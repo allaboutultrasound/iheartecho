@@ -54,7 +54,7 @@ function ResultPanel({ children, guideline }: { children: React.ReactNode; guide
   );
 }
 
-// ─── AORTIC STENOSIS ─────────────────────────────────────────────────────────
+// --- AORTIC STENOSIS ---------------------------------------------------------
 // Per ASE/ACC/AHA 2021 VHD Guidelines
 function ASCalculator() {
   const [vmax, setVmax] = useState("");
@@ -129,7 +129,7 @@ function ASCalculator() {
   );
 }
 
-// ─── MITRAL REGURGITATION ────────────────────────────────────────────────────
+// --- MITRAL REGURGITATION ----------------------------------------------------
 // Per ASE/ACC/AHA 2021 VHD Guidelines (Zoghbi et al.) — Full multi-parameter grading
 function MRCalculator() {
   // PISA
@@ -295,7 +295,7 @@ function MRCalculator() {
   );
 }
 
-// // ─── TRICUSPID REGURGITATION ──────────────────────────────────────────────
+// // --- TRICUSPID REGURGITATION ----------------------------------------------
 // Per ASE 2021 VHD Guidelines — Full multi-parameter grading
 function TRCalculator() {
   const [eroa, setEroa] = useState("");
@@ -433,7 +433,7 @@ function TRCalculator() {
   );
 }
 
-// ─── AORTIC REGURGITATION ─────────────────────────────────────────────────────
+// --- AORTIC REGURGITATION -----------------------------------------------------
 function ARCalculator() {
   // Semi-quantitative
   const [vcw, setVcw] = useState("");
@@ -587,7 +587,7 @@ function ARCalculator() {
   );
 }
 
-// ─── MVA (Pressure Half-Time) ─────────────────────────────────────────────────
+// --- MVA (Pressure Half-Time) -------------------------------------------------
 function MVACalculator() {
   const [pht, setPht] = useState("");
   const [mva, setMva] = useState("");
@@ -625,7 +625,7 @@ function MVACalculator() {
   );
 }
 
-// ─── RVSP ─────────────────────────────────────────────────────────────────────
+// --- RVSP ---------------------------------------------------------------------
 function RVSPCalculator() {
   const [trVmax, setTrVmax] = useState("");
   const [rap, setRap] = useState("5");
@@ -655,7 +655,7 @@ function RVSPCalculator() {
   );
 }
 
-// ─── DIASTOLOGY ENGINE (ASE 2016 + LARS) ─────────────────────────────────────
+// --- DIASTOLOGY ENGINE (ASE 2016 + LARS) -------------------------------------
 function DiastologyCalculator() {
   const [e, setE] = useState("");
   const [a, setA] = useState("");
@@ -826,7 +826,7 @@ function DiastologyCalculator() {
   );
 }
 
-// ─── LV FUNCTION + GLS + STRAIN RATE ─────────────────────────────────────────
+// --- LV FUNCTION + GLS + STRAIN RATE -----------------------------------------
 function LVFunctionCalculator() {
   const [ef, setEf] = useState("");
   const [gls, setGls] = useState("");
@@ -917,7 +917,7 @@ function LVFunctionCalculator() {
   );
 }
 
-// ─── RV FUNCTION + STRAIN ─────────────────────────────────────────────────────
+// --- RV FUNCTION + STRAIN -----------------------------------------------------
 function RVFunctionCalculator() {
   const [tapse, setTapse] = useState("");
   const [rvFac, setRvFac] = useState("");
@@ -1025,7 +1025,7 @@ function RVFunctionCalculator() {
   );
 }
 
-// ─── STROKE VOLUME / CARDIAC OUTPUT ──────────────────────────────────────────
+// --- STROKE VOLUME / CARDIAC OUTPUT ------------------------------------------
 function SVCalculator() {
   const [lvotD, setLvotD] = useState("");
   const [lvotVti, setLvotVti] = useState("");
@@ -1069,7 +1069,7 @@ function SVCalculator() {
   );
 }
 
-// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
+// --- MAIN COMPONENT -----------------------------------------------------------
 const calculators = [
   { id: "as", label: "Aortic Stenosis", sub: "ASE/ACC/AHA 2021" },
   { id: "mr", label: "Mitral Regurgitation", sub: "PISA Method" },

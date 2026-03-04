@@ -8,7 +8,7 @@ import { useState } from "react";
 import Layout from "@/components/Layout";
 import { Baby, AlertCircle, CheckCircle2, HelpCircle, Activity } from "lucide-react";
 
-// ─── DATA ─────────────────────────────────────────────────────────────────────
+// --- DATA ---------------------------------------------------------------------
 
 const chdFindings = [
   {
@@ -131,7 +131,7 @@ const chdFindings = [
   },
 ];
 
-// ─── Z-SCORE CALCULATOR (BSA-normalized, simplified Daubeney/Pettersen-based) ──
+// --- Z-SCORE CALCULATOR (BSA-normalized, simplified Daubeney/Pettersen-based) --
 function PedZScoreCalc() {
   const [bsa, setBsa] = useState("");
   const [structure, setStructure] = useState("mv_annulus");
@@ -266,7 +266,7 @@ function PedZScoreCalc() {
   );
 }
 
-// ─── Qp/Qs CALCULATOR ─────────────────────────────────────────────────────────
+// --- Qp/Qs CALCULATOR ---------------------------------------------------------
 function QpQsCalc() {
   const [pvVti, setPvVti] = useState("");
   const [pvD, setPvD] = useState("");
@@ -351,7 +351,7 @@ function QpQsCalc() {
   );
 }
 
-// ─── SEGMENTAL ANALYSIS HELPER ────────────────────────────────────────────────
+// --- SEGMENTAL ANALYSIS HELPER ------------------------------------------------
 function SegmentalAnalysis() {
   const [visceroAtrial, setVisceroAtrial] = useState("");
   const [avConnection, setAvConnection] = useState("");
@@ -427,7 +427,7 @@ function SegmentalAnalysis() {
   );
 }
 
-// // ─── NEONATAL HEMODYNAMICS COMPONENT ─────────────────────────────────────────────────────
+// // --- NEONATAL HEMODYNAMICS COMPONENT -----------------------------------------------------
 function NeonatalHemodynamics() {
   const [trVmax, setTrVmax] = useState("");
   const [rap, setRap] = useState("5");
@@ -641,7 +641,7 @@ function NeonatalHemodynamics() {
   );
 }
 
-// ─── MAIN COMPONENT ─────────────────────────────────────────────────────
+// --- MAIN COMPONENT ---
 type TabId = "findings" | "zscore" | "qpqs" | "segmental" | "neonatal";
 
 export default function PediatricNavigator() {

@@ -158,7 +158,7 @@ const teeProtocol: ViewSection[] = [
   },
 ];
 
-// ─── CLINICAL APPLICATIONS ────────────────────────────────────────────────────
+// --- CLINICAL APPLICATIONS ----------------------------------------------------
 const clinicalApps = [
   {
     indication: "MV Repair / Replacement",
@@ -192,7 +192,7 @@ const clinicalApps = [
   },
 ];
 
-// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
+// --- MAIN COMPONENT -----------------------------------------------------------
 export default function TEENavigator() {
   const [tab, setTab] = useState<"protocol" | "applications">("protocol");
   const [expandedView, setExpandedView] = useState<number | null>(0);
@@ -220,7 +220,7 @@ export default function TEENavigator() {
     ];
     teeProtocol.forEach(section => {
       const sectionChecked = section.items.filter(i => checked.has(i.id)).length;
-      lines.push(`\n── ${section.view} [${section.position} | ${section.angle} | ${section.depth}] (${sectionChecked}/${section.items.length}) ──`);
+      lines.push(`\n-- ${section.view} [${section.position} | ${section.angle} | ${section.depth}] (${sectionChecked}/${section.items.length}) --`);
       if (section.clinicalUse) lines.push(`   Clinical use: ${section.clinicalUse}`);
       section.items.forEach(item => {
         const status = checked.has(item.id) ? "[✓]" : item.critical ? "[ ] ⚠ CRITICAL" : "[ ]";

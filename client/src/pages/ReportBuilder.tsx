@@ -38,7 +38,7 @@ function SelectField({ label, value, onChange, options }: {
 }
 
 interface ReportData {
-  patientName: string; dob: string; mrn: string; indication: string;
+  indication: string;
   lvedd: string; lvesd: string; ivsd: string; pwd: string;
   ef: string; efMethod: string; rwma: string;
   eVel: string; aVel: string; ePrime: string; trVel: string; lavi: string; diastGrade: string;
@@ -91,16 +91,15 @@ function generateReport(d: ReportData): string {
     ? `\n\nCONCLUSION:\n${d.conclusion}` : "";
 
   return `ECHOCARDIOGRAPHIC REPORT
-${"─".repeat(50)}
-Patient: ${d.patientName || "—"}    DOB: ${d.dob || "—"}    MRN: ${d.mrn || "—"}
+${"-".repeat(50)}
 Indication: ${d.indication || "—"}
-${"─".repeat(50)}
+${"-".repeat(50)}
 
 LEFT VENTRICLE:
 Left ventricle is ${lvSize || "—"}${efText ? ` with ${efText}` : ""}.${d.rwma && d.rwma !== "None" ? ` Regional wall motion abnormality: ${d.rwma}.` : " No regional wall motion abnormality."}${d.lvedd ? ` LVEDD ${d.lvedd} mm.` : ""}${d.ivsd ? ` IVSd ${d.ivsd} mm.` : ""}${d.pwd ? ` PWd ${d.pwd} mm.` : ""}
 EF estimated by ${d.efMethod || "visual estimation"}.${diastText}${avText}${mrText}${trText}${rvText}${pericardText}${ivcText}${conclusionText}
 
-${"─".repeat(50)}
+${"-".repeat(50)}
 Interpreted by: ___________________________
 Date: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
 © All About Ultrasound — iHeartEcho™`;
@@ -108,7 +107,7 @@ Date: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long",
 
 export default function ReportBuilder() {
   const [data, setData] = useState<ReportData>({
-    patientName: "", dob: "", mrn: "", indication: "",
+    indication: "",
     lvedd: "", lvesd: "", ivsd: "", pwd: "",
     ef: "", efMethod: "Biplane Simpson", rwma: "None",
     eVel: "", aVel: "", ePrime: "", trVel: "", lavi: "", diastGrade: "Not assessed",
@@ -151,11 +150,8 @@ export default function ReportBuilder() {
               <div className="teal-header px-5 py-3">
                 <h3 className="font-bold text-sm text-white" style={{ fontFamily: "Merriweather, serif" }}>Patient Information</h3>
               </div>
-              <div className="p-4 grid grid-cols-2 gap-3">
-                <Field label="Patient Name" value={data.patientName} onChange={set("patientName")} placeholder="Last, First" />
-                <Field label="Date of Birth" value={data.dob} onChange={set("dob")} placeholder="MM/DD/YYYY" />
-                <Field label="MRN" value={data.mrn} onChange={set("mrn")} placeholder="Medical record #" />
-                <Field label="Indication" value={data.indication} onChange={set("indication")} placeholder="e.g. Chest pain eval" />
+              <div className="p-4">
+                <Field label="Indication" value={data.indication} onChange={set("indication")} placeholder="e.g. Chest pain eval, pre-op assessment, dyspnea" />
               </div>
             </div>
 

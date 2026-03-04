@@ -8,7 +8,7 @@ import { useState } from "react";
 import Layout from "@/components/Layout";
 import { Activity, AlertCircle, CheckCircle2, Circle, ChevronDown, ChevronUp, Zap } from "lucide-react";
 
-// ─── WALL MOTION SCORING ──────────────────────────────────────────────────────
+// --- WALL MOTION SCORING ------------------------------------------------------
 const segments17 = [
   // Basal (6)
   { id: "bas_ant", label: "Basal Anterior", territory: "LAD" },
@@ -141,7 +141,7 @@ function WallMotionScorer() {
   );
 }
 
-// ─── TARGET HR CALCULATOR ─────────────────────────────────────────────────────
+// --- TARGET HR CALCULATOR -----------------------------------------------------
 function TargetHRCalc() {
   const [age, setAge] = useState("");
   const [protocol, setProtocol] = useState("exercise");
@@ -226,7 +226,7 @@ function TargetHRCalc() {
   );
 }
 
-// ─── PROTOCOL CHECKLISTS ──────────────────────────────────────────────────────
+// --- PROTOCOL CHECKLISTS ------------------------------------------------------
 type StressProtocol = { name: string; icon: string; stages: { name: string; items: { id: string; label: string; critical?: boolean }[] }[] };
 
 const protocols: StressProtocol[] = [
@@ -326,7 +326,7 @@ const protocols: StressProtocol[] = [
   },
 ];
 
-// ─── INTERPRETATION CRITERIA ──────────────────────────────────────────────────
+// --- INTERPRETATION CRITERIA --------------------------------------------------
 const interpretationCriteria = [
   {
     result: "Positive (Ischemia)",
@@ -371,7 +371,7 @@ const interpretationCriteria = [
   },
 ];
 
-// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
+// --- MAIN COMPONENT -----------------------------------------------------------
 type TabId = "protocol" | "wmsi" | "target_hr" | "interpretation";
 
 export default function StressNavigator() {

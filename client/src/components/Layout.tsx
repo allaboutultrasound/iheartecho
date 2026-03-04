@@ -8,7 +8,7 @@ import { Link, useLocation } from "wouter";
 import {
   Heart, Calculator, Baby, ClipboardList, Activity,
   Scan, BookOpen, FileText, Menu, X, ChevronRight,
-  Stethoscope, Microscope, Zap, Users
+  Stethoscope, Microscope, Zap, Users, ExternalLink
 } from "lucide-react";
 
 const navGroups = [
@@ -19,26 +19,35 @@ const navGroups = [
     ],
   },
   {
-    label: "Calculators",
+    label: "Adult Echo",
+    items: [
+      { path: "/tte", label: "TTE Navigator", icon: Stethoscope },
+      { path: "/tee", label: "TEE Navigator", icon: Microscope },
+    ],
+  },
+  {
+    label: "Stress Echo",
+    items: [
+      { path: "/stress", label: "Stress Navigator", icon: Zap },
+    ],
+  },
+  {
+    label: "Pediatric Echo",
+    items: [
+      { path: "/pediatric", label: "Pediatric Navigator", icon: Users },
+    ],
+  },
+  {
+    label: "Fetal Echo",
+    items: [
+      { path: "/fetal", label: "Fetal Navigator", icon: Baby },
+    ],
+  },
+  {
+    label: "Calculators & Tools",
     items: [
       { path: "/calculator", label: "Echo Calculator", icon: Calculator },
       { path: "/hemodynamics", label: "Hemodynamics Lab", icon: Activity },
-    ],
-  },
-  {
-    label: "Navigators",
-    items: [
-      { path: "/tte", label: "Adult TTE", icon: Stethoscope },
-      { path: "/tee", label: "TEE", icon: Microscope },
-      { path: "/stress", label: "Stress Echo", icon: Zap },
-      { path: "/fetal", label: "Fetal Echo", icon: Baby },
-      { path: "/pediatric", label: "Pediatric Echo", icon: Users },
-    ],
-  },
-  {
-    label: "Tools",
-    items: [
-      { path: "/protocol", label: "Protocol Assistant", icon: ClipboardList },
       { path: "/scan-coach", label: "Scan Coach", icon: Scan },
       { path: "/cases", label: "Case Lab", icon: BookOpen },
       { path: "/report", label: "Report Builder", icon: FileText },
@@ -70,18 +79,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           w-64 bg-[#0e1e2e] text-white flex-shrink-0`}
       >
         {/* Logo */}
-        <div className="flex items-center gap-3 px-5 py-5 border-b border-white/10">
-          <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: "#189aa1" }}>
-            <Heart className="w-5 h-5 text-white fill-white" />
-          </div>
-          <div>
-            <div className="font-bold text-white text-base leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
-              iHeartEcho
+        <div className="flex items-center gap-2 px-4 py-4 border-b border-white/10">
+          <img
+            src="https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/TTSqgyHlTBmxeODV.png?Expires=1804183007&Signature=tWUrD-cUfgsk0u97qoBm0zB3mj75cGUW2F-hh-3aepkHA9QlDWUbfY2eqgxrIpyY2Zp3wTFpuBC7DXxtNjAMv5Ju2HBWLLcCgaGJrEB5X2wKLtoJQKscrbUUOXFV7xdwiJWP5zeVe7QNQaBw5zHqqyN6EYc6a0WovYLeHtUnM~vCz5pDvUh0L43UEpwlSVUZnU9ULfYO~ML9cpjCX-M~Uwb1QHUU2IxD7Qa9wMXw3nUhLxhbrUVdc-byWsUfQg5~PCwxH3jjLLq-4hlrBvFgkyB5QJJiqv6f~GM6bMh8jFE1GfWCAPzQVdcY97tgqT4GBExpYMkQ-K7AK83Fvd5zEg__&Key-Pair-Id=K2HSFNDJXOU9YS"
+            alt="iHeartEcho"
+            className="w-12 h-12 object-contain flex-shrink-0"
+          />
+          <div className="flex-1 min-w-0">
+            <div className="font-bold text-white text-sm leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
+              iHeartEcho™
             </div>
-            <div className="text-xs text-[#4ad9e0] leading-tight">Clinical Companion</div>
+            <div className="text-xs text-[#4ad9e0] leading-tight">Echocardiography Clinical Companion</div>
           </div>
           <button
-            className="ml-auto lg:hidden text-white/60 hover:text-white"
+            className="ml-auto lg:hidden text-white/60 hover:text-white flex-shrink-0"
             onClick={() => setSidebarOpen(false)}
           >
             <X className="w-5 h-5" />
@@ -117,9 +128,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </nav>
 
         {/* Footer */}
-        <div className="px-5 py-4 border-t border-white/10">
-          <div className="text-xs text-white/40">© All About Ultrasound</div>
-          <div className="text-xs text-[#4ad9e0] mt-0.5">iHeartEcho v1.0</div>
+        <div className="px-4 py-4 border-t border-white/10">
+          <a href="https://www.iheartecho.com" target="_blank" rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-xs text-[#4ad9e0] hover:text-white transition-colors mb-1">
+            <ExternalLink className="w-3 h-3" />
+            www.iheartecho.com
+          </a>
+          <div className="text-xs text-white/30">© All About Ultrasound</div>
         </div>
       </aside>
 
@@ -140,7 +155,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </span>
           </div>
           <div className="ml-auto text-xs text-gray-400 hidden sm:block">
-            Cardiac & Fetal Echo Clinical Companion
+            Echocardiography Clinical Companion
           </div>
         </header>
 

@@ -12,7 +12,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import EchoCalculator from "./pages/EchoCalculator";
 import FetalNavigator from "./pages/FetalNavigator";
-import ProtocolAssistant from "./pages/ProtocolAssistant";
+import TTENavigatorRedirect from "./pages/TTENavigator";
 import HemodynamicsLab from "./pages/HemodynamicsLab";
 import ScanCoach from "./pages/ScanCoach";
 import CaseLab from "./pages/CaseLab";
@@ -32,7 +32,7 @@ function Router() {
       <Route path="/tte" component={TTENavigator} />
       <Route path="/tee" component={TEENavigator} />
       <Route path="/stress" component={StressNavigator} />
-      <Route path="/protocol" component={ProtocolAssistant} />
+      <Route path="/protocol" component={TTENavigatorRedirect} />
       <Route path="/hemodynamics" component={HemodynamicsLab} />
       <Route path="/scan-coach" component={ScanCoach} />
       <Route path="/cases" component={CaseLab} />

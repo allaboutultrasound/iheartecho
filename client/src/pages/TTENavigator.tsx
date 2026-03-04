@@ -113,7 +113,7 @@ const tteProtocol: ViewSection[] = [
   },
 ];
 
-// ─── NORMAL REFERENCE VALUES ──────────────────────────────────────────────────
+// --- NORMAL REFERENCE VALUES --------------------------------------------------
 const normalValues = [
   { category: "LV Dimensions", values: [
     { param: "LV EDD (M)", normal: "≤58 mm", borderline: "59–63 mm", abnormal: ">63 mm" },
@@ -152,7 +152,7 @@ const normalValues = [
   ]},
 ];
 
-// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
+// --- MAIN COMPONENT -----------------------------------------------------------
 export default function TTENavigator() {
   const [tab, setTab] = useState<"protocol" | "reference">("protocol");
   const [expandedView, setExpandedView] = useState<number | null>(0);
@@ -184,7 +184,7 @@ export default function TTENavigator() {
     ];
     tteProtocol.forEach(section => {
       const sectionChecked = section.items.filter(i => checked.has(i.id)).length;
-      lines.push(`\n── ${section.view} (${sectionChecked}/${section.items.length}) ──`);
+      lines.push(`\n-- ${section.view} (${sectionChecked}/${section.items.length}) --`);
       lines.push(`   Probe: ${section.probe}`);
       section.items.forEach(item => {
         const status = checked.has(item.id) ? "[✓]" : item.critical ? "[ ] ⚠ CRITICAL" : "[ ]";

@@ -5,39 +5,68 @@
 */
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
-import { Calculator, Baby, ClipboardList, Activity, Scan, BookOpen, FileText, ArrowRight, Users, Award, Zap } from "lucide-react";
+import { Calculator, Baby, ClipboardList, Activity, Scan, BookOpen, FileText, ArrowRight, Users, Award, Zap, Stethoscope, Microscope, ExternalLink } from "lucide-react";
 
 const modules = [
+  // Adult Echo
   {
-    path: "/calculator",
-    icon: Calculator,
-    title: "Echo Severity Calculator",
-    description: "Instant guideline-based interpretation for AS, MR, TR, AR, diastology, GLS, and more.",
-    badge: "ASE Guidelines",
+    path: "/tte",
+    icon: Stethoscope,
+    title: "Adult TTE Navigator",
+    description: "Structured TTE protocol with view-by-view checklist, critical item tracking, and ASE reference values.",
+    badge: "Adult Echo",
     color: "#189aa1",
   },
+  {
+    path: "/tee",
+    icon: Microscope,
+    title: "TEE Navigator",
+    description: "ME, TG, and UE views with angle/depth guidance, clinical applications, and intraoperative checklist.",
+    badge: "Adult Echo",
+    color: "#0e7490",
+  },
+  // Stress Echo
+  {
+    path: "/stress",
+    icon: Zap,
+    title: "Stress Echo Navigator",
+    description: "Exercise and DSE protocols, 17-segment WMSI scorer, target HR calculator, and interpretation criteria.",
+    badge: "Stress Echo",
+    color: "#d97706",
+  },
+  // Pediatric Echo
+  {
+    path: "/pediatric",
+    icon: Users,
+    title: "Pediatric Echo Navigator",
+    description: "CHD findings, BSA Z-scores, Qp/Qs shunt estimation, segmental analysis, and neonatal hemodynamics.",
+    badge: "Pediatric Echo",
+    color: "#7c3aed",
+  },
+  // Fetal Echo
   {
     path: "/fetal",
     icon: Baby,
     title: "Fetal Echo Navigator",
-    description: "Interpret fetal cardiac findings, CHD differentials, Z-scores, situs, and arch patterns.",
+    description: "Fetal cardiac findings, CHD differentials, biometry Z-scores, situs, arch patterns, and scan coach.",
     badge: "Fetal Echo",
-    color: "#7c3aed",
+    color: "#db2777",
   },
+  // Calculators & Tools
   {
-    path: "/protocol",
-    icon: ClipboardList,
-    title: "Protocol Assistant",
-    description: "Step-by-step interactive echo protocol guidance to prevent missed measurements.",
-    badge: "Adult & Peds",
-    color: "#0891b2",
+    path: "/calculator",
+    icon: Calculator,
+    title: "Echo Severity Calculator",
+    description: "Guideline-based interpretation for AS, MR, TR, AR, diastology with LARS, LV GLS, and RV strain.",
+    badge: "ASE 2025",
+    color: "#189aa1",
   },
   {
     path: "/hemodynamics",
     icon: Activity,
     title: "Hemodynamics Lab",
-    description: "Adjust preload, afterload, and contractility. See PV loop changes and echo findings.",
-    badge: "ACS Training",
+    description: "Adjust preload, afterload, and contractility. See PV loop changes and echo findings in real time.",
+    badge: "Training",
     color: "#059669",
   },
   {
@@ -46,7 +75,7 @@ const modules = [
     title: "Scan Coach",
     description: "Visual probe guidance with anatomy overlays, Doppler positioning, and orientation tips.",
     badge: "Training Mode",
-    color: "#d97706",
+    color: "#0891b2",
   },
   {
     path: "/cases",
@@ -59,7 +88,7 @@ const modules = [
   {
     path: "/report",
     icon: FileText,
-    title: "AI Report Builder",
+    title: "Report Builder",
     description: "Enter measurements and generate a complete, structured echo report instantly.",
     badge: "Time Saver",
     color: "#189aa1",
@@ -70,7 +99,7 @@ const stats = [
   { label: "Clinical Calculators", value: "20+", icon: Calculator },
   { label: "Echo Cases", value: "500+", icon: BookOpen },
   { label: "Protocols Covered", value: "12", icon: ClipboardList },
-  { label: "Active Users", value: "8,400+", icon: Users },
+  { label: "Active Users", value: "12,492+", icon: Users },
 ];
 
 export default function Home() {
@@ -95,19 +124,28 @@ export default function Home() {
               <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
               <span className="text-xs text-white/80 font-medium">Real-time Clinical Decision Support</span>
             </div>
-            <h1 className="text-3xl md:text-4xl font-black text-white mb-3 leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
-              iHeartEcho™
-            </h1>
-            <p className="text-lg text-[#4ad9e0] font-semibold mb-2">Cardiac & Fetal Echo Clinical Companion</p>
+            <div className="flex items-center gap-4 mb-3">
+              <img
+                src="https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/TTSqgyHlTBmxeODV.png?Expires=1804183007&Signature=tWUrD-cUfgsk0u97qoBm0zB3mj75cGUW2F-hh-3aepkHA9QlDWUbfY2eqgxrIpyY2Zp3wTFpuBC7DXxtNjAMv5Ju2HBWLLcCgaGJrEB5X2wKLtoJQKscrbUUOXFV7xdwiJWP5zeVe7QNQaBw5zHqqyN6EYc6a0WovYLeHtUnM~vCz5pDvUh0L43UEpwlSVUZnU9ULfYO~ML9cpjCX-M~Uwb1QHUU2IxD7Qa9wMXw3nUhLxhbrUVdc-byWsUfQg5~PCwxH3jjLLq-4hlrBvFgkyB5QJJiqv6f~GM6bMh8jFE1GfWCAPzQVdcY97tgqT4GBExpYMkQ-K7AK83Fvd5zEg__&Key-Pair-Id=K2HSFNDJXOU9YS"
+                alt="iHeartEcho Logo"
+                className="w-20 h-20 object-contain drop-shadow-lg"
+              />
+              <div>
+                <h1 className="text-3xl md:text-4xl font-black text-white leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
+                  iHeartEcho™
+                </h1>
+                <p className="text-lg text-[#4ad9e0] font-semibold">Echocardiography Clinical Companion</p>
+              </div>
+            </div>
             <p className="text-white/70 text-sm leading-relaxed mb-6 max-w-lg">
               A real-time echo interpretation and measurement assistant for sonographers, cardiologists, and ACS students. Guideline-based, fast, and built for the clinical environment.
             </p>
             <div className="flex flex-wrap gap-3">
-              <Link href="/calculator">
+              <Link href="/tte">
                 <button className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90 hover:scale-105"
                   style={{ background: "#189aa1" }}>
-                  <Calculator className="w-4 h-4" />
-                  Open Calculator
+                  <Stethoscope className="w-4 h-4" />
+                  Start TTE Protocol
                 </button>
               </Link>
               <Link href="/cases">
@@ -116,6 +154,11 @@ export default function Home() {
                   Daily Case
                 </button>
               </Link>
+              <a href="https://www.iheartecho.com" target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all">
+                <ExternalLink className="w-4 h-4" />
+                iheartecho.com
+              </a>
             </div>
           </div>
         </div>
@@ -142,11 +185,11 @@ export default function Home() {
 
       {/* Modules Grid */}
       <div className="container py-8">
-        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Clinical Modules</h2>
           <div className="flex items-center gap-1.5 text-xs text-[#189aa1] font-medium">
             <Zap className="w-3.5 h-3.5" />
-            7 Modules Available
+            10 Modules Available
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -174,24 +217,26 @@ export default function Home() {
         </div>
 
         {/* Premium CTA */}
-        <div className="mt-8 rounded-xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4"
+          <div className="mt-8 rounded-xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4"
           style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}>
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
               <Award className="w-4 h-4 text-[#4ad9e0]" />
-              <span className="text-xs font-semibold text-[#4ad9e0] uppercase tracking-wider">Premium</span>
+              <span className="text-xs font-semibold text-[#4ad9e0] uppercase tracking-wider">Full Platform</span>
             </div>
             <h3 className="text-white font-bold text-base mb-1" style={{ fontFamily: "Merriweather, serif" }}>
               Unlock Full Clinical Suite
             </h3>
             <p className="text-white/60 text-xs">
-              Full interpretation engine, fetal navigator, 500+ cases, ACS learning tools — $19–29/month
+              Full interpretation engine, fetal navigator, 500+ cases, ACS learning tools — visit iheartecho.com
             </p>
           </div>
-          <button className="flex-shrink-0 px-5 py-2.5 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
+          <a href="https://www.iheartecho.com" target="_blank" rel="noopener noreferrer"
+            className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
             style={{ background: "#189aa1" }}>
-            Start Free Trial
-          </button>
+            <ExternalLink className="w-4 h-4" />
+            Visit iheartecho.com
+          </a>
         </div>
       </div>
     </Layout>
