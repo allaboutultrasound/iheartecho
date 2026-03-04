@@ -280,10 +280,25 @@ const PRESETS = [
   { label: "Tamponade",             values: { preload: 25, afterload: 60, contractility: 45, heartRate: 110 }, color: "#be185d" },
   { label: "HCM (Obstructive)",     values: { preload: 40, afterload: 80, contractility: 90, heartRate: 80 }, color: "#b45309" },
   { label: "Septic Shock",          values: { preload: 30, afterload: 20, contractility: 55, heartRate: 120 }, color: "#64748b" },
+  // Valvular disease presets
+  { label: "Aortic Stenosis (Severe)",  values: { preload: 55, afterload: 88, contractility: 65, heartRate: 68 }, color: "#c2410c" },
+  { label: "Aortic Regurgitation",      values: { preload: 85, afterload: 38, contractility: 62, heartRate: 75 }, color: "#0369a1" },
+  { label: "Mitral Stenosis (Severe)",  values: { preload: 72, afterload: 45, contractility: 58, heartRate: 85 }, color: "#7e22ce" },
+  { label: "Mitral Regurgitation",      values: { preload: 78, afterload: 42, contractility: 60, heartRate: 80 }, color: "#be123c" },
 ];
 
 function getClinicalContext(p: Params): { title: string; description: string; color: string } {
   const { preload, afterload, contractility, heartRate } = p;
+  // Valvular disease patterns (checked before generic patterns)
+  if (afterload >= 85 && preload >= 50 && preload <= 62 && contractility >= 60 && contractility <= 70 && heartRate <= 72)
+    return { title: "Aortic Stenosis (Severe)", description: "Fixed high afterload from outflow obstruction. LV compensates with concentric LVH and elevated LVEDP. Slow-rising, low-amplitude pulse. Expect preserved EF until late decompensation. AVA <1.0 cm², Vmax >4 m/s.", color: "#c2410c" };
+  if (preload >= 82 && afterload <= 42 && contractility >= 58 && heartRate >= 72 && heartRate <= 78)
+    return { title: "Aortic Regurgitation (Chronic)", description: "Volume overload from diastolic regurgitation. Eccentric LVH with large EDV and wide pulse pressure. Bounding pulse. Diastolic flow reversal in descending aorta. EF may be preserved until late.", color: "#0369a1" };
+  if (preload >= 68 && preload <= 76 && afterload >= 42 && afterload <= 48 && heartRate >= 82 && heartRate <= 88)
+    return { title: "Mitral Stenosis (Severe)", description: "Fixed inflow obstruction elevates LA pressure and limits LV filling. Low EDV, reduced SV. LA dilation, risk of AF and pulmonary hypertension. MVA <1.0 cm², mean gradient >10 mmHg.", color: "#7e22ce" };
+  if (preload >= 75 && afterload <= 45 && contractility >= 57 && contractility <= 63 && heartRate >= 77 && heartRate <= 83)
+    return { title: "Mitral Regurgitation (Chronic)", description: "Volume overload from systolic regurgitation into LA. Elevated preload, reduced effective forward SV. LA and LV dilation. EF appears falsely preserved due to low-resistance regurgitant pathway.", color: "#be123c" };
+  // Generic patterns
   if (contractility < 25 && preload > 60) return { title: "Decompensated Heart Failure", description: "Severely reduced contractility with elevated filling pressures. Dilated, poorly contracting LV. Expect low EF, elevated E/e', pulmonary congestion.", color: "#dc2626" };
   if (afterload > 75 && contractility > 55) return { title: "Pressure Overload — Compensated", description: "High SVR/afterload with preserved EF. LVH present. Seen in hypertension, aortic stenosis.", color: "#d97706" };
   if (preload > 75 && contractility > 55) return { title: "Volume Overload — High Output", description: "Elevated EDV with preserved contractility. Seen in AR, MR, ASD, high-output states.", color: "#0891b2" };
