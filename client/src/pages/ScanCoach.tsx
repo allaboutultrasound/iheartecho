@@ -121,9 +121,11 @@ export default function ScanCoach() {
                       <path d={`M 100 ${y} Q 140 ${y + 5} 160 ${y + 20}`} fill="none" stroke="#e2e8f0" strokeWidth="1.5" />
                     </g>
                   ))}
-                  {/* Heart */}
-                  <path d="M 100 140 Q 70 110 75 90 Q 80 75 95 80 Q 100 82 100 82 Q 100 82 105 80 Q 120 75 125 90 Q 130 110 100 140 Z"
-                    fill="#fecdd3" stroke="#fca5a5" strokeWidth="1" opacity="0.7" />
+                  {/* Heart — tilted slightly left (apex toward patient's left) */}
+                  <g transform="rotate(-15, 100, 110)">
+                    <path d="M 100 140 Q 70 110 75 90 Q 80 75 95 80 Q 100 82 100 82 Q 100 82 105 80 Q 120 75 125 90 Q 130 110 100 140 Z"
+                      fill="#fecdd3" stroke="#fca5a5" strokeWidth="1" opacity="0.7" />
+                  </g>
 
                   {/* Probe position indicator */}
                   {selected.id === "plax" && (
@@ -162,9 +164,9 @@ export default function ScanCoach() {
                     </g>
                   )}
 
-                  {/* Labels */}
-                  <text x="30" y="100" fontSize="7" fill="#94a3b8">Left</text>
-                  <text x="160" y="100" fontSize="7" fill="#94a3b8">Right</text>
+                  {/* Labels — patient's right is on diagram's left, patient's left is on diagram's right */}
+                  <text x="22" y="100" fontSize="7" fill="#94a3b8">Right</text>
+                  <text x="155" y="100" fontSize="7" fill="#94a3b8">Left</text>
                   <text x="90" y="22" fontSize="7" fill="#94a3b8">Head</text>
                   <text x="85" y="190" fontSize="7" fill="#94a3b8">Feet</text>
                 </svg>
