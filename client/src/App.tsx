@@ -17,6 +17,10 @@ import HemodynamicsLab from "./pages/HemodynamicsLab";
 import ScanCoach from "./pages/ScanCoach";
 import CaseLab from "./pages/CaseLab";
 import ReportBuilder from "./pages/ReportBuilder";
+import PediatricNavigator from "./pages/PediatricNavigator";
+import TTENavigator from "./pages/TTENavigator";
+import TEENavigator from "./pages/TEENavigator";
+import StressNavigator from "./pages/StressNavigator";
 
 function Router() {
   return (
@@ -24,6 +28,10 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/calculator" component={EchoCalculator} />
       <Route path="/fetal" component={FetalNavigator} />
+      <Route path="/pediatric" component={PediatricNavigator} />
+      <Route path="/tte" component={TTENavigator} />
+      <Route path="/tee" component={TEENavigator} />
+      <Route path="/stress" component={StressNavigator} />
       <Route path="/protocol" component={ProtocolAssistant} />
       <Route path="/hemodynamics" component={HemodynamicsLab} />
       <Route path="/scan-coach" component={ScanCoach} />

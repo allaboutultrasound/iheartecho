@@ -7,19 +7,47 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import {
   Heart, Calculator, Baby, ClipboardList, Activity,
-  Scan, BookOpen, FileText, Menu, X, ChevronRight
+  Scan, BookOpen, FileText, Menu, X, ChevronRight,
+  Stethoscope, Microscope, Zap, Users
 } from "lucide-react";
 
-const navItems = [
-  { path: "/", label: "Dashboard", icon: Heart },
-  { path: "/calculator", label: "Echo Calculator", icon: Calculator },
-  { path: "/fetal", label: "Fetal Navigator", icon: Baby },
-  { path: "/protocol", label: "Protocol Assistant", icon: ClipboardList },
-  { path: "/hemodynamics", label: "Hemodynamics Lab", icon: Activity },
-  { path: "/scan-coach", label: "Scan Coach", icon: Scan },
-  { path: "/cases", label: "Case Lab", icon: BookOpen },
-  { path: "/report", label: "Report Builder", icon: FileText },
+const navGroups = [
+  {
+    label: "Overview",
+    items: [
+      { path: "/", label: "Dashboard", icon: Heart },
+    ],
+  },
+  {
+    label: "Calculators",
+    items: [
+      { path: "/calculator", label: "Echo Calculator", icon: Calculator },
+      { path: "/hemodynamics", label: "Hemodynamics Lab", icon: Activity },
+    ],
+  },
+  {
+    label: "Navigators",
+    items: [
+      { path: "/tte", label: "Adult TTE", icon: Stethoscope },
+      { path: "/tee", label: "TEE", icon: Microscope },
+      { path: "/stress", label: "Stress Echo", icon: Zap },
+      { path: "/fetal", label: "Fetal Echo", icon: Baby },
+      { path: "/pediatric", label: "Pediatric Echo", icon: Users },
+    ],
+  },
+  {
+    label: "Tools",
+    items: [
+      { path: "/protocol", label: "Protocol Assistant", icon: ClipboardList },
+      { path: "/scan-coach", label: "Scan Coach", icon: Scan },
+      { path: "/cases", label: "Case Lab", icon: BookOpen },
+      { path: "/report", label: "Report Builder", icon: FileText },
+    ],
+  },
 ];
+
+// Flat list for header label lookup
+const navItems = navGroups.flatMap(g => g.items);
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -61,27 +89,31 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-4 overflow-y-auto">
-          <div className="text-xs font-semibold text-white/40 uppercase tracking-wider px-3 mb-2">Modules</div>
-          {navItems.map(({ path, label, icon: Icon }) => {
-            const active = location === path;
-            return (
-              <Link key={path} href={path}>
-                <div
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 transition-all duration-150 group
-                    ${active
-                      ? "bg-[#189aa1] text-white"
-                      : "text-white/70 hover:bg-white/10 hover:text-white"
-                    }`}
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <Icon className={`w-4 h-4 flex-shrink-0 ${active ? "text-white" : "text-[#4ad9e0] group-hover:text-white"}`} />
-                  <span className="text-sm font-medium">{label}</span>
-                  {active && <ChevronRight className="w-3 h-3 ml-auto" />}
-                </div>
-              </Link>
-            );
-          })}
+        <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-4">
+          {navGroups.map(group => (
+            <div key={group.label}>
+              <div className="text-xs font-semibold text-white/40 uppercase tracking-wider px-3 mb-1">{group.label}</div>
+              {group.items.map(({ path, label, icon: Icon }) => {
+                const active = location === path;
+                return (
+                  <Link key={path} href={path}>
+                    <div
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 transition-all duration-150 group
+                        ${active
+                          ? "bg-[#189aa1] text-white"
+                          : "text-white/70 hover:bg-white/10 hover:text-white"
+                        }`}
+                      onClick={() => setSidebarOpen(false)}
+                    >
+                      <Icon className={`w-4 h-4 flex-shrink-0 ${active ? "text-white" : "text-[#4ad9e0] group-hover:text-white"}`} />
+                      <span className="text-sm font-medium">{label}</span>
+                      {active && <ChevronRight className="w-3 h-3 ml-auto" />}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
         {/* Footer */}

@@ -1,0 +1,391 @@
+/*
+  iHeartEcho — TEE Navigator
+  Comprehensive transesophageal echo protocol:
+  ME, TG, Deep TG, UE views with angle guidance, clinical applications
+  Brand: Teal #189aa1, Aqua #4ad9e0
+*/
+import { useState } from "react";
+import Layout from "@/components/Layout";
+import { CheckCircle2, Circle, ChevronDown, ChevronUp, AlertCircle, Eye } from "lucide-react";
+
+type ChecklistItem = { id: string; label: string; detail?: string; critical?: boolean; angle?: string };
+type ViewSection = { view: string; position: string; angle: string; depth: string; items: ChecklistItem[]; clinicalUse?: string };
+
+const teeProtocol: ViewSection[] = [
+  {
+    view: "ME 4-Chamber",
+    position: "Mid-esophageal",
+    angle: "0°",
+    depth: "30–35 cm",
+    clinicalUse: "LV/RV size and function, MV/TV morphology, ASD/PFO, LA/RA assessment",
+    items: [
+      { id: "me4c_lv", label: "LV size and systolic function", detail: "Biplane EF if needed. Assess all walls", critical: true },
+      { id: "me4c_rv", label: "RV size and function", detail: "RV should be <2/3 LV size. TAPSE not feasible — use FAC or S'" },
+      { id: "me4c_mv", label: "Mitral valve morphology (A4C equivalent)", detail: "Leaflet coaptation, prolapse, restriction, calcification", critical: true },
+      { id: "me4c_tv", label: "Tricuspid valve morphology", detail: "TR severity, leaflet morphology" },
+      { id: "me4c_la", label: "Left atrium size and LAA", detail: "LA dilation? Spontaneous echo contrast (SEC)?" },
+      { id: "me4c_ias", label: "Interatrial septum (ASD/PFO)", detail: "Color Doppler + bubble study if PFO suspected", critical: true },
+      { id: "me4c_mr_color", label: "MR color Doppler", detail: "Jet origin, direction, extent. Vena contracta", critical: true },
+      { id: "me4c_tr_color", label: "TR color Doppler + CW", detail: "TR Vmax for RVSP estimation" },
+    ],
+  },
+  {
+    view: "ME 2-Chamber",
+    position: "Mid-esophageal",
+    angle: "90°",
+    depth: "30–35 cm",
+    clinicalUse: "LV anterior/inferior walls, MV anterior/posterior leaflets, LAA",
+    items: [
+      { id: "me2c_lv", label: "LV anterior and inferior wall motion", detail: "LAD (anterior) and RCA (inferior) territories" },
+      { id: "me2c_mv", label: "MV anterior and posterior leaflets", detail: "A1/A2/A3 and P1/P2/P3 segments visible" },
+      { id: "me2c_la", label: "Left atrium and LAA", detail: "LAA thrombus? SEC? LAA flow velocity <20 cm/s = stasis" },
+      { id: "me2c_laa_doppler", label: "LAA Doppler (emptying velocity)", detail: "Normal LAA emptying: >40 cm/s. <20 cm/s = high thrombus risk", critical: true },
+    ],
+  },
+  {
+    view: "ME Long Axis (LAX)",
+    position: "Mid-esophageal",
+    angle: "120–135°",
+    depth: "30–35 cm",
+    clinicalUse: "LVOT, AV, aortic root, MV (PLAX equivalent)",
+    items: [
+      { id: "melax_av", label: "Aortic valve morphology (3 cusps visible)", detail: "Bicuspid? Calcification? Restricted opening?" },
+      { id: "melax_lvot", label: "LVOT diameter (for SV calculation)", detail: "Measure in systole, 0.5–1 cm below AV" },
+      { id: "melax_aortic_root", label: "Aortic root and proximal ascending aorta", detail: "Sinus of Valsalva, STJ, ascending aorta diameters", critical: true },
+      { id: "melax_ar_color", label: "AR color Doppler (LVOT)", detail: "Jet width/LVOT width. Severe: >65% LVOT width" },
+      { id: "melax_mv", label: "MV (PLAX equivalent)", detail: "Posterior leaflet prolapse best seen here" },
+    ],
+  },
+  {
+    view: "ME AV SAX",
+    position: "Mid-esophageal",
+    angle: "30–60°",
+    depth: "28–32 cm",
+    clinicalUse: "AV leaflet morphology, commissures, coronary ostia, RVOT/PV",
+    items: [
+      { id: "meavsax_av", label: "AV leaflet morphology (tricuspid vs bicuspid)", detail: "R, L, N cusps. Commissural fusion? Calcification?", critical: true },
+      { id: "meavsax_coronary", label: "Coronary ostia (LMCA and RCA)", detail: "LMCA from left cusp, RCA from right cusp. Dissection? Occlusion?" },
+      { id: "meavsax_rvot", label: "RVOT and pulmonary valve", detail: "RVOT dilation? PV morphology?" },
+      { id: "meavsax_ra_rv", label: "RA and RV (at AV level)", detail: "RA size, TV, coronary sinus" },
+      { id: "meavsax_ar_color", label: "AR color Doppler (SAX)", detail: "Identify which cusp is prolapsing/perforated" },
+    ],
+  },
+  {
+    view: "ME Bicaval",
+    position: "Mid-esophageal",
+    angle: "90–110°",
+    depth: "28–32 cm",
+    clinicalUse: "IAS, SVC/IVC, ASD sizing, PFO, sinus venosus ASD",
+    items: [
+      { id: "mebicaval_ias", label: "Interatrial septum (full length)", detail: "Secundum ASD, sinus venosus ASD, PFO", critical: true },
+      { id: "mebicaval_svc", label: "Superior vena cava", detail: "SVC flow, sinus venosus ASD near SVC" },
+      { id: "mebicaval_ivc", label: "Inferior vena cava", detail: "IVC entry into RA. Eustachian valve?" },
+      { id: "mebicaval_color", label: "Color Doppler across IAS", detail: "Shunt direction and size. Bubble study if PFO" },
+    ],
+  },
+  {
+    view: "ME RV Inflow-Outflow",
+    position: "Mid-esophageal",
+    angle: "60–90°",
+    depth: "28–32 cm",
+    clinicalUse: "TV, RVOT, PV — comprehensive RV assessment",
+    items: [
+      { id: "mervio_tv", label: "Tricuspid valve (all leaflets)", detail: "Anterior, posterior, septal leaflets. TR mechanism" },
+      { id: "mervio_rvot", label: "RVOT and pulmonary valve", detail: "RVOT obstruction? PV stenosis/regurgitation?" },
+      { id: "mervio_tr_cw", label: "TR CW Doppler (RVSP)", detail: "TR Vmax for RVSP. Severe TR: EROA ≥0.4 cm²" },
+      { id: "mervio_pr", label: "PR color Doppler", detail: "PR severity. PHT of PR jet" },
+    ],
+  },
+  {
+    view: "ME Ascending Aorta SAX / LAX",
+    position: "Mid-esophageal (upper)",
+    angle: "0° (SAX) / 90° (LAX)",
+    depth: "20–25 cm",
+    clinicalUse: "Ascending aorta, aortic dissection, atheroma",
+    items: [
+      { id: "meaorta_size", label: "Ascending aorta diameter", detail: "Measure at sinus, STJ, mid-ascending. Normal ≤38 mm", critical: true },
+      { id: "meaorta_dissection", label: "Aortic dissection (intimal flap?)", detail: "Type A: involves ascending. Color Doppler: true vs false lumen", critical: true },
+      { id: "meaorta_atheroma", label: "Aortic atheroma (plaque grade)", detail: "Grade I–V. Grade ≥IV (≥4 mm or mobile) = high embolic risk" },
+    ],
+  },
+  {
+    view: "UE Aortic Arch",
+    position: "Upper esophageal",
+    angle: "0° (arch LAX) / 90° (arch SAX)",
+    depth: "18–22 cm",
+    clinicalUse: "Aortic arch, descending aorta, PDA, coarctation",
+    items: [
+      { id: "ue_arch", label: "Aortic arch diameter and morphology", detail: "Atheroma, dissection, aneurysm" },
+      { id: "ue_desc", label: "Descending thoracic aorta", detail: "Dissection flap? Atheroma? Aneurysm?" },
+      { id: "ue_pda", label: "PDA (if suspected)", detail: "Continuous flow from descending aorta to PA" },
+    ],
+  },
+  {
+    view: "TG Mid SAX",
+    position: "Transgastric",
+    angle: "0°",
+    depth: "40–45 cm",
+    clinicalUse: "LV wall motion (all 6 segments), papillary muscles, pericardium",
+    items: [
+      { id: "tg_lv_wall", label: "LV wall motion (all 6 mid segments)", detail: "Anteroseptal, anterior, lateral, posterior, inferior, inferoseptal", critical: true },
+      { id: "tg_pap", label: "Papillary muscles (anterolateral and posteromedial)", detail: "Papillary muscle rupture? Ischemia?" },
+      { id: "tg_rv", label: "RV free wall motion", detail: "RV ischemia? Dilation?" },
+      { id: "tg_pericardium", label: "Pericardial effusion", detail: "Circumferential? Loculated?" },
+    ],
+  },
+  {
+    view: "TG 2-Chamber / LAX",
+    position: "Transgastric",
+    angle: "90° (2-chamber) / 120° (LAX)",
+    depth: "40–45 cm",
+    clinicalUse: "LV anterior/inferior walls, LVOT alignment for Doppler",
+    items: [
+      { id: "tg2c_lv", label: "LV anterior and inferior wall motion", detail: "Anterior (LAD), inferior (RCA)" },
+      { id: "tglax_lvot", label: "LVOT (TG LAX — best Doppler alignment)", detail: "Best view for LVOT PW Doppler and AV CW Doppler in intraop TEE", critical: true },
+      { id: "tglax_av_cw", label: "AV CW Doppler (TG LAX)", detail: "Parallel alignment. Use for AS gradient in intraop TEE" },
+    ],
+  },
+  {
+    view: "Deep TG LAX",
+    position: "Deep transgastric",
+    angle: "0° (anteflexed)",
+    depth: "45–50 cm",
+    clinicalUse: "Best Doppler alignment for LVOT/AV — intraoperative AS assessment",
+    items: [
+      { id: "dtg_lvot_pw", label: "LVOT PW Doppler (best alignment)", detail: "Used for SV calculation in intraop TEE" },
+      { id: "dtg_av_cw", label: "AV CW Doppler (best alignment for AS)", detail: "Most parallel to flow — preferred for intraop AS gradient", critical: true },
+    ],
+  },
+];
+
+// ─── CLINICAL APPLICATIONS ────────────────────────────────────────────────────
+const clinicalApps = [
+  {
+    indication: "MV Repair / Replacement",
+    keyViews: ["ME 4C (0°)", "ME 2C (90°)", "ME LAX (120°)", "ME AV SAX (45°)", "TG Mid SAX (0°)"],
+    focus: "MV leaflet segmentation (P1/P2/P3, A1/A2/A3), prolapse/flail segment, MR mechanism (Carpentier classification), post-repair MR, SAM assessment",
+    carpentier: ["Type I: Normal leaflet motion (annular dilation, perforation)", "Type II: Excessive motion (prolapse, flail)", "Type III: Restricted motion (IIIa: rheumatic | IIIb: ischemic)"],
+  },
+  {
+    indication: "Aortic Dissection",
+    keyViews: ["ME LAX (120°)", "ME AV SAX (45°)", "ME Ascending SAX/LAX", "UE Arch (0°/90°)", "TG Mid SAX"],
+    focus: "Intimal flap location, true vs false lumen (color Doppler), AR severity, coronary involvement, pericardial effusion",
+    carpentier: [],
+  },
+  {
+    indication: "Endocarditis",
+    keyViews: ["ME 4C (0°)", "ME LAX (120°)", "ME AV SAX (45°)", "ME 2C (90°)", "TG Mid SAX"],
+    focus: "Vegetation size/location/mobility, perivalvular abscess (aortic root), fistula, severe regurgitation, prosthetic valve involvement",
+    carpentier: [],
+  },
+  {
+    indication: "Intraoperative (Cardiac Surgery)",
+    keyViews: ["Pre-bypass: Full ME survey", "TG Mid SAX (continuous monitoring)", "Deep TG LAX (Doppler)", "Post-bypass: Repeat full survey"],
+    focus: "Pre-bypass: baseline function, valve pathology. Intraop: wall motion (ischemia), volume status. Post-bypass: repair result, residual lesions, de-airing",
+    carpentier: [],
+  },
+  {
+    indication: "Structural Heart (TAVR/MitraClip/LAA Closure)",
+    keyViews: ["ME AV SAX (45°)", "ME LAX (120°)", "ME Bicaval (90°)", "ME 4C (0°)", "3D TEE"],
+    focus: "TAVR: annulus sizing, calcium, coronary heights, paravalvular leak. MitraClip: leaflet anatomy, grasping. WATCHMAN: LAA sizing, thrombus exclusion",
+    carpentier: [],
+  },
+];
+
+// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
+export default function TEENavigator() {
+  const [tab, setTab] = useState<"protocol" | "applications">("protocol");
+  const [expandedView, setExpandedView] = useState<number | null>(0);
+  const [checked, setChecked] = useState<Set<string>>(new Set());
+  const [expandedApp, setExpandedApp] = useState<number | null>(null);
+
+  const toggleCheck = (id: string) => {
+    setChecked(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const totalItems = teeProtocol.reduce((acc, v) => acc + v.items.length, 0);
+  const progress = Math.round((checked.size / totalItems) * 100);
+
+  const positionColors: Record<string, string> = {
+    "Mid-esophageal": "#189aa1",
+    "Mid-esophageal (upper)": "#0e7490",
+    "Upper esophageal": "#0369a1",
+    "Transgastric": "#7c3aed",
+    "Deep transgastric": "#9333ea",
+  };
+
+  return (
+    <Layout>
+      <div className="container py-6">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-800 mb-1" style={{ fontFamily: "Merriweather, serif" }}>
+            TEE Navigator
+          </h1>
+          <p className="text-sm text-gray-500">
+            Comprehensive transesophageal echocardiography protocol with ME, TG, and UE views, clinical applications, and intraoperative guidance.
+          </p>
+        </div>
+
+        {/* Safety reminder */}
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-5 flex items-start gap-2">
+          <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div className="text-xs text-amber-700">
+            <strong>Safety:</strong> Confirm no absolute contraindications (esophageal stricture, active GI bleed, recent esophageal surgery).
+            Relative: esophageal varices, cervical spine instability, coagulopathy. Bite block in place. Continuous monitoring required.
+          </div>
+        </div>
+
+        {/* Progress */}
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-5">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm font-semibold text-gray-700">Protocol Progress</div>
+            <div className="text-sm font-bold text-[#189aa1]">{checked.size}/{totalItems}</div>
+          </div>
+          <div className="w-full bg-gray-100 rounded-full h-2">
+            <div className="h-2 rounded-full transition-all duration-300" style={{ width: `${progress}%`, background: "#189aa1" }} />
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-2 mb-5">
+          {[{ id: "protocol", label: "Protocol Checklist" }, { id: "applications", label: "Clinical Applications" }].map(t => (
+            <button key={t.id} onClick={() => setTab(t.id as any)}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                tab === t.id ? "text-white shadow-sm" : "bg-white text-gray-600 border border-gray-200 hover:border-[#189aa1] hover:text-[#189aa1]"
+              }`}
+              style={tab === t.id ? { background: "#189aa1" } : {}}>
+              {t.label}
+            </button>
+          ))}
+          <button onClick={() => setChecked(new Set())}
+            className="ml-auto px-3 py-2 rounded-lg text-xs font-semibold text-gray-500 border border-gray-200 hover:border-red-300 hover:text-red-500 bg-white transition-all">
+            Reset
+          </button>
+        </div>
+
+        {tab === "protocol" && (
+          <div className="space-y-3">
+            {teeProtocol.map((section, si) => {
+              const sectionChecked = section.items.filter(i => checked.has(i.id)).length;
+              const isExpanded = expandedView === si;
+              const posColor = positionColors[section.position] || "#189aa1";
+              return (
+                <div key={si} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                  <button
+                    className="w-full flex items-center gap-3 px-5 py-4 hover:bg-[#f0fbfc] transition-all"
+                    onClick={() => setExpandedView(isExpanded ? null : si)}>
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                      style={{ background: sectionChecked === section.items.length ? "#16a34a" : posColor }}>
+                      {sectionChecked === section.items.length ? "✓" : si + 1}
+                    </div>
+                    <div className="flex-1 text-left">
+                      <div className="font-bold text-sm text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
+                        {section.view}
+                      </div>
+                      <div className="flex items-center gap-3 mt-0.5">
+                        <span className="text-xs px-2 py-0.5 rounded-full text-white font-medium" style={{ background: posColor }}>
+                          {section.position}
+                        </span>
+                        <span className="text-xs text-gray-400">Angle: {section.angle} | Depth: {section.depth}</span>
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-400 mr-2">{sectionChecked}/{section.items.length}</div>
+                    {isExpanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                  </button>
+
+                  {isExpanded && (
+                    <div className="border-t border-gray-100">
+                      {section.clinicalUse && (
+                        <div className="px-5 py-2 bg-[#f0fbfc] border-b border-[#189aa1]/10 flex items-start gap-2">
+                          <Eye className="w-3.5 h-3.5 text-[#189aa1] flex-shrink-0 mt-0.5" />
+                          <span className="text-xs text-[#189aa1] font-medium">{section.clinicalUse}</span>
+                        </div>
+                      )}
+                      {section.items.map((item) => (
+                        <div key={item.id}
+                          className={`flex items-start gap-3 px-5 py-3 border-b border-gray-50 last:border-0 cursor-pointer hover:bg-[#f0fbfc] transition-all ${
+                            checked.has(item.id) ? "bg-green-50/50" : ""
+                          }`}
+                          onClick={() => toggleCheck(item.id)}>
+                          {checked.has(item.id)
+                            ? <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                            : <Circle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${item.critical ? "text-amber-400" : "text-gray-300"}`} />
+                          }
+                          <div className="flex-1 min-w-0">
+                            <div className={`text-sm font-medium ${checked.has(item.id) ? "text-gray-400 line-through" : "text-gray-700"}`}>
+                              {item.label}
+                              {item.angle && <span className="ml-2 text-xs text-gray-400 font-normal">{item.angle}</span>}
+                              {item.critical && !checked.has(item.id) && (
+                                <span className="ml-2 text-xs font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">Critical</span>
+                              )}
+                            </div>
+                            {item.detail && <div className="text-xs text-gray-400 mt-0.5">{item.detail}</div>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {tab === "applications" && (
+          <div className="space-y-3">
+            {clinicalApps.map((app, ai) => (
+              <div key={ai} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                <button
+                  className="w-full flex items-center gap-3 px-5 py-4 hover:bg-[#f0fbfc] transition-all"
+                  onClick={() => setExpandedApp(expandedApp === ai ? null : ai)}>
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                    style={{ background: "#189aa1" }}>
+                    {ai + 1}
+                  </div>
+                  <span className="font-bold text-sm text-gray-800 flex-1 text-left" style={{ fontFamily: "Merriweather, serif" }}>
+                    {app.indication}
+                  </span>
+                  {expandedApp === ai ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                </button>
+                {expandedApp === ai && (
+                  <div className="border-t border-gray-100 p-5 space-y-4">
+                    <div>
+                      <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Key Views</div>
+                      <div className="flex flex-wrap gap-2">
+                        {app.keyViews.map((v, i) => (
+                          <span key={i} className="px-2 py-1 rounded-lg text-xs font-medium text-white" style={{ background: "#189aa1" }}>{v}</span>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Focus Points</div>
+                      <p className="text-sm text-gray-600">{app.focus}</p>
+                    </div>
+                    {app.carpentier.length > 0 && (
+                      <div>
+                        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Carpentier Classification (MV)</div>
+                        <ul className="space-y-1">
+                          {app.carpentier.map((c, i) => (
+                            <li key={i} className="flex items-start gap-2 text-xs text-gray-600 p-2 rounded-lg bg-[#f0fbfc]">
+                              <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                                style={{ background: "#189aa1" }}>{i + 1}</span>
+                              {c}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </Layout>
+  );
+}
