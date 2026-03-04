@@ -76,9 +76,15 @@ function generateWiggers(p: Params, N = 200) {
   const t_mvo = t_avc + isocRel;
   const t_end = 1.0;
 
+  // LAP baseline: mean LAP ~ 0.7 × LVEDP (preload-driven)
+  const lap_mean = Math.max(4, edp * 0.75);
+  // a-wave peak ~ 1.4× mean LAP; v-wave peak ~ 1.6× mean LAP
+  const lap_a_peak = lap_mean * 1.45;
+  const lap_v_peak = lap_mean * 1.65;
+
   const data: {
     t: number; time: number;
-    lvp: number; aop: number; lvv: number; ecg: number;
+    lvp: number; aop: number; lvv: number; ecg: number; lap: number;
   }[] = [];
 
   for (let i = 0; i < N; i++) {
@@ -187,6 +193,53 @@ function generateWiggers(p: Params, N = 200) {
     const T = 0.35 * Math.exp(-0.5 * Math.pow((t - t_center) / t_w, 2));
     ecg = P + Q + R + S + T;
 
+    // ---- LAP (Left Atrial Pressure) ----
+    // Waveform: a-wave (atrial contraction, just before MVC at t~0.88-0.0)
+    //           c-wave (mitral valve bulge at MVC)
+    //           x-descent (atrial relaxation, during isovolumic contraction)
+    //           v-wave (venous filling during systole, peaks near AVC)
+    //           y-descent (rapid emptying after MVO)
+    //           diastasis (slow filling phase)
+    let lap = lap_mean;
+
+    // a-wave: centered at P-wave (~0.88 of cycle), width ~0.06
+    const a_center = 0.90;  // slightly after P wave
+    const a_w = 0.05;
+    const a_wave = (lap_a_peak - lap_mean) * Math.exp(-0.5 * Math.pow((t - a_center) / a_w, 2));
+    // Also handle wrap-around: a-wave also appears near t=0 (beginning of cycle)
+    const a_wave2 = (lap_a_peak - lap_mean) * Math.exp(-0.5 * Math.pow((t - (a_center - 1.0)) / a_w, 2));
+
+    // c-wave: small bump at MVC (t_mvc = 0.0)
+    const c_center = t_mvc + 0.01;
+    const c_w = 0.015;
+    const c_wave = (lap_mean * 0.15) * Math.exp(-0.5 * Math.pow((t - c_center) / c_w, 2));
+
+    // x-descent: fall during IVCT and early ejection (t_mvc to ~t_avo+0.05)
+    const x_start = t_mvc + 0.01;
+    const x_end = t_avo + 0.08;
+    let x_descent = 0;
+    if (t >= x_start && t <= x_end) {
+      const xf = (t - x_start) / (x_end - x_start);
+      x_descent = -(lap_mean * 0.35) * Math.sin(xf * Math.PI);
+    }
+
+    // v-wave: rises during systole (AVO to AVC), peaks near AVC
+    const v_center = t_avc - 0.02;
+    const v_w = 0.10;
+    const v_wave = (lap_v_peak - lap_mean) * Math.exp(-0.5 * Math.pow((t - v_center) / v_w, 2));
+
+    // y-descent: rapid fall after MVO
+    const y_start = t_mvo;
+    const y_end = t_mvo + 0.12;
+    let y_descent = 0;
+    if (t >= y_start && t <= y_end) {
+      const yf = (t - y_start) / (y_end - y_start);
+      y_descent = -(lap_mean * 0.45) * Math.sin(yf * Math.PI);
+    }
+
+    lap = lap_mean + a_wave + a_wave2 + c_wave + x_descent + v_wave + y_descent;
+    lap = Math.max(1, parseFloat(lap.toFixed(1)));
+
     data.push({
       t: parseFloat(t.toFixed(4)),
       time,
@@ -194,6 +247,7 @@ function generateWiggers(p: Params, N = 200) {
       aop: parseFloat(aop.toFixed(1)),
       lvv: parseFloat(lvv.toFixed(1)),
       ecg: parseFloat(ecg.toFixed(3)),
+      lap,
     });
   }
 
@@ -289,7 +343,7 @@ function WiggersTooltip({ active, payload }: { active?: boolean; payload?: any[]
       {payload.map((p: any) => (
         <div key={p.dataKey} style={{ color: p.color }}>
           {p.name}: {typeof p.value === "number" ? p.value.toFixed(1) : p.value}
-          {p.dataKey === "lvp" || p.dataKey === "aop" ? " mmHg" : p.dataKey === "lvv" ? " mL" : ""}
+          {p.dataKey === "lvp" || p.dataKey === "aop" || p.dataKey === "lap" ? " mmHg" : p.dataKey === "lvv" ? " mL" : ""}
         </div>
       ))}
     </div>
@@ -522,9 +576,10 @@ export default function HemodynamicsLab() {
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-bold text-gray-700 text-sm" style={{ fontFamily: "Merriweather, serif" }}>Pressure (mmHg)</h3>
-                <div className="flex items-center gap-4 text-xs">
+                <div className="flex flex-wrap items-center gap-3 text-xs">
                   <span className="flex items-center gap-1"><span className="w-3 h-0.5 inline-block bg-[#189aa1]"></span> LV Pressure</span>
                   <span className="flex items-center gap-1"><span className="w-3 h-0.5 inline-block bg-[#dc2626]"></span> Aortic Pressure</span>
+                  <span className="flex items-center gap-1"><span className="w-3 h-0.5 inline-block bg-[#9333ea]"></span> LA Pressure</span>
                 </div>
               </div>
               <ResponsiveContainer width="100%" height={160}>
@@ -539,6 +594,7 @@ export default function HemodynamicsLab() {
                   <ReferenceLine x={events.mvo} stroke="#22c55e" strokeDasharray="4 3" strokeWidth={1.5} label={{ value: "MVO", position: "top", fontSize: 8, fill: "#22c55e" }} />
                   <Area type="monotone" dataKey="aop" stroke="#dc2626" fill="#fecaca" fillOpacity={0.3} strokeWidth={2} dot={false} name="Aortic Pressure" />
                   <Line type="monotone" dataKey="lvp" stroke="#189aa1" strokeWidth={2.5} dot={false} name="LV Pressure" />
+                  <Line type="monotone" dataKey="lap" stroke="#9333ea" strokeWidth={1.8} strokeDasharray="5 2" dot={false} name="LA Pressure" />
                 </ComposedChart>
               </ResponsiveContainer>
             </div>
