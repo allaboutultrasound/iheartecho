@@ -210,10 +210,37 @@ function generateWiggers(p: Params, N = 200) {
 }
 
 // ---- PV LOOP GENERATOR ----
-
-function generatePVLoop(p: Params, N = 120) {
+// Also returns key corner points for annotation
+function generatePVLoop(p: Params, N = 200) {
   const { data } = generateWiggers(p, N);
-  return data.map(d => ({ volume: parseFloat(d.lvv.toFixed(1)), pressure: parseFloat(d.lvp.toFixed(1)) }));
+  const points = data.map(d => ({ volume: parseFloat(d.lvv.toFixed(1)), pressure: parseFloat(d.lvp.toFixed(1)) }));
+
+  // Find the 4 corner points by phase index
+  const h = computeHemodynamics(p);
+  const isocVol = 0.05;
+  const ejection = 0.30;
+  const isocRel = 0.05;
+  const t_mvc = 0.0;
+  const t_avo = t_mvc + isocVol;
+  const t_avc = t_avo + ejection;
+  const t_mvo = t_avc + isocRel;
+
+  const idx = (t: number) => Math.min(N - 1, Math.round(t * (N - 1)));
+  const corners = {
+    mvc: points[idx(t_mvc)],
+    avo: points[idx(t_avo)],
+    avc: points[idx(t_avc)],
+    mvo: points[idx(t_mvo)],
+    // IVCT midpoint
+    ivct_mid: points[idx((t_mvc + t_avo) / 2)],
+    // IVRT midpoint
+    ivrt_mid: points[idx((t_avc + t_mvo) / 2)],
+    // Systole midpoint (mid ejection)
+    sys_mid: points[idx((t_avo + t_avc) / 2)],
+    // Diastole midpoint (mid filling)
+    dia_mid: points[idx((t_mvo + 1.0) / 2)],
+  };
+  return { points, corners, hemo: h };
 }
 
 // ---- SLIDER CONTROL ----
@@ -313,7 +340,9 @@ export default function HemodynamicsLab() {
   const set = (key: keyof Params) => (v: number) => setParams(p => ({ ...p, [key]: v }));
 
   const { data: wiggersData, events, hemo } = useMemo(() => generateWiggers(params), [params]);
-  const pvData = useMemo(() => generatePVLoop(params), [params]);
+  const pvLoopResult = useMemo(() => generatePVLoop(params), [params]);
+  const pvData = pvLoopResult.points;
+  const pvCorners = pvLoopResult.corners;
   const context = getClinicalContext(params);
 
   const rr_ms = Math.round((60 / params.heartRate) * 1000);
@@ -437,19 +466,56 @@ export default function HemodynamicsLab() {
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-bold text-gray-700 text-sm" style={{ fontFamily: "Merriweather, serif" }}>ECG</h3>
-                <span className="text-xs text-gray-400">Lead II (simulated)</span>
+                <div className="flex items-center gap-3 text-xs text-gray-400">
+                  <span>Lead II (simulated)</span>
+                  <span className="flex items-center gap-1"><b className="text-purple-600">P</b> wave</span>
+                  <span className="flex items-center gap-1"><b className="text-red-600">QRS</b> complex</span>
+                  <span className="flex items-center gap-1"><b className="text-orange-500">T</b> wave</span>
+                </div>
               </div>
-              <ResponsiveContainer width="100%" height={80}>
-                <ComposedChart data={wiggersData} margin={{ top: 4, right: 10, bottom: 0, left: 30 }}>
+              <ResponsiveContainer width="100%" height={100}>
+                <ComposedChart data={wiggersData} margin={{ top: 16, right: 10, bottom: 0, left: 30 }}>
                   <XAxis dataKey="time" hide />
-                  <YAxis domain={[-0.3, 1.2]} hide />
+                  <YAxis domain={[-0.4, 1.4]} hide />
+                  {/* Valve event lines */}
                   <ReferenceLine x={events.mvc} stroke="#3b82f6" strokeDasharray="4 3" strokeWidth={1.5} />
                   <ReferenceLine x={events.avo} stroke="#ef4444" strokeWidth={1.5} />
                   <ReferenceLine x={events.avc} stroke="#f97316" strokeWidth={1.5} />
                   <ReferenceLine x={events.mvo} stroke="#22c55e" strokeDasharray="4 3" strokeWidth={1.5} />
-                  <Line type="monotone" dataKey="ecg" stroke="#1e293b" strokeWidth={1.5} dot={false} name="ECG" />
+                  {/* P wave label — at ~88% of RR */}
+                  <ReferenceLine
+                    x={Math.round(0.88 * rr_ms)}
+                    stroke="transparent"
+                    label={{ value: "P", position: "top", fontSize: 9, fill: "#9333ea", fontWeight: 700 }}
+                  />
+                  {/* QRS label — at ~2% of RR */}
+                  <ReferenceLine
+                    x={Math.round(0.02 * rr_ms)}
+                    stroke="transparent"
+                    label={{ value: "QRS", position: "top", fontSize: 9, fill: "#dc2626", fontWeight: 700 }}
+                  />
+                  {/* T wave label — at ~18% of RR */}
+                  <ReferenceLine
+                    x={Math.round(0.18 * rr_ms)}
+                    stroke="transparent"
+                    label={{ value: "T", position: "top", fontSize: 9, fill: "#f97316", fontWeight: 700 }}
+                  />
+                  {/* PR interval bracket */}
+                  <ReferenceLine
+                    x={Math.round(0.93 * rr_ms)}
+                    stroke="#9333ea" strokeDasharray="2 3" strokeWidth={0.8}
+                  />
+                  <Line type="monotone" dataKey="ecg" stroke="#1e293b" strokeWidth={1.8} dot={false} name="ECG" />
                 </ComposedChart>
               </ResponsiveContainer>
+              {/* ECG interval summary */}
+              <div className="mt-1 flex flex-wrap gap-3 text-[10px] text-gray-500">
+                <span><b className="text-purple-600">PR:</b> {Math.round((0.02 - 0.88 + 1) * rr_ms)} ms</span>
+                <span><b className="text-red-600">QRS:</b> ~{Math.round(0.03 * rr_ms)} ms</span>
+                <span><b className="text-orange-500">QT:</b> {Math.round(0.40 * rr_ms)} ms</span>
+                <span><b className="text-gray-500">RR:</b> {rr_ms} ms</span>
+                <span><b className="text-gray-500">HR:</b> {params.heartRate} bpm</span>
+              </div>
             </div>
 
             {/* LV Pressure + Aortic Pressure */}
@@ -511,17 +577,94 @@ export default function HemodynamicsLab() {
                   <span>Emax: <b style={{ color: "#189aa1" }}>{hemo.emax.toFixed(2)} mmHg/mL</b></span>
                 </div>
               </div>
-              <ResponsiveContainer width="100%" height={220}>
-                <ComposedChart data={pvData} margin={{ top: 4, right: 10, bottom: 16, left: 30 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="volume" type="number" domain={["auto", "auto"]} tick={{ fontSize: 9 }}
-                    label={{ value: "Volume (mL)", position: "insideBottom", offset: -6, fontSize: 9 }} />
-                  <YAxis tick={{ fontSize: 9 }}
-                    label={{ value: "Pressure (mmHg)", angle: -90, position: "insideLeft", fontSize: 9, offset: 10 }} />
-                  <Tooltip formatter={(v: number) => [`${v.toFixed(1)}`, ""]} />
-                  <Area type="monotone" dataKey="pressure" stroke="#189aa1" fill="#e0f9fa" fillOpacity={0.4} strokeWidth={2.5} dot={false} name="PV Loop" />
-                </ComposedChart>
-              </ResponsiveContainer>
+              {/* PV Loop phase legend */}
+              <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2 text-[10px]">
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm inline-block" style={{ background: "#3b82f620" }}></span><span className="text-blue-600 font-semibold">IVCT</span></span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm inline-block" style={{ background: "#ef444420" }}></span><span className="text-red-600 font-semibold">Systole / Ejection</span></span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm inline-block" style={{ background: "#f9731620" }}></span><span className="text-orange-600 font-semibold">IVRT</span></span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm inline-block" style={{ background: "#22c55e20" }}></span><span className="text-green-600 font-semibold">Diastole / Filling</span></span>
+              </div>
+              <div className="relative">
+                <ResponsiveContainer width="100%" height={260}>
+                  <ComposedChart data={pvData} margin={{ top: 20, right: 50, bottom: 20, left: 40 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis dataKey="volume" type="number" domain={["auto", "auto"]} tick={{ fontSize: 9 }}
+                      label={{ value: "Volume (mL)", position: "insideBottom", offset: -8, fontSize: 9 }} />
+                    <YAxis tick={{ fontSize: 9 }}
+                      label={{ value: "Pressure (mmHg)", angle: -90, position: "insideLeft", fontSize: 9, offset: 10 }} />
+                    <Tooltip formatter={(v: number) => [`${v.toFixed(1)}`, ""]} />
+                    {/* Corner marker dots */}
+                    {pvCorners.mvc && (
+                      <ReferenceLine x={pvCorners.mvc.volume} stroke="#3b82f6" strokeDasharray="3 3" strokeWidth={1}
+                        label={{ value: "MVC", position: "insideTopLeft", fontSize: 8, fill: "#3b82f6", fontWeight: 700 }} />
+                    )}
+                    {pvCorners.avo && (
+                      <ReferenceLine x={pvCorners.avo.volume} stroke="#ef4444" strokeWidth={1.5}
+                        label={{ value: "AVO", position: "insideTopLeft", fontSize: 8, fill: "#ef4444", fontWeight: 700 }} />
+                    )}
+                    {pvCorners.avc && (
+                      <ReferenceLine x={pvCorners.avc.volume} stroke="#f97316" strokeWidth={1.5}
+                        label={{ value: "AVC", position: "insideTopRight", fontSize: 8, fill: "#f97316", fontWeight: 700 }} />
+                    )}
+                    {pvCorners.mvo && (
+                      <ReferenceLine x={pvCorners.mvo.volume} stroke="#22c55e" strokeDasharray="3 3" strokeWidth={1}
+                        label={{ value: "MVO", position: "insideTopRight", fontSize: 8, fill: "#22c55e", fontWeight: 700 }} />
+                    )}
+                    {/* Pressure reference lines for IVCT and IVRT */}
+                    {pvCorners.ivct_mid && (
+                      <ReferenceLine y={pvCorners.ivct_mid.pressure} stroke="#3b82f6" strokeDasharray="2 4" strokeWidth={0.8}
+                        label={{ value: "IVCT", position: "right", fontSize: 8, fill: "#3b82f6" }} />
+                    )}
+                    {pvCorners.ivrt_mid && (
+                      <ReferenceLine y={pvCorners.ivrt_mid.pressure} stroke="#f97316" strokeDasharray="2 4" strokeWidth={0.8}
+                        label={{ value: "IVRT", position: "right", fontSize: 8, fill: "#f97316" }} />
+                    )}
+                    {/* EDV and ESV reference lines */}
+                    <ReferenceLine x={Math.round(hemo.edv)} stroke="#94a3b8" strokeDasharray="4 3" strokeWidth={1}
+                      label={{ value: `EDV ${Math.round(hemo.edv)}`, position: "insideBottomRight", fontSize: 8, fill: "#64748b" }} />
+                    <ReferenceLine x={Math.round(hemo.esv)} stroke="#94a3b8" strokeDasharray="4 3" strokeWidth={1}
+                      label={{ value: `ESV ${Math.round(hemo.esv)}`, position: "insideBottomLeft", fontSize: 8, fill: "#64748b" }} />
+                    {/* ESP reference */}
+                    <ReferenceLine y={Math.round(hemo.esp)} stroke="#189aa1" strokeDasharray="3 3" strokeWidth={0.8}
+                      label={{ value: `ESP ${Math.round(hemo.esp)} mmHg`, position: "right", fontSize: 8, fill: "#189aa1" }} />
+                    {/* EDP reference */}
+                    <ReferenceLine y={Math.round(hemo.edp)} stroke="#0891b2" strokeDasharray="3 3" strokeWidth={0.8}
+                      label={{ value: `EDP ${Math.round(hemo.edp)} mmHg`, position: "right", fontSize: 8, fill: "#0891b2" }} />
+                    <Area type="monotone" dataKey="pressure" stroke="#189aa1" fill="#e0f9fa" fillOpacity={0.4} strokeWidth={2.5} dot={false} name="PV Loop" />
+                  </ComposedChart>
+                </ResponsiveContainer>
+                {/* Phase labels overlaid on the loop quadrants */}
+                <div className="absolute inset-0 pointer-events-none" style={{ top: 20, left: 40, right: 50, bottom: 20 }}>
+                  {/* These are positioned conceptually — actual pixel positions are approximated */}
+                  <div className="absolute text-[9px] font-bold text-blue-500 opacity-70" style={{ left: "5%", top: "15%" }}>IVCT</div>
+                  <div className="absolute text-[9px] font-bold text-red-500 opacity-70" style={{ left: "40%", top: "5%" }}>SYSTOLE</div>
+                  <div className="absolute text-[9px] font-bold text-orange-500 opacity-70" style={{ right: "5%", top: "40%" }}>IVRT</div>
+                  <div className="absolute text-[9px] font-bold text-green-600 opacity-70" style={{ left: "30%", bottom: "10%" }}>DIASTOLE</div>
+                </div>
+              </div>
+              {/* PV Loop annotation summary */}
+              <div className="mt-2 grid grid-cols-4 gap-2 text-[10px]">
+                <div className="p-1.5 rounded bg-blue-50 border border-blue-100 text-center">
+                  <div className="font-bold text-blue-600">IVCT</div>
+                  <div className="text-gray-500">MVC → AVO</div>
+                  <div className="font-mono text-blue-700">{Math.round((0.05) * (60 / params.heartRate) * 1000)} ms</div>
+                </div>
+                <div className="p-1.5 rounded bg-red-50 border border-red-100 text-center">
+                  <div className="font-bold text-red-600">Ejection</div>
+                  <div className="text-gray-500">AVO → AVC</div>
+                  <div className="font-mono text-red-700">{Math.round((0.30) * (60 / params.heartRate) * 1000)} ms</div>
+                </div>
+                <div className="p-1.5 rounded bg-orange-50 border border-orange-100 text-center">
+                  <div className="font-bold text-orange-600">IVRT</div>
+                  <div className="text-gray-500">AVC → MVO</div>
+                  <div className="font-mono text-orange-700">{Math.round((0.05) * (60 / params.heartRate) * 1000)} ms</div>
+                </div>
+                <div className="p-1.5 rounded bg-green-50 border border-green-100 text-center">
+                  <div className="font-bold text-green-600">Filling</div>
+                  <div className="text-gray-500">MVO → MVC</div>
+                  <div className="font-mono text-green-700">{Math.round((0.60) * (60 / params.heartRate) * 1000)} ms</div>
+                </div>
+              </div>
             </div>
 
           </div>
