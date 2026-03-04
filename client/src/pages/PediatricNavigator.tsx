@@ -427,8 +427,222 @@ function SegmentalAnalysis() {
   );
 }
 
-// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
-type TabId = "findings" | "zscore" | "qpqs" | "segmental";
+// // ─── NEONATAL HEMODYNAMICS COMPONENT ─────────────────────────────────────────────────────
+function NeonatalHemodynamics() {
+  const [trVmax, setTrVmax] = useState("");
+  const [rap, setRap] = useState("5");
+  const [prVmax, setPrVmax] = useState("");
+  const [pdaDir, setPdaDir] = useState<"left-to-right" | "right-to-left" | "bidirectional" | "">("")
+  const [ivcDil, setIvcDil] = useState(false);
+  const [raaDil, setRaaDil] = useState(false);
+
+  // RVSP from TR Vmax (Bernoulli)
+  const rvsp = trVmax ? (4 * Math.pow(parseFloat(trVmax), 2) + parseFloat(rap || "5")).toFixed(1) : "";
+  const rvspNum = rvsp ? parseFloat(rvsp) : 0;
+
+  // Neonatal-specific RVSP interpretation
+  // In transitional circulation (0–48h), RVSP may equal systemic — normal
+  // After 48h: RVSP >2/3 systemic = elevated
+  const getRvspInterp = () => {
+    if (!rvsp) return null;
+    if (rvspNum >= 60) return { label: "Severely elevated (≥60 mmHg) — Likely PPHN or CHD", color: "#dc2626", note: "Evaluate for PPHN, CHD with RV outflow obstruction, or parenchymal lung disease" };
+    if (rvspNum >= 40) return { label: "Moderately elevated (40–59 mmHg) — Persistent PH", color: "#ea580c", note: "Consider transitional circulation if <48h of life. If >48h: evaluate for PPHN" };
+    if (rvspNum >= 25) return { label: "Mildly elevated (25–39 mmHg) — Monitor", color: "#d97706", note: "May be normal in first 24–48h of life (transitional). Recheck at 48–72h" };
+    return { label: "Normal (<25 mmHg) — Pulmonary pressures normal", color: "#16a34a", note: "Normal neonatal pulmonary vascular resistance" };
+  };
+  const rvspInterp = getRvspInterp();
+
+  // PR end-diastolic velocity → estimate PA diastolic pressure
+  const padp = prVmax ? (4 * Math.pow(parseFloat(prVmax), 2) + parseFloat(rap || "5")).toFixed(1) : "";
+
+  // PDA direction interpretation
+  const pdaInterp = pdaDir === "left-to-right"
+    ? { label: "L→R shunt: Systemic > Pulmonary pressure (normal direction)", color: "#16a34a" }
+    : pdaDir === "right-to-left"
+    ? { label: "R→L shunt: Pulmonary > Systemic pressure — PPHN / Critical CHD", color: "#dc2626" }
+    : pdaDir === "bidirectional"
+    ? { label: "Bidirectional: Near-equal pressures — Transitional or PPHN", color: "#d97706" }
+    : null;
+
+  // Supporting features
+  const supportingFeatures: string[] = [];
+  if (ivcDil) supportingFeatures.push("IVC dilation → Elevated RAP / RV failure");
+  if (raaDil) supportingFeatures.push("RA dilation → Chronic RV pressure/volume overload");
+
+  return (
+    <div className="space-y-5">
+      {/* PPHN / Transitional Circulation info */}
+      <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-start gap-2">
+        <AlertCircle className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+        <div className="text-xs text-blue-700">
+          <strong>Transitional Circulation (0–48h):</strong> RVSP may equal systemic pressure — this is normal in the first 24–48h of life.
+          Persistent pulmonary hypertension of the newborn (PPHN) is diagnosed when RVSP remains elevated (&gt;2/3 systemic) beyond 48h
+          or when there is R→L shunting at the PDA or PFO.
+        </div>
+      </div>
+
+      {/* RVSP Calculator */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="teal-header px-5 py-3">
+          <h3 className="font-bold text-sm text-white" style={{ fontFamily: "Merriweather, serif" }}>RVSP from TR Vmax (Bernoulli)</h3>
+        </div>
+        <div className="p-5 space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">TR Vmax <span className="text-gray-400">(m/s)</span></label>
+              <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#189aa1]/30">
+                <input type="number" value={trVmax} onChange={e => setTrVmax(e.target.value)} placeholder="e.g. 3.2"
+                  className="flex-1 px-3 py-2 text-sm outline-none bg-white" style={{ fontFamily: "JetBrains Mono, monospace" }} />
+                <span className="px-3 py-2 text-xs text-gray-400 bg-gray-50 border-l border-gray-200">m/s</span>
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">RAP Estimate <span className="text-gray-400">(mmHg)</span></label>
+              <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#189aa1]/30">
+                <input type="number" value={rap} onChange={e => setRap(e.target.value)} placeholder="5"
+                  className="flex-1 px-3 py-2 text-sm outline-none bg-white" style={{ fontFamily: "JetBrains Mono, monospace" }} />
+                <span className="px-3 py-2 text-xs text-gray-400 bg-gray-50 border-l border-gray-200">mmHg</span>
+              </div>
+            </div>
+          </div>
+          {rvsp && rvspInterp && (
+            <div className="rounded-lg p-4 border" style={{ borderColor: rvspInterp.color + "40", background: rvspInterp.color + "10" }}>
+              <div className="flex items-center gap-3 mb-1">
+                <span className="text-sm text-gray-600">RVSP =</span>
+                <span className="text-3xl font-black" style={{ fontFamily: "JetBrains Mono, monospace", color: rvspInterp.color }}>{rvsp}</span>
+                <span className="text-sm text-gray-500">mmHg</span>
+              </div>
+              <div className="text-sm font-bold mb-1" style={{ color: rvspInterp.color }}>{rvspInterp.label}</div>
+              <div className="text-xs text-gray-500">{rvspInterp.note}</div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* PA Diastolic Pressure from PR */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="teal-header px-5 py-3">
+          <h3 className="font-bold text-sm text-white" style={{ fontFamily: "Merriweather, serif" }}>PA Diastolic Pressure from PR End-Diastolic Velocity</h3>
+        </div>
+        <div className="p-5 space-y-3">
+          <div className="max-w-xs">
+            <label className="block text-xs font-semibold text-gray-600 mb-1">PR End-Diastolic Velocity <span className="text-gray-400">(m/s)</span></label>
+            <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#189aa1]/30">
+              <input type="number" value={prVmax} onChange={e => setPrVmax(e.target.value)} placeholder="e.g. 1.2"
+                className="flex-1 px-3 py-2 text-sm outline-none bg-white" style={{ fontFamily: "JetBrains Mono, monospace" }} />
+              <span className="px-3 py-2 text-xs text-gray-400 bg-gray-50 border-l border-gray-200">m/s</span>
+            </div>
+          </div>
+          {padp && (
+            <div className="rounded-lg p-3 bg-[#f0fbfc] border border-[#189aa1]/20">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">PA Diastolic Pressure =</span>
+                <span className="text-2xl font-black text-[#189aa1]" style={{ fontFamily: "JetBrains Mono, monospace" }}>{padp}</span>
+                <span className="text-sm text-gray-500">mmHg</span>
+              </div>
+              <div className="text-xs text-gray-400 mt-1">PADP = 4 × PR end-diastolic velocity² + RAP | Normal neonatal PADP: &lt;15 mmHg</div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* PDA Direction */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="teal-header px-5 py-3">
+          <h3 className="font-bold text-sm text-white" style={{ fontFamily: "Merriweather, serif" }}>PDA Shunt Direction (Hemodynamic Significance)</h3>
+        </div>
+        <div className="p-5 space-y-3">
+          <div className="flex flex-wrap gap-2">
+            {(["left-to-right", "right-to-left", "bidirectional"] as const).map(d => (
+              <button key={d} onClick={() => setPdaDir(pdaDir === d ? "" : d)}
+                className={`px-3 py-2 rounded-lg text-xs font-bold capitalize transition-all ${
+                  pdaDir === d ? "text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+                style={pdaDir === d ? { background: "#189aa1" } : {}}>
+                {d === "left-to-right" ? "L→R (Normal)" : d === "right-to-left" ? "R→L (PPHN)" : "Bidirectional"}
+              </button>
+            ))}
+          </div>
+          {pdaInterp && (
+            <div className="rounded-lg p-3 border" style={{ borderColor: pdaInterp.color + "40", background: pdaInterp.color + "10" }}>
+              <div className="text-sm font-bold" style={{ color: pdaInterp.color }}>{pdaInterp.label}</div>
+            </div>
+          )}
+          <div className="text-xs text-gray-500 bg-gray-50 rounded p-2">
+            <strong>Clinical note:</strong> R→L PDA shunting = pulmonary pressure exceeds systemic — indicates PPHN or critical CHD (e.g., d-TGA, HLHS, critical PS/AS).
+            PGE1 should be considered to maintain ductal patency in duct-dependent lesions.
+          </div>
+        </div>
+      </div>
+
+      {/* Supporting Features */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="teal-header px-5 py-3">
+          <h3 className="font-bold text-sm text-white" style={{ fontFamily: "Merriweather, serif" }}>Supporting Hemodynamic Features</h3>
+        </div>
+        <div className="p-5 space-y-3">
+          <div className="flex flex-wrap gap-4">
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-600 cursor-pointer">
+              <input type="checkbox" checked={ivcDil} onChange={e => setIvcDil(e.target.checked)} className="rounded" />
+              IVC dilated (&gt;9 mm in neonate)
+            </label>
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-600 cursor-pointer">
+              <input type="checkbox" checked={raaDil} onChange={e => setRaaDil(e.target.checked)} className="rounded" />
+              RA dilation present
+            </label>
+          </div>
+          {supportingFeatures.length > 0 && (
+            <div className="space-y-1">
+              {supportingFeatures.map((f, i) => (
+                <div key={i} className="text-xs text-amber-700 bg-amber-50 rounded px-2 py-1.5">{f}</div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* PPHN Reference Table */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="px-5 py-3 border-b border-gray-100">
+          <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>Neonatal Pulmonary Hypertension Reference</h3>
+        </div>
+        <div className="p-4 overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="bg-[#f0fbfc]">
+                <th className="text-left px-3 py-2 font-bold text-[#189aa1]">Parameter</th>
+                <th className="text-left px-3 py-2 font-bold text-green-600">Normal Neonate</th>
+                <th className="text-left px-3 py-2 font-bold text-amber-600">Transitional (0–48h)</th>
+                <th className="text-left px-3 py-2 font-bold text-red-600">PPHN</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                ["RVSP", "<25 mmHg", "Up to systemic", "≥60 mmHg or >2/3 systemic"],
+                ["TR Vmax", "<2.5 m/s", "Up to 3.5 m/s", ">3.5 m/s"],
+                ["PA Diastolic", "<15 mmHg", "Variable", ">25 mmHg"],
+                ["PDA Direction", "L→R", "Bidirectional", "R→L or bidirectional"],
+                ["PFO Direction", "L→R (small)", "Bidirectional", "R→L"],
+                ["IVC", "Normal (<9 mm)", "Variable", "Dilated"],
+                ["RV Function", "Normal", "Normal", "Reduced (TAPSE, FAC)"],
+              ].map(([param, normal, trans, pphn], i) => (
+                <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                  <td className="px-3 py-2 font-semibold text-gray-700">{param}</td>
+                  <td className="px-3 py-2 text-green-700">{normal}</td>
+                  <td className="px-3 py-2 text-amber-700">{trans}</td>
+                  <td className="px-3 py-2 text-red-700">{pphn}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── MAIN COMPONENT ─────────────────────────────────────────────────────
+type TabId = "findings" | "zscore" | "qpqs" | "segmental" | "neonatal";
 
 export default function PediatricNavigator() {
   const [tab, setTab] = useState<TabId>("findings");
@@ -442,6 +656,7 @@ export default function PediatricNavigator() {
     { id: "zscore" as TabId, label: "Z-Score Calculator" },
     { id: "qpqs" as TabId, label: "Qp/Qs Shunt" },
     { id: "segmental" as TabId, label: "Segmental Analysis" },
+    { id: "neonatal" as TabId, label: "Neonatal Hemodynamics" },
   ];
 
   return (
@@ -612,6 +827,9 @@ export default function PediatricNavigator() {
             </div>
           </div>
         )}
+
+        {/* Neonatal Hemodynamics Tab */}
+        {tab === "neonatal" && <NeonatalHemodynamics />}
 
         {/* Quick reference */}
         <div className="mt-6 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">

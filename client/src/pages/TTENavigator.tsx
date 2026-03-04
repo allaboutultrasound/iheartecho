@@ -6,7 +6,7 @@
 */
 import { useState } from "react";
 import Layout from "@/components/Layout";
-import { CheckCircle2, Circle, ChevronDown, ChevronUp, Info, Stethoscope } from "lucide-react";
+import { CheckCircle2, Circle, ChevronDown, ChevronUp, Info, Stethoscope, Printer } from "lucide-react";
 
 type ChecklistItem = { id: string; label: string; detail?: string; critical?: boolean };
 type ViewSection = { view: string; probe: string; items: ChecklistItem[] };
@@ -174,6 +174,35 @@ export default function TTENavigator() {
 
   const progress = Math.round((checked.size / totalItems) * 100);
 
+  const handleExport = () => {
+    const now = new Date().toLocaleString();
+    const lines: string[] = [
+      "=== iHeartEcho — Adult TTE Protocol Checklist ===",
+      `Generated: ${now}`,
+      `Progress: ${checked.size}/${totalItems} items (${progress}%) | Critical: ${checkedCritical}/${criticalItems}`,
+      "",
+    ];
+    tteProtocol.forEach(section => {
+      const sectionChecked = section.items.filter(i => checked.has(i.id)).length;
+      lines.push(`\n── ${section.view} (${sectionChecked}/${section.items.length}) ──`);
+      lines.push(`   Probe: ${section.probe}`);
+      section.items.forEach(item => {
+        const status = checked.has(item.id) ? "[✓]" : item.critical ? "[ ] ⚠ CRITICAL" : "[ ]";
+        lines.push(`   ${status} ${item.label}`);
+        if (item.detail && !checked.has(item.id)) lines.push(`        → ${item.detail}`);
+      });
+    });
+    lines.push("\n" + "=".repeat(50));
+    lines.push("Per ASE/ACC/AHA Guidelines | iHeartEcho Clinical Companion");
+    const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `TTE-Checklist-${new Date().toISOString().slice(0,10)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <Layout>
       <div className="container py-6">
@@ -214,10 +243,18 @@ export default function TTENavigator() {
               {t.label}
             </button>
           ))}
-          <button onClick={() => setChecked(new Set())}
-            className="ml-auto px-3 py-2 rounded-lg text-xs font-semibold text-gray-500 border border-gray-200 hover:border-red-300 hover:text-red-500 bg-white transition-all">
-            Reset
-          </button>
+          <div className="ml-auto flex gap-2">
+            <button onClick={handleExport}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-white transition-all"
+              style={{ background: "#189aa1" }}>
+              <Printer className="w-3.5 h-3.5" />
+              Export
+            </button>
+            <button onClick={() => setChecked(new Set())}
+              className="px-3 py-2 rounded-lg text-xs font-semibold text-gray-500 border border-gray-200 hover:border-red-300 hover:text-red-500 bg-white transition-all">
+              Reset
+            </button>
+          </div>
         </div>
 
         {tab === "protocol" && (

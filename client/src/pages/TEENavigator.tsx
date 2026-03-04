@@ -6,7 +6,7 @@
 */
 import { useState } from "react";
 import Layout from "@/components/Layout";
-import { CheckCircle2, Circle, ChevronDown, ChevronUp, AlertCircle, Eye } from "lucide-react";
+import { CheckCircle2, Circle, ChevronDown, ChevronUp, AlertCircle, Eye, Printer } from "lucide-react";
 
 type ChecklistItem = { id: string; label: string; detail?: string; critical?: boolean; angle?: string };
 type ViewSection = { view: string; position: string; angle: string; depth: string; items: ChecklistItem[]; clinicalUse?: string };
@@ -210,6 +210,35 @@ export default function TEENavigator() {
   const totalItems = teeProtocol.reduce((acc, v) => acc + v.items.length, 0);
   const progress = Math.round((checked.size / totalItems) * 100);
 
+  const handleExport = () => {
+    const now = new Date().toLocaleString();
+    const lines: string[] = [
+      "=== iHeartEcho — TEE Protocol Checklist ===",
+      `Generated: ${now}`,
+      `Progress: ${checked.size}/${totalItems} items (${progress}%)`,
+      "",
+    ];
+    teeProtocol.forEach(section => {
+      const sectionChecked = section.items.filter(i => checked.has(i.id)).length;
+      lines.push(`\n── ${section.view} [${section.position} | ${section.angle} | ${section.depth}] (${sectionChecked}/${section.items.length}) ──`);
+      if (section.clinicalUse) lines.push(`   Clinical use: ${section.clinicalUse}`);
+      section.items.forEach(item => {
+        const status = checked.has(item.id) ? "[✓]" : item.critical ? "[ ] ⚠ CRITICAL" : "[ ]";
+        lines.push(`   ${status} ${item.label}`);
+        if (item.detail && !checked.has(item.id)) lines.push(`        → ${item.detail}`);
+      });
+    });
+    lines.push("\n" + "=".repeat(50));
+    lines.push("Per ASE/SCA TEE Guidelines | iHeartEcho Clinical Companion");
+    const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `TEE-Checklist-${new Date().toISOString().slice(0,10)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const positionColors: Record<string, string> = {
     "Mid-esophageal": "#189aa1",
     "Mid-esophageal (upper)": "#0e7490",
@@ -261,10 +290,18 @@ export default function TEENavigator() {
               {t.label}
             </button>
           ))}
-          <button onClick={() => setChecked(new Set())}
-            className="ml-auto px-3 py-2 rounded-lg text-xs font-semibold text-gray-500 border border-gray-200 hover:border-red-300 hover:text-red-500 bg-white transition-all">
-            Reset
-          </button>
+          <div className="ml-auto flex gap-2">
+            <button onClick={handleExport}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-white transition-all"
+              style={{ background: "#189aa1" }}>
+              <Printer className="w-3.5 h-3.5" />
+              Export
+            </button>
+            <button onClick={() => setChecked(new Set())}
+              className="px-3 py-2 rounded-lg text-xs font-semibold text-gray-500 border border-gray-200 hover:border-red-300 hover:text-red-500 bg-white transition-all">
+              Reset
+            </button>
+          </div>
         </div>
 
         {tab === "protocol" && (

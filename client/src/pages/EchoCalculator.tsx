@@ -129,14 +129,22 @@ function ASCalculator() {
   );
 }
 
-// ─── MITRAL REGURGITATION (PISA) ─────────────────────────────────────────────
-// Per ASE 2021 VHD Guidelines
+// ─── MITRAL REGURGITATION ────────────────────────────────────────────────────
+// Per ASE/ACC/AHA 2021 VHD Guidelines (Zoghbi et al.) — Full multi-parameter grading
 function MRCalculator() {
+  // PISA
   const [pisaR, setPisaR] = useState("");
   const [aliasV, setAliasV] = useState("40");
   const [mrVmax, setMrVmax] = useState("");
+  // Quantitative
   const [eroa, setEroa] = useState("");
   const [rvol, setRvol] = useState("");
+  const [rf, setRf] = useState(""); // regurgitant fraction
+  // Qualitative / semi-quantitative
+  const [vcw, setVcw] = useState("");  // vena contracta width
+  const [jetArea, setJetArea] = useState(""); // jet area / LA area %
+  const [pvFlow, setPvFlow] = useState<"normal" | "blunted" | "reversal" | "">("")
+  const [mrType, setMrType] = useState<"primary" | "secondary" | "">("")
 
   const pisaFlow = pisaR && aliasV ? (2 * Math.PI * Math.pow(parseFloat(pisaR), 2) * parseFloat(aliasV)).toFixed(1) : "";
   const calcEroa = pisaFlow && mrVmax ? (parseFloat(pisaFlow) / parseFloat(mrVmax)).toFixed(2) : "";
@@ -145,41 +153,141 @@ function MRCalculator() {
   const eVal = eroa || calcEroa;
   const rVal = rvol || calcRvol;
 
-  const getSeverity = (): Severity => {
-    const e = parseFloat(eVal || "0"), r = parseFloat(rVal || "0");
-    if (e >= 0.4 || r >= 60) return "severe";
-    if (e >= 0.2 || r >= 30) return "moderate";
-    if (e > 0 || r > 0) return "mild";
-    return "none";
+  // Integrated severity grading
+  const getSeverity = (): { sev: Severity; criteria: string[]; warnings: string[] } => {
+    const e = parseFloat(eVal || "0");
+    const r = parseFloat(rVal || "0");
+    const v = parseFloat(vcw || "0");
+    const ja = parseFloat(jetArea || "0");
+    const rfVal = parseFloat(rf || "0");
+    const criteria: string[] = [];
+    const warnings: string[] = [];
+    let sevScore = 0;
+
+    // Quantitative (most reliable)
+    if (e >= 0.4) { criteria.push(`EROA ${e} cm² ≥ 0.40 → Severe`); sevScore = Math.max(sevScore, 3); }
+    else if (e >= 0.2) { criteria.push(`EROA ${e} cm² 0.20–0.39 → Moderate`); sevScore = Math.max(sevScore, 2); }
+    else if (e > 0) { criteria.push(`EROA ${e} cm² < 0.20 → Mild`); sevScore = Math.max(sevScore, 1); }
+
+    if (r >= 60) { criteria.push(`R.Vol ${r} mL ≥ 60 → Severe`); sevScore = Math.max(sevScore, 3); }
+    else if (r >= 30) { criteria.push(`R.Vol ${r} mL 30–59 → Moderate`); sevScore = Math.max(sevScore, 2); }
+    else if (r > 0) { criteria.push(`R.Vol ${r} mL < 30 → Mild`); sevScore = Math.max(sevScore, 1); }
+
+    if (rfVal >= 50) { criteria.push(`RF ${rfVal}% ≥ 50% → Severe`); sevScore = Math.max(sevScore, 3); }
+    else if (rfVal >= 30) { criteria.push(`RF ${rfVal}% 30–49% → Moderate`); sevScore = Math.max(sevScore, 2); }
+
+    // Semi-quantitative
+    if (v >= 0.7) { criteria.push(`VCW ${v} cm ≥ 0.7 → Severe`); sevScore = Math.max(sevScore, 3); }
+    else if (v >= 0.3) { criteria.push(`VCW ${v} cm 0.3–0.69 → Moderate`); sevScore = Math.max(sevScore, 2); }
+    else if (v > 0) { criteria.push(`VCW ${v} cm < 0.3 → Mild`); sevScore = Math.max(sevScore, 1); }
+
+    // Qualitative
+    if (ja >= 40) { criteria.push(`Jet area ${ja}% of LA ≥ 40% → Severe (qualitative)`); }
+    else if (ja > 0 && ja < 20) { criteria.push(`Jet area ${ja}% of LA < 20% → Mild (qualitative)`); }
+
+    if (pvFlow === "reversal") { criteria.push("Pulmonary vein systolic flow reversal → Severe"); sevScore = Math.max(sevScore, 3); }
+    else if (pvFlow === "blunted") { criteria.push("Pulmonary vein systolic flow blunting → Moderate/Severe"); }
+
+    // Secondary MR thresholds differ
+    if (mrType === "secondary" && e >= 0.2) {
+      warnings.push("Secondary MR: Severe threshold is EROA ≥0.20 cm² and R.Vol ≥30 mL (ASE/ESC 2021)");
+    }
+
+    const sev: Severity = sevScore >= 3 ? "severe" : sevScore === 2 ? "moderate" : sevScore === 1 ? "mild" : "none";
+    return { sev, criteria, warnings };
   };
 
-  const sev = getSeverity();
+  const { sev, criteria, warnings } = getSeverity();
+  const hasInput = eVal || rVal || vcw || jetArea;
 
   return (
     <div className="space-y-4">
-      <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">PISA Method</div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <InputField label="PISA Radius" unit="cm" value={pisaR} onChange={setPisaR} placeholder="e.g. 0.9" />
-        <InputField label="Aliasing Velocity" unit="cm/s" value={aliasV} onChange={setAliasV} placeholder="40" />
-        <InputField label="MR Vmax" unit="cm/s" value={mrVmax} onChange={setMrVmax} placeholder="e.g. 500" />
+      {/* MR Type */}
+      <div className="flex gap-3 items-center">
+        <span className="text-xs font-semibold text-gray-600">MR Type:</span>
+        {(["primary", "secondary"] as const).map(t => (
+          <button key={t} onClick={() => setMrType(mrType === t ? "" : t)}
+            className={`px-3 py-1 rounded-lg text-xs font-bold capitalize transition-all ${
+              mrType === t ? "text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+            style={mrType === t ? { background: "#189aa1" } : {}}>
+            {t === "primary" ? "Primary (Organic)" : "Secondary (Functional)"}
+          </button>
+        ))}
       </div>
-      {pisaFlow && <div className="text-xs text-gray-500">PISA Flow Rate: <span className="font-mono font-bold text-[#189aa1]">{pisaFlow} mL/s</span></div>}
+
+      {mrType === "secondary" && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 text-xs text-amber-700">
+          Secondary MR: Severe threshold is lower — EROA ≥0.20 cm², R.Vol ≥30 mL (per ASE/ESC 2021 guidelines)
+        </div>
+      )}
+
+      {/* PISA */}
+      <div>
+        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">PISA Method (Quantitative)</div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <InputField label="PISA Radius" unit="cm" value={pisaR} onChange={setPisaR} placeholder="e.g. 0.9" />
+          <InputField label="Aliasing Velocity" unit="cm/s" value={aliasV} onChange={setAliasV} placeholder="40" />
+          <InputField label="MR Vmax" unit="cm/s" value={mrVmax} onChange={setMrVmax} placeholder="e.g. 500" />
+        </div>
+        {pisaFlow && <div className="text-xs text-gray-500 mt-1">PISA Flow Rate: <span className="font-mono font-bold text-[#189aa1]">{pisaFlow} mL/s</span></div>}
+      </div>
+
+      {/* Direct entry */}
       <div className="border-t border-gray-100 pt-3">
-        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Or Enter Directly</div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Quantitative Parameters</div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <InputField label="EROA" unit="cm²" value={eroa} onChange={setEroa} placeholder={calcEroa || "e.g. 0.4"} />
           <InputField label="Regurgitant Volume" unit="mL" value={rvol} onChange={setRvol} placeholder={calcRvol || "e.g. 60"} />
+          <InputField label="Regurgitant Fraction" unit="%" value={rf} onChange={setRf} placeholder="e.g. 55" hint="Severe ≥50%" />
         </div>
       </div>
-      {(eVal || rVal) && (
-        <ResultPanel guideline="Per ASE/ACC/AHA 2021 VHD Guidelines (Zoghbi et al.)">
-          <div className="flex items-center gap-3 mb-2">
+
+      {/* Semi-quantitative */}
+      <div className="border-t border-gray-100 pt-3">
+        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Semi-Quantitative</div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <InputField label="Vena Contracta Width" unit="cm" value={vcw} onChange={setVcw} placeholder="e.g. 0.7" hint="Severe ≥0.7" />
+          <InputField label="Jet Area / LA Area" unit="%" value={jetArea} onChange={setJetArea} placeholder="e.g. 45" hint="Severe ≥40%" />
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Pulmonary Vein Systolic Flow</label>
+            <select value={pvFlow} onChange={e => setPvFlow(e.target.value as any)}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#189aa1]/30">
+              <option value="">Select...</option>
+              <option value="normal">Normal (S &gt; D)</option>
+              <option value="blunted">Blunted (S ≈ D)</option>
+              <option value="reversal">Systolic reversal → Severe</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {hasInput && (
+        <ResultPanel guideline="Per ASE/ACC/AHA 2021 VHD Guidelines (Zoghbi et al.) — Integrated multi-parameter grading">
+          <div className="flex items-center gap-3 mb-3">
             <span className="text-sm font-semibold text-gray-700">Mitral Regurgitation:</span>
             <SeverityBadge severity={sev} />
           </div>
-          <div className="grid grid-cols-2 gap-3 text-xs">
-            {eVal && <div>EROA: <span className="font-bold font-mono text-[#189aa1]">{eVal} cm²</span> <span className="text-gray-400">(Severe ≥0.40)</span></div>}
-            {rVal && <div>R.Vol: <span className="font-bold font-mono text-[#189aa1]">{rVal} mL</span> <span className="text-gray-400">(Severe ≥60)</span></div>}
+          <ul className="space-y-1 mb-2">
+            {criteria.map((c, i) => (
+              <li key={i} className="text-xs text-gray-600 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#189aa1] flex-shrink-0" />{c}
+              </li>
+            ))}
+          </ul>
+          {warnings.map((w, i) => (
+            <div key={i} className="mt-2 text-xs font-semibold text-amber-600 bg-amber-50 rounded px-2 py-1">{w}</div>
+          ))}
+          <div className="mt-3 pt-2 border-t border-[#189aa1]/10">
+            <div className="text-xs text-gray-500 font-semibold mb-1">Severity Thresholds (Primary MR)</div>
+            <div className="grid grid-cols-3 gap-2 text-xs">
+              {[["Mild","EROA <0.20, R.Vol <30, VCW <0.3","#16a34a"],["Moderate","EROA 0.20–0.39, R.Vol 30–59","#d97706"],["Severe","EROA ≥0.40, R.Vol ≥60, VCW ≥0.7","#dc2626"]].map(([label, vals, color]) => (
+                <div key={label} className="p-2 rounded" style={{ background: color + "10" }}>
+                  <div className="font-bold" style={{ color }}>{label}</div>
+                  <div className="text-gray-500 mt-0.5">{vals}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </ResultPanel>
       )}
@@ -187,37 +295,138 @@ function MRCalculator() {
   );
 }
 
-// ─── TRICUSPID REGURGITATION ──────────────────────────────────────────────────
+// // ─── TRICUSPID REGURGITATION ──────────────────────────────────────────────
+// Per ASE 2021 VHD Guidelines — Full multi-parameter grading
 function TRCalculator() {
   const [eroa, setEroa] = useState("");
   const [rvol, setRvol] = useState("");
   const [vcw, setVcw] = useState("");
+  const [jetArea, setJetArea] = useState(""); // jet area cm²
+  const [pisaR, setPisaR] = useState("");
+  const [aliasV, setAliasV] = useState("28");
+  const [trVmax, setTrVmax] = useState("");
+  const [hvFlow, setHvFlow] = useState<"normal" | "blunted" | "reversal" | "">("")
+  const [ivcDil, setIvcDil] = useState(false);
+  const [raDil, setRaDil] = useState(false);
 
-  const getSeverity = (): Severity => {
-    const e = parseFloat(eroa), r = parseFloat(rvol), v = parseFloat(vcw);
-    if (e >= 0.4 || r >= 45 || v >= 0.7) return "severe";
-    if (e >= 0.2 || r >= 30 || v >= 0.3) return "moderate";
-    if (e > 0 || r > 0 || v > 0) return "mild";
-    return "none";
+  // PISA calculation for TR
+  const pisaFlow = pisaR && aliasV ? (2 * Math.PI * Math.pow(parseFloat(pisaR), 2) * parseFloat(aliasV)).toFixed(1) : "";
+  const calcEroa = pisaFlow && trVmax ? (parseFloat(pisaFlow) / (parseFloat(trVmax) * 100)).toFixed(2) : "";
+  const eVal = eroa || calcEroa;
+
+  const getSeverity = (): { sev: Severity; criteria: string[]; supportingFeatures: string[] } => {
+    const e = parseFloat(eVal || "0");
+    const r = parseFloat(rvol || "0");
+    const v = parseFloat(vcw || "0");
+    const ja = parseFloat(jetArea || "0");
+    const criteria: string[] = [];
+    const supportingFeatures: string[] = [];
+    let sevScore = 0;
+
+    // Quantitative
+    if (e >= 0.4) { criteria.push(`EROA ${e} cm² ≥ 0.40 → Severe`); sevScore = Math.max(sevScore, 3); }
+    else if (e >= 0.2) { criteria.push(`EROA ${e} cm² 0.20–0.39 → Moderate`); sevScore = Math.max(sevScore, 2); }
+    else if (e > 0) { criteria.push(`EROA ${e} cm² < 0.20 → Mild`); sevScore = Math.max(sevScore, 1); }
+
+    if (r >= 45) { criteria.push(`R.Vol ${r} mL ≥ 45 → Severe`); sevScore = Math.max(sevScore, 3); }
+    else if (r >= 30) { criteria.push(`R.Vol ${r} mL 30–44 → Moderate`); sevScore = Math.max(sevScore, 2); }
+    else if (r > 0) { criteria.push(`R.Vol ${r} mL < 30 → Mild`); sevScore = Math.max(sevScore, 1); }
+
+    // Semi-quantitative
+    if (v >= 0.7) { criteria.push(`VCW ${v} cm ≥ 0.7 → Severe`); sevScore = Math.max(sevScore, 3); }
+    else if (v >= 0.3) { criteria.push(`VCW ${v} cm 0.3–0.69 → Moderate`); sevScore = Math.max(sevScore, 2); }
+    else if (v > 0) { criteria.push(`VCW ${v} cm < 0.3 → Mild`); sevScore = Math.max(sevScore, 1); }
+
+    if (ja >= 10) { criteria.push(`Jet area ${ja} cm² ≥ 10 cm² → Severe (qualitative)`); sevScore = Math.max(sevScore, 3); }
+    else if (ja > 0) { criteria.push(`Jet area ${ja} cm² < 10 cm² → Mild-Moderate`); }
+
+    // Supportive features
+    if (hvFlow === "reversal") { supportingFeatures.push("⚠ Hepatic vein systolic flow reversal → Severe TR"); sevScore = Math.max(sevScore, 3); }
+    else if (hvFlow === "blunted") { supportingFeatures.push("Hepatic vein systolic flow blunting → Moderate-Severe"); }
+    if (ivcDil) supportingFeatures.push("IVC dilated (>21 mm) → Elevated RAP");
+    if (raDil) supportingFeatures.push("RA dilation (area >18 cm²) → Chronic TR");
+
+    const sev: Severity = sevScore >= 3 ? "severe" : sevScore === 2 ? "moderate" : sevScore === 1 ? "mild" : "none";
+    return { sev, criteria, supportingFeatures };
   };
 
-  const sev = getSeverity();
-  const hasInput = eroa || rvol || vcw;
+  const { sev, criteria, supportingFeatures } = getSeverity();
+  const hasInput = eVal || rvol || vcw || jetArea;
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-3">
-        <InputField label="EROA" unit="cm²" value={eroa} onChange={setEroa} placeholder="e.g. 0.4" />
-        <InputField label="Regurg Volume" unit="mL" value={rvol} onChange={setRvol} placeholder="e.g. 45" />
-        <InputField label="Vena Contracta Width" unit="cm" value={vcw} onChange={setVcw} placeholder="e.g. 0.7" />
+      {/* PISA */}
+      <div>
+        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">PISA Method</div>
+        <div className="grid grid-cols-3 gap-3">
+          <InputField label="PISA Radius" unit="cm" value={pisaR} onChange={setPisaR} placeholder="e.g. 0.8" />
+          <InputField label="Aliasing Velocity" unit="cm/s" value={aliasV} onChange={setAliasV} placeholder="28" />
+          <InputField label="TR Vmax" unit="m/s" value={trVmax} onChange={setTrVmax} placeholder="e.g. 3.0" />
+        </div>
       </div>
+
+      {/* Quantitative */}
+      <div className="border-t border-gray-100 pt-3">
+        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Quantitative Parameters</div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <InputField label="EROA" unit="cm²" value={eroa} onChange={setEroa} placeholder={calcEroa || "e.g. 0.4"} />
+          <InputField label="Regurgitant Volume" unit="mL" value={rvol} onChange={setRvol} placeholder="e.g. 45" />
+          <InputField label="Vena Contracta Width" unit="cm" value={vcw} onChange={setVcw} placeholder="e.g. 0.7" hint="Severe ≥0.7" />
+          <InputField label="Jet Area" unit="cm²" value={jetArea} onChange={setJetArea} placeholder="e.g. 10" hint="Severe ≥10 cm²" />
+        </div>
+      </div>
+
+      {/* Supporting features */}
+      <div className="border-t border-gray-100 pt-3">
+        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Supporting Features</div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Hepatic Vein Systolic Flow</label>
+            <select value={hvFlow} onChange={e => setHvFlow(e.target.value as any)}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#189aa1]/30">
+              <option value="">Select...</option>
+              <option value="normal">Normal (S &gt; D)</option>
+              <option value="blunted">Blunted (S ≈ D)</option>
+              <option value="reversal">Systolic reversal → Severe</option>
+            </select>
+          </div>
+          <div className="flex flex-col gap-2 justify-end">
+            <label className="flex items-center gap-2 text-xs font-semibold text-gray-600 cursor-pointer">
+              <input type="checkbox" checked={ivcDil} onChange={e => setIvcDil(e.target.checked)} className="rounded" />
+              IVC dilated (&gt;21 mm)
+            </label>
+            <label className="flex items-center gap-2 text-xs font-semibold text-gray-600 cursor-pointer">
+              <input type="checkbox" checked={raDil} onChange={e => setRaDil(e.target.checked)} className="rounded" />
+              RA dilated (&gt;18 cm²)
+            </label>
+          </div>
+        </div>
+      </div>
+
       {hasInput && (
-        <ResultPanel guideline="Per ASE 2021 VHD Guidelines — TR Severity">
-          <div className="flex items-center gap-3 mb-2">
+        <ResultPanel guideline="Per ASE 2021 VHD Guidelines — TR Severity (Lancellotti et al.)">
+          <div className="flex items-center gap-3 mb-3">
             <span className="text-sm font-semibold text-gray-700">Tricuspid Regurgitation:</span>
             <SeverityBadge severity={sev} />
           </div>
-          <div className="text-xs text-gray-500 mt-1">Severe TR: EROA ≥0.40 cm², R.Vol ≥45 mL, VCW ≥0.7 cm</div>
+          <ul className="space-y-1 mb-2">
+            {criteria.map((c, i) => (
+              <li key={i} className="text-xs text-gray-600 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#189aa1] flex-shrink-0" />{c}
+              </li>
+            ))}
+          </ul>
+          {supportingFeatures.length > 0 && (
+            <div className="mt-2 pt-2 border-t border-[#189aa1]/10">
+              <div className="text-xs font-semibold text-gray-500 mb-1">Supporting Features</div>
+              {supportingFeatures.map((f, i) => (
+                <div key={i} className="text-xs text-amber-700 bg-amber-50 rounded px-2 py-1 mb-1">{f}</div>
+              ))}
+            </div>
+          )}
+          <div className="mt-3 pt-2 border-t border-[#189aa1]/10 text-xs text-gray-500">
+            Severe TR: EROA ≥0.40 cm² | R.Vol ≥45 mL | VCW ≥0.7 cm | Jet area ≥10 cm² | HV systolic reversal
+          </div>
         </ResultPanel>
       )}
     </div>
@@ -226,37 +435,152 @@ function TRCalculator() {
 
 // ─── AORTIC REGURGITATION ─────────────────────────────────────────────────────
 function ARCalculator() {
+  // Semi-quantitative
   const [vcw, setVcw] = useState("");
-  const [phd, setPhd] = useState("");
+  const [jetLvot, setJetLvot] = useState(""); // jet width / LVOT diameter %
+  const [pht, setPht] = useState(""); // pressure half-time
+  // Quantitative
   const [eroa, setEroa] = useState("");
   const [rvol, setRvol] = useState("");
+  const [rf, setRf] = useState(""); // regurgitant fraction
+  // Qualitative / supporting
+  const [diastRevDesc, setDiastRevDesc] = useState<"none" | "brief" | "holodiastolic" | "">("")
+  const [lvDil, setLvDil] = useState(false);
+  const [aortaSize, setAortaSize] = useState("");
 
-  const getSeverity = (): Severity => {
-    const v = parseFloat(vcw), p = parseFloat(phd), e = parseFloat(eroa), r = parseFloat(rvol);
-    if (v >= 0.6 || p <= 200 || e >= 0.3 || r >= 60) return "severe";
-    if (v >= 0.3 || (p > 200 && p <= 500) || e >= 0.1 || r >= 30) return "moderate";
-    if (v > 0 || e > 0 || r > 0) return "mild";
-    return "none";
+  const getSeverity = (): { sev: Severity; criteria: string[]; supportingFeatures: string[] } => {
+    const v = parseFloat(vcw || "0");
+    const jl = parseFloat(jetLvot || "0");
+    const p = parseFloat(pht || "0");
+    const e = parseFloat(eroa || "0");
+    const r = parseFloat(rvol || "0");
+    const rfVal = parseFloat(rf || "0");
+    const criteria: string[] = [];
+    const supportingFeatures: string[] = [];
+    let sevScore = 0;
+
+    // Quantitative (most reliable)
+    if (e >= 0.3) { criteria.push(`EROA ${e} cm² ≥ 0.30 → Severe`); sevScore = Math.max(sevScore, 3); }
+    else if (e >= 0.1) { criteria.push(`EROA ${e} cm² 0.10–0.29 → Moderate`); sevScore = Math.max(sevScore, 2); }
+    else if (e > 0) { criteria.push(`EROA ${e} cm² < 0.10 → Mild`); sevScore = Math.max(sevScore, 1); }
+
+    if (r >= 60) { criteria.push(`R.Vol ${r} mL ≥ 60 → Severe`); sevScore = Math.max(sevScore, 3); }
+    else if (r >= 30) { criteria.push(`R.Vol ${r} mL 30–59 → Moderate`); sevScore = Math.max(sevScore, 2); }
+    else if (r > 0) { criteria.push(`R.Vol ${r} mL < 30 → Mild`); sevScore = Math.max(sevScore, 1); }
+
+    if (rfVal >= 50) { criteria.push(`RF ${rfVal}% ≥ 50% → Severe`); sevScore = Math.max(sevScore, 3); }
+    else if (rfVal >= 30) { criteria.push(`RF ${rfVal}% 30–49% → Moderate`); sevScore = Math.max(sevScore, 2); }
+
+    // Semi-quantitative
+    if (v >= 0.6) { criteria.push(`VCW ${v} cm ≥ 0.6 → Severe`); sevScore = Math.max(sevScore, 3); }
+    else if (v >= 0.3) { criteria.push(`VCW ${v} cm 0.3–0.59 → Moderate`); sevScore = Math.max(sevScore, 2); }
+    else if (v > 0) { criteria.push(`VCW ${v} cm < 0.3 → Mild`); sevScore = Math.max(sevScore, 1); }
+
+    if (jl >= 65) { criteria.push(`Jet/LVOT ratio ${jl}% ≥ 65% → Severe`); sevScore = Math.max(sevScore, 3); }
+    else if (jl >= 25) { criteria.push(`Jet/LVOT ratio ${jl}% 25–64% → Moderate`); sevScore = Math.max(sevScore, 2); }
+    else if (jl > 0) { criteria.push(`Jet/LVOT ratio ${jl}% < 25% → Mild`); sevScore = Math.max(sevScore, 1); }
+
+    if (p > 0 && p <= 200) { criteria.push(`PHT ${p} ms ≤ 200 ms → Severe`); sevScore = Math.max(sevScore, 3); }
+    else if (p > 200 && p <= 500) { criteria.push(`PHT ${p} ms 200–500 ms → Moderate`); sevScore = Math.max(sevScore, 2); }
+    else if (p > 500) { criteria.push(`PHT ${p} ms > 500 ms → Mild`); sevScore = Math.max(sevScore, 1); }
+
+    // Supporting features
+    if (diastRevDesc === "holodiastolic") {
+      supportingFeatures.push("⚠ Holodiastolic flow reversal in descending aorta → Severe AR");
+      sevScore = Math.max(sevScore, 3);
+    } else if (diastRevDesc === "brief") {
+      supportingFeatures.push("Brief diastolic flow reversal in descending aorta → Mild-Moderate AR");
+    }
+    if (lvDil) supportingFeatures.push("LV dilation → Chronic volume overload from AR");
+    if (aortaSize && parseFloat(aortaSize) >= 45) {
+      supportingFeatures.push(`⚠ Aortic root/ascending aorta ${aortaSize} mm ≥ 45 mm → Consider surgical threshold`);
+    }
+
+    const sev: Severity = sevScore >= 3 ? "severe" : sevScore === 2 ? "moderate" : sevScore === 1 ? "mild" : "none";
+    return { sev, criteria, supportingFeatures };
   };
 
-  const sev = getSeverity();
-  const hasInput = vcw || phd || eroa || rvol;
+  const { sev, criteria, supportingFeatures } = getSeverity();
+  const hasInput = vcw || pht || eroa || rvol || jetLvot;
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <InputField label="Vena Contracta Width" unit="cm" value={vcw} onChange={setVcw} placeholder="e.g. 0.6" />
-        <InputField label="PHT" unit="ms" value={phd} onChange={setPhd} placeholder="e.g. 250" hint="AR jet" />
-        <InputField label="EROA" unit="cm²" value={eroa} onChange={setEroa} placeholder="e.g. 0.3" />
-        <InputField label="Regurg Volume" unit="mL" value={rvol} onChange={setRvol} placeholder="e.g. 60" />
+      {/* Quantitative */}
+      <div>
+        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Quantitative Parameters</div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <InputField label="EROA" unit="cm²" value={eroa} onChange={setEroa} placeholder="e.g. 0.3" hint="Severe ≥0.30" />
+          <InputField label="Regurgitant Volume" unit="mL" value={rvol} onChange={setRvol} placeholder="e.g. 60" hint="Severe ≥60" />
+          <InputField label="Regurgitant Fraction" unit="%" value={rf} onChange={setRf} placeholder="e.g. 50" hint="Severe ≥50%" />
+        </div>
       </div>
+
+      {/* Semi-quantitative */}
+      <div className="border-t border-gray-100 pt-3">
+        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Semi-Quantitative</div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <InputField label="Vena Contracta Width" unit="cm" value={vcw} onChange={setVcw} placeholder="e.g. 0.6" hint="Severe ≥0.6" />
+          <InputField label="Jet Width / LVOT" unit="%" value={jetLvot} onChange={setJetLvot} placeholder="e.g. 65" hint="Severe ≥65%" />
+          <InputField label="AR Jet PHT" unit="ms" value={pht} onChange={setPht} placeholder="e.g. 250" hint="Severe ≤200" />
+          <InputField label="Aortic Root/Asc Ao" unit="mm" value={aortaSize} onChange={setAortaSize} placeholder="e.g. 42" hint="Surgical ≥45" />
+        </div>
+      </div>
+
+      {/* Supporting features */}
+      <div className="border-t border-gray-100 pt-3">
+        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Supporting Features</div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Diastolic Flow Reversal (Desc. Ao)</label>
+            <select value={diastRevDesc} onChange={e => setDiastRevDesc(e.target.value as any)}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#189aa1]/30">
+              <option value="">Select...</option>
+              <option value="none">None / Absent</option>
+              <option value="brief">Brief early diastolic reversal</option>
+              <option value="holodiastolic">Holodiastolic reversal → Severe</option>
+            </select>
+          </div>
+          <div className="flex items-end pb-2">
+            <label className="flex items-center gap-2 text-xs font-semibold text-gray-600 cursor-pointer">
+              <input type="checkbox" checked={lvDil} onChange={e => setLvDil(e.target.checked)} className="rounded" />
+              LV dilation present
+            </label>
+          </div>
+        </div>
+      </div>
+
       {hasInput && (
-        <ResultPanel guideline="Per ASE 2021 VHD Guidelines — AR Severity">
-          <div className="flex items-center gap-3 mb-2">
+        <ResultPanel guideline="Per ASE/ACC/AHA 2021 VHD Guidelines — AR Severity (Zoghbi et al.)">
+          <div className="flex items-center gap-3 mb-3">
             <span className="text-sm font-semibold text-gray-700">Aortic Regurgitation:</span>
             <SeverityBadge severity={sev} />
           </div>
-          <div className="text-xs text-gray-500 mt-1">Severe AR: VCW ≥0.6 cm, PHT ≤200 ms, EROA ≥0.30 cm², R.Vol ≥60 mL</div>
+          <ul className="space-y-1 mb-2">
+            {criteria.map((c, i) => (
+              <li key={i} className="text-xs text-gray-600 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#189aa1] flex-shrink-0" />{c}
+              </li>
+            ))}
+          </ul>
+          {supportingFeatures.length > 0 && (
+            <div className="mt-2 pt-2 border-t border-[#189aa1]/10">
+              <div className="text-xs font-semibold text-gray-500 mb-1">Supporting Features</div>
+              {supportingFeatures.map((f, i) => (
+                <div key={i} className="text-xs text-amber-700 bg-amber-50 rounded px-2 py-1 mb-1">{f}</div>
+              ))}
+            </div>
+          )}
+          <div className="mt-3 pt-2 border-t border-[#189aa1]/10">
+            <div className="text-xs text-gray-500 font-semibold mb-1">Severity Thresholds</div>
+            <div className="grid grid-cols-3 gap-2 text-xs">
+              {[["Mild","VCW <0.3, Jet/LVOT <25%, PHT >500","#16a34a"],["Moderate","VCW 0.3–0.59, EROA 0.10–0.29","#d97706"],["Severe","VCW ≥0.6, EROA ≥0.30, R.Vol ≥60, PHT ≤200","#dc2626"]].map(([label, vals, color]) => (
+                <div key={label} className="p-2 rounded" style={{ background: color + "10" }}>
+                  <div className="font-bold" style={{ color }}>{label}</div>
+                  <div className="text-gray-500 mt-0.5">{vals}</div>
+                </div>
+              ))}
+            </div>
+          </div>
         </ResultPanel>
       )}
     </div>
