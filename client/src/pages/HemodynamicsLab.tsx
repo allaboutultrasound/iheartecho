@@ -673,10 +673,10 @@ function generateAVOutflowPath(p: Params, W: number, H: number): {
   const ejectionFrac = 0.30;
   const vti = vmax * ejectionFrac * rr * 0.6 * 100; // rough cm
 
-  let pattern = "Normal LVOT Flow";
+  let pattern = "Normal";
   if (shape === "tardus") pattern = `Aortic Stenosis — Vmax ${vmax.toFixed(1)} m/s`;
   else if (shape === "dynamic") pattern = "HCM — Dynamic LVOT Obstruction";
-  else if (vmax > 2.0) pattern = "Elevated LVOT Velocity";
+  else if (vmax > 2.0) pattern = "Elevated Velocity";
 
   const maxVelDisplay = Math.max(2.5, vmax * 1.2);
   const cycleW = W / 2;
@@ -941,7 +941,7 @@ export default function HemodynamicsLab() {
 
   // Doppler tracing data — computed once per params change
   const W_DOPPLER = 520, H_DOPPLER = 240;
-  const [dopplerScale, setDopplerScale] = useState<number>(2.0); // m/s full-scale per side
+  const dopplerScale = 2.0; // fixed display scale — waveforms fill the full canvas height
   const mitralData = useMemo(() => generateMitralInflowPath(params, W_DOPPLER, H_DOPPLER), [params]);
   const tricuspidData = useMemo(() => generateTricuspidInflowPath(params, W_DOPPLER, H_DOPPLER), [params]);
   const avOutflowData = useMemo(() => generateAVOutflowPath(params, W_DOPPLER, H_DOPPLER), [params]);
@@ -1321,29 +1321,9 @@ export default function HemodynamicsLab() {
 
         {/* ---- DOPPLER TRACINGS ---- */}
         <div className="mt-6">
-          <div className="flex flex-wrap items-center gap-3 mb-3">
+          <div className="flex items-center gap-2 mb-3">
             <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Representative Doppler Tracings</h2>
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-200 font-semibold">Live — updates with hemodynamic state</span>
-            {/* Doppler Scale Selector */}
-            <div className="ml-auto flex items-center gap-2">
-              <span className="text-[10px] font-semibold text-gray-500" style={{ fontFamily: "JetBrains Mono, monospace" }}>Scale:</span>
-              {[1.0, 1.5, 2.0, 3.0, 4.0, 5.0].map(s => (
-                <button
-                  key={s}
-                  onClick={() => setDopplerScale(s)}
-                  className="px-2 py-0.5 rounded text-[10px] font-bold transition-all border"
-                  style={{
-                    fontFamily: "JetBrains Mono, monospace",
-                    background: dopplerScale === s ? "#189aa1" : "#f0fbfc",
-                    color: dopplerScale === s ? "white" : "#189aa1",
-                    borderColor: dopplerScale === s ? "#189aa1" : "#b2e8eb",
-                  }}
-                >
-                  {s.toFixed(1)}
-                </button>
-              ))}
-              <span className="text-[10px] text-gray-400" style={{ fontFamily: "JetBrains Mono, monospace" }}>m/s</span>
-            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Mitral Inflow */}
