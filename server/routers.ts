@@ -511,7 +511,7 @@ export const appRouter = router({
         inviteEmail: z.string().email(),
         displayName: z.string().optional(),
         credentials: z.string().optional(),
-        role: z.enum(["admin", "reviewer", "sonographer"]).optional(),
+        role: z.enum(["admin", "reviewer", "sonographer", "physician"]).optional(),
         specialty: z.string().optional(),
         department: z.string().optional(),
       }))
@@ -535,7 +535,7 @@ export const appRouter = router({
         memberId: z.number(),
         displayName: z.string().optional(),
         credentials: z.string().optional(),
-        role: z.enum(["admin", "reviewer", "sonographer"]).optional(),
+        role: z.enum(["admin", "reviewer", "sonographer", "physician"]).optional(),
         specialty: z.string().optional(),
         department: z.string().optional(),
       }))

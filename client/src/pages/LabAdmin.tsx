@@ -332,12 +332,12 @@ function OverviewTab({ lab, members, snapshot }: {
 function StaffTab({ lab, members, onRefresh }: { lab: any; members: any[]; onRefresh: () => void }) {
   const [addOpen, setAddOpen] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
-  const [form, setForm] = useState({ inviteEmail: "", displayName: "", credentials: "", role: "sonographer" as "admin" | "reviewer" | "sonographer", specialty: "", department: "" });
+  const [form, setForm] = useState({ inviteEmail: "", displayName: "", credentials: "", role: "sonographer" as "admin" | "reviewer" | "sonographer" | "physician", specialty: "", department: "" });
   const [editForm, setEditForm] = useState<any>({});
 
   const utils = trpc.useUtils();
   const addMember = trpc.lab.addMember.useMutation({
-    onSuccess: () => { toast.success("Staff member added."); utils.lab.getMembers.invalidate(); setAddOpen(false); setForm({ inviteEmail: "", displayName: "", credentials: "", role: "sonographer", specialty: "", department: "" }); },
+    onSuccess: () => { toast.success("Staff member added."); utils.lab.getMembers.invalidate(); setAddOpen(false); setForm({ inviteEmail: "", displayName: "", credentials: "", role: "sonographer" as "admin" | "reviewer" | "sonographer" | "physician", specialty: "", department: "" }); },
     onError: (e) => toast.error(e.message),
   });
   const updateMember = trpc.lab.updateMember.useMutation({
@@ -349,7 +349,7 @@ function StaffTab({ lab, members, onRefresh }: { lab: any; members: any[]; onRef
     onError: (e) => toast.error(e.message),
   });
 
-  const roleColors: Record<string, string> = { admin: "#7c3aed", reviewer: BRAND, sonographer: "#d97706" };
+  const roleColors: Record<string, string> = { admin: "#7c3aed", reviewer: BRAND, sonographer: "#d97706", physician: "#0e4a50" };
 
   return (
     <div className="space-y-4">
@@ -385,6 +385,7 @@ function StaffTab({ lab, members, onRefresh }: { lab: any; members: any[]; onRef
                   <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="sonographer">Sonographer</SelectItem>
+                    <SelectItem value="physician">Physician</SelectItem>
                     <SelectItem value="reviewer">Reviewer</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                   </SelectContent>
@@ -425,6 +426,7 @@ function StaffTab({ lab, members, onRefresh }: { lab: any; members: any[]; onRef
                       <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="sonographer">Sonographer</SelectItem>
+                        <SelectItem value="physician">Physician</SelectItem>
                         <SelectItem value="reviewer">Reviewer</SelectItem>
                         <SelectItem value="admin">Admin</SelectItem>
                       </SelectContent>

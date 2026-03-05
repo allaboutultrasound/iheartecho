@@ -305,7 +305,7 @@ export const labMembers = mysqlTable("labMembers", {
   inviteEmail: varchar("inviteEmail", { length: 320 }).notNull(),
   displayName: varchar("displayName", { length: 100 }),
   credentials: varchar("credentials", { length: 200 }),
-  role: mysqlEnum("role", ["admin", "reviewer", "sonographer"]).default("sonographer").notNull(),
+  role: mysqlEnum("role", ["admin", "reviewer", "sonographer", "physician"]).default("sonographer").notNull(),
   specialty: varchar("specialty", { length: 100 }),
   department: varchar("department", { length: 100 }),
   inviteStatus: mysqlEnum("inviteStatus", ["pending", "accepted", "declined"]).default("pending").notNull(),

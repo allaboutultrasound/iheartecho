@@ -448,7 +448,7 @@ export async function addLabMember(data: {
   inviteEmail: string;
   displayName?: string;
   credentials?: string;
-  role?: "admin" | "reviewer" | "sonographer";
+  role?: "admin" | "reviewer" | "sonographer" | "physician";
   specialty?: string;
   department?: string;
 }) {
@@ -475,7 +475,7 @@ export async function getLabMembers(labId: number) {
 export async function updateLabMember(memberId: number, data: Partial<{
   displayName: string;
   credentials: string;
-  role: "admin" | "reviewer" | "sonographer";
+  role: "admin" | "reviewer" | "sonographer" | "physician";
   specialty: string;
   department: string;
   isActive: boolean;
