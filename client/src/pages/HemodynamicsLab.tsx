@@ -725,7 +725,7 @@ function generateAVOutflowPath(p: Params, W: number, H: number): {
 // ---- DOPPLER DISPLAY COMPONENT ----
 
 function DopplerTracing({
-  title, subtitle, pathData, color, annotations, W = 520, H = 160, belowBaseline = false
+  title, subtitle, pathData, color, annotations, W = 520, H = 240, belowBaseline = false, scaleMax = 2.0
 }: {
   title: string;
   subtitle: string;
@@ -735,12 +735,32 @@ function DopplerTracing({
   W?: number;
   H?: number;
   belowBaseline?: boolean;
+  scaleMax?: number; // m/s full-scale
 }) {
-  // For below-baseline tracings (AV outflow), the baseline is near the top
-  const baselineY = belowBaseline ? H * 0.08 : H * 0.08;
+  // Layout constants — left margin for Y-axis labels
+  const MARGIN_LEFT = 38;
+  const plotW = W - MARGIN_LEFT;
+  const baselineY = belowBaseline ? H * 0.07 : H * 0.93;
   const fillClose = belowBaseline
-    ? ` L ${W} ${H * 0.08} L 0 ${H * 0.08} Z`
-    : ` L ${W} ${H * 0.92} L 0 ${H * 0.92} Z`;
+    ? ` L ${MARGIN_LEFT + plotW} ${baselineY} L ${MARGIN_LEFT} ${baselineY} Z`
+    : ` L ${MARGIN_LEFT + plotW} ${baselineY} L ${MARGIN_LEFT} ${baselineY} Z`;
+
+  // Y-axis scale ticks: 0, 0.5, 1.0, 1.5, 2.0 (or up to scaleMax)
+  const tickStep = scaleMax <= 2.0 ? 0.5 : scaleMax <= 4.0 ? 1.0 : 1.0;
+  const ticks: number[] = [];
+  for (let v = tickStep; v <= scaleMax + 0.01; v += tickStep) ticks.push(parseFloat(v.toFixed(1)));
+
+  // Map velocity (m/s) to Y coordinate
+  const velToY = (v: number) => {
+    const plotH = H * 0.86;
+    if (belowBaseline) {
+      // baseline near top, waveform goes downward
+      return baselineY + (v / scaleMax) * plotH;
+    } else {
+      // baseline near bottom, waveform goes upward
+      return baselineY - (v / scaleMax) * plotH;
+    }
+  };
 
   return (
     <div className="bg-[#060e1f] rounded-xl overflow-hidden border border-[#1a3a5c]">
@@ -766,47 +786,76 @@ function DopplerTracing({
               }
             </linearGradient>
           </defs>
-          {/* Background subtle scan lines */}
-          {Array.from({ length: 8 }, (_, i) => (
-            <line key={i} x1={0} y1={H * (i / 8)} x2={W} y2={H * (i / 8)}
-              stroke="#0d1f3c" strokeWidth={0.6} />
+
+          {/* ── Y-axis background panel ── */}
+          <rect x={0} y={0} width={MARGIN_LEFT} height={H} fill="#040b18" />
+          {/* Y-axis label: m/s */}
+          <text
+            x={10} y={H / 2}
+            fill="#4ad9e0" fontSize={8} fontFamily="JetBrains Mono, monospace"
+            textAnchor="middle"
+            transform={`rotate(-90, 10, ${H / 2})`}
+          >m/s</text>
+
+          {/* ── Velocity tick marks and grid lines ── */}
+          {ticks.map(v => {
+            const y = velToY(v);
+            return (
+              <g key={v}>
+                {/* Horizontal grid line across plot area */}
+                <line x1={MARGIN_LEFT} y1={y} x2={W} y2={y}
+                  stroke="#1e3f6a" strokeWidth={0.8} strokeDasharray="5 4" />
+                {/* Tick mark on Y-axis */}
+                <line x1={MARGIN_LEFT - 4} y1={y} x2={MARGIN_LEFT} y2={y}
+                  stroke="#3a6fa8" strokeWidth={1} />
+                {/* Velocity label */}
+                <text x={MARGIN_LEFT - 6} y={y + 3.5}
+                  fill="#5a8fbf" fontSize={9} fontFamily="JetBrains Mono, monospace"
+                  textAnchor="end">{v.toFixed(1)}</text>
+              </g>
+            );
+          })}
+
+          {/* ── Background scan lines ── */}
+          {Array.from({ length: 10 }, (_, i) => (
+            <line key={i} x1={MARGIN_LEFT} y1={H * (i / 10)} x2={W} y2={H * (i / 10)}
+              stroke="#0d1f3c" strokeWidth={0.4} />
           ))}
-          {/* Grid lines — brighter */}
-          {[0.25, 0.5, 0.75].map(f => (
-            <line key={f}
-              x1={0} y1={belowBaseline ? H * (0.08 + f * 0.88) : H * (0.08 + (1 - f) * 0.84)}
-              x2={W} y2={belowBaseline ? H * (0.08 + f * 0.88) : H * (0.08 + (1 - f) * 0.84)}
-              stroke="#1e3f6a" strokeWidth={0.8} strokeDasharray="5 5" />
-          ))}
-          {/* Cycle dividers */}
-          {[0.5].map(f => (
-            <line key={f} x1={W * f} y1={0} x2={W * f} y2={H}
-              stroke="#1e3f6a" strokeWidth={1} strokeDasharray="3 5" />
-          ))}
-          {/* Baseline — bright */}
-          <line x1={0} y1={belowBaseline ? H * 0.08 : H * 0.92}
-            x2={W} y2={belowBaseline ? H * 0.08 : H * 0.92}
+
+          {/* ── Cycle divider ── */}
+          <line x1={MARGIN_LEFT + plotW * 0.5} y1={0} x2={MARGIN_LEFT + plotW * 0.5} y2={H}
+            stroke="#1e3f6a" strokeWidth={1} strokeDasharray="3 5" />
+
+          {/* ── Baseline ── */}
+          <line x1={MARGIN_LEFT} y1={baselineY} x2={W} y2={baselineY}
             stroke="#3a6fa8" strokeWidth={1.5} />
-          {/* Waveform fill — gradient */}
+          {/* Baseline "0" label */}
+          <text x={MARGIN_LEFT - 6} y={baselineY + 3.5}
+            fill="#3a6fa8" fontSize={9} fontFamily="JetBrains Mono, monospace"
+            textAnchor="end">0</text>
+
+          {/* ── Y-axis vertical line ── */}
+          <line x1={MARGIN_LEFT} y1={0} x2={MARGIN_LEFT} y2={H}
+            stroke="#2a4f7a" strokeWidth={1} />
+
+          {/* ── Waveform fill ── */}
           <path d={pathData + fillClose}
             fill={`url(#wfill-${title.replace(/\s/g,"")})`} stroke="none" />
-          {/* Waveform stroke — thick and bright */}
-          <path d={pathData} fill="none" stroke={color} strokeWidth={2.8} strokeLinejoin="round" strokeLinecap="round" />
-          {/* Velocity scale labels */}
-          <text x={5} y={belowBaseline ? H * 0.95 : H * 0.14} fill="#5a8fbf" fontSize={9} fontFamily="JetBrains Mono, monospace">peak</text>
-          <text x={5} y={belowBaseline ? H * 0.55 : H * 0.54} fill="#2a4a6f" fontSize={8} fontFamily="JetBrains Mono, monospace">mid</text>
-          {/* Annotations */}
+          {/* ── Waveform stroke ── */}
+          <path d={pathData} fill="none" stroke={color} strokeWidth={3} strokeLinejoin="round" strokeLinecap="round" />
+
+          {/* ── Annotations ── */}
           {annotations.map((a, i) => (
             <g key={i}>
               <line x1={a.x} y1={a.y}
-                x2={a.x} y2={belowBaseline ? H * 0.08 : H * 0.92}
+                x2={a.x} y2={baselineY}
                 stroke={color} strokeWidth={1} strokeDasharray="3 3" opacity={0.7} />
-              <circle cx={a.x} cy={a.y} r={3.5} fill={color} opacity={1} />
-              <circle cx={a.x} cy={a.y} r={5} fill={color} opacity={0.25} />
-              <text x={a.x + 6} y={belowBaseline ? a.y + 12 : a.y - 6}
-                fill="white" fontSize={9} fontFamily="JetBrains Mono, monospace" fontWeight="bold">{a.label}</text>
-              {a.sub && <text x={a.x + 6} y={belowBaseline ? a.y + 22 : a.y + 5}
-                fill={color} fontSize={8} fontFamily="JetBrains Mono, monospace">{a.sub}</text>}
+              <circle cx={a.x} cy={a.y} r={4} fill={color} opacity={1} />
+              <circle cx={a.x} cy={a.y} r={6.5} fill={color} opacity={0.2} />
+              <text x={a.x + 7} y={belowBaseline ? a.y + 13 : a.y - 7}
+                fill="white" fontSize={10} fontFamily="JetBrains Mono, monospace" fontWeight="bold">{a.label}</text>
+              {a.sub && <text x={a.x + 7} y={belowBaseline ? a.y + 24 : a.y + 6}
+                fill={color} fontSize={9} fontFamily="JetBrains Mono, monospace">{a.sub}</text>}
             </g>
           ))}
         </svg>
@@ -891,25 +940,33 @@ export default function HemodynamicsLab() {
   const rr_ms = Math.round((60 / params.heartRate) * 1000);
 
   // Doppler tracing data — computed once per params change
-  const W_DOPPLER = 520, H_DOPPLER = 160;
+  const W_DOPPLER = 520, H_DOPPLER = 240;
+  const [dopplerScale, setDopplerScale] = useState<number>(2.0); // m/s full-scale per side
   const mitralData = useMemo(() => generateMitralInflowPath(params, W_DOPPLER, H_DOPPLER), [params]);
   const tricuspidData = useMemo(() => generateTricuspidInflowPath(params, W_DOPPLER, H_DOPPLER), [params]);
   const avOutflowData = useMemo(() => generateAVOutflowPath(params, W_DOPPLER, H_DOPPLER), [params]);
 
   // Annotation positions for above-baseline tracings (MV, TV)
+  // Annotation Y positions — match DopplerTracing velToY formula
+  // Above-baseline: baselineY = H*0.93, waveform goes upward
+  const MARGIN_LEFT_ANN = 38;
+  const plotH_ann = H_DOPPLER * 0.86;
+  const baselineAbove = H_DOPPLER * 0.93;
+  const baselineBelow = H_DOPPLER * 0.07;
+  const velToYAbove = (v: number) => baselineAbove - (v / dopplerScale) * plotH_ann;
+  const velToYBelow = (v: number) => baselineBelow + (v / dopplerScale) * plotH_ann;
+
   const mitralAnnotations = [
-    { x: W_DOPPLER * 0.5 * 0.66, y: H_DOPPLER * 0.92 - mitralData.eVel * (H_DOPPLER * 0.85 / 1.5), label: `E ${mitralData.eVel.toFixed(2)} m/s` },
-    { x: W_DOPPLER * 0.5 * 0.91, y: H_DOPPLER * 0.92 - mitralData.aVel * (H_DOPPLER * 0.85 / 1.5), label: `A ${mitralData.aVel.toFixed(2)} m/s`, sub: `E/A ${mitralData.eaRatio.toFixed(1)}` },
+    { x: MARGIN_LEFT_ANN + (W_DOPPLER - MARGIN_LEFT_ANN) * 0.5 * 0.66, y: velToYAbove(mitralData.eVel), label: `E ${mitralData.eVel.toFixed(2)} m/s` },
+    { x: MARGIN_LEFT_ANN + (W_DOPPLER - MARGIN_LEFT_ANN) * 0.5 * 0.91, y: velToYAbove(mitralData.aVel), label: `A ${mitralData.aVel.toFixed(2)} m/s`, sub: `E/A ${mitralData.eaRatio.toFixed(1)}` },
   ];
   const tricuspidAnnotations = [
-    { x: W_DOPPLER * 0.5 * 0.66, y: H_DOPPLER * 0.92 - tricuspidData.eVel * (H_DOPPLER * 0.85 / 1.0), label: `E ${tricuspidData.eVel.toFixed(2)} m/s` },
-    { x: W_DOPPLER * 0.5 * 0.91, y: H_DOPPLER * 0.92 - tricuspidData.aVel * (H_DOPPLER * 0.85 / 1.0), label: `A ${tricuspidData.aVel.toFixed(2)} m/s` },
+    { x: MARGIN_LEFT_ANN + (W_DOPPLER - MARGIN_LEFT_ANN) * 0.5 * 0.66, y: velToYAbove(tricuspidData.eVel), label: `E ${tricuspidData.eVel.toFixed(2)} m/s` },
+    { x: MARGIN_LEFT_ANN + (W_DOPPLER - MARGIN_LEFT_ANN) * 0.5 * 0.91, y: velToYAbove(tricuspidData.aVel), label: `A ${tricuspidData.aVel.toFixed(2)} m/s` },
   ];
-  // AV outflow is below baseline — annotation y goes downward from baseline (H * 0.08)
-  const maxVelAV = Math.max(2.5, avOutflowData.vmax * 1.2);
-  const avPeakY = H_DOPPLER * 0.08 + avOutflowData.vmax * (H_DOPPLER * 0.88 / maxVelAV);
+  // AV outflow is below baseline — annotation y goes downward
   const avAnnotations = [
-    { x: W_DOPPLER * 0.5 * (avOutflowData.shape === "tardus" ? 0.27 : 0.22), y: avPeakY, label: `Vmax ${avOutflowData.vmax.toFixed(1)} m/s`, sub: `VTI ~${avOutflowData.vti} cm` },
+    { x: MARGIN_LEFT_ANN + (W_DOPPLER - MARGIN_LEFT_ANN) * 0.5 * (avOutflowData.shape === "tardus" ? 0.27 : 0.22), y: velToYBelow(avOutflowData.vmax), label: `Vmax ${avOutflowData.vmax.toFixed(1)} m/s`, sub: `VTI ~${avOutflowData.vti} cm` },
   ];
 
   return (
@@ -1264,9 +1321,29 @@ export default function HemodynamicsLab() {
 
         {/* ---- DOPPLER TRACINGS ---- */}
         <div className="mt-6">
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex flex-wrap items-center gap-3 mb-3">
             <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Representative Doppler Tracings</h2>
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-200 font-semibold">Live — updates with hemodynamic state</span>
+            {/* Doppler Scale Selector */}
+            <div className="ml-auto flex items-center gap-2">
+              <span className="text-[10px] font-semibold text-gray-500" style={{ fontFamily: "JetBrains Mono, monospace" }}>Scale:</span>
+              {[1.0, 1.5, 2.0, 3.0, 4.0, 5.0].map(s => (
+                <button
+                  key={s}
+                  onClick={() => setDopplerScale(s)}
+                  className="px-2 py-0.5 rounded text-[10px] font-bold transition-all border"
+                  style={{
+                    fontFamily: "JetBrains Mono, monospace",
+                    background: dopplerScale === s ? "#189aa1" : "#f0fbfc",
+                    color: dopplerScale === s ? "white" : "#189aa1",
+                    borderColor: dopplerScale === s ? "#189aa1" : "#b2e8eb",
+                  }}
+                >
+                  {s.toFixed(1)}
+                </button>
+              ))}
+              <span className="text-[10px] text-gray-400" style={{ fontFamily: "JetBrains Mono, monospace" }}>m/s</span>
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Mitral Inflow */}
@@ -1278,6 +1355,7 @@ export default function HemodynamicsLab() {
                 color="#4ad9e0"
                 annotations={mitralAnnotations}
                 W={W_DOPPLER} H={H_DOPPLER}
+                scaleMax={dopplerScale}
               />
               <div className="mt-2 grid grid-cols-3 gap-1 text-[10px]">
                 <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
@@ -1308,6 +1386,7 @@ export default function HemodynamicsLab() {
                 color="#189aa1"
                 annotations={tricuspidAnnotations}
                 W={W_DOPPLER} H={H_DOPPLER}
+                scaleMax={dopplerScale}
               />
               <div className="mt-2 grid grid-cols-3 gap-1 text-[10px]">
                 <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
@@ -1339,6 +1418,7 @@ export default function HemodynamicsLab() {
                 annotations={avAnnotations}
                 W={W_DOPPLER} H={H_DOPPLER}
                 belowBaseline={true}
+                scaleMax={dopplerScale}
               />
               <div className="mt-2 grid grid-cols-3 gap-1 text-[10px]">
                 <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
