@@ -144,3 +144,8 @@
 - [x] DIY Accreditation Tool™ — all badge tags, status chips use brand teal palette
 - [x] EchoAccreditation Navigator™ — all section tags, standard badges use brand colors
 - [x] Home dashboard — module badge tags use brand teal palette
+
+## Strain Navigator™ Updates
+- [x] Add Fujifilm as vendor option in vendor select dropdown
+- [x] Update bull's-eye color scale: normal=red, mildly reduced=pink, moderately reduced=light pink, mod-severe=light blue, severely reduced=dark blue
+- [x] Update legend to match new color scale

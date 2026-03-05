@@ -52,11 +52,11 @@ const SEGMENTS_17 = [
 
 function strainColor(val: number | null): string {
   if (val === null) return "#e5e7eb"; // gray — not entered
-  if (val <= -20) return "#15803d"; // dark green — normal
-  if (val <= -16) return "#86efac"; // light green — mildly reduced
-  if (val <= -12) return "#fbbf24"; // amber — moderately reduced
-  if (val <= -8) return "#f97316"; // orange — severely reduced
-  return "#dc2626"; // red — critically reduced
+  if (val <= -20) return "#dc2626"; // red — normal
+  if (val <= -16) return "#f472b6"; // pink — mildly reduced
+  if (val <= -12) return "#fbcfe8"; // light pink — moderately reduced
+  if (val <= -8) return "#93c5fd"; // light blue — mod-severely reduced
+  return "#1d4ed8"; // dark blue — severely reduced
 }
 
 // ─── Bull's Eye SVG ──────────────────────────────────────────────────────────
@@ -385,11 +385,11 @@ export default function StrainNavigator() {
 
   // Color legend
   const legend = [
-    { color: "#15803d", label: "Normal (≤ −20%)" },
-    { color: "#86efac", label: "Mildly reduced (−16 to −20%)" },
-    { color: "#fbbf24", label: "Moderately reduced (−12 to −16%)" },
-    { color: "#f97316", label: "Severely reduced (−8 to −12%)" },
-    { color: "#dc2626", label: "Critically reduced (> −8%)" },
+    { color: "#dc2626", label: "Normal (≤ −20%)" },
+    { color: "#f472b6", label: "Mildly reduced (−16 to −20%)" },
+    { color: "#fbcfe8", label: "Moderately reduced (−12 to −16%)" },
+    { color: "#93c5fd", label: "Mod-severely reduced (−8 to −12%)" },
+    { color: "#1d4ed8", label: "Severely reduced (> −8%)" },
     { color: "#e5e7eb", label: "Not entered" },
   ];
 
@@ -444,6 +444,7 @@ export default function StrainNavigator() {
                     <option>Philips</option>
                     <option>Siemens Healthineers</option>
                     <option>Canon Medical</option>
+                    <option>Fujifilm</option>
                     <option>Samsung Medison</option>
                     <option>Mindray</option>
                     <option>Other</option>
