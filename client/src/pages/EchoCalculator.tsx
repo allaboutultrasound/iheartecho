@@ -15,7 +15,7 @@ function SeverityBadge({ severity }: { severity: Severity }) {
   const map: Record<string, string> = {
     normal: "bg-green-100 text-green-700",
     mild: "bg-yellow-100 text-yellow-700",
-    moderate: "bg-orange-100 text-orange-700",
+    moderate: "bg-amber-50 text-amber-600",
     severe: "bg-red-100 text-red-700",
   };
   return (
@@ -690,7 +690,7 @@ function DiastologyCalculator() {
   const larsGrade = larsVal > 0
     ? larsVal >= 35 ? { label: "Normal (≥35%)", color: "#16a34a" }
     : larsVal >= 24 ? { label: "Mildly Reduced — Grade I DD", color: "#d97706" }
-    : larsVal >= 18 ? { label: "Moderately Reduced — Grade II DD", color: "#ea580c" }
+    : larsVal >= 18 ? { label: "Moderately Reduced — Grade II DD", color: "#d97706" }
     : { label: "Severely Reduced — Grade III DD", color: "#dc2626" }
     : null;
 
@@ -708,11 +708,11 @@ function DiastologyCalculator() {
       if (abnormalCount >= 2) {
         grade = "Grade II — Pseudonormal (Elevated Filling Pressures)";
         fillingPressure = "Elevated filling pressures";
-        gradeColor = "#ea580c";
+        gradeColor = "#d97706";
       } else if (abnormalCount === 1) {
         grade = "Indeterminate — Insufficient criteria";
         fillingPressure = "Filling pressure uncertain";
-        gradeColor = "#7c3aed";
+        gradeColor = "#189aa1";
       } else {
         grade = "Normal Diastolic Function";
         fillingPressure = "Normal filling pressures";
@@ -859,7 +859,7 @@ function LVFunctionCalculator() {
   const efInterp = efNum > 0
     ? efNum >= 55 ? { label: "Normal EF (≥55%)", color: "#16a34a" }
     : efNum >= 40 ? { label: "Mildly-Moderately Reduced EF (40–54%)", color: "#d97706" }
-    : efNum >= 30 ? { label: "Moderately Reduced EF (30–39%)", color: "#ea580c" }
+    : efNum >= 30 ? { label: "Moderately Reduced EF (30–39%)", color: "#d97706" }
     : { label: "Severely Reduced EF (<30%)", color: "#dc2626" }
     : null;
 

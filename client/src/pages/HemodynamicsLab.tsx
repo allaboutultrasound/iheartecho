@@ -858,20 +858,20 @@ function getClinicalContext(p: Params): { title: string; description: string; co
   const { preload, afterload, contractility, heartRate } = p;
   // Valvular disease patterns (checked before generic patterns)
   if (afterload >= 85 && preload >= 50 && preload <= 62 && contractility >= 60 && contractility <= 70 && heartRate <= 72)
-    return { title: "Aortic Stenosis (Severe)", description: "Fixed high afterload from outflow obstruction. LV compensates with concentric LVH and elevated LVEDP. Slow-rising, low-amplitude pulse. Expect preserved EF until late decompensation. AVA <1.0 cm², Vmax >4 m/s.", color: "#c2410c" };
+    return { title: "Aortic Stenosis (Severe)", description: "Fixed high afterload from outflow obstruction. LV compensates with concentric LVH and elevated LVEDP. Slow-rising, low-amplitude pulse. Expect preserved EF until late decompensation. AVA <1.0 cm², Vmax >4 m/s.", color: "#d97706" };
   if (preload >= 82 && afterload <= 42 && contractility >= 58 && heartRate >= 72 && heartRate <= 78)
-    return { title: "Aortic Regurgitation (Chronic)", description: "Volume overload from diastolic regurgitation. Eccentric LVH with large EDV and wide pulse pressure. Bounding pulse. Diastolic flow reversal in descending aorta. EF may be preserved until late.", color: "#0369a1" };
+    return { title: "Aortic Regurgitation (Chronic)", description: "Volume overload from diastolic regurgitation. Eccentric LVH with large EDV and wide pulse pressure. Bounding pulse. Diastolic flow reversal in descending aorta. EF may be preserved until late.", color: "#189aa1" };
   if (preload >= 68 && preload <= 76 && afterload >= 42 && afterload <= 48 && heartRate >= 82 && heartRate <= 88)
-    return { title: "Mitral Stenosis (Severe)", description: "Fixed inflow obstruction elevates LA pressure and limits LV filling. Low EDV, reduced SV. LA dilation, risk of AF and pulmonary hypertension. MVA <1.0 cm², mean gradient >10 mmHg.", color: "#7e22ce" };
+    return { title: "Mitral Stenosis (Severe)", description: "Fixed inflow obstruction elevates LA pressure and limits LV filling. Low EDV, reduced SV. LA dilation, risk of AF and pulmonary hypertension. MVA <1.0 cm², mean gradient >10 mmHg.", color: "#189aa1" };
   if (preload >= 75 && afterload <= 45 && contractility >= 57 && contractility <= 63 && heartRate >= 77 && heartRate <= 83)
-    return { title: "Mitral Regurgitation (Chronic)", description: "Volume overload from systolic regurgitation into LA. Elevated preload, reduced effective forward SV. LA and LV dilation. EF appears falsely preserved due to low-resistance regurgitant pathway.", color: "#be123c" };
+    return { title: "Mitral Regurgitation (Chronic)", description: "Volume overload from systolic regurgitation into LA. Elevated preload, reduced effective forward SV. LA and LV dilation. EF appears falsely preserved due to low-resistance regurgitant pathway.", color: "#dc2626" };
   // Generic patterns
   if (contractility < 25 && preload > 60) return { title: "Decompensated Heart Failure", description: "Severely reduced contractility with elevated filling pressures. Dilated, poorly contracting LV. Expect low EF, elevated E/e', pulmonary congestion.", color: "#dc2626" };
   if (afterload > 75 && contractility > 55) return { title: "Pressure Overload — Compensated", description: "High SVR/afterload with preserved EF. LVH present. Seen in hypertension, aortic stenosis.", color: "#d97706" };
-  if (preload > 75 && contractility > 55) return { title: "Volume Overload — High Output", description: "Elevated EDV with preserved contractility. Seen in AR, MR, ASD, high-output states.", color: "#0891b2" };
+  if (preload > 75 && contractility > 55) return { title: "Volume Overload — High Output", description: "Elevated EDV with preserved contractility. Seen in AR, MR, ASD, high-output states.", color: "#189aa1" };
   if (contractility < 30) return { title: "Cardiomyopathy Pattern", description: "Severely reduced contractility. Dilated LV, low EF, elevated filling pressures.", color: "#dc2626" };
-  if (preload < 25 && heartRate > 100) return { title: "Hypovolemia / Shock", description: "Low preload with compensatory tachycardia. Reduced SV and CO. Underfilled LV.", color: "#7c3aed" };
-  if (afterload < 25 && heartRate > 100) return { title: "Vasodilatory / Distributive Shock", description: "Low SVR with compensatory tachycardia. High CO but poor perfusion pressure.", color: "#64748b" };
+  if (preload < 25 && heartRate > 100) return { title: "Hypovolemia / Shock", description: "Low preload with compensatory tachycardia. Reduced SV and CO. Underfilled LV.", color: "#dc2626" };
+  if (afterload < 25 && heartRate > 100) return { title: "Vasodilatory / Distributive Shock", description: "Low SVR with compensatory tachycardia. High CO but poor perfusion pressure.", color: "#dc2626" };
   return { title: "Normal Hemodynamics", description: "Balanced preload, afterload, and contractility. Normal cardiac output and filling pressures.", color: "#16a34a" };
 }
 
@@ -952,13 +952,13 @@ export default function HemodynamicsLab() {
                 Hemodynamic Controls
               </h3>
               <SliderControl label="Preload (LVEDP / EDV)" value={params.preload} min={0} max={100}
-                onChange={set("preload")} color="#0891b2" />
+                onChange={set("preload")} color="#189aa1" />
               <SliderControl label="Afterload (SVR / SBP)" value={params.afterload} min={0} max={100}
                 onChange={set("afterload")} color="#dc2626" />
               <SliderControl label="Contractility (Emax)" value={params.contractility} min={0} max={100}
                 onChange={set("contractility")} color="#16a34a" />
               <SliderControl label="Heart Rate" value={params.heartRate} min={40} max={140}
-                onChange={set("heartRate")} color="#9333ea" unit=" bpm" />
+                onChange={set("heartRate")} color="#189aa1" unit=" bpm" />
 
               <button onClick={() => setParams({ preload: 50, afterload: 50, contractility: 50, heartRate: 70 })}
                 className="w-full py-2 rounded-lg text-xs font-semibold border border-gray-200 text-gray-600 hover:border-[#189aa1] hover:text-[#189aa1] transition-all flex items-center justify-center gap-1.5">
@@ -1022,8 +1022,8 @@ export default function HemodynamicsLab() {
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs">
                 <span className="font-bold text-gray-600" style={{ fontFamily: "Merriweather, serif" }}>Valve Events:</span>
                 <span className="flex items-center gap-1.5">
-                  <span className="w-3 h-0.5 inline-block bg-blue-500 border-dashed border border-blue-500"></span>
-                  <span className="font-semibold text-blue-600">MVC</span>
+                  <span className="w-3 h-0.5 inline-block bg-teal-100 border-dashed border border-teal-300"></span>
+                  <span className="font-semibold text-teal-600">MVC</span>
                   <span className="text-gray-400">Mitral Valve Closes ({events.mvc} ms)</span>
                 </span>
                 <span className="flex items-center gap-1.5">
@@ -1032,8 +1032,8 @@ export default function HemodynamicsLab() {
                   <span className="text-gray-400">Aortic Valve Opens ({events.avo} ms)</span>
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <span className="w-3 h-0.5 inline-block bg-orange-500"></span>
-                  <span className="font-semibold text-orange-600">AVC</span>
+                  <span className="w-3 h-0.5 inline-block bg-amber-50"></span>
+                  <span className="font-semibold text-amber-600">AVC</span>
                   <span className="text-gray-400">Aortic Valve Closes ({events.avc} ms)</span>
                 </span>
                 <span className="flex items-center gap-1.5">
@@ -1051,9 +1051,9 @@ export default function HemodynamicsLab() {
                 <h3 className="font-bold text-gray-700 text-sm" style={{ fontFamily: "Merriweather, serif" }}>ECG</h3>
                 <div className="flex items-center gap-3 text-xs text-gray-400">
                   <span>Lead II (simulated)</span>
-                  <span className="flex items-center gap-1"><b className="text-purple-600">P</b> wave</span>
+                  <span className="flex items-center gap-1"><b className="text-teal-600">P</b> wave</span>
                   <span className="flex items-center gap-1"><b className="text-red-600">QRS</b> complex</span>
-                  <span className="flex items-center gap-1"><b className="text-orange-500">T</b> wave</span>
+                  <span className="flex items-center gap-1"><b className="text-amber-600">T</b> wave</span>
                 </div>
               </div>
               <ResponsiveContainer width="100%" height={100}>
@@ -1061,15 +1061,15 @@ export default function HemodynamicsLab() {
                   <XAxis dataKey="time" hide />
                   <YAxis domain={[-0.4, 1.4]} hide />
                   {/* Valve event lines */}
-                  <ReferenceLine x={events.mvc} stroke="#3b82f6" strokeDasharray="4 3" strokeWidth={1.5} />
-                  <ReferenceLine x={events.avo} stroke="#ef4444" strokeWidth={1.5} />
-                  <ReferenceLine x={events.avc} stroke="#f97316" strokeWidth={1.5} />
-                  <ReferenceLine x={events.mvo} stroke="#22c55e" strokeDasharray="4 3" strokeWidth={1.5} />
+                  <ReferenceLine x={events.mvc} stroke="#189aa1" strokeDasharray="4 3" strokeWidth={1.5} />
+                  <ReferenceLine x={events.avo} stroke="#dc2626" strokeWidth={1.5} />
+                  <ReferenceLine x={events.avc} stroke="#d97706" strokeWidth={1.5} />
+                  <ReferenceLine x={events.mvo} stroke="#16a34a" strokeDasharray="4 3" strokeWidth={1.5} />
                   {/* P wave label — at ~88% of RR */}
                   <ReferenceLine
                     x={Math.round(0.88 * rr_ms)}
                     stroke="transparent"
-                    label={{ value: "P", position: "top", fontSize: 9, fill: "#9333ea", fontWeight: 700 }}
+                    label={{ value: "P", position: "top", fontSize: 9, fill: "#189aa1", fontWeight: 700 }}
                   />
                   {/* QRS label — at ~2% of RR */}
                   <ReferenceLine
@@ -1081,21 +1081,21 @@ export default function HemodynamicsLab() {
                   <ReferenceLine
                     x={Math.round(0.18 * rr_ms)}
                     stroke="transparent"
-                    label={{ value: "T", position: "top", fontSize: 9, fill: "#f97316", fontWeight: 700 }}
+                    label={{ value: "T", position: "top", fontSize: 9, fill: "#d97706", fontWeight: 700 }}
                   />
                   {/* PR interval bracket */}
                   <ReferenceLine
                     x={Math.round(0.93 * rr_ms)}
-                    stroke="#9333ea" strokeDasharray="2 3" strokeWidth={0.8}
+                    stroke="#189aa1" strokeDasharray="2 3" strokeWidth={0.8}
                   />
                   <Line type="monotone" dataKey="ecg" stroke="#1e293b" strokeWidth={1.8} dot={false} name="ECG" />
                 </ComposedChart>
               </ResponsiveContainer>
               {/* ECG interval summary */}
               <div className="mt-1 flex flex-wrap gap-3 text-[10px] text-gray-500">
-                <span><b className="text-purple-600">PR:</b> {Math.round((0.02 - 0.88 + 1) * rr_ms)} ms</span>
+                <span><b className="text-teal-600">PR:</b> {Math.round((0.02 - 0.88 + 1) * rr_ms)} ms</span>
                 <span><b className="text-red-600">QRS:</b> ~{Math.round(0.03 * rr_ms)} ms</span>
-                <span><b className="text-orange-500">QT:</b> {Math.round(0.40 * rr_ms)} ms</span>
+                <span><b className="text-amber-600">QT:</b> {Math.round(0.40 * rr_ms)} ms</span>
                 <span><b className="text-gray-500">RR:</b> {rr_ms} ms</span>
                 <span><b className="text-gray-500">HR:</b> {params.heartRate} bpm</span>
               </div>
@@ -1108,7 +1108,7 @@ export default function HemodynamicsLab() {
                 <div className="flex flex-wrap items-center gap-3 text-xs">
                   <span className="flex items-center gap-1"><span className="w-3 h-0.5 inline-block bg-[#189aa1]"></span> LV Pressure</span>
                   <span className="flex items-center gap-1"><span className="w-3 h-0.5 inline-block bg-[#dc2626]"></span> Aortic Pressure</span>
-                  <span className="flex items-center gap-1"><span className="w-3 h-0.5 inline-block bg-[#9333ea]"></span> LA Pressure</span>
+                  <span className="flex items-center gap-1"><span className="w-3 h-0.5 inline-block bg-[#189aa1]"></span> LA Pressure</span>
                 </div>
               </div>
               <ResponsiveContainer width="100%" height={180}>
@@ -1121,13 +1121,13 @@ export default function HemodynamicsLab() {
                     domain={[0, Math.max(250, Math.round(hemo.sbp + (params.lvaoGradient ?? 0) + 20))]}
                   />
                   <Tooltip content={<WiggersTooltip />} />
-                  <ReferenceLine x={events.mvc} stroke="#3b82f6" strokeDasharray="4 3" strokeWidth={1.5} label={{ value: "MVC", position: "top", fontSize: 8, fill: "#3b82f6" }} />
-                  <ReferenceLine x={events.avo} stroke="#ef4444" strokeWidth={1.5} label={{ value: "AVO", position: "top", fontSize: 8, fill: "#ef4444" }} />
-                  <ReferenceLine x={events.avc} stroke="#f97316" strokeWidth={1.5} label={{ value: "AVC", position: "top", fontSize: 8, fill: "#f97316" }} />
-                  <ReferenceLine x={events.mvo} stroke="#22c55e" strokeDasharray="4 3" strokeWidth={1.5} label={{ value: "MVO", position: "top", fontSize: 8, fill: "#22c55e" }} />
+                  <ReferenceLine x={events.mvc} stroke="#189aa1" strokeDasharray="4 3" strokeWidth={1.5} label={{ value: "MVC", position: "top", fontSize: 8, fill: "#189aa1" }} />
+                  <ReferenceLine x={events.avo} stroke="#dc2626" strokeWidth={1.5} label={{ value: "AVO", position: "top", fontSize: 8, fill: "#dc2626" }} />
+                  <ReferenceLine x={events.avc} stroke="#d97706" strokeWidth={1.5} label={{ value: "AVC", position: "top", fontSize: 8, fill: "#d97706" }} />
+                  <ReferenceLine x={events.mvo} stroke="#16a34a" strokeDasharray="4 3" strokeWidth={1.5} label={{ value: "MVO", position: "top", fontSize: 8, fill: "#16a34a" }} />
                   <Area type="monotone" dataKey="aop" stroke="#dc2626" fill="#fecaca" fillOpacity={0.3} strokeWidth={2} dot={false} name="Aortic Pressure" />
                   <Line type="monotone" dataKey="lvp" stroke="#189aa1" strokeWidth={2.5} dot={false} name="LV Pressure" />
-                  <Line type="monotone" dataKey="lap" stroke="#9333ea" strokeWidth={1.8} strokeDasharray="5 2" dot={false} name="LA Pressure" />
+                  <Line type="monotone" dataKey="lap" stroke="#189aa1" strokeWidth={1.8} strokeDasharray="5 2" dot={false} name="LA Pressure" />
                 </ComposedChart>
               </ResponsiveContainer>
             </div>
@@ -1148,10 +1148,10 @@ export default function HemodynamicsLab() {
                   <XAxis dataKey="time" tick={{ fontSize: 9 }} label={{ value: "Time (ms)", position: "insideBottom", offset: -2, fontSize: 9 }} />
                   <YAxis tick={{ fontSize: 9 }} label={{ value: "mL", angle: -90, position: "insideLeft", fontSize: 9, offset: 10 }} />
                   <Tooltip content={<WiggersTooltip />} />
-                  <ReferenceLine x={events.mvc} stroke="#3b82f6" strokeDasharray="4 3" strokeWidth={1.5} />
-                  <ReferenceLine x={events.avo} stroke="#ef4444" strokeWidth={1.5} />
-                  <ReferenceLine x={events.avc} stroke="#f97316" strokeWidth={1.5} />
-                  <ReferenceLine x={events.mvo} stroke="#22c55e" strokeDasharray="4 3" strokeWidth={1.5} />
+                  <ReferenceLine x={events.mvc} stroke="#189aa1" strokeDasharray="4 3" strokeWidth={1.5} />
+                  <ReferenceLine x={events.avo} stroke="#dc2626" strokeWidth={1.5} />
+                  <ReferenceLine x={events.avc} stroke="#d97706" strokeWidth={1.5} />
+                  <ReferenceLine x={events.mvo} stroke="#16a34a" strokeDasharray="4 3" strokeWidth={1.5} />
                   <Area type="monotone" dataKey="lvv" stroke="#4ad9e0" fill="#e0f9fa" fillOpacity={0.5} strokeWidth={2.5} dot={false} name="LV Volume" />
                 </ComposedChart>
               </ResponsiveContainer>
@@ -1168,10 +1168,10 @@ export default function HemodynamicsLab() {
               </div>
               {/* PV Loop phase legend */}
               <div className="flex flex-wrap gap-x-4 gap-y-1 mb-2 text-[10px]">
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm inline-block" style={{ background: "#3b82f620" }}></span><span className="text-blue-600 font-semibold">IVCT</span></span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm inline-block" style={{ background: "#ef444420" }}></span><span className="text-red-600 font-semibold">Systole / Ejection</span></span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm inline-block" style={{ background: "#f9731620" }}></span><span className="text-orange-600 font-semibold">IVRT</span></span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm inline-block" style={{ background: "#22c55e20" }}></span><span className="text-green-600 font-semibold">Diastole / Filling</span></span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm inline-block" style={{ background: "#189aa120" }}></span><span className="text-teal-600 font-semibold">IVCT</span></span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm inline-block" style={{ background: "#dc262620" }}></span><span className="text-red-600 font-semibold">Systole / Ejection</span></span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm inline-block" style={{ background: "#d9770620" }}></span><span className="text-amber-600 font-semibold">IVRT</span></span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm inline-block" style={{ background: "#16a34a20" }}></span><span className="text-green-600 font-semibold">Diastole / Filling</span></span>
               </div>
               <div className="relative">
                 <ResponsiveContainer width="100%" height={260}>
@@ -1184,69 +1184,69 @@ export default function HemodynamicsLab() {
                     <Tooltip formatter={(v: number) => [`${v.toFixed(1)}`, ""]} />
                     {/* Corner marker dots */}
                     {pvCorners.mvc && (
-                      <ReferenceLine x={pvCorners.mvc.volume} stroke="#3b82f6" strokeDasharray="3 3" strokeWidth={1}
-                        label={{ value: "MVC", position: "insideTopLeft", fontSize: 8, fill: "#3b82f6", fontWeight: 700 }} />
+                      <ReferenceLine x={pvCorners.mvc.volume} stroke="#189aa1" strokeDasharray="3 3" strokeWidth={1}
+                        label={{ value: "MVC", position: "insideTopLeft", fontSize: 8, fill: "#189aa1", fontWeight: 700 }} />
                     )}
                     {pvCorners.avo && (
-                      <ReferenceLine x={pvCorners.avo.volume} stroke="#ef4444" strokeWidth={1.5}
-                        label={{ value: "AVO", position: "insideTopLeft", fontSize: 8, fill: "#ef4444", fontWeight: 700 }} />
+                      <ReferenceLine x={pvCorners.avo.volume} stroke="#dc2626" strokeWidth={1.5}
+                        label={{ value: "AVO", position: "insideTopLeft", fontSize: 8, fill: "#dc2626", fontWeight: 700 }} />
                     )}
                     {pvCorners.avc && (
-                      <ReferenceLine x={pvCorners.avc.volume} stroke="#f97316" strokeWidth={1.5}
-                        label={{ value: "AVC", position: "insideTopRight", fontSize: 8, fill: "#f97316", fontWeight: 700 }} />
+                      <ReferenceLine x={pvCorners.avc.volume} stroke="#d97706" strokeWidth={1.5}
+                        label={{ value: "AVC", position: "insideTopRight", fontSize: 8, fill: "#d97706", fontWeight: 700 }} />
                     )}
                     {pvCorners.mvo && (
-                      <ReferenceLine x={pvCorners.mvo.volume} stroke="#22c55e" strokeDasharray="3 3" strokeWidth={1}
-                        label={{ value: "MVO", position: "insideTopRight", fontSize: 8, fill: "#22c55e", fontWeight: 700 }} />
+                      <ReferenceLine x={pvCorners.mvo.volume} stroke="#16a34a" strokeDasharray="3 3" strokeWidth={1}
+                        label={{ value: "MVO", position: "insideTopRight", fontSize: 8, fill: "#16a34a", fontWeight: 700 }} />
                     )}
                     {/* Pressure reference lines for IVCT and IVRT */}
                     {pvCorners.ivct_mid && (
-                      <ReferenceLine y={pvCorners.ivct_mid.pressure} stroke="#3b82f6" strokeDasharray="2 4" strokeWidth={0.8}
-                        label={{ value: "IVCT", position: "right", fontSize: 8, fill: "#3b82f6" }} />
+                      <ReferenceLine y={pvCorners.ivct_mid.pressure} stroke="#189aa1" strokeDasharray="2 4" strokeWidth={0.8}
+                        label={{ value: "IVCT", position: "right", fontSize: 8, fill: "#189aa1" }} />
                     )}
                     {pvCorners.ivrt_mid && (
-                      <ReferenceLine y={pvCorners.ivrt_mid.pressure} stroke="#f97316" strokeDasharray="2 4" strokeWidth={0.8}
-                        label={{ value: "IVRT", position: "right", fontSize: 8, fill: "#f97316" }} />
+                      <ReferenceLine y={pvCorners.ivrt_mid.pressure} stroke="#d97706" strokeDasharray="2 4" strokeWidth={0.8}
+                        label={{ value: "IVRT", position: "right", fontSize: 8, fill: "#d97706" }} />
                     )}
                     {/* EDV and ESV reference lines */}
                     <ReferenceLine x={Math.round(hemo.edv)} stroke="#94a3b8" strokeDasharray="4 3" strokeWidth={1}
-                      label={{ value: `EDV ${Math.round(hemo.edv)}`, position: "insideBottomRight", fontSize: 8, fill: "#64748b" }} />
+                      label={{ value: `EDV ${Math.round(hemo.edv)}`, position: "insideBottomRight", fontSize: 8, fill: "#189aa1" }} />
                     <ReferenceLine x={Math.round(hemo.esv)} stroke="#94a3b8" strokeDasharray="4 3" strokeWidth={1}
-                      label={{ value: `ESV ${Math.round(hemo.esv)}`, position: "insideBottomLeft", fontSize: 8, fill: "#64748b" }} />
+                      label={{ value: `ESV ${Math.round(hemo.esv)}`, position: "insideBottomLeft", fontSize: 8, fill: "#189aa1" }} />
                     {/* ESP reference */}
                     <ReferenceLine y={Math.round(hemo.esp)} stroke="#189aa1" strokeDasharray="3 3" strokeWidth={0.8}
                       label={{ value: `ESP ${Math.round(hemo.esp)} mmHg`, position: "right", fontSize: 8, fill: "#189aa1" }} />
                     {/* EDP reference */}
-                    <ReferenceLine y={Math.round(hemo.edp)} stroke="#0891b2" strokeDasharray="3 3" strokeWidth={0.8}
-                      label={{ value: `EDP ${Math.round(hemo.edp)} mmHg`, position: "right", fontSize: 8, fill: "#0891b2" }} />
+                    <ReferenceLine y={Math.round(hemo.edp)} stroke="#189aa1" strokeDasharray="3 3" strokeWidth={0.8}
+                      label={{ value: `EDP ${Math.round(hemo.edp)} mmHg`, position: "right", fontSize: 8, fill: "#189aa1" }} />
                     <Area type="monotone" dataKey="pressure" stroke="#189aa1" fill="#e0f9fa" fillOpacity={0.4} strokeWidth={2.5} dot={false} name="PV Loop" />
                   </ComposedChart>
                 </ResponsiveContainer>
                 {/* Phase labels overlaid on the loop quadrants */}
                 <div className="absolute inset-0 pointer-events-none" style={{ top: 20, left: 40, right: 50, bottom: 20 }}>
                   {/* These are positioned conceptually — actual pixel positions are approximated */}
-                  <div className="absolute text-[9px] font-bold text-blue-500 opacity-70" style={{ left: "5%", top: "15%" }}>IVCT</div>
+                  <div className="absolute text-[9px] font-bold text-teal-500 opacity-70" style={{ left: "5%", top: "15%" }}>IVCT</div>
                   <div className="absolute text-[9px] font-bold text-red-500 opacity-70" style={{ left: "40%", top: "5%" }}>SYSTOLE</div>
-                  <div className="absolute text-[9px] font-bold text-orange-500 opacity-70" style={{ right: "5%", top: "40%" }}>IVRT</div>
+                  <div className="absolute text-[9px] font-bold text-amber-600 opacity-70" style={{ right: "5%", top: "40%" }}>IVRT</div>
                   <div className="absolute text-[9px] font-bold text-green-600 opacity-70" style={{ left: "30%", bottom: "10%" }}>DIASTOLE</div>
                 </div>
               </div>
               {/* PV Loop annotation summary */}
               <div className="mt-2 grid grid-cols-4 gap-2 text-[10px]">
-                <div className="p-1.5 rounded bg-blue-50 border border-blue-100 text-center">
-                  <div className="font-bold text-blue-600">IVCT</div>
+                <div className="p-1.5 rounded bg-teal-100 border border-teal-300 text-center">
+                  <div className="font-bold text-teal-600">IVCT</div>
                   <div className="text-gray-500">MVC → AVO</div>
-                  <div className="font-mono text-blue-700">{Math.round((0.05) * (60 / params.heartRate) * 1000)} ms</div>
+                  <div className="font-mono text-teal-600">{Math.round((0.05) * (60 / params.heartRate) * 1000)} ms</div>
                 </div>
                 <div className="p-1.5 rounded bg-red-50 border border-red-100 text-center">
                   <div className="font-bold text-red-600">Ejection</div>
                   <div className="text-gray-500">AVO → AVC</div>
                   <div className="font-mono text-red-700">{Math.round((0.30) * (60 / params.heartRate) * 1000)} ms</div>
                 </div>
-                <div className="p-1.5 rounded bg-orange-50 border border-orange-100 text-center">
-                  <div className="font-bold text-orange-600">IVRT</div>
+                <div className="p-1.5 rounded bg-amber-50 border border-orange-100 text-center">
+                  <div className="font-bold text-amber-600">IVRT</div>
                   <div className="text-gray-500">AVC → MVO</div>
-                  <div className="font-mono text-orange-700">{Math.round((0.05) * (60 / params.heartRate) * 1000)} ms</div>
+                  <div className="font-mono text-amber-600">{Math.round((0.05) * (60 / params.heartRate) * 1000)} ms</div>
                 </div>
                 <div className="p-1.5 rounded bg-green-50 border border-green-100 text-center">
                   <div className="font-bold text-green-600">Filling</div>
@@ -1287,11 +1287,11 @@ export default function HemodynamicsLab() {
                 </div>
                 <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
                   <div className="font-bold text-gray-700">E/A</div>
-                  <div className={`font-mono font-bold ${mitralData.eaRatio < 0.8 ? "text-orange-600" : mitralData.eaRatio > 2.0 ? "text-red-600" : ""}`} style={mitralData.eaRatio >= 0.8 && mitralData.eaRatio <= 2.0 ? {color:"#0e9aa7"} : {}}>{mitralData.eaRatio.toFixed(1)}</div>
+                  <div className={`font-mono font-bold ${mitralData.eaRatio < 0.8 ? "text-amber-600" : mitralData.eaRatio > 2.0 ? "text-red-600" : ""}`} style={mitralData.eaRatio >= 0.8 && mitralData.eaRatio <= 2.0 ? {color:"#0e9aa7"} : {}}>{mitralData.eaRatio.toFixed(1)}</div>
                 </div>
                 <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100 col-span-3">
                   <div className="font-bold text-gray-700">Dec. Time</div>
-                  <div className="font-mono text-blue-700">{mitralData.decTime} ms</div>
+                  <div className="font-mono text-teal-600">{mitralData.decTime} ms</div>
                 </div>
               </div>
             </div>
@@ -1340,7 +1340,7 @@ export default function HemodynamicsLab() {
               <div className="mt-2 grid grid-cols-3 gap-1 text-[10px]">
                 <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
                   <div className="font-bold text-gray-700">Vmax</div>
-                  <div className={`font-mono font-bold ${avOutflowData.vmax > 4.0 ? "text-red-600" : avOutflowData.vmax > 3.0 ? "text-orange-600" : ""}`} style={avOutflowData.vmax <= 3.0 ? {color:"#22d3ee"} : {}}>{avOutflowData.vmax.toFixed(1)} m/s</div>
+                  <div className={`font-mono font-bold ${avOutflowData.vmax > 4.0 ? "text-red-600" : avOutflowData.vmax > 3.0 ? "text-amber-600" : ""}`} style={avOutflowData.vmax <= 3.0 ? {color:"#22d3ee"} : {}}>{avOutflowData.vmax.toFixed(1)} m/s</div>
                 </div>
                 <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
                   <div className="font-bold text-gray-700">VTI</div>
@@ -1348,13 +1348,13 @@ export default function HemodynamicsLab() {
                 </div>
                 <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
                   <div className="font-bold text-gray-700">Shape</div>
-                  <div className={`font-mono font-bold ${avOutflowData.shape === "tardus" ? "text-red-600" : avOutflowData.shape === "dynamic" ? "text-orange-600" : "text-green-700"}`}>
+                  <div className={`font-mono font-bold ${avOutflowData.shape === "tardus" ? "text-red-600" : avOutflowData.shape === "dynamic" ? "text-amber-600" : "text-green-700"}`}>
                     {avOutflowData.shape === "tardus" ? "Tardus" : avOutflowData.shape === "dynamic" ? "Dagger" : "Normal"}
                   </div>
                 </div>
                 <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100 col-span-3">
                   <div className="font-bold text-gray-700">Mean Gradient (est.)</div>
-                  <div className={`font-mono font-bold ${4 * avOutflowData.vmax ** 2 > 40 ? "text-red-600" : 4 * avOutflowData.vmax ** 2 > 20 ? "text-orange-600" : ""}`} style={4 * avOutflowData.vmax ** 2 <= 20 ? {color:"#22d3ee"} : {}}>{Math.round(4 * avOutflowData.vmax ** 2 * 0.6)} mmHg</div>
+                  <div className={`font-mono font-bold ${4 * avOutflowData.vmax ** 2 > 40 ? "text-red-600" : 4 * avOutflowData.vmax ** 2 > 20 ? "text-amber-600" : ""}`} style={4 * avOutflowData.vmax ** 2 <= 20 ? {color:"#22d3ee"} : {}}>{Math.round(4 * avOutflowData.vmax ** 2 * 0.6)} mmHg</div>
                 </div>
               </div>
             </div>

@@ -47,11 +47,11 @@ type Severity = "normal" | "mild" | "moderate" | "severe" | "critical" | "indete
 const severityConfig: Record<Severity, { bg: string; border: string; text: string; badge: string; badgeText: string; icon: string }> = {
   normal:       { bg: "#f0fdf4", border: "#86efac", text: "#166534", badge: "#16a34a", badgeText: "Normal",        icon: "✓" },
   mild:         { bg: "#fffbeb", border: "#fcd34d", text: "#92400e", badge: "#d97706", badgeText: "Mild",           icon: "!" },
-  moderate:     { bg: "#fff7ed", border: "#fdba74", text: "#9a3412", badge: "#ea580c", badgeText: "Moderate",       icon: "!!" },
+  moderate:     { bg: "#fff7ed", border: "#fdba74", text: "#9a3412", badge: "#d97706", badgeText: "Moderate",       icon: "!!" },
   severe:       { bg: "#fef2f2", border: "#fca5a5", text: "#991b1b", badge: "#dc2626", badgeText: "Severe",         icon: "!!!" },
   critical:     { bg: "#fdf2f8", border: "#f0abfc", text: "#701a75", badge: "#a21caf", badgeText: "Critical",       icon: "⚠" },
-  indeterminate:{ bg: "#f8fafc", border: "#cbd5e1", text: "#475569", badge: "#64748b", badgeText: "Indeterminate",  icon: "?" },
-  info:         { bg: "#f0fbfc", border: "#67e8f9", text: "#0e7490", badge: "#0891b2", badgeText: "Result",         icon: "i" },
+  indeterminate:{ bg: "#f8fafc", border: "#cbd5e1", text: "#475569", badge: "#189aa1", badgeText: "Indeterminate",  icon: "?" },
+  info:         { bg: "#f0fbfc", border: "#67e8f9", text: "#0e7490", badge: "#189aa1", badgeText: "Result",         icon: "i" },
 };
 
 function ResultCard({
@@ -1118,7 +1118,7 @@ export default function EchoAssist() {
 
         {/* Info banner */}
         <div className="flex items-start gap-3 bg-[#f0fbfc] border border-[#b2e8ec] rounded-xl px-5 py-3 mb-6">
-          <Info className="w-4 h-4 text-[#0891b2] flex-shrink-0 mt-0.5" />
+          <Info className="w-4 h-4 text-[#189aa1] flex-shrink-0 mt-0.5" />
           <p className="text-xs text-[#0e7490]">
             <strong>Clinical tool — not a substitute for physician judgment.</strong> All classifications are based on published ASE, AHA/ACC, and ESC guidelines. Results update in real time as you type. Each section can be used independently.
           </p>

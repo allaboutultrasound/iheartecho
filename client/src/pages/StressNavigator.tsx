@@ -37,7 +37,7 @@ const wmScores: Record<number, { label: string; color: string }> = {
   2: { label: "Hypokinetic", color: "#d97706" },
   3: { label: "Akinetic", color: "#ea580c" },
   4: { label: "Dyskinetic", color: "#dc2626" },
-  5: { label: "Aneurysmal", color: "#7c3aed" },
+  5: { label: "Aneurysmal", color: "#d97706" },
 };
 
 function WallMotionScorer() {
@@ -361,7 +361,7 @@ const interpretationCriteria = [
   },
   {
     result: "Viability (Low-Dose DSE)",
-    color: "#7c3aed",
+    color: "#d97706",
     criteria: [
       "Biphasic response: improved at low dose → worsens at high dose = viable + ischemic",
       "Sustained improvement at all doses = viable, no significant ischemia",

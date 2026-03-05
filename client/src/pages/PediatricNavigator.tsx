@@ -172,7 +172,7 @@ function PedZScoreCalc() {
 
   const getZInterp = (z: number) => {
     if (z < -3) return { label: "Severely Reduced (< -3 SD)", color: "#dc2626" };
-    if (z < -2) return { label: "Reduced (< -2 SD)", color: "#ea580c" };
+    if (z < -2) return { label: "Reduced (< -2 SD)", color: "#d97706" };
     if (z > 3) return { label: "Severely Enlarged (> +3 SD)", color: "#dc2626" };
     if (z > 2) return { label: "Enlarged (> +2 SD)", color: "#d97706" };
     return { label: "Normal Range (±2 SD)", color: "#16a34a" };
@@ -367,8 +367,8 @@ function SegmentalAnalysis() {
     if (isNormal) return { label: "Normal Cardiac Segmental Anatomy", color: "#16a34a" };
     if (isTGA) return { label: "d-TGA (Concordant AV, Discordant VA)", color: "#dc2626" };
     if (isCCTGA) return { label: "CCTGA / L-TGA (Discordant AV + VA)", color: "#dc2626" };
-    if (isDORV) return { label: "Double Outlet Right Ventricle (DORV)", color: "#ea580c" };
-    if (avConnection === "single_ventricle") return { label: "Univentricular AV Connection", color: "#7c3aed" };
+    if (isDORV) return { label: "Double Outlet Right Ventricle (DORV)", color: "#d97706" };
+    if (avConnection === "single_ventricle") return { label: "Univentricular AV Connection", color: "#189aa1" };
     if (vaConnection && avConnection && visceroAtrial) return { label: "Complex CHD — Detailed analysis required", color: "#d97706" };
     return null;
   };
@@ -447,7 +447,7 @@ function NeonatalHemodynamics() {
   const getRvspInterp = () => {
     if (!rvsp) return null;
     if (rvspNum >= 60) return { label: "Severely elevated (≥60 mmHg) — Likely PPHN or CHD", color: "#dc2626", note: "Evaluate for PPHN, CHD with RV outflow obstruction, or parenchymal lung disease" };
-    if (rvspNum >= 40) return { label: "Moderately elevated (40–59 mmHg) — Persistent PH", color: "#ea580c", note: "Consider transitional circulation if <48h of life. If >48h: evaluate for PPHN" };
+    if (rvspNum >= 40) return { label: "Moderately elevated (40–59 mmHg) — Persistent PH", color: "#d97706", note: "Consider transitional circulation if <48h of life. If >48h: evaluate for PPHN" };
     if (rvspNum >= 25) return { label: "Mildly elevated (25–39 mmHg) — Monitor", color: "#d97706", note: "May be normal in first 24–48h of life (transitional). Recheck at 48–72h" };
     return { label: "Normal (<25 mmHg) — Pulmonary pressures normal", color: "#16a34a", note: "Normal neonatal pulmonary vascular resistance" };
   };
@@ -473,9 +473,9 @@ function NeonatalHemodynamics() {
   return (
     <div className="space-y-5">
       {/* PPHN / Transitional Circulation info */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-start gap-2">
-        <AlertCircle className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
-        <div className="text-xs text-blue-700">
+      <div className="bg-teal-100 border border-teal-300 rounded-xl p-3 flex items-start gap-2">
+        <AlertCircle className="w-4 h-4 text-teal-600 flex-shrink-0 mt-0.5" />
+        <div className="text-xs text-teal-600">
           <strong>Transitional Circulation (0–48h):</strong> RVSP may equal systemic pressure — this is normal in the first 24–48h of life.
           Persistent pulmonary hypertension of the newborn (PPHN) is diagnosed when RVSP remains elevated (&gt;2/3 systemic) beyond 48h
           or when there is R→L shunting at the PDA or PFO.
@@ -778,9 +778,9 @@ export default function PediatricNavigator() {
                           ))}
                         </ul>
                       </div>
-                      <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
-                        <div className="text-xs font-semibold text-blue-700 mb-1">Clinical Notes</div>
-                        <p className="text-xs text-blue-700">{currentFindings[selectedFinding].notes}</p>
+                      <div className="p-3 rounded-lg bg-teal-100 border border-teal-300">
+                        <div className="text-xs font-semibold text-teal-600 mb-1">Clinical Notes</div>
+                        <p className="text-xs text-teal-600">{currentFindings[selectedFinding].notes}</p>
                       </div>
                       <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 flex items-start gap-2">
                         <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />

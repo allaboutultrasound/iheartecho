@@ -102,7 +102,7 @@ const tteViews = [
       <!-- Notch dot toward right shoulder -->
       <circle cx="60" cy="72" r="4" fill="#4ad9e0"/>
       <line x1="60" y1="72" x2="43" y2="55" stroke="#4ad9e0" stroke-width="1.8" marker-end="url(#ah)"/>
-      <text x="100" y="218" text-anchor="middle" font-size="10" fill="#64748b" font-family="sans-serif">3rd–4th ICS, LSB → notch 2 o'clock</text>
+      <text x="100" y="218" text-anchor="middle" font-size="10" fill="#189aa1" font-family="sans-serif">3rd–4th ICS, LSB → notch 2 o'clock</text>
     </svg>`,
   },
   {
@@ -127,11 +127,11 @@ const tteViews = [
       <path d="M100,82 Q56,87 40,103" fill="none" stroke="#cbd5e1" stroke-width="1.2"/>
       <path d="M100,102 Q56,107 40,123" fill="none" stroke="#cbd5e1" stroke-width="1.2"/>
       <!-- Probe rotated 90° CW — horizontal orientation -->
-      <rect x="58" y="85" width="30" height="16" rx="4" fill="#0891b2" transform="rotate(0,73,93)"/>
+      <rect x="58" y="85" width="30" height="16" rx="4" fill="#189aa1" transform="rotate(0,73,93)"/>
       <!-- Notch dot toward left shoulder -->
       <circle cx="58" cy="85" r="4" fill="#4ad9e0"/>
       <line x1="58" y1="85" x2="42" y2="68" stroke="#4ad9e0" stroke-width="1.8" marker-end="url(#ah2)"/>
-      <text x="100" y="218" text-anchor="middle" font-size="10" fill="#64748b" font-family="sans-serif">Rotate 90° CW from PLAX → notch 10 o'clock</text>
+      <text x="100" y="218" text-anchor="middle" font-size="10" fill="#189aa1" font-family="sans-serif">Rotate 90° CW from PLAX → notch 10 o'clock</text>
     </svg>`,
   },
   {
@@ -156,10 +156,10 @@ const tteViews = [
       <path d="M100,102 Q56,107 40,123" fill="none" stroke="#cbd5e1" stroke-width="1.2"/>
       <path d="M100,122 Q58,127 44,143" fill="none" stroke="#cbd5e1" stroke-width="1.2"/>
       <!-- Probe slightly more inferior, tilted posteriorly -->
-      <rect x="58" y="98" width="30" height="16" rx="4" fill="#7c3aed" transform="rotate(-5,73,106)"/>
+      <rect x="58" y="98" width="30" height="16" rx="4" fill="#189aa1" transform="rotate(-5,73,106)"/>
       <circle cx="57" cy="97" r="4" fill="#4ad9e0"/>
       <line x1="57" y1="97" x2="41" y2="80" stroke="#4ad9e0" stroke-width="1.8" marker-end="url(#ah3)"/>
-      <text x="100" y="218" text-anchor="middle" font-size="10" fill="#64748b" font-family="sans-serif">Tilt posteriorly from AV level</text>
+      <text x="100" y="218" text-anchor="middle" font-size="10" fill="#189aa1" font-family="sans-serif">Tilt posteriorly from AV level</text>
     </svg>`,
   },
   {
@@ -187,7 +187,7 @@ const tteViews = [
       <rect x="58" y="112" width="30" height="16" rx="4" fill="#059669" transform="rotate(-8,73,120)"/>
       <circle cx="57" cy="110" r="4" fill="#4ad9e0"/>
       <line x1="57" y1="110" x2="41" y2="93" stroke="#4ad9e0" stroke-width="1.8" marker-end="url(#ah4)"/>
-      <text x="100" y="218" text-anchor="middle" font-size="10" fill="#64748b" font-family="sans-serif">4th–5th ICS, more posterior tilt</text>
+      <text x="100" y="218" text-anchor="middle" font-size="10" fill="#189aa1" font-family="sans-serif">4th–5th ICS, more posterior tilt</text>
     </svg>`,
   },
   {
@@ -215,7 +215,7 @@ const tteViews = [
       <!-- Notch toward left (patient's left = image right) -->
       <circle cx="94" cy="154" r="4" fill="#4ad9e0"/>
       <line x1="94" y1="154" x2="116" y2="143" stroke="#4ad9e0" stroke-width="1.8" marker-end="url(#ah5)"/>
-      <text x="100" y="218" text-anchor="middle" font-size="10" fill="#64748b" font-family="sans-serif">Apex, 5th ICS MCL → notch 3 o'clock</text>
+      <text x="100" y="218" text-anchor="middle" font-size="10" fill="#189aa1" font-family="sans-serif">Apex, 5th ICS MCL → notch 3 o'clock</text>
     </svg>`,
   },
   {
@@ -239,11 +239,11 @@ const tteViews = [
       <path d="M100,122 Q58,127 44,143" fill="none" stroke="#cbd5e1" stroke-width="1.2"/>
       <path d="M100,142 Q60,147 48,160" fill="none" stroke="#cbd5e1" stroke-width="1.2"/>
       <!-- Probe at apex, tilted anteriorly -->
-      <rect x="86" y="155" width="16" height="28" rx="4" fill="#0891b2"/>
+      <rect x="86" y="155" width="16" height="28" rx="4" fill="#189aa1"/>
       <!-- Notch toward left -->
       <circle cx="94" cy="154" r="4" fill="#4ad9e0"/>
       <line x1="94" y1="154" x2="116" y2="143" stroke="#4ad9e0" stroke-width="1.8" marker-end="url(#ah5b)"/>
-      <text x="100" y="218" text-anchor="middle" font-size="10" fill="#64748b" font-family="sans-serif">A4C position → tilt anteriorly to open LVOT</text>
+      <text x="100" y="218" text-anchor="middle" font-size="10" fill="#189aa1" font-family="sans-serif">A4C position → tilt anteriorly to open LVOT</text>
     </svg>`,
   },
   {
@@ -267,10 +267,10 @@ const tteViews = [
       <path d="M100,122 Q58,127 44,143" fill="none" stroke="#cbd5e1" stroke-width="1.2"/>
       <path d="M100,142 Q60,147 48,160" fill="none" stroke="#cbd5e1" stroke-width="1.2"/>
       <!-- Probe at apex, notch toward 12 o'clock -->
-      <rect x="86" y="155" width="16" height="28" rx="4" fill="#be185d"/>
+      <rect x="86" y="155" width="16" height="28" rx="4" fill="#189aa1"/>
       <circle cx="94" cy="154" r="4" fill="#4ad9e0"/>
       <line x1="94" y1="154" x2="94" y2="135" stroke="#4ad9e0" stroke-width="1.8" marker-end="url(#ah6)"/>
-      <text x="100" y="218" text-anchor="middle" font-size="10" fill="#64748b" font-family="sans-serif">Rotate 60° CCW from A4C → notch 12 o'clock</text>
+      <text x="100" y="218" text-anchor="middle" font-size="10" fill="#189aa1" font-family="sans-serif">Rotate 60° CCW from A4C → notch 12 o'clock</text>
     </svg>`,
   },
   {
@@ -294,10 +294,10 @@ const tteViews = [
       <path d="M100,122 Q58,127 44,143" fill="none" stroke="#cbd5e1" stroke-width="1.2"/>
       <path d="M100,142 Q60,147 48,160" fill="none" stroke="#cbd5e1" stroke-width="1.2"/>
       <!-- Probe at apex, notch toward 10-11 o'clock -->
-      <rect x="86" y="155" width="16" height="28" rx="4" fill="#c2410c"/>
+      <rect x="86" y="155" width="16" height="28" rx="4" fill="#189aa1"/>
       <circle cx="94" cy="154" r="4" fill="#4ad9e0"/>
       <line x1="94" y1="154" x2="76" y2="138" stroke="#4ad9e0" stroke-width="1.8" marker-end="url(#ah7)"/>
-      <text x="100" y="218" text-anchor="middle" font-size="10" fill="#64748b" font-family="sans-serif">Rotate 120° CCW from A4C → notch 10–11 o'clock</text>
+      <text x="100" y="218" text-anchor="middle" font-size="10" fill="#189aa1" font-family="sans-serif">Rotate 120° CCW from A4C → notch 10–11 o'clock</text>
     </svg>`,
   },
   {
@@ -321,11 +321,11 @@ const tteViews = [
       <!-- Xiphoid process -->
       <path d="M100,68 L95,85 L100,95 L105,85 Z" fill="#cbd5e1" opacity="0.5"/>
       <!-- Probe flat on abdomen, angled up -->
-      <rect x="72" y="90" width="52" height="14" rx="4" fill="#64748b" transform="rotate(-15,98,97)"/>
+      <rect x="72" y="90" width="52" height="14" rx="4" fill="#189aa1" transform="rotate(-15,98,97)"/>
       <!-- Notch toward patient's left -->
       <circle cx="74" cy="88" r="4" fill="#4ad9e0"/>
       <line x1="74" y1="88" x2="54" y2="72" stroke="#4ad9e0" stroke-width="1.8" marker-end="url(#ah8)"/>
-      <text x="100" y="218" text-anchor="middle" font-size="10" fill="#64748b" font-family="sans-serif">Subxiphoid, probe flat, angled superiorly</text>
+      <text x="100" y="218" text-anchor="middle" font-size="10" fill="#189aa1" font-family="sans-serif">Subxiphoid, probe flat, angled superiorly</text>
     </svg>`,
   },
   {
@@ -353,7 +353,7 @@ const tteViews = [
       <rect x="82" y="65" width="36" height="14" rx="4" fill="#1d4ed8" transform="rotate(-20,100,72)"/>
       <circle cx="84" cy="63" r="4" fill="#4ad9e0"/>
       <line x1="84" y1="63" x2="65" y2="50" stroke="#4ad9e0" stroke-width="1.8" marker-end="url(#ah9)"/>
-      <text x="100" y="218" text-anchor="middle" font-size="10" fill="#64748b" font-family="sans-serif">Suprasternal notch, neck extended</text>
+      <text x="100" y="218" text-anchor="middle" font-size="10" fill="#189aa1" font-family="sans-serif">Suprasternal notch, neck extended</text>
     </svg>`,
   },
 ];

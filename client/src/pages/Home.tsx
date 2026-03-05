@@ -41,7 +41,7 @@ const modules = [
     title: "Pediatric Echo Navigator",
     description: "CHD findings, BSA Z-scores, Qp/Qs shunt estimation, segmental analysis, and neonatal hemodynamics.",
     badge: "Pediatric Echo",
-    color: "#7c3aed",
+    color: "#189aa1",
   },
   // Fetal Echo
   {
@@ -75,7 +75,7 @@ const modules = [
     title: "Scan Coach",
     description: "Visual probe guidance with anatomy overlays, Doppler positioning, and orientation tips.",
     badge: "Training Mode",
-    color: "#0891b2",
+    color: "#189aa1",
   },
   {
     path: "/cases",

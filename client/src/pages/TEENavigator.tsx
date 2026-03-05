@@ -242,9 +242,9 @@ export default function TEENavigator() {
   const positionColors: Record<string, string> = {
     "Mid-esophageal": "#189aa1",
     "Mid-esophageal (upper)": "#0e7490",
-    "Upper esophageal": "#0369a1",
-    "Transgastric": "#7c3aed",
-    "Deep transgastric": "#9333ea",
+    "Upper esophageal": "#189aa1",
+    "Transgastric": "#189aa1",
+    "Deep transgastric": "#4ad9e0",
   };
 
   return (

@@ -149,7 +149,7 @@ const fetalViews = [
     technique: ["Identify spine position first", "Stomach should be on same side as cardiac apex", "IVC and aorta are side-by-side — IVC is more anterior and to the right", "Confirm situs solitus before proceeding"],
     doppler: "Color Doppler: confirm IVC flow direction (toward heart)",
     pitfalls: ["Fetal position can make left/right confusing — always re-identify spine first", "Absent stomach bubble: consider esophageal atresia or fetal swallowing disorder"],
-    color: "#0891b2",
+    color: "#189aa1",
   },
   {
     name: "4-Chamber View (4CV)",
@@ -169,7 +169,7 @@ const fetalViews = [
     technique: ["Aorta should arise centrally from LV", "Anterior aortic wall is continuous with IVS", "Posterior aortic wall is continuous with anterior MV leaflet", "Overriding aorta (>50%) suggests TOF or DORV"],
     doppler: "Color Doppler: assess LVOT for obstruction or VSD with aortic override",
     pitfalls: ["Overriding aorta: measure % override to differentiate TOF vs DORV", "Malalignment VSD may be subtle without color Doppler"],
-    color: "#7c3aed",
+    color: "#189aa1",
   },
   {
     name: "RVOT / 3-Vessel View (3VV)",
