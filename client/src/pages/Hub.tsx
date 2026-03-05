@@ -737,69 +737,49 @@ export default function Hub() {
         </div>
       </div>
 
-      <div className="flex gap-0 lg:gap-4 container py-4 max-w-5xl">
-        {/* Community Sidebar */}
-        <div className="w-56 flex-shrink-0 hidden lg:block">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-3 py-2.5 border-b border-gray-100">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Communities</span>
-            </div>
-            {loadingCommunities && (
-              <div className="flex justify-center py-4">
-                <Loader2 className="w-4 h-4 animate-spin text-[#189aa1]" />
-              </div>
-            )}
+       <div className="container py-4 max-w-5xl">
+        {/* Community selector — horizontal pill tabs on all screen sizes */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-4">
+          <div className="px-4 py-2.5 border-b border-gray-100 flex items-center justify-between">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Communities</span>
+            {loadingCommunities && <Loader2 className="w-3.5 h-3.5 animate-spin text-[#189aa1]" />}
+          </div>
+          <div className="flex flex-wrap gap-2 p-3">
             {communities?.map(c => (
               <button
                 key={c.id}
                 onClick={() => setActiveCommunityId(c.id)}
-                className={`w-full flex items-center gap-2.5 px-3 py-2.5 transition-colors text-left border-b border-gray-50 last:border-0 ${activeCommunityId === c.id ? "bg-[#189aa1]/10" : "hover:bg-gray-50"}`}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all border ${
+                  activeCommunityId === c.id
+                    ? "text-white border-transparent shadow-sm"
+                    : "bg-white text-gray-600 border-gray-200 hover:border-[#189aa1]/40 hover:text-[#189aa1]"
+                }`}
+                style={activeCommunityId === c.id ? { background: c.color ?? "#189aa1", borderColor: c.color ?? "#189aa1" } : {}}
               >
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ background: (c.color ?? "#189aa1") + "20" }}>
-                  <CommunityIcon name={c.icon} className="w-3.5 h-3.5" style={{ color: c.color ?? "#189aa1" } as React.CSSProperties} />
+                <div className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 ${
+                  activeCommunityId === c.id ? "bg-white/20" : ""
+                }`}
+                  style={activeCommunityId !== c.id ? { background: (c.color ?? "#189aa1") + "18" } : {}}>
+                  <CommunityIcon
+                    name={c.icon}
+                    className="w-3 h-3"
+                    style={{ color: activeCommunityId === c.id ? "white" : (c.color ?? "#189aa1") } as React.CSSProperties}
+                  />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className={`text-xs font-semibold truncate ${activeCommunityId === c.id ? "text-[#189aa1]" : "text-gray-700"}`}>
-                    {c.name}
-                  </div>
-                </div>
-                {activeCommunityId === c.id && <ChevronRight className="w-3 h-3 text-[#189aa1] flex-shrink-0" />}
+                <span className="truncate max-w-[120px]">{c.name}</span>
               </button>
             ))}
           </div>
 
-          {/* HIPAA Notice */}
-          <div className="mt-3 bg-amber-50 border border-amber-200 rounded-xl p-3">
-            <div className="flex items-start gap-2">
-              <Shield className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-xs font-semibold text-amber-800">HIPAA Reminder</p>
-                <p className="text-xs text-amber-700 mt-0.5">Never share patient-identifiable information.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile community tabs */}
-        <div className="lg:hidden w-full mb-3">
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {communities?.map(c => (
-              <button
-                key={c.id}
-                onClick={() => setActiveCommunityId(c.id)}
-                className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors ${activeCommunityId === c.id ? "text-white" : "bg-white text-gray-600 border border-gray-200"}`}
-                style={activeCommunityId === c.id ? { background: c.color ?? "#189aa1" } : {}}
-              >
-                <CommunityIcon name={c.icon} className="w-3 h-3" />
-                {c.name}
-              </button>
-            ))}
+          {/* HIPAA Notice inline */}
+          <div className="mx-3 mb-3 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 flex items-center gap-2">
+            <Shield className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+            <p className="text-xs text-amber-700"><strong>HIPAA Reminder:</strong> Never share patient-identifiable information in any community post or message.</p>
           </div>
         </div>
 
         {/* Feed */}
-        <div className="flex-1 min-w-0 space-y-3">
+        <div className="space-y-3">
           {/* Community header */}
           {activeCommunity && (
             <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
