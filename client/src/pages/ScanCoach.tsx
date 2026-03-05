@@ -4,7 +4,7 @@
   Brand: Teal #189aa1, Aqua #4ad9e0
   Fonts: Merriweather headings, Open Sans body
 */
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Layout from "@/components/Layout";
 import { Scan, Heart, Info, Eye, AlertTriangle, ChevronRight } from "lucide-react";
 
@@ -78,7 +78,7 @@ const tteViews = [
     tips: ["'Mercedes-Benz' sign = normal tricuspid AV", "Bicuspid AV: 2 cusps, fish-mouth opening", "Assess for ASD at this level"],
     pitfalls: ["Bicuspid AV may appear tricuspid if not fully open", "RVOT foreshortening"],
     measurements: ["RVOT diameter", "Pulmonary valve annulus", "AV planimetry (AVA)"],
-    color: "#0891b2",
+    color: "#1ba8b0",
     probeSvg: `<svg viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:200px">
       <defs><marker id="ah2" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#4ad9e0"/></marker></defs>
       <ellipse cx="100" cy="115" rx="82" ry="98" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
@@ -103,7 +103,7 @@ const tteViews = [
     tips: ["Fish-mouth opening of MV — both leaflets should open symmetrically", "Identify A1/A2/A3 and P1/P2/P3 scallops for MR localization", "Planimetry of MVA in mitral stenosis"],
     pitfalls: ["Oblique cut gives oval LV — reposition for true circle", "Papillary muscle level vs MV level"],
     measurements: ["MVA planimetry", "LV short-axis dimensions"],
-    color: "#7c3aed",
+    color: "#1db6bf",
     probeSvg: `<svg viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:200px">
       <defs><marker id="ah3" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#4ad9e0"/></marker></defs>
       <ellipse cx="100" cy="115" rx="82" ry="98" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
@@ -127,7 +127,7 @@ const tteViews = [
     tips: ["Best level for regional wall motion assessment (6 segments visible)", "Anterolateral PM: LAD + LCx territory; Posteromedial PM: RCA territory", "Compare systolic thickening anterior vs inferior walls for ischemia"],
     pitfalls: ["Foreshortening makes LV appear oval", "Near-field artifact from ribs"],
     measurements: ["LV EF (visual)", "Wall motion score"],
-    color: "#059669",
+    color: "#20c4ce",
     probeSvg: `<svg viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:200px">
       <defs><marker id="ah4" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#4ad9e0"/></marker></defs>
       <ellipse cx="100" cy="115" rx="82" ry="98" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
@@ -151,7 +151,7 @@ const tteViews = [
     tips: ["Apex must be at TOP of image — rotate patient to left lateral decubitus", "Foreshortening: LV appears round — move probe laterally and/or use lower ICS", "RV should be smaller than LV; RV:LV ratio >0.6 suggests RV dilation"],
     pitfalls: ["Foreshortening is the most common error", "Apex not at top → incorrect volumes"],
     measurements: ["LV volumes (biplane Simpson)", "EF", "GLS", "E, A, DT", "e' septal/lateral", "TAPSE", "RV FAC"],
-    color: "#d97706",
+    color: "#24d2d8",
     probeSvg: `<svg viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:200px">
       <defs><marker id="ah5" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#4ad9e0"/></marker></defs>
       <ellipse cx="100" cy="115" rx="82" ry="98" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
@@ -175,7 +175,7 @@ const tteViews = [
     tips: ["Rotate CCW from A4C until RV disappears — only LV and LA visible", "Anterior wall (top) and inferior wall (bottom) in this view", "LAA best seen with slight posterior tilt"],
     pitfalls: ["Oblique cut includes RV — rotate further CCW", "Inferior wall foreshortening"],
     measurements: ["LV volume (biplane Simpson)", "LAA assessment"],
-    color: "#be185d",
+    color: "#28dce0",
     probeSvg: `<svg viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:200px">
       <defs><marker id="ah6" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#4ad9e0"/></marker></defs>
       <ellipse cx="100" cy="115" rx="82" ry="98" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
@@ -198,7 +198,7 @@ const tteViews = [
     tips: ["APLAX = apical long axis — shows LVOT and AV from apex", "Align Doppler cursor parallel to LVOT flow for accurate VTI", "Anteroseptal (top) and inferolateral (bottom) walls visible"],
     pitfalls: ["Underalignment of Doppler cursor underestimates VTI by up to 30%", "Confusion with A2C"],
     measurements: ["LVOT VTI", "AVA (continuity equation)", "AV peak/mean gradient"],
-    color: "#c2410c",
+    color: "#30e0e4",
     probeSvg: `<svg viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:200px">
       <defs><marker id="ah7" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#4ad9e0"/></marker></defs>
       <ellipse cx="100" cy="115" rx="82" ry="98" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
@@ -221,7 +221,7 @@ const tteViews = [
     tips: ["IVC < 2.1 cm + >50% collapse = RAP 0–5 mmHg (normal)", "IVC > 2.1 cm + <50% collapse = RAP 15 mmHg (elevated)", "Best view for pericardial effusion and tamponade", "Ask patient to sniff for IVC collapsibility"],
     pitfalls: ["Hepatic vein mistaken for IVC", "Difficult in obese patients — try lateral decubitus"],
     measurements: ["IVC diameter", "IVC collapsibility index", "RAP estimate"],
-    color: "#64748b",
+    color: "#38e4e8",
     probeSvg: `<svg viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:200px">
       <defs><marker id="ah8" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#4ad9e0"/></marker></defs>
       <!-- Abdomen outline -->
@@ -245,7 +245,7 @@ const tteViews = [
     tips: ["Extend patient's neck with shoulder roll for better access", "Aortic arch visible as 'candy cane' shape", "Diastolic flow reversal in descending aorta = significant AR"],
     pitfalls: ["Difficult in short necks or COPD", "Probe pressure may cause discomfort"],
     measurements: ["Aortic arch diameter", "Descending aorta diastolic flow reversal"],
-    color: "#1d4ed8",
+    color: "#4ad9e0",
     probeSvg: `<svg viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:200px">
       <defs><marker id="ah9" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#4ad9e0"/></marker></defs>
       <!-- Neck/chest outline -->
@@ -486,6 +486,21 @@ export default function ScanCoach() {
   const [activeTab, setActiveTab] = useState<"tte" | "fetal">("tte");
   const [selectedTTE, setSelectedTTE] = useState(tteViews[0]);
   const [selectedFetal, setSelectedFetal] = useState(fetalViews[0]);
+  const fetalDetailRef = useRef<HTMLDivElement>(null);
+  const tteDetailRef = useRef<HTMLDivElement>(null);
+
+  // Scroll detail panel into view when view changes
+  useEffect(() => {
+    if (fetalDetailRef.current) {
+      fetalDetailRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [selectedFetal]);
+
+  useEffect(() => {
+    if (tteDetailRef.current) {
+      tteDetailRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [selectedTTE]);
 
   return (
     <Layout>
@@ -510,7 +525,7 @@ export default function ScanCoach() {
               className="px-5 py-2 rounded-lg text-sm font-semibold transition-all"
               style={activeTab === tab
                 ? { background: "#189aa1", color: "white" }
-                : { background: "white", color: "#64748b", border: "1px solid #e2e8f0" }}
+                : { background: "white", color: "#38e4e8", border: "1px solid #e2e8f0" }}
             >
               {tab === "tte" ? "Adult TTE" : "Fetal Echo"}
             </button>
@@ -536,7 +551,7 @@ export default function ScanCoach() {
             </div>
 
             {/* Detail panel */}
-            <div className="lg:col-span-3 space-y-4">
+            <div ref={tteDetailRef} className="lg:col-span-3 space-y-4">
               {/* Header */}
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="px-5 py-4 border-b" style={{ borderColor: selectedTTE.color + "30", background: selectedTTE.color + "08" }}>
@@ -629,28 +644,8 @@ export default function ScanCoach() {
         {/* ─── FETAL ECHO TAB ─── */}
         {activeTab === "fetal" && (
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
-            {/* View list */}
-            <div className="lg:col-span-1 space-y-2">
-              <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="px-4 py-3 border-b border-gray-100">
-                  <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>Fetal Echo Views</h3>
-                  <p className="text-xs text-gray-400 mt-0.5">13-view sweep sequence</p>
-                  <p className="text-[10px] text-gray-400 mt-0.5 italic">Lara Williams, BS, ACS, RCCS, RDCS, RVT, RDMS, FASE</p>
-                </div>
-                {/* Sweep overview image */}
-                <div className="p-2">
-                  <img src={CDN.sweep} alt="Fetal echo sweep overview" className="w-full rounded-lg object-contain bg-gray-900" style={{ maxHeight: "120px" }} />
-                </div>
-                <div className="p-3 space-y-1">
-                  {fetalViews.map(v => (
-                    <FetalViewCard key={v.id} view={v} isSelected={selectedFetal.id === v.id} onClick={() => setSelectedFetal(v)} />
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Fetal detail panel */}
-            <div className="lg:col-span-3 space-y-4">
+            {/* Fetal detail panel — order-first on mobile so it appears at top */}
+            <div ref={fetalDetailRef} className="lg:col-span-3 lg:order-2 order-1 space-y-4">
               {/* Header */}
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="px-5 py-4 border-b" style={{ borderColor: selectedFetal.color + "30", background: selectedFetal.color + "08" }}>
@@ -796,6 +791,25 @@ export default function ScanCoach() {
               {/* Copyright */}
               <div className="text-xs text-gray-400 text-center py-2">
                 Clinical images © All About Ultrasound, Inc. / iHeartEcho — Lara Williams, BS, ACS, RCCS, RDCS, RVT, RDMS, FASE. Educational use only.
+              </div>
+            </div>
+            {/* View list sidebar — order-2 on mobile so detail panel shows first */}
+            <div className="lg:col-span-1 lg:order-1 order-2 space-y-2">
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-100">
+                  <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>Fetal Echo Views</h3>
+                  <p className="text-xs text-gray-400 mt-0.5">13-view sweep sequence</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5 italic">Lara Williams, BS, ACS, RCCS, RDCS, RVT, RDMS, FASE</p>
+                </div>
+                {/* Sweep overview image */}
+                <div className="p-2">
+                  <img src={CDN.sweep} alt="Fetal echo sweep overview" className="w-full rounded-lg object-contain bg-gray-900" style={{ maxHeight: "120px" }} />
+                </div>
+                <div className="p-3 space-y-1">
+                  {fetalViews.map(v => (
+                    <FetalViewCard key={v.id} view={v} isSelected={selectedFetal.id === v.id} onClick={() => setSelectedFetal(v)} />
+                  ))}
+                </div>
               </div>
             </div>
           </div>
