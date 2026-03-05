@@ -20,6 +20,13 @@ interface Params {
   afterload: number;    // 0-100 (maps to SBP ~80-200 mmHg, SVR)
   contractility: number; // 0-100 (Emax, inotropy)
   heartRate: number;    // 40-140 bpm
+  // Disease-specific modifiers (optional, only set by presets)
+  lvaoGradient?: number;   // mmHg — LV-to-Ao systolic gradient (AS)
+  pulseWidthFactor?: number; // multiplier for pulse pressure (AR: >1, MS: <1)
+  lapMultiplier?: number;  // multiplier for LAP amplitude (MR: elevated v-wave)
+  msInflow?: boolean;      // Mitral Stenosis: restrict LV filling, low LV pressure
+  tamponade?: boolean;     // Tamponade: equalize pressures
+  hcmGradient?: number;    // mmHg — dynamic LVOT gradient (HCM)
 }
 
 // ---- PHYSIOLOGY ENGINE ----
@@ -30,14 +37,31 @@ function computeHemodynamics(p: Params) {
   // Map sliders to physiological values
   const edv   = 80  + preload       * 1.2;          // 80–200 mL
   const edp   = 4   + preload       * 0.21;          // 4–25 mmHg
-  const sbp   = 80  + afterload     * 1.2;           // 80–200 mmHg
-  const dbp   = 50  + afterload     * 0.5;           // 50–100 mmHg
+  let sbp     = 80  + afterload     * 1.2;           // 80–200 mmHg
+  let dbp     = 50  + afterload     * 0.5;           // 50–100 mmHg
   const emax  = 0.5 + contractility * 0.025;         // 0.5–3.0 mmHg/mL (Emax)
   const esv   = Math.max(20, edv - (edv - 20) * (contractility / 100) * 0.75);
   const sv    = Math.max(15, edv - esv);
   const co    = (sv * heartRate) / 1000;             // L/min
   const ci    = co / 1.9;                            // assume BSA 1.9
   const ef    = Math.round((sv / edv) * 100);
+
+  // Apply disease-specific modifiers to aortic pressure
+  if (p.pulseWidthFactor !== undefined) {
+    // AR: widen pulse pressure (high SBP, very low DBP)
+    // MS: narrow pulse pressure (low SBP due to reduced SV)
+    const pp = sbp - dbp;
+    const newPP = pp * p.pulseWidthFactor;
+    const mid = (sbp + dbp) / 2;
+    sbp = mid + newPP / 2;
+    dbp = Math.max(20, mid - newPP / 2);
+  }
+  if (p.tamponade) {
+    // Tamponade: narrow pulse pressure, equalize diastolic pressures
+    sbp = Math.min(sbp, 100);
+    dbp = Math.max(dbp, sbp - 20); // very narrow pulse pressure
+  }
+
   const esp   = sbp * 0.9;                           // ESP ~ 90% SBP
   const esP   = Math.max(40, esp);
 
@@ -77,10 +101,12 @@ function generateWiggers(p: Params, N = 200) {
   const t_end = 1.0;
 
   // LAP baseline: mean LAP ~ 0.7 × LVEDP (preload-driven)
-  const lap_mean = Math.max(4, edp * 0.75);
-  // a-wave peak ~ 1.4× mean LAP; v-wave peak ~ 1.6× mean LAP
+  // lapMultiplier: MR elevates v-wave (>1.5), MS elevates overall LAP (>2.0)
+  const lapMult = p.lapMultiplier ?? 1.0;
+  const lap_mean = Math.max(4, edp * 0.75 * Math.max(1.0, lapMult * 0.7));
+  // a-wave peak ~ 1.4× mean LAP; v-wave peak ~ 1.6× mean LAP (amplified by lapMultiplier for MR)
   const lap_a_peak = lap_mean * 1.45;
-  const lap_v_peak = lap_mean * 1.65;
+  const lap_v_peak = lap_mean * (1.65 * lapMult);  // MR: giant v-wave
 
   const data: {
     t: number; time: number;
@@ -94,39 +120,57 @@ function generateWiggers(p: Params, N = 200) {
     let lvp = 0, aop = 0, lvv = 0, ecg = 0;
 
     // ---- LV PRESSURE ----
+    // Disease modifiers applied below:
+    // AS: LV pressure elevated above aortic by lvaoGradient during ejection
+    // HCM: dynamic LVOT gradient added in mid-to-late ejection
+    // MS: LV filling restricted, diastolic LV pressure lower than normal
+    const lvaoGrad = p.lvaoGradient ?? 0;
+    const hcmGrad  = p.hcmGradient  ?? 0;
+    const msInflow = p.msInflow     ?? false;
+
     if (t < t_mvc) {
       // Late diastole / atrial kick
       const frac = t / t_mvc;
-      lvp = edp * (0.7 + 0.3 * Math.sin(frac * Math.PI));
+      // MS: LV fills less, so diastolic pressure is lower
+      const dipFactor = msInflow ? 0.6 : 1.0;
+      lvp = edp * dipFactor * (0.7 + 0.3 * Math.sin(frac * Math.PI));
     } else if (t < t_avo) {
       // Isovolumic contraction
       const frac = (t - t_mvc) / isocVol;
-      lvp = edp + (esp - edp) * (frac * frac);
+      // AS: LV must build higher pressure to overcome gradient before AVO
+      const targetEsp = esp + lvaoGrad * 0.8;
+      lvp = edp + (targetEsp - edp) * (frac * frac);
     } else if (t < t_avc) {
       // Ejection
       const frac = (t - t_avo) / ejection;
-      // Pressure rises to peak then falls
-      const peak = esp * 1.05;
-      lvp = esp + (peak - esp) * Math.sin(frac * Math.PI) - (esp - (esp * 0.85)) * frac;
+      // Base LV pressure during ejection
+      const peak = (esp + lvaoGrad) * 1.05;
+      lvp = (esp + lvaoGrad) + (peak - (esp + lvaoGrad)) * Math.sin(frac * Math.PI)
+            - ((esp + lvaoGrad) - (esp + lvaoGrad) * 0.85) * frac;
+      // HCM: add dynamic gradient in mid-late ejection (Venturi effect)
+      if (hcmGrad > 0) {
+        const hcmFrac = Math.max(0, (frac - 0.3) / 0.7); // ramps up mid-ejection
+        lvp += hcmGrad * Math.sin(hcmFrac * Math.PI);
+      }
       lvp = Math.max(edp, lvp);
     } else if (t < t_mvo) {
       // Isovolumic relaxation
       const frac = (t - t_avc) / isocRel;
-      lvp = (esp * 0.85) * Math.exp(-frac * 4);
+      lvp = ((esp + lvaoGrad) * 0.85) * Math.exp(-frac * 4);
       lvp = Math.max(edp * 0.5, lvp);
     } else {
       // Diastolic filling
       const frac = (t - t_mvo) / (t_end - t_mvo);
-      // Rapid filling then slow filling then atrial kick
       const rapid = 0.4;
+      const dipFactor = msInflow ? 0.55 : 1.0; // MS: restricted inflow, lower LV diastolic pressure
       if (frac < rapid) {
-        lvp = edp * 0.5 + (edp * 0.5) * (frac / rapid);
+        lvp = edp * dipFactor * (0.5 + 0.5 * (frac / rapid));
       } else if (frac < 0.85) {
-        lvp = edp * (0.9 + 0.1 * ((frac - rapid) / 0.45));
+        lvp = edp * dipFactor * (0.9 + 0.1 * ((frac - rapid) / 0.45));
       } else {
         // Atrial kick
         const af = (frac - 0.85) / 0.15;
-        lvp = edp + edp * 0.25 * Math.sin(af * Math.PI);
+        lvp = edp * dipFactor + edp * 0.25 * Math.sin(af * Math.PI);
       }
     }
 
@@ -352,20 +396,48 @@ function WiggersTooltip({ active, payload }: { active?: boolean; payload?: any[]
 
 // ---- MAIN COMPONENT ----
 
-const PRESETS = [
-  { label: "Normal",                values: { preload: 50, afterload: 50, contractility: 50, heartRate: 70 }, color: "#16a34a" },
-  { label: "HTN / Pressure Overload", values: { preload: 50, afterload: 80, contractility: 60, heartRate: 72 }, color: "#d97706" },
-  { label: "Dilated CMP (DCM)",     values: { preload: 70, afterload: 55, contractility: 20, heartRate: 95 }, color: "#dc2626" },
-  { label: "Volume Overload (AR/MR)", values: { preload: 82, afterload: 40, contractility: 65, heartRate: 78 }, color: "#0891b2" },
-  { label: "Hypovolemic Shock",     values: { preload: 15, afterload: 75, contractility: 55, heartRate: 118 }, color: "#7c3aed" },
-  { label: "Tamponade",             values: { preload: 25, afterload: 60, contractility: 45, heartRate: 110 }, color: "#be185d" },
-  { label: "HCM (Obstructive)",     values: { preload: 40, afterload: 80, contractility: 90, heartRate: 80 }, color: "#b45309" },
-  { label: "Septic Shock",          values: { preload: 30, afterload: 20, contractility: 55, heartRate: 120 }, color: "#64748b" },
+const PRESETS: { label: string; values: Params; color: string }[] = [
+  { label: "Normal",
+    values: { preload: 50, afterload: 50, contractility: 50, heartRate: 70 },
+    color: "#16a34a" },
+  { label: "HTN / Pressure Overload",
+    values: { preload: 50, afterload: 80, contractility: 60, heartRate: 72 },
+    color: "#d97706" },
+  { label: "Dilated CMP (DCM)",
+    values: { preload: 70, afterload: 55, contractility: 20, heartRate: 95 },
+    color: "#dc2626" },
+  { label: "Volume Overload",
+    values: { preload: 82, afterload: 40, contractility: 65, heartRate: 78, pulseWidthFactor: 1.3 },
+    color: "#0891b2" },
+  { label: "Hypovolemic Shock",
+    values: { preload: 15, afterload: 75, contractility: 55, heartRate: 118 },
+    color: "#7c3aed" },
+  { label: "Tamponade",
+    values: { preload: 25, afterload: 60, contractility: 45, heartRate: 110, tamponade: true },
+    color: "#be185d" },
+  { label: "HCM (Obstructive)",
+    values: { preload: 40, afterload: 80, contractility: 90, heartRate: 80, hcmGradient: 60 },
+    color: "#b45309" },
+  { label: "Septic Shock",
+    values: { preload: 30, afterload: 20, contractility: 55, heartRate: 120 },
+    color: "#64748b" },
   // Valvular disease presets
-  { label: "Aortic Stenosis (Severe)",  values: { preload: 55, afterload: 88, contractility: 65, heartRate: 68 }, color: "#c2410c" },
-  { label: "Aortic Regurgitation",      values: { preload: 85, afterload: 38, contractility: 62, heartRate: 75 }, color: "#0369a1" },
-  { label: "Mitral Stenosis (Severe)",  values: { preload: 72, afterload: 45, contractility: 58, heartRate: 85 }, color: "#7e22ce" },
-  { label: "Mitral Regurgitation",      values: { preload: 78, afterload: 42, contractility: 60, heartRate: 80 }, color: "#be123c" },
+  { label: "Aortic Stenosis (Severe)",
+    // LV-Ao gradient 60 mmHg: LV systolic ~240 mmHg, Ao ~180 mmHg
+    values: { preload: 55, afterload: 88, contractility: 65, heartRate: 68, lvaoGradient: 60 },
+    color: "#c2410c" },
+  { label: "Aortic Regurgitation",
+    // Wide pulse pressure: high SBP, very low DBP (bounding pulse)
+    values: { preload: 85, afterload: 38, contractility: 62, heartRate: 75, pulseWidthFactor: 2.2 },
+    color: "#0369a1" },
+  { label: "Mitral Stenosis (Severe)",
+    // Elevated LAP, restricted LV inflow, narrow pulse pressure
+    values: { preload: 72, afterload: 45, contractility: 58, heartRate: 85, lapMultiplier: 2.5, msInflow: true },
+    color: "#7e22ce" },
+  { label: "Mitral Regurgitation",
+    // Giant LAP v-wave from systolic regurgitation into LA
+    values: { preload: 78, afterload: 42, contractility: 60, heartRate: 80, lapMultiplier: 2.8 },
+    color: "#be123c" },
 ];
 
 function getClinicalContext(p: Params): { title: string; description: string; color: string } {
@@ -582,11 +654,15 @@ export default function HemodynamicsLab() {
                   <span className="flex items-center gap-1"><span className="w-3 h-0.5 inline-block bg-[#9333ea]"></span> LA Pressure</span>
                 </div>
               </div>
-              <ResponsiveContainer width="100%" height={160}>
-                <ComposedChart data={wiggersData} margin={{ top: 4, right: 10, bottom: 4, left: 30 }}>
+              <ResponsiveContainer width="100%" height={180}>
+                <ComposedChart data={wiggersData} margin={{ top: 4, right: 10, bottom: 4, left: 35 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="time" tick={{ fontSize: 9 }} label={{ value: "Time (ms)", position: "insideBottom", offset: -2, fontSize: 9 }} />
-                  <YAxis tick={{ fontSize: 9 }} label={{ value: "mmHg", angle: -90, position: "insideLeft", fontSize: 9, offset: 10 }} />
+                  <YAxis
+                    tick={{ fontSize: 9 }}
+                    label={{ value: "mmHg", angle: -90, position: "insideLeft", fontSize: 9, offset: 10 }}
+                    domain={[0, Math.max(250, Math.round(hemo.sbp + (params.lvaoGradient ?? 0) + 20))]}
+                  />
                   <Tooltip content={<WiggersTooltip />} />
                   <ReferenceLine x={events.mvc} stroke="#3b82f6" strokeDasharray="4 3" strokeWidth={1.5} label={{ value: "MVC", position: "top", fontSize: 8, fill: "#3b82f6" }} />
                   <ReferenceLine x={events.avo} stroke="#ef4444" strokeWidth={1.5} label={{ value: "AVO", position: "top", fontSize: 8, fill: "#ef4444" }} />
