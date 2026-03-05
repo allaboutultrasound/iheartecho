@@ -51,7 +51,7 @@ const navGroups = [
       { path: "/scan-coach", label: "Scan Coach", icon: Scan },
       { path: "/cases", label: "Case Lab", icon: BookOpen },
       { path: "/report", label: "Report Builder", icon: FileText },
-      { path: "/echoassist", label: "EchoAssist", icon: FlaskConical },
+      { path: "/echoassist", label: "EchoAssist™", icon: FlaskConical },
     ],
   },
 ];

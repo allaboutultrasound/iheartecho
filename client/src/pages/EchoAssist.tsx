@@ -7,7 +7,7 @@
 */
 import { useState } from "react";
 import Layout from "@/components/Layout";
-import { Zap, ChevronDown, ChevronUp, AlertTriangle, CheckCircle2, Info, TrendingDown } from "lucide-react";
+import { Zap, ChevronDown, ChevronUp, Info, Lightbulb, MessageSquare, AlertCircle } from "lucide-react";
 
 // ─── UI PRIMITIVES ────────────────────────────────────────────────────────────
 
@@ -113,6 +113,56 @@ function EngineSection({
   );
 }
 
+// ─── ECHOASSIST™ DIAGNOSTIC PANEL ───────────────────────────────────────────
+
+interface EchoAssistOutput {
+  suggests: string;
+  note?: string;
+  tip?: string;
+}
+
+function EchoAssistPanel({ output }: { output: EchoAssistOutput | null }) {
+  if (!output) return null;
+  return (
+    <div className="mt-4 rounded-xl overflow-hidden border border-[#189aa1]/30 shadow-sm">
+      {/* Suggests */}
+      <div className="flex items-start gap-3 px-4 py-3 bg-[#f0fbfc] border-b border-[#189aa1]/20">
+        <MessageSquare className="w-4 h-4 text-[#189aa1] flex-shrink-0 mt-0.5" />
+        <div>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-[#0e7490] block mb-0.5">
+            EchoAssist™ Suggests
+          </span>
+          <p className="text-sm text-[#0e7490] font-medium leading-snug">{output.suggests}</p>
+        </div>
+      </div>
+      {/* Note */}
+      {output.note && (
+        <div className="flex items-start gap-3 px-4 py-3 bg-amber-50 border-b border-amber-100">
+          <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-amber-700 block mb-0.5">
+              EchoAssist™ Note
+            </span>
+            <p className="text-sm text-amber-800 leading-snug">{output.note}</p>
+          </div>
+        </div>
+      )}
+      {/* Tip */}
+      {output.tip && (
+        <div className="flex items-start gap-3 px-4 py-3 bg-white">
+          <Lightbulb className="w-4 h-4 text-[#189aa1] flex-shrink-0 mt-0.5" />
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[#189aa1] block mb-0.5">
+              EchoAssist™ Tip
+            </span>
+            <p className="text-sm text-gray-600 leading-snug">{output.tip}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── CALCULATION HELPERS ──────────────────────────────────────────────────────
 
 const n = (v: string) => parseFloat(v);
@@ -201,6 +251,34 @@ function AorticStenosisEngine() {
 
   const result = getSeverity();
 
+  const getEchoAssistOutput = (): EchoAssistOutput | null => {
+    if (result.sev === "indeterminate") return null;
+    const vm = n(avVmax);
+    const mg = n(avMg);
+    let suggests = "";
+    let note: string | undefined;
+    let tip: string | undefined;
+
+    if (result.sev === "normal") {
+      suggests = "Findings are consistent with no hemodynamically significant aortic stenosis. AV Vmax and gradients are within normal limits.";
+      tip = "Ensure the AV is interrogated from multiple windows (apical, right parasternal, suprasternal) to capture the highest velocity and avoid underestimation.";
+    } else if (result.sev === "mild") {
+      suggests = `Findings are consistent with mild aortic stenosis. AV Vmax ${has(avVmax) ? avVmax + " m/s" : ""} and gradients indicate mild obstruction without hemodynamic significance at rest.`;
+      note = "Mild AS warrants annual clinical review. Progression to moderate or severe AS may occur over 3–5 years, particularly in bicuspid valves or heavily calcified leaflets.";
+      tip = "Document peak and mean gradients from the highest-velocity window. The right parasternal approach often yields higher velocities in AS.";
+    } else if (result.sev === "moderate") {
+      suggests = `Findings are consistent with moderate aortic stenosis${ava ? ` (AVA ${ava.toFixed(2)} cm²)` : ""}. ${has(avVmax) ? `AV Vmax ${avVmax} m/s, mean gradient ${has(avMg) ? avMg + " mmHg" : "not entered"}.` : ""} Hemodynamic significance is intermediate.`;
+      note = result.note ?? "Moderate AS requires closer surveillance (echo every 1–2 years). Evaluate for symptoms of syncope, angina, or dyspnea, which may trigger earlier intervention.";
+      tip = "Ensure LVOT diameter is measured in the PLAX view at the level of the aortic annulus, inner-edge to inner-edge, in mid-systole. A 1 mm error in LVOT diameter results in ~10% error in AVA.";
+    } else if (result.sev === "severe") {
+      const veryS = vm >= 5.0;
+      suggests = `Findings are consistent with ${veryS ? "very severe" : "severe"} aortic stenosis${ava ? ` (AVA ${ava.toFixed(2)} cm²${avai ? ", AVAi " + avai.toFixed(2) + " cm²/m²" : ""})` : ""}. ${has(avVmax) ? `AV Vmax ${avVmax} m/s${has(avMg) ? ", mean gradient " + avMg + " mmHg" : ""}.` : ""} Meets ASE/AHA/ACC criteria for severe AS — surgical or transcatheter valve replacement should be considered.`;
+      note = result.note ?? (veryS ? "Very severe AS (Vmax ≥5.0 m/s) carries high surgical risk. TAVR should be discussed at a multidisciplinary heart team meeting." : "Severe AS with symptoms is a Class I indication for AVR. Assess for LV systolic dysfunction, which may indicate advanced disease.");
+      tip = "In severe AS with low EF, consider dobutamine stress echo to distinguish true-severe from pseudo-severe AS. CT calcium scoring (Agatston score ≥2000 in women, ≥3000 in men) supports severe AS in low-flow, low-gradient cases.";
+    }
+    return { suggests, note, tip };
+  };
+
   return (
     <EngineSection title="Aortic Stenosis" subtitle="AVA by continuity equation · Vmax · Mean gradient · DVI">
       <div className="grid grid-cols-2 gap-3">
@@ -219,6 +297,7 @@ function AorticStenosisEngine() {
         criteria={result.criteria}
         note={result.note}
       />
+      <EchoAssistPanel output={getEchoAssistOutput()} />
       <p className="text-xs text-gray-400 mt-3">Reference: AHA/ACC 2021 Valvular Heart Disease Guidelines; ASE 2017 Valve Stenosis Guidelines</p>
     </EngineSection>
   );
@@ -266,6 +345,30 @@ function MitraStenosisEngine() {
 
   const result = getSeverity();
 
+  const getMsEchoAssist = (): EchoAssistOutput | null => {
+    if (result.sev === "indeterminate") return null;
+    const area = n(mva) || (mvaPht ?? 0);
+    if (result.sev === "normal") return {
+      suggests: "No hemodynamically significant mitral stenosis identified. Mitral valve area and gradients are within normal limits.",
+      tip: "Ensure MV mean gradient is measured during normal sinus rhythm. Atrial fibrillation or elevated heart rate will artificially elevate gradients."
+    };
+    if (result.sev === "mild") return {
+      suggests: `Findings are consistent with mild mitral stenosis (MVA ${area > 0 ? area.toFixed(2) + " cm²" : "not calculated"}). Hemodynamic impact is minimal at rest.`,
+      note: "Mild MS may become symptomatic with exercise or pregnancy due to increased cardiac output and heart rate. Consider exercise stress echo if symptoms are disproportionate to resting findings.",
+      tip: "Pressure half-time (PHT) method is most reliable in sinus rhythm. After mitral valvuloplasty or in the presence of significant AR or elevated LVEDP, PHT may overestimate MVA."
+    };
+    if (result.sev === "moderate") return {
+      suggests: `Findings are consistent with moderate mitral stenosis (MVA ${area > 0 ? area.toFixed(2) + " cm²" : "not calculated"}${has(mvMg) ? ", mean gradient " + mvMg + " mmHg" : ""}). Hemodynamic significance is intermediate and warrants clinical correlation.`,
+      note: "Moderate MS with NYHA Class II symptoms may be a candidate for percutaneous mitral balloon commissurotomy (PMBC) if valve morphology is favorable (Wilkins score ≤8).",
+      tip: "Assess mitral valve morphology using the Wilkins score (leaflet mobility, thickening, calcification, subvalvular apparatus). This guides suitability for PMBC vs. surgical repair."
+    };
+    return {
+      suggests: `Findings are consistent with severe mitral stenosis (MVA ${area > 0 ? area.toFixed(2) + " cm²" : "not calculated"}${has(mvMg) ? ", mean gradient " + mvMg + " mmHg" : ""}). Intervention is indicated in symptomatic patients.`,
+      note: "Severe MS is a Class I indication for PMBC in symptomatic patients with favorable anatomy. Assess for LA thrombus (TEE) and mitral regurgitation before proceeding.",
+      tip: "Confirm TR Vmax to estimate pulmonary artery pressure. RVSP >50 mmHg in severe MS indicates significant pulmonary hypertension and may alter surgical risk and timing."
+    };
+  };
+
   return (
     <EngineSection title="Mitral Stenosis" subtitle="MVA · Mean gradient · Pressure half-time · PA pressure" defaultOpen={false}>
       <div className="grid grid-cols-2 gap-3">
@@ -276,6 +379,7 @@ function MitraStenosisEngine() {
       </div>
       {mvaPht && <p className="text-xs text-gray-400 mt-2">MVA by PHT (220/PHT): {mvaPht.toFixed(2)} cm²</p>}
       <ResultCard severity={result.sev} title="Mitral Stenosis Severity" value={result.label} criteria={result.criteria} />
+      <EchoAssistPanel output={getMsEchoAssist()} />
       <p className="text-xs text-gray-400 mt-3">Reference: AHA/ACC 2021; ASE 2009 Echocardiographic Assessment of Valve Stenosis</p>
     </EngineSection>
   );
@@ -333,6 +437,29 @@ function AorticRegurgEngine() {
 
   const result = getSeverity();
 
+  const getArEchoAssist = (): EchoAssistOutput | null => {
+    if (result.sev === "indeterminate") return null;
+    if (result.sev === "normal") return {
+      suggests: "No hemodynamically significant aortic regurgitation identified. Vena contracta and quantitative parameters are within normal limits.",
+      tip: "Use color Doppler in the PLAX view with a narrow sector and reduced Nyquist limit (50–60 cm/s) to optimally visualize the AR jet width and vena contracta."
+    };
+    if (result.sev === "mild") return {
+      suggests: `Findings are consistent with mild aortic regurgitation${has(venaContracta) ? " (vena contracta " + venaContracta + " mm)" : ""}. Hemodynamic burden on the LV is minimal at rest.`,
+      note: "Mild AR is generally well tolerated. Annual clinical review is recommended. Echocardiographic surveillance every 3–5 years is appropriate unless LV dilation is present.",
+      tip: "Assess the AR PHT: a short PHT (<200 ms) suggests rapid equalization of aortic and LV diastolic pressures, indicating more severe regurgitation regardless of jet size."
+    };
+    if (result.sev === "moderate") return {
+      suggests: `Findings are consistent with moderate aortic regurgitation${has(venaContracta) ? " (vena contracta " + venaContracta + " mm)" : ""}${has(regVol) ? ", regurgitant volume " + regVol + " mL" : ""}. LV volume overload is present and warrants monitoring.`,
+      note: "Moderate AR requires annual echocardiographic surveillance. LV dilation (LVEDD >65 mm or LVESD >50 mm) or declining EF may indicate progression toward severe AR requiring intervention.",
+      tip: "Wide pulse pressure and a bounding pulse on clinical exam support significant AR. Assess the descending aorta for holodiastolic flow reversal by PW Doppler — present in moderate-to-severe AR."
+    };
+    return {
+      suggests: `Findings are consistent with severe aortic regurgitation${has(venaContracta) ? " (vena contracta " + venaContracta + " mm)" : ""}${has(eroa) ? ", EROA " + eroa + " cm²" : ""}${has(regVol) ? ", regurgitant volume " + regVol + " mL" : ""}. Significant LV volume overload is present. Surgical aortic valve replacement should be considered.`,
+      note: "Severe AR with symptoms or LV systolic dysfunction (EF <55%) or significant LV dilation (LVEDD >65 mm) is a Class I indication for AVR. Asymptomatic severe AR with preserved EF requires close surveillance (echo every 6–12 months).",
+      tip: "Holodiastolic flow reversal in the abdominal aorta (PW Doppler) is a highly specific sign of severe AR. Assess the aortic root dimensions — concurrent aortopathy may alter surgical planning."
+    };
+  };
+
   return (
     <EngineSection title="Aortic Regurgitation" subtitle="Vena contracta · EROA · Regurgitant volume · AR PHT" defaultOpen={false}>
       <div className="grid grid-cols-2 gap-3">
@@ -344,6 +471,7 @@ function AorticRegurgEngine() {
         <NumInput label="LVEDD" value={lvedd} onChange={setLvedd} unit="mm" placeholder="nl <58" hint="(nl <58)" />
       </div>
       <ResultCard severity={result.sev} title="Aortic Regurgitation Severity" value={result.label} criteria={result.criteria} />
+      <EchoAssistPanel output={getArEchoAssist()} />
       <p className="text-xs text-gray-400 mt-3">Reference: AHA/ACC 2021; ASE/EACVI 2017 AR Guidelines (Zoghbi et al.)</p>
     </EngineSection>
   );
@@ -402,6 +530,29 @@ function MitralRegurgEngine() {
 
   const result = getSeverity();
 
+  const getMrEchoAssist = (): EchoAssistOutput | null => {
+    if (result.sev === "indeterminate") return null;
+    if (result.sev === "normal") return {
+      suggests: "No hemodynamically significant mitral regurgitation identified. Quantitative parameters are within normal limits.",
+      tip: "Optimize color Doppler gain and Nyquist limit (50–60 cm/s) when assessing MR jet area. Eccentric jets (Coanda effect) are frequently underestimated by jet area alone — use vena contracta and PISA methods."
+    };
+    if (result.sev === "mild") return {
+      suggests: `Findings are consistent with mild mitral regurgitation${has(vcMr) ? " (vena contracta " + vcMr + " mm)" : ""}. LV volume loading is minimal at rest.`,
+      note: "Mild MR is generally well tolerated. Echocardiographic follow-up every 3–5 years is appropriate unless symptoms develop or LV dilation is identified.",
+      tip: "For eccentric or posteriorly directed MR jets, the PISA method provides a more accurate EROA than jet area. Ensure the aliasing velocity is set to 40 cm/s for the standard PISA calculation."
+    };
+    if (result.sev === "moderate") return {
+      suggests: `Findings are consistent with moderate mitral regurgitation${has(vcMr) ? " (vena contracta " + vcMr + " mm)" : ""}${has(eroaMr) ? ", EROA " + eroaMr + " cm²" : ""}. LV volume overload is present and warrants clinical monitoring.`,
+      note: "Moderate MR requires annual echocardiographic surveillance. Progression to severe MR, LV dilation (LVESD >40 mm), or EF decline below 60% may indicate the need for surgical evaluation.",
+      tip: "Assess LA size as a marker of chronic volume overload. LA dilation (LAVI >34 mL/m²) in the setting of moderate MR suggests hemodynamic significance and may influence management decisions."
+    };
+    return {
+      suggests: `Findings are consistent with severe mitral regurgitation${has(vcMr) ? " (vena contracta " + vcMr + " mm)" : ""}${pisaEroa ? ", EROA " + pisaEroa.toFixed(2) + " cm²" : has(eroaMr) ? ", EROA " + eroaMr + " cm²" : ""}${has(regVolMr) ? ", regurgitant volume " + regVolMr + " mL" : ""}. Significant LV volume overload is present. Mitral valve repair or replacement should be considered.`,
+      note: "Severe primary MR with symptoms or LV systolic dysfunction (EF <60% or LVESD >40 mm) is a Class I indication for surgery. Mitral valve repair is preferred over replacement when feasible.",
+      tip: "In severe MR, a preserved or hyperdynamic EF may mask underlying LV dysfunction due to reduced afterload. An EF of 60% in severe MR may represent early dysfunction — use GLS to detect subclinical impairment."
+    };
+  };
+
   return (
     <EngineSection title="Mitral Regurgitation" subtitle="Vena contracta · EROA · PISA · Regurgitant volume" defaultOpen={false}>
       <div className="grid grid-cols-2 gap-3">
@@ -414,6 +565,7 @@ function MitralRegurgEngine() {
       </div>
       {pisaEroa && <p className="text-xs text-gray-400 mt-2">PISA-derived EROA: {pisaEroa.toFixed(2)} cm²</p>}
       <ResultCard severity={result.sev} title="Mitral Regurgitation Severity" value={result.label} criteria={result.criteria} />
+      <EchoAssistPanel output={getMrEchoAssist()} />
       <p className="text-xs text-gray-400 mt-3">Reference: AHA/ACC 2021; ASE/EACVI 2017 MR Guidelines (Zoghbi et al.)</p>
     </EngineSection>
   );
@@ -474,6 +626,35 @@ function LVSystolicEngine() {
 
   const result = getSeverity();
 
+  const getLvEchoAssist = (): EchoAssistOutput | null => {
+    if (result.sev === "indeterminate") return null;
+    const efVal = n(ef);
+    if (result.sev === "normal") return {
+      suggests: `Findings are consistent with preserved LV systolic function (EF ${ef}%). No evidence of systolic impairment.`,
+      tip: "Biplane Simpson's method of discs (MOD) is the recommended technique for EF quantification. Ensure adequate endocardial border tracing in both A4C and A2C views, avoiding foreshortening."
+    };
+    if (result.sev === "mild") return {
+      suggests: `Findings are consistent with low-normal LV systolic function (EF ${ef}%). This falls in the HFmrEF range (EF 50–54%). Clinical correlation is warranted.`,
+      note: "Low-normal EF may represent early or recovering systolic dysfunction. Assess for wall motion abnormalities, LV dilation, and risk factors for coronary artery disease.",
+      tip: "LV GLS is a more sensitive marker of subclinical systolic dysfunction than EF. A GLS less negative than −18% in the setting of low-normal EF may indicate early myocardial dysfunction."
+    };
+    if (result.sev === "moderate") return {
+      suggests: `Findings are consistent with mildly reduced LV systolic function (EF ${ef}%, HFmrEF). Guideline-directed medical therapy should be considered.`,
+      note: "EF 40–49% (HFmrEF) may represent a transitional state between preserved and reduced EF. Evaluate for ischemic etiology, valvular disease, and cardiomyopathy. Repeat echo in 3–6 months after therapy initiation.",
+      tip: "Assess wall motion segmentally using the 17-segment model. Regional wall motion abnormalities suggest ischemic etiology; global dysfunction suggests non-ischemic cardiomyopathy."
+    };
+    if (result.sev === "severe") return {
+      suggests: `Findings are consistent with moderately reduced LV systolic function (EF ${ef}%, HFrEF). Guideline-directed medical therapy is indicated.`,
+      note: "EF 30–39% meets criteria for HFrEF. GDMT including ACE inhibitor/ARB/ARNI, beta-blocker, MRA, and SGLT2 inhibitor is indicated. Assess for ICD candidacy if EF remains ≤35% after 3 months of optimal therapy.",
+      tip: "Evaluate for LV dyssynchrony (LBBB morphology, QRS >150 ms) as CRT may be indicated. Assess mitral regurgitation severity, as functional MR is common in dilated cardiomyopathy and may worsen prognosis."
+    };
+    return {
+      suggests: `Findings are consistent with severely reduced LV systolic function (EF ${ef}%). This represents advanced HFrEF with high risk for arrhythmia and adverse cardiac events.`,
+      note: "EF <30% carries high risk for sudden cardiac death. ICD implantation should be considered. Evaluate for advanced HF therapies including LVAD or cardiac transplantation referral if refractory to GDMT.",
+      tip: "In severely reduced EF, ensure measurements are obtained at end-diastole (largest LV cavity) and end-systole (smallest cavity). Avoid measuring during ectopic beats. Consider 3D echocardiography for more accurate volumetric assessment."
+    };
+  };
+
   return (
     <EngineSection title="LV Systolic Function" subtitle="EF · Dimensions · Wall thickness · FS">
       <div className="grid grid-cols-2 gap-3">
@@ -487,6 +668,7 @@ function LVSystolicEngine() {
       </div>
       {fsCalc !== null && <p className="text-xs text-gray-400 mt-2">Calculated FS: {fsCalc.toFixed(1)}%</p>}
       <ResultCard severity={result.sev} title="LV Systolic Function" value={result.label} criteria={result.criteria} />
+      <EchoAssistPanel output={getLvEchoAssist()} />
       <p className="text-xs text-gray-400 mt-3">Reference: ASE 2015 Chamber Quantification (Lang et al.); AHA/ACC HF Classification 2022</p>
     </EngineSection>
   );
@@ -578,6 +760,34 @@ function DiastolicEngine() {
 
   const result = getGrade();
 
+  const getDiastEchoAssist = (): EchoAssistOutput | null => {
+    if (result.sev === "indeterminate" && result.label === "Insufficient data") return null;
+    if (result.sev === "normal") return {
+      suggests: "Findings are consistent with normal diastolic function. All evaluated ASE 2025 criteria are within normal limits. No evidence of elevated LV filling pressures.",
+      tip: "Ensure e' velocities are sampled at the septal and lateral mitral annulus using TDI with a low wall filter and high gain. Angle of incidence should be <20° for accurate velocity measurement."
+    };
+    if (result.label.includes("Grade I")) return {
+      suggests: `Findings are consistent with Grade I diastolic dysfunction (impaired relaxation pattern). E/A < 0.8 with normal filling pressures${ePrimeAvg ? " (average e\u2019 " + ePrimeAvg.toFixed(1) + " cm/s)" : ""}${eeRatio ? ", E/e\u2019 " + eeRatio.toFixed(1) : ""}. LV end-diastolic pressure is estimated to be normal.`,
+      note: "Grade I diastolic dysfunction is common in aging and hypertension. It reflects impaired active relaxation of the LV. LVEDP is typically normal at rest but may rise with exercise.",
+      tip: "Consider exercise diastolic stress echo if the patient has unexplained exertional dyspnea with Grade I dysfunction at rest. A rise in E/e\u2019 >14 or TR velocity >2.8 m/s with exercise suggests exercise-induced elevated filling pressures."
+    };
+    if (result.label.includes("Grade II")) return {
+      suggests: `Findings are consistent with Grade II diastolic dysfunction (pseudonormal filling pattern with elevated LV filling pressures). ${eeRatio ? "E/e\u2019 " + eeRatio.toFixed(1) + (eeRatio > 14 ? " (elevated, >14)" : "") + ". " : ""}${has(lavi) ? "LAVI " + lavi + " mL/m\u00b2" + (n(lavi) > 34 ? " (dilated)." : ".") + " " : ""}Mean LAP is estimated to be elevated.`,
+      note: "Grade II diastolic dysfunction with elevated filling pressures is associated with increased risk of HF hospitalization and atrial fibrillation. Evaluate for underlying hypertension, diabetes, obesity, or HFpEF.",
+      tip: "LARS (LA reservoir strain) <18% in the context of Grade II dysfunction provides additional evidence of elevated filling pressures per ASE 2025 guidelines. If TR Vmax is not yet obtained, confirm TR velocity to complete the four-criterion algorithm."
+    };
+    if (result.label.includes("Grade III")) return {
+      suggests: `Findings are consistent with Grade III diastolic dysfunction (restrictive filling pattern). E/A > 2.0 with multiple positive criteria indicates markedly elevated LV filling pressures and advanced diastolic impairment.`,
+      note: "Grade III (restrictive) diastolic dysfunction carries a poor prognosis and is associated with advanced HF, cardiac amyloidosis, and constrictive pericarditis. Reversibility with Valsalva maneuver should be assessed — irreversible restriction indicates more advanced disease.",
+      tip: "Valsalva maneuver may help distinguish Grade II from Grade III: if E/A normalizes or reverses to <0.8 with Valsalva, the pattern is pseudonormal (Grade II). Persistence of E/A >2.0 suggests fixed restrictive physiology (Grade III)."
+    };
+    return {
+      suggests: "Diastolic function assessment is indeterminate. Insufficient criteria are available to assign a definitive grade. Additional parameters are needed.",
+      note: "Per ASE 2025 guidelines, grading requires at least 3 of 4 criteria: average e\u2019, E/e\u2019 ratio, LAVI, and TR Vmax. LARS and LA strain rate may be used as supplementary criteria when standard parameters are inconclusive.",
+      tip: "If TR is absent or TR Vmax is not measurable, LARS <18% or LA strain rate <1.5 s\u207b\u00b9 may substitute as a surrogate for elevated filling pressures per the 2025 ASE algorithm."
+    };
+  };
+
   return (
     <EngineSection title="Diastolic Function" subtitle="ASE 2025 diastolic function grading · E/A · e' · E/e' · LAVI · RVSP">
       <div className="grid grid-cols-2 gap-3">
@@ -591,6 +801,7 @@ function DiastolicEngine() {
       </div>
       {eaRatio !== null && <p className="text-xs text-gray-400 mt-2">E/A ratio: {eaRatio.toFixed(2)} | {ePrimeAvg ? `Avg e': ${ePrimeAvg.toFixed(1)} cm/s | ` : ""}E/e': {eeRatio?.toFixed(1) ?? "—"}</p>}
       <ResultCard severity={result.sev} title="Diastolic Function Grade" value={result.label} criteria={result.criteria} note={result.note} />
+      <EchoAssistPanel output={getDiastEchoAssist()} />
       <p className="text-xs text-gray-400 mt-3">Reference: <a href="https://www.asecho.org/wp-content/uploads/2025/07/Left-Ventricular-Diastolic-Function.pdf" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#189aa1] transition-colors">ASE 2025 Left Ventricular Diastolic Function Guidelines</a></p>
     </EngineSection>
   );
@@ -674,6 +885,24 @@ function StrainEngine() {
           </div>
         )}
       </div>
+      <EchoAssistPanel output={(() => {
+        const anyEntered = has(lvGls) || has(rvFws) || has(lars) || has(rars);
+        if (!anyEntered) return null;
+        const lvAbn = has(lvGls) && lvResult.sev !== "normal" && lvResult.sev !== "indeterminate";
+        const rvAbn = has(rvFws) && rvResult.sev !== "normal" && rvResult.sev !== "indeterminate";
+        const laAbn = has(lars) && laResult.sev !== "normal" && laResult.sev !== "indeterminate";
+        const suggests = [
+          has(lvGls) ? `LV GLS ${lvGls}% is ${lvAbn ? "impaired (threshold ≤ −18%)" : "within normal limits"}` : null,
+          has(rvFws) ? `RV free wall strain ${rvFws}% is ${rvAbn ? "impaired (threshold ≤ −20%)" : "within normal limits"}` : null,
+          has(lars) ? `LARS ${lars}% is ${laAbn ? "reduced (threshold ≥35%)" : "within normal limits"}` : null,
+        ].filter(Boolean).join("; ");
+        const note = laAbn ? "Reduced LARS (<18%) is an independent predictor of elevated LV filling pressures per ASE 2025 diastolic guidelines and may substitute for TR Vmax when TR is absent." :
+          lvAbn ? "Impaired LV GLS in the setting of preserved EF suggests subclinical myocardial dysfunction. Consider cardiotoxicity surveillance, infiltrative cardiomyopathy, or early HCM." : undefined;
+        const tip = has(lvGls) ? "LV GLS should be reported as a negative percentage (e.g., −20%). Ensure vendor-neutral values are used when comparing across platforms — a 2% inter-vendor variability is expected." :
+          has(lars) ? "LARS is best measured using speckle-tracking echocardiography in the A4C and A2C views. Ensure adequate frame rate (50–80 fps) for accurate tracking." : undefined;
+        return { suggests: suggests || "Strain parameters entered.", note, tip };
+      })()}
+      />
       <p className="text-xs text-gray-400 mt-3">Reference: ASE 2025 Strain Guideline (Thomas et al.); ASE 2015 LARS/RARS recommendations</p>
     </EngineSection>
   );
@@ -752,6 +981,21 @@ function RVFunctionEngine() {
       </div>
       {rvsFromTr && <p className="text-xs text-gray-400 mt-2">RVSP from TR Vmax: {rvsFromTr.toFixed(0)} mmHg</p>}
       <ResultCard severity={result.sev} title="RV Systolic Function" value={result.label} criteria={result.criteria} />
+      <EchoAssistPanel output={(() => {
+        if (result.sev === "indeterminate") return null;
+        if (result.sev === "normal") return {
+          suggests: "Findings are consistent with normal RV systolic function. TAPSE, S\u2019, and FAC are within normal limits.",
+          tip: "TAPSE is measured from the apical 4-chamber view with M-mode cursor placed at the lateral tricuspid annulus. Ensure the cursor is parallel to the direction of annular motion for accurate measurement."
+        };
+        const sev = result.sev;
+        return {
+          suggests: `Findings are consistent with ${sev === "mild" ? "mildly" : sev === "moderate" ? "moderately" : "severely"} reduced RV systolic function.${has(tapse) ? " TAPSE " + tapse + " mm" + (n(tapse) < 17 ? " (reduced, nl \u226517 mm)" : "") + "." : ""}${has(rvSPrime) ? " RV S\u2019 " + rvSPrime + " cm/s" + (n(rvSPrime) < 9.5 ? " (reduced, nl \u22659.5 cm/s)" : "") + "." : ""}`,
+          note: sev === "severe" ? "Severely reduced RV function warrants evaluation for pulmonary hypertension, RV infarction, or cardiomyopathy. RV-PA coupling (TAPSE/RVSP ratio <0.55 mm/mmHg) may indicate uncoupled RV-PA physiology." :
+            "RV dysfunction may be secondary to pressure overload (PH, PE), volume overload (TR, ASD), or primary myocardial disease. Assess TR severity and PA pressure to determine etiology.",
+          tip: "RV free wall strain (FWS) by speckle-tracking is a sensitive marker of early RV dysfunction, particularly in pulmonary hypertension and right heart failure. FWS < \u221220% is abnormal per ASE 2025."
+        };
+      })()}
+      />
       <p className="text-xs text-gray-400 mt-3">Reference: ASE 2015 RV Guidelines (Rudski et al.); ASE 2025 Strain Guideline</p>
     </EngineSection>
   );
@@ -822,7 +1066,31 @@ function PulmonaryHTNEngine() {
       </div>
       {rvsp && <p className="text-xs text-gray-400 mt-2">Calculated RVSP: {rvsp.toFixed(0)} mmHg{padp ? ` | PADP: ${padp.toFixed(0)} mmHg` : ""}{atEtRatio ? ` | AT/ET: ${atEtRatio.toFixed(2)}` : ""}</p>}
       <ResultCard severity={result.sev} title="Pulmonary Hypertension Assessment" value={result.label} criteria={result.criteria} note={result.note} />
-      <p className="text-xs text-gray-400 mt-3">Reference: ESC/ERS 2022 PH Guidelines; ASE 2010 Echocardiographic Assessment of PH (Rudski et al.)</p>
+      <EchoAssistPanel output={(() => {
+        if (!rvsp) return null;
+        const rvsVal = rvsp;
+        if (rvsVal <= 25) return {
+          suggests: `Estimated RVSP is ${rvsVal.toFixed(0)} mmHg, which is within normal limits. No echocardiographic evidence of pulmonary hypertension.`,
+          tip: "Ensure TR Vmax is measured from the apical 4-chamber view using CW Doppler with careful angulation to obtain the highest velocity signal. The right parasternal or subcostal window may yield higher velocities."
+        };
+        if (rvsVal <= 35) return {
+          suggests: `Estimated RVSP is ${rvsVal.toFixed(0)} mmHg, representing a borderline elevation. This may reflect early or mild pulmonary hypertension and warrants clinical correlation.`,
+          note: "Borderline RVSP elevation (25\u201335 mmHg) may be physiological in athletes or with elevated cardiac output. Assess for adjunctive signs of PH: RV dilation, septal flattening (D-sign), and RVOT notching.",
+          tip: "Confirm TR Vmax by measuring from multiple windows. A single measurement may underestimate true TR velocity. Assess IVC diameter and collapsibility to estimate RAP, which directly affects RVSP calculation."
+        };
+        if (rvsVal <= 50) return {
+          suggests: `Estimated RVSP is ${rvsVal.toFixed(0)} mmHg, consistent with moderate pulmonary hypertension. Right heart catheterization is recommended to confirm diagnosis and characterize hemodynamics.`,
+          note: "Moderate PH (RVSP 35\u201350 mmHg) warrants evaluation for pre-capillary (Group 1\u20133 PH) vs. post-capillary (Group 2, HFpEF/HFrEF) etiology. Assess LV filling pressures and mitral valve disease.",
+          tip: "Assess for the D-sign (septal flattening in systole = pressure overload; in diastole = volume overload) and RV:LV ratio. RVOT notching on PW Doppler is a specific sign of pre-capillary PH."
+        };
+        return {
+          suggests: `Estimated RVSP is ${rvsVal.toFixed(0)} mmHg, consistent with ${rvsVal > 60 ? "severe" : "moderate-to-severe"} pulmonary hypertension. Urgent specialist referral and right heart catheterization are indicated.`,
+          note: result.note ?? "Severe PH (RVSP >50 mmHg) carries significant morbidity and mortality. Evaluate for RV-PA uncoupling (TAPSE/RVSP <0.55 mm/mmHg), which indicates decompensated RV function and poor prognosis.",
+          tip: "In severe PH, assess for pericardial effusion, which may indicate decompensated right heart failure. Tricuspid annular plane systolic excursion (TAPSE) <14 mm in the setting of severe PH indicates significantly impaired RV-PA coupling."
+        };
+      })()}
+      />
+      <p className="text-xs text-gray-400 mt-3">Reference: ASE 2025 Pulmonary Hypertension Guidelines (<a href='https://www.asecho.org/wp-content/uploads/2025/03/PIIS0894731725000379.pdf' target='_blank' rel='noopener noreferrer' className='underline hover:text-[#189aa1]'>ASE 2025 PH Guideline PDF</a>); ESC/ERS 2022 PH Guidelines</p>
     </EngineSection>
   );
 }
@@ -840,7 +1108,7 @@ export default function EchoAssist() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-              EchoAssist
+              EchoAssist™
             </h1>
             <p className="text-sm text-gray-500 mt-0.5">
               Enter raw measurements — get instant ASE/AHA/ACC guideline-based severity classifications, calculated values, and the specific criteria met.
