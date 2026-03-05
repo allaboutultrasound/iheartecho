@@ -83,3 +83,4 @@
 - [x] Velocity peak annotations updated to match new scale and MARGIN_LEFT offset
 - [x] Remove Doppler scale selector — display at fixed larger scale
 - [x] Rename AV outflow subtitle tag from "Normal LVOT flow" to "Normal"
+- [x] Fix Doppler waveform visibility and accurate peak annotation placement

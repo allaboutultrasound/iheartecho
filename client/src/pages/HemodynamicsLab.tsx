@@ -478,6 +478,7 @@ function WiggersTooltip({ active, payload }: { active?: boolean; payload?: any[]
 
 function generateMitralInflowPath(p: Params, W: number, H: number): {
   path: string; eVel: number; aVel: number; eaRatio: number; pattern: string; decTime: number;
+  ePeakX: number; ePeakY: number; aPeakX: number; aPeakY: number;
 } {
   const { preload, afterload, contractility, heartRate } = p;
   const rr = 60 / heartRate; // seconds per beat
@@ -525,7 +526,7 @@ function generateMitralInflowPath(p: Params, W: number, H: number): {
   else if (eaRatio < 0.8) pattern = "Impaired Relaxation (Grade I)";
 
   // Generate SVG path for 2 cycles
-  const maxVelDisplay = 1.5; // m/s at top of display
+  const maxVelDisplay = Math.max(eVel, aVel) * 1.25; // auto-scale to fill canvas
   const cycleW = W / 2;
   const baseline = H * 0.92; // baseline near bottom
   const velScale = (H * 0.85) / maxVelDisplay; // pixels per m/s
@@ -541,6 +542,9 @@ function generateMitralInflowPath(p: Params, W: number, H: number): {
   const decFrac = (decTime / 1000) / rr; // deceleration fraction of RR
 
   let d = `M 0 ${baseline}`;
+  // Track peak pixel positions for accurate annotation placement
+  let ePeakX = 0, ePeakY = baseline, aPeakX = 0, aPeakY = baseline;
+  let ePeakVel = 0, aPeakVel = 0;
 
   for (let cycle = 0; cycle < 2; cycle++) {
     const ox = cycle * cycleW;
@@ -572,14 +576,28 @@ function generateMitralInflowPath(p: Params, W: number, H: number): {
 
       const y = baseline - vel * velScale;
       d += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
+
+      // Track peaks on cycle 0 only
+      if (cycle === 0) {
+        if (t >= eStart && t <= eEnd + decFrac * 0.8 && vel > ePeakVel) {
+          ePeakVel = vel; ePeakX = x; ePeakY = y;
+        }
+        if (t >= aStart && t <= aEnd) {
+          const tRel = t - aPeak;
+          const aW = 0.03;
+          const aVelHere = aVel * Math.exp(-0.5 * Math.pow(tRel / aW, 2));
+          if (aVelHere > aPeakVel) { aPeakVel = aVelHere; aPeakX = x; aPeakY = baseline - aVelHere * velScale; }
+        }
+      }
     }
   }
 
-  return { path: d, eVel, aVel, eaRatio, pattern, decTime };
+  return { path: d, eVel, aVel, eaRatio, pattern, decTime, ePeakX, ePeakY, aPeakX, aPeakY };
 }
 
 function generateTricuspidInflowPath(p: Params, W: number, H: number): {
   path: string; eVel: number; aVel: number; pattern: string;
+  ePeakX: number; ePeakY: number; aPeakX: number; aPeakY: number;
 } {
   const { preload, afterload, heartRate } = p;
 
@@ -607,7 +625,7 @@ function generateTricuspidInflowPath(p: Params, W: number, H: number): {
   else if (eaRatio > 2.0) pattern = "Elevated RA Pressure";
   else if (p.tamponade) pattern = "Tamponade — Respiratory Variation";
 
-  const maxVelDisplay = 1.0;
+  const maxVelDisplay = Math.max(eVel, aVel) * 1.25; // auto-scale to fill canvas
   const cycleW = W / 2;
   const baseline = H * 0.92;
   const velScale = (H * 0.85) / maxVelDisplay;
@@ -616,6 +634,9 @@ function generateTricuspidInflowPath(p: Params, W: number, H: number): {
   const aStart = 0.85, aPeak = 0.91, aEnd = 0.98;
 
   let d = `M 0 ${baseline}`;
+  let ePeakX = 0, ePeakY = baseline, aPeakX = 0, aPeakY = baseline;
+  let ePeakVel = 0, aPeakVel = 0;
+
   for (let cycle = 0; cycle < 2; cycle++) {
     const ox = cycle * cycleW;
     const N = 200;
@@ -636,14 +657,23 @@ function generateTricuspidInflowPath(p: Params, W: number, H: number): {
 
       const y = baseline - vel * velScale;
       d += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
+
+      if (cycle === 0) {
+        if (t >= eStart && t <= eStart + 0.18 && vel > ePeakVel) { ePeakVel = vel; ePeakX = x; ePeakY = y; }
+        if (t >= aStart && t <= aEnd) {
+          const aVelHere = aVel * Math.exp(-0.5 * Math.pow((t - aPeak) / 0.03, 2));
+          if (aVelHere > aPeakVel) { aPeakVel = aVelHere; aPeakX = x; aPeakY = baseline - aVelHere * velScale; }
+        }
+      }
     }
   }
 
-  return { path: d, eVel, aVel, pattern };
+  return { path: d, eVel, aVel, pattern, ePeakX, ePeakY, aPeakX, aPeakY };
 }
 
 function generateAVOutflowPath(p: Params, W: number, H: number): {
   path: string; vmax: number; vti: number; pattern: string; shape: string;
+  vmaxPeakX: number; vmaxPeakY: number;
 } {
   const { preload, afterload, contractility, heartRate } = p;
   const rr = 60 / heartRate;
@@ -678,7 +708,7 @@ function generateAVOutflowPath(p: Params, W: number, H: number): {
   else if (shape === "dynamic") pattern = "HCM — Dynamic LVOT Obstruction";
   else if (vmax > 2.0) pattern = "Elevated Velocity";
 
-  const maxVelDisplay = Math.max(2.5, vmax * 1.2);
+  const maxVelDisplay = vmax * 1.2; // auto-scale so Vmax fills ~83% of canvas
   const cycleW = W / 2;
   // AV outflow is BELOW baseline — baseline at top (8% from top), waveform goes downward
   const baseline = H * 0.08;
@@ -689,6 +719,8 @@ function generateAVOutflowPath(p: Params, W: number, H: number): {
   const ejW = avcT - avoT;
 
   let d = `M 0 ${baseline}`;
+  let vmaxPeakX = 0, vmaxPeakY = baseline, vmaxPeakVel = 0;
+
   for (let cycle = 0; cycle < 2; cycle++) {
     const ox = cycle * cycleW;
     const N = 200;
@@ -716,10 +748,12 @@ function generateAVOutflowPath(p: Params, W: number, H: number): {
       // Below baseline: y increases downward from baseline
       const y = baseline + vel * velScale;
       d += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
+
+      if (cycle === 0 && vel > vmaxPeakVel) { vmaxPeakVel = vel; vmaxPeakX = x; vmaxPeakY = y; }
     }
   }
 
-  return { path: d, vmax, vti: Math.round(vti), pattern, shape };
+  return { path: d, vmax, vti: Math.round(vti), pattern, shape, vmaxPeakX, vmaxPeakY };
 }
 
 // ---- DOPPLER DISPLAY COMPONENT ----
@@ -946,27 +980,18 @@ export default function HemodynamicsLab() {
   const tricuspidData = useMemo(() => generateTricuspidInflowPath(params, W_DOPPLER, H_DOPPLER), [params]);
   const avOutflowData = useMemo(() => generateAVOutflowPath(params, W_DOPPLER, H_DOPPLER), [params]);
 
-  // Annotation positions for above-baseline tracings (MV, TV)
-  // Annotation Y positions — match DopplerTracing velToY formula
-  // Above-baseline: baselineY = H*0.93, waveform goes upward
-  const MARGIN_LEFT_ANN = 38;
-  const plotH_ann = H_DOPPLER * 0.86;
-  const baselineAbove = H_DOPPLER * 0.93;
-  const baselineBelow = H_DOPPLER * 0.07;
-  const velToYAbove = (v: number) => baselineAbove - (v / dopplerScale) * plotH_ann;
-  const velToYBelow = (v: number) => baselineBelow + (v / dopplerScale) * plotH_ann;
-
+  // Annotation positions — use exact peak pixel coordinates returned by path generators
+  // This guarantees dots land precisely on the waveform peaks regardless of scale
   const mitralAnnotations = [
-    { x: MARGIN_LEFT_ANN + (W_DOPPLER - MARGIN_LEFT_ANN) * 0.5 * 0.66, y: velToYAbove(mitralData.eVel), label: `E ${mitralData.eVel.toFixed(2)} m/s` },
-    { x: MARGIN_LEFT_ANN + (W_DOPPLER - MARGIN_LEFT_ANN) * 0.5 * 0.91, y: velToYAbove(mitralData.aVel), label: `A ${mitralData.aVel.toFixed(2)} m/s`, sub: `E/A ${mitralData.eaRatio.toFixed(1)}` },
+    { x: mitralData.ePeakX, y: mitralData.ePeakY, label: `E ${mitralData.eVel.toFixed(2)} m/s` },
+    { x: mitralData.aPeakX, y: mitralData.aPeakY, label: `A ${mitralData.aVel.toFixed(2)} m/s`, sub: `E/A ${mitralData.eaRatio.toFixed(1)}` },
   ];
   const tricuspidAnnotations = [
-    { x: MARGIN_LEFT_ANN + (W_DOPPLER - MARGIN_LEFT_ANN) * 0.5 * 0.66, y: velToYAbove(tricuspidData.eVel), label: `E ${tricuspidData.eVel.toFixed(2)} m/s` },
-    { x: MARGIN_LEFT_ANN + (W_DOPPLER - MARGIN_LEFT_ANN) * 0.5 * 0.91, y: velToYAbove(tricuspidData.aVel), label: `A ${tricuspidData.aVel.toFixed(2)} m/s` },
+    { x: tricuspidData.ePeakX, y: tricuspidData.ePeakY, label: `E ${tricuspidData.eVel.toFixed(2)} m/s` },
+    { x: tricuspidData.aPeakX, y: tricuspidData.aPeakY, label: `A ${tricuspidData.aVel.toFixed(2)} m/s` },
   ];
-  // AV outflow is below baseline — annotation y goes downward
   const avAnnotations = [
-    { x: MARGIN_LEFT_ANN + (W_DOPPLER - MARGIN_LEFT_ANN) * 0.5 * (avOutflowData.shape === "tardus" ? 0.27 : 0.22), y: velToYBelow(avOutflowData.vmax), label: `Vmax ${avOutflowData.vmax.toFixed(1)} m/s`, sub: `VTI ~${avOutflowData.vti} cm` },
+    { x: avOutflowData.vmaxPeakX, y: avOutflowData.vmaxPeakY, label: `Vmax ${avOutflowData.vmax.toFixed(1)} m/s`, sub: `VTI ~${avOutflowData.vti} cm` },
   ];
 
   return (
@@ -1335,7 +1360,7 @@ export default function HemodynamicsLab() {
                 color="#4ad9e0"
                 annotations={mitralAnnotations}
                 W={W_DOPPLER} H={H_DOPPLER}
-                scaleMax={dopplerScale}
+                scaleMax={Math.max(mitralData.eVel, mitralData.aVel) * 1.25}
               />
               <div className="mt-2 grid grid-cols-3 gap-1 text-[10px]">
                 <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
@@ -1366,7 +1391,7 @@ export default function HemodynamicsLab() {
                 color="#189aa1"
                 annotations={tricuspidAnnotations}
                 W={W_DOPPLER} H={H_DOPPLER}
-                scaleMax={dopplerScale}
+                scaleMax={Math.max(tricuspidData.eVel, tricuspidData.aVel) * 1.25}
               />
               <div className="mt-2 grid grid-cols-3 gap-1 text-[10px]">
                 <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
@@ -1398,7 +1423,7 @@ export default function HemodynamicsLab() {
                 annotations={avAnnotations}
                 W={W_DOPPLER} H={H_DOPPLER}
                 belowBaseline={true}
-                scaleMax={dopplerScale}
+                scaleMax={avOutflowData.vmax * 1.2}
               />
               <div className="mt-2 grid grid-cols-3 gap-1 text-[10px]">
                 <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
