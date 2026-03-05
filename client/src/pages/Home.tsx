@@ -138,7 +138,7 @@ export default function Home() {
               </div>
             </div>
             <p className="text-white/70 text-sm leading-relaxed mb-6 max-w-lg">
-              A real-time echo interpretation and measurement assistant for sonographers, cardiologists, and ACS students. Guideline-based, fast, and built for the clinical environment.
+              A real-time echo interpretation and measurement assistant for sonographers, cardiologists, and ACS professionals. Guideline-based, fast, and built for the clinical environment.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link href="/tte">
