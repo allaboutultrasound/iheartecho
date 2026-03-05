@@ -29,6 +29,7 @@ import Hub from "./pages/Hub";
 import CardiacPOCUS from "./pages/CardiacPOCUS";
 import LungPOCUS from "./pages/LungPOCUS";
 import EfastPOCUS from "./pages/EfastPOCUS";
+import StrainNavigator from "./pages/StrainNavigator";
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
@@ -53,6 +54,7 @@ function Router() {
       <Route path="/cardiac-pocus" component={CardiacPOCUS} />
       <Route path="/lung-pocus" component={LungPOCUS} />
       <Route path="/efast" component={EfastPOCUS} />
+      <Route path="/strain" component={StrainNavigator} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

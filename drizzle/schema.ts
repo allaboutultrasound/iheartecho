@@ -168,6 +168,99 @@ export const moderationLogs = mysqlTable("moderationLogs", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
+// ─── Accreditation: Peer Reviews ────────────────────────────────────────────
+
+export const peerReviews = mysqlTable("peerReviews", {
+  id: int("id").autoincrement().primaryKey(),
+  reviewerId: int("reviewerId").notNull(),
+  patientId: varchar("patientId", { length: 64 }), // de-identified
+  studyDate: varchar("studyDate", { length: 20 }),
+  modality: mysqlEnum("modality", ["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS"]).notNull(),
+  sonographerInitials: varchar("sonographerInitials", { length: 20 }),
+  imageQuality: mysqlEnum("imageQuality", ["excellent", "good", "adequate", "poor"]),
+  imageQualityNotes: text("imageQualityNotes"),
+  reportAccuracy: mysqlEnum("reportAccuracy", ["accurate", "minor_discrepancy", "major_discrepancy"]),
+  reportNotes: text("reportNotes"),
+  technicalAdherence: mysqlEnum("technicalAdherence", ["full", "partial", "non_adherent"]),
+  technicalNotes: text("technicalNotes"),
+  overallScore: int("overallScore"), // 1-5
+  feedback: text("feedback"),
+  status: mysqlEnum("status", ["draft", "submitted", "complete"]).default("draft").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PeerReview = typeof peerReviews.$inferSelect;
+export type InsertPeerReview = typeof peerReviews.$inferInsert;
+
+// ─── Accreditation: QA Logs ───────────────────────────────────────────────────
+
+export const qaLogs = mysqlTable("qaLogs", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  category: mysqlEnum("category", [
+    "equipment", "protocol", "image_quality", "report_turnaround",
+    "staff_competency", "infection_control", "patient_safety", "other"
+  ]).notNull(),
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description"),
+  finding: mysqlEnum("finding", ["pass", "fail", "needs_improvement", "na"]).default("pass").notNull(),
+  actionRequired: text("actionRequired"),
+  actionTaken: text("actionTaken"),
+  dueDate: varchar("dueDate", { length: 20 }),
+  resolvedAt: timestamp("resolvedAt"),
+  attachmentUrl: text("attachmentUrl"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type QaLog = typeof qaLogs.$inferSelect;
+export type InsertQaLog = typeof qaLogs.$inferInsert;
+
+// ─── Accreditation: Policies ──────────────────────────────────────────────────
+
+export const policies = mysqlTable("policies", {
+  id: int("id").autoincrement().primaryKey(),
+  authorId: int("authorId").notNull(),
+  title: varchar("title", { length: 300 }).notNull(),
+  category: mysqlEnum("category", [
+    "infection_control", "equipment", "patient_safety", "protocol",
+    "staff_competency", "quality_assurance", "appropriate_use",
+    "report_turnaround", "emergency", "other"
+  ]).notNull(),
+  modality: mysqlEnum("modality", ["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "All"]).default("All").notNull(),
+  content: text("content").notNull(),
+  version: varchar("version", { length: 20 }).default("1.0").notNull(),
+  effectiveDate: varchar("effectiveDate", { length: 20 }),
+  reviewDate: varchar("reviewDate", { length: 20 }),
+  status: mysqlEnum("status", ["draft", "active", "archived"]).default("draft").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Policy = typeof policies.$inferSelect;
+export type InsertPolicy = typeof policies.$inferInsert;
+
+// ─── Accreditation: Appropriate Use Cases ────────────────────────────────────
+
+export const appropriateUseCases = mysqlTable("appropriateUseCases", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  studyDate: varchar("studyDate", { length: 20 }),
+  modality: mysqlEnum("modality", ["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS"]).notNull(),
+  indication: text("indication").notNull(),
+  appropriatenessRating: mysqlEnum("appropriatenessRating", ["appropriate", "may_be_appropriate", "rarely_appropriate", "unknown"]).default("unknown").notNull(),
+  clinicalScenario: text("clinicalScenario"),
+  outcome: text("outcome"),
+  notes: text("notes"),
+  flagged: boolean("flagged").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AppropriateUseCase = typeof appropriateUseCases.$inferSelect;
+export type InsertAppropriateUseCase = typeof appropriateUseCases.$inferInsert;
+
 // ─── Community Members ────────────────────────────────────────────────────────
 
 export const communityMembers = mysqlTable("communityMembers", {

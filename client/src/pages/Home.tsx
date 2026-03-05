@@ -6,7 +6,7 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
-import { Calculator, Baby, ClipboardList, Activity, Scan, BookOpen, FileText, ArrowRight, Users, Award, Zap, Stethoscope, Microscope, ExternalLink, Heart, MessageCircle, Radio, Wind, Shield } from "lucide-react";
+import { Calculator, Baby, ClipboardList, Activity, Scan, BookOpen, FileText, ArrowRight, Users, Award, Zap, Stethoscope, Microscope, ExternalLink, Heart, MessageCircle, Radio, Wind, Shield, BarChart3 } from "lucide-react";
 
 const BRAND = "#189aa1";
 const modules = [
@@ -16,6 +16,14 @@ const modules = [
     icon: Stethoscope,
     title: "Adult TTE EchoNavigator™",
     description: "Structured TTE protocol with view-by-view checklist, critical item tracking, and ASE reference values.",
+    badge: "Adult Echo",
+    color: BRAND,
+  },
+  {
+    path: "/strain",
+    icon: BarChart3,
+    title: "Strain Navigator™",
+    description: "LV GLS, RV free-wall strain, LA reservoir strain with interactive 17-segment bull's-eye display and ASE/EACVI 2022 reference values.",
     badge: "Adult Echo",
     color: BRAND,
   },

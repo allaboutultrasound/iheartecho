@@ -87,3 +87,16 @@
 - [x] Move Frank-Starling engine to bottom of EchoAssist™ engine list
 - [x] Move POCUS Navigator dashboard cards to follow other navigator cards
 - [x] EchoAssist™ — all engine sections collapsed by default, hash-anchor auto-open
+
+## Accreditation Tools (In Progress)
+- [ ] Database schema: peer_reviews, policies, qa_logs, appropriate_use_cases tables
+- [ ] tRPC procedures: peer review CRUD, policy CRUD, QA log, appropriate use tracking
+- [ ] DIY Accreditation Tool™ page — Quality Review, Peer Review, Policy Builder, Appropriate Use Monitor tabs
+- [ ] EchoAccreditation Navigator™ page — IAC standards guide with search (TTE, TEE, Stress, Pediatric, Fetal, HOCM)
+- [ ] Accreditation Tools sidebar section and dashboard cards
+- [ ] Routes wired in App.tsx
+
+## Strain Navigator & Sidebar Reorganization
+- [x] Move Strain EchoNavigator™ entry to Adult Echo sidebar section
+- [x] Build Strain Navigator™ page (LV GLS, RV strain, LA strain, bull's-eye display, clinical interpretation)
+- [x] Wire Strain Navigator™ route in App.tsx and add to Home dashboard

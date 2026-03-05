@@ -22,6 +22,7 @@ const navGroups = [
     label: "Adult Echo",
     items: [
       { path: "/tte", label: "TTE EchoNavigator™", icon: Stethoscope },
+      { path: "/strain", label: "Strain Navigator™", icon: Activity },
     ],
   },
   {
