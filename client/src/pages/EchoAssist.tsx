@@ -8,7 +8,8 @@
 import { useState } from "react";
 import { useSearch } from "wouter";
 import Layout from "@/components/Layout";
-import { Zap, ChevronDown, ChevronUp, Info, Lightbulb, MessageSquare, AlertCircle } from "lucide-react";
+import { Zap, ChevronDown, ChevronUp, Info, Lightbulb, MessageSquare, AlertCircle, TrendingUp } from "lucide-react";
+import FrankStarlingGraph, { type FrankStarlingParams } from "@/components/FrankStarlingGraph";
 
 // ─── UI PRIMITIVES ────────────────────────────────────────────────────────────
 
@@ -1317,6 +1318,136 @@ function PulmonaryHTNEngine() {
   );
 }
 
+// ─── FRANK-STARLING ENGINE ───────────────────────────────────────────────────
+function FrankStarlingEngine() {
+  const [open, setOpen] = useState(true);
+  const [fsParams, setFsParams] = useState<FrankStarlingParams>({ preload: 50, afterload: 50, contractility: 50 });
+
+  const contractilityLabel =
+    fsParams.contractility >= 70 ? "Hyperdynamic (EF >70%)"
+    : fsParams.contractility >= 45 ? "Normal (EF 55–70%)"
+    : fsParams.contractility >= 25 ? "Mildly Reduced (EF 40–55%)"
+    : "Severely Reduced (EF <40%)";
+
+  const preloadLabel =
+    fsParams.preload >= 70 ? "Volume overloaded — elevated LVEDP"
+    : fsParams.preload >= 40 ? "Euvolemic — normal filling pressures"
+    : "Hypovolemic — low preload";
+
+  const afterloadLabel =
+    fsParams.afterload >= 70 ? "High afterload — increased SVR/SBP"
+    : fsParams.afterload >= 40 ? "Normal afterload"
+    : "Low afterload — vasodilated state";
+
+  const suggests =
+    fsParams.contractility < 25
+      ? `EchoAssist\u2122 Suggests: Severely depressed contractility with Starling failure. The Frank-Starling curve is flat — further preload augmentation will not improve stroke volume. Consider inotropic support, afterload reduction, or mechanical circulatory support.`
+      : fsParams.contractility < 45
+      ? `EchoAssist\u2122 Suggests: Reduced contractility shifts the Frank-Starling curve downward. Stroke volume is diminished at any given preload. Optimize preload, reduce afterload (vasodilators), and consider guideline-directed medical therapy.`
+      : fsParams.contractility >= 70
+      ? `EchoAssist\u2122 Suggests: Hyperdynamic state — steep ascending limb. The ventricle is highly preload-responsive. Assess for high-output states: sepsis, anemia, thyrotoxicosis, AV fistula, or severe MR/AR.`
+      : `EchoAssist\u2122 Suggests: Normal contractility. The ascending limb of the Frank-Starling curve is intact — preload augmentation will increase stroke volume up to the plateau. Maintain euvolemia and optimize heart rate.`;
+
+  const note =
+    fsParams.afterload >= 70
+      ? "EchoAssist\u2122 Note: High afterload depresses the Frank-Starling curve — the same preload generates less stroke volume. Afterload reduction (ACE inhibitors, ARBs, hydralazine, nitroprusside) can restore SV without increasing preload."
+      : fsParams.preload >= 75
+      ? "EchoAssist\u2122 Note: Operating on the plateau of the Frank-Starling curve. Further volume loading is unlikely to improve stroke volume and may worsen pulmonary congestion. Consider diuresis if filling pressures are elevated."
+      : fsParams.preload <= 25
+      ? "EchoAssist\u2122 Note: Operating on the steep ascending limb — the ventricle is preload-dependent. Fluid resuscitation will increase stroke volume. Assess IVC collapsibility and passive leg raise response."
+      : "EchoAssist\u2122 Note: Operating in the mid-range of the Frank-Starling curve. Both preload augmentation and contractility enhancement can improve stroke volume.";
+
+  const tip = "EchoAssist\u2122 Tip: The Frank-Starling relationship is the physiologic basis for fluid responsiveness testing (passive leg raise, fluid challenge). A >10% increase in SV or VTI with PLR predicts fluid responsiveness. Correlate with IVC collapsibility, E/e\u2019, and LVOT VTI trends.";
+
+  return (
+    <div id="engine-frank-starling" className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full px-5 py-3.5 flex items-center justify-between"
+        style={{ background: "linear-gradient(90deg, #0e4a50, #189aa1)" }}
+      >
+        <div className="flex items-center gap-3">
+          <TrendingUp className="w-4 h-4 text-white" />
+          <div className="text-left">
+            <h3 className="font-bold text-sm text-white" style={{ fontFamily: "Merriweather, serif" }}>Frank-Starling Curve</h3>
+            <p className="text-xs text-white/70">Preload · Afterload · Contractility · Stroke Volume</p>
+          </div>
+        </div>
+        {open ? <ChevronUp className="w-4 h-4 text-white/70" /> : <ChevronDown className="w-4 h-4 text-white/70" />}
+      </button>
+
+      {open && (
+        <div className="p-5">
+          {/* Sliders */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+            {[
+              { key: "preload" as const, label: "Preload", sublabel: preloadLabel, color: "#189aa1" },
+              { key: "afterload" as const, label: "Afterload", sublabel: afterloadLabel, color: "#dc2626" },
+              { key: "contractility" as const, label: "Contractility", sublabel: contractilityLabel, color: "#16a34a" },
+            ].map(({ key, label, sublabel, color }) => (
+              <div key={key} className="space-y-1.5">
+                <div className="flex justify-between text-xs">
+                  <span className="font-semibold text-gray-700">{label}</span>
+                  <span className="font-mono font-bold" style={{ color }}>{fsParams[key]}</span>
+                </div>
+                <input
+                  type="range" min={0} max={100} value={fsParams[key]}
+                  onChange={e => setFsParams(p => ({ ...p, [key]: Number(e.target.value) }))}
+                  className="w-full h-1.5 rounded-full appearance-none cursor-pointer"
+                  style={{ accentColor: color }}
+                />
+                <p className="text-[10px] text-gray-400 leading-tight">{sublabel}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Presets */}
+          <div className="flex flex-wrap gap-2 mb-5">
+            {[
+              { label: "Normal", p: { preload: 50, afterload: 50, contractility: 50 } },
+              { label: "HFrEF", p: { preload: 70, afterload: 60, contractility: 20 } },
+              { label: "Hypovolemia", p: { preload: 15, afterload: 60, contractility: 55 } },
+              { label: "Septic Shock", p: { preload: 30, afterload: 20, contractility: 70 } },
+              { label: "Cardiogenic Shock", p: { preload: 80, afterload: 75, contractility: 10 } },
+              { label: "Hypertensive Crisis", p: { preload: 55, afterload: 95, contractility: 50 } },
+              { label: "Athlete", p: { preload: 60, afterload: 35, contractility: 80 } },
+            ].map(({ label, p }) => (
+              <button
+                key={label}
+                onClick={() => setFsParams(p)}
+                className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:border-[#189aa1] hover:text-[#189aa1] transition-all font-medium"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* Graph */}
+          <FrankStarlingGraph params={fsParams} showReferenceCurves height={260} />
+
+          {/* EchoAssist output */}
+          <div className="mt-4 space-y-2">
+            <div className="flex items-start gap-2 bg-[#f0fbfc] border border-[#b2e8ec] rounded-lg px-4 py-3">
+              <Zap className="w-3.5 h-3.5 text-[#189aa1] flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-[#0e7490] leading-relaxed">{suggests}</p>
+            </div>
+            <div className="flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-lg px-4 py-3">
+              <Info className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-amber-700 leading-relaxed">{note}</p>
+            </div>
+            <div className="flex items-start gap-2 bg-gray-50 border border-gray-100 rounded-lg px-4 py-3">
+              <Lightbulb className="w-3.5 h-3.5 text-gray-500 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-gray-500 leading-relaxed">{tip}</p>
+            </div>
+          </div>
+
+          <p className="text-xs text-gray-400 mt-3">Reference: <a href="https://pubmed.ncbi.nlm.nih.gov/13660189/" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#189aa1]">Starling EH. The Linacre Lecture on the Law of the Heart. 1918</a> | <a href="https://pubmed.ncbi.nlm.nih.gov/16908781/" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#189aa1]">Katz AM. Ernest Henry Starling, his predecessors, and the "Law of the Heart". Circulation. 2002</a></p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 export default function EchoAssist() {
   return (
@@ -1333,7 +1464,7 @@ export default function EchoAssist() {
               EchoAssist™
             </h1>
             <p className="text-sm text-gray-500 mt-0.5">
-              Enter raw measurements — get instant ASE/AHA/ACC guideline-based severity classifications, calculated values, and the specific criteria met. Domains: AS, MS, AR, MR, TR, LV, Diastology, Strain, RV, PA Pressure.
+              Enter raw measurements — get instant ASE/AHA/ACC guideline-based severity classifications, calculated values, and the specific criteria met. Domains: Frank-Starling, AS, MS, AR, MR, TR, LV, Diastology, Strain, RV, PA Pressure.
             </p>
           </div>
         </div>
@@ -1348,6 +1479,7 @@ export default function EchoAssist() {
 
         {/* Engine sections */}
         <div className="space-y-4">
+          <FrankStarlingEngine />
           <LVSystolicEngine />
           <DiastolicEngine />
           <StrainEngine />

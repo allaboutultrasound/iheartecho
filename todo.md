@@ -58,3 +58,12 @@
 - [ ] POCUS EchoAssist engines — IVC collapsibility, B-line scoring, eFAST free fluid grading
 - [ ] POCUS sidebar category and routes wired
 - [ ] POCUS Home dashboard cards added
+
+## Frank-Starling & POCUS (In Progress)
+- [x] Frank-Starling reusable graph component with preload/afterload/contractility sliders
+- [x] Frank-Starling engine section in EchoAssist™
+- [x] Frank-Starling graph integrated into Hemodynamics Lab
+- [x] Cardiac POCUS Navigator — route /cardiac-pocus, sidebar wired
+- [x] Lung POCUS Navigator — route /lung-pocus, sidebar wired
+- [x] eFAST POCUS Navigator — route /efast, sidebar wired
+- [x] POCUS Home dashboard cards added

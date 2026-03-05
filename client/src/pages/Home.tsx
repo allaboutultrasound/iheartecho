@@ -6,7 +6,7 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
-import { Calculator, Baby, ClipboardList, Activity, Scan, BookOpen, FileText, ArrowRight, Users, Award, Zap, Stethoscope, Microscope, ExternalLink, Heart, MessageCircle } from "lucide-react";
+import { Calculator, Baby, ClipboardList, Activity, Scan, BookOpen, FileText, ArrowRight, Users, Award, Zap, Stethoscope, Microscope, ExternalLink, Heart, MessageCircle, Radio, Wind, Shield } from "lucide-react";
 
 const BRAND = "#189aa1";
 const modules = [
@@ -108,10 +108,34 @@ const modules = [
     color: BRAND,
   },
   {
+    path: "/cardiac-pocus",
+    icon: Radio,
+    title: "Cardiac POCUS Navigator",
+    description: "Bedside cardiac POCUS protocol — PLAX, PSAX, A4C, subxiphoid, IVC views with clinical interpretation and EchoAssist™ integration.",
+    badge: "POCUS",
+    color: BRAND,
+  },
+  {
+    path: "/lung-pocus",
+    icon: Wind,
+    title: "Lung POCUS Navigator",
+    description: "BLUE protocol, 8-zone lung assessment, B-line scoring, pleural effusion, pneumothorax detection with clinical decision pathways.",
+    badge: "POCUS",
+    color: BRAND,
+  },
+  {
+    path: "/efast",
+    icon: Shield,
+    title: "eFAST POCUS Navigator",
+    description: "Extended FAST exam — RUQ, LUQ, pelvis, cardiac, bilateral thorax windows with free fluid grading and pneumothorax assessment.",
+    badge: "POCUS",
+    color: BRAND,
+  },
+  {
     path: "/hub",
     icon: MessageCircle,
     title: "iHeartEcho Hub™",
-    description: "Professional echo community \u2014 5 specialty hubs, case discussions, DMs, and peer learning for echo professionals.",
+    description: "Professional echo community — 5 specialty hubs, case discussions, DMs, and peer learning for echo professionals.",
     badge: "Community",
     color: BRAND,
   },

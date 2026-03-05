@@ -7,6 +7,7 @@
 import { useState, useMemo } from "react";
 import Layout from "@/components/Layout";
 import { Activity, TrendingUp, TrendingDown, Minus, RotateCcw } from "lucide-react";
+import FrankStarlingGraph from "@/components/FrankStarlingGraph";
 import {
   ResponsiveContainer, ComposedChart, LineChart, Line,
   XAxis, YAxis, Tooltip, CartesianGrid, ReferenceLine,
@@ -1360,6 +1361,29 @@ export default function HemodynamicsLab() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Frank-Starling Curve Section */}
+        <div className="mt-6 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-5 py-3" style={{ background: "linear-gradient(90deg, #0e4a50, #189aa1)" }}>
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-white" />
+              <div>
+                <h3 className="font-bold text-sm text-white" style={{ fontFamily: "Merriweather, serif" }}>Frank-Starling Curve</h3>
+                <p className="text-xs text-white/70">Synchronized with hemodynamic sliders above — adjust preload, afterload, and contractility to see real-time curve changes</p>
+              </div>
+            </div>
+          </div>
+          <div className="p-5">
+            <FrankStarlingGraph
+              params={{ preload: params.preload, afterload: params.afterload, contractility: params.contractility }}
+              showReferenceCurves
+              height={300}
+            />
+            <p className="text-xs text-gray-400 mt-3">
+              The operating point (teal dot) moves in real time as you adjust the sliders above. The dashed green and red curves show the effect of ±30 units of contractility change. Reference: Starling EH. The Linacre Lecture on the Law of the Heart. 1918.
+            </p>
           </div>
         </div>
 
