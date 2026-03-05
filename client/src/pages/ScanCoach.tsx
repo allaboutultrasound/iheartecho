@@ -82,7 +82,7 @@ const tteViews = [
     doppler: "2D, Color and M-mode assessment",
     anatomyImageUrl: CDN.ttePlaxAnatomy,
     echoImageUrl: CDN.ttePlaxEcho,
-    tips: ["Tilt probe to open up LVOT — IVS should be horizontal", "Descending aorta posterior to MV confirms true PLAX", "Avoid foreshortening — LV should appear elongated, not round"],
+    tips: ["Tilt probe to open up LVOT — IVS should be horizontal", "Descending aorta posterior to MV confirms true PLAX"],
     pitfalls: ["Foreshortening underestimates LV size", "Descending aorta mistaken for LA"],
     measurements: ["LVID (d/s)", "IVS (d)", "PW (d)", "Ao root", "LA diameter", "LVOT diameter"],
     color: "#189aa1",
