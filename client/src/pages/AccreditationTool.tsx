@@ -16,9 +16,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   ClipboardList, Star, FileText, BarChart2, Plus, CheckCircle, AlertTriangle,
   XCircle, Clock, ChevronDown, ChevronUp, Shield, Award, BookOpen, Loader2, Download,
-  TrendingUp, TrendingDown, Minus, Info, ImageIcon
+  TrendingUp, TrendingDown, Minus, Info, ImageIcon, GitCompare
 } from "lucide-react";
 import ImageQualityReviewTab from "./ImageQualityReview";
+import EchoCorrelationTab from "./EchoCorrelation";
 import { toast } from "sonner";
 import { getLoginUrl } from "@/const";
 import jsPDF from "jspdf";
@@ -1145,7 +1146,7 @@ function AppropriateUseTab() {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function AccreditationTool() {
   const { isAuthenticated, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState<"qa" | "iqr" | "peer" | "policy" | "auc">("qa");
+  const [activeTab, setActiveTab] = useState<"qa" | "iqr" | "echo-correlation" | "peer" | "policy" | "auc">("qa");
 
   if (loading) {
     return (
@@ -1203,6 +1204,7 @@ export default function AccreditationTool() {
           <div className="flex flex-wrap gap-1">
             <TabBtn active={activeTab === "qa"} onClick={() => setActiveTab("qa")} icon={ClipboardList} label="Quality Review" />
             <TabBtn active={activeTab === "iqr"} onClick={() => setActiveTab("iqr")} icon={ImageIcon} label="Image Quality Review" />
+            <TabBtn active={activeTab === "echo-correlation"} onClick={() => setActiveTab("echo-correlation")} icon={GitCompare} label="Echo Correlation" />
             <TabBtn active={activeTab === "peer"} onClick={() => setActiveTab("peer")} icon={Star} label="Peer Review" />
             <TabBtn active={activeTab === "policy"} onClick={() => setActiveTab("policy")} icon={FileText} label="Policy Builder" />
             <TabBtn active={activeTab === "auc"} onClick={() => setActiveTab("auc")} icon={BarChart2} label="Appropriate Use" />
@@ -1212,7 +1214,7 @@ export default function AccreditationTool() {
 
       {/* Content */}
       <div className="container py-6">
-        <div className={activeTab === "iqr" ? "" : "max-w-3xl"}>
+        <div className={(activeTab === "iqr" || activeTab === "echo-correlation") ? "" : "max-w-3xl"}>
           {/* Disclaimer */}
           <div className="mb-4 p-3 rounded-lg border border-amber-200 bg-amber-50 flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
@@ -1223,6 +1225,7 @@ export default function AccreditationTool() {
 
           {activeTab === "qa" && <QualityReviewTab />}
           {activeTab === "iqr" && <ImageQualityReviewTab />}
+          {activeTab === "echo-correlation" && <EchoCorrelationTab />}
           {activeTab === "peer" && <PeerReviewTab />}
           {activeTab === "policy" && <PolicyBuilderTab />}
           {activeTab === "auc" && <AppropriateUseTab />}

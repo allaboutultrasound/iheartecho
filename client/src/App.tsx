@@ -64,7 +64,7 @@ function Router() {
       <Route path="/accreditation-navigator" component={AccreditationNavigator} />
       <Route path="/lab-admin" component={LabAdmin} />
       <Route path="/image-quality-review" component={ImageQualityReview} />
-      <Route path="/echo-correlation" component={EchoCorrelation} />
+      <Route path="/echo-correlation" component={() => { window.location.replace("/accreditation"); return null; }} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
