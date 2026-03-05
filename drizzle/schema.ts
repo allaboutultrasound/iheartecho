@@ -397,7 +397,6 @@ export const imageQualityReviews = mysqlTable("imageQualityReviews", {
   dateReviewCompleted: varchar("dateReviewCompleted", { length: 20 }),
   examDos: varchar("examDos", { length: 20 }),
   examIdentifier: varchar("examIdentifier", { length: 100 }),
-  patientDob: varchar("patientDob", { length: 20 }),
   facilityLocation: varchar("facilityLocation", { length: 200 }),
   performingSonographer: varchar("performingSonographer", { length: 200 }),
   interpretingPhysician: varchar("interpretingPhysician", { length: 200 }),
@@ -505,7 +504,6 @@ export const echoCorrelations = mysqlTable("echoCorrelations", {
   organization: varchar("organization", { length: 255 }),
   dateReviewCompleted: varchar("dateReviewCompleted", { length: 20 }),
   examIdentifier: varchar("examIdentifier", { length: 50 }),
-  dob: varchar("dob", { length: 20 }),
   // Exam Info
   examType: varchar("examType", { length: 100 }),
   correlation1Type: varchar("correlation1Type", { length: 100 }),

@@ -272,14 +272,14 @@ const STANDARDS: Standard[] = [
 
 // ─── Category Config ──────────────────────────────────────────────────────────
 const CATEGORY_CONFIG: Record<Category, { label: string; color: string; icon: React.ElementType }> = {
-  personnel: { label: "Personnel", color: "#7c3aed", icon: Users },
-  facility: { label: "Facility", color: "#0891b2", icon: Stethoscope },
-  equipment: { label: "Equipment", color: "#0369a1", icon: Activity },
+  personnel: { label: "Personnel", color: "#189aa1", icon: Users },
+  facility: { label: "Facility", color: "#0e7a80", icon: Stethoscope },
+  equipment: { label: "Equipment", color: "#2ab8bf", icon: Activity },
   procedures: { label: "Procedures & Protocols", color: "#189aa1", icon: ClipboardListIcon },
-  case_mix: { label: "Case Mix", color: "#16a34a", icon: FileText },
-  cme: { label: "CME / Education", color: "#d97706", icon: GraduationCap },
-  quality: { label: "Quality Assurance", color: "#dc2626", icon: Award },
-  policies: { label: "Policies", color: "#6b7280", icon: FileText },
+  case_mix: { label: "Case Mix", color: "#0e6b70", icon: FileText },
+  cme: { label: "CME / Education", color: "#4ad9e0", icon: GraduationCap },
+  quality: { label: "Quality Assurance", color: "#0e4a50", icon: Award },
+  policies: { label: "Policies", color: "#3ab5bc", icon: FileText },
 };
 
 function ClipboardListIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -295,11 +295,11 @@ function ClipboardListIcon(props: React.SVGProps<SVGSVGElement>) {
 
 const MODALITY_CONFIG: Record<Modality, { label: string; color: string; icon: React.ElementType }> = {
   TTE: { label: "TTE", color: "#189aa1", icon: Stethoscope },
-  TEE: { label: "TEE", color: "#0369a1", icon: Activity },
-  Stress: { label: "Stress Echo", color: "#d97706", icon: Zap },
-  Pediatric: { label: "Pediatric", color: "#7c3aed", icon: Users },
-  Fetal: { label: "Fetal", color: "#db2777", icon: Baby },
-  HOCM: { label: "HOCM / HCM", color: "#dc2626", icon: Heart },
+  TEE: { label: "TEE", color: "#0e7a80", icon: Activity },
+  Stress: { label: "Stress Echo", color: "#2ab8bf", icon: Zap },
+  Pediatric: { label: "Pediatric", color: "#4ad9e0", icon: Users },
+  Fetal: { label: "Fetal", color: "#0e6b70", icon: Baby },
+  HOCM: { label: "HOCM / HCM", color: "#0e4a50", icon: Heart },
 };
 
 // ─── Standard Card ────────────────────────────────────────────────────────────

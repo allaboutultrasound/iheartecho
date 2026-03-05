@@ -233,3 +233,35 @@
 
 ## Favicon — Completed
 - [x] iHeartEcho logo set as favicon (PNG + ICO) in index.html
+
+## Consolidation — All Reviews Under DIY Accreditation Tool™
+- [ ] Remove standalone /image-quality-review and /echo-correlation routes from App.tsx
+- [ ] Remove standalone sidebar entries for IQR and Echo Correlation from Layout.tsx
+- [ ] Remove standalone Home dashboard cards for IQR and Echo Correlation
+- [ ] Add "Image Quality Review™" as a tab inside DIY Accreditation Tool™
+- [ ] Add "Echo Correlation Review™" as a tab inside DIY Accreditation Tool™
+- [ ] Auto-link all reviews (IQR, Echo Correlation, Peer Review) to Lab Admin (labId + revieweeId) on save
+- [ ] Add Send Feedback button on all review completion screens (PDF summary + notification)
+- [ ] Update Lab Admin Analytics to consume all review types in real time
+
+## Navigation & Dashboard Cleanup
+- [ ] Remove Lab Admin card from Home dashboard
+- [ ] Remove Image Quality Review card from Home dashboard
+- [ ] Remove Echo Correlation Review card from Home dashboard
+- [ ] Fix sidebar active state: use useLocation to highlight correct item on all pages
+- [ ] Remove standalone /image-quality-review and /echo-correlation routes from App.tsx
+- [ ] Remove standalone sidebar entries for IQR and Echo Correlation from Layout.tsx
+- [ ] Remove Lab Admin from sidebar (accessible via Accreditation Tool)
+- [ ] IQR and Echo Correlation embedded as tabs in DIY Accreditation Tool™
+
+## EchoAccreditation Navigator Color Fix
+- [ ] All tags/badges in AccreditationNavigator.tsx use brand teal palette
+- [ ] All icons in AccreditationNavigator.tsx use brand teal color
+- [ ] Filter tab buttons use brand teal border/text when inactive
+- [ ] Section category badges use brand teal
+- [ ] Standard/requirement level badges use brand teal variants
+
+## Navigation Structure
+- [ ] Pin Lab Admin to bottom of Accreditation Tools sidebar section (always last)
+- [ ] Add Lab Admin shortcut button inside DIY Accreditation Tool™ header
+- [ ] Add link from EchoAccreditation Navigator™ to DIY Accreditation Tool™

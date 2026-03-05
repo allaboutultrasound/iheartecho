@@ -4,17 +4,13 @@
   10-step wizard with PDF export and review history
 */
 import { useState, useMemo } from "react";
-import { useLocation } from "wouter";
-import Layout from "@/components/Layout";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import {
   ChevronLeft, ChevronRight, FileText, Download, CheckCircle2,
   ClipboardList, Eye, Stethoscope, Activity, BarChart2, Save, Trash2,
-  Plus, ArrowLeft
-} from "lucide-react";
-
+  Plus,} from "lucide-react";
 // ─── Brand colors ─────────────────────────────────────────────────────────────
 const TEAL = "#189aa1";
 const AQUA = "#4ad9e0";
@@ -201,7 +197,6 @@ function generateIqrPdf(data: FormData) {
   addSection("Exam Information");
   addField("Exam Date", data.examDos as string);
   addField("Exam Identifier", data.examIdentifier as string);
-  addField("Patient DOB", data.patientDob as string);
   addField("Facility Location", data.facilityLocation as string);
   addField("Performing Sonographer", data.performingSonographer as string);
   addField("Interpreting Physician", data.interpretingPhysician as string);
@@ -411,8 +406,7 @@ const IAC_OPTIONS = [
 ];
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function ImageQualityReview() {
-  const [, navigate] = useLocation();
+export default function ImageQualityReviewTab() {
   const [step, setStep] = useState(1);
   const [view, setView] = useState<"form" | "history">("form");
   const [form, setForm] = useState<FormData>({
@@ -421,7 +415,6 @@ export default function ImageQualityReview() {
     dateReviewCompleted: new Date().toISOString().slice(0, 10),
     examDos: "",
     examIdentifier: "",
-    patientDob: "",
     facilityLocation: "",
     performingSonographer: "",
     interpretingPhysician: "",
@@ -572,11 +565,8 @@ export default function ImageQualityReview() {
           <FieldRow label="Exam Date of Service (DOS)" required>
             <TextInput name="examDos" type="date" value={form.examDos as string} onChange={setStr("examDos")} />
           </FieldRow>
-          <FieldRow label="Exam Identifier (LAS/FIR/MRN)">
-            <TextInput name="examIdentifier" value={form.examIdentifier as string} onChange={setStr("examIdentifier")} placeholder="De-identified ID" />
-          </FieldRow>
-          <FieldRow label="Patient DOB">
-            <TextInput name="patientDob" type="date" value={form.patientDob as string} onChange={setStr("patientDob")} />
+          <FieldRow label="Exam Identifier (LAS/FIR)">
+            <TextInput name="examIdentifier" value={form.examIdentifier as string} onChange={setStr("examIdentifier")} placeholder="Last 3 of Last Name + First 3 of First Name" />
           </FieldRow>
           <FieldRow label="Facility Location">
             <TextInput name="facilityLocation" value={form.facilityLocation as string} onChange={setStr("facilityLocation")} placeholder="Site location" />
@@ -1147,20 +1137,14 @@ export default function ImageQualityReview() {
 
   // ─── Main render ──────────────────────────────────────────────────────────────
   return (
-    <Layout>
-      <div className="container py-6 max-w-3xl">
-        {/* Page header */}
-        <div className="flex items-center gap-3 mb-6">
-          <button onClick={() => navigate("/accreditation")} className="p-2 rounded-lg border border-[#189aa1]/30 text-[#189aa1] hover:bg-[#189aa1]/5">
-            <ArrowLeft className="w-4 h-4" />
-          </button>
+    <div className="py-4">
+        {/* Sub-header */}
+        <div className="flex items-center justify-between mb-5">
           <div>
-            <h1 className="text-xl font-black text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-              Image Quality Review™
-            </h1>
+            <h2 className="text-base font-black text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Image Quality Review™</h2>
             <p className="text-xs text-gray-500">IAC-aligned quality review form for echo lab accreditation</p>
           </div>
-          <div className="ml-auto flex gap-2">
+          <div className="flex gap-2">
             <button onClick={() => setView("form")}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${view === "form" ? "text-white" : "text-gray-600 bg-gray-100 hover:bg-gray-200"}`}
               style={view === "form" ? { background: TEAL } : {}}>
@@ -1239,7 +1223,6 @@ export default function ImageQualityReview() {
             </div>
           </>
         )}
-      </div>
-    </Layout>
+    </div>
   );
 }

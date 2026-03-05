@@ -11,8 +11,6 @@
 */
 
 import { useState } from "react";
-import { useLocation } from "wouter";
-import Layout from "@/components/Layout";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
@@ -179,8 +177,7 @@ function BrandSelect({ value, onChange, options, placeholder }: {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export default function EchoCorrelation() {
-  const [, navigate] = useLocation();
+export default function EchoCorrelationTab() {
   const [step, setStep] = useState(1);
   const TOTAL_STEPS = 4;
 
@@ -193,7 +190,6 @@ export default function EchoCorrelation() {
   // Step 2 — Exam Info
   const [examType, setExamType] = useState("");
   const [examIdentifier, setExamIdentifier] = useState("");
-  const [dob, setDob] = useState("");
   const [originalExamDos, setOriginalExamDos] = useState("");
   const [correlation1Type, setCorrelation1Type] = useState("");
   const [correlation1TypeOther, setCorrelation1TypeOther] = useState("");
@@ -254,7 +250,6 @@ export default function EchoCorrelation() {
       reviewerEmail,
       examType,
       examIdentifier,
-      dob,
       originalExamDos,
       correlation1Type: correlation1Type === "Other" ? correlation1TypeOther : correlation1Type,
       correlation1TypeOther,
@@ -399,39 +394,18 @@ export default function EchoCorrelation() {
   // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <Layout>
-      {/* Page Header */}
-      <div className="border-b" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}>
-        <div className="container py-6">
-          <button
-            onClick={() => navigate("/accreditation")}
-            className="flex items-center gap-1.5 text-xs text-white/60 hover:text-white mb-3 transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" /> Back to Accreditation Tool
-          </button>
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <BarChart3 className="w-5 h-5" style={{ color: AQUA }} />
-                <h1 className="text-xl font-black text-white" style={{ fontFamily: "Merriweather, serif" }}>
-                  Echo Correlation Review™
-                </h1>
-              </div>
-              <p className="text-white/60 text-sm">
-                Compare original echo findings against correlative studies — catheterization, CTA, MRI, nuclear, surgical reports.
-              </p>
+    <div className="py-4">
+        {/* Sub-header */}
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <div className="flex items-center gap-2 mb-0.5">
+              <BarChart3 className="w-4 h-4" style={{ color: BRAND }} />
+              <h2 className="text-base font-black text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Echo Correlation Review™</h2>
             </div>
-            <button
-              onClick={() => navigate("/echo-correlation/history")}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white border border-white/20 hover:bg-white/10 transition-all flex-shrink-0"
-            >
-              <ClipboardList className="w-4 h-4" /> History
-            </button>
+            <p className="text-xs text-gray-500">Compare original echo findings against correlative studies — cath, CTA, MRI, nuclear, surgical reports.</p>
           </div>
         </div>
-      </div>
-
-      <div className="container py-8 max-w-4xl">
+      <div className="max-w-4xl">
         <StepIndicator step={step} total={TOTAL_STEPS} />
 
         {/* ── Step 1: Header ──────────────────────────────────────────────── */}
@@ -459,11 +433,8 @@ export default function EchoCorrelation() {
               <FieldRow label="Exam Type">
                 <BrandSelect value={examType} onChange={setExamType} options={EXAM_TYPES} placeholder="Select exam type…" />
               </FieldRow>
-              <FieldRow label="Exam Identifier (LAS/FIR/MRN)">
+              <FieldRow label="Exam Identifier (LAS/FIR)">
                 <BrandInput value={examIdentifier} onChange={setExamIdentifier} placeholder="De-identified identifier" />
-              </FieldRow>
-              <FieldRow label="Date of Birth (DOB)">
-                <BrandInput type="date" value={dob} onChange={setDob} />
               </FieldRow>
               <FieldRow label="Original Exam DOS">
                 <BrandInput type="date" value={originalExamDos} onChange={setOriginalExamDos} />
@@ -802,6 +773,6 @@ export default function EchoCorrelation() {
           )}
         </div>
       </div>
-    </Layout>
+    </div>
   );
 }
