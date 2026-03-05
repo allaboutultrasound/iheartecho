@@ -587,11 +587,12 @@ export default function ScanCoach() {
                     <img
                       src={(selectedTTE as any).transducerImageUrl}
                       alt={`${selectedTTE.name} transducer position`}
-                      className="w-full rounded-lg object-contain mb-3"
-                      style={{ maxHeight: "200px" }}
+                      className="w-full rounded-lg object-contain"
+                      style={{ maxHeight: "220px" }}
                     />
-                  ) : null}
-                  <div dangerouslySetInnerHTML={{ __html: selectedTTE.probeSvg }} />
+                  ) : (
+                    <div dangerouslySetInnerHTML={{ __html: selectedTTE.probeSvg }} />
+                  )}
                   <div className="mt-3 space-y-1.5 text-xs text-gray-600">
                     <div><span className="font-semibold text-gray-500">Position: </span>{selectedTTE.probePosition}</div>
                     <div><span className="font-semibold text-gray-500">Notch: </span>{selectedTTE.probeOrientation}</div>
