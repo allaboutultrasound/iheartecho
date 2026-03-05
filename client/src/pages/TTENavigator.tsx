@@ -366,8 +366,9 @@ export default function TTENavigator() {
                 )}
               </div>
             ))}
-            <div className="text-xs text-gray-400 px-1">
-              Reference: <a href='https://asecho.org/wp-content/uploads/2018/08/WFTF-Chamber-Quantification-Summary-Doc-Final-July-18.pdf' target='_blank' rel='noopener noreferrer' className='underline hover:text-[#189aa1]'>ASE/WFTF 2018 Chamber Quantification</a>, ASE 2025 LV Diastolic Function Guidelines, ASE 2025 Strain Guideline (Thomas et al.)
+            <div className="text-xs text-gray-400 px-1 space-y-1">
+              <p>Reference: <a href='https://asecho.org/wp-content/uploads/2018/08/WFTF-Chamber-Quantification-Summary-Doc-Final-July-18.pdf' target='_blank' rel='noopener noreferrer' className='underline hover:text-[#189aa1]'>ASE/WFTF 2018 Chamber Quantification</a>, ASE 2025 LV Diastolic Function Guidelines, ASE 2025 Strain Guideline (Thomas et al.)</p>
+              <p>Right Heart & PH: <a href='https://www.asecho.org/wp-content/uploads/2025/03/PIIS0894731725000379.pdf' target='_blank' rel='noopener noreferrer' className='underline hover:text-[#189aa1]'>ASE 2025 Right Heart & Pulmonary Hypertension Guidelines</a></p>
             </div>
 
             {/* Quick links to EchoAssist and Strain Navigator */}
@@ -389,6 +390,14 @@ export default function TTENavigator() {
                 <a href="/echoassist#engine-diastolic" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:bg-gray-50"
                   style={{ color: "#189aa1", borderColor: "#189aa140" }}>
                   ↗ Diastolic Function — EchoAssist™
+                </a>
+                <a href="/echoassist#engine-rv" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:bg-gray-50"
+                  style={{ color: "#189aa1", borderColor: "#189aa140" }}>
+                  ↗ RV Function — EchoAssist™
+                </a>
+                <a href="/echoassist#engine-ph" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:bg-gray-50"
+                  style={{ color: "#189aa1", borderColor: "#189aa140" }}>
+                  ↗ Pulmonary Hypertension — EchoAssist™
                 </a>
               </div>
             </div>
