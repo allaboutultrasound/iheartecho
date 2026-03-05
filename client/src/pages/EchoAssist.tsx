@@ -508,13 +508,13 @@ function DiastolicEngine() {
   const rvsp = has(trVmax) ? 4 * Math.pow(n(trVmax), 2) : null;
 
   const getGrade = (): { sev: Severity; label: string; criteria: string[]; note?: string } => {
-    if (!eaRatio && !ePrimeAvg && !has(lavi)) return { sev: "indeterminate", label: "Insufficient data", criteria: ["Enter E/A, e', LAVI, and TR Vmax for ASE 2016 grading"] };
+    if (!eaRatio && !ePrimeAvg && !has(lavi)) return { sev: "indeterminate", label: "Insufficient data", criteria: ["Enter E/A, e', LAVI, and TR Vmax for ASE 2025 grading"] };
 
     const criteria: string[] = [];
     let positiveCount = 0;
     let totalCriteria = 0;
 
-    // ASE 2016 four criteria
+    // ASE 2025 four criteria
     if (ePrimeAvg !== null) {
       totalCriteria++;
       criteria.push(`Average e' = ${ePrimeAvg.toFixed(1)} cm/s${ePrimeAvg < 7 ? " → abnormal (septal <7 cm/s)" : " → normal"}`);
@@ -564,7 +564,7 @@ function DiastolicEngine() {
       note = "E/A > 2.0 with elevated filling pressure markers = Grade III (restrictive pattern, elevated LVEDP).";
     } else if (ratio >= 0.5) {
       sev = "moderate"; label = "Grade II Diastolic Dysfunction — Elevated Filling Pressures";
-      note = `${positiveCount} of ${totalCriteria} ASE 2016 criteria positive → Grade II (pseudonormal, elevated filling pressures).`;
+      note = `${positiveCount} of ${totalCriteria} ASE 2025 criteria positive → Grade II (pseudonormal, elevated filling pressures).`;
     } else if (ratio > 0 && ratio < 0.5) {
       sev = "indeterminate"; label = "Indeterminate Diastolic Function";
       note = `${positiveCount} of ${totalCriteria} criteria positive — insufficient to grade. Additional criteria needed.`;
@@ -579,7 +579,7 @@ function DiastolicEngine() {
   const result = getGrade();
 
   return (
-    <EngineSection title="Diastolic Function" subtitle="ASE 2016 four-criteria grading · E/A · e' · E/e' · LAVI · RVSP">
+    <EngineSection title="Diastolic Function" subtitle="ASE 2025 diastolic function grading · E/A · e' · E/e' · LAVI · RVSP">
       <div className="grid grid-cols-2 gap-3">
         <NumInput label="E velocity" value={eVel} onChange={setEVel} unit="m/s" placeholder="e.g. 0.8" />
         <NumInput label="A velocity" value={aVel} onChange={setAVel} unit="m/s" placeholder="e.g. 0.6" />
@@ -591,7 +591,7 @@ function DiastolicEngine() {
       </div>
       {eaRatio !== null && <p className="text-xs text-gray-400 mt-2">E/A ratio: {eaRatio.toFixed(2)} | {ePrimeAvg ? `Avg e': ${ePrimeAvg.toFixed(1)} cm/s | ` : ""}E/e': {eeRatio?.toFixed(1) ?? "—"}</p>}
       <ResultCard severity={result.sev} title="Diastolic Function Grade" value={result.label} criteria={result.criteria} note={result.note} />
-      <p className="text-xs text-gray-400 mt-3">Reference: ASE/EACVI 2016 Diastolic Function Guidelines (Nagueh et al.)</p>
+      <p className="text-xs text-gray-400 mt-3">Reference: <a href="https://www.asecho.org/wp-content/uploads/2025/07/Left-Ventricular-Diastolic-Function.pdf" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#189aa1] transition-colors">ASE 2025 Left Ventricular Diastolic Function Guidelines</a></p>
     </EngineSection>
   );
 }
@@ -872,7 +872,7 @@ export default function EchoAssist() {
         {/* Footer */}
         <div className="mt-8 p-4 bg-gray-50 rounded-xl border border-gray-100 text-xs text-gray-400 space-y-1">
           <p className="font-semibold text-gray-500">Guideline References</p>
-          <p>• ASE 2015 Chamber Quantification (Lang et al.) | ASE 2016 Diastolic Function (Nagueh et al.)</p>
+          <p>• ASE 2015 Chamber Quantification (Lang et al.) | ASE 2025 LV Diastolic Function Guidelines</p>
           <p>• ASE 2025 Strain Guideline (Thomas et al.) | ASE 2015 RV Guidelines (Rudski et al.)</p>
           <p>• AHA/ACC 2021 Valvular Heart Disease Guidelines | ASE/EACVI 2017 Valve Regurgitation (Zoghbi et al.)</p>
           <p>• ESC/ERS 2022 Pulmonary Hypertension Guidelines | AHA/ACC 2022 Heart Failure Guidelines</p>
