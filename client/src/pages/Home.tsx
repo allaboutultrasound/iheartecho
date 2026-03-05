@@ -3,9 +3,10 @@
   Brand: Teal #189aa1, Aqua #4ad9e0
   Fonts: Merriweather headings, Open Sans body
 */
+import { useAuth } from "@/_core/hooks/useAuth";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
-import { Calculator, Baby, ClipboardList, Activity, Scan, BookOpen, FileText, ArrowRight, Users, Award, Zap, Stethoscope, Microscope, ExternalLink, Heart } from "lucide-react";
+import { Calculator, Baby, ClipboardList, Activity, Scan, BookOpen, FileText, ArrowRight, Users, Award, Zap, Stethoscope, Microscope, ExternalLink, Heart, MessageCircle } from "lucide-react";
 
 const BRAND = "#189aa1";
 const modules = [
@@ -106,6 +107,14 @@ const modules = [
     badge: "ASE Guidelines",
     color: BRAND,
   },
+  {
+    path: "/hub",
+    icon: MessageCircle,
+    title: "iHeartEcho Hub™",
+    description: "Professional echo community \u2014 5 specialty hubs, case discussions, DMs, and peer learning for echo professionals.",
+    badge: "Community",
+    color: BRAND,
+  },
 ];
 
 const stats = [
@@ -116,6 +125,7 @@ const stats = [
 ];
 
 export default function Home() {
+  const { user } = useAuth();
   return (
     <Layout>
       {/* Hero Banner */}

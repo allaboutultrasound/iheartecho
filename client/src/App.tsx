@@ -25,8 +25,9 @@ import DeviceNavigator from "./pages/DeviceNavigator";
 import ACHDNavigator from "./pages/ACHDNavigator";
 import StressNavigator from "./pages/StressNavigator";
 import EchoAssist from "./pages/EchoAssist";
-
+import Hub from "./pages/Hub";
 function Router() {
+  // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
       <Route path="/" component={Home} />
@@ -45,6 +46,7 @@ function Router() {
       <Route path="/cases" component={CaseLab} />
       <Route path="/report" component={ReportBuilder} />
       <Route path="/echoassist" component={EchoAssist} />
+      <Route path="/hub" component={Hub} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

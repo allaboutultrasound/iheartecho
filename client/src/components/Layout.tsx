@@ -8,7 +8,7 @@ import { Link, useLocation } from "wouter";
 import {
   Heart, Calculator, Baby, ClipboardList, Activity,
   Scan, BookOpen, FileText, Menu, X, ChevronRight,
-  Stethoscope, Microscope, Zap, Users, ExternalLink, ShoppingBag, FlaskConical, Cpu, Layers
+  Stethoscope, Microscope, Zap, Users, ExternalLink, ShoppingBag, FlaskConical, Cpu, Layers, MessageCircle
 } from "lucide-react";
 
 const navGroups = [
@@ -55,6 +55,12 @@ const navGroups = [
       { path: "/cases", label: "Case Lab", icon: BookOpen },
       { path: "/report", label: "Report Builder", icon: FileText },
       { path: "/echoassist", label: "EchoAssist™", icon: FlaskConical },
+    ],
+  },
+  {
+    label: "Community",
+    items: [
+      { path: "/hub", label: "iHeartEcho Hub™", icon: MessageCircle },
     ],
   },
 ];
