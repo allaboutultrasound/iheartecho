@@ -817,45 +817,41 @@ function DopplerTracing({
 const PRESETS: { label: string; values: Params; color: string }[] = [
   { label: "Normal",
     values: { preload: 50, afterload: 50, contractility: 50, heartRate: 70 },
-    color: "#16a34a" },
+    color: "#16a34a" },       // green — normal only
   { label: "HTN / Pressure Overload",
     values: { preload: 50, afterload: 80, contractility: 60, heartRate: 72 },
-    color: "#d97706" },
+    color: "#0e9aa7" },       // teal
   { label: "Dilated CMP (DCM)",
     values: { preload: 70, afterload: 55, contractility: 20, heartRate: 95 },
-    color: "#dc2626" },
+    color: "#dc2626" },       // red — critical/severe dysfunction
   { label: "Volume Overload",
     values: { preload: 82, afterload: 40, contractility: 65, heartRate: 78, pulseWidthFactor: 1.3 },
-    color: "#0891b2" },
+    color: "#189aa1" },       // teal-mid
   { label: "Hypovolemic Shock",
     values: { preload: 15, afterload: 75, contractility: 55, heartRate: 118 },
-    color: "#7c3aed" },
+    color: "#dc2626" },       // red — shock
   { label: "Tamponade",
     values: { preload: 25, afterload: 60, contractility: 45, heartRate: 110, tamponade: true },
-    color: "#be185d" },
+    color: "#dc2626" },       // red — critical
   { label: "HCM (Obstructive)",
     values: { preload: 40, afterload: 80, contractility: 90, heartRate: 80, hcmGradient: 60 },
-    color: "#b45309" },
+    color: "#0e9aa7" },       // teal
   { label: "Septic Shock",
     values: { preload: 30, afterload: 20, contractility: 55, heartRate: 120 },
-    color: "#64748b" },
+    color: "#dc2626" },       // red — shock
   // Valvular disease presets
   { label: "Aortic Stenosis (Severe)",
-    // LV-Ao gradient 60 mmHg: LV systolic ~240 mmHg, Ao ~180 mmHg
     values: { preload: 55, afterload: 88, contractility: 65, heartRate: 68, lvaoGradient: 60 },
-    color: "#c2410c" },
+    color: "#0e9aa7" },       // teal
   { label: "Aortic Regurgitation",
-    // Wide pulse pressure: high SBP, very low DBP (bounding pulse)
     values: { preload: 85, afterload: 38, contractility: 62, heartRate: 75, pulseWidthFactor: 2.2 },
-    color: "#0369a1" },
+    color: "#22d3ee" },       // aqua
   { label: "Mitral Stenosis (Severe)",
-    // Elevated LAP, restricted LV inflow, narrow pulse pressure
     values: { preload: 72, afterload: 45, contractility: 58, heartRate: 85, lapMultiplier: 2.5, msInflow: true },
-    color: "#7e22ce" },
+    color: "#189aa1" },       // teal-mid
   { label: "Mitral Regurgitation",
-    // Giant LAP v-wave from systolic regurgitation into LA
     values: { preload: 78, afterload: 42, contractility: 60, heartRate: 80, lapMultiplier: 2.8 },
-    color: "#be123c" },
+    color: "#22d3ee" },       // aqua
 ];
 
 function getClinicalContext(p: Params): { title: string; description: string; color: string } {
