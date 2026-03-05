@@ -8,7 +8,7 @@ import { Link, useLocation } from "wouter";
 import {
   Heart, Calculator, Baby, ClipboardList, Activity,
   Scan, BookOpen, FileText, Menu, X, ChevronRight,
-  Stethoscope, Microscope, Zap, Users, ExternalLink
+  Stethoscope, Microscope, Zap, Users, ExternalLink, ShoppingBag
 } from "lucide-react";
 
 const navGroups = [
@@ -127,8 +127,22 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
 
+        {/* SonoShop */}
+        <div className="px-3 pb-2">
+          <a
+            href="https://store.allaboutultrasound.com/collections/iheartecho"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-3 py-2.5 rounded-lg transition-all duration-150 group w-full"
+            style={{ background: "linear-gradient(135deg, #189aa1 0%, #4ad9e0 100%)" }}
+          >
+            <ShoppingBag className="w-4 h-4 text-white flex-shrink-0" />
+            <span className="text-sm font-semibold text-white">SonoShop</span>
+            <ExternalLink className="w-3 h-3 text-white/70 ml-auto" />
+          </a>
+        </div>
         {/* Footer */}
-        <div className="px-4 py-4 border-t border-white/10">
+        <div className="px-4 py-3 border-t border-white/10">
           <a href="https://www.iheartecho.com" target="_blank" rel="noopener noreferrer"
             className="flex items-center gap-1.5 text-xs text-[#4ad9e0] hover:text-white transition-colors mb-1">
             <ExternalLink className="w-3 h-3" />
