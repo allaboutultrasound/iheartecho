@@ -560,6 +560,27 @@ export default function HemodynamicsLab() {
           </p>
         </div>
 
+        {/* Clinical Presets */}
+        <div className="mb-5 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="teal-header px-5 py-3">
+            <h3 className="font-bold text-sm text-white" style={{ fontFamily: "Merriweather, serif" }}>Clinical Presets</h3>
+          </div>
+          <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {PRESETS.map(preset => (
+              <button key={preset.label} onClick={() => setParams(preset.values)}
+                className="p-3 rounded-lg border text-left transition-all hover:shadow-sm active:scale-95"
+                style={{ borderColor: preset.color + "40", background: preset.color + "08" }}>
+                <div className="text-xs font-bold mb-0.5" style={{ color: preset.color, fontFamily: "Merriweather, serif" }}>
+                  {preset.label}
+                </div>
+                <div className="text-[10px] text-gray-400">
+                  PL:{preset.values.preload} AL:{preset.values.afterload} CTR:{preset.values.contractility} HR:{preset.values.heartRate}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-5">
 
           {/* ---- CONTROLS ---- */}
@@ -877,26 +898,7 @@ export default function HemodynamicsLab() {
           </div>
         </div>
 
-        {/* Clinical Presets */}
-        <div className="mt-5 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="teal-header px-5 py-3">
-            <h3 className="font-bold text-sm text-white" style={{ fontFamily: "Merriweather, serif" }}>Clinical Presets</h3>
-          </div>
-          <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {PRESETS.map(preset => (
-              <button key={preset.label} onClick={() => setParams(preset.values)}
-                className="p-3 rounded-lg border text-left transition-all hover:shadow-sm active:scale-95"
-                style={{ borderColor: preset.color + "40", background: preset.color + "08" }}>
-                <div className="text-xs font-bold mb-0.5" style={{ color: preset.color, fontFamily: "Merriweather, serif" }}>
-                  {preset.label}
-                </div>
-                <div className="text-[10px] text-gray-400">
-                  PL:{preset.values.preload} AL:{preset.values.afterload} CTR:{preset.values.contractility} HR:{preset.values.heartRate}
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
+
       </div>
     </Layout>
   );
