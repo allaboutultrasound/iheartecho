@@ -40,7 +40,9 @@ function computeHemodynamics(p: Params) {
   let sbp     = 80  + afterload     * 1.2;           // 80–200 mmHg
   let dbp     = 50  + afterload     * 0.5;           // 50–100 mmHg
   const emax  = 0.5 + contractility * 0.025;         // 0.5–3.0 mmHg/mL (Emax)
-  const esv   = Math.max(20, edv - (edv - 20) * (contractility / 100) * 0.75);
+  // EF calibrated: c=20→EF~25%, c=50→EF~62%, c=90→EF~78%
+  const efFrac = Math.min(0.78, Math.max(0.15, 0.004 + 0.0123 * contractility));
+  const esv   = Math.round(edv * (1 - efFrac));
   const sv    = Math.max(15, edv - esv);
   const co    = (sv * heartRate) / 1000;             // L/min
   const ci    = co / 1.9;                            // assume BSA 1.9
