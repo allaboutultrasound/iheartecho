@@ -22,6 +22,7 @@ import TTENavigator from "./pages/TTENavigator";
 import TEENavigator from "./pages/TEENavigator";
 import ICENavigator from "./pages/ICENavigator";
 import DeviceNavigator from "./pages/DeviceNavigator";
+import ACHDNavigator from "./pages/ACHDNavigator";
 import StressNavigator from "./pages/StressNavigator";
 import EchoAssist from "./pages/EchoAssist";
 
@@ -36,6 +37,7 @@ function Router() {
       <Route path="/tee" component={TEENavigator} />
       <Route path="/ice" component={ICENavigator} />
       <Route path="/device" component={DeviceNavigator} />
+      <Route path="/achd" component={ACHDNavigator} />
       <Route path="/stress" component={StressNavigator} />
       <Route path="/protocol" component={TTENavigatorRedirect} />
       <Route path="/hemodynamics" component={HemodynamicsLab} />

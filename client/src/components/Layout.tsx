@@ -39,15 +39,11 @@ const navGroups = [
     ],
   },
   {
-    label: "Pediatric Echo",
+    label: "Congenital Heart",
     items: [
       { path: "/pediatric", label: "Pediatric EchoNavigator™", icon: Users },
-    ],
-  },
-  {
-    label: "Fetal Echo",
-    items: [
       { path: "/fetal", label: "Fetal EchoNavigator™", icon: Baby },
+      { path: "/achd", label: "Adult Congenital EchoNavigator™", icon: Heart },
     ],
   },
   {
