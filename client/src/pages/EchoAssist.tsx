@@ -688,7 +688,7 @@ function LVSystolicEngine() {
       {fsCalc !== null && <p className="text-xs text-gray-400 mt-2">Calculated FS: {fsCalc.toFixed(1)}%</p>}
       <ResultCard severity={result.sev} title="LV Systolic Function" value={result.label} criteria={result.criteria} />
       <EchoAssistPanel output={getLvEchoAssist()} />
-      <p className="text-xs text-gray-400 mt-3">Reference: ASE 2015 Chamber Quantification (Lang et al.); AHA/ACC HF Classification 2022</p>
+      <p className="text-xs text-gray-400 mt-3">Reference: <a href='https://asecho.org/wp-content/uploads/2018/08/WFTF-Chamber-Quantification-Summary-Doc-Final-July-18.pdf' target='_blank' rel='noopener noreferrer' className='underline hover:text-[#189aa1]'>ASE/WFTF 2018 Chamber Quantification</a>; AHA/ACC HF Classification 2022</p>
     </EngineSection>
   );
 }
@@ -1015,7 +1015,7 @@ function RVFunctionEngine() {
         };
       })()}
       />
-      <p className="text-xs text-gray-400 mt-3">Reference: ASE 2015 RV Guidelines (Rudski et al.); ASE 2025 Strain Guideline</p>
+      <p className="text-xs text-gray-400 mt-3">Reference: <a href='https://www.asecho.org/wp-content/uploads/2025/03/PIIS0894731725000379.pdf' target='_blank' rel='noopener noreferrer' className='underline hover:text-[#189aa1]'>ASE 2025 Right Heart & PH Guidelines</a>; ASE 2025 Strain Guideline</p>
     </EngineSection>
   );
 }
@@ -1536,10 +1536,10 @@ export default function EchoAssist() {
         {/* Footer */}
         <div className="mt-8 p-4 bg-gray-50 rounded-xl border border-gray-100 text-xs text-gray-400 space-y-1">
           <p className="font-semibold text-gray-500">Guideline References</p>
-          <p>• ASE 2015 Chamber Quantification (Lang et al.) | ASE 2025 LV Diastolic Function Guidelines</p>
-          <p>• ASE 2025 Strain Guideline (Thomas et al.) | ASE 2015 RV Guidelines (Rudski et al.)</p>
+          <p>• <a href='https://asecho.org/wp-content/uploads/2018/08/WFTF-Chamber-Quantification-Summary-Doc-Final-July-18.pdf' target='_blank' rel='noopener noreferrer' className='underline hover:text-[#189aa1]'>ASE/WFTF 2018 Chamber Quantification</a> | ASE 2025 LV Diastolic Function Guidelines</p>
+          <p>• ASE 2025 Strain Guideline (Thomas et al.) | <a href='https://www.asecho.org/wp-content/uploads/2025/03/PIIS0894731725000379.pdf' target='_blank' rel='noopener noreferrer' className='underline hover:text-[#189aa1]'>ASE 2025 Right Heart & PH Guidelines</a></p>
           <p>• AHA/ACC 2021 Valvular Heart Disease Guidelines | ASE/EACVI 2017 Valve Regurgitation (Zoghbi et al.) | Hahn et al. JACC 2019 TR Grading</p>
-          <p>• ESC/ERS 2022 Pulmonary Hypertension Guidelines | AHA/ACC 2022 Heart Failure Guidelines</p>
+          <p>• ESC/ERS 2022 PH Guidelines | AHA/ACC 2022 Heart Failure Guidelines</p>
           <p className="pt-1">© All About Ultrasound — iHeartEcho™ | www.iheartecho.com</p>
         </div>
       </div>

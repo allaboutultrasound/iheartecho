@@ -207,3 +207,24 @@
     background-position: center;
   }
 }
+
+/* ─── Copy Protection ────────────────────────────────────────────────────────
+   Prevents text selection and drag across the entire app.
+   Input/textarea elements are explicitly excluded so users can still
+   type in form fields and calculators.
+*/
+body {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+input,
+textarea,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}

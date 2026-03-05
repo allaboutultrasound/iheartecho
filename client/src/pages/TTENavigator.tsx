@@ -367,7 +367,7 @@ export default function TTENavigator() {
               </div>
             ))}
             <div className="text-xs text-gray-400 px-1">
-              Reference: ASE 2015 Chamber Quantification (Lang et al.), ASE 2016 Diastology (Nagueh et al.), ASE 2025 Strain Guideline (Thomas et al.)
+              Reference: <a href='https://asecho.org/wp-content/uploads/2018/08/WFTF-Chamber-Quantification-Summary-Doc-Final-July-18.pdf' target='_blank' rel='noopener noreferrer' className='underline hover:text-[#189aa1]'>ASE/WFTF 2018 Chamber Quantification</a>, ASE 2025 LV Diastolic Function Guidelines, ASE 2025 Strain Guideline (Thomas et al.)
             </div>
 
             {/* Quick links to EchoAssist and Strain Navigator */}

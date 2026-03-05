@@ -441,7 +441,7 @@ export default function TEENavigator() {
                   </table>
                 </div>
               ))}
-              <p className="text-xs text-gray-400 mt-2">References: ASE 2015 Chamber Quantification (Lang et al.), ASE 2025 Strain Guideline (Thomas et al.), ACC/AHA Valvular Heart Disease Guidelines 2021.</p>
+              <p className="text-xs text-gray-400 mt-2">References: <a href='https://asecho.org/wp-content/uploads/2018/08/WFTF-Chamber-Quantification-Summary-Doc-Final-July-18.pdf' target='_blank' rel='noopener noreferrer' className='underline hover:text-[#189aa1]'>ASE/WFTF 2018 Chamber Quantification</a>, ASE 2025 Strain Guideline (Thomas et al.), ACC/AHA Valvular Heart Disease Guidelines 2021.</p>
             </div>
           </div>
         )}

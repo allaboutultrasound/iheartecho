@@ -1178,7 +1178,7 @@ export default function StrainNavigator() {
               <div className="space-y-2">
                 {[
                   { ref: "ASE. Recommendations for the Standardization and Interpretation of Echocardiographic Strain. JASE 2025 (August).", url: "https://www.asecho.org/wp-content/uploads/2025/08/Strain-Guideline-AIP-August-2025.pdf" },
-                  { ref: "Lang RM et al. Recommendations for Cardiac Chamber Quantification by Echocardiography in Adults. JASE 2015;28:1–39.", url: "https://www.asecho.org/guideline/guidelines-for-cardiac-chamber-quantification/" },
+                  { ref: "ASE/WFTF. Recommendations for Cardiac Chamber Quantification by Echocardiography in Adults. 2018 Update.", url: "https://asecho.org/wp-content/uploads/2018/08/WFTF-Chamber-Quantification-Summary-Doc-Final-July-18.pdf" },
                   { ref: "Marwick TH et al. Recommendations on the Use of Echocardiography in Adult Hypertension. JASE 2015;28:727–54.", url: "https://www.asecho.org" },
                   { ref: "Plana JC et al. Expert Consensus for Multimodality Imaging Evaluation of Adult Patients during and after Cancer Therapy (Cardio-Oncology). JASE 2014;27:911–39.", url: "https://www.asecho.org" },
                   { ref: "Smiseth OA et al. Myocardial strain imaging: how useful is it in clinical decision making? Eur Heart J 2016;37:1196–207.", url: "https://academic.oup.com/eurheartj" },

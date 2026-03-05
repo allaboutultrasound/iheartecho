@@ -898,7 +898,7 @@ function LVFunctionCalculator() {
       </div>
 
       {(efVal || gls) && (
-        <ResultPanel guideline="EF per ASE 2015 Chamber Quantification | GLS per ASE 2025 Strain Guideline (Thomas et al.)">
+        <ResultPanel guideline="EF per ASE/WFTF 2018 Chamber Quantification | GLS per ASE 2025 Strain Guideline (Thomas et al.)">
           {efInterp && (
             <div className="mb-3 p-2 rounded border" style={{ borderColor: efInterp.color + "40", background: efInterp.color + "10" }}>
               <div className="text-xs text-gray-500 mb-0.5">LVEF</div>

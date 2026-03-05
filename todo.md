@@ -282,3 +282,8 @@
 - [ ] Add normal reference values section to ACHD EchoNavigator™
 - [ ] Add normal reference values section to Strain EchoNavigator™ (GLS, RV, LA strain normals)
 - [ ] Add persistent "Open in ScanCoach™" link/button to every EchoNavigator™ page (links to relevant ScanCoach tab)
+
+## Guideline Reference Updates
+- [ ] Update all chamber quantification references to ASE/WFTF 2018: https://asecho.org/wp-content/uploads/2018/08/WFTF-Chamber-Quantification-Summary-Doc-Final-July-18.pdf
+- [ ] Update all pulmonary hypertension/right heart references to ASE 2025: https://www.asecho.org/wp-content/uploads/2025/03/PIIS0894731725000379.pdf
+- [ ] Add both guidelines to EchoAssist™ references section
