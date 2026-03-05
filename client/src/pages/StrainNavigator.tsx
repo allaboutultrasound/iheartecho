@@ -79,12 +79,13 @@ const WALL_GROUPS = [
 // ─── Strain Color ─────────────────────────────────────────────────────────────
 
 function strainColor(val: number | null): string {
-  if (val === null) return "#e5e7eb"; // gray — not entered
-  if (val <= -20) return "#16a34a";   // green — normal (≤ −20%)
-  if (val <= -16) return "#ca8a04";   // yellow — mildly reduced (−16 to −20%)
-  if (val <= -12) return "#ea580c";   // orange — moderately reduced (−12 to −16%)
-  if (val <= -8)  return "#dc2626";   // red — mod-severely reduced (−8 to −12%)
-  return "#7f1d1d";                   // dark red — severely reduced (> −8%)
+  if (val === null) return "#d1d5db"; // gray — not entered
+  if (val <= -20) return "#991b1b";   // dark red — normal (≤ −20%)
+  if (val <= -18) return "#ef4444";   // red — borderline (−18 to −20%)
+  if (val <= -16) return "#f9a8d4";   // pink — mildly reduced (−16 to −18%)
+  if (val <= -12) return "#fbcfe8";   // light pink — moderately reduced (−12 to −16%)
+  if (val <= -8)  return "#93c5fd";   // light blue — mod-severely reduced (−8 to −12%)
+  return "#1d4ed8";                   // dark blue — severely reduced (> −8%)
 }
 
 // ─── Synthetic Strain Waveform Generator ─────────────────────────────────────
@@ -935,14 +936,15 @@ export default function StrainNavigator() {
     ? SEGMENTS_17.find(s => s.id === selectedSeg)?.label ?? ""
     : "";
 
-  // Color legend
+  // Color legend — clinical convention: dark red = normal, dark blue = severely reduced
   const legend = [
-    { color: "#16a34a", label: "Normal (≤ −20%)" },
-    { color: "#ca8a04", label: "Mildly reduced (−16 to −20%)" },
-    { color: "#ea580c", label: "Moderately reduced (−12 to −16%)" },
-    { color: "#dc2626", label: "Mod-severely reduced (−8 to −12%)" },
-    { color: "#7f1d1d", label: "Severely reduced (> −8%)" },
-    { color: "#e5e7eb", label: "Not entered" },
+    { color: "#991b1b", label: "Normal (≤ −20%)", textColor: "#fff" },
+    { color: "#ef4444", label: "Borderline (−18 to −20%)", textColor: "#fff" },
+    { color: "#f9a8d4", label: "Mildly reduced (−16 to −18%)", textColor: "#1f2937" },
+    { color: "#fbcfe8", label: "Moderately reduced (−12 to −16%)", textColor: "#1f2937" },
+    { color: "#93c5fd", label: "Mod-severely reduced (−8 to −12%)", textColor: "#1f2937" },
+    { color: "#1d4ed8", label: "Severely reduced (> −8%)", textColor: "#fff" },
+    { color: "#d1d5db", label: "Not entered", textColor: "#6b7280" },
   ];
 
   return (
@@ -971,12 +973,12 @@ export default function StrainNavigator() {
               <Save className="w-3.5 h-3.5" />
               Save to Case
             </button>
-            <a href="https://www.asecho.org/guideline/guidelines-for-cardiac-chamber-quantification/"
+            <a href="https://www.asecho.org/wp-content/uploads/2025/08/Strain-Guideline-AIP-August-2025.pdf"
               target="_blank" rel="noopener noreferrer"
               className="hidden sm:flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border"
               style={{ color: BRAND, borderColor: BRAND + "40", background: BRAND + "10" }}>
               <ExternalLink className="w-3.5 h-3.5" />
-              ASE Guidelines
+              ASE Strain Guidelines 2025
             </a>
           </div>
         </div>
@@ -1175,6 +1177,7 @@ export default function StrainNavigator() {
             <SectionCard title="References & Guidelines" subtitle="ASE · EACVI · ESC · Cardio-Oncology" defaultOpen={false}>
               <div className="space-y-2">
                 {[
+                  { ref: "ASE. Recommendations for the Standardization and Interpretation of Echocardiographic Strain. JASE 2025 (August).", url: "https://www.asecho.org/wp-content/uploads/2025/08/Strain-Guideline-AIP-August-2025.pdf" },
                   { ref: "Lang RM et al. Recommendations for Cardiac Chamber Quantification by Echocardiography in Adults. JASE 2015;28:1–39.", url: "https://www.asecho.org/guideline/guidelines-for-cardiac-chamber-quantification/" },
                   { ref: "Marwick TH et al. Recommendations on the Use of Echocardiography in Adult Hypertension. JASE 2015;28:727–54.", url: "https://www.asecho.org" },
                   { ref: "Plana JC et al. Expert Consensus for Multimodality Imaging Evaluation of Adult Patients during and after Cancer Therapy (Cardio-Oncology). JASE 2014;27:911–39.", url: "https://www.asecho.org" },
@@ -1260,10 +1263,10 @@ export default function StrainNavigator() {
 
               {/* Legend */}
               <div className="mt-4 space-y-1">
-                {legend.map(({ color, label }) => (
+                {legend.map(({ color, label, textColor }) => (
                   <div key={label} className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-sm flex-shrink-0" style={{ background: color, border: "1px solid #e5e7eb" }} />
-                    <span className="text-xs text-gray-500">{label}</span>
+                    <div className="w-3 h-3 rounded-sm flex-shrink-0" style={{ background: color, border: "1px solid #cbd5e1" }} />
+                    <span className="text-xs" style={{ color: "#6b7280" }}>{label}</span>
                   </div>
                 ))}
               </div>
