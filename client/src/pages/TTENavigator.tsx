@@ -369,6 +369,29 @@ export default function TTENavigator() {
             <div className="text-xs text-gray-400 px-1">
               Reference: ASE 2015 Chamber Quantification (Lang et al.), ASE 2016 Diastology (Nagueh et al.), ASE 2025 Strain Guideline (Thomas et al.)
             </div>
+
+            {/* Quick links to EchoAssist and Strain Navigator */}
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Open in Clinical Tools</p>
+              <div className="flex flex-wrap gap-2">
+                <a href="/echoassist#engine-strain" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
+                  style={{ background: "#189aa1", color: "white" }}>
+                  ↗ Strain Analysis — EchoAssist™
+                </a>
+                <a href="/strain" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
+                  style={{ background: "#0e4a50", color: "white" }}>
+                  ↗ Strain Navigator™
+                </a>
+                <a href="/echoassist#engine-lv" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:bg-gray-50"
+                  style={{ color: "#189aa1", borderColor: "#189aa140" }}>
+                  ↗ LV Systolic Function — EchoAssist™
+                </a>
+                <a href="/echoassist#engine-diastolic" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:bg-gray-50"
+                  style={{ color: "#189aa1", borderColor: "#189aa140" }}>
+                  ↗ Diastolic Function — EchoAssist™
+                </a>
+              </div>
+            </div>
           </div>
         )}
       </div>

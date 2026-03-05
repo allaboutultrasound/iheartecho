@@ -12,6 +12,10 @@ import {
   postReactions,
   posts,
   users,
+  peerReviews,
+  policies,
+  qaLogs,
+  appropriateUseCases,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -241,4 +245,128 @@ export async function logModeration(data: { targetType: "post" | "comment" | "me
   const db = await getDb();
   if (!db) return;
   await db.insert(moderationLogs).values({ targetType: data.targetType, targetId: data.targetId, action: data.action, reason: data.reason, triggeredBy: data.triggeredBy ?? "auto", moderatorId: data.moderatorId });
+}
+
+// ─── ACCREDITATION HELPERS ────────────────────────────────────────────────────
+
+export async function createPeerReview(data: {
+  reviewerId: number;
+  patientId?: string;
+  studyDate?: string;
+  modality: "TTE" | "TEE" | "Stress" | "Pediatric" | "Fetal" | "HOCM" | "POCUS";
+  sonographerInitials?: string;
+  imageQuality?: "excellent" | "good" | "adequate" | "poor";
+  imageQualityNotes?: string;
+  reportAccuracy?: "accurate" | "minor_discrepancy" | "major_discrepancy";
+  reportNotes?: string;
+  technicalAdherence?: "full" | "partial" | "non_adherent";
+  technicalNotes?: string;
+  overallScore?: number;
+  feedback?: string;
+  status?: "draft" | "submitted" | "complete";
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  const [row] = await db.insert(peerReviews).values(data).$returningId();
+  return row;
+}
+
+export async function getPeerReviews(userId: number, limit = 20, offset = 0) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(peerReviews)
+    .where(eq(peerReviews.reviewerId, userId))
+    .orderBy(desc(peerReviews.createdAt))
+    .limit(limit).offset(offset);
+}
+
+export async function createPolicy(data: {
+  authorId: number;
+  title: string;
+  category: "infection_control" | "equipment" | "patient_safety" | "protocol" | "staff_competency" | "quality_assurance" | "appropriate_use" | "report_turnaround" | "emergency" | "other";
+  modality?: "TTE" | "TEE" | "Stress" | "Pediatric" | "Fetal" | "HOCM" | "POCUS" | "All";
+  content: string;
+  version?: string;
+  effectiveDate?: string;
+  reviewDate?: string;
+  status?: "draft" | "active" | "archived";
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  const [row] = await db.insert(policies).values(data).$returningId();
+  return row;
+}
+
+export async function getPolicies(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(policies)
+    .where(eq(policies.authorId, userId))
+    .orderBy(desc(policies.updatedAt));
+}
+
+export async function updatePolicy(id: number, data: Partial<{
+  title: string;
+  category: "infection_control" | "equipment" | "patient_safety" | "protocol" | "staff_competency" | "quality_assurance" | "appropriate_use" | "report_turnaround" | "emergency" | "other";
+  content: string;
+  version: string;
+  status: "draft" | "active" | "archived";
+  reviewDate: string;
+  effectiveDate: string;
+}>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  await db.update(policies).set(data).where(eq(policies.id, id));
+}
+
+export async function createQaLog(data: {
+  userId: number;
+  category: "equipment" | "protocol" | "image_quality" | "report_turnaround" | "staff_competency" | "infection_control" | "patient_safety" | "other";
+  title: string;
+  description?: string;
+  finding?: "pass" | "fail" | "needs_improvement" | "na";
+  actionRequired?: string;
+  actionTaken?: string;
+  dueDate?: string;
+  attachmentUrl?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  const [row] = await db.insert(qaLogs).values(data).$returningId();
+  return row;
+}
+
+export async function getQaLogs(userId: number, limit = 30, offset = 0) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(qaLogs)
+    .where(eq(qaLogs.userId, userId))
+    .orderBy(desc(qaLogs.createdAt))
+    .limit(limit).offset(offset);
+}
+
+export async function createAucEntry(data: {
+  userId: number;
+  studyDate?: string;
+  modality: "TTE" | "TEE" | "Stress" | "Pediatric" | "Fetal" | "HOCM" | "POCUS";
+  indication: string;
+  appropriatenessRating?: "appropriate" | "may_be_appropriate" | "rarely_appropriate" | "unknown";
+  clinicalScenario?: string;
+  outcome?: string;
+  notes?: string;
+  flagged?: boolean;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  const [row] = await db.insert(appropriateUseCases).values(data).$returningId();
+  return row;
+}
+
+export async function getAucEntries(userId: number, limit = 30, offset = 0) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(appropriateUseCases)
+    .where(eq(appropriateUseCases.userId, userId))
+    .orderBy(desc(appropriateUseCases.createdAt))
+    .limit(limit).offset(offset);
 }

@@ -30,6 +30,8 @@ import CardiacPOCUS from "./pages/CardiacPOCUS";
 import LungPOCUS from "./pages/LungPOCUS";
 import EfastPOCUS from "./pages/EfastPOCUS";
 import StrainNavigator from "./pages/StrainNavigator";
+import AccreditationTool from "./pages/AccreditationTool";
+import AccreditationNavigator from "./pages/AccreditationNavigator";
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
@@ -55,6 +57,8 @@ function Router() {
       <Route path="/lung-pocus" component={LungPOCUS} />
       <Route path="/efast" component={EfastPOCUS} />
       <Route path="/strain" component={StrainNavigator} />
+      <Route path="/accreditation" component={AccreditationTool} />
+      <Route path="/accreditation-navigator" component={AccreditationNavigator} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

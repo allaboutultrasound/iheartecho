@@ -8,7 +8,7 @@ import { Link, useLocation } from "wouter";
 import {
   Heart, Calculator, Baby, ClipboardList, Activity,
   Scan, BookOpen, FileText, Menu, X, ChevronRight,
-  Stethoscope, Microscope, Zap, Users, ExternalLink, ShoppingBag, FlaskConical, Cpu, Layers, MessageCircle, Radio, Wind, Shield
+  Stethoscope, Microscope, Zap, Users, ExternalLink, ShoppingBag, FlaskConical, Cpu, Layers, MessageCircle, Radio, Wind, Shield, Award
 } from "lucide-react";
 
 const navGroups = [
@@ -23,11 +23,6 @@ const navGroups = [
     items: [
       { path: "/tte", label: "TTE EchoNavigator™", icon: Stethoscope },
       { path: "/strain", label: "Strain Navigator™", icon: Activity },
-    ],
-  },
-  {
-    label: "Stress Echo",
-    items: [
       { path: "/stress", label: "Stress EchoNavigator™", icon: Zap },
     ],
   },
@@ -64,6 +59,13 @@ const navGroups = [
       { path: "/calculator", label: "Echo Calculator", icon: Calculator },
       { path: "/cases", label: "Case Lab", icon: BookOpen },
       { path: "/report", label: "Report Builder", icon: FileText },
+    ],
+  },
+  {
+    label: "Accreditation Tools",
+    items: [
+      { path: "/accreditation", label: "DIY Accreditation Tool™", icon: ClipboardList },
+      { path: "/accreditation-navigator", label: "EchoAccreditation Navigator™", icon: Award },
     ],
   },
   {

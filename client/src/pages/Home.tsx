@@ -147,6 +147,22 @@ const modules = [
     badge: "Community",
     color: BRAND,
   },
+  {
+    path: "/accreditation",
+    icon: ClipboardList,
+    title: "DIY Accreditation Tool™",
+    description: "Quality reviews, peer review tracking, policy builder, and appropriate use monitoring — everything your lab needs for IAC accreditation.",
+    badge: "Accreditation",
+    color: "#7c3aed",
+  },
+  {
+    path: "/accreditation-navigator",
+    icon: Award,
+    title: "EchoAccreditation Navigator™",
+    description: "Searchable IAC standards guide for TTE, TEE, Stress, Pediatric, Fetal, and HOCM — case requirements, CME, staff qualifications, and policies.",
+    badge: "Accreditation",
+    color: "#7c3aed",
+  },
 ];
 
 const stats = [

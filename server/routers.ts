@@ -26,6 +26,15 @@ import {
   sendMessage,
   toggleReaction,
   updateHubProfile,
+  createPeerReview,
+  getPeerReviews,
+  createPolicy,
+  getPolicies,
+  updatePolicy,
+  createQaLog,
+  getQaLogs,
+  createAucEntry,
+  getAucEntries,
 } from "./db";
 
 export const appRouter = router({
@@ -296,6 +305,118 @@ export const appRouter = router({
         });
         return { success: true };
       }),
+  }),
+
+  // ─── Accreditation ────────────────────────────────────────────────────────────
+
+  accreditation: router({
+  // Peer Reviews
+  createPeerReview: protectedProcedure
+    .input(z.object({
+      patientId: z.string().optional(),
+      studyDate: z.string().optional(),
+      modality: z.enum(["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS"]),
+      sonographerInitials: z.string().optional(),
+      imageQuality: z.enum(["excellent", "good", "adequate", "poor"]).optional(),
+      imageQualityNotes: z.string().optional(),
+      reportAccuracy: z.enum(["accurate", "minor_discrepancy", "major_discrepancy"]).optional(),
+      reportNotes: z.string().optional(),
+      technicalAdherence: z.enum(["full", "partial", "non_adherent"]).optional(),
+      technicalNotes: z.string().optional(),
+      overallScore: z.number().min(1).max(5).optional(),
+      feedback: z.string().optional(),
+      status: z.enum(["draft", "submitted", "complete"]).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      return createPeerReview({ ...input, reviewerId: ctx.user.id });
+    }),
+
+  getPeerReviews: protectedProcedure
+    .input(z.object({ limit: z.number().default(20), offset: z.number().default(0) }))
+    .query(async ({ ctx, input }) => {
+      return getPeerReviews(ctx.user.id, input.limit, input.offset);
+    }),
+
+  // Policies
+  createPolicy: protectedProcedure
+    .input(z.object({
+      title: z.string().min(1),
+      category: z.enum(["infection_control", "equipment", "patient_safety", "protocol", "staff_competency", "quality_assurance", "appropriate_use", "report_turnaround", "emergency", "other"]),
+      modality: z.enum(["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "All"]).optional(),
+      content: z.string().min(1),
+      version: z.string().optional(),
+      effectiveDate: z.string().optional(),
+      reviewDate: z.string().optional(),
+      status: z.enum(["draft", "active", "archived"]).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      return createPolicy({ ...input, authorId: ctx.user.id });
+    }),
+
+  getPolicies: protectedProcedure
+    .query(async ({ ctx }) => {
+      return getPolicies(ctx.user.id);
+    }),
+
+  updatePolicy: protectedProcedure
+    .input(z.object({
+      id: z.number(),
+      title: z.string().optional(),
+      category: z.enum(["infection_control", "equipment", "patient_safety", "protocol", "staff_competency", "quality_assurance", "appropriate_use", "report_turnaround", "emergency", "other"]).optional(),
+      content: z.string().optional(),
+      version: z.string().optional(),
+      status: z.enum(["draft", "active", "archived"]).optional(),
+      reviewDate: z.string().optional(),
+      effectiveDate: z.string().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const { id, ...data } = input;
+      return updatePolicy(id, data);
+    }),
+
+  // QA Logs
+  createQaLog: protectedProcedure
+    .input(z.object({
+      category: z.enum(["equipment", "protocol", "image_quality", "report_turnaround", "staff_competency", "infection_control", "patient_safety", "other"]),
+      title: z.string().min(1),
+      description: z.string().optional(),
+      finding: z.enum(["pass", "fail", "needs_improvement", "na"]).optional(),
+      actionRequired: z.string().optional(),
+      actionTaken: z.string().optional(),
+      dueDate: z.string().optional(),
+      attachmentUrl: z.string().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      return createQaLog({ ...input, userId: ctx.user.id });
+    }),
+
+  getQaLogs: protectedProcedure
+    .input(z.object({ limit: z.number().default(30), offset: z.number().default(0) }))
+    .query(async ({ ctx, input }) => {
+      return getQaLogs(ctx.user.id, input.limit, input.offset);
+    }),
+
+  // Appropriate Use Cases
+  createAucEntry: protectedProcedure
+    .input(z.object({
+      studyDate: z.string().optional(),
+      modality: z.enum(["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS"]),
+      indication: z.string().min(1),
+      appropriatenessRating: z.enum(["appropriate", "may_be_appropriate", "rarely_appropriate", "unknown"]).optional(),
+      clinicalScenario: z.string().optional(),
+      outcome: z.string().optional(),
+      notes: z.string().optional(),
+      flagged: z.boolean().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      return createAucEntry({ ...input, userId: ctx.user.id });
+    }),
+
+  getAucEntries: protectedProcedure
+    .input(z.object({ limit: z.number().default(30), offset: z.number().default(0) }))
+    .query(async ({ ctx, input }) => {
+      return getAucEntries(ctx.user.id, input.limit, input.offset);
+    }),
   }),
 });
 

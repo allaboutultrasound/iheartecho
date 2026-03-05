@@ -337,6 +337,23 @@ export default function StrainNavigator() {
   const rvInterp = !isNaN(rvStrainNum) ? interpretRvStrain(rvStrainNum) : null;
   const laInterp = !isNaN(laReservoirNum) ? interpretLaStrain(laReservoirNum) : null;
 
+  // RAS (Relative Apical Strain) — dedicated inputs
+  const [rasApical, setRasApical] = useState("");
+  const [rasBasal, setRasBasal] = useState("");
+  const [rasMid, setRasMid] = useState("");
+
+  const rasApicalNum = parseFloat(rasApical);
+  const rasBasalNum = parseFloat(rasBasal);
+  const rasMidNum = parseFloat(rasMid);
+  const rasValue = (!isNaN(rasApicalNum) && !isNaN(rasBasalNum) && !isNaN(rasMidNum) && (rasBasalNum + rasMidNum) !== 0)
+    ? Math.abs(rasApicalNum) / (Math.abs(rasBasalNum) + Math.abs(rasMidNum))
+    : null;
+  const rasInterpretation = rasValue !== null
+    ? rasValue > 1.0
+      ? { label: "Apical-Sparing Pattern", color: "#dc2626", text: `EchoAssist™ Suggests: RAS = ${rasValue.toFixed(2)} (> 1.0). This apical-sparing longitudinal strain pattern is a hallmark of cardiac amyloidosis (sensitivity ~80%, specificity ~80% vs. HCM). Prompt further evaluation with T1 mapping, nuclear scintigraphy (PYP/DPD), or serum/urine protein electrophoresis.`, note: "EchoAssist™ Note: Apical-sparing strain is defined as relatively preserved apical GLS with disproportionate reduction in basal and mid-ventricular segments. This pattern reflects the characteristic base-to-apex amyloid deposition gradient.", tip: "EchoAssist™ Tip: RAS > 1.0 combined with increased LV wall thickness (≥ 12 mm), low-voltage ECG, and diastolic dysfunction should trigger a comprehensive amyloidosis workup. Transthyretin (ATTR) amyloidosis is treatable with tafamidis." }
+      : { label: "Non-Apical-Sparing Pattern", color: "#15803d", text: `EchoAssist™ Suggests: RAS = ${rasValue.toFixed(2)} (≤ 1.0). No apical-sparing pattern identified. This does not exclude amyloidosis but makes it less likely. Diffuse or ischemic patterns should be considered based on clinical context.`, note: "EchoAssist™ Note: RAS ≤ 1.0 with reduced GLS is more consistent with ischemic cardiomyopathy, dilated cardiomyopathy, or HCM. Regional wall motion abnormalities and coronary territory correlation are recommended.", tip: "EchoAssist™ Tip: In HCM, strain is typically reduced in the hypertrophied segments (often septal/basal) with relatively preserved apical strain — RAS may approach but usually does not exceed 1.0 as prominently as in amyloidosis." }
+    : null;
+
   // Segmental GLS average
   const enteredSegs = Object.values(segValues).filter(v => v !== null) as number[];
   const segAvg = enteredSegs.length > 0
@@ -535,6 +552,40 @@ export default function StrainNavigator() {
               <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-xs text-blue-800 leading-relaxed">
                 <strong>LA Strain Phases:</strong> Reservoir = total LA deformation during LV systole (most clinically used). Conduit = passive emptying during early diastole. Booster (pump) = active emptying during atrial contraction. Reservoir strain is the most reproducible and prognostically validated parameter.
               </div>
+            </SectionCard>
+
+            {/* RAS Calculator */}
+            <SectionCard title="Relative Apical Strain (RAS) Calculator" subtitle="Apical-sparing pattern · Amyloidosis vs. HCM · RAS = |Apical GLS| / (|Basal GLS| + |Mid GLS|)">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                <NumInput label="Apical GLS (average)" value={rasApical} onChange={setRasApical} unit="%" placeholder="e.g. −19.5" hint="Apical 4 segments avg" />
+                <NumInput label="Basal GLS (average)" value={rasBasal} onChange={setRasBasal} unit="%" placeholder="e.g. −12.0" hint="Basal 6 segments avg" />
+                <NumInput label="Mid GLS (average)" value={rasMid} onChange={setRasMid} unit="%" placeholder="e.g. −14.0" hint="Mid 6 segments avg" />
+              </div>
+
+              {rasValue !== null && (
+                <div className="rounded-lg p-3 mb-3 flex items-center gap-3" style={{ background: "#f0fbfc", border: `1px solid ${BRAND}40` }}>
+                  <div className="text-3xl font-black font-mono" style={{ color: BRAND }}>{rasValue.toFixed(2)}</div>
+                  <div>
+                    <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">RAS Value</div>
+                    <div className="text-xs text-gray-600">Threshold: &gt; 1.0 = apical-sparing pattern</div>
+                  </div>
+                </div>
+              )}
+
+              {rasInterpretation && (
+                <div className="rounded-lg p-4" style={{ background: rasInterpretation.color + "18", borderLeft: `4px solid ${rasInterpretation.color}` }}>
+                  <div className="font-bold text-sm mb-2" style={{ color: rasInterpretation.color }}>{rasInterpretation.label}</div>
+                  <p className="text-xs text-gray-700 leading-relaxed mb-2">{rasInterpretation.text}</p>
+                  <p className="text-xs text-gray-600 leading-relaxed mb-2">{rasInterpretation.note}</p>
+                  <p className="text-xs text-gray-500 leading-relaxed italic">{rasInterpretation.tip}</p>
+                </div>
+              )}
+
+              {rasValue === null && (
+                <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-xs text-blue-800 leading-relaxed">
+                  <strong>How to use:</strong> Enter the average strain values for the apical segments (segments 13–17), basal segments (1–6), and mid segments (7–12) from the bull's-eye display above. RAS &gt; 1.0 indicates an apical-sparing pattern, which is a hallmark of cardiac amyloidosis.
+                </div>
+              )}
             </SectionCard>
 
             {/* Clinical Applications */}
