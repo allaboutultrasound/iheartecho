@@ -49,12 +49,12 @@ const navGroups = [
   {
     label: "Calculators & Tools",
     items: [
-      { path: "/calculator", label: "Echo Calculator", icon: Calculator },
-      { path: "/hemodynamics", label: "Hemodynamics Lab", icon: Activity },
       { path: "/scan-coach", label: "ScanCoach™", icon: Scan },
+      { path: "/echoassist", label: "EchoAssist™", icon: FlaskConical },
+      { path: "/hemodynamics", label: "Hemodynamics Lab", icon: Activity },
+      { path: "/calculator", label: "Echo Calculator", icon: Calculator },
       { path: "/cases", label: "Case Lab", icon: BookOpen },
       { path: "/report", label: "Report Builder", icon: FileText },
-      { path: "/echoassist", label: "EchoAssist™", icon: FlaskConical },
     ],
   },
   {
