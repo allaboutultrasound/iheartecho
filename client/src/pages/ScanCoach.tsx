@@ -21,6 +21,23 @@ const CDN = {
   aorticArch:   "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/TKlJMYtocuCBKwbl.png?Expires=1804217678&Signature=eojPUlijwGlowVGglOvcT3zQY-LR8gK11wJQnfC2qZlnkawEQfTx~e1s8wviyiQcQsp7dMfGrw5NN8m98ofDYz7OYUjLTd7jzv56cr6X5m12PJRJndtZOiNvSBd3QNgHNZ3gZaV3QaiM-ozMrtEQMZWL11l0LhmLcTGnc9wULnDMyqTm1RvcBrbZMZLagDQkuAO~fQOtDHZSDVh2DVXfQtC7teCqYSUwVGBM0NpG6T0~ocdAs2~Kn00TrPLtjo32iPwq8U3ndb9c0lRT75MMwUAZG4M5KPed--PbAYiS2UK465P-5-~DCboWpSXbbsCqzHi74BAd8kNv15-1K67dug__&Key-Pair-Id=K2HSFNDJXOU9YS",
   ductalArch:   "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/bvrodzhIwNApIBbC.png?Expires=1804217678&Signature=oZ4LyOOcoHxUHXmU-o~9dtNQd1~0O9GQRuEVBx9Bbg0NKvsBOtAhAeIBbWJJe2AJ-AlfN3N66m7sNGnvKorUkixgyqosSbhG7bnpmZoY~aFIPjDMn0Vtd0t3QrIrzmRe3JIY8frK0xo8dBhQeHI1HjKsHdHebttaz5vjkha34mBXEtFVUMPAbK-lQMeobbcZkpipsuJ1aYnIAslKeZLJwr8-d7D4LrB4oYf70rKffMyeZZ3XCLKPm19tUAktTgomn0UfIy9jCHQgjPWHMP-tNob~MMtURGRM0uzX1Vq1rsojj2pwsUYpz6haOGG1KBt1f8OU2IRLyK4oJT6aoMHsxg__&Key-Pair-Id=K2HSFNDJXOU9YS",
   bcv:          "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/vRqqlQSitiQuZxSJ.png?Expires=1804217678&Signature=XacRQ2a0loWf3gCJH2fWU~KTUNBawZUALgm6ZeTq5bTLjnycjlI15ykab6dSXGO82fiuyczm9ePOC1vwpJ76ZyYkS7f2ZHO~BAGREmsYOxdmb-jDbaZP3e9MfC9F~5JNFeQPcFXXEEKKAkFbhtYfF8nOub3tZHkcuonV~JW3Yr5rDSOAn6KKAHRttn2zy895eBqOzLozU2eHtWwSN3Pcfan1y7fZBeyrz-26R0wj~nWDcWSC6tPEg90g5ycjMx74E5LAC2UzXJiBVVVoRvf~IZsdnKk7WWqOEWDLW9rMRYPIA2PkapLOs7BM88PV0q0McPe0N8kZZiW4p5AGi-fsDg__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  // New diagram image for Abdominal Situs view
+  abdominalSitusDiagram: "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/ZMTandoYWqCfTVQG.png?Expires=1804219541&Signature=FFw3aLQMd681Ktzg35mIlyajenWZXm5SUyNpFH4Jy~AHqYVioMYaUNqtxZ410Uq9GoNPRcBd6W~zQ5~ddPDzfo7jHB6sc7B~DlmsQcWFSYre6CLyWRhxYC~CBrJk2bq0oh84jf5WLgoc95f70H3wOc~JamfxXXSOE70VM~~2jd~2rQOm5vkLA6QzLMvZANC2XAPlaAoKhGk-Hkfjv4Y7WTlcudoywE2Wmkk-5zHslwi~DDh9UJjeS6HE6wNVfb0Gu9uytxKRAS3r65i8TeH4zNq7kZStckHZmpiPOCgEFg3nKq7UZFIfnyanhi37z9~E3sS5MSbrQX89pvWMEfaHnQ__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  // Echo images for each fetal view
+  echoAbdominalSitus: "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/oJAqycRWgaGIHUKy.png?Expires=1804219546&Signature=r2K1V3-P-GnIhbORET95gATIoTUFWXd4AxZeqCiDXB1yXQJUXk6rojvOLenXmx~VmkqxROoBJmxj6onaUz62nTTQY4QDKKW1zhZvxCH9yANnYkXZPy-nsmnEeqQCAq~CutfguKZSfj5wub~YDQ7voe2y38IZQqC6TcG-rk7ZElwB~GRqAXhFwJ5p3zlfzhCWZXt8SyXk0rCtfdGVuz1JYqz9QMZ3mGBkz-Zbe4ETNy~Rc0f1OmWAL0M9NDGp~xKExY9cpKO581Z6MbeV9aJ3IbdNMwy~7xsBtXbuJPGxt880EuruzfcVom0mlQj7I9uGX-Fa-1QlQ9Rp9FCxJB9njw__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  echoFourChamber:    "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/UQGEYwBFlZYthyoF.png?Expires=1804219530&Signature=b0a8Ysvl26jpBBEbu3RDvvYmaSVNrsnjDIvwauCxmMYKJUOrQUS1uisTdJub3Iy-90pQ~tCuiMiiBRqGdmQrtQpk5qXFcSfZ4paIdlVhSeBqO6kdNPdUj-PFq1fGfRX2bFZjXJBI7JVfiu3Nc0Y6EGHX9GRjxZ9KAjTw1BWPni0FAjFO~JmVcvKPdaBE1IBQZNeO1-OCS92YQvo9PfFzIJ0kQeHlxtnFIJgoQlfZ6P~Dal~uIPAjtTS~T2cxYnp~RgQh~Rga0eXEQ4rwsnOcQr8g5GZPWaB7znpEHfItI8TZeYpDvIxhSPnCjkzlPmBAU--GK-RoYevdinTjv9RiUg__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  echoLvot:           "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/hoZUvkgoRxGKVwoe.png?Expires=1804219530&Signature=M-OEK-mIAzB6Sgcz78hZtMDxPiByalz~AQ28ja7U-XilYeDGmrjkgmVcOIO9vLYwRhUKIh62XpvR1QRvJui6-reviwnbeqvbY-ITwK4D6mwLot27xz6IHuVvxfVWfcaX--B0K-bQhUcqMz2ByEzxpItGw3tXFdPUtqktfZV9mt6r980qDqKayMINQDzuTBP~66CIbtA9Bb5qCjqq4Src3MK0vygzN2k32YIYyjSqC8ASeGfrDrn5vDuTuzb~GAwkDptWcdBqUbdsGcvHZWOK72Y2EZdwH7wqbzTxkwbFbq1WjujD4iEzK7KhiF-RSeMDaWnwU~dxt~EkKmMlY~JqkA__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  echoRvot:           "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/CNAfQgEEeAnLOrZf.png?Expires=1804219531&Signature=INVCtOLqj6QtazMvh9ls3bqrHfhT35s1s0rwtwRzwupUtbLLhEBAiLvQ4~6g9-SlhQ~30R4XE5~xxj~662YoOwv3dQCw8zR3vjrYa2SiS-yzufrdB5WHWkTdNJOOXDCZbO5pO2Squ~BhlqTJkxJ6j1odLoslvqubIIL83NytJyYU71Y-0qR0aO-J2oYKUeSXQqS1uNzWtEwiWn0aH-c2lqfvlQ2~pRnw~TE-eQobOoWZLngdX5gku7KXocGHWhhjyA0a-Y5JniSyb~V4eFnMyxYWpAO5OzjJyTwMvYkzIJiUc01Mz5OpyTt5IcpdjOCA1HxHdNVop8r51sXLBthUcg__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  echoRvotBifurcation:"https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/kjNujbopvYeXuXRd.png?Expires=1804219531&Signature=EtSFpEBvcFTPWEa5CBlr89rmS8MMPCHN4QwtQ1TGHb202PKKEEeYq5MadcYUTWLq7miAnnnwXls7ViZu~-349O4ki3lmeRRjGlIog7m4KazgEoJmQX6jzm2kgtCZS6-SjbTUlEK4tiGbkJofCe~hq7E-q9xULBwy2pyF1tYn6mFrIYOOzBJgSohf0KSoxWFkSjpY7UTDMGtIUmJb4A0i~RO7Wb~~oIvqZfQOzLZMeOfINzdG5r6SoJoXaCLWiUmNOnN4SDvIMj7kbPQbM9e4~wyAdH5HOrYENIfBMZ2-8L1aZQpnX6xXo3~ksdUxKMJsahORgJYa0sa362bD9TSUBw__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  echoThreeVVDuctal:  "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/tqrBgqVGzZDYoeXM.png?Expires=1804219557&Signature=CDFJzl4ikVN-wm7kjYAzoizilDf9Iv6EBn~R71yWirmTgSC53Poukur~PZNKd26ndivYsur2qwZk3Ek7XE9oFNED3UhQVk0IHnBm4t8wm6lHZsjRH7dUTuGGKLYVC2BiPm6rHxBTTn94UtcOvAmlsYyazQgGiaKp5BkNcOQYYZaeLS-yQ0hkJmBVbGreICidn6NmxWkgP-ies5kHeJg6IO72epeSJFV0QfgxLVwLUp0jZ1D5j0cL17GwVsk1RtDbJ09Q6VN~IORZGWznv7EGAw3t0317AJ~2i5p6ZyZdKKMoDQOlCQcKP8ITqsOe~99Sc6AVkmxFzFxaYfmjZdQE~A__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  echoThreeVT:        "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/MZUkvGpgWGlkDXov.png?Expires=1804219552&Signature=I0l3fbi~sagUc5Mr-IbUAS4JYVoLmt1vuOrq~xdcYuMTrIXXJXwISFKPgo9-WbHGc1WtaCrnTDfZ~3v-Daip92tMuned96PywjakhET~e1Pom5CkUbGLIH4~4AHFzwR~2mRa9Xi5~Fd4FCZEgXNbRP6wg0CcX3MhGk5zenDifKYvzad7mTtlahILnFTr8UaQRTFH95BSvdjW9KAcq~PnLQ9J8WMxHeudIeJVlv6NYlKGApfecFo-o~7I24K41b~cbOmBPsdTXabZ5NVKLG4QySR8wHTtPNpKoMWKLgw56fY~Pb9qjeqgi95OZeAvQb~wymSEONvF6yW5EerLeZK2RA__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  echoLbvc:           "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/VizJommhsipdzIeA.png?Expires=1804219531&Signature=XYTjAWg9IqlCByRfuqWLeJXN-QsTAi-KPfu5csTu50s41cV9Q1DlYx6bwvbg69-Aakl0Uft0rMPQcD96hppPaDU-QuNYZOgu8x0-66yMpIqD5mcny7cTMaQIN-lIfqUCGfo5uHVHDSjZcDcACv1PogJLqYu7RTUCbvRVx4GZNp7JW5xTY09cznC6YJFT60gIUvx9nso6rHc~JlsCMjJ1GXiv~7hIab~PEghsjLIam2Pxpyv8~qIiPfByRfYeJz0Y9dl3l4NQ5ND5Y9XREXmqm6slDL10~YEiItHVi6FeHczsEcTd8MZj1A~2D3-il5DWnvdSYVfc~k4F0Sx1GU3QUQ__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  echoBicaval:        "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/jLbSEOMlpJNaDUKN.png?Expires=1804219530&Signature=oblPSfgoLq-Iv6QD-~BEHHNLOy61FXtoQPQ4Rzq7RKuxjLTVvzjXD3ntFBsHc33JDmbwHkBIE-63HCgTeGE78A~BBQA5XbfgV1n2Ha9qdQSVv95rbKYn9KatM3ghB7pZSCu8nQR31Zf5s6WcXpl8yiOonL6FQnnSfVwyzTOUtIqgysGjOfp0VYnLJRlpe8IES6PnX4Y89al9CP0ePuGBKWcrZqW2UMlIeSM8NCpnv~Cjpq~CGzXLu-phCjSPudEC264vas4ZijWNCc7UmO0G10SY0qYdbXKR~qA7XhkKNCFuKmw2xntMYahlpJr3KrhLfK-EKwpd~3QUb4Fw62Q1eA__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  echoAorticArch:     "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/OnpmABKkYpNRPzKQ.png?Expires=1804219561&Signature=lzxcqAi29hHfLEK6ULXL9oCFOV7gEFurRbAb5a-KnZwD9RhQwS4rhrCJ6bChC0~FhHMjnPX5aUm2BmolOpYzj5KRj2i2nERZhicJDuflA3YQJVfQMDVh579vouzuaMb~WWfYMcwGhlOJGSWq1XTqdq9AM5ximb1mkQLz~Zitc3rKVEbDxLztxDGXaLxS5qjE0kPlB1X2rSKiexZ-ZaVBkjDnZjX1XqJuq-d~AY8pLOrgK3X8Lu-SnFc4kJ4RyF5AFcKomwz6UmaLPwrfH8OiGg2-43F2botDRl7uLfPuNHJsDrhyMnR7LVRSsWeUr59EB~Sacw2kjmZWseUQ8OOKow__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  echoDuctalArch:     "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/yfagHApsvpUglKVm.png?Expires=1804219531&Signature=vktlvQfIIQvfgpTqyFJkYq8t054EoIyIpujqvL5zoywI35OMTh8VqSY7wLsHlIHsFALzd8Nl7Ao~ZZRFAXaQSr-vishsf2Z2RBGW-UZK0I-G7uAYdEmTNH-UoQ4jtSNlX3anQZH6ao3eQN3lAdPKJpl~DRP1RPaedmG1XlSsLCS0WGDDo4bksUlRxVD8Bv~jvxXov6CeWiNRVs6C1vrxHpMZz3SOsG89MWMPads1r~xG4UQeVkwwdho5AMqmRsavQxzlA6dNlx~2rZkVDeER4fERShjAu1L-jiTP49Ab4scLo2jTr~KdWkqT-dOzYpmL~wtQ6JU1BCU7BJ0waUhytw__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  // RVOT Short Axis and LV Short Axis echo images
+  echoRvotShortAxis:  "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/isfAjCTuYjsHReYQ.jpg?Expires=1804219532&Signature=fTuq02MnH3H~M~o8rHrajM6KsQFo8QFxhTrJicJgWGBgQqogk5W2RNzdpZD-HSzm~72XMiX-QezkuA5F0Xh3qYw5G8gcuXFDgKkffwJ~D0NMPA3B1R9jrzcug6GISttUzixKypx08uCQI1sBWexnSftDBTZU5FY9SxKcYGvl9sOcmumOYTDYt-G0UJcDZlvyqk9Bcc~EUa1WJF0C72paowdHA0zHCSrdr2piwSTCPfR~e69Pqk3Vt6puv2MiFv9iRyuiPUR0dt048QOR4xmsSkkn0-qz922e6EwxCWGyzxpXJN86bGk4nFrisdVbyDeIcCwbdstqEBYCnQXMsdr7CA__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  echoLvShortAxis:    "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/iNdFjSbLMjrYmvFc.png?Expires=1804219532&Signature=mrXbXlZqr1wk~7Q8f8p4sDFBy5XUwuGawzmQMD~LLw~eL-aUZ16Q9nnUA-C1XH0FV-o8OnlZmmh2HnBRrXWsNxt0S8KApPFNCFQ~obHlr8GL45rSkUkAEZH6~GSOwCIKXXtYnd~GDVn7m2V4zQgb~pqKwlxbt~W2qCdkk6DzDfRb8ZzxsDUpm4EFXmd-wwrxSbxC5HJIsGScWFjkJoDPajig5rBfP5CurgXOT6DTAxQ6wDNs4z2qgw54VAL5CWwevn3DWmyZl7E4-J2CDKzgOv6uEvepchkZA59y1~XCmzWTDNyipCXJERomlfp6PM4fzLsHsDucr6mzPnbnpRVoTw__&Key-Pair-Id=K2HSFNDJXOU9YS",
 };
 
 // ─── TTE Views ────────────────────────────────────────────────────────────────
@@ -251,7 +268,8 @@ const fetalViews = [
     id: "abdominal-situs", step: 1,
     name: "Abdominal Situs View", abbr: "Situs",
     description: "The first step in fetal cardiac evaluation. Confirms normal situs solitus — stomach on left, liver on right, aorta left of spine, IVC right of spine. Situs abnormalities are strongly associated with complex congenital heart disease.",
-    imageUrl: CDN.sweep, // Use sweep overview for situs (no dedicated image)
+    imageUrl: CDN.abdominalSitusDiagram,
+    echoImageUrl: CDN.echoAbdominalSitus,
     structures: ["Stomach (left)", "Liver (right)", "Descending aorta (left of spine)", "IVC (right of spine)", "Umbilical vein", "Spine (posterior)"],
     normalFindings: ["Stomach bubble on LEFT side of fetus", "Aorta to LEFT of spine, IVC to RIGHT", "Liver on right, stomach on left", "Umbilical vein entering liver anteriorly"],
     technique: "Transverse view of fetal abdomen at level of stomach. Identify spine posteriorly. Confirm stomach on left and aorta/IVC positions relative to spine.",
@@ -265,6 +283,7 @@ const fetalViews = [
     name: "Four Chamber View", abbr: "4CV",
     description: "The most important screening view in fetal echo. Obtained from a transverse cross-section of the fetal thorax at the level of the AV valves. The heart should occupy approximately 1/3 of the thoracic area.",
     imageUrl: CDN.fourChamber,
+    echoImageUrl: CDN.echoFourChamber,
     structures: ["LV (left, posterior)", "RV (right, anterior)", "LA (posterior left)", "RA (posterior right)", "Mitral valve", "Tricuspid valve", "IVS", "IAS with foramen ovale flap", "Descending aorta (posterior to spine)"],
     normalFindings: ["LV and RV roughly equal in size (RV slightly larger in fetus)", "Foramen ovale flap opens toward LA", "Apex points toward left anterior chest wall (levocardia)", "Descending aorta posterior-left to spine", "Pulmonary veins entering LA (2 on each side)"],
     technique: "Transverse sweep from abdomen (situs view) cranially until 4 chambers are visible. Maintain transverse plane — do not oblique.",
@@ -278,6 +297,7 @@ const fetalViews = [
     name: "LVOT View", abbr: "LVOT",
     description: "Obtained by rotating the transducer slightly from the 4CV to bring the LVOT into view. Confirms the aorta arises from the LV (ventriculo-arterial concordance) and crosses the RVOT.",
     imageUrl: CDN.lvot,
+    echoImageUrl: CDN.echoLvot,
     structures: ["LV", "RV", "LA", "Ascending aorta (ASC AO)", "LVOT", "Pulmonary veins (entering LA)", "Descending aorta (DESC AO)"],
     normalFindings: ["Aorta arises from LV — continuity between IVS and anterior aortic wall", "Aorta crosses rightward over the RVOT", "Ascending aorta smaller than MPA in fetus", "Pulmonary veins visible entering LA posteriorly"],
     technique: "From 4CV, rotate transducer slightly clockwise (or tilt anteriorly) until the aortic root comes into view arising from the LV. The LVOT should be parallel to the ultrasound beam.",
@@ -289,6 +309,7 @@ const fetalViews = [
   {
     id: "rvot", step: 4,
     name: "RVOT View", abbr: "RVOT",
+    echoImageUrl: CDN.echoRvot,
     description: "Confirms the pulmonary artery arises from the RV. The MPA is normally larger than the ascending aorta in the fetus. The PA bifurcates into LPA and RPA.",
     imageUrl: CDN.rvot,
     structures: ["RV", "Main pulmonary artery (MPA/PA)", "Ascending aorta (ASC AO)", "Superior vena cava (SVC)", "Descending aorta (DESC AO)"],
@@ -302,6 +323,7 @@ const fetalViews = [
   {
     id: "rvot-bifurcation", step: 5,
     name: "RVOT with MPA Bifurcation", abbr: "MPA Bifurc",
+    echoImageUrl: CDN.echoRvotBifurcation,
     description: "A slightly superior view from the RVOT showing the main pulmonary artery bifurcating into the right and left pulmonary arteries. Confirms pulmonary artery anatomy and rules out pulmonary atresia.",
     imageUrl: CDN.rvotBifurcation,
     structures: ["RV", "Main PA (MPA)", "Right PA (RPA)", "Left PA (LPA)", "Ascending aorta", "SVC"],
@@ -317,6 +339,7 @@ const fetalViews = [
     name: "3-Vessel View (3VV) — Ductal", abbr: "3VV",
     description: "A transverse view at the level of the great vessels showing three vessels in a line from left to right: MPA (largest), ascending aorta (medium), and SVC (smallest). The MPA bifurcates in this view.",
     imageUrl: CDN.threeVVDuctal,
+    echoImageUrl: CDN.echoThreeVVDuctal,
     structures: ["MPA/Ductus Arteriosus (DA)", "Ascending aorta (ASC AO)", "SVC", "Descending aorta (DESC AO)"],
     normalFindings: ["Three vessels in a line: PA > Ao > SVC (left to right)", "PA is the largest vessel — normally larger than Ao in fetus", "Vessels align in a straight line (abnormal if offset)", "DESC AO in lower left quadrant"],
     technique: "From RVOT view, slide the transducer slightly cranially. The three vessels should appear in a transverse plane. Maintain transverse orientation.",
@@ -330,6 +353,7 @@ const fetalViews = [
     name: "3-Vessel Trachea View (3VT)", abbr: "3VT",
     description: "A transverse view at the level of the superior mediastinum showing the relationship of the three vessels to the trachea. Critical for detecting vascular rings and abnormal vessel arrangements.",
     imageUrl: CDN.threeVT,
+    echoImageUrl: CDN.echoThreeVT,
     structures: ["MPA / ductal arch", "Transverse aortic arch", "SVC", "Trachea (echogenic ring)", "Descending aorta"],
     normalFindings: ["Aortic arch curves to the left of the trachea (left aortic arch)", "Three vessels form a 'V' shape pointing to the right", "Trachea is a small echogenic ring to the right of the aortic arch", "SVC is the rightmost vessel"],
     technique: "Slide cranially from 3VV until the trachea becomes visible as an echogenic ring. The aortic arch should be seen curving to the left.",
@@ -339,10 +363,25 @@ const fetalViews = [
     color: "#1d4ed8",
   },
   {
-    id: "bicaval", step: 8,
+    id: "lbvc", step: 8,
+    name: "LBVC View", abbr: "LBVC",
+    description: "A superior transverse sweep above the 3VT level showing the left brachiocephalic vein (LBVC) crossing from left to right to join the SVC. The thymus is visible anteriorly. This view is obtained immediately after the 3VT by sliding the transducer slightly cranially.",
+    imageUrl: CDN.bcv,
+    echoImageUrl: CDN.echoLbvc,
+    structures: ["Left brachiocephalic vein (LBVC)", "SVC", "Thymus", "Brachiocephalic arteries", "Trachea (T)"],
+    normalFindings: ["LBVC crosses midline from left to right to join SVC", "Thymus visible as gray structure anterior to vessels", "3 brachiocephalic arteries visible below LBVC", "Trachea to right side"],
+    technique: "Superior transverse sweep above 3VT level. The LBVC appears as a horizontal vessel crossing from left to right, anterior to the aortic arch vessels.",
+    doppler: "Color Doppler to confirm LBVC flow direction (left to right into SVC); assess thymic size",
+    pitfalls: ["Absent LBVC may drain anomalously — TAPVR, heterotaxy", "Dilated LBVC suggests increased flow — PAPVR, AVM"],
+    redFlags: ["Absent LBVC (may drain anomalously — TAPVR, heterotaxy)", "Dilated LBVC (increased flow — PAPVR, AVM)", "Absent thymus (22q11 DiGeorge)", "Persistent LSVC (LBVC absent, vertical vein present instead)"],
+    color: "#189aa1",
+  },
+  {
+    id: "bicaval", step: 9,
     name: "Bicaval View", abbr: "Bicaval",
     description: "A sagittal or near-sagittal view through the right side of the fetus showing both the SVC and IVC draining into the right atrium. Best view for assessing venous return and foramen ovale.",
     imageUrl: CDN.bicaval,
+    echoImageUrl: CDN.echoBicaval,
     structures: ["RA", "SVC (right side)", "IVC (left side)", "LA", "Right pulmonary artery (RPA)", "Aorta (AO)"],
     normalFindings: ["SVC and IVC both drain into RA", "Foramen ovale flap visible in LA", "RPA visible in cross-section", "IVC and SVC enter RA from opposite ends"],
     technique: "Sagittal or near-sagittal plane through right side of fetus. Rotate from transverse to align with IVC/SVC axis.",
@@ -352,10 +391,11 @@ const fetalViews = [
     color: "#64748b",
   },
   {
-    id: "aortic-arch", step: 9,
+    id: "aortic-arch", step: 10,
     name: "Aortic Arch View (Long Axis)", abbr: "Ao Arch",
     description: "A sagittal view through the left side of the fetus showing the aortic arch in long axis. The classic 'candy cane' shape confirms left aortic arch. Three head and neck vessels arise from the arch.",
     imageUrl: CDN.aorticArch,
+    echoImageUrl: CDN.echoAorticArch,
     structures: ["Ascending aorta (ASC AO)", "Aortic arch", "Descending aorta (DESC AO)", "RA", "Right pulmonary artery (RPA)"],
     normalFindings: ["Candy-cane shape of aortic arch", "3 head/neck vessels arising from arch (innominate, LCCA, LSCA)", "Aortic isthmus visible between LSCA and ductus", "Left-sided arch (curves to left of trachea)"],
     technique: "Sagittal plane through left side of fetus. Align with aortic arch long axis — should see the classic candy-cane curve.",
@@ -365,30 +405,18 @@ const fetalViews = [
     color: "#c2410c",
   },
   {
-    id: "ductal-arch", step: 10,
+    id: "ductal-arch", step: 11,
     name: "Long Axis Ductal Arch View", abbr: "Ductal Arch",
     description: "A sagittal view showing the ductus arteriosus connecting the pulmonary artery to the descending aorta. The ductal arch has a characteristic 'hockey stick' shape — more vertical and acute than the aortic arch.",
     imageUrl: CDN.ductalArch,
+    echoImageUrl: CDN.echoDuctalArch,
     structures: ["RV", "Pulmonary valve", "Ductus Arteriosus", "Descending aorta (DESC AO)", "Aortic root (LA)"],
     normalFindings: ["Hockey-stick shape (more acute angle than aortic arch)", "Ductus connects PA directly to descending aorta", "No head/neck vessels arising from ductal arch", "RV and pulmonary valve visible at origin"],
     technique: "Sagittal plane through right side of fetus. The ductal arch is more vertical and acute than the aortic arch — hockey-stick vs. candy-cane.",
     doppler: "PW/Color Doppler in ductus; reversed or absent flow = critical right heart obstruction",
     pitfalls: ["Ductal arch confused with aortic arch — DA is more anterior and vertical", "Absent DA may indicate pulmonary hypertension or premature closure"],
     redFlags: ["Absent ductus (isolated ductal absence — rare)", "Constricted ductus (NSAIDs, indomethacin exposure)", "Reversed ductal flow (critical pulmonary stenosis/atresia)", "Aneurysmal ductus"],
-    color: "#0891b2",
-  },
-  {
-    id: "bcv", step: 11,
-    name: "Axial Brachiocephalic Vein View", abbr: "BCV",
-    description: "A superior transverse sweep above the 3VT level showing the left brachiocephalic vein crossing from left to right to join the SVC. The thymus is visible anteriorly. This view is the most superior in the standard fetal cardiac sweep.",
-    imageUrl: CDN.bcv,
-    structures: ["Left brachiocephalic vein (LBVC)", "SVC", "Thymus", "Brachiocephalic arteries", "Trachea (T)"],
-    normalFindings: ["LBVC crosses midline from left to right to join SVC", "Thymus visible as gray structure anterior to vessels", "3 brachiocephalic arteries visible below LBVC", "Trachea to right side"],
-    technique: "Superior transverse sweep above 3VT level. The LBVC appears as a horizontal vessel crossing from left to right, anterior to the aortic arch vessels.",
-    doppler: "Color Doppler to confirm LBVC flow direction (left to right into SVC); assess thymic size",
-    pitfalls: ["Absent LBVC may drain anomalously — TAPVR, heterotaxy", "Dilated LBVC suggests increased flow — PAPVR, AVM"],
-    redFlags: ["Absent LBVC (may drain anomalously — TAPVR, heterotaxy)", "Dilated LBVC (increased flow — PAPVR, AVM)", "Absent thymus (22q11 DiGeorge)", "Persistent LSVC (LBVC absent, vertical vein present instead)"],
-    color: "#189aa1",
+     color: "#0891b2",
   },
 ];
 
@@ -632,18 +660,35 @@ export default function ScanCoach() {
                 </div>
               </div>
 
-              {/* Echo image */}
+              {/* Diagram + Echo image */}
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="px-4 py-3 border-b border-gray-100">
-                  <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>Clinical Echo Image</h3>
+                <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                  <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>View Reference Images</h3>
+                  <span className="text-xs text-gray-400">Diagram · Clinical Echo</span>
                 </div>
-                <div className="flex justify-center bg-gray-950 p-2">
-                  <img
-                    src={selectedFetal.imageUrl}
-                    alt={selectedFetal.name}
-                    className="max-h-72 object-contain rounded"
-                    style={{ background: "#030712" }}
-                  />
+                <div className="grid grid-cols-2 gap-0 bg-gray-950">
+                  <div className="flex justify-center items-center p-3 border-r border-gray-800">
+                    <div className="text-center">
+                      <p className="text-xs text-gray-400 mb-1.5">Anatomy Diagram</p>
+                      <img
+                        src={selectedFetal.imageUrl}
+                        alt={`${selectedFetal.name} diagram`}
+                        className="max-h-60 object-contain rounded"
+                        style={{ background: "#030712" }}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-center items-center p-3">
+                    <div className="text-center">
+                      <p className="text-xs text-gray-400 mb-1.5">Clinical Echo Image</p>
+                      <img
+                        src={(selectedFetal as any).echoImageUrl || selectedFetal.imageUrl}
+                        alt={`${selectedFetal.name} echo`}
+                        className="max-h-60 object-contain rounded"
+                        style={{ background: "#030712" }}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
