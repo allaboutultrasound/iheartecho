@@ -24,7 +24,8 @@
 - [x] Full-stack upgrade — database + server + auth (web-db-user template)
 - [x] Database schema — 10 tables (users, communities, posts, postReactions, comments, conversations, messages, boosts, moderationLogs, communityMembers)
 - [x] db:push — Schema migrated to production database
-- [x] Default communities seeded — General, ACS Hub, Congenital Heart Hub, Echo Student Hub, Travelers Hub
+- [x] Default communities seeded — General, ACS Hub (Advanced Cardiac Sonographers), Congenital Heart Hub, Echo Student Hub, Travelers Hub
+- [x] ACS Hub terminology corrected — "Advanced Cardiac Sonographers" (not acute coronary syndrome), updated in code + live DB
 - [x] Hub backend router — tRPC procedures for communities, posts, comments, reactions, DMs, media upload
 - [x] Content moderation — Auto-reject sexually explicit content, HIPAA PHI detection, profanity filter
 - [x] Hub frontend — Community switcher (sidebar + mobile tabs)

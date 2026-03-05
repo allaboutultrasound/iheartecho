@@ -99,7 +99,7 @@ export async function ensureDefaultCommunities() {
   if (existing.length > 0) return;
   const defaults = [
     { slug: "general", name: "iHeartEcho Hub\u2122", description: "General echo community \u2014 news, tips, and discussions for all echo professionals.", icon: "Heart", color: "#189aa1", isDefault: true },
-    { slug: "acs", name: "ACS Hub", description: "Acute Coronary Syndrome \u2014 STEMI protocols, wall motion, and critical care echo.", icon: "Zap", color: "#dc2626", isDefault: false },
+    { slug: "acs", name: "ACS Hub", description: "Advanced Cardiac Sonographers — advanced techniques, complex cases, hemodynamics, and peer discussion for experienced sonographers.", icon: "Zap", color: "#dc2626", isDefault: false },
     { slug: "congenital", name: "Congenital Heart Hub", description: "Pediatric and adult congenital heart disease \u2014 CHD imaging, ACHD, fetal echo.", icon: "Baby", color: "#189aa1", isDefault: false },
     { slug: "students", name: "Echo Student Hub", description: "Learning resources, study tips, board prep, and mentorship for echo students.", icon: "BookOpen", color: "#189aa1", isDefault: false },
     { slug: "travelers", name: "Travelers Hub", description: "Travel sonography \u2014 contracts, agencies, housing, and life on the road.", icon: "Plane", color: "#189aa1", isDefault: false },
