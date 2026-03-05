@@ -270,3 +270,73 @@ export const communityMembers = mysqlTable("communityMembers", {
   role: mysqlEnum("role", ["member", "moderator"]).default("member").notNull(),
   joinedAt: timestamp("joinedAt").defaultNow().notNull(),
 });
+
+// ─── Lab Subscriptions ────────────────────────────────────────────────────────
+
+export const labSubscriptions = mysqlTable("labSubscriptions", {
+  id: int("id").autoincrement().primaryKey(),
+  adminUserId: int("adminUserId").notNull(),         // owner / billing admin
+  labName: varchar("labName", { length: 200 }).notNull(),
+  labAddress: text("labAddress"),
+  labPhone: varchar("labPhone", { length: 30 }),
+  plan: mysqlEnum("plan", ["basic", "professional", "enterprise"]).default("basic").notNull(),
+  status: mysqlEnum("status", ["active", "trialing", "past_due", "canceled", "paused"]).default("trialing").notNull(),
+  seats: int("seats").default(5).notNull(),          // max staff members
+  stripeCustomerId: varchar("stripeCustomerId", { length: 64 }),
+  stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 64 }),
+  billingCycleStart: timestamp("billingCycleStart"),
+  billingCycleEnd: timestamp("billingCycleEnd"),
+  trialEndsAt: timestamp("trialEndsAt"),
+  canceledAt: timestamp("canceledAt"),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type LabSubscription = typeof labSubscriptions.$inferSelect;
+export type InsertLabSubscription = typeof labSubscriptions.$inferInsert;
+
+// ─── Lab Members ─────────────────────────────────────────────────────────────
+
+export const labMembers = mysqlTable("labMembers", {
+  id: int("id").autoincrement().primaryKey(),
+  labId: int("labId").notNull(),
+  userId: int("userId"),                             // null until invite accepted
+  inviteEmail: varchar("inviteEmail", { length: 320 }).notNull(),
+  displayName: varchar("displayName", { length: 100 }),
+  credentials: varchar("credentials", { length: 200 }),
+  role: mysqlEnum("role", ["admin", "reviewer", "sonographer"]).default("sonographer").notNull(),
+  specialty: varchar("specialty", { length: 100 }),
+  department: varchar("department", { length: 100 }),
+  inviteStatus: mysqlEnum("inviteStatus", ["pending", "accepted", "declined"]).default("pending").notNull(),
+  inviteToken: varchar("inviteToken", { length: 64 }),
+  joinedAt: timestamp("joinedAt"),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type LabMember = typeof labMembers.$inferSelect;
+export type InsertLabMember = typeof labMembers.$inferInsert;
+
+// ─── Lab Peer Reviews (extends peerReviews with lab context) ─────────────────
+// We add labId + revieweeId + qualityScore to peerReviews via a separate
+// labPeerReviews table that references peerReviews.id for clean separation.
+
+export const labPeerReviews = mysqlTable("labPeerReviews", {
+  id: int("id").autoincrement().primaryKey(),
+  labId: int("labId").notNull(),
+  peerReviewId: int("peerReviewId").notNull(),       // FK → peerReviews.id
+  reviewerId: int("reviewerId").notNull(),            // labMembers.id (reviewer)
+  revieweeId: int("revieweeId").notNull(),            // labMembers.id (sonographer being reviewed)
+  qualityScore: int("qualityScore"),                  // 0–100 computed composite
+  qualityTier: mysqlEnum("qualityTier", ["Excellent", "Good", "Adequate", "Needs Improvement"]),
+  iqScore: int("iqScore"),                           // image quality component 0–100
+  raScore: int("raScore"),                           // report accuracy component 0–100
+  taScore: int("taScore"),                           // technical adherence component 0–100
+  reviewMonth: varchar("reviewMonth", { length: 7 }), // "YYYY-MM" for easy grouping
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type LabPeerReview = typeof labPeerReviews.$inferSelect;
+export type InsertLabPeerReview = typeof labPeerReviews.$inferInsert;

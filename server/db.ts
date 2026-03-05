@@ -1,4 +1,4 @@
-import { and, desc, eq, or } from "drizzle-orm";
+import { and, avg, count, desc, eq, gte, lte, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   InsertUser,
@@ -16,6 +16,12 @@ import {
   policies,
   qaLogs,
   appropriateUseCases,
+  labSubscriptions,
+  labMembers,
+  labPeerReviews,
+  type LabSubscription,
+  type LabMember,
+  type LabPeerReview,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -369,4 +375,209 @@ export async function getAucEntries(userId: number, limit = 30, offset = 0) {
     .where(eq(appropriateUseCases.userId, userId))
     .orderBy(desc(appropriateUseCases.createdAt))
     .limit(limit).offset(offset);
+}
+
+// ─── Lab Subscription Helpers ─────────────────────────────────────────────────
+
+export async function createLabSubscription(data: {
+  adminUserId: number;
+  labName: string;
+  labAddress?: string;
+  labPhone?: string;
+  plan?: "basic" | "professional" | "enterprise";
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  const seats = data.plan === "enterprise" ? 999 : data.plan === "professional" ? 25 : 5;
+  const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 14-day trial
+  const [row] = await db.insert(labSubscriptions).values({
+    ...data,
+    seats,
+    status: "trialing",
+    trialEndsAt,
+  }).$returningId();
+  return row;
+}
+
+export async function getLabByAdmin(adminUserId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(labSubscriptions)
+    .where(eq(labSubscriptions.adminUserId, adminUserId))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+export async function getLabById(labId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(labSubscriptions)
+    .where(eq(labSubscriptions.id, labId))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+export async function updateLabSubscription(labId: number, data: Partial<{
+  labName: string;
+  labAddress: string;
+  labPhone: string;
+  plan: "basic" | "professional" | "enterprise";
+  status: "active" | "trialing" | "past_due" | "canceled" | "paused";
+  seats: number;
+  stripeCustomerId: string;
+  stripeSubscriptionId: string;
+  billingCycleStart: Date;
+  billingCycleEnd: Date;
+  notes: string;
+}>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  await db.update(labSubscriptions).set(data).where(eq(labSubscriptions.id, labId));
+}
+
+// ─── Lab Member Helpers ───────────────────────────────────────────────────────
+
+export async function addLabMember(data: {
+  labId: number;
+  inviteEmail: string;
+  displayName?: string;
+  credentials?: string;
+  role?: "admin" | "reviewer" | "sonographer";
+  specialty?: string;
+  department?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  // Check if already a member
+  const existing = await db.select().from(labMembers)
+    .where(and(eq(labMembers.labId, data.labId), eq(labMembers.inviteEmail, data.inviteEmail)))
+    .limit(1);
+  if (existing.length > 0) throw new Error("This email is already a lab member.");
+  const inviteToken = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  const [row] = await db.insert(labMembers).values({ ...data, inviteToken, inviteStatus: "pending" }).$returningId();
+  return row;
+}
+
+export async function getLabMembers(labId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(labMembers)
+    .where(and(eq(labMembers.labId, labId), eq(labMembers.isActive, true)))
+    .orderBy(labMembers.displayName);
+}
+
+export async function updateLabMember(memberId: number, data: Partial<{
+  displayName: string;
+  credentials: string;
+  role: "admin" | "reviewer" | "sonographer";
+  specialty: string;
+  department: string;
+  isActive: boolean;
+}>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  await db.update(labMembers).set(data).where(eq(labMembers.id, memberId));
+}
+
+export async function removeLabMember(memberId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  await db.update(labMembers).set({ isActive: false }).where(eq(labMembers.id, memberId));
+}
+
+// ─── Lab Peer Review Helpers ──────────────────────────────────────────────────
+
+export async function createLabPeerReview(data: {
+  labId: number;
+  peerReviewId: number;
+  reviewerId: number;
+  revieweeId: number;
+  qualityScore?: number;
+  qualityTier?: "Excellent" | "Good" | "Adequate" | "Needs Improvement";
+  iqScore?: number;
+  raScore?: number;
+  taScore?: number;
+  reviewMonth?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  const [row] = await db.insert(labPeerReviews).values(data).$returningId();
+  return row;
+}
+
+export async function getLabPeerReviews(labId: number, limit = 50, offset = 0) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({
+    lpr: labPeerReviews,
+    pr: peerReviews,
+    reviewer: { id: labMembers.id, displayName: labMembers.displayName, credentials: labMembers.credentials },
+  })
+    .from(labPeerReviews)
+    .innerJoin(peerReviews, eq(labPeerReviews.peerReviewId, peerReviews.id))
+    .innerJoin(labMembers, eq(labPeerReviews.reviewerId, labMembers.id))
+    .where(eq(labPeerReviews.labId, labId))
+    .orderBy(desc(labPeerReviews.createdAt))
+    .limit(limit).offset(offset);
+}
+
+// ─── Staff Analytics Helpers ──────────────────────────────────────────────────
+
+/** Per-member monthly Quality Score averages for growth curves */
+export async function getStaffQsTrend(labId: number, revieweeId: number, months = 12) {
+  const db = await getDb();
+  if (!db) return [];
+  const cutoff = new Date();
+  cutoff.setMonth(cutoff.getMonth() - months);
+  const rows = await db.select({
+    reviewMonth: labPeerReviews.reviewMonth,
+    avgQs: avg(labPeerReviews.qualityScore),
+    avgIq: avg(labPeerReviews.iqScore),
+    avgRa: avg(labPeerReviews.raScore),
+    avgTa: avg(labPeerReviews.taScore),
+    reviewCount: count(labPeerReviews.id),
+  })
+    .from(labPeerReviews)
+    .where(and(eq(labPeerReviews.labId, labId), eq(labPeerReviews.revieweeId, revieweeId)))
+    .groupBy(labPeerReviews.reviewMonth)
+    .orderBy(labPeerReviews.reviewMonth);
+  return rows;
+}
+
+/** All staff latest QS snapshot for lab-wide leaderboard */
+export async function getLabStaffSnapshot(labId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select({
+    revieweeId: labPeerReviews.revieweeId,
+    avgQs: avg(labPeerReviews.qualityScore),
+    avgIq: avg(labPeerReviews.iqScore),
+    avgRa: avg(labPeerReviews.raScore),
+    avgTa: avg(labPeerReviews.taScore),
+    reviewCount: count(labPeerReviews.id),
+    lastReviewMonth: sql<string>`MAX(${labPeerReviews.reviewMonth})`,
+  })
+    .from(labPeerReviews)
+    .where(eq(labPeerReviews.labId, labId))
+    .groupBy(labPeerReviews.revieweeId);
+  return rows;
+}
+
+/** Monthly lab-wide summary for reporting */
+export async function getLabMonthlySummary(labId: number, months = 12) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({
+    reviewMonth: labPeerReviews.reviewMonth,
+    avgQs: avg(labPeerReviews.qualityScore),
+    reviewCount: count(labPeerReviews.id),
+    excellentCount: sql<number>`SUM(CASE WHEN ${labPeerReviews.qualityTier} = 'Excellent' THEN 1 ELSE 0 END)`,
+    goodCount: sql<number>`SUM(CASE WHEN ${labPeerReviews.qualityTier} = 'Good' THEN 1 ELSE 0 END)`,
+    adequateCount: sql<number>`SUM(CASE WHEN ${labPeerReviews.qualityTier} = 'Adequate' THEN 1 ELSE 0 END)`,
+    needsImprovementCount: sql<number>`SUM(CASE WHEN ${labPeerReviews.qualityTier} = 'Needs Improvement' THEN 1 ELSE 0 END)`,
+  })
+    .from(labPeerReviews)
+    .where(eq(labPeerReviews.labId, labId))
+    .groupBy(labPeerReviews.reviewMonth)
+    .orderBy(labPeerReviews.reviewMonth);
 }

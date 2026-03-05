@@ -15,10 +15,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   ClipboardList, Star, FileText, BarChart2, Plus, CheckCircle, AlertTriangle,
-  XCircle, Clock, ChevronDown, ChevronUp, Shield, Award, BookOpen, Loader2
+  XCircle, Clock, ChevronDown, ChevronUp, Shield, Award, BookOpen, Loader2, Download,
+  TrendingUp, TrendingDown, Minus, Info
 } from "lucide-react";
 import { toast } from "sonner";
 import { getLoginUrl } from "@/const";
+import jsPDF from "jspdf";
 
 const BRAND = "#189aa1";
 const MODALITIES = ["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS"] as const;
@@ -244,6 +246,316 @@ function QualityReviewTab() {
   );
 }
 
+// ─── Quality Score Engine ───────────────────────────────────────────────────
+
+// Rubric weights
+const QS_WEIGHTS = { imageQuality: 0.40, reportAccuracy: 0.35, technicalAdherence: 0.25 } as const;
+
+// Component raw scores (0–100)
+const IQ_SCORES: Record<string, number> = {
+  excellent: 100, good: 80, adequate: 60, poor: 30,
+};
+const RA_SCORES: Record<string, number> = {
+  accurate: 100, minor_discrepancy: 55, major_discrepancy: 15,
+};
+const TA_SCORES: Record<string, number> = {
+  full: 100, partial: 55, non_adherent: 15,
+};
+
+type QualityScoreResult = {
+  score: number;           // 0–100 composite
+  tier: "Excellent" | "Good" | "Adequate" | "Needs Improvement" | null;
+  color: string;
+  bgColor: string;
+  components: { label: string; raw: number; weight: number; weighted: number }[];
+  complete: boolean;       // all 3 fields filled
+};
+
+function calcQualityScore(
+  imageQuality?: string,
+  reportAccuracy?: string,
+  technicalAdherence?: string,
+): QualityScoreResult {
+  const iqRaw = imageQuality ? (IQ_SCORES[imageQuality] ?? null) : null;
+  const raRaw = reportAccuracy ? (RA_SCORES[reportAccuracy] ?? null) : null;
+  const taRaw = technicalAdherence ? (TA_SCORES[technicalAdherence] ?? null) : null;
+  const complete = iqRaw !== null && raRaw !== null && taRaw !== null;
+
+  const components = [
+    { label: "Image Quality", raw: iqRaw ?? 0, weight: QS_WEIGHTS.imageQuality, weighted: (iqRaw ?? 0) * QS_WEIGHTS.imageQuality },
+    { label: "Report Accuracy", raw: raRaw ?? 0, weight: QS_WEIGHTS.reportAccuracy, weighted: (raRaw ?? 0) * QS_WEIGHTS.reportAccuracy },
+    { label: "Technical Adherence", raw: taRaw ?? 0, weight: QS_WEIGHTS.technicalAdherence, weighted: (taRaw ?? 0) * QS_WEIGHTS.technicalAdherence },
+  ];
+
+  const score = complete
+    ? Math.round(components.reduce((s, c) => s + c.weighted, 0))
+    : 0;
+
+  let tier: QualityScoreResult["tier"] = null;
+  let color = "#6b7280";
+  let bgColor = "#f3f4f6";
+  if (complete) {
+    if (score >= 85) { tier = "Excellent"; color = "#16a34a"; bgColor = "#dcfce7"; }
+    else if (score >= 70) { tier = "Good"; color = "#2563eb"; bgColor = "#dbeafe"; }
+    else if (score >= 50) { tier = "Adequate"; color = "#d97706"; bgColor = "#fef3c7"; }
+    else { tier = "Needs Improvement"; color = "#dc2626"; bgColor = "#fee2e2"; }
+  }
+
+  return { score, tier, color, bgColor, components, complete };
+}
+
+// Quality Score Badge component
+function QualityScoreBadge({ qs, size = "sm" }: { qs: QualityScoreResult; size?: "sm" | "md" }) {
+  if (!qs.complete) return null;
+  const TierIcon = qs.score >= 85 ? TrendingUp : qs.score >= 50 ? Minus : TrendingDown;
+  return (
+    <span
+      className={`inline-flex items-center gap-1 font-bold rounded-full ${
+        size === "md" ? "text-sm px-3 py-1" : "text-xs px-2 py-0.5"
+      }`}
+      style={{ background: qs.bgColor, color: qs.color }}
+    >
+      <TierIcon className={size === "md" ? "w-4 h-4" : "w-3 h-3"} />
+      QS {qs.score}
+      {size === "md" && <span className="font-normal">/ 100 — {qs.tier}</span>}
+    </span>
+  );
+}
+
+// Inline Quality Score preview (shown inside the form while editing)
+function QualityScorePreview({ imageQuality, reportAccuracy, technicalAdherence }: {
+  imageQuality: string; reportAccuracy: string; technicalAdherence: string;
+}) {
+  const qs = calcQualityScore(imageQuality || undefined, reportAccuracy || undefined, technicalAdherence || undefined);
+  if (!qs.complete) {
+    return (
+      <div className="flex items-center gap-1.5 text-xs text-gray-400 italic">
+        <Info className="w-3.5 h-3.5" />
+        Fill in Image Quality, Report Accuracy, and Technical Adherence to see the Quality Score.
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-lg border p-3 space-y-2" style={{ borderColor: qs.color + "40", background: qs.bgColor + "60" }}>
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold text-gray-700">Quality Score Preview</span>
+        <QualityScoreBadge qs={qs} size="md" />
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        {qs.components.map(c => (
+          <div key={c.label} className="text-center">
+            <div className="text-[10px] text-gray-500 mb-0.5">{c.label}</div>
+            <div className="text-xs font-bold" style={{ color: qs.color }}>{c.raw}</div>
+            <div className="text-[10px] text-gray-400">×{(c.weight * 100).toFixed(0)}%</div>
+            <div className="h-1 rounded-full mt-1" style={{ background: qs.color + "30" }}>
+              <div className="h-full rounded-full" style={{ width: `${c.raw}%`, background: qs.color }} />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="text-[10px] text-gray-500 text-center">
+        Weighted composite: {qs.components.map(c => `${c.raw}×${(c.weight * 100).toFixed(0)}%`).join(" + ")} = {qs.score}/100
+      </div>
+    </div>
+  );
+}
+
+// ─── PDF Export Utility ─────────────────────────────────────────────────────
+type PeerReviewRow = {
+  id: number;
+  modality: string;
+  sonographerInitials?: string | null;
+  patientId?: string | null;
+  studyDate?: string | null;
+  imageQuality?: string | null;
+  imageQualityNotes?: string | null;
+  reportAccuracy?: string | null;
+  reportNotes?: string | null;
+  technicalAdherence?: string | null;
+  technicalNotes?: string | null;
+  overallScore?: number | null;
+  feedback?: string | null;
+  status: string;
+  createdAt: Date;
+};
+
+function exportPeerReviewPDF(reviews: PeerReviewRow[]) {
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "letter" });
+  const pageW = 215.9;
+  const pageH = 279.4;
+  const margin = 18;
+  const contentW = pageW - margin * 2;
+  let y = margin;
+
+  const checkPage = (needed: number) => {
+    if (y + needed > pageH - margin) {
+      doc.addPage();
+      y = margin;
+    }
+  };
+
+  const drawHRule = (thickness = 0.3, color: [number, number, number] = [200, 200, 200]) => {
+    doc.setDrawColor(...color);
+    doc.setLineWidth(thickness);
+    doc.line(margin, y, pageW - margin, y);
+    y += 3;
+  };
+
+  // ── Header ──
+  doc.setFillColor(14, 74, 80); // #0e4a50
+  doc.rect(0, 0, pageW, 28, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(16);
+  doc.setFont("helvetica", "bold");
+  doc.text("iHeartEcho™ — Peer Review Report", margin, 12);
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.text("DIY Accreditation Tool™  |  For IAC Accreditation Preparation", margin, 19);
+  doc.text(`Generated: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`, margin, 24);
+  y = 36;
+
+  // ── Summary box ──
+  const submitted = reviews.filter(r => r.status === "submitted" || r.status === "complete").length;
+  const avgScore = reviews.filter(r => r.overallScore).reduce((s, r) => s + (r.overallScore ?? 0), 0) /
+    (reviews.filter(r => r.overallScore).length || 1);
+  doc.setFillColor(240, 251, 252); // light teal bg
+  doc.setDrawColor(24, 154, 161);
+  doc.setLineWidth(0.5);
+  doc.roundedRect(margin, y, contentW, 20, 2, 2, "FD");
+  doc.setTextColor(14, 74, 80);
+  doc.setFontSize(8.5);
+  doc.setFont("helvetica", "bold");
+  doc.text(`Total Reviews: ${reviews.length}`, margin + 6, y + 7);
+  doc.text(`Submitted / Complete: ${submitted}`, margin + 50, y + 7);
+  doc.text(`Avg. Overall Score: ${reviews.filter(r => r.overallScore).length ? avgScore.toFixed(1) + " / 5" : "N/A"}`, margin + 110, y + 7);
+  const modalityCounts = reviews.reduce<Record<string, number>>((acc, r) => { acc[r.modality] = (acc[r.modality] ?? 0) + 1; return acc; }, {});
+  const modalitySummary = Object.entries(modalityCounts).map(([k, v]) => `${k}: ${v}`).join("  |  ");
+  doc.setFont("helvetica", "normal");
+  doc.text(`Modalities: ${modalitySummary}`, margin + 6, y + 14);
+  y += 26;
+
+  // ── HIPAA notice ──
+  doc.setFontSize(7.5);
+  doc.setTextColor(120, 80, 0);
+  doc.setFont("helvetica", "italic");
+  doc.text(
+    "HIPAA Notice: This report contains de-identified study data only. Do not add or distribute patient PHI.",
+    margin, y
+  );
+  y += 7;
+  drawHRule(0.5, [24, 154, 161]);
+
+  // ── Individual reviews ──
+  const scoreLabel = (n?: number | null) =>
+    !n ? "—" : ["Poor", "Below Average", "Average", "Good", "Excellent"][n - 1] + ` (${n}/5)`;
+  const fmt = (s?: string | null) => !s ? "—" : s.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+  reviews.forEach((r, idx) => {
+    checkPage(52);
+
+    // Review header bar
+    doc.setFillColor(24, 154, 161);
+    doc.rect(margin, y, contentW, 7, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Review #${idx + 1}  —  ${r.modality}`, margin + 3, y + 5);
+    const dateStr = r.studyDate ?? new Date(r.createdAt).toLocaleDateString();
+    doc.text(dateStr, pageW - margin - doc.getTextWidth(dateStr) - 3, y + 5);
+    y += 10;
+
+    // Two-column grid
+    const col1 = margin;
+    const col2 = margin + contentW / 2 + 2;
+    const colW = contentW / 2 - 2;
+
+    const field = (label: string, value: string, x: number, colWidth: number) => {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7.5);
+      doc.setTextColor(80, 80, 80);
+      doc.text(label, x, y);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(30, 30, 30);
+      const lines = doc.splitTextToSize(value, colWidth - doc.getTextWidth(label) - 2);
+      doc.text(lines, x + doc.getTextWidth(label) + 1, y);
+    };
+
+    field("Sonographer: ", r.sonographerInitials ?? "—", col1, colW);
+    field("Patient ID: ", r.patientId ?? "—", col2, colW);
+    y += 5;
+
+    field("Image Quality: ", fmt(r.imageQuality), col1, colW);
+    field("Report Accuracy: ", fmt(r.reportAccuracy), col2, colW);
+    y += 5;
+
+    field("Technical Adherence: ", fmt(r.technicalAdherence), col1, colW);
+    field("Overall Score: ", scoreLabel(r.overallScore), col2, colW);
+    y += 5;
+
+    field("Status: ", fmt(r.status), col1, colW);
+    y += 5;
+
+    // Notes fields (full width)
+    const noteField = (label: string, value: string | null | undefined) => {
+      if (!value) return;
+      checkPage(10);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7.5);
+      doc.setTextColor(80, 80, 80);
+      doc.text(label, margin, y);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(30, 30, 30);
+      const lines = doc.splitTextToSize(value, contentW - doc.getTextWidth(label) - 2);
+      doc.text(lines, margin + doc.getTextWidth(label) + 1, y);
+      y += lines.length * 4.5;
+    };
+
+    noteField("Image Notes: ", r.imageQualityNotes);
+    noteField("Report Notes: ", r.reportNotes);
+    noteField("Technical Notes: ", r.technicalNotes);
+
+    // Feedback box
+    if (r.feedback) {
+      checkPage(16);
+      doc.setFillColor(248, 250, 252);
+      doc.setDrawColor(200, 200, 200);
+      doc.setLineWidth(0.3);
+      const feedbackLines = doc.splitTextToSize(r.feedback, contentW - 8);
+      const boxH = feedbackLines.length * 4.5 + 8;
+      doc.roundedRect(margin, y, contentW, boxH, 1.5, 1.5, "FD");
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7.5);
+      doc.setTextColor(80, 80, 80);
+      doc.text("Feedback / Recommendations:", margin + 3, y + 5);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(30, 30, 30);
+      doc.text(feedbackLines, margin + 3, y + 10);
+      y += boxH + 3;
+    }
+
+    y += 2;
+    drawHRule();
+  });
+
+  // ── Footer on each page ──
+  const totalPages = (doc as any).internal.getNumberOfPages();
+  for (let p = 1; p <= totalPages; p++) {
+    doc.setPage(p);
+    doc.setFontSize(7);
+    doc.setTextColor(150, 150, 150);
+    doc.setFont("helvetica", "normal");
+    doc.text(
+      "iHeartEcho™ DIY Accreditation Tool™  |  For accreditation preparation use only  |  Not a substitute for official IAC review",
+      margin, pageH - 8
+    );
+    doc.text(`Page ${p} of ${totalPages}`, pageW - margin - 20, pageH - 8);
+  }
+
+  const dateTag = new Date().toISOString().slice(0, 10);
+  doc.save(`iHeartEcho_PeerReview_Report_${dateTag}.pdf`);
+  return true;
+}
+
 // ─── Peer Review Tab ──────────────────────────────────────────────────────────
 function PeerReviewTab() {
   
@@ -423,6 +735,23 @@ function PeerReviewTab() {
         <div className="flex items-center justify-center py-8"><Loader2 className="w-5 h-5 animate-spin" style={{ color: BRAND }} /></div>
       ) : (reviews && reviews.length > 0) ? (
         <div className="space-y-2">
+          {/* Bulk export toolbar */}
+          <div className="flex items-center justify-between px-1 py-1.5">
+            <span className="text-xs text-gray-500 font-medium">{reviews.length} review{reviews.length !== 1 ? "s" : ""} on file</span>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs gap-1.5 border-[#189aa1] text-[#189aa1] hover:bg-[#f0fbfc]"
+              onClick={() => {
+                exportPeerReviewPDF(reviews);
+                toast.success("PDF report downloaded.");
+              }}
+            >
+              <Download className="w-3.5 h-3.5" />
+              Export All as PDF
+            </Button>
+          </div>
+
           {reviews.map((r) => (
             <Card key={r.id} className="border border-gray-100">
               <CardContent className="p-3">
@@ -441,7 +770,20 @@ function PeerReviewTab() {
                     </div>
                     {r.feedback && <p className="text-xs text-gray-600 mt-1 italic">"{r.feedback}"</p>}
                   </div>
-                  <div className="text-xs text-gray-400 whitespace-nowrap">{r.studyDate ?? new Date(r.createdAt).toLocaleDateString()}</div>
+                  <div className="flex flex-col items-end gap-1.5">
+                    <div className="text-xs text-gray-400 whitespace-nowrap">{r.studyDate ?? new Date(r.createdAt).toLocaleDateString()}</div>
+                    <button
+                      title="Export this review as PDF"
+                      className="flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded border border-[#189aa1]/40 text-[#189aa1] hover:bg-[#f0fbfc] transition-colors"
+                      onClick={() => {
+                        exportPeerReviewPDF([r]);
+                        toast.success("Single review PDF downloaded.");
+                      }}
+                    >
+                      <Download className="w-3 h-3" />
+                      PDF
+                    </button>
+                  </div>
                 </div>
               </CardContent>
             </Card>

@@ -108,3 +108,27 @@
 - [x] Build DIY Accreditation Tool™ page
 - [x] Build EchoAccreditation Navigator™ page
 - [x] Wire Accreditation Tools routes and sidebar section
+
+## PDF Export — DIY Accreditation Tool™
+- [x] PDF export for peer review reports (IAC submission format) — jsPDF browser-side generation
+
+## Quality Score — Peer Review
+- [x] Quality Score rubric: weighted composite of image quality (40%), report accuracy (35%), technical adherence (25%)
+- [x] Auto-calculate Quality Score on form entry and display on review cards
+- [x] Quality Score badge with color-coded tiers (Excellent/Good/Adequate/Needs Improvement)
+- [x] Quality Score trend summary in the reviews list header
+- [x] Quality Score included in PDF export with rubric breakdown
+
+## Lab Subscription Platform
+- [x] DB schema: labSubscriptions table (labName, plan, status, seats, adminUserId, stripeCustomerId, billingCycleEnd)
+- [x] DB schema: labMembers table (labId, userId, role: admin|reviewer|sonographer, inviteEmail, joinedAt)
+- [x] DB schema: extend peerReviews with labId, revieweeId (staff being reviewed), qualityScore (computed)
+- [x] tRPC: lab CRUD (create, get, update), member invite/remove, role change
+- [x] tRPC: staff analytics (per-member QS over time, domain breakdown, trend)
+- [x] tRPC: lab reporting (monthly summary, aggregate stats, export data)
+- [x] Lab Admin Portal page (/lab-admin): staff roster, invite members, subscription status
+- [x] Staff Progress Analytics: growth curves (recharts), per-staff QS trend, domain radar
+- [x] Admin Reporting Dashboard: lab-wide monthly stats, PDF export of lab report
+- [x] Subscription tier UI: Basic (5 staff), Professional (25 staff), Enterprise (unlimited)
+- [ ] Stripe integration for monthly subscription billing (pending Stripe key)
+- [x] Sidebar entry for Lab Admin under Accreditation Tools section

@@ -8,7 +8,7 @@ import { Link, useLocation } from "wouter";
 import {
   Heart, Calculator, Baby, ClipboardList, Activity,
   Scan, BookOpen, FileText, Menu, X, ChevronRight,
-  Stethoscope, Microscope, Zap, Users, ExternalLink, ShoppingBag, FlaskConical, Cpu, Layers, MessageCircle, Radio, Wind, Shield, Award
+  Stethoscope, Microscope, Zap, Users, ExternalLink, ShoppingBag, FlaskConical, Cpu, Layers, MessageCircle, Radio, Wind, Shield, Award, Building2
 } from "lucide-react";
 
 const navGroups = [
@@ -66,6 +66,7 @@ const navGroups = [
     items: [
       { path: "/accreditation", label: "DIY Accreditation Tool™", icon: ClipboardList },
       { path: "/accreditation-navigator", label: "EchoAccreditation Navigator™", icon: Award },
+      { path: "/lab-admin", label: "Lab Admin Portal", icon: Building2 },
     ],
   },
   {

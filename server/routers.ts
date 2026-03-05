@@ -35,6 +35,19 @@ import {
   getQaLogs,
   createAucEntry,
   getAucEntries,
+  createLabSubscription,
+  getLabByAdmin,
+  getLabById,
+  updateLabSubscription,
+  addLabMember,
+  getLabMembers,
+  updateLabMember,
+  removeLabMember,
+  createLabPeerReview,
+  getLabPeerReviews,
+  getStaffQsTrend,
+  getLabStaffSnapshot,
+  getLabMonthlySummary,
 } from "./db";
 
 export const appRouter = router({
@@ -417,7 +430,156 @@ export const appRouter = router({
     .query(async ({ ctx, input }) => {
       return getAucEntries(ctx.user.id, input.limit, input.offset);
     }),
+   }),
+
+  // ─── Lab Subscription Router ────────────────────────────────────────────────
+  lab: router({
+    // Subscription management
+    createLab: protectedProcedure
+      .input(z.object({
+        labName: z.string().min(1).max(200),
+        labAddress: z.string().optional(),
+        labPhone: z.string().optional(),
+        plan: z.enum(["basic", "professional", "enterprise"]).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const existing = await getLabByAdmin(ctx.user.id);
+        if (existing) throw new Error("You already have a lab subscription.");
+        return createLabSubscription({ ...input, adminUserId: ctx.user.id });
+      }),
+
+    getMyLab: protectedProcedure
+      .query(async ({ ctx }) => {
+        return getLabByAdmin(ctx.user.id);
+      }),
+
+    updateLab: protectedProcedure
+      .input(z.object({
+        labName: z.string().min(1).max(200).optional(),
+        labAddress: z.string().optional(),
+        labPhone: z.string().optional(),
+        plan: z.enum(["basic", "professional", "enterprise"]).optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const lab = await getLabByAdmin(ctx.user.id);
+        if (!lab) throw new Error("No lab found.");
+        // Update seats if plan changed
+        const seats = input.plan === "enterprise" ? 999 : input.plan === "professional" ? 25 : input.plan === "basic" ? 5 : undefined;
+        await updateLabSubscription(lab.id, { ...input, ...(seats ? { seats } : {}) });
+        return { success: true };
+      }),
+
+    upgradePlan: protectedProcedure
+      .input(z.object({ plan: z.enum(["basic", "professional", "enterprise"]) }))
+      .mutation(async ({ ctx, input }) => {
+        const lab = await getLabByAdmin(ctx.user.id);
+        if (!lab) throw new Error("No lab found.");
+        const seats = input.plan === "enterprise" ? 999 : input.plan === "professional" ? 25 : 5;
+        await updateLabSubscription(lab.id, { plan: input.plan, seats, status: "active" });
+        return { success: true };
+      }),
+
+    // Staff management
+    addMember: protectedProcedure
+      .input(z.object({
+        inviteEmail: z.string().email(),
+        displayName: z.string().optional(),
+        credentials: z.string().optional(),
+        role: z.enum(["admin", "reviewer", "sonographer"]).optional(),
+        specialty: z.string().optional(),
+        department: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const lab = await getLabByAdmin(ctx.user.id);
+        if (!lab) throw new Error("No lab subscription found. Please create a lab first.");
+        const members = await getLabMembers(lab.id);
+        if (members.length >= lab.seats) throw new Error(`Seat limit reached (${lab.seats}). Upgrade your plan to add more staff.`);
+        return addLabMember({ ...input, labId: lab.id });
+      }),
+
+    getMembers: protectedProcedure
+      .query(async ({ ctx }) => {
+        const lab = await getLabByAdmin(ctx.user.id);
+        if (!lab) return [];
+        return getLabMembers(lab.id);
+      }),
+
+    updateMember: protectedProcedure
+      .input(z.object({
+        memberId: z.number(),
+        displayName: z.string().optional(),
+        credentials: z.string().optional(),
+        role: z.enum(["admin", "reviewer", "sonographer"]).optional(),
+        specialty: z.string().optional(),
+        department: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const lab = await getLabByAdmin(ctx.user.id);
+        if (!lab) throw new Error("No lab found.");
+        const { memberId, ...data } = input;
+        await updateLabMember(memberId, data);
+        return { success: true };
+      }),
+
+    removeMember: protectedProcedure
+      .input(z.object({ memberId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const lab = await getLabByAdmin(ctx.user.id);
+        if (!lab) throw new Error("No lab found.");
+        await removeLabMember(input.memberId);
+        return { success: true };
+      }),
+
+    // Lab peer reviews
+    createLabReview: protectedProcedure
+      .input(z.object({
+        peerReviewId: z.number(),
+        revieweeId: z.number(),
+        qualityScore: z.number().min(0).max(100).optional(),
+        qualityTier: z.enum(["Excellent", "Good", "Adequate", "Needs Improvement"]).optional(),
+        iqScore: z.number().min(0).max(100).optional(),
+        raScore: z.number().min(0).max(100).optional(),
+        taScore: z.number().min(0).max(100).optional(),
+        reviewMonth: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const lab = await getLabByAdmin(ctx.user.id);
+        if (!lab) throw new Error("No lab found.");
+        return createLabPeerReview({ ...input, labId: lab.id, reviewerId: ctx.user.id });
+      }),
+
+    getLabReviews: protectedProcedure
+      .input(z.object({ limit: z.number().default(50), offset: z.number().default(0) }))
+      .query(async ({ ctx, input }) => {
+        const lab = await getLabByAdmin(ctx.user.id);
+        if (!lab) return [];
+        return getLabPeerReviews(lab.id, input.limit, input.offset);
+      }),
+
+    // Analytics
+    getStaffTrend: protectedProcedure
+      .input(z.object({ revieweeId: z.number(), months: z.number().default(12) }))
+      .query(async ({ ctx, input }) => {
+        const lab = await getLabByAdmin(ctx.user.id);
+        if (!lab) return [];
+        return getStaffQsTrend(lab.id, input.revieweeId, input.months);
+      }),
+
+    getStaffSnapshot: protectedProcedure
+      .query(async ({ ctx }) => {
+        const lab = await getLabByAdmin(ctx.user.id);
+        if (!lab) return [];
+        return getLabStaffSnapshot(lab.id);
+      }),
+
+    getMonthlySummary: protectedProcedure
+      .input(z.object({ months: z.number().default(12) }))
+      .query(async ({ ctx, input }) => {
+        const lab = await getLabByAdmin(ctx.user.id);
+        if (!lab) return [];
+        return getLabMonthlySummary(lab.id, input.months);
+      }),
   }),
 });
-
 export type AppRouter = typeof appRouter;
