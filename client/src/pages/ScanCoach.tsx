@@ -51,6 +51,7 @@ const tteViews = [
     id: "plax", name: "Parasternal Long Axis", abbr: "PLAX",
     probePosition: "Left sternal border, 3rd–4th ICS",
     probeOrientation: "Marker toward right shoulder (2 o'clock)",
+    patientPosition: "Left lateral decubitus (left side down); arms across chest to widen intercostal spaces",
     structures: ["Aortic valve", "Mitral valve", "LV", "LA", "LVOT", "Descending aorta (posterior)"],
     doppler: "PW Doppler at LVOT; CW through AV; Color over MV/AV",
     tips: ["Tilt probe to open up LVOT — IVS should be horizontal", "Descending aorta posterior to MV confirms true PLAX", "Avoid foreshortening — LV should appear elongated, not round"],
@@ -79,6 +80,7 @@ const tteViews = [
     id: "psax_av", name: "Parasternal Short Axis — AV Level", abbr: "PSAX-AV",
     probePosition: "Left sternal border, 3rd–4th ICS",
     probeOrientation: "Marker toward left shoulder (10 o'clock), rotated 90° from PLAX",
+    patientPosition: "Left lateral decubitus; same position as PLAX — rotate probe without moving patient",
     structures: ["Aortic valve (3 cusps)", "RVOT", "Pulmonary valve", "LA", "RA", "Tricuspid valve", "Interatrial septum"],
     doppler: "PW/CW through RVOT and pulmonic valve; Color over TV",
     tips: ["'Mercedes-Benz' sign = normal tricuspid AV", "Bicuspid AV: 2 cusps, fish-mouth opening", "Assess for ASD at this level"],
@@ -105,6 +107,7 @@ const tteViews = [
     id: "psax_mv", name: "Parasternal Short Axis — MV Level", abbr: "PSAX-MV",
     probePosition: "Left sternal border, 3rd–4th ICS — tilt inferiorly from AV level",
     probeOrientation: "Marker toward left shoulder (10 o'clock)",
+    patientPosition: "Left lateral decubitus; tilt probe inferiorly from PSAX-AV without repositioning patient",
     structures: ["Mitral valve (fish-mouth)", "LV (circular)", "Papillary muscles"],
     doppler: "Color Doppler for MR jet origin; PHT for MVA in MS",
     tips: ["Fish-mouth opening of MV — both leaflets should open symmetrically", "Identify A1/A2/A3 and P1/P2/P3 scallops for MR localization", "Planimetry of MVA in mitral stenosis"],
@@ -130,6 +133,7 @@ const tteViews = [
     id: "psax_pm", name: "Parasternal Short Axis — Papillary Muscle", abbr: "PSAX-PM",
     probePosition: "Left sternal border, 4th–5th ICS — tilt further inferiorly",
     probeOrientation: "Marker toward left shoulder (10 o'clock)",
+    patientPosition: "Left lateral decubitus; tilt probe further inferiorly from PSAX-MV to reach papillary muscle level",
     structures: ["LV (circular)", "Anterolateral papillary muscle", "Posteromedial papillary muscle"],
     doppler: "Wall motion assessment in all 6 mid segments",
     tips: ["Best level for regional wall motion assessment (6 segments visible)", "Anterolateral PM: LAD + LCx territory; Posteromedial PM: RCA territory", "Compare systolic thickening anterior vs inferior walls for ischemia"],
@@ -155,6 +159,7 @@ const tteViews = [
     id: "a4c", name: "Apical 4-Chamber", abbr: "A4C",
     probePosition: "Cardiac apex (5th ICS, midclavicular line)",
     probeOrientation: "Marker toward left (3 o'clock)",
+    patientPosition: "Left lateral decubitus; use a cardiac notch pillow if available to drop the apex closer to the chest wall",
     structures: ["LV", "RV", "LA", "RA", "Mitral valve", "Tricuspid valve", "Interatrial septum", "IVS"],
     doppler: "PW Doppler at MV tips (E/A); TDI at annulus (e'); TV inflow; CW for TR (RVSP)",
     tips: ["Apex must be at TOP of image — rotate patient to left lateral decubitus", "Foreshortening: LV appears round — move probe laterally and/or use lower ICS", "RV should be smaller than LV; RV:LV ratio >0.6 suggests RV dilation"],
@@ -179,6 +184,7 @@ const tteViews = [
     id: "a2c", name: "Apical 2-Chamber", abbr: "A2C",
     probePosition: "Cardiac apex — rotate 60° CCW from A4C",
     probeOrientation: "Marker toward 12 o'clock (superior)",
+    patientPosition: "Left lateral decubitus; same position as A4C — rotate probe counterclockwise without moving patient",
     structures: ["LV (anterior and inferior walls)", "LA", "Mitral valve", "LAA"],
     doppler: "PW at MV tips; Color for MR",
     tips: ["Rotate CCW from A4C until RV disappears — only LV and LA visible", "Anterior wall (top) and inferior wall (bottom) in this view", "LAA best seen with slight posterior tilt"],
@@ -202,6 +208,7 @@ const tteViews = [
     id: "a3c", name: "Apical 3-Chamber (APLAX)", abbr: "A3C",
     probePosition: "Cardiac apex — rotate 30° CCW from A2C",
     probeOrientation: "Marker toward 10–11 o'clock",
+    patientPosition: "Left lateral decubitus; rotate probe counterclockwise from A2C to open the LVOT",
     structures: ["LV", "LA", "LVOT", "Aortic valve", "Ascending aorta"],
     doppler: "PW in LVOT (VTI); CW through AV",
     tips: ["APLAX = apical long axis — shows LVOT and AV from apex", "Align Doppler cursor parallel to LVOT flow for accurate VTI", "Anteroseptal (top) and inferolateral (bottom) walls visible"],
@@ -225,6 +232,7 @@ const tteViews = [
     id: "subcostal", name: "Subcostal", abbr: "Sub",
     probePosition: "Subxiphoid, angled toward left shoulder at 45°",
     probeOrientation: "Marker toward patient's left",
+    patientPosition: "Supine with knees bent (feet flat on bed) to relax abdominal muscles; ask patient to take a deep breath and hold",
     structures: ["IVC", "RA", "RV", "Atrial septum", "Pericardium", "Liver"],
     doppler: "M-mode IVC for RAP estimation; Hepatic vein PW",
     tips: ["IVC < 2.1 cm + >50% collapse = RAP 0–5 mmHg (normal)", "IVC > 2.1 cm + <50% collapse = RAP 15 mmHg (elevated)", "Best view for pericardial effusion and tamponade", "Ask patient to sniff for IVC collapsibility"],
@@ -250,6 +258,7 @@ const tteViews = [
     id: "suprasternal", name: "Suprasternal", abbr: "SSN",
     probePosition: "Suprasternal notch, angled inferiorly",
     probeOrientation: "Marker toward left (sagittal plane)",
+    patientPosition: "Supine with neck extended (shoulder roll or pillow under shoulders); head turned slightly to the right",
     structures: ["Aortic arch", "Innominate artery", "Left carotid artery", "Left subclavian artery", "Descending aorta", "RPA (cross-section)"],
     doppler: "CW Doppler in descending aorta (diastolic flow reversal in AR); coarctation gradient",
     tips: ["Extend patient's neck with shoulder roll for better access", "Aortic arch visible as 'candy cane' shape", "Diastolic flow reversal in descending aorta = significant AR"],
@@ -301,6 +310,7 @@ const fetalViews = [
     doppler: "Color Doppler across AV valves for regurgitation. PW at MV and TV tips for E/A ratio.",
     pitfalls: ["Dextrocardia vs dextroposition — check situs first", "Foramen ovale flap mistaken for ASD — flap should bow toward LA", "Oblique cut may make chambers appear unequal"],
     redFlags: ["Cardiomegaly (>1/3 thorax)", "Unequal chamber sizes", "Absent or abnormal foramen ovale flap", "Pericardial effusion", "Echogenic focus (EIF)", "Cardiac axis >60°"],
+    patientPosition: "Mother supine or left lateral tilt; obtain true transverse cardiac cut perpendicular to fetal spine",
     color: "#1ba8b0",
   },
   {
@@ -315,6 +325,7 @@ const fetalViews = [
     doppler: "PW Doppler in LVOT for velocity. Color Doppler to confirm antegrade flow from LV to aorta.",
     pitfalls: ["Overangulation brings in RVOT instead of LVOT", "Aorta appears to arise from RV in TGA — confirm with RVOT view"],
     redFlags: ["Aorta arising from RV (TGA)", "Overriding aorta (TOF)", "Aortic stenosis — turbulent LVOT flow", "Small ascending aorta (HLHS)"],
+    patientPosition: "Mother supine; tilt transducer slightly cephalad from 4CV to bring LVOT into view",
     color: "#1db6bf",
   },
   {
@@ -329,6 +340,7 @@ const fetalViews = [
     doppler: "PW Doppler in MPA for velocity. Color Doppler to confirm antegrade flow from RV to PA.",
     pitfalls: ["PA arising from LV in TGA — confirm with LVOT view", "Pulmonary stenosis — turbulent flow in MPA"],
     redFlags: ["PA arising from LV (TGA)", "Small PA (pulmonary atresia/stenosis)", "PA = Ao size (abnormal)", "Absent PA bifurcation"],
+    patientPosition: "Mother supine; tilt transducer further cephalad from LVOT view to visualize RVOT crossing over aorta",
     color: "#20c4ce",
   },
   {
@@ -343,6 +355,7 @@ const fetalViews = [
     doppler: "Color Doppler at bifurcation; assess RPA and LPA flow",
     pitfalls: ["Absent bifurcation may indicate pulmonary atresia with intact IVS", "Markedly asymmetric branch PAs suggest peripheral PS or absent PA"],
     redFlags: ["Absent bifurcation (pulmonary atresia with intact IVS)", "Markedly asymmetric branch PAs", "Confluent PAs absent (severe TOF with absent PA)"],
+    patientPosition: "Mother supine; slight additional cephalad tilt from RVOT view to visualize PA bifurcation into RPA and LPA",
     color: "#24d2d8",
   },
   {
@@ -357,6 +370,7 @@ const fetalViews = [
     doppler: "Color Doppler across all three vessels to confirm antegrade flow. PW in MPA for velocity.",
     pitfalls: ["Only 2 vessels visible — may be at wrong level", "PA and Ao equal in size — abnormal", "Vessels not in a line — offset suggests abnormality"],
     redFlags: ["PA < Ao (pulmonary stenosis/atresia)", "Absent SVC", "Vessels not in a line", "Reversed flow in PA (pulmonary atresia)"],
+    patientPosition: "Mother supine; transverse upper mediastinal view — three vessels must appear in a straight line",
     color: "#28dce0",
   },
   {
@@ -371,6 +385,7 @@ const fetalViews = [
     doppler: "Color Doppler to confirm flow direction in all vessels.",
     pitfalls: ["Right aortic arch: arch curves to the right of trachea — abnormal", "Double aortic arch: vessels on both sides of trachea", "Trachea not identified — may be at wrong level"],
     redFlags: ["Right aortic arch (curves right of trachea)", "Double aortic arch", "Aberrant subclavian artery", "Vascular ring encircling trachea"],
+    patientPosition: "Mother supine; transverse upper mediastinal view slightly cephalad to 3VV — trachea ring must be visible to the right of the aortic arch",
     color: "#30e0e4",
   },
   {
@@ -385,6 +400,7 @@ const fetalViews = [
     doppler: "Color Doppler to confirm LBVC flow direction (left to right into SVC); assess thymic size",
     pitfalls: ["Absent LBVC may drain anomalously — TAPVR, heterotaxy", "Dilated LBVC suggests increased flow — PAPVR, AVM"],
     redFlags: ["Absent LBVC (may drain anomalously — TAPVR, heterotaxy)", "Dilated LBVC (increased flow — PAPVR, AVM)", "Absent thymus (22q11 DiGeorge)", "Persistent LSVC (LBVC absent, vertical vein present instead)"],
+    patientPosition: "Mother supine; transverse upper chest view just above 3VT — LBVC crosses horizontally anterior to the great vessels",
     color: "#38e4e8",
   },
   {
@@ -399,6 +415,7 @@ const fetalViews = [
     doppler: "Not typically used; M-mode through LV at papillary muscle level for fractional shortening",
     pitfalls: ["Oblique cut makes LV appear oval — foreshortens measurements", "Papillary muscles may be confused for VSD or mass", "Difficult to obtain in late gestation due to fetal position"],
     redFlags: ["Asymmetric wall thickness (hypertrophic cardiomyopathy)", "Dilated LV (cardiomyopathy, severe AR/MR)", "Echogenic foci in LV (normal variant vs. cardiac rhabdomyoma)", "Hypoplastic LV (HLHS)"],
+    patientPosition: "Mother supine; transverse cardiac view at papillary muscle level — tilt inferiorly from 4CV",
     color: "#3de8e8",
   },
   {
@@ -413,6 +430,7 @@ const fetalViews = [
     doppler: "Color/PW Doppler across pulmonary valve; CW for peak velocity; assess DA flow direction",
     pitfalls: ["PA may appear smaller than Ao if oblique — ensure true transverse cut", "DA may be confused with LPA — trace vessel to descending aorta to confirm"],
     redFlags: ["PA smaller than Ao (pulmonary stenosis/atresia, TOF)", "Absent pulmonary valve", "Reversed DA flow (critical pulmonary obstruction)", "Absent LPA or RPA"],
+    patientPosition: "Mother supine; transverse upper mediastinal view — same level as 3VV, confirm PA and aortic root cross-sections",
     color: "#42e8e4",
   },
   {
@@ -427,6 +445,7 @@ const fetalViews = [
     doppler: "Color Doppler to confirm SVC and IVC flow into RA; assess foramen ovale shunting",
     pitfalls: ["SVC absent (left SVC only — persistent LSVC)", "IVC interruption with azygos continuation (polysplenia)", "Dilated coronary sinus (persistent LSVC)"],
     redFlags: ["SVC absent (persistent LSVC only)", "IVC interruption with azygos continuation (polysplenia)", "Dilated coronary sinus (persistent LSVC)", "ASD/sinus venosus defect"],
+    patientPosition: "Mother supine; sagittal or oblique view along fetal spine — align with IVC/SVC long axis entering RA",
     color: "#4ad9e0",
   },
   {
@@ -441,6 +460,7 @@ const fetalViews = [
     doppler: "CW/PW at aortic isthmus; retrograde or absent diastolic flow = coarctation/critical obstruction",
     pitfalls: ["Ductal arch may be confused with aortic arch — ductal arch is more vertical (hockey stick)", "Only 2 head vessels visible suggests aberrant subclavian artery"],
     redFlags: ["Right aortic arch (mirror image — 22q11, TOF)", "Coarctation — narrowing at isthmus", "Interrupted aortic arch — gap in arch", "Only 2 head vessels (aberrant subclavian)"],
+    patientPosition: "Mother supine; sagittal view along fetal left side — rotate transducer to align with aortic arch long axis",
     color: "#3ecfd6",
   },
   {
@@ -455,6 +475,7 @@ const fetalViews = [
     doppler: "PW/Color Doppler in ductus; reversed or absent flow = critical right heart obstruction",
     pitfalls: ["Ductal arch confused with aortic arch — DA is more anterior and vertical", "Absent DA may indicate pulmonary hypertension or premature closure"],
     redFlags: ["Absent ductus (isolated ductal absence — rare)", "Constricted ductus (NSAIDs, indomethacin exposure)", "Reversed ductal flow (critical pulmonary stenosis/atresia)", "Aneurysmal ductus"],
+    patientPosition: "Mother supine; sagittal view along fetal right side — rotate transducer to align with ductal arch (more vertical than aortic arch)",
     color: "#189aa1",
   },
 ];
@@ -581,6 +602,11 @@ export default function ScanCoach() {
                   <div className="mt-3 space-y-1.5 text-xs text-gray-600">
                     <div><span className="font-semibold text-gray-500">Position: </span>{selectedTTE.probePosition}</div>
                     <div><span className="font-semibold text-gray-500">Notch: </span>{selectedTTE.probeOrientation}</div>
+                    {(selectedTTE as any).patientPosition && (
+                      <div className="mt-2 pt-2 border-t border-gray-100">
+                        <span className="font-semibold text-gray-500">Patient: </span>{(selectedTTE as any).patientPosition}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -772,6 +798,12 @@ export default function ScanCoach() {
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
                   <h3 className="font-bold text-sm text-gray-700 mb-2" style={{ fontFamily: "Merriweather, serif" }}>Scanning Technique</h3>
                   <p className="text-sm text-gray-600 leading-relaxed">{selectedFetal.technique}</p>
+                  {(selectedFetal as any).patientPosition && (
+                    <div className="mt-3 pt-3 border-t border-gray-100">
+                      <h4 className="font-semibold text-xs text-gray-500 mb-1 uppercase tracking-wide">Patient Positioning</h4>
+                      <p className="text-sm text-gray-600">{(selectedFetal as any).patientPosition}</p>
+                    </div>
+                  )}
                   <div className="mt-3 pt-3 border-t border-gray-100">
                     <h4 className="font-semibold text-xs text-gray-500 mb-1 uppercase tracking-wide">Doppler</h4>
                     <p className="text-sm text-gray-600">{selectedFetal.doppler}</p>
