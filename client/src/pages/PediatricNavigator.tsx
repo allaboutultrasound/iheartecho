@@ -5,8 +5,9 @@
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
 import { useState } from "react";
+import { Link } from "wouter";
 import Layout from "@/components/Layout";
-import { Baby, AlertCircle, CheckCircle2, HelpCircle, Activity } from "lucide-react";
+import { Baby, AlertCircle, CheckCircle2, HelpCircle, Activity, Scan } from "lucide-react";
 
 // --- DATA ---------------------------------------------------------------------
 
@@ -669,6 +670,21 @@ export default function PediatricNavigator() {
           <p className="text-sm text-gray-500">
             Congenital heart disease findings, BSA-normalized Z-scores, Qp/Qs shunt estimation, and segmental analysis.
           </p>
+        </div>
+
+        {/* Scan Coach shortcut banner */}
+        <div className="flex items-center justify-between bg-[#f0fbfc] border border-[#b2e8ec] rounded-xl px-5 py-3 mb-5">
+          <div>
+            <p className="text-sm font-semibold text-[#0e7490]">Pediatric CHD Scan Coach</p>
+            <p className="text-xs text-gray-500 mt-0.5">View-by-view scanning protocols, pre-op anatomy, key measurements, and post-op surveillance for 13 major CHDs.</p>
+          </div>
+          <Link href="/scan-coach?tab=chd">
+            <a className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold text-white whitespace-nowrap transition-all hover:opacity-90"
+              style={{ background: "#189aa1" }}>
+              <Scan className="w-4 h-4" />
+              Pediatric CHD Scan Coach
+            </a>
+          </Link>
         </div>
 
         {/* Tabs */}

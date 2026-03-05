@@ -5,8 +5,9 @@
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
 import { useState } from "react";
+import { Link } from "wouter";
 import Layout from "@/components/Layout";
-import { CheckCircle2, Circle, ChevronDown, ChevronUp, Info, Stethoscope, Printer } from "lucide-react";
+import { CheckCircle2, Circle, ChevronDown, ChevronUp, Info, Stethoscope, Printer, Scan } from "lucide-react";
 
 type ChecklistItem = { id: string; label: string; detail?: string; critical?: boolean };
 type ViewSection = { view: string; probe: string; items: ChecklistItem[] };
@@ -316,6 +317,20 @@ export default function TTENavigator() {
 
         {tab === "reference" && (
           <div className="space-y-3">
+            {/* Scan Coach shortcut */}
+            <div className="flex items-center justify-between bg-[#f0fbfc] border border-[#b2e8ec] rounded-xl px-5 py-3">
+              <div>
+                <p className="text-sm font-semibold text-[#0e7490]">Want to practice these views?</p>
+                <p className="text-xs text-gray-500 mt-0.5">Open the Adult TTE Scan Coach for probe positioning, anatomy diagrams, and technique tips.</p>
+              </div>
+              <Link href="/scan-coach?tab=tte">
+                <a className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold text-white whitespace-nowrap transition-all hover:opacity-90"
+                  style={{ background: "#189aa1" }}>
+                  <Scan className="w-4 h-4" />
+                  Adult TTE Scan Coach
+                </a>
+              </Link>
+            </div>
             {normalValues.map((cat, ci) => (
               <div key={ci} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                 <button

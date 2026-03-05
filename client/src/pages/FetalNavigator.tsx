@@ -3,6 +3,7 @@
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
 import { useState } from "react";
+import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import { Baby, AlertCircle, CheckCircle2, HelpCircle, Scan, ClipboardList, ChevronDown, ChevronUp } from "lucide-react";
 
@@ -384,6 +385,21 @@ export default function FetalNavigator() {
           <p className="text-sm text-gray-500">
             Select a fetal cardiac finding to generate a differential diagnosis and clinical guidance.
           </p>
+        </div>
+
+        {/* Scan Coach shortcut banner */}
+        <div className="flex items-center justify-between bg-[#f0fbfc] border border-[#b2e8ec] rounded-xl px-5 py-3 mb-5">
+          <div>
+            <p className="text-sm font-semibold text-[#0e7490]">Fetal Echo Scan Coach</p>
+            <p className="text-xs text-gray-500 mt-0.5">Step-by-step sweep sequence with probe positioning, anatomy diagrams, and normal reference images.</p>
+          </div>
+          <Link href="/scan-coach?tab=fetal">
+            <a className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold text-white whitespace-nowrap transition-all hover:opacity-90"
+              style={{ background: "#189aa1" }}>
+              <Scan className="w-4 h-4" />
+              Fetal Scan Coach
+            </a>
+          </Link>
         </div>
 
         <div className="flex flex-wrap gap-2 mb-6">

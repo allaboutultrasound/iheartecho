@@ -5,6 +5,7 @@
   Fonts: Merriweather headings, Open Sans body
 */
 import { useState, useRef, useEffect } from "react";
+import { useSearch } from "wouter";
 import Layout from "@/components/Layout";
 import { Scan, Heart, Info, Eye, AlertTriangle, ChevronRight } from "lucide-react";
 import PedCHDCoach from "@/components/PedCHDCoach";
@@ -591,7 +592,10 @@ function FetalViewCard({ view, isSelected, onClick }: { view: typeof fetalViews[
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function ScanCoach() {
-  const [activeTab, setActiveTab] = useState<"tte" | "fetal" | "chd">("tte");
+  const search = useSearch();
+  const _params = new URLSearchParams(search);
+  const _initialTab = (_params.get("tab") as "tte" | "fetal" | "chd") || "tte";
+  const [activeTab, setActiveTab] = useState<"tte" | "fetal" | "chd">(_initialTab);
   const [selectedTTE, setSelectedTTE] = useState(tteViews[0]);
   const [selectedFetal, setSelectedFetal] = useState(fetalViews[0]);
    const fetalDetailRef = useRef<HTMLDivElement>(null);
