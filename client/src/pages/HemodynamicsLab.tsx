@@ -469,6 +469,315 @@ function WiggersTooltip({ active, payload }: { active?: boolean; payload?: any[]
   );
 }
 
+// ---- DOPPLER TRACING GENERATORS ----
+// Each generator returns SVG path data for 2 cardiac cycles
+// All velocities in m/s, rendered on a dark echo-style background
+
+function generateMitralInflowPath(p: Params, W: number, H: number): {
+  path: string; eVel: number; aVel: number; eaRatio: number; pattern: string; decTime: number;
+} {
+  const { preload, afterload, contractility, heartRate } = p;
+  const rr = 60 / heartRate; // seconds per beat
+
+  // Derive E and A velocities from physiology
+  // E wave: driven by LA-LV pressure gradient at MVO
+  // Elevated preload → higher E; impaired relaxation (high afterload/age) → lower E, higher A
+  let eVel = 0.5 + (preload - 50) * 0.012 + (contractility - 50) * 0.004;
+  let aVel = 0.4 - (preload - 50) * 0.005 + (afterload - 50) * 0.006;
+
+  // Disease-specific overrides
+  if (p.msInflow) {
+    // MS: prolonged deceleration, elevated E, absent or reduced A (often AF)
+    eVel = 1.2 + (preload - 50) * 0.008;
+    aVel = 0.3; // often in AF or reduced
+  } else if (p.lapMultiplier && p.lapMultiplier > 2) {
+    // MR / elevated LAP: high E, reduced A (pseudonormal or restrictive)
+    eVel = Math.min(1.8, 0.9 + (p.lapMultiplier - 1) * 0.3);
+    aVel = Math.max(0.1, 0.35 - (p.lapMultiplier - 1) * 0.08);
+  } else if (p.tamponade) {
+    // Tamponade: respiratory variation (simplified as reduced E)
+    eVel = Math.max(0.3, eVel * 0.7);
+    aVel = Math.max(0.2, aVel * 0.8);
+  } else if (p.hcmGradient && p.hcmGradient > 30) {
+    // HCM: impaired relaxation, high A wave
+    eVel = Math.max(0.4, eVel * 0.75);
+    aVel = Math.min(1.0, aVel * 1.6);
+  }
+
+  eVel = Math.max(0.3, Math.min(2.0, eVel));
+  aVel = Math.max(0.1, Math.min(1.2, aVel));
+  const eaRatio = eVel / aVel;
+
+  // Deceleration time: shorter with elevated filling pressures
+  const decTime = p.msInflow ? 350 : Math.max(100, 240 - (preload - 50) * 2.5);
+
+  // Pattern classification
+  let pattern = "Normal";
+  if (p.msInflow) pattern = "Mitral Stenosis";
+  else if (eaRatio < 0.8 && eVel < 0.7) pattern = "Impaired Relaxation (Grade I)";
+  else if (eaRatio >= 0.8 && eaRatio <= 1.5 && eVel >= 0.7 && eVel <= 1.2) {
+    if (preload > 65) pattern = "Pseudonormal (Grade II)";
+    else pattern = "Normal";
+  } else if (eaRatio > 1.5 || (eVel > 1.2 && decTime < 160)) pattern = "Restrictive (Grade III)";
+  else if (eaRatio < 0.8) pattern = "Impaired Relaxation (Grade I)";
+
+  // Generate SVG path for 2 cycles
+  const maxVelDisplay = 1.5; // m/s at top of display
+  const cycleW = W / 2;
+  const baseline = H * 0.92; // baseline near bottom
+  const velScale = (H * 0.85) / maxVelDisplay; // pixels per m/s
+
+  // Timing within cycle (as fraction of RR)
+  // MVO at ~0.60 of cycle, MVC at ~0.02
+  // E wave: 0.60–0.72 (rapid filling)
+  // A wave: 0.85–0.97 (atrial kick)
+  const eStart = 0.60, eEnd = 0.74;
+  const aStart = 0.85, aEnd = 0.98;
+  const ePeak = (eStart + eEnd) / 2 - 0.01;
+  const aPeak = (aStart + aEnd) / 2;
+  const decFrac = (decTime / 1000) / rr; // deceleration fraction of RR
+
+  let d = `M 0 ${baseline}`;
+
+  for (let cycle = 0; cycle < 2; cycle++) {
+    const ox = cycle * cycleW;
+    const N = 200;
+    for (let i = 0; i <= N; i++) {
+      const t = i / N;
+      const x = ox + t * cycleW;
+      let vel = 0;
+
+      // E wave: Gaussian rise, exponential decay (deceleration)
+      const eRiseW = 0.04;
+      const eDecayW = Math.max(0.03, decFrac * 0.6);
+      if (t >= eStart && t <= eEnd + decFrac * 0.8) {
+        const tRel = t - ePeak;
+        if (tRel < 0) {
+          vel = eVel * Math.exp(-0.5 * Math.pow(tRel / eRiseW, 2));
+        } else {
+          vel = eVel * Math.exp(-tRel / eDecayW);
+        }
+      }
+
+      // A wave: Gaussian
+      if (t >= aStart && t <= aEnd) {
+        const tRel = t - aPeak;
+        const aW = 0.03;
+        const aVelHere = aVel * Math.exp(-0.5 * Math.pow(tRel / aW, 2));
+        vel = Math.max(vel, aVelHere);
+      }
+
+      const y = baseline - vel * velScale;
+      d += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
+    }
+  }
+
+  return { path: d, eVel, aVel, eaRatio, pattern, decTime };
+}
+
+function generateTricuspidInflowPath(p: Params, W: number, H: number): {
+  path: string; eVel: number; aVel: number; pattern: string;
+} {
+  const { preload, afterload, heartRate } = p;
+
+  // TV inflow: similar to MV but lower velocities (0.3–0.7 m/s)
+  // RV filling: driven by RA-RV gradient
+  let eVel = 0.35 + (preload - 50) * 0.006;
+  let aVel = 0.25 + (afterload - 50) * 0.003;
+
+  if (p.tamponade) {
+    // Tamponade: exaggerated respiratory variation — show elevated E
+    eVel = Math.min(0.8, eVel * 1.3);
+  }
+  if (p.lapMultiplier && p.lapMultiplier > 2) {
+    // Elevated RA pressure: higher E, reduced A
+    eVel = Math.min(0.9, eVel * 1.2);
+    aVel = Math.max(0.1, aVel * 0.8);
+  }
+
+  eVel = Math.max(0.2, Math.min(1.0, eVel));
+  aVel = Math.max(0.1, Math.min(0.6, aVel));
+  const eaRatio = eVel / aVel;
+
+  let pattern = "Normal";
+  if (eaRatio < 0.8) pattern = "Impaired RV Relaxation";
+  else if (eaRatio > 2.0) pattern = "Elevated RA Pressure";
+  else if (p.tamponade) pattern = "Tamponade — Respiratory Variation";
+
+  const maxVelDisplay = 1.0;
+  const cycleW = W / 2;
+  const baseline = H * 0.92;
+  const velScale = (H * 0.85) / maxVelDisplay;
+
+  const eStart = 0.60, ePeak = 0.66, eDecayW = 0.04;
+  const aStart = 0.85, aPeak = 0.91, aEnd = 0.98;
+
+  let d = `M 0 ${baseline}`;
+  for (let cycle = 0; cycle < 2; cycle++) {
+    const ox = cycle * cycleW;
+    const N = 200;
+    for (let i = 0; i <= N; i++) {
+      const t = i / N;
+      const x = ox + t * cycleW;
+      let vel = 0;
+
+      if (t >= eStart && t <= eStart + 0.18) {
+        const tRel = t - ePeak;
+        if (tRel < 0) vel = eVel * Math.exp(-0.5 * Math.pow(tRel / 0.03, 2));
+        else vel = eVel * Math.exp(-tRel / eDecayW);
+      }
+      if (t >= aStart && t <= aEnd) {
+        const tRel = t - aPeak;
+        vel = Math.max(vel, aVel * Math.exp(-0.5 * Math.pow(tRel / 0.03, 2)));
+      }
+
+      const y = baseline - vel * velScale;
+      d += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
+    }
+  }
+
+  return { path: d, eVel, aVel, pattern };
+}
+
+function generateAVOutflowPath(p: Params, W: number, H: number): {
+  path: string; vmax: number; vti: number; pattern: string; shape: string;
+} {
+  const { preload, afterload, contractility, heartRate } = p;
+  const rr = 60 / heartRate;
+
+  // AV outflow: systolic envelope
+  // Vmax driven by SV and LVOT area (simplified)
+  const sv = Math.max(15, (80 + preload * 1.2) - Math.max(20, (80 + preload * 1.2) - ((80 + preload * 1.2) - 20) * (contractility / 100) * 0.75));
+  let vmax = 0.8 + (sv - 50) * 0.012 + (contractility - 50) * 0.008;
+
+  // AS: elevated Vmax, late-peaking (tardus parvus)
+  let shape = "normal"; // "normal" | "tardus" | "dynamic"
+  if (p.lvaoGradient && p.lvaoGradient > 20) {
+    vmax = Math.min(5.5, 1.5 + p.lvaoGradient * 0.065);
+    shape = "tardus"; // late-peaking, rounded
+  } else if (p.hcmGradient && p.hcmGradient > 30) {
+    // HCM: dagger-shaped (early peak, mid-systolic notch, late spike)
+    shape = "dynamic";
+    vmax = Math.min(4.5, 1.2 + p.hcmGradient * 0.055);
+  } else if (p.pulseWidthFactor && p.pulseWidthFactor > 1.5) {
+    // AR: increased SV → higher Vmax
+    vmax = Math.min(2.5, vmax * 1.3);
+  }
+
+  vmax = Math.max(0.6, Math.min(5.5, vmax));
+
+  // VTI approximation: area under the envelope
+  const ejectionFrac = 0.30;
+  const vti = vmax * ejectionFrac * rr * 0.6 * 100; // rough cm
+
+  let pattern = "Normal LVOT Flow";
+  if (shape === "tardus") pattern = `Aortic Stenosis — Vmax ${vmax.toFixed(1)} m/s`;
+  else if (shape === "dynamic") pattern = "HCM — Dynamic LVOT Obstruction";
+  else if (vmax > 2.0) pattern = "Elevated LVOT Velocity";
+
+  const maxVelDisplay = Math.max(2.5, vmax * 1.2);
+  const cycleW = W / 2;
+  const baseline = H * 0.92;
+  const velScale = (H * 0.85) / maxVelDisplay;
+
+  // Systolic ejection: AVO at ~0.05, AVC at ~0.35 of cycle
+  const avoT = 0.05, avcT = 0.35;
+  const ejW = avcT - avoT;
+
+  let d = `M 0 ${baseline}`;
+  for (let cycle = 0; cycle < 2; cycle++) {
+    const ox = cycle * cycleW;
+    const N = 200;
+    for (let i = 0; i <= N; i++) {
+      const t = i / N;
+      const x = ox + t * cycleW;
+      let vel = 0;
+
+      if (t >= avoT && t <= avcT) {
+        const frac = (t - avoT) / ejW;
+        if (shape === "normal") {
+          // Smooth triangular with slight asymmetry (peak at ~40% of ejection)
+          vel = vmax * Math.sin(frac * Math.PI);
+        } else if (shape === "tardus") {
+          // Late-peaking: peak at ~65% of ejection, rounded
+          const peakFrac = 0.65;
+          if (frac < peakFrac) vel = vmax * Math.pow(frac / peakFrac, 1.5);
+          else vel = vmax * Math.pow((1 - frac) / (1 - peakFrac), 1.2);
+        } else if (shape === "dynamic") {
+          // HCM dagger: early peak, mid-systolic notch, late spike
+          const earlyPeak = vmax * 0.55 * Math.sin(frac * Math.PI * 2.5);
+          const latePeak = frac > 0.5 ? vmax * Math.pow((frac - 0.5) / 0.5, 0.7) * Math.sin((frac - 0.5) * Math.PI / 0.5) : 0;
+          vel = Math.max(0, earlyPeak + latePeak * 0.8);
+        }
+        vel = Math.max(0, vel);
+      }
+
+      const y = baseline - vel * velScale;
+      d += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
+    }
+  }
+
+  return { path: d, vmax, vti: Math.round(vti), pattern, shape };
+}
+
+// ---- DOPPLER DISPLAY COMPONENT ----
+
+function DopplerTracing({
+  title, subtitle, pathData, color, annotations, W = 520, H = 140
+}: {
+  title: string;
+  subtitle: string;
+  pathData: string;
+  color: string;
+  annotations: { x: number; y: number; label: string; sub?: string }[];
+  W?: number;
+  H?: number;
+}) {
+  return (
+    <div className="bg-[#0a1628] rounded-xl overflow-hidden border border-[#1e3a5f]">
+      {/* Header */}
+      <div className="flex items-center justify-between px-3 py-2 border-b border-[#1e3a5f]">
+        <span className="text-xs font-bold text-white" style={{ fontFamily: "Merriweather, serif" }}>{title}</span>
+        <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold" style={{ background: color + "30", color }}>{subtitle}</span>
+      </div>
+      {/* SVG canvas */}
+      <div className="relative">
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: H }}>
+          {/* Grid lines */}
+          {[0.25, 0.5, 0.75].map(f => (
+            <line key={f} x1={0} y1={H * (1 - f * 0.85)} x2={W} y2={H * (1 - f * 0.85)}
+              stroke="#1e3a5f" strokeWidth={0.5} strokeDasharray="4 4" />
+          ))}
+          {/* Cycle dividers */}
+          {[0.5, 1.0].map(f => (
+            <line key={f} x1={W * f} y1={0} x2={W * f} y2={H}
+              stroke="#1e3a5f" strokeWidth={0.8} strokeDasharray="2 4" />
+          ))}
+          {/* Baseline */}
+          <line x1={0} y1={H * 0.92} x2={W} y2={H * 0.92} stroke="#2a4a6f" strokeWidth={1} />
+          {/* Waveform fill */}
+          <path d={pathData + ` L ${W} ${H * 0.92} L 0 ${H * 0.92} Z`}
+            fill={color + "25"} stroke="none" />
+          {/* Waveform stroke */}
+          <path d={pathData} fill="none" stroke={color} strokeWidth={1.8} strokeLinejoin="round" />
+          {/* Velocity scale labels */}
+          <text x={4} y={H * 0.12} fill="#4a7fa5" fontSize={8} fontFamily="JetBrains Mono, monospace">peak</text>
+          <text x={4} y={H * 0.5} fill="#2a4a6f" fontSize={7} fontFamily="JetBrains Mono, monospace">mid</text>
+          {/* Annotations */}
+          {annotations.map((a, i) => (
+            <g key={i}>
+              <line x1={a.x} y1={a.y} x2={a.x} y2={H * 0.92} stroke={color} strokeWidth={0.8} strokeDasharray="2 2" opacity={0.6} />
+              <circle cx={a.x} cy={a.y} r={2.5} fill={color} opacity={0.9} />
+              <text x={a.x + 4} y={a.y - 4} fill="white" fontSize={8} fontFamily="JetBrains Mono, monospace" fontWeight="bold">{a.label}</text>
+              {a.sub && <text x={a.x + 4} y={a.y + 6} fill={color} fontSize={7} fontFamily="JetBrains Mono, monospace">{a.sub}</text>}
+            </g>
+          ))}
+        </svg>
+      </div>
+    </div>
+  );
+}
+
 // ---- MAIN COMPONENT ----
 
 const PRESETS: { label: string; values: Params; color: string }[] = [
@@ -547,6 +856,26 @@ export default function HemodynamicsLab() {
   const context = getClinicalContext(params);
 
   const rr_ms = Math.round((60 / params.heartRate) * 1000);
+
+  // Doppler tracing data — computed once per params change
+  const W_DOPPLER = 520, H_DOPPLER = 140;
+  const mitralData = useMemo(() => generateMitralInflowPath(params, W_DOPPLER, H_DOPPLER), [params]);
+  const tricuspidData = useMemo(() => generateTricuspidInflowPath(params, W_DOPPLER, H_DOPPLER), [params]);
+  const avOutflowData = useMemo(() => generateAVOutflowPath(params, W_DOPPLER, H_DOPPLER), [params]);
+
+  // Annotation positions: peak of E wave (cycle 1, ~66% of half-width)
+  const mitralAnnotations = [
+    { x: W_DOPPLER * 0.5 * 0.66, y: H_DOPPLER * 0.92 - mitralData.eVel * (H_DOPPLER * 0.85 / 1.5), label: `E ${mitralData.eVel.toFixed(2)} m/s` },
+    { x: W_DOPPLER * 0.5 * 0.91, y: H_DOPPLER * 0.92 - mitralData.aVel * (H_DOPPLER * 0.85 / 1.5), label: `A ${mitralData.aVel.toFixed(2)} m/s`, sub: `E/A ${mitralData.eaRatio.toFixed(1)}` },
+  ];
+  const tricuspidAnnotations = [
+    { x: W_DOPPLER * 0.5 * 0.66, y: H_DOPPLER * 0.92 - tricuspidData.eVel * (H_DOPPLER * 0.85 / 1.0), label: `E ${tricuspidData.eVel.toFixed(2)} m/s` },
+    { x: W_DOPPLER * 0.5 * 0.91, y: H_DOPPLER * 0.92 - tricuspidData.aVel * (H_DOPPLER * 0.85 / 1.0), label: `A ${tricuspidData.aVel.toFixed(2)} m/s` },
+  ];
+  const maxVelAV = Math.max(2.5, avOutflowData.vmax * 1.2);
+  const avAnnotations = [
+    { x: W_DOPPLER * 0.5 * (avOutflowData.shape === "tardus" ? 0.25 : 0.20), y: H_DOPPLER * 0.92 - avOutflowData.vmax * (H_DOPPLER * 0.85 / maxVelAV), label: `Vmax ${avOutflowData.vmax.toFixed(1)} m/s`, sub: `VTI ~${avOutflowData.vti} cm` },
+  ];
 
   return (
     <Layout>
@@ -898,6 +1227,106 @@ export default function HemodynamicsLab() {
           </div>
         </div>
 
+        {/* ---- DOPPLER TRACINGS ---- */}
+        <div className="mt-6">
+          <div className="flex items-center gap-2 mb-3">
+            <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Representative Doppler Tracings</h2>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-200 font-semibold">Live — updates with hemodynamic state</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Mitral Inflow */}
+            <div>
+              <DopplerTracing
+                title="Mitral Inflow (PW)"
+                subtitle={mitralData.pattern}
+                pathData={mitralData.path}
+                color="#4ade80"
+                annotations={mitralAnnotations}
+                W={W_DOPPLER} H={H_DOPPLER}
+              />
+              <div className="mt-2 grid grid-cols-3 gap-1 text-[10px]">
+                <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
+                  <div className="font-bold text-gray-700">E wave</div>
+                  <div className="font-mono text-green-700">{mitralData.eVel.toFixed(2)} m/s</div>
+                </div>
+                <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
+                  <div className="font-bold text-gray-700">A wave</div>
+                  <div className="font-mono text-green-700">{mitralData.aVel.toFixed(2)} m/s</div>
+                </div>
+                <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
+                  <div className="font-bold text-gray-700">E/A</div>
+                  <div className={`font-mono font-bold ${mitralData.eaRatio < 0.8 ? "text-orange-600" : mitralData.eaRatio > 2.0 ? "text-red-600" : "text-green-700"}`}>{mitralData.eaRatio.toFixed(1)}</div>
+                </div>
+                <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100 col-span-3">
+                  <div className="font-bold text-gray-700">Dec. Time</div>
+                  <div className="font-mono text-blue-700">{mitralData.decTime} ms</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Tricuspid Inflow */}
+            <div>
+              <DopplerTracing
+                title="Tricuspid Inflow (PW)"
+                subtitle={tricuspidData.pattern}
+                pathData={tricuspidData.path}
+                color="#60a5fa"
+                annotations={tricuspidAnnotations}
+                W={W_DOPPLER} H={H_DOPPLER}
+              />
+              <div className="mt-2 grid grid-cols-3 gap-1 text-[10px]">
+                <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
+                  <div className="font-bold text-gray-700">E wave</div>
+                  <div className="font-mono text-blue-700">{tricuspidData.eVel.toFixed(2)} m/s</div>
+                </div>
+                <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
+                  <div className="font-bold text-gray-700">A wave</div>
+                  <div className="font-mono text-blue-700">{tricuspidData.aVel.toFixed(2)} m/s</div>
+                </div>
+                <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
+                  <div className="font-bold text-gray-700">E/A</div>
+                  <div className={`font-mono font-bold ${(tricuspidData.eVel/tricuspidData.aVel) > 2.0 ? "text-red-600" : "text-blue-700"}`}>{(tricuspidData.eVel/tricuspidData.aVel).toFixed(1)}</div>
+                </div>
+                <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100 col-span-3">
+                  <div className="font-bold text-gray-700">Est. RVSP</div>
+                  <div className={`font-mono font-bold ${hemo.rvsp > 40 ? "text-red-600" : "text-blue-700"}`}>{Math.round(hemo.rvsp)} mmHg</div>
+                </div>
+              </div>
+            </div>
+
+            {/* AV Outflow */}
+            <div>
+              <DopplerTracing
+                title="Aortic Valve Outflow (CW)"
+                subtitle={avOutflowData.pattern}
+                pathData={avOutflowData.path}
+                color="#f97316"
+                annotations={avAnnotations}
+                W={W_DOPPLER} H={H_DOPPLER}
+              />
+              <div className="mt-2 grid grid-cols-3 gap-1 text-[10px]">
+                <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
+                  <div className="font-bold text-gray-700">Vmax</div>
+                  <div className={`font-mono font-bold ${avOutflowData.vmax > 4.0 ? "text-red-600" : avOutflowData.vmax > 3.0 ? "text-orange-600" : "text-orange-700"}`}>{avOutflowData.vmax.toFixed(1)} m/s</div>
+                </div>
+                <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
+                  <div className="font-bold text-gray-700">VTI</div>
+                  <div className="font-mono text-orange-700">~{avOutflowData.vti} cm</div>
+                </div>
+                <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
+                  <div className="font-bold text-gray-700">Shape</div>
+                  <div className={`font-mono font-bold ${avOutflowData.shape === "tardus" ? "text-red-600" : avOutflowData.shape === "dynamic" ? "text-orange-600" : "text-green-700"}`}>
+                    {avOutflowData.shape === "tardus" ? "Tardus" : avOutflowData.shape === "dynamic" ? "Dagger" : "Normal"}
+                  </div>
+                </div>
+                <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100 col-span-3">
+                  <div className="font-bold text-gray-700">Mean Gradient (est.)</div>
+                  <div className={`font-mono font-bold ${4 * avOutflowData.vmax ** 2 > 40 ? "text-red-600" : 4 * avOutflowData.vmax ** 2 > 20 ? "text-orange-600" : "text-green-700"}`}>{Math.round(4 * avOutflowData.vmax ** 2 * 0.6)} mmHg</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
       </div>
     </Layout>
