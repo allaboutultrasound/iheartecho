@@ -680,7 +680,7 @@ export default function PediatricNavigator() {
           </div>
           <Link href="/scan-coach?tab=chd" className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold text-white whitespace-nowrap transition-all hover:opacity-90" style={{ background: "#189aa1" } as React.CSSProperties}>
               <Scan className="w-4 h-4" />
-              Pediatric CHD Scan Coach
+              Scan Coach
           </Link>
         </div>
 
