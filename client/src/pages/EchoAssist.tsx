@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — Echo Guideline Engine
+  iHeartEcho — EchoAssist
   Instant ASE-guideline severity classification from raw measurements.
   Domains: AS, MS, AR, MR, LV Systolic, Diastolic, Strain (LV/RV/LA), RV Function, PA Pressure
   Brand: Teal #189aa1, Aqua #4ad9e0
@@ -828,7 +828,7 @@ function PulmonaryHTNEngine() {
 }
 
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
-export default function GuidelineEngine() {
+export default function EchoAssist() {
   return (
     <Layout>
       <div className="container py-6">
@@ -840,7 +840,7 @@ export default function GuidelineEngine() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-              Echo Guideline Engine
+              EchoAssist
             </h1>
             <p className="text-sm text-gray-500 mt-0.5">
               Enter raw measurements — get instant ASE/AHA/ACC guideline-based severity classifications, calculated values, and the specific criteria met.
