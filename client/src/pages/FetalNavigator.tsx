@@ -369,7 +369,7 @@ function FetalProtocolChecklist() {
 }
 
 export default function FetalNavigator() {
-  const [view, setView] = useState<"3vv" | "4ch" | "zscore" | "scancoach" | "protocol">("3vv");
+  const [view, setView] = useState<"3vv" | "4ch" | "zscore" | "protocol">("3vv");
   const [selected, setSelected] = useState<number | null>(null);
 
   const findings = view === "3vv" ? findings3VV : findingsFC;
@@ -391,7 +391,6 @@ export default function FetalNavigator() {
             { id: "3vv", label: "3-Vessel View" },
             { id: "4ch", label: "4-Chamber View" },
             { id: "zscore", label: "Z-Score Calculator" },
-            { id: "scancoach", label: "Scan Coach" },
             { id: "protocol", label: "Protocol Checklist" },
           ].map(tab => (
             <button key={tab.id} onClick={() => { setView(tab.id as any); setSelected(null); }}
@@ -404,9 +403,7 @@ export default function FetalNavigator() {
           ))}
         </div>
 
-        {view === "scancoach" ? (
-          <FetalScanCoach />
-        ) : view === "protocol" ? (
+        {view === "protocol" ? (
           <FetalProtocolChecklist />
         ) : view === "zscore" ? (
           <ZScoreCalc />
