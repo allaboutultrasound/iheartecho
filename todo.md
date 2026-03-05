@@ -67,3 +67,11 @@
 - [x] Lung POCUS Navigator — route /lung-pocus, sidebar wired
 - [x] eFAST POCUS Navigator — route /efast, sidebar wired
 - [x] POCUS Home dashboard cards added
+
+## User Profiles in Hub (In Progress)
+- [ ] Extend users table with profile fields (avatar, bio, credentials, location, website, joinedAt)
+- [ ] tRPC profile procedures: getProfile, updateProfile, getPublicProfile, getUserPosts
+- [ ] Public member profile page (UserProfile.tsx) — avatar, cover, bio, credentials, post history
+- [ ] Edit profile modal — avatar upload to S3, bio, credentials, location, website
+- [ ] Profile avatars shown on Hub post cards with link to public profile
+- [ ] Profile link from DM panel and community member list
