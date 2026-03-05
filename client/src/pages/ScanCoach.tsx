@@ -38,6 +38,11 @@ const CDN = {
   // RVOT Short Axis and LV Short Axis echo images
   echoRvotShortAxis:  "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/isfAjCTuYjsHReYQ.jpg?Expires=1804219532&Signature=fTuq02MnH3H~M~o8rHrajM6KsQFo8QFxhTrJicJgWGBgQqogk5W2RNzdpZD-HSzm~72XMiX-QezkuA5F0Xh3qYw5G8gcuXFDgKkffwJ~D0NMPA3B1R9jrzcug6GISttUzixKypx08uCQI1sBWexnSftDBTZU5FY9SxKcYGvl9sOcmumOYTDYt-G0UJcDZlvyqk9Bcc~EUa1WJF0C72paowdHA0zHCSrdr2piwSTCPfR~e69Pqk3Vt6puv2MiFv9iRyuiPUR0dt048QOR4xmsSkkn0-qz922e6EwxCWGyzxpXJN86bGk4nFrisdVbyDeIcCwbdstqEBYCnQXMsdr7CA__&Key-Pair-Id=K2HSFNDJXOU9YS",
   echoLvShortAxis:    "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/iNdFjSbLMjrYmvFc.png?Expires=1804219532&Signature=mrXbXlZqr1wk~7Q8f8p4sDFBy5XUwuGawzmQMD~LLw~eL-aUZ16Q9nnUA-C1XH0FV-o8OnlZmmh2HnBRrXWsNxt0S8KApPFNCFQ~obHlr8GL45rSkUkAEZH6~GSOwCIKXXtYnd~GDVn7m2V4zQgb~pqKwlxbt~W2qCdkk6DzDfRb8ZzxsDUpm4EFXmd-wwrxSbxC5HJIsGScWFjkJoDPajig5rBfP5CurgXOT6DTAxQ6wDNs4z2qgw54VAL5CWwevn3DWmyZl7E4-J2CDKzgOv6uEvepchkZA59y1~XCmzWTDNyipCXJERomlfp6PM4fzLsHsDucr6mzPnbnpRVoTw__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  // TTE transducer positioning images
+  ttePlax:       "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/vRjcMyvkOCWAequN.png?Expires=1804222380&Signature=NWgX7uVrRSRBade2VRC0MWHTBNpywddX1pCEI~~h3SLCstwhhux9hCUKQmvvtfcLG7Z2D7GdqNCCPUaM~om-xlZNnTkn0HzYIZklmrBLfGeJ3bP9gMz9WB2dyAkkQkL3WYGsljt0--JyIHtZg4zPJiB-Mh7JE-QR6XHWIqcJyrA1zBCM6Z2BhZBsTpt9KsXl0i0g-4oWRIHJP2WyARvlfhV771fVetgyFVfOwPurKMuCqWD0cv7BsIsVjW7IN3govRGy7wzbLPZ6XagNLHeVLnSmauWDf72UMOt8assXc54i5P9bAcl6OkyyUQl7T81L~XulcH6XciNqgW7HeufZxQ__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  ttePsax:       "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/KXjnLvWWXfPggLKt.png?Expires=1804222380&Signature=jFekXBPNtNbWSrPX-ctcbTj9ahRkfxj6cQX9aUTWw-dXug2ATf1wAZPG~Y2mDj00jzEMqhP-s5JXyWHqKdyhlZCoiMA0DjMTlUGCznbCwvLjOlCe9G1AR1lJ0VQCmCD6KdUTN2MX5Ts9U6T4GFwOA0Le9pKIsn9Xu4clO3UgTd8TfOm0937gohN2dVm6jeddwd-do9RS-dfcO6F6WyQsvvQfP-7ao837HhjuDVB3hCbq~TOKtN0nr5d713L2zV0HEnFTXOxA34CBOt21JOLomU7-6A94h4WS9wPfj-EODS-efcPNygf4-Bc4N3qohKLxqK6WBi4BJgzQsMi~bysmLw__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  tteSubcostal:  "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/szLIUWyZOqjzZEWM.png?Expires=1804222380&Signature=CFd~QwKBjB0mzLnLBbP3fadCkYErEeYqNAW7fxFIDMqPX7QlVMV~lBzXh9xpT4HU7JiFW~DJg2i4brFkq8iwRZ88V5dFs-M153xb1qo0FSu8FzcYEO0JX~5WP9zzXvrp5JfXveNi0vGWyXhj84uutRztWMbdO3-xhfnHKIGF9OE-ZJwnttHhnjDsp0mTED1gMlbn9iJZIAsFTShCAj~LPf1l1HA2zihJNnafkUWU4nbD24bCESHEDRYiVAMHf9IT3BXhhh9J75faa6wYGyb516kCRp5NYPksLtVe3QJ1T-oUffKD2QtvRGBhKj089Eo~ZJR8LrOA3jwd3hz9S3r0jA__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  tteSsn:        "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/pBYDLdXqRkBGWZHX.png?Expires=1804222380&Signature=kHjGMgHGDX1KhABM4dOGG66Uzw9QzvTq9nZdMbY6tloMXFZzaaR2EtFvxFdBNpyCeUcYLTYrCMmAdJoEko4onyLhI6ZmkoOrO8o2mZVyFIoerNMu5ILDtiuX4z8~D4XjhgZZ~h3Qt3r9k6ZiETDpi56KSNIcfrCXwa6uW55l-hrm0Fsdri3fH8M2RdcHfskNyrURPqxnZeVthv9ZTyjw7~cl5-LtvMFJ8YDR~DrMp79sTZ15bW64pu3j8CPDoTbbxiNdRwt7AAbhQLzLsR2KxkwxNL~6l~ZGjjRw9bXPak93wTY3k9eXOkxGehzQLco-YMp9vzq6FgD~hEaDWOmzUQ__&Key-Pair-Id=K2HSFNDJXOU9YS",
 };
 
 // ─── TTE Views ────────────────────────────────────────────────────────────────
@@ -52,6 +57,7 @@ const tteViews = [
     pitfalls: ["Foreshortening underestimates LV size", "Descending aorta mistaken for LA"],
     measurements: ["LVID (d/s)", "IVS (d)", "PW (d)", "Ao root", "LA diameter", "LVOT diameter"],
     color: "#189aa1",
+    transducerImageUrl: CDN.ttePlax,
     // SVG: anterior chest, probe at 3rd ICS LSB, notch toward right shoulder
     probeSvg: `<svg viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:200px">
       <defs><marker id="ah" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#4ad9e0"/></marker></defs>
@@ -79,6 +85,7 @@ const tteViews = [
     pitfalls: ["Bicuspid AV may appear tricuspid if not fully open", "RVOT foreshortening"],
     measurements: ["RVOT diameter", "Pulmonary valve annulus", "AV planimetry (AVA)"],
     color: "#1ba8b0",
+    transducerImageUrl: CDN.ttePsax,
     probeSvg: `<svg viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:200px">
       <defs><marker id="ah2" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#4ad9e0"/></marker></defs>
       <ellipse cx="100" cy="115" rx="82" ry="98" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
@@ -104,6 +111,7 @@ const tteViews = [
     pitfalls: ["Oblique cut gives oval LV — reposition for true circle", "Papillary muscle level vs MV level"],
     measurements: ["MVA planimetry", "LV short-axis dimensions"],
     color: "#1db6bf",
+    transducerImageUrl: CDN.ttePsax,
     probeSvg: `<svg viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:200px">
       <defs><marker id="ah3" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#4ad9e0"/></marker></defs>
       <ellipse cx="100" cy="115" rx="82" ry="98" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
@@ -128,6 +136,7 @@ const tteViews = [
     pitfalls: ["Foreshortening makes LV appear oval", "Near-field artifact from ribs"],
     measurements: ["LV EF (visual)", "Wall motion score"],
     color: "#20c4ce",
+    transducerImageUrl: CDN.ttePsax,
     probeSvg: `<svg viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:200px">
       <defs><marker id="ah4" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#4ad9e0"/></marker></defs>
       <ellipse cx="100" cy="115" rx="82" ry="98" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
@@ -222,6 +231,7 @@ const tteViews = [
     pitfalls: ["Hepatic vein mistaken for IVC", "Difficult in obese patients — try lateral decubitus"],
     measurements: ["IVC diameter", "IVC collapsibility index", "RAP estimate"],
     color: "#38e4e8",
+    transducerImageUrl: CDN.tteSubcostal,
     probeSvg: `<svg viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:200px">
       <defs><marker id="ah8" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#4ad9e0"/></marker></defs>
       <!-- Abdomen outline -->
@@ -246,6 +256,7 @@ const tteViews = [
     pitfalls: ["Difficult in short necks or COPD", "Probe pressure may cause discomfort"],
     measurements: ["Aortic arch diameter", "Descending aorta diastolic flow reversal"],
     color: "#4ad9e0",
+    transducerImageUrl: CDN.tteSsn,
     probeSvg: `<svg viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:200px">
       <defs><marker id="ah9" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#4ad9e0"/></marker></defs>
       <!-- Neck/chest outline -->
@@ -571,7 +582,15 @@ export default function ScanCoach() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Probe diagram */}
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-                  <h3 className="font-bold text-sm text-gray-700 mb-3" style={{ fontFamily: "Merriweather, serif" }}>Probe Position</h3>
+                  <h3 className="font-bold text-sm text-gray-700 mb-3" style={{ fontFamily: "Merriweather, serif" }}>Transducer Positioning</h3>
+                  {(selectedTTE as any).transducerImageUrl ? (
+                    <img
+                      src={(selectedTTE as any).transducerImageUrl}
+                      alt={`${selectedTTE.name} transducer position`}
+                      className="w-full rounded-lg object-contain mb-3"
+                      style={{ maxHeight: "200px" }}
+                    />
+                  ) : null}
                   <div dangerouslySetInnerHTML={{ __html: selectedTTE.probeSvg }} />
                   <div className="mt-3 space-y-1.5 text-xs text-gray-600">
                     <div><span className="font-semibold text-gray-500">Position: </span>{selectedTTE.probePosition}</div>
