@@ -304,7 +304,7 @@ const fetalViews = [
     doppler: "PW Doppler in LVOT for velocity. Color Doppler to confirm antegrade flow from LV to aorta.",
     pitfalls: ["Overangulation brings in RVOT instead of LVOT", "Aorta appears to arise from RV in TGA — confirm with RVOT view"],
     redFlags: ["Aorta arising from RV (TGA)", "Overriding aorta (TOF)", "Aortic stenosis — turbulent LVOT flow", "Small ascending aorta (HLHS)"],
-    color: "#7c3aed",
+    color: "#0e7490",
   },
   {
     id: "rvot", step: 4,
@@ -318,7 +318,7 @@ const fetalViews = [
     doppler: "PW Doppler in MPA for velocity. Color Doppler to confirm antegrade flow from RV to PA.",
     pitfalls: ["PA arising from LV in TGA — confirm with LVOT view", "Pulmonary stenosis — turbulent flow in MPA"],
     redFlags: ["PA arising from LV (TGA)", "Small PA (pulmonary atresia/stenosis)", "PA = Ao size (abnormal)", "Absent PA bifurcation"],
-    color: "#059669",
+    color: "#0d9488",
   },
   {
     id: "rvot-bifurcation", step: 5,
@@ -332,7 +332,7 @@ const fetalViews = [
     doppler: "Color Doppler at bifurcation; assess RPA and LPA flow",
     pitfalls: ["Absent bifurcation may indicate pulmonary atresia with intact IVS", "Markedly asymmetric branch PAs suggest peripheral PS or absent PA"],
     redFlags: ["Absent bifurcation (pulmonary atresia with intact IVS)", "Markedly asymmetric branch PAs", "Confluent PAs absent (severe TOF with absent PA)"],
-    color: "#d97706",
+    color: "#14b8a6",
   },
   {
     id: "3vv-ductal", step: 6,
@@ -346,7 +346,7 @@ const fetalViews = [
     doppler: "Color Doppler across all three vessels to confirm antegrade flow. PW in MPA for velocity.",
     pitfalls: ["Only 2 vessels visible — may be at wrong level", "PA and Ao equal in size — abnormal", "Vessels not in a line — offset suggests abnormality"],
     redFlags: ["PA < Ao (pulmonary stenosis/atresia)", "Absent SVC", "Vessels not in a line", "Reversed flow in PA (pulmonary atresia)"],
-    color: "#be185d",
+    color: "#22d3ee",
   },
   {
     id: "3vt", step: 7,
@@ -360,7 +360,7 @@ const fetalViews = [
     doppler: "Color Doppler to confirm flow direction in all vessels.",
     pitfalls: ["Right aortic arch: arch curves to the right of trachea — abnormal", "Double aortic arch: vessels on both sides of trachea", "Trachea not identified — may be at wrong level"],
     redFlags: ["Right aortic arch (curves right of trachea)", "Double aortic arch", "Aberrant subclavian artery", "Vascular ring encircling trachea"],
-    color: "#1d4ed8",
+    color: "#06b6d4",
   },
   {
     id: "lbvc", step: 8,
@@ -377,7 +377,35 @@ const fetalViews = [
     color: "#189aa1",
   },
   {
-    id: "bicaval", step: 9,
+    id: "lv-short-axis", step: 9,
+    name: "LV Short Axis View", abbr: "LV SAX",
+    description: "A transverse view at the mid-ventricular level showing the left ventricle in short axis. The LV appears circular with the RV wrapping around it anteriorly. Used to assess ventricular size, wall thickness, and systolic function.",
+    imageUrl: CDN.echoLvShortAxis,
+    echoImageUrl: CDN.echoLvShortAxis,
+    structures: ["LV (circular)", "RV (crescent-shaped, anterior)", "Interventricular septum (IVS)", "Posterior wall", "Papillary muscles (at mid level)"],
+    normalFindings: ["LV appears circular in cross-section", "RV wraps around anterior LV", "Symmetric wall thickness", "Normal papillary muscle position at mid level", "Concentric contraction on M-mode"],
+    technique: "Transverse plane at mid-ventricular level. Tilt caudally from 4CV until LV appears circular with papillary muscles visible. Avoid oblique cuts that make LV appear oval.",
+    doppler: "Not typically used; M-mode through LV at papillary muscle level for fractional shortening",
+    pitfalls: ["Oblique cut makes LV appear oval — foreshortens measurements", "Papillary muscles may be confused for VSD or mass", "Difficult to obtain in late gestation due to fetal position"],
+    redFlags: ["Asymmetric wall thickness (hypertrophic cardiomyopathy)", "Dilated LV (cardiomyopathy, severe AR/MR)", "Echogenic foci in LV (normal variant vs. cardiac rhabdomyoma)", "Hypoplastic LV (HLHS)"],
+    color: "#0e9488",
+  },
+  {
+    id: "rvot-short-axis", step: 10,
+    name: "RVOT Short Axis View", abbr: "RVOT SAX",
+    description: "A transverse view at the base of the heart showing the RVOT, pulmonary valve, and main pulmonary artery with its bifurcation into RPA and LPA. Also shows the aortic root in cross-section and the ductus arteriosus.",
+    imageUrl: CDN.echoRvotShortAxis,
+    echoImageUrl: CDN.echoRvotShortAxis,
+    structures: ["RV", "RVOT", "Pulmonary valve", "Main PA", "RPA", "LPA", "Aortic root (AO, circular)", "RA", "Ductus Arteriosus (DA)"],
+    normalFindings: ["Aortic root appears circular (AO) with PA wrapping around it", "PA bifurcates into RPA and LPA", "DA connects PA to descending aorta", "RV and RA visible", "PA diameter ≥ Ao diameter in normal fetus"],
+    technique: "Transverse plane at base of heart. Tilt cranially from 3VV level. The aortic root appears as a circle with the RVOT/PA wrapping around it anteriorly — the classic 'circle and sausage' appearance.",
+    doppler: "Color/PW Doppler across pulmonary valve; CW for peak velocity; assess DA flow direction",
+    pitfalls: ["PA may appear smaller than Ao if oblique — ensure true transverse cut", "DA may be confused with LPA — trace vessel to descending aorta to confirm"],
+    redFlags: ["PA smaller than Ao (pulmonary stenosis/atresia, TOF)", "Absent pulmonary valve", "Reversed DA flow (critical pulmonary obstruction)", "Absent LPA or RPA"],
+    color: "#0891b2",
+  },
+  {
+    id: "bicaval", step: 11,
     name: "Bicaval View", abbr: "Bicaval",
     description: "A sagittal or near-sagittal view through the right side of the fetus showing both the SVC and IVC draining into the right atrium. Best view for assessing venous return and foramen ovale.",
     imageUrl: CDN.bicaval,
@@ -388,10 +416,10 @@ const fetalViews = [
     doppler: "Color Doppler to confirm SVC and IVC flow into RA; assess foramen ovale shunting",
     pitfalls: ["SVC absent (left SVC only — persistent LSVC)", "IVC interruption with azygos continuation (polysplenia)", "Dilated coronary sinus (persistent LSVC)"],
     redFlags: ["SVC absent (persistent LSVC only)", "IVC interruption with azygos continuation (polysplenia)", "Dilated coronary sinus (persistent LSVC)", "ASD/sinus venosus defect"],
-    color: "#64748b",
+    color: "#0891b2",
   },
   {
-    id: "aortic-arch", step: 10,
+    id: "aortic-arch", step: 12,
     name: "Aortic Arch View (Long Axis)", abbr: "Ao Arch",
     description: "A sagittal view through the left side of the fetus showing the aortic arch in long axis. The classic 'candy cane' shape confirms left aortic arch. Three head and neck vessels arise from the arch.",
     imageUrl: CDN.aorticArch,
@@ -402,10 +430,10 @@ const fetalViews = [
     doppler: "CW/PW at aortic isthmus; retrograde or absent diastolic flow = coarctation/critical obstruction",
     pitfalls: ["Ductal arch may be confused with aortic arch — ductal arch is more vertical (hockey stick)", "Only 2 head vessels visible suggests aberrant subclavian artery"],
     redFlags: ["Right aortic arch (mirror image — 22q11, TOF)", "Coarctation — narrowing at isthmus", "Interrupted aortic arch — gap in arch", "Only 2 head vessels (aberrant subclavian)"],
-    color: "#c2410c",
+    color: "#0e9488",
   },
   {
-    id: "ductal-arch", step: 11,
+    id: "ductal-arch", step: 13,
     name: "Long Axis Ductal Arch View", abbr: "Ductal Arch",
     description: "A sagittal view showing the ductus arteriosus connecting the pulmonary artery to the descending aorta. The ductal arch has a characteristic 'hockey stick' shape — more vertical and acute than the aortic arch.",
     imageUrl: CDN.ductalArch,
@@ -416,7 +444,7 @@ const fetalViews = [
     doppler: "PW/Color Doppler in ductus; reversed or absent flow = critical right heart obstruction",
     pitfalls: ["Ductal arch confused with aortic arch — DA is more anterior and vertical", "Absent DA may indicate pulmonary hypertension or premature closure"],
     redFlags: ["Absent ductus (isolated ductal absence — rare)", "Constricted ductus (NSAIDs, indomethacin exposure)", "Reversed ductal flow (critical pulmonary stenosis/atresia)", "Aneurysmal ductus"],
-     color: "#0891b2",
+    color: "#189aa1",
   },
 ];
 
@@ -606,8 +634,8 @@ export default function ScanCoach() {
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="px-4 py-3 border-b border-gray-100">
                   <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>Fetal Echo Views</h3>
-                  <p className="text-xs text-gray-400 mt-0.5">11-view sweep sequence</p>
-                  <p className="text-[10px] text-gray-400 mt-0.5 italic">Lara Williams, ACS, RDCS, FASE</p>
+                  <p className="text-xs text-gray-400 mt-0.5">13-view sweep sequence</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5 italic">Lara Williams, BS, ACS, RCCS, RDCS, RVT, RDMS, FASE</p>
                 </div>
                 {/* Sweep overview image */}
                 <div className="p-2">
@@ -767,7 +795,7 @@ export default function ScanCoach() {
 
               {/* Copyright */}
               <div className="text-xs text-gray-400 text-center py-2">
-                Clinical images © All About Ultrasound, Inc. / iHeartEcho — Lara Williams, ACS, RDCS, FASE. Educational use only.
+                Clinical images © All About Ultrasound, Inc. / iHeartEcho — Lara Williams, BS, ACS, RCCS, RDCS, RVT, RDMS, FASE. Educational use only.
               </div>
             </div>
           </div>
