@@ -7,6 +7,7 @@
 import { useState, useRef, useEffect } from "react";
 import Layout from "@/components/Layout";
 import { Scan, Heart, Info, Eye, AlertTriangle, ChevronRight } from "lucide-react";
+import PedCHDCoach from "@/components/PedCHDCoach";
 
 // ─── CDN image URLs (clinical images from iHeartEcho curriculum) ───
 const CDN = {
@@ -590,7 +591,7 @@ function FetalViewCard({ view, isSelected, onClick }: { view: typeof fetalViews[
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function ScanCoach() {
-  const [activeTab, setActiveTab] = useState<"tte" | "fetal">("tte");
+  const [activeTab, setActiveTab] = useState<"tte" | "fetal" | "chd">("tte");
   const [selectedTTE, setSelectedTTE] = useState(tteViews[0]);
   const [selectedFetal, setSelectedFetal] = useState(fetalViews[0]);
    const fetalDetailRef = useRef<HTMLDivElement>(null);
@@ -627,7 +628,7 @@ export default function ScanCoach() {
 
         {/* Tab switcher */}
         <div className="flex gap-2 mb-6">
-          {(["tte", "fetal"] as const).map(tab => (
+          {(["tte", "fetal", "chd"] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -636,7 +637,7 @@ export default function ScanCoach() {
                 ? { background: "#189aa1", color: "white" }
                 : { background: "white", color: "#38e4e8", border: "1px solid #e2e8f0" }}
             >
-              {tab === "tte" ? "Adult TTE" : "Fetal Echo"}
+              {tab === "tte" ? "Adult TTE" : tab === "fetal" ? "Fetal Echo" : "Pediatric CHD"}
             </button>
           ))}
         </div>
@@ -991,6 +992,8 @@ export default function ScanCoach() {
             </div>
           </div>
         )}
+        {/* ─── PEDIATRIC CHD TAB ─── */}
+        {activeTab === "chd" && <PedCHDCoach />}
       </div>
     </Layout>
   );
