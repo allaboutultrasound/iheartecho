@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — eFAST POCUS Navigator
+  iHeartEcho — eFAST POCUS Navigator™
   Extended Focused Assessment with Sonography in Trauma
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
@@ -200,7 +200,7 @@ export default function EfastPOCUS() {
           </div>
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-              eFAST POCUS Navigator
+              eFAST POCUS Navigator™
             </h1>
             <p className="text-sm text-gray-500 mt-0.5">
               Extended FAST · RUQ · LUQ · Pelvis · Cardiac · Bilateral Thorax (Pneumothorax)

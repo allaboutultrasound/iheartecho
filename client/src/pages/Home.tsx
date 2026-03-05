@@ -110,7 +110,7 @@ const modules = [
   {
     path: "/cardiac-pocus",
     icon: Radio,
-    title: "Cardiac POCUS Navigator",
+    title: "Cardiac POCUS Navigator™",
     description: "Bedside cardiac POCUS protocol — PLAX, PSAX, A4C, subxiphoid, IVC views with clinical interpretation and EchoAssist™ integration.",
     badge: "POCUS",
     color: BRAND,
@@ -118,7 +118,7 @@ const modules = [
   {
     path: "/lung-pocus",
     icon: Wind,
-    title: "Lung POCUS Navigator",
+    title: "Lung POCUS Navigator™",
     description: "BLUE protocol, 8-zone lung assessment, B-line scoring, pleural effusion, pneumothorax detection with clinical decision pathways.",
     badge: "POCUS",
     color: BRAND,
@@ -126,7 +126,7 @@ const modules = [
   {
     path: "/efast",
     icon: Shield,
-    title: "eFAST POCUS Navigator",
+    title: "eFAST POCUS Navigator™",
     description: "Extended FAST exam — RUQ, LUQ, pelvis, cardiac, bilateral thorax windows with free fluid grading and pneumothorax assessment.",
     badge: "POCUS",
     color: BRAND,

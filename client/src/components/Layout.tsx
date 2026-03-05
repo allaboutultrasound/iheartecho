@@ -47,6 +47,14 @@ const navGroups = [
     ],
   },
   {
+    label: "POCUS",
+    items: [
+      { path: "/cardiac-pocus", label: "Cardiac POCUS Navigator™", icon: Radio },
+      { path: "/lung-pocus", label: "Lung POCUS Navigator™", icon: Wind },
+      { path: "/efast", label: "eFAST POCUS Navigator™", icon: Shield },
+    ],
+  },
+  {
     label: "Calculators & Tools",
     items: [
       { path: "/scan-coach", label: "ScanCoach™", icon: Scan },
@@ -55,14 +63,6 @@ const navGroups = [
       { path: "/calculator", label: "Echo Calculator", icon: Calculator },
       { path: "/cases", label: "Case Lab", icon: BookOpen },
       { path: "/report", label: "Report Builder", icon: FileText },
-    ],
-  },
-  {
-    label: "POCUS",
-    items: [
-      { path: "/cardiac-pocus", label: "Cardiac POCUS Navigator", icon: Radio },
-      { path: "/lung-pocus", label: "Lung POCUS Navigator", icon: Wind },
-      { path: "/efast", label: "eFAST POCUS Navigator", icon: Shield },
     ],
   },
   {

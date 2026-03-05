@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — Lung POCUS Navigator
+  iHeartEcho — Lung POCUS Navigator™
   BLUE Protocol · 8-Zone Assessment · B-lines · Pleural Sliding · Consolidation
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
@@ -224,7 +224,7 @@ export default function LungPOCUS() {
           </div>
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-              Lung POCUS Navigator
+              Lung POCUS Navigator™
             </h1>
             <p className="text-sm text-gray-500 mt-0.5">
               6-Zone Assessment · BLUE Protocol · B-lines · Pleural Sliding · Consolidation · Effusion

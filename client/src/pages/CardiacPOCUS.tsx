@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — Cardiac POCUS Navigator
+  iHeartEcho — Cardiac POCUS Navigator™
   RUSH Protocol · Goal-directed cardiac ultrasound · Hemodynamic assessment
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
@@ -215,7 +215,7 @@ export default function CardiacPOCUS() {
           </div>
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-              Cardiac POCUS Navigator
+              Cardiac POCUS Navigator™
             </h1>
             <p className="text-sm text-gray-500 mt-0.5">
               Goal-directed cardiac ultrasound · RUSH Protocol · Hemodynamic assessment in critical care and emergency settings
