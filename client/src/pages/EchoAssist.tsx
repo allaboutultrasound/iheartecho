@@ -1002,6 +1002,227 @@ function RVFunctionEngine() {
   );
 }
 
+// ─── TRICUSPID REGURGITATION ENGINE ─────────────────────────────────────────
+function TricuspidRegurgEngine() {
+  const [vcTr, setVcTr] = useState("");
+  const [eroaTr, setEroaTr] = useState("");
+  const [regVolTr, setRegVolTr] = useState("");
+  const [pisaRadiusTr, setPisaRadiusTr] = useState("");
+  const [trVmax, setTrVmax] = useState("");
+  const [rvBasal, setRvBasal] = useState("");
+  const [raArea, setRaArea] = useState("");
+  const [ivcDiam, setIvcDiam] = useState("");
+  const [ivcCollapse, setIvcCollapse] = useState("");
+  const [hepaticVein, setHepaticVein] = useState<"" | "normal" | "blunted" | "reversal">("" );
+  const [jetArea, setJetArea] = useState("");
+
+  // PISA EROA at 28 cm/s aliasing (standard for TR)
+  const pisaEroaTr = has(pisaRadiusTr, trVmax)
+    ? (2 * Math.PI * Math.pow(n(pisaRadiusTr), 2) * 28) / (n(trVmax) * 100)
+    : null;
+
+  // RVSP from TR Vmax (simplified Bernoulli)
+  const rvsp = has(trVmax) ? 4 * Math.pow(n(trVmax), 2) : null;
+
+  // RAP estimate from IVC
+  const rapEstimate = (): number | null => {
+    if (!has(ivcDiam)) return null;
+    const d = n(ivcDiam);
+    if (d <= 21 && ivcCollapse === "normal") return 3;   // ≤21 mm + >50% collapse → 3 mmHg
+    if (d <= 21 && ivcCollapse === "blunted") return 8;  // ≤21 mm + <50% collapse → 8 mmHg
+    if (d > 21 && ivcCollapse === "normal") return 8;    // >21 mm + >50% collapse → 8 mmHg
+    if (d > 21 && ivcCollapse === "blunted") return 15;  // >21 mm + <50% collapse → 15 mmHg
+    return null;
+  };
+  const rap = rapEstimate();
+  const rvsWithRap = rvsp !== null && rap !== null ? rvsp + rap : null;
+
+  // ─── ASE/AHA 2021 Severity Grading ───────────────────────────────────────────
+  // Criteria: vena contracta, EROA (PISA), regurgitant volume, jet area, hepatic vein flow
+  // Mild: VC <7 mm, EROA <0.20 cm², RVol <30 mL, jet area <5 cm²
+  // Moderate: VC 7–13 mm, EROA 0.20–0.39 cm², RVol 30–44 mL
+  // Severe: VC ≥14 mm, EROA ≥0.40 cm², RVol ≥45 mL, systolic reversal in hepatic veins
+  // Massive/Torrential (Hahn 2019 / ESC 2021): VC ≥21 mm, EROA ≥0.75 cm², RVol ≥45 mL
+  const getSeverity = (): { sev: Severity; label: string; criteria: string[]; note?: string } => {
+    const anyData = has(vcTr) || has(eroaTr) || has(regVolTr) || has(pisaRadiusTr) || has(jetArea) || hepaticVein !== "";
+    if (!anyData) return { sev: "indeterminate", label: "Insufficient data", criteria: ["Enter vena contracta, EROA, regurgitant volume, or jet area to classify TR severity"] };
+
+    const criteria: string[] = [];
+    let sevScore = 0; // 0=normal/trace, 1=mild, 2=moderate, 3=severe, 4=massive
+    let votes = 0;
+
+    // Vena contracta (most reliable single parameter)
+    if (has(vcTr)) {
+      const vc = n(vcTr);
+      criteria.push(`Vena contracta = ${vcTr} mm`);
+      if (vc >= 21) { criteria.push("VC ≥21 mm → massive/torrential"); sevScore = Math.max(sevScore, 4); votes++; }
+      else if (vc >= 14) { criteria.push("VC 14–20 mm → severe"); sevScore = Math.max(sevScore, 3); votes++; }
+      else if (vc >= 7) { criteria.push("VC 7–13 mm → moderate"); sevScore = Math.max(sevScore, 2); votes++; }
+      else { criteria.push("VC <7 mm → mild"); sevScore = Math.max(sevScore, 1); votes++; }
+    }
+
+    // EROA (entered directly or from PISA)
+    const effectiveEroa = n(eroaTr) || pisaEroaTr || 0;
+    if (pisaEroaTr) criteria.push(`EROA by PISA = ${pisaEroaTr.toFixed(2)} cm²`);
+    if (has(eroaTr)) criteria.push(`EROA (entered) = ${eroaTr} cm²`);
+    if (effectiveEroa > 0) {
+      if (effectiveEroa >= 0.75) { criteria.push("EROA ≥0.75 cm² → massive/torrential"); sevScore = Math.max(sevScore, 4); votes++; }
+      else if (effectiveEroa >= 0.40) { criteria.push("EROA 0.40–0.74 cm² → severe"); sevScore = Math.max(sevScore, 3); votes++; }
+      else if (effectiveEroa >= 0.20) { criteria.push("EROA 0.20–0.39 cm² → moderate"); sevScore = Math.max(sevScore, 2); votes++; }
+      else { criteria.push("EROA <0.20 cm² → mild"); sevScore = Math.max(sevScore, 1); votes++; }
+    }
+
+    // Regurgitant volume
+    if (has(regVolTr)) {
+      const rv = n(regVolTr);
+      criteria.push(`Regurgitant volume = ${regVolTr} mL`);
+      if (rv >= 45) { criteria.push("RVol ≥45 mL → severe"); sevScore = Math.max(sevScore, 3); votes++; }
+      else if (rv >= 30) { criteria.push("RVol 30–44 mL → moderate"); sevScore = Math.max(sevScore, 2); votes++; }
+      else { criteria.push("RVol <30 mL → mild"); sevScore = Math.max(sevScore, 1); votes++; }
+    }
+
+    // Jet area (color Doppler — supportive only)
+    if (has(jetArea)) {
+      const ja = n(jetArea);
+      criteria.push(`TR jet area = ${jetArea} cm²`);
+      if (ja >= 10) { criteria.push("Jet area ≥10 cm² → severe (supportive)"); sevScore = Math.max(sevScore, 3); }
+      else if (ja >= 5) { criteria.push("Jet area 5–9 cm² → moderate (supportive)"); sevScore = Math.max(sevScore, 2); }
+      else { criteria.push("Jet area <5 cm² → mild (supportive)"); }
+    }
+
+    // Hepatic vein flow
+    if (hepaticVein !== "") {
+      if (hepaticVein === "reversal") {
+        criteria.push("Hepatic vein systolic flow reversal → severe/massive TR");
+        sevScore = Math.max(sevScore, 3);
+        votes++;
+      } else if (hepaticVein === "blunted") {
+        criteria.push("Hepatic vein systolic flow blunting → at least moderate TR");
+        sevScore = Math.max(sevScore, 2);
+        votes++;
+      } else {
+        criteria.push("Hepatic vein systolic flow normal → mild/no TR");
+      }
+    }
+
+    // RV/RA size context
+    if (has(rvBasal)) {
+      const rv = n(rvBasal);
+      criteria.push(`RV basal diameter = ${rvBasal} mm${rv > 41 ? " → dilated (>41 mm)" : " → normal"}`);
+    }
+    if (has(raArea)) {
+      const ra = n(raArea);
+      criteria.push(`RA area = ${raArea} cm²${ra > 18 ? " → dilated (>18 cm²)" : " → normal"}`);
+    }
+    if (rvsp !== null) criteria.push(`TR Vmax = ${trVmax} m/s → RVSP gradient = ${rvsp.toFixed(0)} mmHg`);
+    if (rvsWithRap !== null) criteria.push(`Estimated RVSP (with RAP ${rap} mmHg) = ${rvsWithRap.toFixed(0)} mmHg`);
+    if (has(ivcDiam)) criteria.push(`IVC diameter = ${ivcDiam} mm${n(ivcDiam) > 21 ? " → dilated" : " → normal"}`);
+
+    let sev: Severity;
+    let label: string;
+    if (sevScore === 0) { sev = "normal"; label = "Trace / No Significant Tricuspid Regurgitation"; }
+    else if (sevScore === 1) { sev = "mild"; label = "Mild Tricuspid Regurgitation"; }
+    else if (sevScore === 2) { sev = "moderate"; label = "Moderate Tricuspid Regurgitation"; }
+    else if (sevScore === 3) { sev = "severe"; label = "Severe Tricuspid Regurgitation"; }
+    else { sev = "critical"; label = "Massive / Torrential Tricuspid Regurgitation"; }
+
+    return { sev, label, criteria };
+  };
+
+  const result = getSeverity();
+
+  const getTrEchoAssist = (): EchoAssistOutput | null => {
+    if (result.sev === "indeterminate") return null;
+
+    const vcStr = has(vcTr) ? ` (vena contracta ${vcTr} mm)` : "";
+    const eroaStr = pisaEroaTr ? `, EROA ${pisaEroaTr.toFixed(2)} cm²` : has(eroaTr) ? `, EROA ${eroaTr} cm²` : "";
+    const rvStr = has(regVolTr) ? `, regurgitant volume ${regVolTr} mL` : "";
+    const rvsStr = rvsWithRap ? ` Estimated RVSP ${rvsWithRap.toFixed(0)} mmHg.` : rvsp ? ` TR Vmax ${trVmax} m/s (RVSP gradient ${rvsp.toFixed(0)} mmHg).` : "";
+
+    if (result.sev === "normal") return {
+      suggests: "No hemodynamically significant tricuspid regurgitation identified. Trace TR is a normal physiologic finding in up to 65–85% of healthy adults.",
+      tip: "Optimize color Doppler gain and set Nyquist limit to 50–60 cm/s when assessing TR. The RV-focused apical 4-chamber view and parasternal RV inflow view provide the best windows for TR jet assessment."
+    };
+
+    if (result.sev === "mild") return {
+      suggests: `Findings are consistent with mild tricuspid regurgitation${vcStr}. RV volume loading is minimal at rest.`,
+      note: "Mild TR is generally well tolerated and does not require intervention. Annual echocardiographic follow-up is appropriate if RV dilation or elevated PA pressure is present.",
+      tip: "Vena contracta width is the most reproducible single parameter for TR grading. Measure at the narrowest portion of the TR jet in the parasternal RV inflow or apical 4-chamber view, perpendicular to the jet direction."
+    };
+
+    if (result.sev === "moderate") return {
+      suggests: `Findings are consistent with moderate tricuspid regurgitation${vcStr}${eroaStr}${rvStr}.${rvsStr} RV volume overload is present and warrants clinical monitoring.`,
+      note: "Moderate TR requires echocardiographic surveillance every 1–2 years. Assess for RV dilation (basal diameter >41 mm), RA dilation (area >18 cm²), and IVC plethora as markers of hemodynamic significance. Concomitant left-sided valve disease or pulmonary hypertension may accelerate progression.",
+      tip: "Hepatic vein pulsed-wave Doppler is a key supportive parameter. Systolic flow blunting (S/D ratio <1) indicates at least moderate TR. Systolic flow reversal is specific for severe TR. Sample from the right hepatic vein 1–2 cm from the IVC junction."
+    };
+
+    if (result.sev === "severe") return {
+      suggests: `Findings are consistent with severe tricuspid regurgitation${vcStr}${eroaStr}${rvStr}.${rvsStr} Significant RV volume overload is present. Tricuspid valve intervention should be considered in symptomatic patients or those undergoing concomitant left-sided surgery.`,
+      note: "Severe TR with symptoms (fatigue, dyspnea, hepatic congestion, peripheral edema) or progressive RV dilation is a Class IIa indication for tricuspid valve repair or replacement. Isolated severe TR surgery carries higher risk — early intervention before RV dysfunction develops is preferred.",
+      tip: "In severe TR, the PISA method may underestimate EROA due to flow convergence zone flattening. Use a combination of vena contracta, EROA, regurgitant volume, and hepatic vein flow reversal to confirm severity. 3D color Doppler vena contracta area is the most accurate method when available."
+    };
+
+    // Massive/Torrential
+    return {
+      suggests: `Findings are consistent with massive/torrential tricuspid regurgitation${vcStr}${eroaStr}${rvStr}.${rvsStr} Severe RV volume overload with likely right heart failure physiology. Urgent cardiology evaluation is warranted.`,
+      note: "Massive TR (VC ≥21 mm, EROA ≥0.75 cm²) is associated with advanced right heart failure, hepatic congestion, and poor prognosis. Tricuspid valve intervention — surgical or transcatheter (TEER, replacement) — should be urgently considered. Assess for RV-PA uncoupling (TAPSE/RVSP <0.55 mm/mmHg).",
+      tip: "In massive TR, the RV may appear severely dilated with paradoxical septal motion. Assess RV systolic function carefully — a low TAPSE in the setting of massive TR may reflect volume-mediated dysfunction rather than intrinsic myocardial disease. Post-intervention RV recovery is possible with timely repair."
+    };
+  };
+
+  return (
+    <EngineSection id="engine-tr" title="Tricuspid Regurgitation" subtitle="Vena contracta · EROA · PISA · Regurgitant volume · Hepatic vein flow" defaultOpen={false}>
+      <div className="grid grid-cols-2 gap-3">
+        <NumInput label="Vena Contracta" value={vcTr} onChange={setVcTr} unit="mm" placeholder="sev ≥14" hint="(sev ≥14 mm)" />
+        <NumInput label="EROA" value={eroaTr} onChange={setEroaTr} unit="cm²" placeholder="sev ≥0.40" />
+        <NumInput label="Regurgitant Volume" value={regVolTr} onChange={setRegVolTr} unit="mL" placeholder="sev ≥45" />
+        <NumInput label="PISA Radius" value={pisaRadiusTr} onChange={setPisaRadiusTr} unit="cm" placeholder="e.g. 0.8" hint="(at 28 cm/s alias)" />
+        <NumInput label="TR Vmax" value={trVmax} onChange={setTrVmax} unit="m/s" placeholder="nl <2.8" hint="(for RVSP)" />
+        <NumInput label="TR Jet Area" value={jetArea} onChange={setJetArea} unit="cm²" placeholder="sev ≥10" hint="(supportive)" />
+        <NumInput label="RV Basal Diameter" value={rvBasal} onChange={setRvBasal} unit="mm" placeholder="nl <41" />
+        <NumInput label="RA Area" value={raArea} onChange={setRaArea} unit="cm²" placeholder="nl <18" />
+        <NumInput label="IVC Diameter" value={ivcDiam} onChange={setIvcDiam} unit="mm" placeholder="nl ≤21" />
+      </div>
+
+      {/* IVC collapse and hepatic vein selectors */}
+      <div className="grid grid-cols-2 gap-3 mt-3">
+        <div>
+          <label className="block text-xs font-semibold text-gray-600 mb-1">IVC Collapse with Sniff</label>
+          <select
+            value={ivcCollapse}
+            onChange={e => setIvcCollapse(e.target.value as "" | "normal" | "blunted")}
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none bg-white focus:ring-2 focus:ring-[#189aa1]/30 focus:border-[#189aa1]"
+          >
+            <option value="">— select —</option>
+            <option value="normal">&gt;50% collapse (normal)</option>
+            <option value="blunted">&lt;50% collapse (blunted)</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-gray-600 mb-1">Hepatic Vein Systolic Flow</label>
+          <select
+            value={hepaticVein}
+            onChange={e => setHepaticVein(e.target.value as "" | "normal" | "blunted" | "reversal")}
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none bg-white focus:ring-2 focus:ring-[#189aa1]/30 focus:border-[#189aa1]"
+          >
+            <option value="">— select —</option>
+            <option value="normal">Normal systolic flow</option>
+            <option value="blunted">Systolic flow blunting</option>
+            <option value="reversal">Systolic flow reversal</option>
+          </select>
+        </div>
+      </div>
+
+      {pisaEroaTr && <p className="text-xs text-gray-400 mt-2">PISA-derived EROA (28 cm/s): {pisaEroaTr.toFixed(2)} cm²</p>}
+      {rvsWithRap !== null && <p className="text-xs text-gray-400 mt-1">Estimated RVSP (TR gradient + RAP {rap} mmHg): {rvsWithRap.toFixed(0)} mmHg</p>}
+
+      <ResultCard severity={result.sev} title="Tricuspid Regurgitation Severity" value={result.label} criteria={result.criteria} />
+      <EchoAssistPanel output={getTrEchoAssist()} />
+      <p className="text-xs text-gray-400 mt-3">Reference: AHA/ACC 2021 Valvular Heart Disease Guidelines; ASE/EACVI 2017 (Zoghbi et al.); Hahn et al. JACC 2019 TR Grading</p>
+    </EngineSection>
+  );
+}
+
 // ─── PULMONARY HYPERTENSION ENGINE ────────────────────────────────────────────
 function PulmonaryHTNEngine() {
   const [trVmax, setTrVmax] = useState("");
@@ -1112,7 +1333,7 @@ export default function EchoAssist() {
               EchoAssist™
             </h1>
             <p className="text-sm text-gray-500 mt-0.5">
-              Enter raw measurements — get instant ASE/AHA/ACC guideline-based severity classifications, calculated values, and the specific criteria met.
+              Enter raw measurements — get instant ASE/AHA/ACC guideline-based severity classifications, calculated values, and the specific criteria met. Domains: AS, MS, AR, MR, TR, LV, Diastology, Strain, RV, PA Pressure.
             </p>
           </div>
         </div>
@@ -1134,6 +1355,7 @@ export default function EchoAssist() {
           <MitraStenosisEngine />
           <AorticRegurgEngine />
           <MitralRegurgEngine />
+          <TricuspidRegurgEngine />
           <RVFunctionEngine />
           <PulmonaryHTNEngine />
         </div>
@@ -1143,7 +1365,7 @@ export default function EchoAssist() {
           <p className="font-semibold text-gray-500">Guideline References</p>
           <p>• ASE 2015 Chamber Quantification (Lang et al.) | ASE 2025 LV Diastolic Function Guidelines</p>
           <p>• ASE 2025 Strain Guideline (Thomas et al.) | ASE 2015 RV Guidelines (Rudski et al.)</p>
-          <p>• AHA/ACC 2021 Valvular Heart Disease Guidelines | ASE/EACVI 2017 Valve Regurgitation (Zoghbi et al.)</p>
+          <p>• AHA/ACC 2021 Valvular Heart Disease Guidelines | ASE/EACVI 2017 Valve Regurgitation (Zoghbi et al.) | Hahn et al. JACC 2019 TR Grading</p>
           <p>• ESC/ERS 2022 Pulmonary Hypertension Guidelines | AHA/ACC 2022 Heart Failure Guidelines</p>
           <p className="pt-1">© All About Ultrasound — iHeartEcho™ | www.iheartecho.com</p>
         </div>

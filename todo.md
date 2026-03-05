@@ -46,3 +46,6 @@
 - [ ] Hub — Real-time DM notifications (polling or WebSocket)
 - [ ] Hub — Community member count tracking
 - [ ] Hub — Post reporting / manual moderation UI for admins
+
+## In Progress
+- [x] Tricuspid Regurgitation engine in EchoAssist™ — vena contracta, EROA, regurgitant volume, jet area, hepatic vein flow, TR Vmax/RVSP, RV/RA size, ASE/AHA 2021 grading, Suggests/Note/Tip output
