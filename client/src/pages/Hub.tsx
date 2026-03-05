@@ -144,7 +144,7 @@ function DisclaimerModal({ onAccept }: { onAccept: () => void }) {
         </div>
 
         <div className="text-xs text-gray-500 mb-4 bg-gray-50 rounded-lg p-3">
-          iHeartEcho Hub™ is a professional community for echo technologists, cardiologists, and students. All content is for educational and professional discussion purposes only and does not constitute medical advice.
+          iHeartEcho Hub™ is a professional community for sonographers, cardiologists, and students. All content is for educational and professional discussion purposes only and does not constitute medical advice.
         </div>
 
         <label className="flex items-start gap-3 cursor-pointer mb-5">
