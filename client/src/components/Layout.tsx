@@ -81,7 +81,8 @@ const navGroups = [
 const navItems = navGroups.flatMap(g => g.items);
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const [location] = useLocation();
+  const [rawLocation] = useLocation();
+  const location = rawLocation.split("?")[0];
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (

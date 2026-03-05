@@ -80,11 +80,11 @@ const WALL_GROUPS = [
 
 function strainColor(val: number | null): string {
   if (val === null) return "#e5e7eb"; // gray — not entered
-  if (val <= -20) return "#dc2626";   // red — normal
-  if (val <= -16) return "#f472b6";   // pink — mildly reduced
-  if (val <= -12) return "#fbcfe8";   // light pink — moderately reduced
-  if (val <= -8)  return "#93c5fd";   // light blue — mod-severely reduced
-  return "#1d4ed8";                   // dark blue — severely reduced
+  if (val <= -20) return "#16a34a";   // green — normal (≤ −20%)
+  if (val <= -16) return "#ca8a04";   // yellow — mildly reduced (−16 to −20%)
+  if (val <= -12) return "#ea580c";   // orange — moderately reduced (−12 to −16%)
+  if (val <= -8)  return "#dc2626";   // red — mod-severely reduced (−8 to −12%)
+  return "#7f1d1d";                   // dark red — severely reduced (> −8%)
 }
 
 // ─── Synthetic Strain Waveform Generator ─────────────────────────────────────
@@ -830,7 +830,9 @@ function interpretLaStrain(val: number): { severity: string; color: string; sugg
 export default function StrainNavigator() {
   // LV GLS — global and segmental
   const [lvGls, setLvGls] = useState("");
-  const [segValues, setSegValues] = useState<Record<number, number | null>>({});
+  const [segValues, setSegValues] = useState<Record<number, number | null>>(
+    () => Object.fromEntries(SEGMENTS_17.map(s => [s.id, -22])) as Record<number, number | null>
+  );
   const [selectedSeg, setSelectedSeg] = useState<number | null>(null);
   const [segInput, setSegInput] = useState("");
 
@@ -935,11 +937,11 @@ export default function StrainNavigator() {
 
   // Color legend
   const legend = [
-    { color: "#dc2626", label: "Normal (≤ −20%)" },
-    { color: "#f472b6", label: "Mildly reduced (−16 to −20%)" },
-    { color: "#fbcfe8", label: "Moderately reduced (−12 to −16%)" },
-    { color: "#93c5fd", label: "Mod-severely reduced (−8 to −12%)" },
-    { color: "#1d4ed8", label: "Severely reduced (> −8%)" },
+    { color: "#16a34a", label: "Normal (≤ −20%)" },
+    { color: "#ca8a04", label: "Mildly reduced (−16 to −20%)" },
+    { color: "#ea580c", label: "Moderately reduced (−12 to −16%)" },
+    { color: "#dc2626", label: "Mod-severely reduced (−8 to −12%)" },
+    { color: "#7f1d1d", label: "Severely reduced (> −8%)" },
     { color: "#e5e7eb", label: "Not entered" },
   ];
 
