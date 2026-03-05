@@ -86,3 +86,4 @@
 - [x] Fix Doppler waveform visibility and accurate peak annotation placement
 - [x] Move Frank-Starling engine to bottom of EchoAssist™ engine list
 - [x] Move POCUS Navigator dashboard cards to follow other navigator cards
+- [x] EchoAssist™ — all engine sections collapsed by default, hash-anchor auto-open

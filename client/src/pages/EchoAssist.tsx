@@ -5,7 +5,7 @@
   Brand: Teal #189aa1, Aqua #4ad9e0
   Fonts: Merriweather headings, Open Sans body, JetBrains Mono data
 */
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearch } from "wouter";
 import Layout from "@/components/Layout";
 import { Zap, ChevronDown, ChevronUp, Info, Lightbulb, MessageSquare, AlertCircle, TrendingUp } from "lucide-react";
@@ -93,13 +93,30 @@ function ResultCard({
 }
 
 function EngineSection({
-  title, subtitle, children, defaultOpen = true, id,
+  title, subtitle, children, defaultOpen = false, id,
 }: {
   title: string; subtitle?: string; children: React.ReactNode; defaultOpen?: boolean; id?: string;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Listen for hash-based open events dispatched by the main page
+  useEffect(() => {
+    if (!id) return;
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<string>).detail;
+      if (detail === id) {
+        setOpen(true);
+        // Scroll into view after a short delay so the section has expanded
+        setTimeout(() => ref.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+      }
+    };
+    window.addEventListener("echoassist:open", handler);
+    return () => window.removeEventListener("echoassist:open", handler);
+  }, [id]);
+
   return (
-    <div id={id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+    <div id={id} ref={ref} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
       <button
         onClick={() => setOpen(o => !o)}
         className="w-full teal-header px-5 py-3 flex items-center justify-between"
@@ -372,7 +389,7 @@ function MitraStenosisEngine() {
   };
 
   return (
-    <EngineSection id="engine-ms" title="Mitral Stenosis" subtitle="MVA · Mean gradient · Pressure half-time · PA pressure" defaultOpen={false}>
+    <EngineSection id="engine-ms" title="Mitral Stenosis" subtitle="MVA · Mean gradient · Pressure half-time · PA pressure">
       <div className="grid grid-cols-2 gap-3">
         <NumInput label="MVA (planimetry / continuity)" value={mva} onChange={setMva} unit="cm²" placeholder="nl >4.0" />
         <NumInput label="MV Mean Gradient" value={mvMg} onChange={setMvMg} unit="mmHg" placeholder="sev ≥10" />
@@ -463,7 +480,7 @@ function AorticRegurgEngine() {
   };
 
   return (
-    <EngineSection id="engine-ar" title="Aortic Regurgitation" subtitle="Vena contracta · EROA · Regurgitant volume · AR PHT" defaultOpen={false}>
+    <EngineSection id="engine-ar" title="Aortic Regurgitation" subtitle="Vena contracta · EROA · Regurgitant volume · AR PHT">
       <div className="grid grid-cols-2 gap-3">
         <NumInput label="Vena Contracta" value={venaContracta} onChange={setVenaContracta} unit="mm" placeholder="sev ≥6" hint="(sev ≥6 mm)" />
         <NumInput label="EROA" value={eroa} onChange={setEroa} unit="cm²" placeholder="sev ≥0.30" />
@@ -556,7 +573,7 @@ function MitralRegurgEngine() {
   };
 
   return (
-    <EngineSection id="engine-mr" title="Mitral Regurgitation" subtitle="Vena contracta · EROA · PISA · Regurgitant volume" defaultOpen={false}>
+    <EngineSection id="engine-mr" title="Mitral Regurgitation" subtitle="Vena contracta · EROA · PISA · Regurgitant volume">
       <div className="grid grid-cols-2 gap-3">
         <NumInput label="Vena Contracta" value={vcMr} onChange={setVcMr} unit="mm" placeholder="sev ≥7" hint="(sev ≥7 mm)" />
         <NumInput label="EROA" value={eroaMr} onChange={setEroaMr} unit="cm²" placeholder="sev ≥0.40" />
@@ -972,7 +989,7 @@ function RVFunctionEngine() {
   const result = getSeverity();
 
   return (
-    <EngineSection id="engine-rv" title="RV Systolic Function" subtitle="TAPSE · S' · FAC · RV size · RVSP" defaultOpen={false}>
+    <EngineSection id="engine-rv" title="RV Systolic Function" subtitle="TAPSE · S' · FAC · RV size · RVSP">
       <div className="grid grid-cols-2 gap-3">
         <NumInput label="TAPSE" value={tapse} onChange={setTapse} unit="mm" placeholder="nl ≥17" hint="(nl ≥17)" />
         <NumInput label="RV S' (TDI)" value={rvSPrime} onChange={setRvSPrime} unit="cm/s" placeholder="nl ≥9.5" hint="(nl ≥9.5)" />
@@ -1172,7 +1189,7 @@ function TricuspidRegurgEngine() {
   };
 
   return (
-    <EngineSection id="engine-tr" title="Tricuspid Regurgitation" subtitle="Vena contracta · EROA · PISA · Regurgitant volume · Hepatic vein flow" defaultOpen={false}>
+    <EngineSection id="engine-tr" title="Tricuspid Regurgitation" subtitle="Vena contracta · EROA · PISA · Regurgitant volume · Hepatic vein flow">
       <div className="grid grid-cols-2 gap-3">
         <NumInput label="Vena Contracta" value={vcTr} onChange={setVcTr} unit="mm" placeholder="sev ≥14" hint="(sev ≥14 mm)" />
         <NumInput label="EROA" value={eroaTr} onChange={setEroaTr} unit="cm²" placeholder="sev ≥0.40" />
@@ -1269,7 +1286,7 @@ function PulmonaryHTNEngine() {
   const result = getSeverity();
 
   return (
-    <EngineSection id="engine-ph" title="Pulmonary Hypertension" subtitle="RVSP · PADP · RVOT AT/ET · IVC-based RAP" defaultOpen={false}>
+    <EngineSection id="engine-ph" title="Pulmonary Hypertension" subtitle="RVSP · PADP · RVOT AT/ET · IVC-based RAP">
       <div className="grid grid-cols-2 gap-3">
         <NumInput label="TR Vmax" value={trVmax} onChange={setTrVmax} unit="m/s" placeholder="nl <2.8" hint="(nl <2.8)" />
         <NumInput label="Estimated RAP" value={rap} onChange={setRap} unit="mmHg" placeholder="3, 5, 8, or 15" />
@@ -1320,7 +1337,20 @@ function PulmonaryHTNEngine() {
 
 // ─── FRANK-STARLING ENGINE ───────────────────────────────────────────────────
 function FrankStarlingEngine() {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<string>).detail;
+      if (detail === "engine-frank-starling") {
+        setOpen(true);
+        setTimeout(() => ref.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+      }
+    };
+    window.addEventListener("echoassist:open", handler);
+    return () => window.removeEventListener("echoassist:open", handler);
+  }, []);
   const [fsParams, setFsParams] = useState<FrankStarlingParams>({ preload: 50, afterload: 50, contractility: 50 });
 
   const contractilityLabel =
@@ -1360,7 +1390,7 @@ function FrankStarlingEngine() {
   const tip = "EchoAssist\u2122 Tip: The Frank-Starling relationship is the physiologic basis for fluid responsiveness testing (passive leg raise, fluid challenge). A >10% increase in SV or VTI with PLR predicts fluid responsiveness. Correlate with IVC collapsibility, E/e\u2019, and LVOT VTI trends.";
 
   return (
-    <div id="engine-frank-starling" className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+    <div id="engine-frank-starling" ref={ref} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
       <button
         onClick={() => setOpen(o => !o)}
         className="w-full px-5 py-3.5 flex items-center justify-between"
@@ -1450,6 +1480,17 @@ function FrankStarlingEngine() {
 
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 export default function EchoAssist() {
+  // Fire hash-based open event on mount so the matching engine auto-opens
+  useEffect(() => {
+    const hash = window.location.hash.replace("#", "");
+    if (!hash) return;
+    // Dispatch after a short delay so all engine components have mounted
+    const timer = setTimeout(() => {
+      window.dispatchEvent(new CustomEvent("echoassist:open", { detail: hash }));
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <Layout>
       <div className="container py-6">
