@@ -5,61 +5,66 @@
 */
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
-import { Calculator, Baby, ClipboardList, Activity, Scan, BookOpen, FileText, ArrowRight, Users, Award, Zap, Stethoscope, Microscope, ExternalLink } from "lucide-react";
+import { Calculator, Baby, ClipboardList, Activity, Scan, BookOpen, FileText, ArrowRight, Users, Award, Zap, Stethoscope, Microscope, ExternalLink, Heart } from "lucide-react";
 
+const BRAND = "#189aa1";
 const modules = [
   // Adult Echo
   {
     path: "/tte",
     icon: Stethoscope,
-    title: "Adult TTE Navigator",
+    title: "Adult TTE EchoNavigator™",
     description: "Structured TTE protocol with view-by-view checklist, critical item tracking, and ASE reference values.",
     badge: "Adult Echo",
-    color: "#189aa1",
+    color: BRAND,
   },
   {
     path: "/tee",
     icon: Microscope,
-    title: "TEE Navigator",
+    title: "TEE EchoNavigator™",
     description: "ME, TG, and UE views with angle/depth guidance, clinical applications, and intraoperative checklist.",
-    badge: "Adult Echo",
-    color: "#0e7490",
+    badge: "Structural Heart",
+    color: BRAND,
   },
-  // Stress Echo
   {
     path: "/stress",
     icon: Zap,
-    title: "Stress Echo Navigator",
+    title: "Stress Echo EchoNavigator™",
     description: "Exercise and DSE protocols, 17-segment WMSI scorer, target HR calculator, and interpretation criteria.",
     badge: "Stress Echo",
-    color: "#d97706",
+    color: BRAND,
   },
-  // Pediatric Echo
   {
     path: "/pediatric",
     icon: Users,
-    title: "Pediatric Echo Navigator",
+    title: "Pediatric EchoNavigator™",
     description: "CHD findings, BSA Z-scores, Qp/Qs shunt estimation, segmental analysis, and neonatal hemodynamics.",
-    badge: "Pediatric Echo",
-    color: "#189aa1",
+    badge: "Congenital Heart",
+    color: BRAND,
   },
-  // Fetal Echo
   {
     path: "/fetal",
     icon: Baby,
-    title: "Fetal Echo Navigator",
+    title: "Fetal EchoNavigator™",
     description: "Fetal cardiac findings, CHD differentials, biometry Z-scores, situs, arch patterns, and scan coach.",
-    badge: "Fetal Echo",
-    color: "#db2777",
+    badge: "Congenital Heart",
+    color: BRAND,
   },
-  // Calculators & Tools
+  {
+    path: "/achd",
+    icon: Heart,
+    title: "Adult Congenital EchoNavigator™",
+    description: "ACHD lesion-specific protocols for ASD, VSD, ToF, CoA, TGA, and Fontan with ASE/AHA thresholds.",
+    badge: "Congenital Heart",
+    color: BRAND,
+  },
   {
     path: "/calculator",
     icon: Calculator,
     title: "Echo Severity Calculator",
     description: "Guideline-based interpretation for AS, MR, TR, AR, diastology with LARS, LV GLS, and RV strain.",
     badge: "ASE 2025",
-    color: "#189aa1",
+    color: BRAND,
   },
   {
     path: "/hemodynamics",
@@ -67,15 +72,15 @@ const modules = [
     title: "Hemodynamics Lab",
     description: "Adjust preload, afterload, and contractility. See PV loop changes and echo findings in real time.",
     badge: "Training",
-    color: "#059669",
+    color: BRAND,
   },
   {
     path: "/scan-coach",
     icon: Scan,
-    title: "Scan Coach",
+    title: "ScanCoach™",
     description: "Visual probe guidance with anatomy overlays, Doppler positioning, and orientation tips.",
     badge: "Training Mode",
-    color: "#189aa1",
+    color: BRAND,
   },
   {
     path: "/cases",
@@ -83,7 +88,7 @@ const modules = [
     title: "Echo Case Lab",
     description: "Daily echo cases with gamified learning — earn Echo Ninja points, streaks, and leaderboards.",
     badge: "Gamified",
-    color: "#dc2626",
+    color: BRAND,
   },
   {
     path: "/report",
@@ -91,14 +96,22 @@ const modules = [
     title: "Report Builder",
     description: "Enter measurements and generate a complete, structured echo report instantly.",
     badge: "Time Saver",
-    color: "#189aa1",
+    color: BRAND,
+  },
+  {
+    path: "/echoassist",
+    icon: Zap,
+    title: "EchoAssist™",
+    description: "Enter measurements and get instant guideline-based severity classification with clinical narrative.",
+    badge: "ASE Guidelines",
+    color: BRAND,
   },
 ];
 
 const stats = [
   { label: "Clinical Calculators", value: "20+", icon: Calculator },
   { label: "Echo Cases", value: "500+", icon: BookOpen },
-  { label: "Protocols Covered", value: "12", icon: ClipboardList },
+  { label: "Protocols Covered", value: "15", icon: ClipboardList },
   { label: "Active Users", value: "12,492+", icon: Users },
 ];
 

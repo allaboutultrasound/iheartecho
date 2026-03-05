@@ -313,7 +313,7 @@ export default function ACHDNavigator() {
             <p className="text-sm font-semibold text-[#0e7490]">Pediatric CHD Scan Coach</p>
             <p className="text-xs text-[#189aa1]">Practice CHD views and congenital echo techniques</p>
           </div>
-          <Link href="/scan-coach?tab=chd"
+          <Link href="/scan-coach?tab=achd"
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90"
             style={{ background: "linear-gradient(135deg, #189aa1, #0e7490)" }}>
             Scan Coach →

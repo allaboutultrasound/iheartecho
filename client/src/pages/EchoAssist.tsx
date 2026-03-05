@@ -6,6 +6,7 @@
   Fonts: Merriweather headings, Open Sans body, JetBrains Mono data
 */
 import { useState } from "react";
+import { useSearch } from "wouter";
 import Layout from "@/components/Layout";
 import { Zap, ChevronDown, ChevronUp, Info, Lightbulb, MessageSquare, AlertCircle } from "lucide-react";
 
@@ -91,13 +92,13 @@ function ResultCard({
 }
 
 function EngineSection({
-  title, subtitle, children, defaultOpen = true,
+  title, subtitle, children, defaultOpen = true, id,
 }: {
-  title: string; subtitle?: string; children: React.ReactNode; defaultOpen?: boolean;
+  title: string; subtitle?: string; children: React.ReactNode; defaultOpen?: boolean; id?: string;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+    <div id={id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
       <button
         onClick={() => setOpen(o => !o)}
         className="w-full teal-header px-5 py-3 flex items-center justify-between"
@@ -280,7 +281,7 @@ function AorticStenosisEngine() {
   };
 
   return (
-    <EngineSection title="Aortic Stenosis" subtitle="AVA by continuity equation · Vmax · Mean gradient · DVI">
+    <EngineSection id="engine-as" title="Aortic Stenosis" subtitle="AVA by continuity equation · Vmax · Mean gradient · DVI">
       <div className="grid grid-cols-2 gap-3">
         <NumInput label="LVOT Diameter" value={lvotD} onChange={setLvotD} unit="cm" placeholder="e.g. 2.0" hint="(nl 1.8–2.2)" />
         <NumInput label="LVOT VTI" value={lvotVti} onChange={setLvotVti} unit="cm" placeholder="e.g. 22" hint="(nl 18–25)" />
@@ -370,7 +371,7 @@ function MitraStenosisEngine() {
   };
 
   return (
-    <EngineSection title="Mitral Stenosis" subtitle="MVA · Mean gradient · Pressure half-time · PA pressure" defaultOpen={false}>
+    <EngineSection id="engine-ms" title="Mitral Stenosis" subtitle="MVA · Mean gradient · Pressure half-time · PA pressure" defaultOpen={false}>
       <div className="grid grid-cols-2 gap-3">
         <NumInput label="MVA (planimetry / continuity)" value={mva} onChange={setMva} unit="cm²" placeholder="nl >4.0" />
         <NumInput label="MV Mean Gradient" value={mvMg} onChange={setMvMg} unit="mmHg" placeholder="sev ≥10" />
@@ -461,7 +462,7 @@ function AorticRegurgEngine() {
   };
 
   return (
-    <EngineSection title="Aortic Regurgitation" subtitle="Vena contracta · EROA · Regurgitant volume · AR PHT" defaultOpen={false}>
+    <EngineSection id="engine-ar" title="Aortic Regurgitation" subtitle="Vena contracta · EROA · Regurgitant volume · AR PHT" defaultOpen={false}>
       <div className="grid grid-cols-2 gap-3">
         <NumInput label="Vena Contracta" value={venaContracta} onChange={setVenaContracta} unit="mm" placeholder="sev ≥6" hint="(sev ≥6 mm)" />
         <NumInput label="EROA" value={eroa} onChange={setEroa} unit="cm²" placeholder="sev ≥0.30" />
@@ -554,7 +555,7 @@ function MitralRegurgEngine() {
   };
 
   return (
-    <EngineSection title="Mitral Regurgitation" subtitle="Vena contracta · EROA · PISA · Regurgitant volume" defaultOpen={false}>
+    <EngineSection id="engine-mr" title="Mitral Regurgitation" subtitle="Vena contracta · EROA · PISA · Regurgitant volume" defaultOpen={false}>
       <div className="grid grid-cols-2 gap-3">
         <NumInput label="Vena Contracta" value={vcMr} onChange={setVcMr} unit="mm" placeholder="sev ≥7" hint="(sev ≥7 mm)" />
         <NumInput label="EROA" value={eroaMr} onChange={setEroaMr} unit="cm²" placeholder="sev ≥0.40" />
@@ -656,7 +657,7 @@ function LVSystolicEngine() {
   };
 
   return (
-    <EngineSection title="LV Systolic Function" subtitle="EF · Dimensions · Wall thickness · FS">
+    <EngineSection id="engine-lv" title="LV Systolic Function" subtitle="EF · Dimensions · Wall thickness · FS">
       <div className="grid grid-cols-2 gap-3">
         <NumInput label="Ejection Fraction (EF)" value={ef} onChange={setEf} unit="%" placeholder="nl ≥55" hint="(nl ≥55%)" />
         <NumInput label="Fractional Shortening" value={fs} onChange={setFs} unit="%" placeholder="nl 25–43" />
@@ -789,7 +790,7 @@ function DiastolicEngine() {
   };
 
   return (
-    <EngineSection title="Diastolic Function" subtitle="ASE 2025 diastolic function grading · E/A · e' · E/e' · LAVI · RVSP">
+    <EngineSection id="engine-diastolic" title="Diastolic Function" subtitle="ASE 2025 diastolic function grading · E/A · e' · E/e' · LAVI · RVSP">
       <div className="grid grid-cols-2 gap-3">
         <NumInput label="E velocity" value={eVel} onChange={setEVel} unit="m/s" placeholder="e.g. 0.8" />
         <NumInput label="A velocity" value={aVel} onChange={setAVel} unit="m/s" placeholder="e.g. 0.6" />
@@ -865,7 +866,7 @@ function StrainEngine() {
   const raResult = getRarsSeverity();
 
   return (
-    <EngineSection title="Myocardial Strain (ASE 2025)" subtitle="LV GLS · RV Free Wall Strain · LA Reservoir Strain · RA Reservoir Strain">
+    <EngineSection id="engine-strain" title="Myocardial Strain (ASE 2025)" subtitle="LV GLS · RV Free Wall Strain · LA Reservoir Strain · RA Reservoir Strain">
       <div className="grid grid-cols-2 gap-3">
         <NumInput label="LV GLS" value={lvGls} onChange={setLvGls} unit="%" placeholder="nl ≤ −18" hint="(nl ≤ −18%)" />
         <NumInput label="LV Strain Rate" value={lvSr} onChange={setLvSr} unit="s⁻¹" placeholder="nl ≤ −1.0" />
@@ -970,7 +971,7 @@ function RVFunctionEngine() {
   const result = getSeverity();
 
   return (
-    <EngineSection title="RV Systolic Function" subtitle="TAPSE · S' · FAC · RV size · RVSP" defaultOpen={false}>
+    <EngineSection id="engine-rv" title="RV Systolic Function" subtitle="TAPSE · S' · FAC · RV size · RVSP" defaultOpen={false}>
       <div className="grid grid-cols-2 gap-3">
         <NumInput label="TAPSE" value={tapse} onChange={setTapse} unit="mm" placeholder="nl ≥17" hint="(nl ≥17)" />
         <NumInput label="RV S' (TDI)" value={rvSPrime} onChange={setRvSPrime} unit="cm/s" placeholder="nl ≥9.5" hint="(nl ≥9.5)" />
@@ -1046,7 +1047,7 @@ function PulmonaryHTNEngine() {
   const result = getSeverity();
 
   return (
-    <EngineSection title="Pulmonary Hypertension" subtitle="RVSP · PADP · RVOT AT/ET · IVC-based RAP" defaultOpen={false}>
+    <EngineSection id="engine-ph" title="Pulmonary Hypertension" subtitle="RVSP · PADP · RVOT AT/ET · IVC-based RAP" defaultOpen={false}>
       <div className="grid grid-cols-2 gap-3">
         <NumInput label="TR Vmax" value={trVmax} onChange={setTrVmax} unit="m/s" placeholder="nl <2.8" hint="(nl <2.8)" />
         <NumInput label="Estimated RAP" value={rap} onChange={setRap} unit="mmHg" placeholder="3, 5, 8, or 15" />

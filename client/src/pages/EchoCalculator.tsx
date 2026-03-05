@@ -5,8 +5,22 @@
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
 import { useState } from "react";
+import { Link } from "wouter";
 import Layout from "@/components/Layout";
-import { Calculator, Info, ChevronDown, ChevronUp } from "lucide-react";
+import { Calculator, Info, ChevronDown, ChevronUp, Zap } from "lucide-react";
+
+function EchoAssistLink({ engine, params }: { engine: string; params: Record<string, string> }) {
+  const qs = Object.entries(params).filter(([, v]) => v !== "").map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join("&");
+  const href = `/echoassist?${qs}#engine-${engine}`;
+  return (
+    <Link href={href}
+      className="inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all hover:opacity-90 active:scale-95"
+      style={{ background: "linear-gradient(135deg, #189aa1, #0e7490)" }}>
+      <Zap className="w-3 h-3" />
+      Analyse in EchoAssist™ →
+    </Link>
+  );
+}
 
 type Severity = "normal" | "mild" | "moderate" | "severe" | "none";
 
@@ -123,6 +137,7 @@ function ASCalculator() {
               Low-flow, low-gradient AS: if AVA ≤1.0 cm² but gradient &lt;40 mmHg, consider dobutamine stress echo or CT calcium scoring.
             </div>
           )}
+          <EchoAssistLink engine="as" params={{ avVmax: vmax, avMg: mg }} />
         </ResultPanel>
       )}
     </div>
@@ -288,13 +303,13 @@ function MRCalculator() {
                 </div>
               ))}
             </div>
-          </div>
+           </div>
+          <EchoAssistLink engine="mr" params={{ eroaMr: eroa || calcEroa, regVolMr: rvol || calcRvol, vcMr: vcw }} />
         </ResultPanel>
       )}
     </div>
   );
 }
-
 // // --- TRICUSPID REGURGITATION ----------------------------------------------
 // Per ASE 2021 VHD Guidelines — Full multi-parameter grading
 function TRCalculator() {
@@ -427,6 +442,7 @@ function TRCalculator() {
           <div className="mt-3 pt-2 border-t border-[#189aa1]/10 text-xs text-gray-500">
             Severe TR: EROA ≥0.40 cm² | R.Vol ≥45 mL | VCW ≥0.7 cm | Jet area ≥10 cm² | HV systolic reversal
           </div>
+          <EchoAssistLink engine="rv" params={{ trVmax }} />
         </ResultPanel>
       )}
     </div>
@@ -579,14 +595,14 @@ function ARCalculator() {
                   <div className="text-gray-500 mt-0.5">{vals}</div>
                 </div>
               ))}
-            </div>
+             </div>
           </div>
+          <EchoAssistLink engine="ar" params={{ venaContracta: vcw, eroa, regVol: rvol, phtAr: pht }} />
         </ResultPanel>
       )}
     </div>
   );
 }
-
 // --- MVA (Pressure Half-Time) -------------------------------------------------
 function MVACalculator() {
   const [pht, setPht] = useState("");
@@ -619,6 +635,7 @@ function MVACalculator() {
             <SeverityBadge severity={getSeverity()} />
           </div>
           <div className="text-xs text-gray-500">Severe MS: MVA ≤1.0 cm² | Moderate: 1.0–1.5 cm² | Mild: &gt;1.5 cm²</div>
+          <EchoAssistLink engine="ms" params={{ mva: mvaVal }} />
         </ResultPanel>
       )}
     </div>
@@ -649,6 +666,7 @@ function RVSPCalculator() {
             <SeverityBadge severity={severity} />
           </div>
           <div className="text-xs text-gray-500">Normal ≤35 | Mild 36–40 | Moderate 41–60 | Severe &gt;60 mmHg</div>
+          <EchoAssistLink engine="ph" params={{ trVmax, rap }} />
         </ResultPanel>
       )}
     </div>
@@ -820,6 +838,7 @@ function DiastologyCalculator() {
               ⚠ LARS &lt;18% — strongly suggests elevated LV filling pressures regardless of E/A pattern.
             </div>
           )}
+          <EchoAssistLink engine="diastolic" params={{ eVel: e, aVel: a, ePrimeSep: eSeptal, ePrimeLat: eLateral, trVmax: trVel, lavi, lars }} />
         </ResultPanel>
       )}
     </div>
@@ -911,6 +930,7 @@ function LVFunctionCalculator() {
           <div className="mt-2 text-xs text-gray-400">
             GLS normal: more negative than -18% | Borderline: -16 to -18% | Abnormal: less negative than -16%
           </div>
+          <EchoAssistLink engine="lv" params={{ ef, lvGls: gls, lvSr: glsSR }} />
         </ResultPanel>
       )}
     </div>
@@ -1019,12 +1039,12 @@ function RVFunctionCalculator() {
               </div>
             )}
           </div>
+          <EchoAssistLink engine="rv" params={{ tapse, rvFac, rvFws, rvSr: rvFwsSR }} />
         </ResultPanel>
       )}
     </div>
   );
 }
-
 // --- STROKE VOLUME / CARDIAC OUTPUT ------------------------------------------
 function SVCalculator() {
   const [lvotD, setLvotD] = useState("");
@@ -1063,6 +1083,7 @@ function SVCalculator() {
               </div>
             )}
           </div>
+          <EchoAssistLink engine="lv" params={{ lvotD, lvotVti }} />
         </ResultPanel>
       )}
     </div>

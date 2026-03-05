@@ -590,12 +590,162 @@ function FetalViewCard({ view, isSelected, onClick }: { view: typeof fetalViews[
   );
 }
 
+// ─── ACHD Scan Coach Component ──────────────────────────────────────────────
+const achdLesions = [
+  {
+    id: "asd",
+    label: "ASD / PFO",
+    color: "#189aa1",
+    views: [
+      { name: "Subcostal 4-Chamber", tip: "Best window for ASD. Align beam perpendicular to the IAS. Use colour Doppler to detect L→R shunt. Measure defect diameter at widest point.", pearls: ["Rotate probe to subcostal coronal for sinus venosus ASD", "Assess IVC/SVC drainage to confirm sinus venosus type", "Check for associated partial anomalous pulmonary venous return (PAPVR)"] },
+      { name: "Parasternal Short Axis", tip: "Identify ASD location relative to AV and MV. Ostium secundum sits mid-IAS; primum is inferior near AV valves.", pearls: ["Primum ASD: look for cleft anterior MV leaflet", "Colour Doppler at 0–30° to detect sinus venosus shunt near SVC"] },
+      { name: "Apical 4-Chamber", tip: "Measure RA/RV dimensions. RV enlargement (RVD1 >4.2 cm) suggests significant shunt. Assess TR for RVSP estimation.", pearls: ["RV:LV ratio >1 indicates significant volume overload", "Assess for paradoxical septal motion (D-shaped LV in PSAX)"] },
+      { name: "Bicaval TEE View (if applicable)", tip: "Gold standard for sinus venosus ASD. Rotate to ~100–110° to see SVC–RA junction and defect rim.", pearls: ["Confirm adequate rims for device closure (>5 mm all rims)", "3D TEE for accurate sizing before device closure"] },
+    ]
+  },
+  {
+    id: "vsd",
+    label: "VSD",
+    color: "#189aa1",
+    views: [
+      { name: "Parasternal Long Axis", tip: "Perimembranous VSD visible just below the AV. Align colour box at the LVOT/IVS junction. Measure peak CW velocity to estimate RV pressure (modified Bernoulli).", pearls: ["RV systolic pressure = SBP − 4V²", "Aneurysm of the membranous septum may partially restrict the defect"] },
+      { name: "Parasternal Short Axis", tip: "Rotate through IVS to characterise VSD type: perimembranous (12 o'clock), inlet (7–8 o'clock), muscular (central), outlet/subarterial (10–11 o'clock).", pearls: ["Subarterial VSD: check for AR due to leaflet prolapse", "Multiple muscular VSDs: 'Swiss cheese' — use colour Doppler sweep"] },
+      { name: "Apical 4-Chamber", tip: "Inlet VSD best seen here. Assess AV valve attachments — inlet VSD may have common AV valve in AVSD.", pearls: ["Measure Qp/Qs if shunt fraction needed (LVOT VTI × LVOT area vs RVOT VTI × RVOT area)"] },
+      { name: "Subcostal", tip: "Useful for muscular VSDs in children. Sweep through the IVS in multiple planes with colour Doppler.", pearls: ["High-velocity L→R jet confirms restrictive VSD and normal RV pressure", "Low-velocity or bidirectional flow suggests elevated RV pressure"] },
+    ]
+  },
+  {
+    id: "tof",
+    label: "Repaired ToF",
+    color: "#189aa1",
+    views: [
+      { name: "Parasternal Long Axis", tip: "Assess LVOT for residual obstruction. Measure LV dimensions and function. Check for neo-aortic root dilation (>4.5 cm warrants surveillance).", pearls: ["Aortic root dilation is common in ToF — measure at annulus, sinuses, STJ, and ascending aorta", "LV dysfunction may develop late due to chronic RV-LV interaction"] },
+      { name: "Parasternal Short Axis — RVOT", tip: "Key view for RVOT assessment. Measure RVOT diameter and assess PR by colour and CW Doppler. PR fraction >40% is severe.", pearls: ["Pressure half-time <100 ms indicates severe PR", "Assess for residual RVOT obstruction: peak gradient >40 mmHg warrants intervention", "Look for patch dehiscence or aneurysmal RVOT"] },
+      { name: "Apical 4-Chamber", tip: "Quantify RV size (RVD1, RVD2, RVEDA) and function (FAC, TAPSE, S'). RV dilation is the primary indication for PVR.", pearls: ["RVEDVI >160 mL/m² or RVESVI >80 mL/m² are thresholds for PVR consideration", "Assess TR severity — often worsens with RV dilation"] },
+      { name: "Subcostal IVC", tip: "Assess IVC size and collapsibility for RA pressure. Hepatic vein flow reversal suggests severe TR or elevated RA pressure.", pearls: ["Dilated IVC (>2.1 cm, <50% collapse) = RA pressure ≥15 mmHg"] },
+    ]
+  },
+  {
+    id: "coa",
+    label: "Repaired CoA",
+    color: "#189aa1",
+    views: [
+      { name: "Suprasternal Notch", tip: "Primary window for CoA surveillance. Align CW Doppler with descending aorta flow. Peak velocity >3.5 m/s or mean gradient >20 mmHg suggests re-coarctation.", pearls: ["'Diastolic tail' (persistent antegrade flow in diastole) is a hallmark of significant CoA", "Measure aortic arch dimensions: transverse arch, isthmus, and descending aorta at diaphragm"] },
+      { name: "Parasternal Long Axis", tip: "Assess for associated bicuspid AV (present in 50–85% of CoA). Measure aortic root and ascending aorta dimensions.", pearls: ["Bicuspid AV + CoA: high risk for aortic dilation — measure annually", "LV hypertrophy from chronic pressure overload — assess wall thickness and mass"] },
+      { name: "Apical 5-Chamber / LVOT", tip: "Quantify LVOT obstruction if BAV with AS is present. Measure peak AV velocity and mean gradient.", pearls: ["Doppler underestimates gradient if beam is not aligned — use multiple windows"] },
+      { name: "Abdominal Aorta (subcostal)", tip: "Assess abdominal aortic flow pattern. Tardus parvus waveform (slow upstroke, reduced amplitude) confirms significant proximal obstruction.", pearls: ["Pulsatility index <1.0 in abdominal aorta suggests significant re-coarctation"] },
+    ]
+  },
+  {
+    id: "tga",
+    label: "TGA (post-Mustard/Senning)",
+    color: "#189aa1",
+    views: [
+      { name: "Apical 4-Chamber", tip: "Identify systemic RV (anterior, trabeculated, moderator band). Assess systemic RV function: FAC <35%, TAPSE <1.6 cm, or S' <10 cm/s indicates dysfunction.", pearls: ["Systemic RV failure is the leading cause of late morbidity in Mustard/Senning", "TR severity directly reflects systemic RV function — quantify with EROA and regurgitant volume"] },
+      { name: "Parasternal Short Axis", tip: "Assess baffle anatomy. Look for baffle obstruction (turbulent flow by colour Doppler) or baffle leak (colour Doppler across baffle).", pearls: ["SVC baffle obstruction: peak velocity >1.5 m/s or gradient >9 mmHg", "IVC baffle obstruction may present with hepatomegaly and ascites"] },
+      { name: "Subcostal", tip: "Best view for baffle assessment. Align colour Doppler across the atrial baffles. Assess IVC and SVC baffle flow direction and velocity.", pearls: ["Baffle leak: colour jet crossing from systemic to pulmonary venous atrium", "Contrast echo (agitated saline) can confirm baffle leak direction"] },
+      { name: "RVOT / Pulmonary Artery", tip: "The subpulmonary LV (posterior, smooth-walled) ejects into the PA. Measure LV systolic pressure via TR jet (if present) or PA pressure.", pearls: ["LV systolic pressure <50% systemic pressure = 'unprepared' LV — important if arterial switch conversion considered"] },
+    ]
+  },
+  {
+    id: "fontan",
+    label: "Fontan Circulation",
+    color: "#189aa1",
+    views: [
+      { name: "Apical 4-Chamber", tip: "Assess single ventricle (SV) size and function. Measure SV EF (biplane Simpson's or 3D). EF <50% or FAC <35% indicates dysfunction.", pearls: ["Assess AV valve regurgitation — even mild-moderate AR/MR significantly impacts Fontan physiology", "Diastolic dysfunction is common — assess E/e' ratio and LAVI"] },
+      { name: "Subcostal IVC / Fontan Conduit", tip: "Assess IVC-PA conduit (extracardiac Fontan) or lateral tunnel. Look for obstruction (peak velocity >1.5 m/s) or thrombus.", pearls: ["Fontan pressure estimated as IVC/conduit velocity + RAP", "Low pulsatility in Fontan conduit is normal — do not mistake for obstruction"] },
+      { name: "Suprasternal / Pulmonary Arteries", tip: "Assess bilateral PA flow. Asymmetric PA flow suggests branch PA stenosis. Measure peak velocity in each PA.", pearls: ["PA stenosis >50% diameter reduction warrants catheterisation", "Assess for pulmonary AV malformations if hepatic veins excluded from Fontan"] },
+      { name: "Hepatic Veins (subcostal)", tip: "Hepatic vein flow pattern reflects Fontan haemodynamics. Blunted or reversed S-wave suggests elevated Fontan pressure or AV valve regurgitation.", pearls: ["Hepatic vein pulsatility correlates with Fontan pressure", "Hepatic vein flow reversal = severe AV valve regurgitation or very elevated Fontan pressure"] },
+    ]
+  },
+];
+
+function ACHDScanCoach() {
+  const [selectedLesion, setSelectedLesion] = useState(achdLesions[0]);
+  const [selectedView, setSelectedView] = useState(achdLesions[0].views[0]);
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
+      {/* Lesion list */}
+      <div className="lg:col-span-1 space-y-2">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">ACHD Lesions</h3>
+          {achdLesions.map(lesion => (
+            <button
+              key={lesion.id}
+              onClick={() => { setSelectedLesion(lesion); setSelectedView(lesion.views[0]); }}
+              className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-semibold mb-1 transition-all"
+              style={selectedLesion.id === lesion.id
+                ? { background: "#189aa1", color: "white" }
+                : { background: "#f8fffe", color: "#189aa1", border: "1px solid #e2e8f0" }}
+            >
+              {lesion.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      {/* View detail */}
+      <div className="lg:col-span-3 space-y-4">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b" style={{ borderColor: "#189aa130", background: "#189aa108" }}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white text-xs font-bold" style={{ background: "#189aa1" }}>
+                <Heart className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>{selectedLesion.label}</h2>
+                <p className="text-xs text-gray-500">Adult Congenital Heart Disease — ScanCoach™</p>
+              </div>
+            </div>
+          </div>
+          {/* View tabs */}
+          <div className="px-5 pt-4 flex flex-wrap gap-2">
+            {selectedLesion.views.map(v => (
+              <button
+                key={v.name}
+                onClick={() => setSelectedView(v)}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                style={selectedView.name === v.name
+                  ? { background: "#189aa1", color: "white" }
+                  : { background: "#f0fbfc", color: "#189aa1", border: "1px solid #189aa130" }}
+              >
+                {v.name}
+              </button>
+            ))}
+          </div>
+          {/* View content */}
+          <div className="p-5">
+            <h3 className="text-base font-bold text-gray-800 mb-2" style={{ fontFamily: "Merriweather, serif" }}>{selectedView.name}</h3>
+            <div className="rounded-lg p-4 mb-4" style={{ background: "#f0fbfc", border: "1px solid #189aa130" }}>
+              <div className="flex items-start gap-2 mb-1">
+                <Eye className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "#189aa1" }} />
+                <p className="text-sm text-gray-700 leading-relaxed">{selectedView.tip}</p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 mb-2">
+                <Info className="w-4 h-4" style={{ color: "#189aa1" }} />
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Clinical Pearls</span>
+              </div>
+              {selectedView.pearls.map((pearl, i) => (
+                <div key={i} className="flex items-start gap-2 p-3 rounded-lg" style={{ background: "#f8fffe", border: "1px solid #189aa120" }}>
+                  <AlertTriangle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: "#189aa1" }} />
+                  <p className="text-xs text-gray-600 leading-relaxed">{pearl}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function ScanCoach() {
   const search = useSearch();
   const _params = new URLSearchParams(search);
-  const _initialTab = (_params.get("tab") as "tte" | "fetal" | "chd") || "tte";
-  const [activeTab, setActiveTab] = useState<"tte" | "fetal" | "chd">(_initialTab);
+  const _initialTab = (_params.get("tab") as "tte" | "fetal" | "chd" | "achd") || "tte";
+  const [activeTab, setActiveTab] = useState<"tte" | "fetal" | "chd" | "achd">(_initialTab);
   const [selectedTTE, setSelectedTTE] = useState(tteViews[0]);
   const [selectedFetal, setSelectedFetal] = useState(fetalViews[0]);
    const fetalDetailRef = useRef<HTMLDivElement>(null);
@@ -625,23 +775,23 @@ export default function ScanCoach() {
             <Scan className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Scan Coach</h1>
+            <h1 className="text-2xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>ScanCoach™</h1>
             <p className="text-sm text-gray-500">View-by-view scanning guides with probe positioning, anatomy, and clinical pearls</p>
           </div>
         </div>
 
         {/* Tab switcher */}
         <div className="flex gap-2 mb-6">
-          {(["tte", "fetal", "chd"] as const).map(tab => (
+          {(["tte", "fetal", "chd", "achd"] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className="px-5 py-2 rounded-lg text-sm font-semibold transition-all"
               style={activeTab === tab
                 ? { background: "#189aa1", color: "white" }
-                : { background: "white", color: "#38e4e8", border: "1px solid #e2e8f0" }}
+                : { background: "white", color: "#189aa1", border: "1px solid #e2e8f0" }}
             >
-              {tab === "tte" ? "Adult TTE" : tab === "fetal" ? "Fetal Echo" : "Pediatric CHD"}
+              {tab === "tte" ? "Adult TTE" : tab === "fetal" ? "Fetal Echo" : tab === "chd" ? "Pediatric CHD" : "Adult Congenital"}
             </button>
           ))}
         </div>
@@ -998,6 +1148,8 @@ export default function ScanCoach() {
         )}
         {/* ─── PEDIATRIC CHD TAB ─── */}
         {activeTab === "chd" && <PedCHDCoach />}
+        {/* ─── ADULT CONGENITAL TAB ─── */}
+        {activeTab === "achd" && <ACHDScanCoach />}
       </div>
     </Layout>
   );
