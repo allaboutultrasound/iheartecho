@@ -38,6 +38,17 @@ const CDN = {
   // RVOT Short Axis and LV Short Axis echo images
   echoRvotShortAxis:  "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/isfAjCTuYjsHReYQ.jpg?Expires=1804219532&Signature=fTuq02MnH3H~M~o8rHrajM6KsQFo8QFxhTrJicJgWGBgQqogk5W2RNzdpZD-HSzm~72XMiX-QezkuA5F0Xh3qYw5G8gcuXFDgKkffwJ~D0NMPA3B1R9jrzcug6GISttUzixKypx08uCQI1sBWexnSftDBTZU5FY9SxKcYGvl9sOcmumOYTDYt-G0UJcDZlvyqk9Bcc~EUa1WJF0C72paowdHA0zHCSrdr2piwSTCPfR~e69Pqk3Vt6puv2MiFv9iRyuiPUR0dt048QOR4xmsSkkn0-qz922e6EwxCWGyzxpXJN86bGk4nFrisdVbyDeIcCwbdstqEBYCnQXMsdr7CA__&Key-Pair-Id=K2HSFNDJXOU9YS",
   echoLvShortAxis:    "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/iNdFjSbLMjrYmvFc.png?Expires=1804219532&Signature=mrXbXlZqr1wk~7Q8f8p4sDFBy5XUwuGawzmQMD~LLw~eL-aUZ16Q9nnUA-C1XH0FV-o8OnlZmmh2HnBRrXWsNxt0S8KApPFNCFQ~obHlr8GL45rSkUkAEZH6~GSOwCIKXXtYnd~GDVn7m2V4zQgb~pqKwlxbt~W2qCdkk6DzDfRb8ZzxsDUpm4EFXmd-wwrxSbxC5HJIsGScWFjkJoDPajig5rBfP5CurgXOT6DTAxQ6wDNs4z2qgw54VAL5CWwevn3DWmyZl7E4-J2CDKzgOv6uEvepchkZA59y1~XCmzWTDNyipCXJERomlfp6PM4fzLsHsDucr6mzPnbnpRVoTw__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  // TTE clinical echo GIF images
+  ttePlaxEcho:       "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/ypeXYMXPaLfelPaR.gif?Expires=1804227358&Signature=AtBwHsUVNECgefJA2HP7fxWA5s0LiDTMBdBMkimZrkNJUU0YCDKbuP1dqUzvhz1Bnqjuj1HWV0fUh03u006l~D~Dmq4KWU91h4B02B1J3pMUvgVINXLDGvhu6U1PSzxN7bcK7nlUNhPvgBGBtBwZ26vN6RXch2VvcbXOAikkD8Xj5dmsu61Yb0B8fCg~kqR5Jh0hQ4GqwG-VN6eQb6IjslepdgW25NXA-1mft3EAFGXq4hmbQNnQ-ga4Dl8HlYUra0XNkFUrJoJHoVJQEt1V21t1QW-6Q0141-zLRaI0cjIRsN~AWe~DVCXQhDXMCnQyNIGqextSAxYTREFv6lMt-w__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  ttePsaxAvEcho:     "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/NTzdsQEMNJALxPvJ.gif?Expires=1804227358&Signature=jCI4eazPgWg5e3qLcdAwQlYnM5ESPwQio4nsvJuq2nuJwKb22Pf-Y5Vu4YNbuTjS60xw4sVH2OlNbqMZ9oB~bmfedpCnQpXqUP-1HVLqe79djbAUL5-ZWbTUvAP1DJL0NPmvL5QFu5vbCpbMKMmG4vWNOwPkt1TT6XmDQE0swFlzbR4sCrkTJVrTXgoXxJsIgaiQrS2IaUETcy7VJqticNzZAytCFqlM~w8rYQeH5wr179BBLyD04qWp8b3QfflPrg1NZTKFZDs4RqABXfT1YdZ6BVKJbzrIBMY4te1AAYZL8u07OZoALfn1P4u5Pe1kv-cFMunV-L5bY6QSdPLb0A__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  ttePsaxMvEcho:     "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/VHGsPBMYeDZgszFi.gif?Expires=1804227358&Signature=O~LNl84tUejHsnoeFjXvAlTNvGGAQ5RcWEzCE9fm846vSKlHuzmDM41GpjfeW-CQgRq0UwQgbzDfrxw3LpiIJNX0nEBNyZfdXY6rfhbtZLgaBMJMHT~SJBJ5Yic8sdvDG6PmteJlIvGVEvwIxRJYrEO3vU9MojMJICtVbVwIrxgkNC86W0I39ZVRXPG2LqRjUsiCE5oKyN86i8J-iHEbwfz4oW7c-SPKwofN-g3dJNp~WdkNpERE9db3HEIDsmpUoIY458DmV28Tbcy8Es4nINfNmrTDXvN247-IsOKNhRLpVFLzPVnEeOCXccnS1LY4pR8Ea2NLtkQkfgSu4mQp8Q__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  ttePsaxPmEcho:     "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/YLkJExQgjJGELqus.gif?Expires=1804227358&Signature=HMjYSHJnvSV6ALJv2siwgcnKMLCPHZzUqrKIRTGbdyDTKMeRnw-LQOIyZfqoJOpJLpcNx184mNDz2PnCJHsa1mly9UB1bqcKTW2~mIUTAE0d3hGhuzi9DiG6~BSOH-8fFyRCTExcZNB3PrQAgtXiNzSscMzZlB2MOOI3z0NiliKaMDcPhgDMA-W8V7sX~nj1P02OtOhJbGq3Vht~UIG75gcXBJBPkuiBMZzbUUlfURvip9BJTyiHDwK3GhJRzpN-9T0pjLOy62sKTUhh1NTaOkgDz1s5-pYziZtslNOV9juFwRd4V~pjNM1Qumf4hxLuNNnYZ~qiqGmHX3u57Xuehw__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  tteA4cEcho:        "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/CYtuUBnCwldHUOKl.gif?Expires=1804227358&Signature=i1u6p8CcEHyRpKSqA0ON4xk1tcz~r6onC91cbwyMN7HLRjPSx5r1QJ9QAfGxHHmzGC614HiX~5YmY3dwMtT9E7nDOTtcPlvztOvO-8S5enfKILZYRfyLRpxEmF~iNOWmzPmAoQa0bVvfBSljHn3ZLvZGla-bsWVJ5H9JoQgrYcGvrT2VaYO5JO~goS7Jr7n8MJnYPOxRqCUdSrNgNO6nwAxem0u1MthwgoHNJGktw7WOsF0jJUQQIRI6H98acfP0lfJwqM10TmzkJJKp07a4ESqeyF1md-NpAJcbArPax7XW3BeDjfUcoQPmKGDFjhZYcMwiLPHtUkeTFbQNIQ~TDw__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  tteA5cEcho:        "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/VZRlkWrCVnAMkSUc.gif?Expires=1804227358&Signature=EPRbHCg5sLC42V6uigjl6dHB-uM25EWSR7ElGbNtWBETiK0bvg7T4eQT6dRA2oqyGqSnBSCxuOSL7OLpIwftumEXewFqejLM7jf9r~dTVBVgtl6YiserOXIIxSYxMpyfK7LEt3zqrexvn5WxoCFAEmoTy20AVH2eT2uq81hfx7dq7nx~XdrX8pzND1qBE7DjjTfUA0xCd7o2QpU9wai14tjNpWrySIOGXTAPg4Fj0SjkapxhQB3r9KXWP~jrBE05VXRIHhaKdjcAZpGCUyLMnd9bT0dHGF9JNHmWU66cHKrhfKslwWPeRxHjXSlWOMmLjeF0ZSpOqKawm8qxH-D27g__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  tteA2cEcho:        "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/VKfsiIzyhAwDOrVe.gif?Expires=1804227358&Signature=kYf0cgB~VitYR8c1HF18JdXspDBhEyEdhP1Mmw1WaPoD6QEexxILN7dEFw4ilVhRc9D24BA1At4G0aEn~mya9bbs6WRM00~xunHqaTPSyTGliCHd7cZ4Z6VKWPLBZfGUq6YGDd3v-g21-T2fPbv2olJCEE1h~in5hisVNAqpBnmoHCuRU4ldvhrkl0glQGANvBu7~xGksJIacEZmmoae4RihSUesku2gCn4CpMDxRt2r1z3cCnfwyNXH6MBa51HDAT-y5OoySojcno~y8wO4MDllzeoMN2eEF~45aM4D3isrATQUm197bB1Or-1w38Bn~PPy8qMmgdqumTzAD~pUZg__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  tteA3cEcho:        "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/XRqSpXiBeGMDMJzK.gif?Expires=1804227358&Signature=Lv09H0LLuruFH8a8-Vnte8oiHGY4HOp050UG5OM-syI5tEagieRv30Fr7m44PWwAX8tFuOksXvR-wZ9wvvRRMEZ8dPcUSPkJWdffkJYp6Rb6p7pJ0Uyi70XjKs6EaU0ieTGIizIq9KzJ41ex1yX9uZdF~GRDW5BFuyy5ZIZcDwCba3acDID-BoWXGd7rvLgHSZ~4rnlbqGILGrV6dEDxLFDPeuQ3AUlGCIiV59QP6y2ktxwjxvamGdvtlP~LXUyPKRY1mDC5mboI8nzHexJp7K8AG8g~WeWSVggXtHwk98Dd3kQrHQsVtoPPH8DChV8vSMjK7ouGzWBL0a7AaTeiyA__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  tteSubcostalEcho:  "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/TxZzBPbYSMdlLzSQ.gif?Expires=1804227359&Signature=eLXIi5pZ4t5~FZWZnTCX3sj1qdU-tjlD~sSOKAsWpKhT0NvkSdficUmWm72S1nJw8a9urZ58mzcoANAyCTZ~XRqr59eV71foT-MGNrAr7es7eaWbI7ZGGxg6PjhXN~piomynwqiq-qnYofTgisoIe67urbysdHwkDYT21RwGNrZpJAtfk2v8cl7lIoW7kUsYF73Ut6sjD0j4FkOKlbPn2wfB6RF13cYmo4uGb0PS64I2xNocJrQEa40CKZYqGMC4VyZr4qyHptgQGkNGaFRwr84Z40cSfJH91uZExdKHuvVB0QNlrg1UfDhfP4twSZjfCVwoyNNMi4idt7~VGldk1A__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  tteSsnEcho:        "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/cIyFIGZOUEuabZbH.gif?Expires=1804227489&Signature=HMWkNqU3wQrheNUQuYLdlLr7CtijAQRdG3HRjI~529ib36X5NYsAZtf5qJUOKNLmHXuj59c3CNxWnd6zTL-NPCuoOagL64VEpedhQMcyg9ikP~gG66B4bI9R0dT37upiyk69Lmo~uB7xdZKx1LybkRSzFYn4sS76Pad-j5LNmMP-5~lYumDiCgYEQ3n3MkNU7QU26IUhhzUPuGyScPPoztG3t1XdRwNAxenvsOhyM2iMkh4Rk3vHgEZsdW0sCQ4o~V-A3Ef1dlMc6UrI56Cr6WxVcgH7yZEqAkpivmA8TMe~7iboFb3Br9Tmoh~WJ3FyQ3~atBLVBQWqVFju-TN9Xg__&Key-Pair-Id=K2HSFNDJXOU9YS",
   // TTE transducer positioning images
   ttePlax:       "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/vRjcMyvkOCWAequN.png?Expires=1804222380&Signature=NWgX7uVrRSRBade2VRC0MWHTBNpywddX1pCEI~~h3SLCstwhhux9hCUKQmvvtfcLG7Z2D7GdqNCCPUaM~om-xlZNnTkn0HzYIZklmrBLfGeJ3bP9gMz9WB2dyAkkQkL3WYGsljt0--JyIHtZg4zPJiB-Mh7JE-QR6XHWIqcJyrA1zBCM6Z2BhZBsTpt9KsXl0i0g-4oWRIHJP2WyARvlfhV771fVetgyFVfOwPurKMuCqWD0cv7BsIsVjW7IN3govRGy7wzbLPZ6XagNLHeVLnSmauWDf72UMOt8assXc54i5P9bAcl6OkyyUQl7T81L~XulcH6XciNqgW7HeufZxQ__&Key-Pair-Id=K2HSFNDJXOU9YS",
   ttePsax:       "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/KXjnLvWWXfPggLKt.png?Expires=1804222380&Signature=jFekXBPNtNbWSrPX-ctcbTj9ahRkfxj6cQX9aUTWw-dXug2ATf1wAZPG~Y2mDj00jzEMqhP-s5JXyWHqKdyhlZCoiMA0DjMTlUGCznbCwvLjOlCe9G1AR1lJ0VQCmCD6KdUTN2MX5Ts9U6T4GFwOA0Le9pKIsn9Xu4clO3UgTd8TfOm0937gohN2dVm6jeddwd-do9RS-dfcO6F6WyQsvvQfP-7ao837HhjuDVB3hCbq~TOKtN0nr5d713L2zV0HEnFTXOxA34CBOt21JOLomU7-6A94h4WS9wPfj-EODS-efcPNygf4-Bc4N3qohKLxqK6WBi4BJgzQsMi~bysmLw__&Key-Pair-Id=K2HSFNDJXOU9YS",
@@ -53,7 +64,8 @@ const tteViews = [
     probeOrientation: "Marker toward right shoulder (2 o'clock)",
     patientPosition: "Left lateral decubitus (left side down); arms across chest to widen intercostal spaces",
     structures: ["Aortic valve", "Mitral valve", "LV", "LA", "LVOT", "Descending aorta (posterior)"],
-    doppler: "PW Doppler at LVOT; CW through AV; Color over MV/AV",
+    doppler: "2D, Color and M-mode assessment",
+    echoImageUrl: CDN.ttePlaxEcho,
     tips: ["Tilt probe to open up LVOT — IVS should be horizontal", "Descending aorta posterior to MV confirms true PLAX", "Avoid foreshortening — LV should appear elongated, not round"],
     pitfalls: ["Foreshortening underestimates LV size", "Descending aorta mistaken for LA"],
     measurements: ["LVID (d/s)", "IVS (d)", "PW (d)", "Ao root", "LA diameter", "LVOT diameter"],
@@ -82,7 +94,8 @@ const tteViews = [
     probeOrientation: "Marker toward left shoulder (10 o'clock), rotated 90° from PLAX",
     patientPosition: "Left lateral decubitus; same position as PLAX — rotate probe without moving patient",
     structures: ["Aortic valve (3 cusps)", "RVOT", "Pulmonary valve", "LA", "RA", "Tricuspid valve", "Interatrial septum"],
-    doppler: "PW/CW through RVOT and pulmonic valve; Color over TV",
+    doppler: "2D, Color and PW/CW Doppler Valvular assessment",
+    echoImageUrl: CDN.ttePsaxAvEcho,
     tips: ["'Mercedes-Benz' sign = normal tricuspid AV", "Bicuspid AV: 2 cusps, fish-mouth opening", "Assess for ASD at this level"],
     pitfalls: ["Bicuspid AV may appear tricuspid if not fully open", "RVOT foreshortening"],
     measurements: ["RVOT diameter", "Pulmonary valve annulus", "AV planimetry (AVA)"],
@@ -109,7 +122,8 @@ const tteViews = [
     probeOrientation: "Marker toward left shoulder (10 o'clock)",
     patientPosition: "Left lateral decubitus; tilt probe inferiorly from PSAX-AV without repositioning patient",
     structures: ["Mitral valve (fish-mouth)", "LV (circular)", "Papillary muscles"],
-    doppler: "Color Doppler for MR jet origin; PHT for MVA in MS",
+    doppler: "Color Doppler at MV level, planimetry as indicated",
+    echoImageUrl: CDN.ttePsaxMvEcho,
     tips: ["Fish-mouth opening of MV — both leaflets should open symmetrically", "Identify A1/A2/A3 and P1/P2/P3 scallops for MR localization", "Planimetry of MVA in mitral stenosis"],
     pitfalls: ["Oblique cut gives oval LV — reposition for true circle", "Papillary muscle level vs MV level"],
     measurements: ["MVA planimetry", "LV short-axis dimensions"],
@@ -135,7 +149,8 @@ const tteViews = [
     probeOrientation: "Marker toward left shoulder (10 o'clock)",
     patientPosition: "Left lateral decubitus; tilt probe further inferiorly from PSAX-MV to reach papillary muscle level",
     structures: ["LV (circular)", "Anterolateral papillary muscle", "Posteromedial papillary muscle"],
-    doppler: "Wall motion assessment in all 6 mid segments",
+    doppler: "Wall motion assessment in all LV wall segments, sweep through to apex",
+    echoImageUrl: CDN.ttePsaxPmEcho,
     tips: ["Best level for regional wall motion assessment (6 segments visible)", "Anterolateral PM: LAD + LCx territory; Posteromedial PM: RCA territory", "Compare systolic thickening anterior vs inferior walls for ischemia"],
     pitfalls: ["Foreshortening makes LV appear oval", "Near-field artifact from ribs"],
     measurements: ["LV EF (visual)", "Wall motion score"],
@@ -161,7 +176,9 @@ const tteViews = [
     probeOrientation: "Marker toward left (3 o'clock)",
     patientPosition: "Left lateral decubitus; use a cardiac notch pillow if available to drop the apex closer to the chest wall",
     structures: ["LV", "RV", "LA", "RA", "Mitral valve", "Tricuspid valve", "Interatrial septum", "IVS"],
-    doppler: "PW Doppler at MV tips (E/A); TDI at annulus (e'); TV inflow; CW for TR (RVSP)",
+    doppler: "PW Doppler at MV tips (E/A); TDI at annulus (e'); Assess MV/TV inflow; CW for TR (RVSP), TAPSE, EF and chamber sizes",
+    echoImageUrl: CDN.tteA4cEcho,
+    transducerImageUrl: CDN.ttePlax,
     tips: ["Apex must be at TOP of image — rotate patient to left lateral decubitus", "Foreshortening: LV appears round — move probe laterally and/or use lower ICS", "RV should be smaller than LV; RV:LV ratio >0.6 suggests RV dilation"],
     pitfalls: ["Foreshortening is the most common error", "Apex not at top → incorrect volumes"],
     measurements: ["LV volumes (biplane Simpson)", "EF", "GLS", "E, A, DT", "e' septal/lateral", "TAPSE", "RV FAC"],
@@ -181,12 +198,41 @@ const tteViews = [
     </svg>`,
   },
   {
+    id: "a5c", name: "Apical 5-Chamber", abbr: "A5C",
+    probePosition: "Cardiac apex (5th ICS, midclavicular line)",
+    probeOrientation: "Marker toward left (3 o'clock) — same as A4C, tilt probe slightly anteriorly",
+    patientPosition: "Left lateral decubitus; same position as A4C — tilt probe anteriorly (toward sternum) to open the LVOT/AV into view",
+    structures: ["LV", "RV", "LA", "RA", "LVOT", "Aortic valve", "Mitral valve", "Tricuspid valve"],
+    doppler: "Assess AV with Color; PW in LVOT (VTI); CW through AV",
+    echoImageUrl: CDN.tteA5cEcho,
+    transducerImageUrl: CDN.ttePlax,
+    tips: ["Tilt probe anteriorly from A4C until LVOT and AV come into view", "Ideal for PW Doppler in LVOT — align cursor parallel to LVOT flow", "CW through AV for peak and mean gradients", "Color Doppler to assess AR and AS"],
+    pitfalls: ["Over-tilting anteriorly loses the 4-chamber view — find the balance", "Underalignment of Doppler cursor underestimates VTI"],
+    measurements: ["LVOT VTI", "AV peak/mean gradient", "AVA (continuity equation)"],
+    color: "#22d8de",
+    probeSvg: `<svg viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:200px">
+      <defs><marker id="ah5b" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#4ad9e0"/></marker></defs>
+      <ellipse cx="100" cy="115" rx="82" ry="98" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
+      <line x1="100" y1="28" x2="100" y2="185" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <path d="M100,122 Q58,127 44,143" fill="none" stroke="#cbd5e1" stroke-width="1.2"/>
+      <path d="M100,142 Q60,147 48,160" fill="none" stroke="#cbd5e1" stroke-width="1.2"/>
+      <!-- Probe at apex, tilted anteriorly -->
+      <rect x="86" y="155" width="16" height="28" rx="4" fill="#0891b2"/>
+      <!-- Notch toward left -->
+      <circle cx="94" cy="154" r="4" fill="#4ad9e0"/>
+      <line x1="94" y1="154" x2="116" y2="143" stroke="#4ad9e0" stroke-width="1.8" marker-end="url(#ah5b)"/>
+      <text x="100" y="218" text-anchor="middle" font-size="10" fill="#64748b" font-family="sans-serif">A4C position → tilt anteriorly to open LVOT</text>
+    </svg>`,
+  },
+  {
     id: "a2c", name: "Apical 2-Chamber", abbr: "A2C",
     probePosition: "Cardiac apex — rotate 60° CCW from A4C",
     probeOrientation: "Marker toward 12 o'clock (superior)",
     patientPosition: "Left lateral decubitus; same position as A4C — rotate probe counterclockwise without moving patient",
     structures: ["LV (anterior and inferior walls)", "LA", "Mitral valve", "LAA"],
-    doppler: "PW at MV tips; Color for MR",
+    doppler: "Assess MV with Color, Simpson's EF",
+    echoImageUrl: CDN.tteA2cEcho,
+    transducerImageUrl: CDN.ttePlax,
     tips: ["Rotate CCW from A4C until RV disappears — only LV and LA visible", "Anterior wall (top) and inferior wall (bottom) in this view", "LAA best seen with slight posterior tilt"],
     pitfalls: ["Oblique cut includes RV — rotate further CCW", "Inferior wall foreshortening"],
     measurements: ["LV volume (biplane Simpson)", "LAA assessment"],
@@ -210,7 +256,9 @@ const tteViews = [
     probeOrientation: "Marker toward 10–11 o'clock",
     patientPosition: "Left lateral decubitus; rotate probe counterclockwise from A2C to open the LVOT",
     structures: ["LV", "LA", "LVOT", "Aortic valve", "Ascending aorta"],
-    doppler: "PW in LVOT (VTI); CW through AV",
+    doppler: "Assess with Color and PW/CW as indicated",
+    echoImageUrl: CDN.tteA3cEcho,
+    transducerImageUrl: CDN.ttePlax,
     tips: ["APLAX = apical long axis — shows LVOT and AV from apex", "Align Doppler cursor parallel to LVOT flow for accurate VTI", "Anteroseptal (top) and inferolateral (bottom) walls visible"],
     pitfalls: ["Underalignment of Doppler cursor underestimates VTI by up to 30%", "Confusion with A2C"],
     measurements: ["LVOT VTI", "AVA (continuity equation)", "AV peak/mean gradient"],
@@ -235,6 +283,7 @@ const tteViews = [
     patientPosition: "Supine with knees bent (feet flat on bed) to relax abdominal muscles; ask patient to take a deep breath and hold",
     structures: ["IVC", "RA", "RV", "Atrial septum", "Pericardium", "Liver"],
     doppler: "M-mode IVC for RAP estimation; Hepatic vein PW",
+    echoImageUrl: CDN.tteSubcostalEcho,
     tips: ["IVC < 2.1 cm + >50% collapse = RAP 0–5 mmHg (normal)", "IVC > 2.1 cm + <50% collapse = RAP 15 mmHg (elevated)", "Best view for pericardial effusion and tamponade", "Ask patient to sniff for IVC collapsibility"],
     pitfalls: ["Hepatic vein mistaken for IVC", "Difficult in obese patients — try lateral decubitus"],
     measurements: ["IVC diameter", "IVC collapsibility index", "RAP estimate"],
@@ -261,6 +310,7 @@ const tteViews = [
     patientPosition: "Supine with neck extended (shoulder roll or pillow under shoulders); head turned slightly to the right",
     structures: ["Aortic arch", "Innominate artery", "Left carotid artery", "Left subclavian artery", "Descending aorta", "RPA (cross-section)"],
     doppler: "CW Doppler in descending aorta (diastolic flow reversal in AR); coarctation gradient",
+    echoImageUrl: CDN.tteSsnEcho,
     tips: ["Extend patient's neck with shoulder roll for better access", "Aortic arch visible as 'candy cane' shape", "Diastolic flow reversal in descending aorta = significant AR"],
     pitfalls: ["Difficult in short necks or COPD", "Probe pressure may cause discomfort"],
     measurements: ["Aortic arch diameter", "Descending aorta diastolic flow reversal"],
@@ -572,14 +622,32 @@ export default function ScanCoach() {
               {/* Header */}
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="px-5 py-4 border-b" style={{ borderColor: selectedTTE.color + "30", background: selectedTTE.color + "08" }}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white text-xs font-bold"
-                      style={{ background: selectedTTE.color }}>
-                      {selectedTTE.abbr}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white text-xs font-bold"
+                        style={{ background: selectedTTE.color }}>
+                        {selectedTTE.abbr}
+                      </div>
+                      <div>
+                        <h2 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>{selectedTTE.name}</h2>
+                        <p className="text-xs text-gray-500">{selectedTTE.doppler}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h2 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>{selectedTTE.name}</h2>
-                      <p className="text-xs text-gray-500">{selectedTTE.doppler}</p>
+                    {/* Navigation */}
+                    <div className="flex gap-2">
+                      {tteViews.indexOf(selectedTTE) > 0 && (
+                        <button onClick={() => setSelectedTTE(tteViews[tteViews.indexOf(selectedTTE) - 1])}
+                          className="px-3 py-1 rounded text-xs border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
+                          ← Prev
+                        </button>
+                      )}
+                      {tteViews.indexOf(selectedTTE) < tteViews.length - 1 && (
+                        <button onClick={() => setSelectedTTE(tteViews[tteViews.indexOf(selectedTTE) + 1])}
+                          className="px-3 py-1 rounded text-xs text-white transition-colors"
+                          style={{ background: selectedTTE.color }}>
+                          Next →
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -643,6 +711,23 @@ export default function ScanCoach() {
                 </div>
               </div>
 
+              {/* Echo Image */}
+              {(selectedTTE as any).echoImageUrl && (
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                  <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                    <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>Clinical Echo Image</h3>
+                    <span className="text-xs text-gray-400">All About Ultrasound · iHeartEcho</span>
+                  </div>
+                  <div className="bg-gray-950 flex justify-center items-center p-4">
+                    <img
+                      src={(selectedTTE as any).echoImageUrl}
+                      alt={`${selectedTTE.name} clinical echo`}
+                      className="max-h-72 object-contain rounded"
+                      style={{ background: "#030712" }}
+                    />
+                  </div>
+                </div>
+              )}
               {/* Tips & Pitfalls */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
@@ -674,7 +759,7 @@ export default function ScanCoach() {
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="px-4 py-3 border-b border-gray-100">
                   <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>TTE Views</h3>
-                  <p className="text-xs text-gray-400 mt-0.5">9 standard acoustic windows</p>
+                  <p className="text-xs text-gray-400 mt-0.5">10 standard acoustic windows</p>
                 </div>
                 <div className="p-3 space-y-1">
                   {tteViews.map(v => (
