@@ -185,8 +185,8 @@ const chdDefects: CHDDefect[] = [
   },
   {
     id: "cavsd",
-    name: "Complete AV Septal Defect",
-    abbr: "CAVSD",
+    name: "AV Septal Defect",
+    abbr: "AVSD",
     category: "Septal Defects",
     color: "#20c4ce",
     anatomy: "Common AV valve (5 leaflets: superior bridging, inferior bridging, left lateral, right anterosuperior, right inferior), primum ASD, and inlet VSD. Associated with Down syndrome in >50% of cases. The left AV valve (LAVV) has a cleft between the superior and inferior bridging leaflets — the primary source of regurgitation. Rastelli classification (A, B, C) based on superior bridging leaflet chordal attachment to the ventricular septum.",
