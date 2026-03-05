@@ -209,7 +209,7 @@ export default function TTENavigator() {
       <div className="container py-6">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-800 mb-1" style={{ fontFamily: "Merriweather, serif" }}>
-            Adult TTE Navigator
+            Adult TTE EchoNavigator™
           </h1>
           <p className="text-sm text-gray-500">
             Structured transthoracic echocardiography protocol with interactive checklist and ASE reference values.

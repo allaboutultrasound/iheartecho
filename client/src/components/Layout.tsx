@@ -8,7 +8,7 @@ import { Link, useLocation } from "wouter";
 import {
   Heart, Calculator, Baby, ClipboardList, Activity,
   Scan, BookOpen, FileText, Menu, X, ChevronRight,
-  Stethoscope, Microscope, Zap, Users, ExternalLink, ShoppingBag, FlaskConical
+  Stethoscope, Microscope, Zap, Users, ExternalLink, ShoppingBag, FlaskConical, Cpu, Layers
 } from "lucide-react";
 
 const navGroups = [
@@ -21,26 +21,33 @@ const navGroups = [
   {
     label: "Adult Echo",
     items: [
-      { path: "/tte", label: "TTE Navigator", icon: Stethoscope },
-      { path: "/tee", label: "TEE Navigator", icon: Microscope },
+      { path: "/tte", label: "TTE EchoNavigator™", icon: Stethoscope },
     ],
   },
   {
     label: "Stress Echo",
     items: [
-      { path: "/stress", label: "Stress Navigator", icon: Zap },
+      { path: "/stress", label: "Stress EchoNavigator™", icon: Zap },
+    ],
+  },
+  {
+    label: "Structural Heart",
+    items: [
+      { path: "/tee", label: "TEE EchoNavigator™", icon: Microscope },
+      { path: "/ice", label: "ICE EchoNavigator™", icon: Cpu },
+      { path: "/device", label: "Device EchoNavigator™", icon: Layers },
     ],
   },
   {
     label: "Pediatric Echo",
     items: [
-      { path: "/pediatric", label: "Pediatric Navigator", icon: Users },
+      { path: "/pediatric", label: "Pediatric EchoNavigator™", icon: Users },
     ],
   },
   {
     label: "Fetal Echo",
     items: [
-      { path: "/fetal", label: "Fetal Navigator", icon: Baby },
+      { path: "/fetal", label: "Fetal EchoNavigator™", icon: Baby },
     ],
   },
   {

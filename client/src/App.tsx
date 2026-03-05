@@ -20,6 +20,8 @@ import ReportBuilder from "./pages/ReportBuilder";
 import PediatricNavigator from "./pages/PediatricNavigator";
 import TTENavigator from "./pages/TTENavigator";
 import TEENavigator from "./pages/TEENavigator";
+import ICENavigator from "./pages/ICENavigator";
+import DeviceNavigator from "./pages/DeviceNavigator";
 import StressNavigator from "./pages/StressNavigator";
 import EchoAssist from "./pages/EchoAssist";
 
@@ -32,6 +34,8 @@ function Router() {
       <Route path="/pediatric" component={PediatricNavigator} />
       <Route path="/tte" component={TTENavigator} />
       <Route path="/tee" component={TEENavigator} />
+      <Route path="/ice" component={ICENavigator} />
+      <Route path="/device" component={DeviceNavigator} />
       <Route path="/stress" component={StressNavigator} />
       <Route path="/protocol" component={TTENavigatorRedirect} />
       <Route path="/hemodynamics" component={HemodynamicsLab} />

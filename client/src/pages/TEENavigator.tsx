@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — TEE Navigator
+  iHeartEcho — TEE EchoNavigator™
   Comprehensive transesophageal echo protocol:
   ME, TG, Deep TG, UE views with angle guidance, clinical applications
   Brand: Teal #189aa1, Aqua #4ad9e0
@@ -252,7 +252,7 @@ export default function TEENavigator() {
       <div className="container py-6">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-800 mb-1" style={{ fontFamily: "Merriweather, serif" }}>
-            TEE Navigator
+            TEE EchoNavigator™
           </h1>
           <p className="text-sm text-gray-500">
             Comprehensive transesophageal echocardiography protocol with ME, TG, and UE views, clinical applications, and intraoperative guidance.
