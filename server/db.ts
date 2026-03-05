@@ -395,7 +395,7 @@ export async function createLabSubscription(data: {
   const db = await getDb();
   if (!db) throw new Error("DB unavailable");
   const seats = data.plan === "enterprise" ? 999 : data.plan === "professional" ? 25 : 5;
-  const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 14-day trial
+  const trialEndsAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7-day trial
   const [row] = await db.insert(labSubscriptions).values({
     ...data,
     seats,

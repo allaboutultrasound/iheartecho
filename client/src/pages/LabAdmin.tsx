@@ -211,7 +211,7 @@ function SetupWizard({ onCreated }: { onCreated: () => void }) {
               onClick={() => createLab.mutate(form)}
             >
               {createLab.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              Start 14-Day Free Trial
+              Start 7-Day Free Trial
             </Button>
           </div>
           <p className="text-center text-xs text-gray-400">No credit card required for trial. Cancel anytime.</p>
