@@ -184,3 +184,52 @@
 - [x] Home dashboard card with IAC Accreditation badge
 - [x] Vitest tests: 19 tests for IQR procedures and quality score logic
 - [x] Total tests: 134 passing
+
+## IQR → Lab Admin Integration [IN PROGRESS]
+- [ ] DB: add labId (FK → labSubscriptions) and revieweeId (FK → users) columns to imageQualityReviews
+- [ ] DB: migration via pnpm db:push
+- [ ] DB helpers: getIQRStatsByLab, getIQRTrendByStaff, getIQRDomainBreakdownByStaff, getLabStaffWithIQRStats
+- [ ] tRPC lab.getStaffIQRStats procedure (per-staff Quality Score avg, trend, domain breakdown)
+- [ ] tRPC lab.getLabIQRSummary procedure (lab-wide monthly stats from real IQR data)
+- [ ] tRPC lab.getIQRTrend procedure (time-series Quality Score data per staff)
+- [ ] IQR form Step 1: add Lab picker (dropdown of user's labs) and Reviewee picker (staff member from that lab)
+- [ ] Lab Admin Staff tab: replace mock data with real IQR-based Quality Score averages per staff
+- [ ] Lab Admin Analytics tab: replace mock recharts data with real IQR trend data
+- [ ] Lab Admin Reports tab: monthly summary driven by actual IQR submissions
+- [ ] Staff detail view: per-staff Quality Score history, domain radar, trend chart
+- [ ] Vitest tests for new lab analytics procedures
+
+## Strain Navigator™ — Click-to-Focus UX
+- [ ] Map each bull's-eye segment SVG path to a React ref for its corresponding input field
+- [ ] On segment click: scroll to input + focus it (single click, no double-click needed)
+- [ ] Visual feedback: briefly highlight the focused input row with a teal ring
+- [ ] Cursor placed in the input field ready to type immediately
+
+## Echo Correlation Review Form (DIY Accreditation Tool)
+- [ ] Map all Echo Correlation Formsite form fields
+- [ ] DB schema: echoCorrelationReviews table
+- [ ] tRPC: create, list, getById, update, delete, getStats procedures
+- [ ] Multi-step Echo Correlation review form page (/echo-correlation)
+- [ ] PDF export for Echo Correlation reviews
+- [ ] Add Echo Correlation tab/section to DIY Accreditation Tool
+- [ ] Sidebar entry and Home card for Echo Correlation
+- [ ] Lab Admin integration: link Echo Correlation reviews to staff members
+
+## Echo Correlation Review™ — Completed
+- [x] DB schema: echoCorrelations table (userId, labId, examType, correlation1/2 types, findings, concordance, overallConcordanceRate, varianceNotes, reviewerName)
+- [x] DB migration: pnpm db:push applied
+- [x] tRPC echoCorrelation router: create, list, getById, update, delete
+- [x] Echo Correlation Review page (/echo-correlation): 4-step form (Header, Exam Info, Correlation Comparison grid, Summary)
+- [x] Concordance auto-calculation per finding row (Concordant/Minor Variance/Major Variance/N/A)
+- [x] Overall concordance rate auto-calculated from all rows
+- [x] PDF export for IAC/QI submissions
+- [x] Review history dashboard with concordance trend
+- [x] Route, sidebar entry, and Home dashboard card wired
+- [x] 22 vitest tests for echoCorrelation procedures
+
+## Strain Navigator™ Click-to-Focus UX — Completed
+- [x] Clicking a bull's-eye segment scrolls to and focuses the corresponding input field (single-click UX)
+- [x] Tab/Enter key navigation between segment inputs
+
+## Favicon — Completed
+- [x] iHeartEcho logo set as favicon (PNG + ICO) in index.html

@@ -387,6 +387,11 @@ export type InsertStrainSnapshot = typeof strainSnapshots.$inferInsert;
 export const imageQualityReviews = mysqlTable("imageQualityReviews", {
   id: int("id").primaryKey().autoincrement(),
   userId: int("userId").notNull(),
+  // Lab integration — nullable so standalone reviews still work
+  labId: int("labId"),                                          // FK → labSubscriptions.id
+  revieweeLabMemberId: int("revieweeLabMemberId"),               // FK → labMembers.id
+  revieweeUserId: int("revieweeUserId"),                         // denormalized userId for fast queries
+  revieweeName: varchar("revieweeName", { length: 200 }),        // denormalized name for display
   reviewType: varchar("reviewType", { length: 50 }).notNull(),
   organization: varchar("organization", { length: 200 }),
   dateReviewCompleted: varchar("dateReviewCompleted", { length: 20 }),
@@ -491,3 +496,44 @@ export const imageQualityReviews = mysqlTable("imageQualityReviews", {
 
 export type ImageQualityReview = typeof imageQualityReviews.$inferSelect;
 export type InsertImageQualityReview = typeof imageQualityReviews.$inferInsert;
+
+// ─── Echo Correlation (QI Study Correlations) ───────────────────────────────
+export const echoCorrelations = mysqlTable("echoCorrelations", {
+  id: int("id").primaryKey().autoincrement(),
+  userId: int("userId").notNull(),
+  // Header
+  organization: varchar("organization", { length: 255 }),
+  dateReviewCompleted: varchar("dateReviewCompleted", { length: 20 }),
+  examIdentifier: varchar("examIdentifier", { length: 50 }),
+  dob: varchar("dob", { length: 20 }),
+  // Exam Info
+  examType: varchar("examType", { length: 100 }),
+  correlation1Type: varchar("correlation1Type", { length: 100 }),
+  correlation1TypeOther: varchar("correlation1TypeOther", { length: 100 }),
+  correlation2Type: varchar("correlation2Type", { length: 100 }),
+  correlation2TypeOther: varchar("correlation2TypeOther", { length: 100 }),
+  // Dates of Service
+  originalExamDos: varchar("originalExamDos", { length: 20 }),
+  correlation1Dos: varchar("correlation1Dos", { length: 20 }),
+  correlation2Dos: varchar("correlation2Dos", { length: 20 }),
+  // Findings stored as JSON strings
+  originalFindings: text("originalFindings"),
+  corr1Findings: text("corr1Findings"),
+  corr2Findings: text("corr2Findings"),
+  // Concordance results as JSON
+  concordance1: text("concordance1"),
+  concordance2: text("concordance2"),
+  // Overall
+  overallConcordanceRate: int("overallConcordanceRate"),
+  varianceNotes: text("varianceNotes"),
+  reviewerName: varchar("reviewerName", { length: 200 }),
+  reviewerEmail: varchar("reviewerEmail", { length: 200 }),
+  // Lab integration
+  labId: int("labId"),
+  revieweeId: varchar("revieweeId", { length: 255 }),
+  revieweeName: varchar("revieweeName", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type EchoCorrelation = typeof echoCorrelations.$inferSelect;
+export type InsertEchoCorrelation = typeof echoCorrelations.$inferInsert;

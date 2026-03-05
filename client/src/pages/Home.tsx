@@ -179,6 +179,14 @@ const modules = [
     badge: "IAC Accreditation",
     color: BRAND,
   },
+  {
+    path: "/echo-correlation",
+    icon: BarChart3,
+    title: "Echo Correlation Review™",
+    description: "Compare original echo findings against correlative studies (cath, CTA, MRI, nuclear) with concordance scoring and PDF export for QI submissions.",
+    badge: "QI / Accreditation",
+    color: BRAND,
+  },
 ];
 
 const stats = [

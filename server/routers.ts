@@ -60,6 +60,19 @@ import {
   updateImageQualityReview,
   deleteImageQualityReview,
   getIqrStats,
+  // Lab IQR analytics
+  getIQRReviewsByLab,
+  getLabStaffIQRStats,
+  getStaffIQRTrend,
+  getStaffIQRDomainBreakdown,
+  getLabIQRMonthlySummary,
+  getLabMembersWithIQRStats,
+  createEchoCorrelation,
+  getEchoCorrelationsByUser,
+  getEchoCorrelationById,
+  updateEchoCorrelation,
+  deleteEchoCorrelation,
+  getEchoCorrelationsByLab,
 } from "./db";
 
 export const appRouter = router({
@@ -839,6 +852,79 @@ export const appRouter = router({
     getStats: protectedProcedure.query(async ({ ctx }) => {
       return getIqrStats(ctx.user.id);
     }),
+  }),
+
+  // ─── Echo Correlation ─────────────────────────────────────────────────────
+  echoCorrelation: router({
+    create: protectedProcedure
+      .input(z.object({
+        organization: z.string().optional(),
+        dateReviewCompleted: z.string().optional(),
+        examIdentifier: z.string().optional(),
+        dob: z.string().optional(),
+        examType: z.string().optional(),
+        correlation1Type: z.string().optional(),
+        correlation1TypeOther: z.string().optional(),
+        correlation2Type: z.string().optional(),
+        correlation2TypeOther: z.string().optional(),
+        originalExamDos: z.string().optional(),
+        correlation1Dos: z.string().optional(),
+        correlation2Dos: z.string().optional(),
+        originalFindings: z.string().optional(),
+        corr1Findings: z.string().optional(),
+        corr2Findings: z.string().optional(),
+        concordance1: z.string().optional(),
+        concordance2: z.string().optional(),
+        overallConcordanceRate: z.number().optional(),
+        varianceNotes: z.string().optional(),
+        reviewerName: z.string().optional(),
+        reviewerEmail: z.string().optional(),
+        labId: z.number().optional(),
+        revieweeId: z.string().optional(),
+        revieweeName: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return createEchoCorrelation({ ...input, userId: ctx.user.id });
+      }),
+
+    list: protectedProcedure
+      .input(z.object({ limit: z.number().default(50), offset: z.number().default(0) }))
+      .query(async ({ ctx }) => {
+        return getEchoCorrelationsByUser(ctx.user.id);
+      }),
+
+    getById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const record = await getEchoCorrelationById(input.id);
+        if (!record || record.userId !== ctx.user.id) throw new TRPCError({ code: "NOT_FOUND" });
+        return record;
+      }),
+
+    update: protectedProcedure
+      .input(z.object({ id: z.number() }).passthrough())
+      .mutation(async ({ ctx, input }) => {
+        const { id, ...data } = input;
+        const existing = await getEchoCorrelationById(id);
+        if (!existing || existing.userId !== ctx.user.id) throw new TRPCError({ code: "NOT_FOUND" });
+        await updateEchoCorrelation(id, data);
+        return { success: true };
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const existing = await getEchoCorrelationById(input.id);
+        if (!existing || existing.userId !== ctx.user.id) throw new TRPCError({ code: "NOT_FOUND" });
+        await deleteEchoCorrelation(input.id);
+        return { success: true };
+      }),
+
+    getByLab: protectedProcedure
+      .input(z.object({ labId: z.number() }))
+      .query(async ({ input }) => {
+        return getEchoCorrelationsByLab(input.labId);
+      }),
   }),
 });
 export type AppRouter = typeof appRouter;

@@ -22,6 +22,7 @@ import {
   echoCases,
   strainSnapshots,
   imageQualityReviews,
+  echoCorrelations,
   type ImageQualityReview,
   type InsertImageQualityReview,
   type LabSubscription,
@@ -745,4 +746,152 @@ export async function getIqrStats(userId: number) {
   }).from(imageQualityReviews).where(eq(imageQualityReviews.userId, userId))
     .groupBy(imageQualityReviews.examType);
   return { total: rows[0]?.total ?? 0, avgScore: rows[0]?.avgScore ?? 0, byExamType: byType };
+}
+
+// ─── Lab IQR Analytics ─────────────────────────────────────────────────────────
+
+/** Get all IQR reviews for a lab, optionally filtered by reviewee */
+export async function getIQRReviewsByLab(labId: number, revieweeLabMemberId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions: ReturnType<typeof eq>[] = [eq(imageQualityReviews.labId, labId)];
+  if (revieweeLabMemberId !== undefined) {
+    conditions.push(eq(imageQualityReviews.revieweeLabMemberId, revieweeLabMemberId));
+  }
+  return db.select().from(imageQualityReviews)
+    .where(and(...conditions))
+    .orderBy(desc(imageQualityReviews.createdAt));
+}
+
+/** Aggregate per-staff Quality Score stats for a lab */
+export async function getLabStaffIQRStats(labId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({
+    revieweeLabMemberId: imageQualityReviews.revieweeLabMemberId,
+    revieweeName: imageQualityReviews.revieweeName,
+    reviewCount: count(),
+    avgScore: avg(imageQualityReviews.qualityScore),
+    latestReviewDate: sql<string>`MAX(${imageQualityReviews.dateReviewCompleted})`,
+  })
+    .from(imageQualityReviews)
+    .where(and(
+      eq(imageQualityReviews.labId, labId),
+      sql`${imageQualityReviews.revieweeLabMemberId} IS NOT NULL`
+    ))
+    .groupBy(imageQualityReviews.revieweeLabMemberId, imageQualityReviews.revieweeName)
+    .orderBy(desc(avg(imageQualityReviews.qualityScore)));
+}
+
+/** Get monthly Quality Score trend for a specific staff member */
+export async function getStaffIQRTrend(labId: number, revieweeLabMemberId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({
+    month: sql<string>`DATE_FORMAT(${imageQualityReviews.createdAt}, '%Y-%m')`,
+    avgScore: avg(imageQualityReviews.qualityScore),
+    reviewCount: count(),
+  })
+    .from(imageQualityReviews)
+    .where(and(
+      eq(imageQualityReviews.labId, labId),
+      eq(imageQualityReviews.revieweeLabMemberId, revieweeLabMemberId)
+    ))
+    .groupBy(sql`DATE_FORMAT(${imageQualityReviews.createdAt}, '%Y-%m')`)
+    .orderBy(sql`DATE_FORMAT(${imageQualityReviews.createdAt}, '%Y-%m')`);
+}
+
+/** Get domain-level breakdown for a staff member */
+export async function getStaffIQRDomainBreakdown(labId: number, revieweeLabMemberId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({
+    imageOptimizationSummary: imageQualityReviews.imageOptimizationSummary,
+    measurementAccuracySummary: imageQualityReviews.measurementAccuracySummary,
+    dopplerSettingsSummary: imageQualityReviews.dopplerSettingsSummary,
+    protocolSequenceFollowed: imageQualityReviews.protocolSequenceFollowed,
+    iacAcceptable: imageQualityReviews.iacAcceptable,
+    qualityScore: imageQualityReviews.qualityScore,
+    createdAt: imageQualityReviews.createdAt,
+  })
+    .from(imageQualityReviews)
+    .where(and(
+      eq(imageQualityReviews.labId, labId),
+      eq(imageQualityReviews.revieweeLabMemberId, revieweeLabMemberId)
+    ))
+    .orderBy(desc(imageQualityReviews.createdAt))
+    .limit(20);
+}
+
+/** Lab-wide monthly summary for the Reports tab */
+export async function getLabIQRMonthlySummary(labId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({
+    month: sql<string>`DATE_FORMAT(${imageQualityReviews.createdAt}, '%Y-%m')`,
+    reviewCount: count(),
+    avgScore: avg(imageQualityReviews.qualityScore),
+    staffReviewed: sql<number>`COUNT(DISTINCT ${imageQualityReviews.revieweeLabMemberId})`,
+  })
+    .from(imageQualityReviews)
+    .where(eq(imageQualityReviews.labId, labId))
+    .groupBy(sql`DATE_FORMAT(${imageQualityReviews.createdAt}, '%Y-%m')`)
+    .orderBy(sql`DATE_FORMAT(${imageQualityReviews.createdAt}, '%Y-%m')`);
+}
+
+/** Get lab members enriched with their IQR stats */
+export async function getLabMembersWithIQRStats(labId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const members = await db.select().from(labMembers)
+    .where(eq(labMembers.labId, labId));
+  const stats = await getLabStaffIQRStats(labId);
+  const statsMap = new Map(stats.map(s => [s.revieweeLabMemberId, s]));
+  return members.map(m => ({
+    ...m,
+    iqrStats: statsMap.get(m.id) ?? null,
+  }));
+}
+
+// ─── Echo Correlation Helpers ─────────────────────────────────────────────────
+export async function createEchoCorrelation(data: typeof echoCorrelations.$inferInsert) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  await db.insert(echoCorrelations).values(data);
+}
+
+export async function getEchoCorrelationsByUser(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(echoCorrelations)
+    .where(eq(echoCorrelations.userId, userId))
+    .orderBy(desc(echoCorrelations.createdAt));
+}
+
+export async function getEchoCorrelationById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const [row] = await db.select().from(echoCorrelations)
+    .where(eq(echoCorrelations.id, id));
+  return row ?? null;
+}
+
+export async function updateEchoCorrelation(id: number, data: Partial<typeof echoCorrelations.$inferInsert>) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(echoCorrelations).set(data).where(eq(echoCorrelations.id, id));
+}
+
+export async function deleteEchoCorrelation(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(echoCorrelations).where(eq(echoCorrelations.id, id));
+}
+
+export async function getEchoCorrelationsByLab(labId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(echoCorrelations)
+    .where(eq(echoCorrelations.labId, labId))
+    .orderBy(desc(echoCorrelations.createdAt));
 }

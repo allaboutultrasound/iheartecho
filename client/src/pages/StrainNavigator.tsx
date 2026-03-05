@@ -5,7 +5,7 @@
   Save to Case · ASE/EACVI 2022 reference values
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import Layout from "@/components/Layout";
 import {
   Activity, ChevronDown, ChevronUp, Info, AlertCircle,
@@ -851,6 +851,8 @@ export default function StrainNavigator() {
 
   // Save to Case modal
   const [showSaveModal, setShowSaveModal] = useState(false);
+  // Ref for the segment input — used for scroll-to-focus on bull's-eye click
+  const segInputRef = useRef<HTMLInputElement>(null);
 
   const lvGlsNum = parseFloat(lvGls);
   const rvStrainNum = parseFloat(rvStrain);
@@ -889,10 +891,18 @@ export default function StrainNavigator() {
     ? (scoredSegs.reduce((sum, s) => sum + (wallMotionScores[s.id] ?? 1), 0) / scoredSegs.length).toFixed(2)
     : null;
 
-  function handleSegSelect(id: number) {
+  const handleSegSelect = useCallback((id: number) => {
     setSelectedSeg(id);
     setSegInput(segValues[id] !== null && segValues[id] !== undefined ? String(segValues[id]) : "");
-  }
+    // Scroll to and focus the input on next tick (after React re-renders the input)
+    setTimeout(() => {
+      if (segInputRef.current) {
+        segInputRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        segInputRef.current.focus();
+        segInputRef.current.select();
+      }
+    }, 40);
+  }, [segValues]);
 
   function handleSegInputChange(v: string) {
     setSegInput(v);
@@ -1219,13 +1229,22 @@ export default function StrainNavigator() {
                     {selectedSegLabel} Strain (%)
                   </label>
                   <input
+                    ref={segInputRef}
                     type="number" step="0.1"
                     value={segInput}
                     onChange={e => handleSegInputChange(e.target.value)}
+                    onKeyDown={e => {
+                      // Tab or Enter advances to the next segment automatically
+                      if (e.key === "Tab" || e.key === "Enter") {
+                        e.preventDefault();
+                        const ids = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17];
+                        const cur = ids.indexOf(selectedSeg ?? 1);
+                        handleSegSelect(ids[(cur + 1) % ids.length]);
+                      }
+                    }}
                     placeholder="e.g. −18.5"
                     className="w-full bg-white border rounded-lg px-3 py-2 text-sm font-mono text-gray-800 outline-none"
                     style={{ borderColor: "#189aa1" + "60" }}
-                    autoFocus
                   />
                 </div>
               )}

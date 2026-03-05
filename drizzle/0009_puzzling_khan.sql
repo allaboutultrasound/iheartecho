@@ -1,0 +1,1 @@
+ALTER TABLE `echoCorrelations` MODIFY COLUMN `userId` int NOT NULL;
