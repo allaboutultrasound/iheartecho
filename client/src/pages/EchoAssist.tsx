@@ -1479,7 +1479,6 @@ export default function EchoAssist() {
 
         {/* Engine sections */}
         <div className="space-y-4">
-          <FrankStarlingEngine />
           <LVSystolicEngine />
           <DiastolicEngine />
           <StrainEngine />
@@ -1490,6 +1489,7 @@ export default function EchoAssist() {
           <TricuspidRegurgEngine />
           <RVFunctionEngine />
           <PulmonaryHTNEngine />
+          <FrankStarlingEngine />
         </div>
 
         {/* Footer */}
