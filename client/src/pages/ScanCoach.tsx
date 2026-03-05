@@ -39,17 +39,18 @@ const CDN = {
   echoRvotShortAxis:  "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/isfAjCTuYjsHReYQ.jpg?Expires=1804219532&Signature=fTuq02MnH3H~M~o8rHrajM6KsQFo8QFxhTrJicJgWGBgQqogk5W2RNzdpZD-HSzm~72XMiX-QezkuA5F0Xh3qYw5G8gcuXFDgKkffwJ~D0NMPA3B1R9jrzcug6GISttUzixKypx08uCQI1sBWexnSftDBTZU5FY9SxKcYGvl9sOcmumOYTDYt-G0UJcDZlvyqk9Bcc~EUa1WJF0C72paowdHA0zHCSrdr2piwSTCPfR~e69Pqk3Vt6puv2MiFv9iRyuiPUR0dt048QOR4xmsSkkn0-qz922e6EwxCWGyzxpXJN86bGk4nFrisdVbyDeIcCwbdstqEBYCnQXMsdr7CA__&Key-Pair-Id=K2HSFNDJXOU9YS",
   echoLvShortAxis:    "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/iNdFjSbLMjrYmvFc.png?Expires=1804219532&Signature=mrXbXlZqr1wk~7Q8f8p4sDFBy5XUwuGawzmQMD~LLw~eL-aUZ16Q9nnUA-C1XH0FV-o8OnlZmmh2HnBRrXWsNxt0S8KApPFNCFQ~obHlr8GL45rSkUkAEZH6~GSOwCIKXXtYnd~GDVn7m2V4zQgb~pqKwlxbt~W2qCdkk6DzDfRb8ZzxsDUpm4EFXmd-wwrxSbxC5HJIsGScWFjkJoDPajig5rBfP5CurgXOT6DTAxQ6wDNs4z2qgw54VAL5CWwevn3DWmyZl7E4-J2CDKzgOv6uEvepchkZA59y1~XCmzWTDNyipCXJERomlfp6PM4fzLsHsDucr6mzPnbnpRVoTw__&Key-Pair-Id=K2HSFNDJXOU9YS",
   // TTE clinical echo GIF images
-  ttePlaxEcho:       "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/ypeXYMXPaLfelPaR.gif?Expires=1804227358&Signature=AtBwHsUVNECgefJA2HP7fxWA5s0LiDTMBdBMkimZrkNJUU0YCDKbuP1dqUzvhz1Bnqjuj1HWV0fUh03u006l~D~Dmq4KWU91h4B02B1J3pMUvgVINXLDGvhu6U1PSzxN7bcK7nlUNhPvgBGBtBwZ26vN6RXch2VvcbXOAikkD8Xj5dmsu61Yb0B8fCg~kqR5Jh0hQ4GqwG-VN6eQb6IjslepdgW25NXA-1mft3EAFGXq4hmbQNnQ-ga4Dl8HlYUra0XNkFUrJoJHoVJQEt1V21t1QW-6Q0141-zLRaI0cjIRsN~AWe~DVCXQhDXMCnQyNIGqextSAxYTREFv6lMt-w__&Key-Pair-Id=K2HSFNDJXOU9YS",
-  ttePsaxAvEcho:     "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/NTzdsQEMNJALxPvJ.gif?Expires=1804227358&Signature=jCI4eazPgWg5e3qLcdAwQlYnM5ESPwQio4nsvJuq2nuJwKb22Pf-Y5Vu4YNbuTjS60xw4sVH2OlNbqMZ9oB~bmfedpCnQpXqUP-1HVLqe79djbAUL5-ZWbTUvAP1DJL0NPmvL5QFu5vbCpbMKMmG4vWNOwPkt1TT6XmDQE0swFlzbR4sCrkTJVrTXgoXxJsIgaiQrS2IaUETcy7VJqticNzZAytCFqlM~w8rYQeH5wr179BBLyD04qWp8b3QfflPrg1NZTKFZDs4RqABXfT1YdZ6BVKJbzrIBMY4te1AAYZL8u07OZoALfn1P4u5Pe1kv-cFMunV-L5bY6QSdPLb0A__&Key-Pair-Id=K2HSFNDJXOU9YS",
-  ttePsaxMvEcho:     "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/VHGsPBMYeDZgszFi.gif?Expires=1804227358&Signature=O~LNl84tUejHsnoeFjXvAlTNvGGAQ5RcWEzCE9fm846vSKlHuzmDM41GpjfeW-CQgRq0UwQgbzDfrxw3LpiIJNX0nEBNyZfdXY6rfhbtZLgaBMJMHT~SJBJ5Yic8sdvDG6PmteJlIvGVEvwIxRJYrEO3vU9MojMJICtVbVwIrxgkNC86W0I39ZVRXPG2LqRjUsiCE5oKyN86i8J-iHEbwfz4oW7c-SPKwofN-g3dJNp~WdkNpERE9db3HEIDsmpUoIY458DmV28Tbcy8Es4nINfNmrTDXvN247-IsOKNhRLpVFLzPVnEeOCXccnS1LY4pR8Ea2NLtkQkfgSu4mQp8Q__&Key-Pair-Id=K2HSFNDJXOU9YS",
-  ttePsaxPmEcho:     "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/YLkJExQgjJGELqus.gif?Expires=1804227358&Signature=HMjYSHJnvSV6ALJv2siwgcnKMLCPHZzUqrKIRTGbdyDTKMeRnw-LQOIyZfqoJOpJLpcNx184mNDz2PnCJHsa1mly9UB1bqcKTW2~mIUTAE0d3hGhuzi9DiG6~BSOH-8fFyRCTExcZNB3PrQAgtXiNzSscMzZlB2MOOI3z0NiliKaMDcPhgDMA-W8V7sX~nj1P02OtOhJbGq3Vht~UIG75gcXBJBPkuiBMZzbUUlfURvip9BJTyiHDwK3GhJRzpN-9T0pjLOy62sKTUhh1NTaOkgDz1s5-pYziZtslNOV9juFwRd4V~pjNM1Qumf4hxLuNNnYZ~qiqGmHX3u57Xuehw__&Key-Pair-Id=K2HSFNDJXOU9YS",
-  tteA4cEcho:        "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/CYtuUBnCwldHUOKl.gif?Expires=1804227358&Signature=i1u6p8CcEHyRpKSqA0ON4xk1tcz~r6onC91cbwyMN7HLRjPSx5r1QJ9QAfGxHHmzGC614HiX~5YmY3dwMtT9E7nDOTtcPlvztOvO-8S5enfKILZYRfyLRpxEmF~iNOWmzPmAoQa0bVvfBSljHn3ZLvZGla-bsWVJ5H9JoQgrYcGvrT2VaYO5JO~goS7Jr7n8MJnYPOxRqCUdSrNgNO6nwAxem0u1MthwgoHNJGktw7WOsF0jJUQQIRI6H98acfP0lfJwqM10TmzkJJKp07a4ESqeyF1md-NpAJcbArPax7XW3BeDjfUcoQPmKGDFjhZYcMwiLPHtUkeTFbQNIQ~TDw__&Key-Pair-Id=K2HSFNDJXOU9YS",
-  tteA5cEcho:        "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/VZRlkWrCVnAMkSUc.gif?Expires=1804227358&Signature=EPRbHCg5sLC42V6uigjl6dHB-uM25EWSR7ElGbNtWBETiK0bvg7T4eQT6dRA2oqyGqSnBSCxuOSL7OLpIwftumEXewFqejLM7jf9r~dTVBVgtl6YiserOXIIxSYxMpyfK7LEt3zqrexvn5WxoCFAEmoTy20AVH2eT2uq81hfx7dq7nx~XdrX8pzND1qBE7DjjTfUA0xCd7o2QpU9wai14tjNpWrySIOGXTAPg4Fj0SjkapxhQB3r9KXWP~jrBE05VXRIHhaKdjcAZpGCUyLMnd9bT0dHGF9JNHmWU66cHKrhfKslwWPeRxHjXSlWOMmLjeF0ZSpOqKawm8qxH-D27g__&Key-Pair-Id=K2HSFNDJXOU9YS",
-  tteA2cEcho:        "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/VKfsiIzyhAwDOrVe.gif?Expires=1804227358&Signature=kYf0cgB~VitYR8c1HF18JdXspDBhEyEdhP1Mmw1WaPoD6QEexxILN7dEFw4ilVhRc9D24BA1At4G0aEn~mya9bbs6WRM00~xunHqaTPSyTGliCHd7cZ4Z6VKWPLBZfGUq6YGDd3v-g21-T2fPbv2olJCEE1h~in5hisVNAqpBnmoHCuRU4ldvhrkl0glQGANvBu7~xGksJIacEZmmoae4RihSUesku2gCn4CpMDxRt2r1z3cCnfwyNXH6MBa51HDAT-y5OoySojcno~y8wO4MDllzeoMN2eEF~45aM4D3isrATQUm197bB1Or-1w38Bn~PPy8qMmgdqumTzAD~pUZg__&Key-Pair-Id=K2HSFNDJXOU9YS",
-  tteA3cEcho:        "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/XRqSpXiBeGMDMJzK.gif?Expires=1804227358&Signature=Lv09H0LLuruFH8a8-Vnte8oiHGY4HOp050UG5OM-syI5tEagieRv30Fr7m44PWwAX8tFuOksXvR-wZ9wvvRRMEZ8dPcUSPkJWdffkJYp6Rb6p7pJ0Uyi70XjKs6EaU0ieTGIizIq9KzJ41ex1yX9uZdF~GRDW5BFuyy5ZIZcDwCba3acDID-BoWXGd7rvLgHSZ~4rnlbqGILGrV6dEDxLFDPeuQ3AUlGCIiV59QP6y2ktxwjxvamGdvtlP~LXUyPKRY1mDC5mboI8nzHexJp7K8AG8g~WeWSVggXtHwk98Dd3kQrHQsVtoPPH8DChV8vSMjK7ouGzWBL0a7AaTeiyA__&Key-Pair-Id=K2HSFNDJXOU9YS",
-  tteSubcostalEcho:  "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/TxZzBPbYSMdlLzSQ.gif?Expires=1804227359&Signature=eLXIi5pZ4t5~FZWZnTCX3sj1qdU-tjlD~sSOKAsWpKhT0NvkSdficUmWm72S1nJw8a9urZ58mzcoANAyCTZ~XRqr59eV71foT-MGNrAr7es7eaWbI7ZGGxg6PjhXN~piomynwqiq-qnYofTgisoIe67urbysdHwkDYT21RwGNrZpJAtfk2v8cl7lIoW7kUsYF73Ut6sjD0j4FkOKlbPn2wfB6RF13cYmo4uGb0PS64I2xNocJrQEa40CKZYqGMC4VyZr4qyHptgQGkNGaFRwr84Z40cSfJH91uZExdKHuvVB0QNlrg1UfDhfP4twSZjfCVwoyNNMi4idt7~VGldk1A__&Key-Pair-Id=K2HSFNDJXOU9YS",
-  tteSsnEcho:        "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/cIyFIGZOUEuabZbH.gif?Expires=1804227489&Signature=HMWkNqU3wQrheNUQuYLdlLr7CtijAQRdG3HRjI~529ib36X5NYsAZtf5qJUOKNLmHXuj59c3CNxWnd6zTL-NPCuoOagL64VEpedhQMcyg9ikP~gG66B4bI9R0dT37upiyk69Lmo~uB7xdZKx1LybkRSzFYn4sS76Pad-j5LNmMP-5~lYumDiCgYEQ3n3MkNU7QU26IUhhzUPuGyScPPoztG3t1XdRwNAxenvsOhyM2iMkh4Rk3vHgEZsdW0sCQ4o~V-A3Ef1dlMc6UrI56Cr6WxVcgH7yZEqAkpivmA8TMe~7iboFb3Br9Tmoh~WJ3FyQ3~atBLVBQWqVFju-TN9Xg__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  ttePlaxEcho:       "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/RxzJMuUOSGniiSQV.gif?Expires=1804229590&Signature=d5YDLO1biMpZpnatBfZPzEefSosuDpRiHGOjsMN0LsGh~qWQwqIKV3BMTzBGtknVzaC1Thp2JZlDE9CmE1zyjQI3sO~w4FyEcXn0yYjl8wnDp9fmF9y35d1t-27GzjOOQQmyFc~regN4ZDdZEUhWUWVVVaynz9iu0xY4Mcdobx6Fp~bGzlBDBzw~eLCHPS0nQavqHW4PRoND9bRepjebw6QbKLrIH6-kZar76cJ1Ft7hRdaMUd9t85-a0ENwuW3GXTHHYWShqCo9VW1ffYztoroOVPjvUMbgWIUyU6KBFfygcvOQuZZo5k849P3KEgBQznpJ82qysjDJQQlKkmYnqw__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  ttePsaxAvEcho:     "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/wPhrDExHGwzxURqY.gif?Expires=1804229574&Signature=LDO7T~WwlmplqlUEZNUR~FE61Va5Gl8K9uHPa5Yw9U8qNLByW06HYTiSKXWNsaC9ekw2u6R0jf~4dLz1B5N~Y9ZS~2~FPMtQ7VDRc7pD9BhsY1dB4J2lQxLDKMI00V~twSoAmSLCl2FkGlooNdRUtJKeR6MA3DVxn0k1Iylt9F6kCBFqQJTR26pDIXMCrvMJzJxz9peqx0S9v~5nF2AVDWep4OG2e1AHEjrHcGpdDkiC-6M2SSMrxIAAgMjDF4bKIQ0E5UBlW2Yb5nL33Yjc-mhDqW7gNhSxqXr9aacKcTFIkYJPaX~66IawzihGxL2sgqoK6LH6b81I3zP-ouGGRg__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  ttePsaxMvEcho:     "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/UVPZcUgfHUYSXCkS.gif?Expires=1804229575&Signature=jJEY7NXae5QtMgyN6afcDEnmobdcTVWP~t7siplhehn1jxrBiI8G5UhD4zflznWxHDCGx2h9UZC~XHxGLJpo-sYwIh8lxYPjrdWSqOn2A66SUv~WVVrI96YLV7T3pMgd0JG4kNIk5NGMI3EikKARGi7uxB7J-W5Wq3KI4MDDy8ZteFTIWBKl-BiJ2RyYovl5866cpfyuaZU4M-MQnv6DOMGLbdnGDuJOlLxiP8J1NGQMUzLNzZIIl3hMh~2sZrhNCsm3gKfhA~0c6xKuAct5U3JCsQIiDKuE1sBR~dWHY-6k~WvVC~gMwnYQin8beuTM~X63L7D3rIIyrIXC2Q8fJg__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  ttePsaxPmEcho:     "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/IdDnAaOhcJglRBMz.gif?Expires=1804229576&Signature=htqs--DVoh4nzRve1EAnjkx-GXCRgRP7rm5FFMYcd16lWs4Vm04c2fLHgA4gZ9Tjk9ML5cNjri5Kzo0pJUBBGg7KjI6Tmgb2-v4UhAap7-7FcwE5D0-TL07z4MaPSvv1gUOggAq2JhBxI2Cp7mxx5d2bhZBZlvRYD1ho8HaIHV4BtJ1fRfPxMgwbviX9yd6L4OVF17JqLCjIRmc9x8hWMsLUEGy6IXYPHzXlQTd2Icn4aPWsIFp1XRfFuviZz8TTHO4ojkIwHGVyHq01meierz~OonLE5cj~jI2d7jjtPfwk9~J68Bbd3w29X8PSWLhoPPwKZ0q-Xw1VptrAVYg7-A__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  tteA4cEcho:        "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/IhkfGpYhGzwoxuoO.gif?Expires=1804229577&Signature=tRNQz7CTMIAPFCUJkgGzWOfzCuSSpW3xnBxZU1t2nCkv3yJiNwDdSNTh-cuJghi3UnqJeX48Oaz~5f6EM49BKVCoBuzZHL~GjhhB9pKIe3AmJCPCG1jxBm6JYg8CuToj-LqwwmGf-M0MilSqIeLmJr3cfi4RRjEtjDdqkxzznV7IvpD9fFfsIYL9qlXyRjmAm3-EbqF5LdDrmLSjeS1LaWVhYtM3X94L6z91K6XiCUFnnD5Uxl3lXMuk-03ePfusWQMWYzDbKJCvOpEDPadblf4VHh2qhefaqiNMo7SzSk2lxfDOoTvP-A7P8jJH170QulQrG~a3sBIKJFKicCrzWg__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  tteA5cEcho:        "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/sZToAKpLEtwyYOSQ.gif?Expires=1804229577&Signature=GQcOXC07jVWQ-Q-WPV2W3-9iqk0GMHknfwxCrMzijRjImGL5aVZ7PbsspGCd-siEYhH-4VXXue6MgkY5BZ84OaD96VKT-M6ILoUSZIpZSty9uwiPEWJhWu7ka0zh9M-aO2CvdDNFp34RcJeh~KfS0FvgsWMH-6OtBBNk60Z~KAjF76CZfoeKZ97n4c2-q5zyZ4A5enBnpZfwG08frF4s05XQB3LYP3CRIpferntqBnrkE7AyZgo7VuSjGgDBH3vibqHR2Fnsp9roVVYnwd5RTU5WBQnIYx4QvdZBeOOB1jtqcbZ2bvxYef-ojf3uZIoiktY-3Rehi~uUGpIsLMd8cw__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  tteA2cEcho:        "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/sgOhjFxmGVlKnfZy.gif?Expires=1804229578&Signature=WVMoyMzIpU1JnRn5ajd8M6Brrz3h3LKek8o~tPUC84rH2O~DBuVorGTaJ4VOR2ffNI9Zsp8NcgQDJ34s0rbnm1pvpeB-j~dfCvGvmQm4wn0iwgRab7BvG0bhQIUKFLTp~fTTerab2qcW4ILvNxlH-IXNxVRjZ-xfk09Io1zIfe32aAYVuRjAHcheeTR16iF6XvOIf2fn2LIV8mJM5XrLU79Eljc5wnEwbxiDKXsfpeudhKVqkv8tuL14jRXVn9CbrmGD4pmZu6ZYTNjWwjQOdYjYQ-D2oHh1s8UoPUb9EUd3Ft~RvAdtyo-qBYejbe90rviC55nsyVP3iDMvwDj99A__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  tteA3cEcho:        "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/MIGFgbsvzdjsvNGr.gif?Expires=1804229579&Signature=Un7yJelE5ZnPhkSHXOBFCmjCYUgMqHoLOC818eKSkfTTsf7IHZHkaIbXwX5PS8LOFZuDxjgkoYYzPNChJ3tunJU6EUBlSdGPq65S3UClCg9I8Q0YeFaXtLR4323lRFHKokyAVd6U1C9keJAE1ZT6ZHODYhatH~xDwQ3oVzdqbHVG1fL3K-d0~JHI6H9MNsW3Ek9HPttj-hLElb79RdWC1lwNueQTVYaDFQ~lVIqqnX6~iCKyWctOJuD6Y7p0oie7HvrTBfiGryrqcWfMd9V4zVeGeVWHTVJ~D5s4mxFM6jHFbwsZ9rBvwb41hVGJt0wNDFPfPbpSEIEzg8EbLWHA1w__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  tteSubcostalEcho:  "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/KkKODpDuaQZrummu.gif?Expires=1804229580&Signature=CvWWEMdCFtCJaoVXqUQECpr1W-kkGqKA5rtdel1mHt3LjKo54gf-EJJQrScL7T~iy2eIaygiQ0Eq8C2mzGgzrwt~NKsoZcBf2jWJNKSXka4rZDwoLeLuaIy2rKsLiOJrXuDO-NJJRbzcnMnKQZg2US6ZxSbBjMrp8MubZTu9tALZFpJ4PlU18FAd9bG0E2ntdQJX0q8HucUyelPuUAdARPYucT-bQQjB7USn6-wuAAhz-yRzlDyLkIlMYlc9aVhF47Ex~ftPE6EMuNzKhAOxh8q8Y5wHsipUDRYajPiN1aEMZ6OlYagAMzB4HgdD2huudPQ53x-qr6~9fbCQwteNIw__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  tteSsnEcho:        "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/dRuGEIQCWBrFaAkC.gif?Expires=1804229581&Signature=sCCynNmWWDDVTdJAceT3oSau9uy6VFmWGFcSZ5ioP-66s5Ai1wCepfuQSycosBIdnoYPBczIGQB7bfm6jP6-OsuoYuxzkCDHql3RTHgDC5XuMLmefZcSTR63JtDLaxy3pURwHyQ4kW4ajE3j4rUYSpJpgKk3yyCmIkyEJ5coUQFGDZluTmVIdHjiWNE~qULdQhItw1rBnifcx5NA~wxQEetLFpiJwLhr84-8HJs6HYCcKbUX9P5QKxxEtZBeXDSVlO6NOAjMkAE7iW9xDox-OiMOPY38dO4lOKcmCjii22iQdOX31b19mff36A4cHH50axQsenRYQAmtTt~oWI0~ew__&Key-Pair-Id=K2HSFNDJXOU9YS",
   // TTE transducer positioning images
+  tteApical:     "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/NVJycqNuBitIksac.png?Expires=1804229640&Signature=igPwbzNQg0ILG0~AQcT~hD2DlPnb0Iccq~RuNUTq1O894xCj6sjhVkI~zCe5qNJmok6LqO6mTCmsWJM3sILqtdaKps93B4Cp2ZiRjZEi42Kv20K6i6FI1NY7qDwZBr77d4tXm3y17aw3AANn~PWJ1vE4w0RbnjbABdqIeZZcTKP1Jjoa45Cc6xYtQ6YY1idIEHljjYzZzJ4lPgPAVZwa-I2jBw9EWJRkuFui-YylcCtNEDZpWT7xsN~bnCJ4Jn5kKk4n-~GZNvmVgVPX9YZDdy1bEOroZ5TDEbnja7gmnTQHE5Law7wRUL9ybUR9S2h0lW9JCxw~X56iKMjIELMYEg__&Key-Pair-Id=K2HSFNDJXOU9YS",
   ttePlax:       "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/vRjcMyvkOCWAequN.png?Expires=1804222380&Signature=NWgX7uVrRSRBade2VRC0MWHTBNpywddX1pCEI~~h3SLCstwhhux9hCUKQmvvtfcLG7Z2D7GdqNCCPUaM~om-xlZNnTkn0HzYIZklmrBLfGeJ3bP9gMz9WB2dyAkkQkL3WYGsljt0--JyIHtZg4zPJiB-Mh7JE-QR6XHWIqcJyrA1zBCM6Z2BhZBsTpt9KsXl0i0g-4oWRIHJP2WyARvlfhV771fVetgyFVfOwPurKMuCqWD0cv7BsIsVjW7IN3govRGy7wzbLPZ6XagNLHeVLnSmauWDf72UMOt8assXc54i5P9bAcl6OkyyUQl7T81L~XulcH6XciNqgW7HeufZxQ__&Key-Pair-Id=K2HSFNDJXOU9YS",
   ttePsax:       "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/KXjnLvWWXfPggLKt.png?Expires=1804222380&Signature=jFekXBPNtNbWSrPX-ctcbTj9ahRkfxj6cQX9aUTWw-dXug2ATf1wAZPG~Y2mDj00jzEMqhP-s5JXyWHqKdyhlZCoiMA0DjMTlUGCznbCwvLjOlCe9G1AR1lJ0VQCmCD6KdUTN2MX5Ts9U6T4GFwOA0Le9pKIsn9Xu4clO3UgTd8TfOm0937gohN2dVm6jeddwd-do9RS-dfcO6F6WyQsvvQfP-7ao837HhjuDVB3hCbq~TOKtN0nr5d713L2zV0HEnFTXOxA34CBOt21JOLomU7-6A94h4WS9wPfj-EODS-efcPNygf4-Bc4N3qohKLxqK6WBi4BJgzQsMi~bysmLw__&Key-Pair-Id=K2HSFNDJXOU9YS",
   tteSubcostal:  "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/szLIUWyZOqjzZEWM.png?Expires=1804222380&Signature=CFd~QwKBjB0mzLnLBbP3fadCkYErEeYqNAW7fxFIDMqPX7QlVMV~lBzXh9xpT4HU7JiFW~DJg2i4brFkq8iwRZ88V5dFs-M153xb1qo0FSu8FzcYEO0JX~5WP9zzXvrp5JfXveNi0vGWyXhj84uutRztWMbdO3-xhfnHKIGF9OE-ZJwnttHhnjDsp0mTED1gMlbn9iJZIAsFTShCAj~LPf1l1HA2zihJNnafkUWU4nbD24bCESHEDRYiVAMHf9IT3BXhhh9J75faa6wYGyb516kCRp5NYPksLtVe3QJ1T-oUffKD2QtvRGBhKj089Eo~ZJR8LrOA3jwd3hz9S3r0jA__&Key-Pair-Id=K2HSFNDJXOU9YS",
@@ -177,6 +178,7 @@ const tteViews = [
     patientPosition: "Left lateral decubitus; use a cardiac notch pillow if available to drop the apex closer to the chest wall",
     structures: ["LV", "RV", "LA", "RA", "Mitral valve", "Tricuspid valve", "Interatrial septum", "IVS"],
     doppler: "PW Doppler at MV tips (E/A); TDI at annulus (e'); Assess MV/TV inflow; CW for TR (RVSP), TAPSE, EF and chamber sizes",
+    transducerImageUrl: CDN.tteApical,
     echoImageUrl: CDN.tteA4cEcho,
     tips: ["Apex must be at TOP of image — rotate patient to left lateral decubitus", "Foreshortening: LV appears round — move probe laterally and/or use lower ICS", "RV should be smaller than LV; RV:LV ratio >0.6 suggests RV dilation"],
     pitfalls: ["Foreshortening is the most common error", "Apex not at top → incorrect volumes"],
@@ -203,6 +205,7 @@ const tteViews = [
     patientPosition: "Left lateral decubitus; same position as A4C — tilt probe anteriorly (toward sternum) to open the LVOT/AV into view",
     structures: ["LV", "RV", "LA", "RA", "LVOT", "Aortic valve", "Mitral valve", "Tricuspid valve"],
     doppler: "Assess AV with Color; PW in LVOT (VTI); CW through AV",
+    transducerImageUrl: CDN.tteApical,
     echoImageUrl: CDN.tteA5cEcho,
     tips: ["Tilt probe anteriorly from A4C until LVOT and AV come into view", "Ideal for PW Doppler in LVOT — align cursor parallel to LVOT flow", "CW through AV for peak and mean gradients", "Color Doppler to assess AR and AS"],
     pitfalls: ["Over-tilting anteriorly loses the 4-chamber view — find the balance", "Underalignment of Doppler cursor underestimates VTI"],
@@ -229,6 +232,7 @@ const tteViews = [
     patientPosition: "Left lateral decubitus; same position as A4C — rotate probe counterclockwise without moving patient",
     structures: ["LV (anterior and inferior walls)", "LA", "Mitral valve", "LAA"],
     doppler: "Assess MV with Color, Simpson's EF",
+    transducerImageUrl: CDN.tteApical,
     echoImageUrl: CDN.tteA2cEcho,
     tips: ["Rotate CCW from A4C until RV disappears — only LV and LA visible", "Anterior wall (top) and inferior wall (bottom) in this view", "LAA best seen with slight posterior tilt"],
     pitfalls: ["Oblique cut includes RV — rotate further CCW", "Inferior wall foreshortening"],
@@ -254,6 +258,7 @@ const tteViews = [
     patientPosition: "Left lateral decubitus; rotate probe counterclockwise from A2C to open the LVOT",
     structures: ["LV", "LA", "LVOT", "Aortic valve", "Ascending aorta"],
     doppler: "Assess with Color and PW/CW as indicated",
+    transducerImageUrl: CDN.tteApical,
     echoImageUrl: CDN.tteA3cEcho,
     tips: ["APLAX = apical long axis — shows LVOT and AV from apex", "Align Doppler cursor parallel to LVOT flow for accurate VTI", "Anteroseptal (top) and inferolateral (bottom) walls visible"],
     pitfalls: ["Underalignment of Doppler cursor underestimates VTI by up to 30%", "Confusion with A2C"],
@@ -564,20 +569,22 @@ export default function ScanCoach() {
   const [activeTab, setActiveTab] = useState<"tte" | "fetal">("tte");
   const [selectedTTE, setSelectedTTE] = useState(tteViews[0]);
   const [selectedFetal, setSelectedFetal] = useState(fetalViews[0]);
-  const fetalDetailRef = useRef<HTMLDivElement>(null);
+   const fetalDetailRef = useRef<HTMLDivElement>(null);
   const tteDetailRef = useRef<HTMLDivElement>(null);
-
-  // Scroll detail panel into view when view changes
+  const scrollOnFetalChange = useRef(false);
+  const scrollOnTteChange = useRef(false);
+  // Scroll detail panel into view only when triggered by view list click (not Next/Prev)
   useEffect(() => {
-    if (fetalDetailRef.current) {
+    if (scrollOnFetalChange.current && fetalDetailRef.current) {
       fetalDetailRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
+    scrollOnFetalChange.current = false;
   }, [selectedFetal]);
-
   useEffect(() => {
-    if (tteDetailRef.current) {
+    if (scrollOnTteChange.current && tteDetailRef.current) {
       tteDetailRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
+    scrollOnTteChange.current = false;
   }, [selectedTTE]);
 
   return (
@@ -759,7 +766,7 @@ export default function ScanCoach() {
                 </div>
                 <div className="p-3 space-y-1">
                   {tteViews.map(v => (
-                    <TTEViewCard key={v.id} view={v} isSelected={selectedTTE.id === v.id} onClick={() => setSelectedTTE(v)} />
+                    <TTEViewCard key={v.id} view={v} isSelected={selectedTTE.id === v.id} onClick={() => { scrollOnTteChange.current = true; setSelectedTTE(v); }} />
                   ))}
                 </div>
               </div>
@@ -938,7 +945,7 @@ export default function ScanCoach() {
                 </div>
                 <div className="p-3 space-y-1">
                   {fetalViews.map(v => (
-                    <FetalViewCard key={v.id} view={v} isSelected={selectedFetal.id === v.id} onClick={() => setSelectedFetal(v)} />
+                    <FetalViewCard key={v.id} view={v} isSelected={selectedFetal.id === v.id} onClick={() => { scrollOnFetalChange.current = true; setSelectedFetal(v); }} />
                   ))}
                 </div>
               </div>
