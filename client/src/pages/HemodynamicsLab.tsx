@@ -343,32 +343,107 @@ function generatePVLoop(p: Params, N = 200) {
 
 // ---- SLIDER CONTROL ----
 
-function SliderControl({ label, value, min, max, step = 1, onChange, color, unit }: {
+function SliderControl({ label, value, min, max, step = 1, onChange, unit }: {
   label: string; value: number; min: number; max: number; step?: number;
-  onChange: (v: number) => void; color: string; unit?: string;
+  onChange: (v: number) => void; color?: string; unit?: string;
 }) {
   const pct = ((value - min) / (max - min)) * 100;
-  const level = pct < 33 ? "Low" : pct < 67 ? "Normal" : "High";
+
+  // Level logic
+  let level: string;
+  let isHigh = false;
+  let isLow = false;
+  if (unit === " bpm") {
+    if (value < 60) { level = "Brady"; isLow = true; }
+    else if (value > 100) { level = "Tachy"; isHigh = true; }
+    else level = "Normal";
+  } else {
+    if (pct < 33) { level = "Low"; isLow = true; }
+    else if (pct > 66) { level = "High"; isHigh = true; }
+    else level = "Normal";
+  }
+
+  // Color scheme: teal base, red only when high
+  const TEAL = "#189aa1";
+  const RED  = "#dc2626";
+  const AMBER = "#d97706";
+  const trackColor = isHigh ? RED : isLow ? AMBER : TEAL;
+  const badgeBg    = isHigh ? RED : isLow ? AMBER : TEAL;
+
+  // Tick marks: 5 evenly spaced
+  const ticks = [0, 25, 50, 75, 100];
+
   return (
-    <div>
-      <div className="flex items-center justify-between mb-1.5">
+    <div className="select-none">
+      {/* Header row */}
+      <div className="flex items-center justify-between mb-2">
         <label className="text-xs font-semibold text-gray-600">{label}</label>
         <div className="flex items-center gap-1.5">
-          <span className="text-xs font-bold" style={{ fontFamily: "JetBrains Mono, monospace", color }}>
+          <span className="text-xs font-bold tabular-nums"
+            style={{ fontFamily: "JetBrains Mono, monospace", color: trackColor }}>
             {value}{unit}
           </span>
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-full text-white text-[10px]"
-            style={{ background: color }}>
-            {unit === " bpm" ? (value < 60 ? "Brady" : value > 100 ? "Tachy" : "Normal") : level}
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full text-white"
+            style={{ background: badgeBg }}>
+            {level}
           </span>
         </div>
       </div>
-      <input type="range" min={min} max={max} step={step} value={value}
-        onChange={e => onChange(Number(e.target.value))}
-        className="w-full h-2 rounded-full appearance-none cursor-pointer"
-        style={{ accentColor: color }} />
-      <div className="flex justify-between text-[10px] text-gray-400 mt-0.5">
-        <span>{min}{unit}</span><span>{max}{unit}</span>
+
+      {/* Custom slider track + thumb */}
+      <div className="relative h-6 flex items-center">
+        {/* Track background */}
+        <div className="absolute inset-x-0 h-2 rounded-full bg-gray-200" style={{ top: "50%", transform: "translateY(-50%)" }} />
+        {/* Filled portion */}
+        <div
+          className="absolute h-2 rounded-full transition-all duration-75"
+          style={{
+            top: "50%", transform: "translateY(-50%)",
+            left: 0,
+            width: `${pct}%`,
+            background: `linear-gradient(to right, ${trackColor}88, ${trackColor})`,
+          }}
+        />
+        {/* Tick marks */}
+        {ticks.map(t => (
+          <div
+            key={t}
+            className="absolute w-px h-3 rounded-full"
+            style={{
+              left: `${t}%`,
+              top: "50%",
+              transform: "translate(-50%, -50%)",
+              background: t <= pct ? "rgba(255,255,255,0.6)" : "#d1d5db",
+              zIndex: 1,
+            }}
+          />
+        ))}
+        {/* Native range input — transparent, sits on top for interaction */}
+        <input
+          type="range" min={min} max={max} step={step} value={value}
+          onChange={e => onChange(Number(e.target.value))}
+          className="absolute inset-0 w-full opacity-0 cursor-grab active:cursor-grabbing"
+          style={{ zIndex: 2, height: "100%" }}
+        />
+        {/* Visible thumb */}
+        <div
+          className="absolute w-5 h-5 rounded-full border-2 border-white shadow-md transition-all duration-75 pointer-events-none"
+          style={{
+            left: `calc(${pct}% - 10px)`,
+            top: "50%",
+            transform: "translateY(-50%)",
+            background: trackColor,
+            boxShadow: `0 1px 4px rgba(0,0,0,0.25), 0 0 0 3px ${trackColor}30`,
+            zIndex: 3,
+          }}
+        />
+      </div>
+
+      {/* Min / Max labels */}
+      <div className="flex justify-between text-[10px] text-gray-400 mt-1">
+        <span>{min}{unit}</span>
+        <span className="text-gray-300">drag to adjust</span>
+        <span>{max}{unit}</span>
       </div>
     </div>
   );
