@@ -265,3 +265,20 @@
 - [ ] Pin Lab Admin to bottom of Accreditation Tools sidebar section (always last)
 - [ ] Add Lab Admin shortcut button inside DIY Accreditation Tool™ header
 - [ ] Add link from EchoAccreditation Navigator™ to DIY Accreditation Tool™
+
+## App Structure Reorganization — EchoNavigators / EchoAssist / ScanCoach
+- [ ] Move strain calculators (LV GLS, RV strain, LA strain, RAS, WMSI) from StrainNavigator into EchoAssist™ Strain section
+- [ ] Add Strain ScanCoach section to ScanCoach™ with bull's-eye (17-seg) and segmental strain curves
+- [ ] Slim StrainNavigator down to protocol checklist, scanning tips, and basic pathology only (keep as Strain EchoNavigator™)
+- [ ] Update sidebar nav label for /strain to "Strain EchoNavigator™"
+- [ ] Keep Z-score calculators in Pediatric EchoNavigator™ and Fetal EchoNavigator™ (no change)
+
+## EchoNavigator™ — Reference Values + ScanCoach Links
+- [ ] Add normal reference values section to TTE EchoNavigator™ (LV dimensions, EF, wall thickness, Doppler)
+- [ ] Add normal reference values section to TEE EchoNavigator™
+- [ ] Add normal reference values section to Stress EchoNavigator™
+- [ ] Add normal reference values section to ICE EchoNavigator™
+- [ ] Add normal reference values section to Device EchoNavigator™
+- [ ] Add normal reference values section to ACHD EchoNavigator™
+- [ ] Add normal reference values section to Strain EchoNavigator™ (GLS, RV, LA strain normals)
+- [ ] Add persistent "Open in ScanCoach™" link/button to every EchoNavigator™ page (links to relevant ScanCoach tab)

@@ -6,7 +6,8 @@
 */
 import { useState } from "react";
 import Layout from "@/components/Layout";
-import { ChevronDown, ChevronUp, CheckCircle, Circle, Layers } from "lucide-react";
+import { ChevronDown, ChevronUp, CheckCircle, Circle, Layers, Scan } from "lucide-react";
+import { Link } from "wouter";
 
 // ─── DATA ─────────────────────────────────────────────────────────────────────
 
@@ -251,6 +252,15 @@ export default function DeviceNavigator() {
           </div>
         </div>
 
+        {/* ScanCoach Link */}
+        <div className="mb-4">
+          <Link href="/scan-coach?tab=structural">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90" style={{ background: "#189aa1" }}>
+              <Scan className="w-4 h-4" />
+              Open in ScanCoach™
+            </div>
+          </Link>
+        </div>
         {/* Info banner */}
         <div className="flex items-start gap-3 bg-[#f0fbfc] border border-[#b2e8ec] rounded-xl px-5 py-3 mb-5">
           <Layers className="w-4 h-4 text-[#189aa1] flex-shrink-0 mt-0.5" />

@@ -193,7 +193,7 @@ const stats = [
   { label: "Clinical Calculators", value: "20+", icon: Calculator },
   { label: "Echo Cases", value: "500+", icon: BookOpen },
   { label: "Protocols Covered", value: "15", icon: ClipboardList },
-  { label: "Active Users", value: "12,492+", icon: Users },
+  { label: "Active Users", value: "13,000+", icon: Users },
 ];
 
 export default function Home() {

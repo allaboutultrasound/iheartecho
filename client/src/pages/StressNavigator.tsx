@@ -6,7 +6,8 @@
 */
 import { useState } from "react";
 import Layout from "@/components/Layout";
-import { Activity, AlertCircle, CheckCircle2, Circle, ChevronDown, ChevronUp, Zap } from "lucide-react";
+import { Activity, AlertCircle, CheckCircle2, Circle, ChevronDown, ChevronUp, Zap, Scan } from "lucide-react";
+import { Link } from "wouter";
 
 // --- WALL MOTION SCORING ------------------------------------------------------
 const segments17 = [
@@ -372,7 +373,7 @@ const interpretationCriteria = [
 ];
 
 // --- MAIN COMPONENT -----------------------------------------------------------
-type TabId = "protocol" | "wmsi" | "target_hr" | "interpretation";
+type TabId = "protocol" | "wmsi" | "target_hr" | "interpretation" | "reference";
 
 export default function StressNavigator() {
   const [tab, setTab] = useState<TabId>("protocol");
@@ -397,6 +398,7 @@ export default function StressNavigator() {
     { id: "wmsi" as TabId, label: "Wall Motion Scoring" },
     { id: "target_hr" as TabId, label: "Target HR / Dosing" },
     { id: "interpretation" as TabId, label: "Interpretation" },
+    { id: "reference" as TabId, label: "Normal Reference Values" },
   ];
 
   return (
@@ -411,6 +413,15 @@ export default function StressNavigator() {
           </p>
         </div>
 
+        {/* ScanCoach Link */}
+        <div className="mb-4">
+          <Link href="/scan-coach?tab=tte">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90" style={{ background: "#189aa1" }}>
+              <Scan className="w-4 h-4" />
+              Open in ScanCoach™
+            </div>
+          </Link>
+        </div>
         {/* Tabs */}
         <div className="flex flex-wrap gap-2 mb-5">
           {tabs.map(t => (
@@ -424,6 +435,61 @@ export default function StressNavigator() {
           ))}
         </div>
 
+        {tab === "reference" && (
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="px-5 py-3 border-b" style={{ background: "linear-gradient(90deg, #0e4a50, #189aa1)" }}>
+              <h3 className="font-bold text-sm text-white" style={{ fontFamily: "Merriweather, serif" }}>Stress Echo Normal Reference Values</h3>
+              <p className="text-xs text-white/70 mt-0.5">ASE 2007 Stress Echo Guidelines · ASE 2025 Strain</p>
+            </div>
+            <div className="p-5 space-y-5">
+              {[
+                { section: "Resting LV Function", rows: [
+                  ["LV EF (resting)", "≥ 55%"],
+                  ["LV GLS (resting)", "≤ −18% (ASE 2025)"],
+                  ["WMSI (resting)", "1.0 (all segments normal)"],
+                ]},
+                { section: "Stress Response (Normal)", rows: [
+                  ["EF increase with stress", "≥ 5% above resting"],
+                  ["WMSI (peak stress)", "1.0 (no new WMA)"],
+                  ["Wall motion", "All 17 segments normal/hyperkinetic at peak"],
+                  ["LV cavity size", "Decreases or unchanged at peak stress"],
+                ]},
+                { section: "Target Heart Rate", rows: [
+                  ["Exercise stress", "85% of maximum predicted HR (220 − age)"],
+                  ["DSE (standard)", "85% MPHR or 40 mcg/kg/min"],
+                  ["DSE (low-dose viability)", "5–20 mcg/kg/min (biphasic response)"],
+                ]},
+                { section: "Dobutamine Dosing", rows: [
+                  ["Starting dose", "5 mcg/kg/min"],
+                  ["Increments", "5–10 mcg/kg/min every 3 min"],
+                  ["Maximum dose", "40 mcg/kg/min"],
+                  ["Atropine augmentation", "0.25–1.0 mg IV if target HR not reached"],
+                ]},
+                { section: "Interpretation Thresholds", rows: [
+                  ["Positive test", "New or worsening WMA at peak stress"],
+                  ["Ischemic threshold", "WMA at low workload or low HR"],
+                  ["Viability (biphasic)", "Improvement at low dose, deterioration at high dose"],
+                  ["Hibernation", "Improvement at low dose, sustained at high dose"],
+                ]},
+              ].map(({ section, rows }) => (
+                <div key={section}>
+                  <div className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: "#189aa1" }}>{section}</div>
+                  <table className="w-full text-xs">
+                    <tbody>
+                      {rows.map(([param, val]) => (
+                        <tr key={param} className="border-b border-gray-50 last:border-0">
+                          <td className="py-1.5 text-gray-600 w-1/2">{param}</td>
+                          <td className="py-1.5 font-semibold text-gray-800">{val}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ))}
+              <p className="text-xs text-gray-400 mt-2">References: ASE 2007 Stress Echo Guidelines, ASE 2025 Strain Guideline (Thomas et al.).</p>
+            </div>
+          </div>
+        )}
         {tab === "protocol" && (
           <div>
             {/* Protocol selector */}

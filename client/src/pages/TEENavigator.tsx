@@ -6,7 +6,8 @@
 */
 import { useState } from "react";
 import Layout from "@/components/Layout";
-import { CheckCircle2, Circle, ChevronDown, ChevronUp, AlertCircle, Eye, Printer } from "lucide-react";
+import { CheckCircle2, Circle, ChevronDown, ChevronUp, AlertCircle, Eye, Printer, Scan, ExternalLink } from "lucide-react";
+import { Link } from "wouter";
 
 type ChecklistItem = { id: string; label: string; detail?: string; critical?: boolean; angle?: string };
 type ViewSection = { view: string; position: string; angle: string; depth: string; items: ChecklistItem[]; clinicalUse?: string };
@@ -194,7 +195,7 @@ const clinicalApps = [
 
 // --- MAIN COMPONENT -----------------------------------------------------------
 export default function TEENavigator() {
-  const [tab, setTab] = useState<"protocol" | "applications">("protocol");
+  const [tab, setTab] = useState<"protocol" | "applications" | "reference">("protocol");
   const [expandedView, setExpandedView] = useState<number | null>(0);
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [expandedApp, setExpandedApp] = useState<number | null>(null);
@@ -279,9 +280,18 @@ export default function TEENavigator() {
           </div>
         </div>
 
+        {/* ScanCoach Link */}
+        <div className="mb-4">
+          <Link href="/scan-coach?tab=tee">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90" style={{ background: "#189aa1" }}>
+              <Scan className="w-4 h-4" />
+              Open in ScanCoach™
+            </div>
+          </Link>
+        </div>
         {/* Tabs */}
         <div className="flex gap-2 mb-5">
-          {[{ id: "protocol", label: "Protocol Checklist" }, { id: "applications", label: "Clinical Applications" }].map(t => (
+          {[{ id: "protocol", label: "Protocol Checklist" }, { id: "applications", label: "Clinical Applications" }, { id: "reference", label: "Normal Reference Values" }].map(t => (
             <button key={t.id} onClick={() => setTab(t.id as any)}
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
                 tab === t.id ? "text-white shadow-sm" : "bg-white text-gray-600 border border-gray-200 hover:border-[#189aa1] hover:text-[#189aa1]"
@@ -372,6 +382,69 @@ export default function TEENavigator() {
           </div>
         )}
 
+        {tab === "reference" && (
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="px-5 py-3 border-b" style={{ background: "linear-gradient(90deg, #0e4a50, #189aa1)" }}>
+              <h3 className="font-bold text-sm text-white" style={{ fontFamily: "Merriweather, serif" }}>TEE Normal Reference Values</h3>
+              <p className="text-xs text-white/70 mt-0.5">ASE/EACVI 2015 · Vendor-neutral · Adult</p>
+            </div>
+            <div className="p-5 space-y-5">
+              {[
+                { section: "Left Ventricle", rows: [
+                  ["LVEDD", "42–58 mm (M), 38–52 mm (F)"],
+                  ["LVESD", "25–40 mm"],
+                  ["IVSd / PWd", "6–10 mm"],
+                  ["LV EF (biplane)", "≥ 55%"],
+                  ["LV GLS", "≤ −18% (ASE 2025)"],
+                ]},
+                { section: "Left Atrium", rows: [
+                  ["LA AP dimension", "< 40 mm"],
+                  ["LAVI", "< 34 mL/m²"],
+                  ["LA appendage flow velocity", "≥ 40 cm/s (LAA thrombus risk if < 20 cm/s)"],
+                ]},
+                { section: "Aorta (TEE)", rows: [
+                  ["Aortic annulus", "18–26 mm"],
+                  ["Sinus of Valsalva", "< 40 mm"],
+                  ["Sinotubular junction", "< 36 mm"],
+                  ["Ascending aorta", "< 40 mm"],
+                  ["Descending thoracic aorta", "< 30 mm"],
+                ]},
+                { section: "Mitral Valve", rows: [
+                  ["Mitral annulus diameter", "28–35 mm"],
+                  ["Mitral E velocity", "0.6–1.3 m/s"],
+                  ["Mitral A velocity", "0.4–0.9 m/s"],
+                  ["E/A ratio", "0.8–2.0"],
+                ]},
+                { section: "Aortic Valve", rows: [
+                  ["AV peak velocity", "< 2.0 m/s"],
+                  ["AVA (normal)", "≥ 2.0 cm²"],
+                  ["LVOT diameter", "18–25 mm"],
+                ]},
+                { section: "Right Heart", rows: [
+                  ["RV basal diameter", "< 41 mm"],
+                  ["TAPSE", "≥ 17 mm"],
+                  ["RV free wall strain", "≤ −20%"],
+                  ["RA area", "< 18 cm²"],
+                ]},
+              ].map(({ section, rows }) => (
+                <div key={section}>
+                  <div className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: "#189aa1" }}>{section}</div>
+                  <table className="w-full text-xs">
+                    <tbody>
+                      {rows.map(([param, val]) => (
+                        <tr key={param} className="border-b border-gray-50 last:border-0">
+                          <td className="py-1.5 text-gray-600 w-1/2">{param}</td>
+                          <td className="py-1.5 font-semibold text-gray-800">{val}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ))}
+              <p className="text-xs text-gray-400 mt-2">References: ASE 2015 Chamber Quantification (Lang et al.), ASE 2025 Strain Guideline (Thomas et al.), ACC/AHA Valvular Heart Disease Guidelines 2021.</p>
+            </div>
+          </div>
+        )}
         {tab === "applications" && (
           <div className="space-y-3">
             {clinicalApps.map((app, ai) => (
