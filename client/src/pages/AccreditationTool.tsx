@@ -227,7 +227,7 @@ function QualityReviewTab() {
                     <div className="flex items-center gap-2 flex-wrap mb-1">
                       <span className="text-xs font-bold text-gray-800">{log.title}</span>
                       <FindingBadge finding={log.finding} />
-                      <Badge variant="outline" className="text-xs">{log.category?.replace(/_/g, " ")}</Badge>
+                      <span className="inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "#189aa1" + "15", color: "#189aa1" }}>{log.category?.replace(/_/g, " ")}</span>
                     </div>
                     {log.description && <p className="text-xs text-gray-500 mb-1">{log.description}</p>}
                     {log.actionRequired && <p className="text-xs text-amber-700"><span className="font-semibold">Action required:</span> {log.actionRequired}</p>}
@@ -758,10 +758,10 @@ function PeerReviewTab() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <Badge variant="outline" className="text-xs">{r.modality}</Badge>
+                      <span className="inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "#189aa1" + "15", color: "#189aa1" }}>{r.modality}</span>
                       {r.sonographerInitials && <span className="text-xs text-gray-500">Sonographer: {r.sonographerInitials}</span>}
                       <ScoreBadge score={r.overallScore} />
-                      <Badge variant="outline" className="text-xs capitalize">{r.status}</Badge>
+                      <span className="inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full capitalize" style={{ background: "#189aa1" + "15", color: "#189aa1" }}>{r.status}</span>
                     </div>
                     <div className="flex flex-wrap gap-2 text-xs text-gray-500">
                       {r.imageQuality && <span>Image: <span className="font-medium capitalize">{r.imageQuality}</span></span>}
@@ -951,8 +951,8 @@ function PolicyBuilderTab() {
                     <div className="flex items-center gap-2 flex-wrap mb-1">
                       <span className="text-xs font-bold text-gray-800">{p.title}</span>
                       <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: (statusColor[p.status] ?? "#6b7280") + "18", color: statusColor[p.status] ?? "#6b7280" }}>{p.status}</span>
-                      <Badge variant="outline" className="text-xs">{p.category?.replace(/_/g, " ")}</Badge>
-                      <Badge variant="outline" className="text-xs">{p.modality}</Badge>
+                      <span className="inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "#189aa1" + "15", color: "#189aa1" }}>{p.category?.replace(/_/g, " ")}</span>
+                      <span className="inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "#189aa1" + "15", color: "#189aa1" }}>{p.modality}</span>
                       <span className="text-xs text-gray-400">v{p.version}</span>
                     </div>
                     {p.reviewDate && <p className="text-xs text-gray-400">Review by: {p.reviewDate}</p>}
@@ -1120,7 +1120,7 @@ function AppropriateUseTab() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <Badge variant="outline" className="text-xs">{e.modality}</Badge>
+                      <span className="inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "#189aa1" + "15", color: "#189aa1" }}>{e.modality}</span>
                       <AucBadge rating={e.appropriatenessRating} />
                       {e.flagged && <span className="text-xs font-semibold text-red-600 flex items-center gap-0.5"><AlertTriangle className="w-3 h-3" />Flagged</span>}
                     </div>

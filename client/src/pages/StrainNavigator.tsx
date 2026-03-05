@@ -200,7 +200,7 @@ function NumInput({ label, value, onChange, unit, placeholder, hint }: {
   return (
     <div className="flex flex-col gap-1">
       <label className="text-xs font-semibold text-gray-600">{label}</label>
-      <div className="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+      <div className="flex items-center gap-1 bg-white border rounded-lg px-3 py-2" style={{ borderColor: "#189aa1" + "40" }}>
         <input
           type="number" step="0.1"
           value={value} onChange={e => onChange(e.target.value)}
@@ -246,9 +246,9 @@ function ResultBox({ label, value, normal, unit, interpretation }: {
   const numVal = parseFloat(value);
   const isGood = !isNaN(numVal);
   return (
-    <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+    <div className="rounded-lg p-4 border" style={{ background: "#f0fbfc", borderColor: "#189aa1" + "30" }}>
       <div className="flex items-center justify-between mb-1">
-        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</span>
+        <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#189aa1" }}>{label}</span>
         <span className="text-xs text-gray-400">nl: {normal} {unit}</span>
       </div>
       {isGood ? (
@@ -438,7 +438,7 @@ export default function StrainNavigator() {
                 <div>
                   <label className="text-xs font-semibold text-gray-600 block mb-1">Vendor / Platform</label>
                   <select value={vendor} onChange={e => setVendor(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700">
+                    className="w-full bg-white border rounded-lg px-3 py-2 text-sm text-gray-700" style={{ borderColor: "#189aa1" + "40" }}>
                     <option value="">Select vendor</option>
                     <option>GE HealthCare</option>
                     <option>Philips</option>
@@ -643,7 +643,9 @@ export default function StrainNavigator() {
                   { ref: "Badano LP et al. Recommendations for the Use of Cardiac Imaging to Assess and Follow Patients with Hypertrophic Cardiomyopathy. Eur Heart J Cardiovasc Imaging 2023.", url: "https://academic.oup.com/ehjcimaging" },
                 ].map(({ ref, url }) => (
                   <a key={ref} href={url} target="_blank" rel="noopener noreferrer"
-                    className="flex items-start gap-2 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors group">
+                    className="flex items-start gap-2 p-3 rounded-lg transition-colors group" style={{ background: "#f0fbfc" }}
+                    onMouseEnter={e => (e.currentTarget.style.background = "#d4f5f7")}
+                    onMouseLeave={e => (e.currentTarget.style.background = "#f0fbfc")}>
                     <BookOpen className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: BRAND }} />
                     <span className="text-xs text-gray-600 leading-relaxed group-hover:text-gray-800">{ref}</span>
                     <ExternalLink className="w-3 h-3 flex-shrink-0 mt-0.5 text-gray-400 group-hover:text-gray-600" />
@@ -663,7 +665,10 @@ export default function StrainNavigator() {
                   17-Segment Bull's-Eye
                 </h3>
                 <button onClick={clearAllSegments}
-                  className="text-xs text-gray-400 hover:text-red-500 transition-colors">
+                  className="text-xs font-semibold px-2 py-0.5 rounded transition-colors"
+                  style={{ color: "#189aa1", background: "#189aa1" + "15" }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#dc262618"; (e.currentTarget as HTMLButtonElement).style.color = "#dc2626"; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#189aa1" + "15"; (e.currentTarget as HTMLButtonElement).style.color = "#189aa1"; }}>
                   Clear all
                 </button>
               </div>
@@ -681,7 +686,8 @@ export default function StrainNavigator() {
                     value={segInput}
                     onChange={e => handleSegInputChange(e.target.value)}
                     placeholder="e.g. −18.5"
-                    className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono text-gray-800 outline-none"
+                    className="w-full bg-white border rounded-lg px-3 py-2 text-sm font-mono text-gray-800 outline-none"
+                    style={{ borderColor: "#189aa1" + "60" }}
                     autoFocus
                   />
                 </div>
@@ -733,9 +739,9 @@ export default function StrainNavigator() {
                   interpretation={laInterp?.severity ?? ""}
                 />
                 {segAvg !== null && (
-                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                  <div className="rounded-lg p-4 border" style={{ background: "#f0fbfc", borderColor: "#189aa1" + "30" }}>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Segmental Avg GLS</span>
+                      <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#189aa1" }}>Segmental Avg GLS</span>
                       <span className="text-xs text-gray-400">{enteredSegs.length}/17 segs</span>
                     </div>
                     <div className="text-2xl font-black font-mono" style={{ color: BRAND }}>{segAvg}%</div>

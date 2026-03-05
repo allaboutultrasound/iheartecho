@@ -105,9 +105,9 @@ function TabBtn({ active, onClick, icon: Icon, label, badge }: {
     <button
       onClick={onClick}
       className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
-        active ? "text-white shadow-sm" : "text-gray-600 hover:text-gray-800 hover:bg-white/60"
+        active ? "text-white shadow-sm" : "hover:bg-white/80"
       }`}
-      style={active ? { background: BRAND } : {}}
+      style={active ? { background: BRAND } : { color: "#189aa1" }}
     >
       <Icon className="w-4 h-4" />
       {label}
@@ -962,13 +962,13 @@ export default function LabAdmin() {
             </h1>
             <p className="text-xs text-gray-500 mt-0.5">{lab.labName}</p>
           </div>
-          <button onClick={onRefresh} className="p-2 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors">
+          <button onClick={onRefresh} className="p-2 rounded-lg transition-colors" style={{ color: "#189aa1" }} onMouseEnter={e => (e.currentTarget.style.background = "#f0fbfc")} onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
             <RefreshCw className="w-4 h-4" />
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 p-1 rounded-xl bg-gray-100 mb-6 overflow-x-auto">
+        <div className="flex gap-1 p-1 rounded-xl mb-6 overflow-x-auto" style={{ background: "#e6f7f8" }}>
           <TabBtn active={tab === "overview"} onClick={() => setTab("overview")} icon={Building2} label="Overview" />
           <TabBtn active={tab === "staff"} onClick={() => setTab("staff")} icon={Users} label="Staff" badge={members.length} />
           <TabBtn active={tab === "analytics"} onClick={() => setTab("analytics")} icon={BarChart2} label="Analytics" />

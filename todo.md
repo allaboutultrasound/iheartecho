@@ -132,3 +132,15 @@
 - [x] Subscription tier UI: Basic (5 staff), Professional (25 staff), Enterprise (unlimited)
 - [ ] Stripe integration for monthly subscription billing (pending Stripe key)
 - [x] Sidebar entry for Lab Admin under Accreditation Tools section
+
+## Brand Color Consistency Fix
+- [x] Strain Navigator™ — all buttons, tabs, cards use brand teal #189aa1
+- [x] DIY Accreditation Tool™ — all buttons, tabs, cards use brand teal #189aa1
+- [x] EchoAccreditation Navigator™ — brand color audit
+- [x] Lab Admin Portal — brand color audit
+- [x] Global: no gray/default shadcn buttons on primary actions
+- [x] All badge/tag elements use brand teal palette (not generic gray/blue/purple)
+- [x] Strain Navigator™ — ResultBox, vendor select, reference link cards use brand colors
+- [x] DIY Accreditation Tool™ — all badge tags, status chips use brand teal palette
+- [x] EchoAccreditation Navigator™ — all section tags, standard badges use brand colors
+- [x] Home dashboard — module badge tags use brand teal palette

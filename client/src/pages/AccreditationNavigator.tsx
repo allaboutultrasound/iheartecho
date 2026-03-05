@@ -347,7 +347,7 @@ function StandardCard({ standard }: { standard: Standard }) {
           <div className="pt-3 text-xs text-gray-700 leading-relaxed whitespace-pre-line">{standard.content}</div>
           <div className="flex flex-wrap gap-1 mt-3">
             {standard.tags.map(tag => (
-              <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>
+              <span key={tag} className="inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "#189aa1" + "15", color: "#189aa1" }}>{tag}</span>
             ))}
           </div>
         </div>
@@ -427,8 +427,8 @@ export default function AccreditationNavigator() {
                 <button
                   key={m}
                   onClick={() => setActiveModality(m)}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${isActive ? "text-white shadow-sm" : "text-gray-600 bg-white border border-gray-200 hover:border-gray-300"}`}
-                  style={isActive ? { background: mc?.color ?? BRAND } : {}}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${isActive ? "text-white shadow-sm" : "bg-white hover:bg-[#f0fbfc]"}`}
+                  style={isActive ? { background: mc?.color ?? BRAND } : { color: "#189aa1", border: "1px solid #189aa1" + "40" }}
                 >
                   {m === "All" ? "All Modalities" : mc?.label}
                 </button>
@@ -439,8 +439,8 @@ export default function AccreditationNavigator() {
           <div className="flex flex-wrap gap-1">
             <button
               onClick={() => setActiveCategory("All")}
-              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${activeCategory === "All" ? "text-white shadow-sm" : "text-gray-600 bg-white border border-gray-200 hover:border-gray-300"}`}
-              style={activeCategory === "All" ? { background: BRAND } : {}}
+              className={`px-3 py-1 rounded-full text-xs font-semibold transition-all ${activeCategory === "All" ? "text-white shadow-sm" : "bg-white hover:bg-[#f0fbfc]"}`}
+              style={activeCategory === "All" ? { background: BRAND } : { color: "#189aa1", border: "1px solid #189aa1" + "40" }}
             >
               All Topics
             </button>
@@ -452,8 +452,8 @@ export default function AccreditationNavigator() {
                 <button
                   key={cat}
                   onClick={() => setActiveCategory(cat)}
-                  className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold transition-all ${isActive ? "text-white shadow-sm" : "text-gray-600 bg-white border border-gray-200 hover:border-gray-300"}`}
-                  style={isActive ? { background: cc.color } : {}}
+                  className={`flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold transition-all ${isActive ? "text-white shadow-sm" : "bg-white hover:bg-[#f0fbfc]"}`}
+                  style={isActive ? { background: cc.color } : { color: "#189aa1", border: "1px solid #189aa1" + "40" }}
                 >
                   <CatIcon className="w-3 h-3" />
                   {cc.label}
