@@ -216,6 +216,21 @@ export default function TTENavigator() {
           </p>
         </div>
 
+        {/* Scan Coach shortcut banner */}
+        <div className="flex items-center justify-between bg-[#f0fbfc] border border-[#b2e8ec] rounded-xl px-5 py-3 mb-5">
+          <div>
+            <p className="text-sm font-semibold text-[#0e7490]">Adult TTE Scan Coach</p>
+            <p className="text-xs text-gray-500 mt-0.5">Step-by-step view guides with probe positioning, anatomy diagrams, and clinical technique tips.</p>
+          </div>
+          <Link href="/scan-coach?tab=tte">
+            <a className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold text-white whitespace-nowrap transition-all hover:opacity-90"
+              style={{ background: "#189aa1" }}>
+              <Scan className="w-4 h-4" />
+              Adult TTE Scan Coach
+            </a>
+          </Link>
+        </div>
+
         {/* Progress bar */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-5">
           <div className="flex items-center justify-between mb-2">
@@ -317,20 +332,6 @@ export default function TTENavigator() {
 
         {tab === "reference" && (
           <div className="space-y-3">
-            {/* Scan Coach shortcut */}
-            <div className="flex items-center justify-between bg-[#f0fbfc] border border-[#b2e8ec] rounded-xl px-5 py-3">
-              <div>
-                <p className="text-sm font-semibold text-[#0e7490]">Want to practice these views?</p>
-                <p className="text-xs text-gray-500 mt-0.5">Open the Adult TTE Scan Coach for probe positioning, anatomy diagrams, and technique tips.</p>
-              </div>
-              <Link href="/scan-coach?tab=tte">
-                <a className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold text-white whitespace-nowrap transition-all hover:opacity-90"
-                  style={{ background: "#189aa1" }}>
-                  <Scan className="w-4 h-4" />
-                  Adult TTE Scan Coach
-                </a>
-              </Link>
-            </div>
             {normalValues.map((cat, ci) => (
               <div key={ci} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                 <button
