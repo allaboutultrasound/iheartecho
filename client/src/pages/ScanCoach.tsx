@@ -545,24 +545,9 @@ export default function ScanCoach() {
 
         {/* ─── ADULT TTE TAB ─── */}
         {activeTab === "tte" && (
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
-            {/* View list */}
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="px-4 py-3 border-b border-gray-100">
-                  <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>TTE Views</h3>
-                  <p className="text-xs text-gray-400 mt-0.5">9 standard acoustic windows</p>
-                </div>
-                <div className="p-3 space-y-1">
-                  {tteViews.map(v => (
-                    <TTEViewCard key={v.id} view={v} isSelected={selectedTTE.id === v.id} onClick={() => setSelectedTTE(v)} />
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Detail panel */}
-            <div ref={tteDetailRef} className="lg:col-span-3 space-y-4">
+           <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
+            {/* Detail panel — order-first on mobile so it appears at top */}
+            <div ref={tteDetailRef} className="lg:col-span-3 lg:order-2 order-1 space-y-4">
               {/* Header */}
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="px-5 py-4 border-b" style={{ borderColor: selectedTTE.color + "30", background: selectedTTE.color + "08" }}>
@@ -655,12 +640,25 @@ export default function ScanCoach() {
                       </li>
                     ))}
                   </ul>
+                 </div>
+              </div>
+            </div>
+            {/* View list sidebar — order-1 on desktop, order-2 on mobile so detail panel shows first */}
+            <div className="lg:col-span-1 lg:order-1 order-2">
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-100">
+                  <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>TTE Views</h3>
+                  <p className="text-xs text-gray-400 mt-0.5">9 standard acoustic windows</p>
+                </div>
+                <div className="p-3 space-y-1">
+                  {tteViews.map(v => (
+                    <TTEViewCard key={v.id} view={v} isSelected={selectedTTE.id === v.id} onClick={() => setSelectedTTE(v)} />
+                  ))}
                 </div>
               </div>
             </div>
           </div>
         )}
-
         {/* ─── FETAL ECHO TAB ─── */}
         {activeTab === "fetal" && (
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
