@@ -149,3 +149,22 @@
 - [x] Add Fujifilm as vendor option in vendor select dropdown
 - [x] Update bull's-eye color scale: normal=red, mildly reduced=pink, moderately reduced=light pink, mod-severe=light blue, severely reduced=dark blue
 - [x] Update legend to match new color scale
+
+## Save to Case — Strain Navigator™
+- [x] DB: strainSnapshots table (id, userId, caseId, segmentValues JSON, gls, rvStrain, laStrain, vendor, frameRate, notes, createdAt)
+- [x] tRPC: strain.saveSnapshot mutation (protected)
+- [x] tRPC: strain.getSnapshotsByCase query
+- [x] tRPC: cases.listMyCases query for case picker
+- [x] SaveToCase modal in StrainNavigator: case picker dropdown + new case name input + notes field
+- [x] Bull's-eye SVG export as base64 PNG for snapshot preview
+- [ ] Display strain snapshots panel in Echo Case Lab entry detail view (future)
+- [x] Vitest tests for strain snapshot procedures (20 tests)
+
+## Segmental Strain Curves — Strain Navigator™
+- [x] Segmental strain curves panel below bull's-eye (recharts LineChart per wall: anterior, lateral, inferior, septal, apex)
+- [x] Synthetic time-strain waveforms generated from entered GLS values per segment
+- [x] Wall motion score (1=normal, 2=hypokinetic, 3=akinetic, 4=dyskinetic, 5=aneurysmal) per segment input
+- [x] Waveform shape adjusts by wall motion score: normal=deep negative curve, hypo=shallow, akinetic=flat, dyskinetic=positive deflection
+- [x] Color-coded curves matching bull's-eye segment colors
+- [x] Wall Motion Score Index (WMSI) auto-calculated and displayed
+- [x] Snapshot includes wall motion scores and curve data when saved to case

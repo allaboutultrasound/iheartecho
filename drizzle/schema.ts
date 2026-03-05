@@ -340,3 +340,45 @@ export const labPeerReviews = mysqlTable("labPeerReviews", {
 
 export type LabPeerReview = typeof labPeerReviews.$inferSelect;
 export type InsertLabPeerReview = typeof labPeerReviews.$inferInsert;
+
+// ─── Echo Cases (user-created case library) ───────────────────────────────────
+export const echoCases = mysqlTable("echoCases", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  title: varchar("title", { length: 200 }).notNull(),
+  patientAge: int("patientAge"),
+  patientSex: mysqlEnum("patientSex", ["M", "F", "Other"]),
+  clinicalHistory: text("clinicalHistory"),
+  indication: varchar("indication", { length: 200 }),
+  diagnosis: varchar("diagnosis", { length: 200 }),
+  notes: text("notes"),
+  isPublic: boolean("isPublic").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type EchoCase = typeof echoCases.$inferSelect;
+export type InsertEchoCase = typeof echoCases.$inferInsert;
+
+// ─── Strain Snapshots (attached to echo cases) ────────────────────────────────
+export const strainSnapshots = mysqlTable("strainSnapshots", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  caseId: int("caseId"),                              // nullable — can save without a case
+  caseTitle: varchar("caseTitle", { length: 200 }),   // denormalized for display
+  // Segment values: JSON array of {id, value, wallMotionScore}
+  segmentValues: text("segmentValues").notNull(),      // JSON string
+  wallMotionScores: text("wallMotionScores"),          // JSON string {segId: score}
+  // Summary metrics
+  lvGls: text("lvGls"),                               // stored as string to preserve null
+  rvStrain: text("rvStrain"),
+  laStrain: text("laStrain"),
+  wmsi: text("wmsi"),                                 // wall motion score index
+  // Acquisition context
+  vendor: varchar("vendor", { length: 100 }),
+  frameRate: int("frameRate"),
+  // Clinical notes
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type StrainSnapshot = typeof strainSnapshots.$inferSelect;
+export type InsertStrainSnapshot = typeof strainSnapshots.$inferInsert;

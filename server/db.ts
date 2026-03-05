@@ -19,6 +19,8 @@ import {
   labSubscriptions,
   labMembers,
   labPeerReviews,
+  echoCases,
+  strainSnapshots,
   type LabSubscription,
   type LabMember,
   type LabPeerReview,
@@ -580,4 +582,106 @@ export async function getLabMonthlySummary(labId: number, months = 12) {
     .where(eq(labPeerReviews.labId, labId))
     .groupBy(labPeerReviews.reviewMonth)
     .orderBy(labPeerReviews.reviewMonth);
+}
+
+// ─── Echo Cases ───────────────────────────────────────────────────────────────
+
+export async function createEchoCase(data: {
+  userId: number;
+  title: string;
+  patientAge?: number | null;
+  patientSex?: "M" | "F" | "Other" | null;
+  clinicalHistory?: string | null;
+  indication?: string | null;
+  diagnosis?: string | null;
+  notes?: string | null;
+  isPublic?: boolean;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  await db.insert(echoCases).values({
+    userId: data.userId,
+    title: data.title,
+    patientAge: data.patientAge ?? null,
+    patientSex: data.patientSex ?? null,
+    clinicalHistory: data.clinicalHistory ?? null,
+    indication: data.indication ?? null,
+    diagnosis: data.diagnosis ?? null,
+    notes: data.notes ?? null,
+    isPublic: data.isPublic ?? false,
+  });
+}
+
+export async function getEchoCasesByUser(userId: number, limit = 50, offset = 0) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(echoCases)
+    .where(eq(echoCases.userId, userId))
+    .orderBy(desc(echoCases.createdAt))
+    .limit(limit)
+    .offset(offset);
+}
+
+export async function getEchoCaseById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const [row] = await db.select().from(echoCases).where(eq(echoCases.id, id));
+  return row ?? null;
+}
+
+// ─── Strain Snapshots ─────────────────────────────────────────────────────────
+
+export async function createStrainSnapshot(data: {
+  userId: number;
+  caseId?: number | null;
+  caseTitle?: string | null;
+  segmentValues: string;
+  wallMotionScores?: string | null;
+  lvGls?: string | null;
+  rvStrain?: string | null;
+  laStrain?: string | null;
+  wmsi?: string | null;
+  vendor?: string | null;
+  frameRate?: number | null;
+  notes?: string | null;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  await db.insert(strainSnapshots).values({
+    userId: data.userId,
+    caseId: data.caseId ?? null,
+    caseTitle: data.caseTitle ?? null,
+    segmentValues: data.segmentValues,
+    wallMotionScores: data.wallMotionScores ?? null,
+    lvGls: data.lvGls ?? null,
+    rvStrain: data.rvStrain ?? null,
+    laStrain: data.laStrain ?? null,
+    wmsi: data.wmsi ?? null,
+    vendor: data.vendor ?? null,
+    frameRate: data.frameRate ?? null,
+    notes: data.notes ?? null,
+  });
+}
+
+export async function getStrainSnapshotsByCase(caseId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(strainSnapshots)
+    .where(eq(strainSnapshots.caseId, caseId))
+    .orderBy(desc(strainSnapshots.createdAt));
+}
+
+export async function getStrainSnapshotsByUser(userId: number, limit = 20) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(strainSnapshots)
+    .where(eq(strainSnapshots.userId, userId))
+    .orderBy(desc(strainSnapshots.createdAt))
+    .limit(limit);
 }

@@ -48,6 +48,12 @@ import {
   getStaffQsTrend,
   getLabStaffSnapshot,
   getLabMonthlySummary,
+  createEchoCase,
+  getEchoCasesByUser,
+  getEchoCaseById,
+  createStrainSnapshot,
+  getStrainSnapshotsByCase,
+  getStrainSnapshotsByUser,
 } from "./db";
 
 export const appRouter = router({
@@ -580,6 +586,111 @@ export const appRouter = router({
         if (!lab) return [];
         return getLabMonthlySummary(lab.id, input.months);
       }),
+  }),
+  // ─── Strain Navigator ────────────────────────────────────────────────────────
+
+  strain: router({
+    // List current user's echo cases for the case picker
+    listMyCases: protectedProcedure.query(async ({ ctx }) => {
+      return getEchoCasesByUser(ctx.user.id, 50, 0);
+    }),
+
+    // Save a strain snapshot to an existing case (or without a case)
+    saveSnapshot: protectedProcedure
+      .input(z.object({
+        caseId: z.number().optional(),
+        segmentValues: z.string(),
+        wallMotionScores: z.string().optional(),
+        lvGls: z.string().nullable().optional(),
+        rvStrain: z.string().nullable().optional(),
+        laStrain: z.string().nullable().optional(),
+        wmsi: z.string().nullable().optional(),
+        vendor: z.string().nullable().optional(),
+        frameRate: z.number().nullable().optional(),
+        notes: z.string().nullable().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        let caseTitle: string | null = null;
+        if (input.caseId) {
+          const echoCase = await getEchoCaseById(input.caseId);
+          if (!echoCase || echoCase.userId !== ctx.user.id) {
+            throw new TRPCError({ code: "NOT_FOUND", message: "Case not found" });
+          }
+          caseTitle = echoCase.title;
+        }
+        await createStrainSnapshot({
+          userId: ctx.user.id,
+          caseId: input.caseId ?? null,
+          caseTitle,
+          segmentValues: input.segmentValues,
+          wallMotionScores: input.wallMotionScores ?? null,
+          lvGls: input.lvGls ?? null,
+          rvStrain: input.rvStrain ?? null,
+          laStrain: input.laStrain ?? null,
+          wmsi: input.wmsi ?? null,
+          vendor: input.vendor ?? null,
+          frameRate: input.frameRate ?? null,
+          notes: input.notes ?? null,
+        });
+        return { success: true };
+      }),
+
+    // Create a new echo case AND save the snapshot in one step
+    createCaseAndSaveSnapshot: protectedProcedure
+      .input(z.object({
+        caseTitle: z.string().min(1).max(200),
+        segmentValues: z.string(),
+        wallMotionScores: z.string().optional(),
+        lvGls: z.string().nullable().optional(),
+        rvStrain: z.string().nullable().optional(),
+        laStrain: z.string().nullable().optional(),
+        wmsi: z.string().nullable().optional(),
+        vendor: z.string().nullable().optional(),
+        frameRate: z.number().nullable().optional(),
+        notes: z.string().nullable().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // Create the case first
+        await createEchoCase({
+          userId: ctx.user.id,
+          title: input.caseTitle,
+        });
+        // Get the newly created case
+        const cases = await getEchoCasesByUser(ctx.user.id, 1, 0);
+        const newCase = cases[0];
+        // Save the snapshot attached to the new case
+        await createStrainSnapshot({
+          userId: ctx.user.id,
+          caseId: newCase?.id ?? null,
+          caseTitle: input.caseTitle,
+          segmentValues: input.segmentValues,
+          wallMotionScores: input.wallMotionScores ?? null,
+          lvGls: input.lvGls ?? null,
+          rvStrain: input.rvStrain ?? null,
+          laStrain: input.laStrain ?? null,
+          wmsi: input.wmsi ?? null,
+          vendor: input.vendor ?? null,
+          frameRate: input.frameRate ?? null,
+          notes: input.notes ?? null,
+        });
+        return { success: true, caseId: newCase?.id };
+      }),
+
+    // Get all snapshots for a specific case
+    getSnapshotsByCase: protectedProcedure
+      .input(z.object({ caseId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const echoCase = await getEchoCaseById(input.caseId);
+        if (!echoCase || echoCase.userId !== ctx.user.id) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Case not found" });
+        }
+        return getStrainSnapshotsByCase(input.caseId);
+      }),
+
+    // Get recent snapshots for the current user
+    getMySnapshots: protectedProcedure.query(async ({ ctx }) => {
+      return getStrainSnapshotsByUser(ctx.user.id, 20);
+    }),
   }),
 });
 export type AppRouter = typeof appRouter;

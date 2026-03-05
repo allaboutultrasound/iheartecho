@@ -36,6 +36,13 @@
       "when": 1772741753352,
       "tag": "0004_rainy_lake",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1772743342493,
+      "tag": "0005_lethal_kid_colt",
+      "breakpoints": true
     }
   ]
 }
