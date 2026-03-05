@@ -171,6 +171,14 @@ const modules = [
     badge: "Lab Subscription",
     color: BRAND,
   },
+  {
+    path: "/image-quality-review",
+    icon: ClipboardList,
+    title: "Image Quality Review™",
+    description: "Structured image quality review form for IAC accreditation — score views, Doppler, report accuracy, and generate custom PDF reports for submission.",
+    badge: "IAC Accreditation",
+    color: BRAND,
+  },
 ];
 
 const stats = [

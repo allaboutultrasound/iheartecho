@@ -21,6 +21,9 @@ import {
   labPeerReviews,
   echoCases,
   strainSnapshots,
+  imageQualityReviews,
+  type ImageQualityReview,
+  type InsertImageQualityReview,
   type LabSubscription,
   type LabMember,
   type LabPeerReview,
@@ -684,4 +687,62 @@ export async function getStrainSnapshotsByUser(userId: number, limit = 20) {
     .where(eq(strainSnapshots.userId, userId))
     .orderBy(desc(strainSnapshots.createdAt))
     .limit(limit);
+}
+
+// ─── Image Quality Reviews ─────────────────────────────────────────────────────
+export async function createImageQualityReview(data: InsertImageQualityReview) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  await db.insert(imageQualityReviews).values(data);
+  const result = await db.select().from(imageQualityReviews)
+    .where(eq(imageQualityReviews.userId, data.userId))
+    .orderBy(desc(imageQualityReviews.createdAt)).limit(1);
+  return result[0];
+}
+
+export async function getImageQualityReviewsByUser(userId: number, limit = 50, offset = 0) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(imageQualityReviews)
+    .where(eq(imageQualityReviews.userId, userId))
+    .orderBy(desc(imageQualityReviews.createdAt))
+    .limit(limit).offset(offset);
+}
+
+export async function getImageQualityReviewById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(imageQualityReviews)
+    .where(eq(imageQualityReviews.id, id)).limit(1);
+  return result[0];
+}
+
+export async function updateImageQualityReview(id: number, userId: number, data: Partial<InsertImageQualityReview>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  await db.update(imageQualityReviews).set(data)
+    .where(and(eq(imageQualityReviews.id, id), eq(imageQualityReviews.userId, userId)));
+}
+
+export async function deleteImageQualityReview(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(imageQualityReviews)
+    .where(and(eq(imageQualityReviews.id, id), eq(imageQualityReviews.userId, userId)));
+}
+
+export async function getIqrStats(userId: number) {
+  const db = await getDb();
+  if (!db) return { total: 0, avgScore: 0, byExamType: [] };
+  const rows = await db.select({
+    total: count(),
+    avgScore: avg(imageQualityReviews.qualityScore),
+  }).from(imageQualityReviews).where(eq(imageQualityReviews.userId, userId));
+  const byType = await db.select({
+    examType: imageQualityReviews.examType,
+    count: count(),
+    avgScore: avg(imageQualityReviews.qualityScore),
+  }).from(imageQualityReviews).where(eq(imageQualityReviews.userId, userId))
+    .groupBy(imageQualityReviews.examType);
+  return { total: rows[0]?.total ?? 0, avgScore: rows[0]?.avgScore ?? 0, byExamType: byType };
 }

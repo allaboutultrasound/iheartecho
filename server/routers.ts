@@ -54,6 +54,12 @@ import {
   createStrainSnapshot,
   getStrainSnapshotsByCase,
   getStrainSnapshotsByUser,
+  createImageQualityReview,
+  getImageQualityReviewsByUser,
+  getImageQualityReviewById,
+  updateImageQualityReview,
+  deleteImageQualityReview,
+  getIqrStats,
 } from "./db";
 
 export const appRouter = router({
@@ -690,6 +696,148 @@ export const appRouter = router({
     // Get recent snapshots for the current user
     getMySnapshots: protectedProcedure.query(async ({ ctx }) => {
       return getStrainSnapshotsByUser(ctx.user.id, 20);
+    }),
+  }),
+  // ─── Image Quality Reviews ──────────────────────────────────────────────────
+
+  iqr: router({
+    create: protectedProcedure
+      .input(z.object({
+        reviewType: z.string(),
+        organization: z.string().optional(),
+        dateReviewCompleted: z.string().optional(),
+        examDos: z.string().optional(),
+        examIdentifier: z.string().optional(),
+        patientDob: z.string().optional(),
+        facilityLocation: z.string().optional(),
+        performingSonographer: z.string().optional(),
+        interpretingPhysician: z.string().optional(),
+        referringPhysician: z.string().optional(),
+        examType: z.string().optional(),
+        examScope: z.string().optional(),
+        stressType: z.string().optional(),
+        examIndication: z.string().optional(),
+        indicationAppropriateness: z.string().optional(),
+        demographicsAccurate: z.string().optional(),
+        protocolViews: z.string().optional(),
+        protocolViewsOther: z.string().optional(),
+        gainSettings: z.string().optional(),
+        gainSettingsOther: z.string().optional(),
+        depthSettings: z.string().optional(),
+        depthSettingsOther: z.string().optional(),
+        focalZoneSettings: z.string().optional(),
+        focalZoneDeficiencies: z.string().optional(),
+        colorizeSettings: z.string().optional(),
+        colorizeSettingsOther: z.string().optional(),
+        zoomSettings: z.string().optional(),
+        zoomSettingsOther: z.string().optional(),
+        ecgDisplay: z.string().optional(),
+        ecgDisplayDeficiencies: z.string().optional(),
+        contrastUseAppropriate: z.string().optional(),
+        contrastSettingsAppropriate: z.string().optional(),
+        onAxisImaging: z.string().optional(),
+        effortSuboptimalViews: z.string().optional(),
+        measurements2dComplete: z.string().optional(),
+        measurements2dAccurate: z.string().optional(),
+        psaxLvComplete: z.string().optional(),
+        ventricularFunctionAccurate: z.string().optional(),
+        efMeasurementsAccurate: z.string().optional(),
+        simpsonsEfAccurate: z.string().optional(),
+        laVolumeAccurate: z.string().optional(),
+        dopplerMeasurementsComplete: z.string().optional(),
+        dopplerMeasurementsAccurate: z.string().optional(),
+        dopplerVentricularFunction: z.string().optional(),
+        dopplerWaveformSettings: z.string().optional(),
+        dopplerMeasurementAccuracy: z.string().optional(),
+        forwardFlowSpectrum: z.string().optional(),
+        pwDopplerPlacement: z.string().optional(),
+        cwDopplerPlacement: z.string().optional(),
+        spectralEnvelopePeaks: z.string().optional(),
+        colorFlowInterrogation: z.string().optional(),
+        colorDopplerIasIvs: z.string().optional(),
+        diastolicFunctionEval: z.string().optional(),
+        pulmonaryVeinInflow: z.string().optional(),
+        rightHeartFunctionEval: z.string().optional(),
+        tapseAccurate: z.string().optional(),
+        tissueDopplerAdequate: z.string().optional(),
+        dopplerWaveformSettingsPeer: z.string().optional(),
+        dopplerSampleVolumesPeer: z.string().optional(),
+        aorticValveDoppler: z.string().optional(),
+        lvotDopplerPlacement: z.string().optional(),
+        pedoffCwUtilized: z.string().optional(),
+        pedoffCwEnvelope: z.string().optional(),
+        pedoffCwLabelled: z.string().optional(),
+        mitralValveDoppler: z.string().optional(),
+        mrEvaluationMethods: z.string().optional(),
+        pisaEroMeasurements: z.string().optional(),
+        tricuspidValveDoppler: z.string().optional(),
+        pulmonicValveDoppler: z.string().optional(),
+        aorticValvePeer: z.string().optional(),
+        mitralValvePeer: z.string().optional(),
+        tricuspidValvePeer: z.string().optional(),
+        pulmonicValvePeer: z.string().optional(),
+        diastologyPeer: z.string().optional(),
+        rightHeartPeer: z.string().optional(),
+        additionalImagingMethods: z.string().optional(),
+        strainPerformed: z.string().optional(),
+        strainCorrect: z.string().optional(),
+        threeDPerformed: z.string().optional(),
+        imageOptimizationSummary: z.string().optional(),
+        measurementAccuracySummary: z.string().optional(),
+        dopplerSettingsSummary: z.string().optional(),
+        protocolSequenceFollowed: z.string().optional(),
+        pathologyDocumented: z.string().optional(),
+        clinicalQuestionAnswered: z.string().optional(),
+        reportConcordant: z.string().optional(),
+        comparableToPreview: z.string().optional(),
+        iacAcceptable: z.string().optional(),
+        scanStartTime: z.string().optional(),
+        scanEndTime: z.string().optional(),
+        imagingTimeMinutes: z.number().optional(),
+        scanningTimeType: z.string().optional(),
+        qualityScore: z.number().optional(),
+        reviewComments: z.string().optional(),
+        reviewer: z.string().optional(),
+        reviewerEmail: z.string().optional(),
+        notifyAdmin: z.string().optional(),
+        notifySonographer: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const review = await createImageQualityReview({ ...input, userId: ctx.user.id });
+        return review;
+      }),
+
+    list: protectedProcedure
+      .input(z.object({ limit: z.number().default(50), offset: z.number().default(0) }))
+      .query(async ({ ctx, input }) => {
+        return getImageQualityReviewsByUser(ctx.user.id, input.limit, input.offset);
+      }),
+
+    getById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const review = await getImageQualityReviewById(input.id);
+        if (!review || review.userId !== ctx.user.id) throw new TRPCError({ code: "NOT_FOUND" });
+        return review;
+      }),
+
+    update: protectedProcedure
+      .input(z.object({ id: z.number() }).passthrough())
+      .mutation(async ({ ctx, input }) => {
+        const { id, ...data } = input;
+        await updateImageQualityReview(id, ctx.user.id, data as Parameters<typeof updateImageQualityReview>[2]);
+        return { success: true };
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await deleteImageQualityReview(input.id, ctx.user.id);
+        return { success: true };
+      }),
+
+    getStats: protectedProcedure.query(async ({ ctx }) => {
+      return getIqrStats(ctx.user.id);
     }),
   }),
 });

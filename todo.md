@@ -168,3 +168,19 @@
 - [x] Color-coded curves matching bull's-eye segment colors
 - [x] Wall Motion Score Index (WMSI) auto-calculated and displayed
 - [x] Snapshot includes wall motion scores and curve data when saved to case
+
+## Image Quality Review™ [COMPLETED]
+- [x] Browse and map all 10 pages of the Formsite IMAGE-QUALITY-REVIEW form
+- [x] DB schema: imageQualityReviews table (102 columns covering all form fields)
+- [x] DB helpers: createImageQualityReview, getImageQualityReviewsByUser, getImageQualityReviewById, updateImageQualityReview, deleteImageQualityReview
+- [x] tRPC IQR router: create, list, getById, update, delete procedures
+- [x] 10-step wizard form page (1245 lines) with all original form fields
+- [x] Auto-calculated Quality Score per section and overall composite score
+- [x] Color-coded tier badges (Excellent/Good/Adequate/Needs Improvement)
+- [x] PDF export: structured IAC-ready report with all sections and scores
+- [x] Review history dashboard with filters and summary cards
+- [x] Route: /image-quality-review
+- [x] Sidebar entry under Accreditation Tools
+- [x] Home dashboard card with IAC Accreditation badge
+- [x] Vitest tests: 19 tests for IQR procedures and quality score logic
+- [x] Total tests: 134 passing

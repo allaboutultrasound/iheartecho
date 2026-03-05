@@ -43,6 +43,13 @@
       "when": 1772743342493,
       "tag": "0005_lethal_kid_colt",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1772744853208,
+      "tag": "0006_daffy_joystick",
+      "breakpoints": true
     }
   ]
 }

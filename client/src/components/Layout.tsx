@@ -67,6 +67,7 @@ const navGroups = [
       { path: "/accreditation", label: "DIY Accreditation Tool™", icon: ClipboardList },
       { path: "/accreditation-navigator", label: "EchoAccreditation Navigator™", icon: Award },
       { path: "/lab-admin", label: "Lab Admin Portal", icon: Building2 },
+      { path: "/image-quality-review", label: "Image Quality Review™", icon: ClipboardList },
     ],
   },
   {

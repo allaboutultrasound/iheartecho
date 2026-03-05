@@ -33,6 +33,7 @@ import StrainNavigator from "./pages/StrainNavigator";
 import AccreditationTool from "./pages/AccreditationTool";
 import AccreditationNavigator from "./pages/AccreditationNavigator";
 import LabAdmin from "./pages/LabAdmin";
+import ImageQualityReview from "./pages/ImageQualityReview";
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
@@ -61,6 +62,7 @@ function Router() {
       <Route path="/accreditation" component={AccreditationTool} />
       <Route path="/accreditation-navigator" component={AccreditationNavigator} />
       <Route path="/lab-admin" component={LabAdmin} />
+      <Route path="/image-quality-review" component={ImageQualityReview} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
