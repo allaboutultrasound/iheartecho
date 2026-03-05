@@ -677,8 +677,9 @@ function generateAVOutflowPath(p: Params, W: number, H: number): {
 
   const maxVelDisplay = Math.max(2.5, vmax * 1.2);
   const cycleW = W / 2;
-  const baseline = H * 0.92;
-  const velScale = (H * 0.85) / maxVelDisplay;
+  // AV outflow is BELOW baseline — baseline at top (8% from top), waveform goes downward
+  const baseline = H * 0.08;
+  const velScale = (H * 0.88) / maxVelDisplay;
 
   // Systolic ejection: AVO at ~0.05, AVC at ~0.35 of cycle
   const avoT = 0.05, avcT = 0.35;
@@ -696,15 +697,12 @@ function generateAVOutflowPath(p: Params, W: number, H: number): {
       if (t >= avoT && t <= avcT) {
         const frac = (t - avoT) / ejW;
         if (shape === "normal") {
-          // Smooth triangular with slight asymmetry (peak at ~40% of ejection)
           vel = vmax * Math.sin(frac * Math.PI);
         } else if (shape === "tardus") {
-          // Late-peaking: peak at ~65% of ejection, rounded
           const peakFrac = 0.65;
           if (frac < peakFrac) vel = vmax * Math.pow(frac / peakFrac, 1.5);
           else vel = vmax * Math.pow((1 - frac) / (1 - peakFrac), 1.2);
         } else if (shape === "dynamic") {
-          // HCM dagger: early peak, mid-systolic notch, late spike
           const earlyPeak = vmax * 0.55 * Math.sin(frac * Math.PI * 2.5);
           const latePeak = frac > 0.5 ? vmax * Math.pow((frac - 0.5) / 0.5, 0.7) * Math.sin((frac - 0.5) * Math.PI / 0.5) : 0;
           vel = Math.max(0, earlyPeak + latePeak * 0.8);
@@ -712,7 +710,8 @@ function generateAVOutflowPath(p: Params, W: number, H: number): {
         vel = Math.max(0, vel);
       }
 
-      const y = baseline - vel * velScale;
+      // Below baseline: y increases downward from baseline
+      const y = baseline + vel * velScale;
       d += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
     }
   }
@@ -723,7 +722,7 @@ function generateAVOutflowPath(p: Params, W: number, H: number): {
 // ---- DOPPLER DISPLAY COMPONENT ----
 
 function DopplerTracing({
-  title, subtitle, pathData, color, annotations, W = 520, H = 140
+  title, subtitle, pathData, color, annotations, W = 520, H = 160, belowBaseline = false
 }: {
   title: string;
   subtitle: string;
@@ -732,44 +731,79 @@ function DopplerTracing({
   annotations: { x: number; y: number; label: string; sub?: string }[];
   W?: number;
   H?: number;
+  belowBaseline?: boolean;
 }) {
+  // For below-baseline tracings (AV outflow), the baseline is near the top
+  const baselineY = belowBaseline ? H * 0.08 : H * 0.08;
+  const fillClose = belowBaseline
+    ? ` L ${W} ${H * 0.08} L 0 ${H * 0.08} Z`
+    : ` L ${W} ${H * 0.92} L 0 ${H * 0.92} Z`;
+
   return (
-    <div className="bg-[#0a1628] rounded-xl overflow-hidden border border-[#1e3a5f]">
+    <div className="bg-[#060e1f] rounded-xl overflow-hidden border border-[#1a3a5c]">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-[#1e3a5f]">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-[#1a3a5c]">
         <span className="text-xs font-bold text-white" style={{ fontFamily: "Merriweather, serif" }}>{title}</span>
-        <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold" style={{ background: color + "30", color }}>{subtitle}</span>
+        <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold" style={{ background: color + "40", color }}>{subtitle}</span>
       </div>
       {/* SVG canvas */}
-      <div className="relative">
+      <div className="relative" style={{ background: "#060e1f" }}>
         <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: H }}>
-          {/* Grid lines */}
+          <defs>
+            <linearGradient id={`wfill-${title.replace(/\s/g,"")}`} x1="0" y1="0" x2="0" y2="1">
+              {belowBaseline
+                ? <>
+                    <stop offset="0%" stopColor={color} stopOpacity={0} />
+                    <stop offset="100%" stopColor={color} stopOpacity={0.35} />
+                  </>
+                : <>
+                    <stop offset="0%" stopColor={color} stopOpacity={0.45} />
+                    <stop offset="100%" stopColor={color} stopOpacity={0.05} />
+                  </>
+              }
+            </linearGradient>
+          </defs>
+          {/* Background subtle scan lines */}
+          {Array.from({ length: 8 }, (_, i) => (
+            <line key={i} x1={0} y1={H * (i / 8)} x2={W} y2={H * (i / 8)}
+              stroke="#0d1f3c" strokeWidth={0.6} />
+          ))}
+          {/* Grid lines — brighter */}
           {[0.25, 0.5, 0.75].map(f => (
-            <line key={f} x1={0} y1={H * (1 - f * 0.85)} x2={W} y2={H * (1 - f * 0.85)}
-              stroke="#1e3a5f" strokeWidth={0.5} strokeDasharray="4 4" />
+            <line key={f}
+              x1={0} y1={belowBaseline ? H * (0.08 + f * 0.88) : H * (0.08 + (1 - f) * 0.84)}
+              x2={W} y2={belowBaseline ? H * (0.08 + f * 0.88) : H * (0.08 + (1 - f) * 0.84)}
+              stroke="#1e3f6a" strokeWidth={0.8} strokeDasharray="5 5" />
           ))}
           {/* Cycle dividers */}
-          {[0.5, 1.0].map(f => (
+          {[0.5].map(f => (
             <line key={f} x1={W * f} y1={0} x2={W * f} y2={H}
-              stroke="#1e3a5f" strokeWidth={0.8} strokeDasharray="2 4" />
+              stroke="#1e3f6a" strokeWidth={1} strokeDasharray="3 5" />
           ))}
-          {/* Baseline */}
-          <line x1={0} y1={H * 0.92} x2={W} y2={H * 0.92} stroke="#2a4a6f" strokeWidth={1} />
-          {/* Waveform fill */}
-          <path d={pathData + ` L ${W} ${H * 0.92} L 0 ${H * 0.92} Z`}
-            fill={color + "25"} stroke="none" />
-          {/* Waveform stroke */}
-          <path d={pathData} fill="none" stroke={color} strokeWidth={1.8} strokeLinejoin="round" />
+          {/* Baseline — bright */}
+          <line x1={0} y1={belowBaseline ? H * 0.08 : H * 0.92}
+            x2={W} y2={belowBaseline ? H * 0.08 : H * 0.92}
+            stroke="#3a6fa8" strokeWidth={1.5} />
+          {/* Waveform fill — gradient */}
+          <path d={pathData + fillClose}
+            fill={`url(#wfill-${title.replace(/\s/g,"")})`} stroke="none" />
+          {/* Waveform stroke — thick and bright */}
+          <path d={pathData} fill="none" stroke={color} strokeWidth={2.8} strokeLinejoin="round" strokeLinecap="round" />
           {/* Velocity scale labels */}
-          <text x={4} y={H * 0.12} fill="#4a7fa5" fontSize={8} fontFamily="JetBrains Mono, monospace">peak</text>
-          <text x={4} y={H * 0.5} fill="#2a4a6f" fontSize={7} fontFamily="JetBrains Mono, monospace">mid</text>
+          <text x={5} y={belowBaseline ? H * 0.95 : H * 0.14} fill="#5a8fbf" fontSize={9} fontFamily="JetBrains Mono, monospace">peak</text>
+          <text x={5} y={belowBaseline ? H * 0.55 : H * 0.54} fill="#2a4a6f" fontSize={8} fontFamily="JetBrains Mono, monospace">mid</text>
           {/* Annotations */}
           {annotations.map((a, i) => (
             <g key={i}>
-              <line x1={a.x} y1={a.y} x2={a.x} y2={H * 0.92} stroke={color} strokeWidth={0.8} strokeDasharray="2 2" opacity={0.6} />
-              <circle cx={a.x} cy={a.y} r={2.5} fill={color} opacity={0.9} />
-              <text x={a.x + 4} y={a.y - 4} fill="white" fontSize={8} fontFamily="JetBrains Mono, monospace" fontWeight="bold">{a.label}</text>
-              {a.sub && <text x={a.x + 4} y={a.y + 6} fill={color} fontSize={7} fontFamily="JetBrains Mono, monospace">{a.sub}</text>}
+              <line x1={a.x} y1={a.y}
+                x2={a.x} y2={belowBaseline ? H * 0.08 : H * 0.92}
+                stroke={color} strokeWidth={1} strokeDasharray="3 3" opacity={0.7} />
+              <circle cx={a.x} cy={a.y} r={3.5} fill={color} opacity={1} />
+              <circle cx={a.x} cy={a.y} r={5} fill={color} opacity={0.25} />
+              <text x={a.x + 6} y={belowBaseline ? a.y + 12 : a.y - 6}
+                fill="white" fontSize={9} fontFamily="JetBrains Mono, monospace" fontWeight="bold">{a.label}</text>
+              {a.sub && <text x={a.x + 6} y={belowBaseline ? a.y + 22 : a.y + 5}
+                fill={color} fontSize={8} fontFamily="JetBrains Mono, monospace">{a.sub}</text>}
             </g>
           ))}
         </svg>
@@ -858,12 +892,12 @@ export default function HemodynamicsLab() {
   const rr_ms = Math.round((60 / params.heartRate) * 1000);
 
   // Doppler tracing data — computed once per params change
-  const W_DOPPLER = 520, H_DOPPLER = 140;
+  const W_DOPPLER = 520, H_DOPPLER = 160;
   const mitralData = useMemo(() => generateMitralInflowPath(params, W_DOPPLER, H_DOPPLER), [params]);
   const tricuspidData = useMemo(() => generateTricuspidInflowPath(params, W_DOPPLER, H_DOPPLER), [params]);
   const avOutflowData = useMemo(() => generateAVOutflowPath(params, W_DOPPLER, H_DOPPLER), [params]);
 
-  // Annotation positions: peak of E wave (cycle 1, ~66% of half-width)
+  // Annotation positions for above-baseline tracings (MV, TV)
   const mitralAnnotations = [
     { x: W_DOPPLER * 0.5 * 0.66, y: H_DOPPLER * 0.92 - mitralData.eVel * (H_DOPPLER * 0.85 / 1.5), label: `E ${mitralData.eVel.toFixed(2)} m/s` },
     { x: W_DOPPLER * 0.5 * 0.91, y: H_DOPPLER * 0.92 - mitralData.aVel * (H_DOPPLER * 0.85 / 1.5), label: `A ${mitralData.aVel.toFixed(2)} m/s`, sub: `E/A ${mitralData.eaRatio.toFixed(1)}` },
@@ -872,9 +906,11 @@ export default function HemodynamicsLab() {
     { x: W_DOPPLER * 0.5 * 0.66, y: H_DOPPLER * 0.92 - tricuspidData.eVel * (H_DOPPLER * 0.85 / 1.0), label: `E ${tricuspidData.eVel.toFixed(2)} m/s` },
     { x: W_DOPPLER * 0.5 * 0.91, y: H_DOPPLER * 0.92 - tricuspidData.aVel * (H_DOPPLER * 0.85 / 1.0), label: `A ${tricuspidData.aVel.toFixed(2)} m/s` },
   ];
+  // AV outflow is below baseline — annotation y goes downward from baseline (H * 0.08)
   const maxVelAV = Math.max(2.5, avOutflowData.vmax * 1.2);
+  const avPeakY = H_DOPPLER * 0.08 + avOutflowData.vmax * (H_DOPPLER * 0.88 / maxVelAV);
   const avAnnotations = [
-    { x: W_DOPPLER * 0.5 * (avOutflowData.shape === "tardus" ? 0.25 : 0.20), y: H_DOPPLER * 0.92 - avOutflowData.vmax * (H_DOPPLER * 0.85 / maxVelAV), label: `Vmax ${avOutflowData.vmax.toFixed(1)} m/s`, sub: `VTI ~${avOutflowData.vti} cm` },
+    { x: W_DOPPLER * 0.5 * (avOutflowData.shape === "tardus" ? 0.27 : 0.22), y: avPeakY, label: `Vmax ${avOutflowData.vmax.toFixed(1)} m/s`, sub: `VTI ~${avOutflowData.vti} cm` },
   ];
 
   return (
@@ -1240,22 +1276,22 @@ export default function HemodynamicsLab() {
                 title="Mitral Inflow (PW)"
                 subtitle={mitralData.pattern}
                 pathData={mitralData.path}
-                color="#4ade80"
+                color="#4ad9e0"
                 annotations={mitralAnnotations}
                 W={W_DOPPLER} H={H_DOPPLER}
               />
               <div className="mt-2 grid grid-cols-3 gap-1 text-[10px]">
                 <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
                   <div className="font-bold text-gray-700">E wave</div>
-                  <div className="font-mono text-green-700">{mitralData.eVel.toFixed(2)} m/s</div>
+                  <div className="font-mono" style={{color:"#0e9aa7"}}>{mitralData.eVel.toFixed(2)} m/s</div>
                 </div>
                 <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
                   <div className="font-bold text-gray-700">A wave</div>
-                  <div className="font-mono text-green-700">{mitralData.aVel.toFixed(2)} m/s</div>
+                  <div className="font-mono" style={{color:"#0e9aa7"}}>{mitralData.aVel.toFixed(2)} m/s</div>
                 </div>
                 <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
                   <div className="font-bold text-gray-700">E/A</div>
-                  <div className={`font-mono font-bold ${mitralData.eaRatio < 0.8 ? "text-orange-600" : mitralData.eaRatio > 2.0 ? "text-red-600" : "text-green-700"}`}>{mitralData.eaRatio.toFixed(1)}</div>
+                  <div className={`font-mono font-bold ${mitralData.eaRatio < 0.8 ? "text-orange-600" : mitralData.eaRatio > 2.0 ? "text-red-600" : ""}`} style={mitralData.eaRatio >= 0.8 && mitralData.eaRatio <= 2.0 ? {color:"#0e9aa7"} : {}}>{mitralData.eaRatio.toFixed(1)}</div>
                 </div>
                 <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100 col-span-3">
                   <div className="font-bold text-gray-700">Dec. Time</div>
@@ -1270,26 +1306,26 @@ export default function HemodynamicsLab() {
                 title="Tricuspid Inflow (PW)"
                 subtitle={tricuspidData.pattern}
                 pathData={tricuspidData.path}
-                color="#60a5fa"
+                color="#189aa1"
                 annotations={tricuspidAnnotations}
                 W={W_DOPPLER} H={H_DOPPLER}
               />
               <div className="mt-2 grid grid-cols-3 gap-1 text-[10px]">
                 <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
                   <div className="font-bold text-gray-700">E wave</div>
-                  <div className="font-mono text-blue-700">{tricuspidData.eVel.toFixed(2)} m/s</div>
+                  <div className="font-mono" style={{color:"#189aa1"}}>{tricuspidData.eVel.toFixed(2)} m/s</div>
                 </div>
                 <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
                   <div className="font-bold text-gray-700">A wave</div>
-                  <div className="font-mono text-blue-700">{tricuspidData.aVel.toFixed(2)} m/s</div>
+                  <div className="font-mono" style={{color:"#189aa1"}}>{tricuspidData.aVel.toFixed(2)} m/s</div>
                 </div>
                 <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
                   <div className="font-bold text-gray-700">E/A</div>
-                  <div className={`font-mono font-bold ${(tricuspidData.eVel/tricuspidData.aVel) > 2.0 ? "text-red-600" : "text-blue-700"}`}>{(tricuspidData.eVel/tricuspidData.aVel).toFixed(1)}</div>
+                  <div className={`font-mono font-bold ${(tricuspidData.eVel/tricuspidData.aVel) > 2.0 ? "text-red-600" : ""}`} style={(tricuspidData.eVel/tricuspidData.aVel) <= 2.0 ? {color:"#189aa1"} : {}}>{(tricuspidData.eVel/tricuspidData.aVel).toFixed(1)}</div>
                 </div>
                 <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100 col-span-3">
                   <div className="font-bold text-gray-700">Est. RVSP</div>
-                  <div className={`font-mono font-bold ${hemo.rvsp > 40 ? "text-red-600" : "text-blue-700"}`}>{Math.round(hemo.rvsp)} mmHg</div>
+                  <div className={`font-mono font-bold ${hemo.rvsp > 40 ? "text-red-600" : ""}`} style={hemo.rvsp <= 40 ? {color:"#189aa1"} : {}}>{Math.round(hemo.rvsp)} mmHg</div>
                 </div>
               </div>
             </div>
@@ -1300,18 +1336,19 @@ export default function HemodynamicsLab() {
                 title="Aortic Valve Outflow (CW)"
                 subtitle={avOutflowData.pattern}
                 pathData={avOutflowData.path}
-                color="#f97316"
+                color="#22d3ee"
                 annotations={avAnnotations}
                 W={W_DOPPLER} H={H_DOPPLER}
+                belowBaseline={true}
               />
               <div className="mt-2 grid grid-cols-3 gap-1 text-[10px]">
                 <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
                   <div className="font-bold text-gray-700">Vmax</div>
-                  <div className={`font-mono font-bold ${avOutflowData.vmax > 4.0 ? "text-red-600" : avOutflowData.vmax > 3.0 ? "text-orange-600" : "text-orange-700"}`}>{avOutflowData.vmax.toFixed(1)} m/s</div>
+                  <div className={`font-mono font-bold ${avOutflowData.vmax > 4.0 ? "text-red-600" : avOutflowData.vmax > 3.0 ? "text-orange-600" : ""}`} style={avOutflowData.vmax <= 3.0 ? {color:"#22d3ee"} : {}}>{avOutflowData.vmax.toFixed(1)} m/s</div>
                 </div>
                 <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
                   <div className="font-bold text-gray-700">VTI</div>
-                  <div className="font-mono text-orange-700">~{avOutflowData.vti} cm</div>
+                  <div className="font-mono" style={{color:"#22d3ee"}}>~{avOutflowData.vti} cm</div>
                 </div>
                 <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
                   <div className="font-bold text-gray-700">Shape</div>
@@ -1321,7 +1358,7 @@ export default function HemodynamicsLab() {
                 </div>
                 <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100 col-span-3">
                   <div className="font-bold text-gray-700">Mean Gradient (est.)</div>
-                  <div className={`font-mono font-bold ${4 * avOutflowData.vmax ** 2 > 40 ? "text-red-600" : 4 * avOutflowData.vmax ** 2 > 20 ? "text-orange-600" : "text-green-700"}`}>{Math.round(4 * avOutflowData.vmax ** 2 * 0.6)} mmHg</div>
+                  <div className={`font-mono font-bold ${4 * avOutflowData.vmax ** 2 > 40 ? "text-red-600" : 4 * avOutflowData.vmax ** 2 > 20 ? "text-orange-600" : ""}`} style={4 * avOutflowData.vmax ** 2 <= 20 ? {color:"#22d3ee"} : {}}>{Math.round(4 * avOutflowData.vmax ** 2 * 0.6)} mmHg</div>
                 </div>
               </div>
             </div>
