@@ -222,12 +222,9 @@ export default function TTENavigator() {
             <p className="text-sm font-semibold text-[#0e7490]">Adult TTE Scan Coach</p>
             <p className="text-xs text-gray-500 mt-0.5">Step-by-step view guides with probe positioning, anatomy diagrams, and clinical technique tips.</p>
           </div>
-          <Link href="/scan-coach?tab=tte">
-            <a className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold text-white whitespace-nowrap transition-all hover:opacity-90"
-              style={{ background: "#189aa1" }}>
+          <Link href="/scan-coach?tab=tte" className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold text-white whitespace-nowrap transition-all hover:opacity-90" style={{ background: "#189aa1" } as React.CSSProperties}>
               <Scan className="w-4 h-4" />
               Adult TTE Scan Coach
-            </a>
           </Link>
         </div>
 

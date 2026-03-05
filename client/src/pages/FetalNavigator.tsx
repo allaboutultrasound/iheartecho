@@ -393,12 +393,9 @@ export default function FetalNavigator() {
             <p className="text-sm font-semibold text-[#0e7490]">Fetal Echo Scan Coach</p>
             <p className="text-xs text-gray-500 mt-0.5">Step-by-step sweep sequence with probe positioning, anatomy diagrams, and normal reference images.</p>
           </div>
-          <Link href="/scan-coach?tab=fetal">
-            <a className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold text-white whitespace-nowrap transition-all hover:opacity-90"
-              style={{ background: "#189aa1" }}>
+          <Link href="/scan-coach?tab=fetal" className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold text-white whitespace-nowrap transition-all hover:opacity-90" style={{ background: "#189aa1" } as React.CSSProperties}>
               <Scan className="w-4 h-4" />
               Fetal Scan Coach
-            </a>
           </Link>
         </div>
 

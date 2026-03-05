@@ -21,6 +21,7 @@ import PediatricNavigator from "./pages/PediatricNavigator";
 import TTENavigator from "./pages/TTENavigator";
 import TEENavigator from "./pages/TEENavigator";
 import StressNavigator from "./pages/StressNavigator";
+import GuidelineEngine from "./pages/GuidelineEngine";
 
 function Router() {
   return (
@@ -37,6 +38,7 @@ function Router() {
       <Route path="/scan-coach" component={ScanCoach} />
       <Route path="/cases" component={CaseLab} />
       <Route path="/report" component={ReportBuilder} />
+      <Route path="/guideline-engine" component={GuidelineEngine} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
