@@ -166,43 +166,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <ExternalLink className="w-3 h-3 text-white/70 ml-auto" />
           </a>
         </div>
-        {/* Account / Login */}
-        <div className="px-3 pb-3 border-t border-white/10 pt-3">
-          {isAuthenticated && user ? (
-            <div className="space-y-1">
-              {/* User info card */}
-              <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-white/8 border border-white/10">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ background: "linear-gradient(135deg, #189aa1, #4ad9e0)" }}>
-                  <User className="w-4 h-4 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs font-semibold text-white truncate">
-                    {user.name || user.displayName || "Account"}
-                  </div>
-                  <div className="text-[10px] text-white/40 truncate">{user.email}</div>
-                </div>
-              </div>
-              {/* Logout button */}
-              <button
-                onClick={() => logout()}
-                className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-xs text-white/60 hover:text-white hover:bg-white/10 transition-all"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                Sign Out
-              </button>
-            </div>
-          ) : (
-            <a
-              href={getLoginUrl()}
-              className="flex items-center justify-center gap-2 w-full px-3 py-2.5 rounded-xl font-semibold text-sm text-white transition-all hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
-              style={{ background: "linear-gradient(135deg, #189aa1 0%, #4ad9e0 100%)" }}
-            >
-              <LogIn className="w-4 h-4" />
-              Sign In
-            </a>
-          )}
-        </div>
         {/* Footer */}
         <div className="px-4 py-3 border-t border-white/10">
           <a href="https://www.iheartecho.com" target="_blank" rel="noopener noreferrer"
@@ -233,6 +196,83 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div className="ml-auto flex items-center gap-2">
             <span className="text-xs text-gray-400 hidden sm:block">Echocardiography Clinical Companion</span>
             {isAuthenticated && <NotificationBell />}
+            {/* Account / Login in header */}
+            {isAuthenticated && user ? (
+              <div className="relative group">
+                {/* Avatar trigger */}
+                <button className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-[#f0fbfc] transition-all border border-transparent hover:border-[#189aa1]/20">
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ background: "linear-gradient(135deg, #189aa1, #4ad9e0)" }}>
+                    <User className="w-3.5 h-3.5 text-white" />
+                  </div>
+                  <span className="text-xs font-semibold text-gray-700 hidden sm:block max-w-[100px] truncate">
+                    {user.name || user.displayName || "Account"}
+                  </span>
+                </button>
+                {/* Dropdown on hover */}
+                <div className="absolute right-0 top-full mt-1.5 w-64 bg-white rounded-xl shadow-lg border border-gray-100 p-3 space-y-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50">
+                  {/* User info */}
+                  <div className="flex items-center gap-2.5 pb-2 border-b border-gray-100">
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{ background: "linear-gradient(135deg, #189aa1, #4ad9e0)" }}>
+                      <User className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-semibold text-gray-800 truncate">
+                        {user.name || user.displayName || "Account"}
+                      </div>
+                      <div className="text-[10px] text-gray-400 truncate">{user.email}</div>
+                    </div>
+                  </div>
+                  {/* Subscription badges */}
+                  {(() => {
+                    const roles = (user as any).appRoles as string[] | undefined;
+                    if (!roles || roles.length === 0) return null;
+                    const ROLE_LABELS: Record<string, { label: string; color: string }> = {
+                      premium_user:   { label: "Premium",         color: "#189aa1" },
+                      diy_user:       { label: "DIY Accreditation", color: "#f59e0b" },
+                      diy_admin:      { label: "Lab Admin",        color: "#f97316" },
+                      platform_admin: { label: "Platform Admin",  color: "#a78bfa" },
+                    };
+                    const badges = roles.filter(r => ROLE_LABELS[r]).map(r => ROLE_LABELS[r]);
+                    if (badges.length === 0) return null;
+                    return (
+                      <div>
+                        <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">My Subscriptions</div>
+                        <div className="flex flex-wrap gap-1">
+                          {badges.map(({ label, color }) => (
+                            <span
+                              key={label}
+                              className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold"
+                              style={{ background: color + "15", color, border: `1px solid ${color}40` }}
+                            >
+                              {label}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                  {/* Sign out */}
+                  <button
+                    onClick={() => logout()}
+                    className="flex items-center gap-2 w-full px-2 py-1.5 rounded-lg text-xs text-gray-500 hover:text-red-600 hover:bg-red-50 transition-all"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    Sign Out
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <a
+                href={getLoginUrl()}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold text-xs text-white transition-all hover:opacity-90"
+                style={{ background: "linear-gradient(135deg, #189aa1 0%, #4ad9e0 100%)" }}
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                Sign In
+              </a>
+            )}
           </div>
         </header>
 

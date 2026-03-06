@@ -559,3 +559,7 @@
 - [x] Layout sidebar: add branded Sign In / Account section (teal/aqua, dark sidebar) — shows Login button when logged out, avatar + name + logout when logged in
 - [x] AccreditationNavigator: fix "Open Case Tracker" button to deep-link to /accreditation?tab=case-mix&view=tracker
 - [x] AccreditationTool: read ?tab= and ?view= URL params on mount to support deep-linking
+
+## Account Card Enhancements
+- [x] Layout sidebar: add 'My Subscription' badges to account card showing active roles (Premium, DIY Accreditation, Lab Admin, Platform Admin)
+- [x] Layout: move Sign In button and account profile (with subscription badges) from sidebar to top header bar; remove sidebar account section
