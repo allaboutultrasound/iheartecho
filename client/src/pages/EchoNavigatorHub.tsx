@@ -6,7 +6,7 @@ import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import {
   Stethoscope, Microscope, Zap, Users, Baby, Heart,
-  Cpu, FlaskConical, BarChart3, ArrowRight, Scan
+  Cpu, FlaskConical, BarChart3, ArrowRight, Scan, Lock
 } from "lucide-react";
 
 const BRAND = "#189aa1";
@@ -18,6 +18,7 @@ const navigators = [
     title: "Adult TTE EchoNavigator™",
     description: "View-by-view checklist, critical item tracking, normal reference values, and ASE 2025 guidelines.",
     badge: "Adult Echo",
+    premium: false,
   },
   {
     path: "/tee",
@@ -25,6 +26,7 @@ const navigators = [
     title: "TEE EchoNavigator™",
     description: "ME, TG, and UE views with angle/depth guidance, clinical applications, and intraoperative checklist.",
     badge: "Structural Heart",
+    premium: true,
   },
   {
     path: "/stress",
@@ -32,6 +34,7 @@ const navigators = [
     title: "Stress Echo EchoNavigator™",
     description: "Exercise and DSE protocols, 17-segment WMSI scorer, target HR calculator, and interpretation criteria.",
     badge: "Stress Echo",
+    premium: true,
   },
   {
     path: "/strain",
@@ -39,6 +42,7 @@ const navigators = [
     title: "Strain EchoNavigator™",
     description: "Protocol checklist, scanning tips, basic pathology overview, and LV/RV/LA strain reference values.",
     badge: "Adult Echo",
+    premium: true,
   },
   {
     path: "/ice",
@@ -46,6 +50,7 @@ const navigators = [
     title: "ICE EchoNavigator™",
     description: "Intracardiac echo views, procedural checklists, and key measurements for structural interventions.",
     badge: "Structural Heart",
+    premium: true,
   },
   {
     path: "/device",
@@ -53,6 +58,7 @@ const navigators = [
     title: "Device EchoNavigator™",
     description: "TAVR, MitraClip, WATCHMAN, and ASD/PFO closure — procedural echo guidance and post-implant assessment.",
     badge: "Structural Heart",
+    premium: true,
   },
   {
     path: "/pediatric",
@@ -138,14 +144,25 @@ export default function EchoNavigatorHub() {
       {/* Navigator Grid */}
       <div className="container py-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {navigators.map(({ path, icon: Icon, title, description, badge }) => {
+          {navigators.map(({ path, icon: Icon, title, description, badge, premium }) => {
             const badgeColor = badgeColors[badge] ?? BRAND;
             return (
               <Link key={path} href={path}>
                 <div
-                  className="bg-white rounded-xl border border-gray-100 p-5 cursor-pointer group h-full hover:shadow-md transition-all hover:border-[#189aa1]/30"
+                  className="relative bg-white rounded-xl border border-gray-100 p-5 cursor-pointer group h-full hover:shadow-md transition-all hover:border-[#189aa1]/30"
                   style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
                 >
+                  {premium && (
+                    <div className="absolute top-0 right-0 overflow-hidden rounded-tr-xl rounded-bl-xl">
+                      <div
+                        className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-white"
+                        style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}
+                      >
+                        <Lock className="w-2.5 h-2.5" />
+                        PREMIUM
+                      </div>
+                    </div>
+                  )}
                   <div className="flex items-start justify-between mb-3">
                     <div
                       className="w-10 h-10 rounded-lg flex items-center justify-center"
@@ -153,12 +170,14 @@ export default function EchoNavigatorHub() {
                     >
                       <Icon className="w-5 h-5" style={{ color: BRAND }} />
                     </div>
-                    <span
-                      className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                      style={{ background: badgeColor + "15", color: badgeColor }}
-                    >
-                      {badge}
-                    </span>
+                    {!premium && (
+                      <span
+                        className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                        style={{ background: badgeColor + "15", color: badgeColor }}
+                      >
+                        {badge}
+                      </span>
+                    )}
                   </div>
                   <h3
                     className="font-bold text-gray-800 mb-1.5 text-sm leading-snug"
@@ -169,9 +188,9 @@ export default function EchoNavigatorHub() {
                   <p className="text-xs text-gray-500 leading-relaxed mb-3">{description}</p>
                   <div
                     className="flex items-center gap-1 text-xs font-semibold group-hover:gap-2 transition-all"
-                    style={{ color: BRAND }}
+                    style={{ color: premium ? "#d97706" : BRAND }}
                   >
-                    Open Protocol <ArrowRight className="w-3 h-3" />
+                    {premium ? <><Lock className="w-3 h-3" /> Premium Access</> : <>Open Protocol <ArrowRight className="w-3 h-3" /></>}
                   </div>
                 </div>
               </Link>

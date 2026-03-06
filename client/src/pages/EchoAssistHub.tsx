@@ -6,46 +6,19 @@ import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import {
   Zap, Activity, BarChart3, Wind, Heart, TrendingUp,
-  ArrowRight, Calculator, Stethoscope, Scan
+  ArrowRight, Calculator, Stethoscope, Scan, Lock
 } from "lucide-react";
 
 const BRAND = "#189aa1";
 
 const engines = [
   {
-    path: "/echoassist#engine-as",
-    icon: Activity,
-    title: "Aortic Stenosis",
-    description: "AVA by continuity equation, Vmax, mean gradient, DVI — guideline-based severity classification (ASE 2025).",
-    badge: "Valve Disease",
-  },
-  {
-    path: "/echoassist#engine-ms",
-    icon: Activity,
-    title: "Mitral Stenosis",
-    description: "MVA by PHT and planimetry, mean gradient, PA pressure estimation — rheumatic vs. degenerative classification.",
-    badge: "Valve Disease",
-  },
-  {
-    path: "/echoassist#engine-ar",
-    icon: Activity,
-    title: "Aortic Regurgitation",
-    description: "Vena contracta, EROA, regurgitant volume, AR PHT — integrated severity grading per ASE/ACC/AHA.",
-    badge: "Valve Disease",
-  },
-  {
-    path: "/echoassist#engine-mr",
-    icon: Activity,
-    title: "Mitral Regurgitation",
-    description: "Vena contracta, EROA, PISA, regurgitant volume — primary and secondary MR severity classification.",
-    badge: "Valve Disease",
-  },
-  {
     path: "/echoassist#engine-lv",
     icon: Heart,
     title: "LV Systolic Function",
     description: "EF-based classification (HFpEF / HFmrEF / HFrEF), wall motion scoring, and GLS interpretation.",
     badge: "LV Function",
+    premium: false,
   },
   {
     path: "/echoassist#engine-diastology",
@@ -53,6 +26,39 @@ const engines = [
     title: "Diastolic Function",
     description: "ASE 2016 diastology algorithm — E/A, e', E/e', TR Vmax, LA volume index — grading and filling pressure estimation.",
     badge: "LV Function",
+    premium: false,
+  },
+  {
+    path: "/echoassist#engine-as",
+    icon: Activity,
+    title: "Aortic Stenosis",
+    description: "AVA by continuity equation, Vmax, mean gradient, DVI — guideline-based severity classification (ASE 2025).",
+    badge: "Valve Disease",
+    premium: true,
+  },
+  {
+    path: "/echoassist#engine-ms",
+    icon: Activity,
+    title: "Mitral Stenosis",
+    description: "MVA by PHT and planimetry, mean gradient, PA pressure estimation — rheumatic vs. degenerative classification.",
+    badge: "Valve Disease",
+    premium: true,
+  },
+  {
+    path: "/echoassist#engine-ar",
+    icon: Activity,
+    title: "Aortic Regurgitation",
+    description: "Vena contracta, EROA, regurgitant volume, AR PHT — integrated severity grading per ASE/ACC/AHA.",
+    badge: "Valve Disease",
+    premium: true,
+  },
+  {
+    path: "/echoassist#engine-mr",
+    icon: Activity,
+    title: "Mitral Regurgitation",
+    description: "Vena contracta, EROA, PISA, regurgitant volume — primary and secondary MR severity classification.",
+    badge: "Valve Disease",
+    premium: true,
   },
   {
     path: "/echoassist#engine-strain",
@@ -60,6 +66,7 @@ const engines = [
     title: "Strain (LV / RV / LA)",
     description: "LV GLS, RV free-wall strain, and LA reservoir strain interpretation with reference ranges and clinical context.",
     badge: "Strain",
+    premium: true,
   },
   {
     path: "/echoassist#engine-rv",
@@ -67,6 +74,7 @@ const engines = [
     title: "RV Function",
     description: "TAPSE, S', FAC, RV GLS, and RIMP — integrated RV systolic function grading with pulmonary pressure context.",
     badge: "RV / PA",
+    premium: true,
   },
   {
     path: "/echoassist#engine-pa",
@@ -74,6 +82,7 @@ const engines = [
     title: "PA Pressure",
     description: "RVSP from TR Vmax + RAP, mPAP estimation, and pulmonary hypertension probability classification.",
     badge: "RV / PA",
+    premium: true,
   },
   {
     path: "/calculator",
@@ -82,6 +91,7 @@ const engines = [
     description: "All calculators in one place — AS, MR, TR, AR, diastology, LARS, LV GLS, and RV strain with full reference tables.",
     badge: "All Engines",
     note: "Full calculator suite",
+    premium: false,
   },
 ];
 
@@ -147,14 +157,25 @@ export default function EchoAssistHub() {
       {/* Engine Grid */}
       <div className="container py-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {engines.map(({ path, icon: Icon, title, description, badge, note }) => {
+          {engines.map(({ path, icon: Icon, title, description, badge, note, premium }) => {
             const badgeColor = badgeColors[badge] ?? BRAND;
             return (
               <Link key={path} href={path}>
                 <div
-                  className="bg-white rounded-xl border border-gray-100 p-5 cursor-pointer group h-full hover:shadow-md transition-all hover:border-[#189aa1]/30"
+                  className="relative bg-white rounded-xl border border-gray-100 p-5 cursor-pointer group h-full hover:shadow-md transition-all hover:border-[#189aa1]/30"
                   style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
                 >
+                  {premium && (
+                    <div className="absolute top-0 right-0 overflow-hidden rounded-tr-xl rounded-bl-xl">
+                      <div
+                        className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-white"
+                        style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}
+                      >
+                        <Lock className="w-2.5 h-2.5" />
+                        PREMIUM
+                      </div>
+                    </div>
+                  )}
                   <div className="flex items-start justify-between mb-3">
                     <div
                       className="w-10 h-10 rounded-lg flex items-center justify-center"
@@ -162,12 +183,14 @@ export default function EchoAssistHub() {
                     >
                       <Icon className="w-5 h-5" style={{ color: BRAND }} />
                     </div>
-                    <span
-                      className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                      style={{ background: badgeColor + "15", color: badgeColor }}
-                    >
-                      {badge}
-                    </span>
+                    {!premium && (
+                      <span
+                        className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                        style={{ background: badgeColor + "15", color: badgeColor }}
+                      >
+                        {badge}
+                      </span>
+                    )}
                   </div>
                   <h3
                     className="font-bold text-gray-800 mb-1.5 text-sm leading-snug"
@@ -181,9 +204,9 @@ export default function EchoAssistHub() {
                   )}
                   <div
                     className="flex items-center gap-1 text-xs font-semibold group-hover:gap-2 transition-all"
-                    style={{ color: BRAND }}
+                    style={{ color: premium ? "#d97706" : BRAND }}
                   >
-                    Open Engine <ArrowRight className="w-3 h-3" />
+                    {premium ? <><Lock className="w-3 h-3" /> Premium Access</> : <>Open Engine <ArrowRight className="w-3 h-3" /></>}
                   </div>
                 </div>
               </Link>
