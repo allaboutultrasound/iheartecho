@@ -17,6 +17,9 @@ import { getVisibleProducts, buildCourseUrl, buildEnrollUrl } from "../thinkific
 /** Thinkific collection ID for "E-Learning & CME" on allaboutultrasound */
 const CME_COLLECTION_ID = 131827;
 
+/** Thinkific collection ID for "Registry Review" on allaboutultrasound */
+const REGISTRY_COLLECTION_ID = 131826;
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface CatalogCourse {
@@ -103,7 +106,7 @@ function mapToCatalogCourse(c: typeof cmeCoursesCache.$inferSelect): CatalogCour
 
 export const cmeRouter = router({
   /**
-   * Public: returns the visible course catalog.
+   * Public: returns the visible course catalog for E-Learning & CME collection.
    * If the cache is empty or stale (>6 hours), triggers a sync first.
    * The client appends ?email=<user_email> to the deep-links for pre-fill.
    */
@@ -138,6 +141,41 @@ export const cmeRouter = router({
     // If no courses pass the filter (e.g. first sync before collectionIds are stored),
     // fall back to showing all courses so the page is never blank.
     const result = courses.length > 0 ? courses : allCourses;
+    return result.map(mapToCatalogCourse);
+  }),
+
+  /**
+   * Public: returns the visible course catalog for the Registry Review collection.
+   * Reuses the same cmeCoursesCache table, filtered by REGISTRY_COLLECTION_ID.
+   * If the cache is empty or stale (>6 hours), triggers a sync first.
+   */
+  getRegistryCatalog: publicProcedure.query(async (): Promise<CatalogCourse[]> => {
+    const db = await getDb();
+    if (!db) return [];
+
+    const cached = await db.select().from(cmeCoursesCache).limit(1);
+
+    if (cached.length === 0) {
+      await syncCatalogToDb();
+    } else {
+      const ageMs = Date.now() - cached[0].syncedAt.getTime();
+      if (ageMs > 6 * 60 * 60 * 1000) {
+        syncCatalogToDb().catch(console.error);
+      }
+    }
+
+    const allCourses = await db.select().from(cmeCoursesCache);
+    const courses = allCourses.filter((c) => {
+      if (!c.collectionIds) return false;
+      try {
+        const ids: number[] = JSON.parse(c.collectionIds);
+        return ids.includes(REGISTRY_COLLECTION_ID);
+      } catch {
+        return false;
+      }
+    });
+    // Fall back to all courses if filter returns nothing (e.g. first sync)
+    const result = courses.length > 0 ? courses : [];
     return result.map(mapToCatalogCourse);
   }),
 });

@@ -44,6 +44,7 @@ import StrainScanCoach from "./pages/StrainScanCoach";
 import TEEScanCoach from "./pages/TEEScanCoach";
 import ICEScanCoach from "./pages/ICEScanCoach";
 import CmeHub from "./pages/CmeHub";
+import RegistryReviewHub from "./pages/RegistryReviewHub";
 import Profile from "./pages/Profile";
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -65,6 +66,7 @@ function Router() {
       <Route path="/cases" component={CaseLab} />
       <Route path="/report" component={ReportBuilder} />
       <Route path="/cme" component={CmeHub} />
+      <Route path="/registry-review" component={RegistryReviewHub} />
       <Route path="/echoassist" component={EchoAssist} />
       <Route path="/hub" component={Hub} />
       <Route path="/cardiac-pocus" component={CardiacPOCUS} />

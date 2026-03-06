@@ -642,3 +642,23 @@
 - [x] tRPC: platformAdmin.syncThinkificCourses — trigger syncCatalogToDb, return { count, syncedAt }
 - [x] Platform Admin UI: "CME Course Sync" card with Sync Now button, last-sync timestamp, and course count
 - [x] Vitest: syncThinkificCourses covered by adminRouter.test.ts
+
+## CME Hub — Enrolled Status on Course Cards
+- [ ] Research Thinkific Enrollments API — fetch user enrollments by email/user_id
+- [ ] Add getUserEnrollments helper to server/thinkific.ts
+- [ ] tRPC: cmeCatalog.getMyEnrollments — fetch logged-in user's Thinkific enrollments (enrolled course IDs + progress URLs)
+- [ ] CME Hub UI: show "Continue Learning" button for enrolled courses, "Enroll" for unenrolled
+- [ ] CME Hub UI: show enrollment badge/checkmark on enrolled course cards
+- [ ] Vitest: getUserEnrollments procedure tests
+
+## Registry Review Hub
+- [x] Found Registry Review collection ID = 131826 via Thinkific Collections API
+- [x] Reused existing cmeCoursesCache table — collectionIds column already supports multi-collection
+- [x] tRPC: cmeCatalog.getRegistryCatalog — filters cmeCoursesCache by collection ID 131826
+- [x] Built RegistryReviewHub.tsx page with indigo/purple accent (distinct from CME Hub teal)
+- [x] Features: hero banner, category filter, featured bundle card, course grid, Learn More + Enroll buttons
+- [x] Email pre-fill on checkout links for logged-in users
+- [x] Loading skeleton, live data indicator, error banner
+- [x] Added Registry Review Hub to Learning sidebar nav group (BookMarked icon)
+- [x] Registered /registry-review route in App.tsx
+- [x] Vitest: 17 Registry Review collection filter + category derivation tests, 385 total passing

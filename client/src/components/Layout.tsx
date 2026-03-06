@@ -9,6 +9,7 @@ import {
   Heart, Calculator, ClipboardList, Activity,
   Scan, BookOpen, FileText, Menu, X, ChevronRight,
   Stethoscope, Zap, ExternalLink, ShoppingBag, FlaskConical, MessageCircle, Award, Shield, GraduationCap,
+  BookMarked,
   LogIn, LogOut, Settings, ChevronDown
 } from "lucide-react";
 
@@ -40,6 +41,7 @@ const navGroups = [
       { path: "/cases", label: "Echo Case Lab", icon: BookOpen },
       { path: "/report", label: "Report Builder", icon: FileText },
       { path: "/cme", label: "CME Hub", icon: GraduationCap },
+      { path: "/registry-review", label: "Registry Review Hub", icon: BookMarked },
     ],
   },
   {
