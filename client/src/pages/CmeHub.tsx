@@ -52,7 +52,7 @@ const CME_COURSES: CmeCourse[] = [
     credits: "1",
     creditType: "SDMS CME",
     category: "Ergonomics",
-    enrollUrl: "https://member.allaboutultrasound.com/enroll/603157",
+    enrollUrl: "https://member.allaboutultrasound.com/enroll/617498",
     isFree: true,
   },
   {
@@ -64,7 +64,7 @@ const CME_COURSES: CmeCourse[] = [
     credits: "1",
     creditType: "SDMS CME",
     category: "Adult Echo",
-    enrollUrl: "https://member.allaboutultrasound.com/enroll/617498",
+    enrollUrl: "https://member.allaboutultrasound.com/enroll/603157",
   },
   {
     id: "upper-extremity-duplex",

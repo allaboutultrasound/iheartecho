@@ -606,3 +606,6 @@
 - [x] Integrate BulkCsvUploadPanel into PlatformAdmin page (with role selector)
 - [x] Integrate BulkCsvUploadPanel into LabAdmin page (DIY seat assignment, shows seat usage)
 - [x] Vitest: bulkAssignRole and bulkAssignSeat procedure tests (16 new tests, 334 total passing)
+
+## CME Hub Fixes
+- [x] Swap enrollment URLs: Sonographer Ergonomics now → /enroll/617498, Doppler & Hemodynamics now → /enroll/603157
