@@ -82,7 +82,7 @@ export default function ScanCoachHub() {
                 ScanCoach™
               </h1>
               <p className="text-white/70 text-sm mt-1 max-w-xl">
-                Visual probe guidance with anatomy overlays, Doppler positioning, and orientation tips — for every modality and patient population.
+                Step-by-step tutorials and expert insights that take you from basic cardiac imaging to complex congenital heart disease cases.
               </p>
               <div className="mt-3">
                 <Link href="/echo-navigators">
