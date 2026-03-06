@@ -343,3 +343,11 @@
 - [x] Remove Echo Correlation Review card from Home.tsx modules grid
 - [x] Remove Lab Admin Portal card from Home.tsx modules grid
 - [x] Remove Lab Admin Portal from sidebar navigation in Layout.tsx
+
+## Dashboard Consolidation — 9 Navigation Cards
+- [ ] Build EchoNavigatorHub landing page (/echo-navigators) listing all 9 EchoNavigators
+- [ ] Build ScanCoachHub landing page (/scan-coach-hub) listing all ScanCoach options
+- [ ] Build EchoAssistHub landing page (/echo-assist-hub) listing all EchoAssist engines
+- [ ] Rebuild Home.tsx with 9 consolidated cards: EchoNavigator, ScanCoach, EchoAssist, Hemodynamics Lab, Report Builder, Echo Case Lab, DIY Accreditation, Hub
+- [ ] Update App.tsx routes for new landing pages
+- [ ] Update sidebar to reflect new structure

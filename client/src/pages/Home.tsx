@@ -6,96 +6,35 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
-import { Calculator, Baby, ClipboardList, Activity, Scan, BookOpen, FileText, ArrowRight, Users, Award, Zap, Stethoscope, Microscope, ExternalLink, Heart, MessageCircle, Radio, Wind, Shield, BarChart3 } from "lucide-react";
+import {
+  Calculator, ClipboardList, Activity, Scan, BookOpen, FileText,
+  ArrowRight, Users, Award, Zap, Stethoscope, ExternalLink, MessageCircle
+} from "lucide-react";
 
 const BRAND = "#189aa1";
+
 const modules = [
-  // Adult Echo
   {
-    path: "/tte",
+    path: "/echo-navigators",
     icon: Stethoscope,
-    title: "Adult TTE EchoNavigator™",
-    description: "Structured TTE protocol with view-by-view checklist, critical item tracking, and ASE reference values.",
-    badge: "Adult Echo",
+    title: "EchoNavigator™",
+    description: "Structured echo protocols for Adult TTE, TEE, Stress, Strain, ICE, Device, Pediatric, Fetal, and ACHD — view-by-view checklists, reference values, and scanning tips.",
+    badge: "9 Protocols",
     color: BRAND,
   },
   {
-    path: "/strain",
-    icon: BarChart3,
-    title: "Strain Navigator™",
-    description: "LV GLS, RV free-wall strain, LA reservoir strain with interactive 17-segment bull's-eye display and ASE/EACVI 2022 reference values.",
-    badge: "Adult Echo",
+    path: "/scan-coach-hub",
+    icon: Scan,
+    title: "ScanCoach™",
+    description: "Visual probe guidance with anatomy overlays, Doppler positioning, and orientation tips for Adult TTE, Fetal, Pediatric CHD, ACHD, and Strain.",
+    badge: "5 Modules",
     color: BRAND,
   },
   {
-    path: "/tee",
-    icon: Microscope,
-    title: "TEE EchoNavigator™",
-    description: "ME, TG, and UE views with angle/depth guidance, clinical applications, and intraoperative checklist.",
-    badge: "Structural Heart",
-    color: BRAND,
-  },
-  {
-    path: "/stress",
+    path: "/echo-assist-hub",
     icon: Zap,
-    title: "Stress Echo EchoNavigator™",
-    description: "Exercise and DSE protocols, 17-segment WMSI scorer, target HR calculator, and interpretation criteria.",
-    badge: "Stress Echo",
-    color: BRAND,
-  },
-  {
-    path: "/pediatric",
-    icon: Users,
-    title: "Pediatric EchoNavigator™",
-    description: "CHD findings, BSA Z-scores, Qp/Qs shunt estimation, segmental analysis, and neonatal hemodynamics.",
-    badge: "Congenital Heart",
-    color: BRAND,
-  },
-  {
-    path: "/fetal",
-    icon: Baby,
-    title: "Fetal EchoNavigator™",
-    description: "Fetal cardiac findings, CHD differentials, biometry Z-scores, situs, arch patterns, and scan coach.",
-    badge: "Congenital Heart",
-    color: BRAND,
-  },
-  {
-    path: "/achd",
-    icon: Heart,
-    title: "Adult Congenital EchoNavigator™",
-    description: "ACHD lesion-specific protocols for ASD, VSD, ToF, CoA, TGA, and Fontan with ASE/AHA thresholds.",
-    badge: "Congenital Heart",
-    color: BRAND,
-  },
-  {
-    path: "/cardiac-pocus",
-    icon: Radio,
-    title: "Cardiac POCUS Navigator™",
-    description: "Bedside cardiac POCUS protocol — PLAX, PSAX, A4C, subxiphoid, IVC views with clinical interpretation and EchoAssist™ integration.",
-    badge: "POCUS",
-    color: BRAND,
-  },
-  {
-    path: "/lung-pocus",
-    icon: Wind,
-    title: "Lung POCUS Navigator™",
-    description: "BLUE protocol, 8-zone lung assessment, B-line scoring, pleural effusion, pneumothorax detection with clinical decision pathways.",
-    badge: "POCUS",
-    color: BRAND,
-  },
-  {
-    path: "/efast",
-    icon: Shield,
-    title: "eFAST POCUS Navigator™",
-    description: "Extended FAST exam — RUQ, LUQ, pelvis, cardiac, bilateral thorax windows with free fluid grading and pneumothorax assessment.",
-    badge: "POCUS",
-    color: BRAND,
-  },
-  {
-    path: "/calculator",
-    icon: Calculator,
-    title: "Echo Severity Calculator",
-    description: "Guideline-based interpretation for AS, MR, TR, AR, diastology with LARS, LV GLS, and RV strain.",
+    title: "EchoAssist™",
+    description: "Enter measurements and get instant guideline-based severity classification — AS, MS, AR, MR, LV function, diastology, strain, RV function, and PA pressure.",
     badge: "ASE 2025",
     color: BRAND,
   },
@@ -108,11 +47,11 @@ const modules = [
     color: BRAND,
   },
   {
-    path: "/scan-coach",
-    icon: Scan,
-    title: "ScanCoach™",
-    description: "Visual probe guidance with anatomy overlays, Doppler positioning, and orientation tips.",
-    badge: "Training Mode",
+    path: "/report",
+    icon: FileText,
+    title: "Report Builder",
+    description: "Enter measurements and generate a complete, structured echo report instantly.",
+    badge: "Time Saver",
     color: BRAND,
   },
   {
@@ -124,19 +63,11 @@ const modules = [
     color: BRAND,
   },
   {
-    path: "/report",
-    icon: FileText,
-    title: "Report Builder",
-    description: "Enter measurements and generate a complete, structured echo report instantly.",
-    badge: "Time Saver",
-    color: BRAND,
-  },
-  {
-    path: "/echoassist",
-    icon: Zap,
-    title: "EchoAssist™",
-    description: "Enter measurements and get instant guideline-based severity classification with clinical narrative.",
-    badge: "ASE Guidelines",
+    path: "/accreditation",
+    icon: ClipboardList,
+    title: "DIY Accreditation Tool™",
+    description: "Quality reviews, peer review tracking, policy builder, and appropriate use monitoring — everything your lab needs for IAC accreditation.",
+    badge: "Accreditation",
     color: BRAND,
   },
   {
@@ -145,14 +76,6 @@ const modules = [
     title: "iHeartEcho Hub™",
     description: "Professional echo community — 5 specialty hubs, case discussions, DMs, and peer learning for echo professionals.",
     badge: "Community",
-    color: BRAND,
-  },
-  {
-    path: "/accreditation",
-    icon: ClipboardList,
-    title: "DIY Accreditation Tool™",
-    description: "Quality reviews, peer review tracking, policy builder, and appropriate use monitoring — everything your lab needs for IAC accreditation.",
-    badge: "Accreditation",
     color: BRAND,
   },
 ];
@@ -204,11 +127,11 @@ export default function Home() {
               A real-time echo interpretation and measurement assistant for sonographers, cardiologists, and ACS professionals. Guideline-based, fast, and built for the clinical environment.
             </p>
             <div className="flex flex-wrap gap-3">
-              <Link href="/tte">
+              <Link href="/echo-navigators">
                 <button className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90 hover:scale-105"
                   style={{ background: "#189aa1" }}>
                   <Stethoscope className="w-4 h-4" />
-                  Start TTE Protocol
+                  EchoNavigator™
                 </button>
               </Link>
               <Link href="/cases">
@@ -248,14 +171,14 @@ export default function Home() {
 
       {/* Modules Grid */}
       <div className="container py-8">
-          <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Clinical Modules</h2>
           <div className="flex items-center gap-1.5 text-xs text-[#189aa1] font-medium">
             <Zap className="w-3.5 h-3.5" />
-            10 Modules Available
+            {modules.length} Modules Available
           </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {modules.map(({ path, icon: Icon, title, description, badge, color }) => (
             <Link key={path} href={path}>
               <div className="module-card bg-white rounded-xl p-5 cursor-pointer group h-full">
@@ -280,7 +203,7 @@ export default function Home() {
         </div>
 
         {/* Premium CTA */}
-          <div className="mt-8 rounded-xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4"
+        <div className="mt-8 rounded-xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4"
           style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}>
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">

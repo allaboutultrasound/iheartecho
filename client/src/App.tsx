@@ -35,6 +35,9 @@ import AccreditationNavigator from "./pages/AccreditationNavigator";
 import LabAdmin from "./pages/LabAdmin";
 import ImageQualityReview from "./pages/ImageQualityReview";
 import EchoCorrelation from "./pages/EchoCorrelation";
+import EchoNavigatorHub from "./pages/EchoNavigatorHub";
+import ScanCoachHub from "./pages/ScanCoachHub";
+import EchoAssistHub from "./pages/EchoAssistHub";
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
@@ -65,6 +68,9 @@ function Router() {
       <Route path="/lab-admin" component={LabAdmin} />
       <Route path="/image-quality-review" component={ImageQualityReview} />
       <Route path="/echo-correlation" component={() => { window.location.replace("/accreditation"); return null; }} />
+      <Route path="/echo-navigators" component={EchoNavigatorHub} />
+      <Route path="/scan-coach-hub" component={ScanCoachHub} />
+      <Route path="/echo-assist-hub" component={EchoAssistHub} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

@@ -6,9 +6,9 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import {
-  Heart, Calculator, Baby, ClipboardList, Activity,
+  Heart, Calculator, ClipboardList, Activity,
   Scan, BookOpen, FileText, Menu, X, ChevronRight,
-  Stethoscope, Microscope, Zap, Users, ExternalLink, ShoppingBag, FlaskConical, Cpu, Layers, MessageCircle, Radio, Wind, Shield, Award
+  Stethoscope, Zap, ExternalLink, ShoppingBag, FlaskConical, MessageCircle, Award
 } from "lucide-react";
 import NotificationBell from "@/components/NotificationBell";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -21,50 +21,24 @@ const navGroups = [
     ],
   },
   {
-    label: "Adult Echo",
+    label: "Clinical Tools",
     items: [
-      { path: "/tte", label: "TTE EchoNavigator™", icon: Stethoscope },
-      { path: "/strain", label: "Strain Navigator™", icon: Activity },
-      { path: "/stress", label: "Stress EchoNavigator™", icon: Zap },
-    ],
-  },
-  {
-    label: "Structural Heart",
-    items: [
-      { path: "/tee", label: "TEE EchoNavigator™", icon: Microscope },
-      { path: "/ice", label: "ICE EchoNavigator™", icon: Cpu },
-      { path: "/device", label: "Device EchoNavigator™", icon: Layers },
-    ],
-  },
-  {
-    label: "Congenital Heart",
-    items: [
-      { path: "/pediatric", label: "Pediatric EchoNavigator™", icon: Users },
-      { path: "/fetal", label: "Fetal EchoNavigator™", icon: Baby },
-      { path: "/achd", label: "Adult Congenital EchoNavigator™", icon: Heart },
-    ],
-  },
-  {
-    label: "POCUS",
-    items: [
-      { path: "/cardiac-pocus", label: "Cardiac POCUS Navigator™", icon: Radio },
-      { path: "/lung-pocus", label: "Lung POCUS Navigator™", icon: Wind },
-      { path: "/efast", label: "eFAST POCUS Navigator™", icon: Shield },
-    ],
-  },
-  {
-    label: "Calculators & Tools",
-    items: [
-      { path: "/scan-coach", label: "ScanCoach™", icon: Scan },
-      { path: "/echoassist", label: "EchoAssist™", icon: FlaskConical },
+      { path: "/echo-navigators", label: "EchoNavigator™", icon: Stethoscope },
+      { path: "/scan-coach-hub", label: "ScanCoach™", icon: Scan },
+      { path: "/echo-assist-hub", label: "EchoAssist™", icon: FlaskConical },
       { path: "/hemodynamics", label: "Hemodynamics Lab", icon: Activity },
       { path: "/calculator", label: "Echo Calculator", icon: Calculator },
-      { path: "/cases", label: "Case Lab", icon: BookOpen },
+    ],
+  },
+  {
+    label: "Learning",
+    items: [
+      { path: "/cases", label: "Echo Case Lab", icon: BookOpen },
       { path: "/report", label: "Report Builder", icon: FileText },
     ],
   },
   {
-    label: "Accreditation Tools",
+    label: "Accreditation",
     items: [
       { path: "/accreditation", label: "DIY Accreditation Tool™", icon: ClipboardList },
       { path: "/accreditation-navigator", label: "EchoAccreditation Navigator™", icon: Award },
