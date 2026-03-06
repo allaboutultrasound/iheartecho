@@ -51,6 +51,7 @@ import {
   X,
 } from "lucide-react";
 import { Link } from "wouter";
+import BulkCsvUploadPanel, { type BulkResult } from "@/components/BulkCsvUploadPanel";
 
 type AppRole = "user" | "premium_user" | "diy_admin" | "diy_user" | "platform_admin";
 
@@ -312,6 +313,12 @@ export default function PlatformAdmin() {
   const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
   const [addRoleDialogOpen, setAddRoleDialogOpen] = useState(false);
   const [roleToAdd, setRoleToAdd] = useState<AppRole>("premium_user");
+  const [bulkRole, setBulkRole] = useState<AppRole>("premium_user");
+
+  const bulkAssignRoleMutation = trpc.platformAdmin.bulkAssignRole.useMutation({
+    onSuccess: () => refetchUsers(),
+    onError: (err) => toast.error(err.message),
+  });
 
   const { data: isAdmin, isLoading: checkingAdmin } = trpc.platformAdmin.isAdmin.useQuery(
     undefined,
@@ -458,6 +465,51 @@ export default function PlatformAdmin() {
 
         {/* Add User by Email */}
         <AddUserByEmailPanel onSuccess={refetchUsers} />
+
+        {/* Bulk CSV Role Assignment */}
+        <Card className="mb-6 border-0 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+              <Users className="w-4 h-4 text-[#189aa1]" />
+              Bulk Role Assignment
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <BulkCsvUploadPanel
+              title="Upload a CSV of emails to assign a role in bulk"
+              description="Upload a CSV or paste emails — one per line. All emails will receive the selected role. Users must have signed in at least once."
+              submitLabel="Assign Role to All"
+              isPending={bulkAssignRoleMutation.isPending}
+              onSubmit={async (emails) => {
+                const result = await bulkAssignRoleMutation.mutateAsync({ emails, role: bulkRole });
+                return result as BulkResult;
+              }}
+              actionSlot={
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 block mb-1">Role to assign to all</label>
+                  <Select value={bulkRole} onValueChange={v => setBulkRole(v as AppRole)}>
+                    <SelectTrigger className="h-9 text-sm w-64">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(Object.entries(ROLE_META) as [AppRole, typeof ROLE_META[AppRole]][]).map(([role, meta]) => (
+                        <SelectItem key={role} value={role}>
+                          <div className="flex items-center gap-2">
+                            <meta.icon className="w-3.5 h-3.5" />
+                            {meta.label}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {ROLE_META[bulkRole] && (
+                    <p className="text-xs text-gray-400 mt-1">{ROLE_META[bulkRole].description}</p>
+                  )}
+                </div>
+              }
+            />
+          </CardContent>
+        </Card>
 
         {/* Role Reference */}
         <Card className="mb-6 border-0 shadow-sm">

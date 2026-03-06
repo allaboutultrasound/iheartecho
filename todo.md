@@ -598,3 +598,11 @@
 - [x] Platform Admin UI: inline role chip removal (X button on each role badge)
 - [x] Remove Platform Admin link from sidebar navigation
 - [x] Vitest: findUserByEmail and assignRoleByEmail procedure tests (14 tests, 318 total passing)
+
+## Bulk CSV Onboarding — Platform Admin & Lab Admin
+- [x] tRPC: platformAdmin.bulkAssignRole — emails[] + role → per-row {email, status, displayName}
+- [x] tRPC: labSeats.bulkAssignSeat — emails[] → per-row {email, status, displayName}, seat-limit aware
+- [x] Shared BulkCsvUploadPanel component (drag-and-drop, paste, preview table, results, download CSV)
+- [x] Integrate BulkCsvUploadPanel into PlatformAdmin page (with role selector)
+- [x] Integrate BulkCsvUploadPanel into LabAdmin page (DIY seat assignment, shows seat usage)
+- [x] Vitest: bulkAssignRole and bulkAssignSeat procedure tests (16 new tests, 334 total passing)

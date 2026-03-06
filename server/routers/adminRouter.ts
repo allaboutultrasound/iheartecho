@@ -133,6 +133,62 @@ export const platformAdminRouter = router({
     }),
 
   /**
+   * Bulk assign a role to multiple users by email.
+   * Returns per-row results: success | already_assigned | not_found | error
+   * Processes up to 500 emails per call.
+   */
+  bulkAssignRole: protectedProcedure
+    .input(z.object({
+      emails: z.array(z.string().email()).min(1).max(500),
+      role: z.enum(["user", "premium_user", "diy_admin", "diy_user", "platform_admin"]),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const myRoles = await getUserRoles(ctx.user.id);
+      const isOwner = ctx.user.role === "admin";
+      const isPlatformAdmin = myRoles.includes("platform_admin");
+      if (!isOwner && !isPlatformAdmin) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Platform admin access required" });
+      }
+      if (input.role === "platform_admin" && !isOwner) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only the owner can assign platform_admin" });
+      }
+
+      const results: Array<{
+        email: string;
+        status: "success" | "already_assigned" | "not_found" | "error";
+        displayName?: string;
+        message?: string;
+      }> = [];
+
+      for (const email of input.emails) {
+        try {
+          const found = await findUserByEmailWithRoles(email);
+          if (!found) {
+            results.push({ email, status: "not_found", message: "No account — user must sign in first" });
+            continue;
+          }
+          if (found.roles.includes(input.role)) {
+            results.push({ email, status: "already_assigned", displayName: found.displayName ?? found.name ?? undefined });
+            continue;
+          }
+          await assignRole(found.id, input.role as AppRole, ctx.user.id);
+          results.push({ email, status: "success", displayName: found.displayName ?? found.name ?? undefined });
+        } catch (err) {
+          results.push({ email, status: "error", message: err instanceof Error ? err.message : "Unknown error" });
+        }
+      }
+
+      return {
+        total: results.length,
+        succeeded: results.filter(r => r.status === "success").length,
+        alreadyAssigned: results.filter(r => r.status === "already_assigned").length,
+        notFound: results.filter(r => r.status === "not_found").length,
+        errors: results.filter(r => r.status === "error").length,
+        rows: results,
+      };
+    }),
+
+  /**
    * Assign a role to a user looked up by email.
    * Convenience wrapper so the UI can do email → role in one step.
    */
@@ -211,6 +267,70 @@ export const labSeatsRouter = router({
       }
       await removeRole(input.userId, "diy_user");
       return { success: true };
+    }),
+
+  /**
+   * Bulk assign DIY seats to multiple users by email.
+   * Respects the lab's seat limit — stops and reports when limit is reached.
+   * Returns per-row results: success | already_assigned | not_found | seat_limit_reached | error
+   */
+  bulkAssignSeat: protectedProcedure
+    .input(z.object({
+      emails: z.array(z.string().email()).min(1).max(500),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const myRoles = await getUserRoles(ctx.user.id);
+      if (!myRoles.includes("diy_admin") && ctx.user.role !== "admin") {
+        throw new TRPCError({ code: "FORBIDDEN", message: "DIY Admin access required" });
+      }
+      const lab = await getLabByAdmin(ctx.user.id);
+      if (!lab) throw new TRPCError({ code: "NOT_FOUND", message: "No lab found" });
+
+      const seatLimit = (lab as any).seatCount ?? 1;
+      let currentSeats = await getDiyUsersForLab(lab.id);
+
+      const results: Array<{
+        email: string;
+        status: "success" | "already_assigned" | "not_found" | "seat_limit_reached" | "error";
+        displayName?: string;
+        message?: string;
+      }> = [];
+
+      for (const email of input.emails) {
+        // Re-check seat count each iteration
+        if (currentSeats.length >= seatLimit) {
+          results.push({ email, status: "seat_limit_reached", message: `Seat limit of ${seatLimit} reached` });
+          continue;
+        }
+        try {
+          const found = await findUserByEmailWithRoles(email);
+          if (!found) {
+            results.push({ email, status: "not_found", message: "No account — user must sign in first" });
+            continue;
+          }
+          if (found.roles.includes("diy_user")) {
+            results.push({ email, status: "already_assigned", displayName: found.displayName ?? found.name ?? undefined });
+            continue;
+          }
+          await assignRole(found.id, "diy_user", ctx.user.id, lab.id);
+          // Increment local count to avoid extra DB round-trip
+          currentSeats = [...currentSeats, found as any];
+          results.push({ email, status: "success", displayName: found.displayName ?? found.name ?? undefined });
+        } catch (err) {
+          results.push({ email, status: "error", message: err instanceof Error ? err.message : "Unknown error" });
+        }
+      }
+
+      return {
+        total: results.length,
+        succeeded: results.filter(r => r.status === "success").length,
+        alreadyAssigned: results.filter(r => r.status === "already_assigned").length,
+        notFound: results.filter(r => r.status === "not_found").length,
+        seatLimitReached: results.filter(r => r.status === "seat_limit_reached").length,
+        errors: results.filter(r => r.status === "error").length,
+        rows: results,
+        seatUsage: { used: currentSeats.length, total: seatLimit },
+      };
     }),
 
   /** Get seat usage for current lab */

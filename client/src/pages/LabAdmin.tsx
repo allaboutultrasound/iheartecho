@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { getLoginUrl } from "@/const";
+import BulkCsvUploadPanel, { type BulkResult } from "@/components/BulkCsvUploadPanel";
 import jsPDF from "jspdf";
 import {
   LineChart, Line, BarChart, Bar, RadarChart, Radar, PolarGrid,
@@ -433,6 +434,7 @@ function OverviewTab({ lab, members, snapshot }: {
 // ─── Staff Tab ────────────────────────────────────────────────────────────────
 function StaffTab({ lab, members, onRefresh }: { lab: any; members: any[]; onRefresh: () => void }) {
   const [addOpen, setAddOpen] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [form, setForm] = useState({ inviteEmail: "", displayName: "", credentials: "", role: "technical_staff" as "admin" | "medical_director" | "technical_director" | "medical_staff" | "technical_staff", specialty: "", department: "" });
   const [editForm, setEditForm] = useState<any>({});
@@ -451,6 +453,11 @@ function StaffTab({ lab, members, onRefresh }: { lab: any; members: any[]; onRef
     onError: (e) => toast.error(e.message),
   });
 
+  const bulkAssignSeat = trpc.labSeats.bulkAssignSeat.useMutation({
+    onSuccess: () => { utils.lab.getMembers.invalidate(); },
+    onError: (e) => toast.error(e.message),
+  });
+
   const roleColors: Record<string, string> = { admin: "#7c3aed", medical_director: "#0e4a50", technical_director: "#189aa1", medical_staff: "#0e6b72", technical_staff: "#d97706" };
   const roleLabels: Record<string, string> = { admin: "Admin", medical_director: "Medical Director", technical_director: "Technical Director", medical_staff: "Medical Staff", technical_staff: "Technical Staff" };
 
@@ -460,11 +467,35 @@ function StaffTab({ lab, members, onRefresh }: { lab: any; members: any[]; onRef
         <div className="text-sm text-gray-500 font-medium">
           {members.length} of {lab.seats === 999 ? "unlimited" : lab.seats} seats used
         </div>
-        <Button size="sm" className="text-white h-8 text-xs gap-1.5" style={{ background: BRAND }} onClick={() => setAddOpen(!addOpen)}>
-          <Plus className="w-3.5 h-3.5" />
-          Add Staff Member
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" className="text-white h-8 text-xs gap-1.5" style={{ background: BRAND }} onClick={() => setAddOpen(!addOpen)}>
+            <Plus className="w-3.5 h-3.5" />
+            Add Staff Member
+          </Button>
+          <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5" onClick={() => { setBulkOpen(v => !v); setAddOpen(false); }}>
+            <Download className="w-3.5 h-3.5" />
+            Bulk Import CSV
+          </Button>
+        </div>
       </div>
+
+      {bulkOpen && (
+        <Card className="border border-[#189aa1]/20">
+          <CardContent className="p-4">
+            <BulkCsvUploadPanel
+              title="Bulk Import Staff by Email"
+              description="Upload a CSV or paste emails — one per line. Each user will be assigned a DIY seat. Users must have signed in at least once."
+              submitLabel="Assign Seats to All"
+              isPending={bulkAssignSeat.isPending}
+              seatUsage={{ used: members.length, total: lab.seats ?? 1 }}
+              onSubmit={async (emails) => {
+                const result = await bulkAssignSeat.mutateAsync({ emails });
+                return result as BulkResult;
+              }}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {addOpen && (
         <Card className="border border-[#189aa1]/20">
