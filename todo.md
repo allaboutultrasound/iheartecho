@@ -513,3 +513,12 @@
 - [ ] Login page / sign-in flow with Manus OAuth
 - [ ] Registration auto-creates user with "user" role (no other permissions)
 - [ ] Role badge display on user profile and admin panel
+
+## Role-Gated Route Guards (Completed)
+- [x] Build RoleGuard component that checks user roles and redirects unauthorized users
+- [x] Wire RoleGuard around /accreditation (diy_admin or diy_user), /lab-admin (diy_admin), /platform-admin (platform_admin)
+- [x] Show "Access Required" page with role list, "Request Access" CTA, and back-to-dashboard button
+- [x] Handle loading state gracefully (spinner, no flash before auth check completes)
+- [x] auth.me now returns appRoles array alongside user data
+- [x] platform_admin bypasses all role checks by default (allowAdmin=true)
+- [x] All 227 tests passing

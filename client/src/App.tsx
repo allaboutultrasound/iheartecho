@@ -31,6 +31,7 @@ import LungPOCUS from "./pages/LungPOCUS";
 import EfastPOCUS from "./pages/EfastPOCUS";
 import StrainNavigator from "./pages/StrainNavigator";
 import AccreditationTool from "./pages/AccreditationTool";
+import { RoleGuard } from "@/components/RoleGuard";
 import AccreditationNavigator from "./pages/AccreditationNavigator";
 import LabAdmin from "./pages/LabAdmin";
 import PlatformAdmin from "./pages/PlatformAdmin";
@@ -67,10 +68,28 @@ function Router() {
       <Route path="/lung-pocus" component={LungPOCUS} />
       <Route path="/efast" component={EfastPOCUS} />
       <Route path="/strain" component={StrainNavigator} />
-      <Route path="/accreditation" component={AccreditationTool} />
+      <Route path="/accreditation">
+        {() => (
+          <RoleGuard roles={["diy_admin", "diy_user"]}>
+            <AccreditationTool />
+          </RoleGuard>
+        )}
+      </Route>
       <Route path="/accreditation-navigator" component={AccreditationNavigator} />
-      <Route path="/lab-admin" component={LabAdmin} />
-      <Route path="/platform-admin" component={PlatformAdmin} />
+      <Route path="/lab-admin">
+        {() => (
+          <RoleGuard roles={["diy_admin"]}>
+            <LabAdmin />
+          </RoleGuard>
+        )}
+      </Route>
+      <Route path="/platform-admin">
+        {() => (
+          <RoleGuard roles={["platform_admin"]} allowAdmin={false}>
+            <PlatformAdmin />
+          </RoleGuard>
+        )}
+      </Route>
       <Route path="/image-quality-review" component={ImageQualityReview} />
       <Route path="/echo-correlation" component={() => { window.location.replace("/accreditation"); return null; }} />
       <Route path="/echo-navigators" component={EchoNavigatorHub} />
