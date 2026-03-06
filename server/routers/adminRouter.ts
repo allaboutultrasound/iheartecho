@@ -12,6 +12,7 @@ import {
   findUserByEmailWithRoles,
   type AppRole,
 } from "../db";
+import { syncCatalogToDb } from "./cmeRouter";
 
 // ─── Platform Admin Router ────────────────────────────────────────────────────
 // Manages user roles and seat assignments for the iHeartEcho platform.
@@ -217,6 +218,23 @@ export const platformAdminRouter = router({
       await assignRole(found.id, input.role as AppRole, ctx.user.id);
       return { success: true, userId: found.id, displayName: found.displayName ?? found.name };
     }),
+
+  /**
+   * Manually trigger a Thinkific course catalog re-sync.
+   * Fetches all products from Thinkific, filters to the E-Learning & CME collection,
+   * and upserts into the cmeCoursesCache table.
+   * Returns the number of courses synced and the timestamp.
+   */
+  syncThinkificCourses: protectedProcedure.mutation(async ({ ctx }) => {
+    const myRoles = await getUserRoles(ctx.user.id);
+    const isOwner = ctx.user.role === "admin";
+    const isPlatformAdmin = myRoles.includes("platform_admin");
+    if (!isOwner && !isPlatformAdmin) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "Platform admin access required" });
+    }
+    const count = await syncCatalogToDb();
+    return { count, syncedAt: new Date() };
+  }),
 });
 
 // ─── Lab Seat Management Router ───────────────────────────────────────────────

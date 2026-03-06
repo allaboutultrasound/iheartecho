@@ -1733,6 +1733,15 @@ export async function ensureUserRole(userId: number): Promise<void> {
   await db.insert(userRoles).values({ userId, role: "user", assignedByUserId: userId });
 }
 
+/** Mark a user as enrolled in the Thinkific free membership (sets thinkificEnrolledAt to now) */
+export async function markThinkificEnrolled(userId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(users)
+    .set({ thinkificEnrolledAt: new Date() })
+    .where(eq(users.id, userId));
+}
+
 /** List all users with their roles (for admin panel) */
 export async function listUsersWithRoles(limit = 100, offset = 0) {
   const db = await getDb();

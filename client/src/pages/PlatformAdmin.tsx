@@ -320,6 +320,15 @@ export default function PlatformAdmin() {
     onError: (err) => toast.error(err.message),
   });
 
+  const [lastSyncResult, setLastSyncResult] = useState<{ count: number; syncedAt: Date } | null>(null);
+  const syncCoursesMutation = trpc.platformAdmin.syncThinkificCourses.useMutation({
+    onSuccess: (data) => {
+      setLastSyncResult(data);
+      toast.success(`Synced ${data.count} CME course${data.count !== 1 ? "s" : ""} from Thinkific.`);
+    },
+    onError: (err) => toast.error(`Sync failed: ${err.message}`),
+  });
+
   const { data: isAdmin, isLoading: checkingAdmin } = trpc.platformAdmin.isAdmin.useQuery(
     undefined,
     { enabled: isAuthenticated },
@@ -508,6 +517,43 @@ export default function PlatformAdmin() {
                 </div>
               }
             />
+          </CardContent>
+        </Card>
+
+        {/* Sync CME Courses */}
+        <Card className="mb-6 border-0 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+              <RefreshCw className="w-4 h-4" />
+              CME Course Sync
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className="flex-1">
+                <p className="text-sm text-gray-600 mb-1">
+                  Manually pull the latest course catalog from Thinkific (E-Learning &amp; CME collection).
+                  The catalog also auto-syncs every 6 hours and on webhook events.
+                </p>
+                {lastSyncResult ? (
+                  <p className="text-xs text-[#189aa1] font-medium">
+                    Last sync: {lastSyncResult.count} course{lastSyncResult.count !== 1 ? "s" : ""} &mdash;{" "}
+                    {new Date(lastSyncResult.syncedAt).toLocaleString()}
+                  </p>
+                ) : (
+                  <p className="text-xs text-gray-400">No sync performed this session.</p>
+                )}
+              </div>
+              <Button
+                onClick={() => syncCoursesMutation.mutate()}
+                disabled={syncCoursesMutation.isPending}
+                className="flex items-center gap-2 flex-shrink-0"
+                style={{ background: "#189aa1" }}
+              >
+                <RefreshCw className={`w-4 h-4 ${syncCoursesMutation.isPending ? "animate-spin" : ""}`} />
+                {syncCoursesMutation.isPending ? "Syncing…" : "Sync Now"}
+              </Button>
+            </div>
           </CardContent>
         </Card>
 

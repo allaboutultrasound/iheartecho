@@ -1,6 +1,7 @@
 import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import type { Express, Request, Response } from "express";
 import * as db from "../db";
+import { enrollInFreeMembership } from "../thinkific";
 import { getSessionCookieOptions } from "./cookies";
 import { sdk } from "./sdk";
 
@@ -40,6 +41,24 @@ export function registerOAuthRoutes(app: Express) {
       const createdUser = await db.getUserByOpenId(userInfo.openId);
       if (createdUser) {
         await db.ensureUserRole(createdUser.id);
+
+        // Auto-enroll new users into the Thinkific Free Membership (first sign-in only)
+        if (!createdUser.thinkificEnrolledAt && createdUser.email) {
+          const nameParts = (createdUser.name ?? "").split(" ");
+          const firstName = nameParts[0] ?? "Member";
+          const lastName = nameParts.slice(1).join(" ") ?? "";
+          // Fire-and-forget: don't block the OAuth redirect on Thinkific latency
+          enrollInFreeMembership(createdUser.email, firstName, lastName)
+            .then(async ({ thinkificUserId, coursesEnrolled }) => {
+              await db.markThinkificEnrolled(createdUser.id);
+              console.log(
+                `[Thinkific] Auto-enrolled user ${createdUser.email} (Thinkific ID: ${thinkificUserId}) into ${coursesEnrolled} free membership courses.`
+              );
+            })
+            .catch((err) => {
+              console.error(`[Thinkific] Auto-enrollment failed for ${createdUser.email}:`, err);
+            });
+        }
       }
 
       const sessionToken = await sdk.createSessionToken(userInfo.openId, {

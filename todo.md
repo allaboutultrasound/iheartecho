@@ -624,3 +624,21 @@
 - [x] Webhook endpoint POST /api/webhooks/thinkific — handles product.created/updated/deleted, triggers background re-sync
 - [x] cmeUtils.ts client helper for parseCreditHoursFromName
 - [x] Vitest: 16 webhook + parseCreditHoursFromName tests, 350 total passing
+
+## Platform Admin — Sync Now Button
+- [x] tRPC: platformAdmin.syncThinkificCourses — trigger syncCatalogToDb, return { count, syncedAt }
+- [x] Platform Admin UI: "Sync Now" button in CME section showing last sync time and course count
+- [x] Vitest: syncThinkificCourses procedure test
+
+## Auto-Enroll New Users in Thinkific Free Membership
+- [x] Found Free Membership bundle: product ID 3241567, bundle ID 211942, 4 courses
+- [x] Added findOrCreateThinkificUser, enrollInCourse, enrollInFreeMembership to server/thinkific.ts
+- [x] Hooked enrollInFreeMembership into OAuth callback (fire-and-forget, first sign-in only)
+- [x] DB: added thinkificEnrolledAt column to users table (pnpm db:push migration 0026)
+- [x] Added markThinkificEnrolled(userId) helper to server/db.ts
+- [x] Vitest: 18 enrollment helper tests, 368 total passing
+
+## Platform Admin — Sync Now Button
+- [x] tRPC: platformAdmin.syncThinkificCourses — trigger syncCatalogToDb, return { count, syncedAt }
+- [x] Platform Admin UI: "CME Course Sync" card with Sync Now button, last-sync timestamp, and course count
+- [x] Vitest: syncThinkificCourses covered by adminRouter.test.ts

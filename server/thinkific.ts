@@ -209,3 +209,106 @@ export function buildCourseUrl(slug: string): string {
 export function buildEnrollUrl(productSlug: string): string {
   return `https://${ENV.thinkificSubdomain}.thinkific.com/products/${productSlug}`;
 }
+
+// ─── Free Membership Auto-Enrollment ─────────────────────────────────────────
+
+/**
+ * The Free Membership bundle on Thinkific (product ID 3241567, bundle ID 211942).
+ * Contains 4 courses that are enrolled individually via the Enrollments API.
+ */
+export const FREE_MEMBERSHIP_COURSE_IDS = [2982817, 2980660, 2980484, 586085] as const;
+
+/**
+ * Find a Thinkific user by email, or create a new account if not found.
+ * Returns the Thinkific user ID.
+ *
+ * @param email - The user's email address
+ * @param firstName - First name for new account creation
+ * @param lastName - Last name for new account creation
+ */
+export async function findOrCreateThinkificUser(
+  email: string,
+  firstName: string,
+  lastName: string
+): Promise<number> {
+  // Try to find existing user first
+  const existing = await getUserByEmail(email);
+  if (existing) return existing.id;
+
+  // Create a new Thinkific user
+  const res = await fetch(`${BASE_URL}/users`, {
+    method: "POST",
+    headers: thinkificHeaders(),
+    body: JSON.stringify({
+      first_name: firstName || "Member",
+      last_name: lastName || "",
+      email,
+      skip_custom_fields_validation: true,
+    }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Thinkific create user error ${res.status}: ${body}`);
+  }
+
+  const newUser = await res.json() as ThinkificUser;
+  return newUser.id;
+}
+
+/**
+ * Enroll a Thinkific user (by ID) into a single course.
+ * Silently ignores 422 (already enrolled) errors.
+ */
+export async function enrollInCourse(
+  thinkificUserId: number,
+  courseId: number
+): Promise<boolean> {
+  const res = await fetch(`${BASE_URL}/enrollments`, {
+    method: "POST",
+    headers: thinkificHeaders(),
+    body: JSON.stringify({
+      user_id: thinkificUserId,
+      course_id: courseId,
+      activated_at: new Date().toISOString(),
+    }),
+  });
+
+  // 422 = already enrolled — treat as success
+  if (res.status === 422) return true;
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Thinkific enroll error ${res.status}: ${body}`);
+  }
+
+  return true;
+}
+
+/**
+ * Enroll a user (by email) into all courses in the Free Membership bundle.
+ * Creates the Thinkific account if it doesn't exist yet.
+ * Returns the number of courses successfully enrolled.
+ *
+ * This is safe to call multiple times — already-enrolled courses are silently skipped.
+ */
+export async function enrollInFreeMembership(
+  email: string,
+  firstName: string,
+  lastName: string
+): Promise<{ thinkificUserId: number; coursesEnrolled: number }> {
+  const thinkificUserId = await findOrCreateThinkificUser(email, firstName, lastName);
+
+  let coursesEnrolled = 0;
+  for (const courseId of FREE_MEMBERSHIP_COURSE_IDS) {
+    try {
+      await enrollInCourse(thinkificUserId, courseId);
+      coursesEnrolled++;
+    } catch (err) {
+      // Log but don't fail the whole enrollment if one course fails
+      console.error(`[Thinkific] Failed to enroll user ${email} in course ${courseId}:`, err);
+    }
+  }
+
+  return { thinkificUserId, coursesEnrolled };
+}

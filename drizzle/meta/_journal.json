@@ -183,6 +183,13 @@
       "when": 1772838820977,
       "tag": "0025_previous_wiccan",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "5",
+      "when": 1772839629875,
+      "tag": "0026_crazy_talisman",
+      "breakpoints": true
     }
   ]
 }
