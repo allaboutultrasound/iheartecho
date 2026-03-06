@@ -452,3 +452,9 @@
 - [x] "linked" badge shown on case list entries where staff is linked to a lab member
 - [x] Free-text fallback available for staff not in Lab Admin roster
 - [x] 21 vitest tests covering staffLabel, resolveStaff, IAC flag logic, and role filtering
+
+## Pending — Current Session
+- [ ] Case Count Summary banner at top of Case Mix tracker (per-category progress, not overall total)
+- [ ] Premium lock overlay on TEE, Stress, Strain, ICE, Device navigator pages (blurred content + upgrade CTA)
+- [ ] Staff Coverage Report in Case Mix tracker (who has been represented vs. missing)
+- [x] Adult TTE case types restricted to "LV RWMA" and "AS" only (remove all others)

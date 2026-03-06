@@ -141,6 +141,13 @@
       "when": 1772807618632,
       "tag": "0019_thick_purifiers",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "5",
+      "when": 1772817139859,
+      "tag": "0020_unknown_pride",
+      "breakpoints": true
     }
   ]
 }

@@ -84,17 +84,9 @@ const MODALITIES: ModalityRequirement[] = [
     ],
     lookbackMonths: 12,
     caseTypeOptions: [
-      "Abnormal LV Systolic Function (EF < 50%)",
+      "LV RWMA (Regional Wall Motion Abnormality)",
       "Aortic Stenosis — Moderate",
       "Aortic Stenosis — Severe",
-      "Mitral Regurgitation — Moderate or Severe",
-      "Tricuspid Regurgitation — Moderate or Severe",
-      "Pericardial Effusion / Tamponade",
-      "Cardiomyopathy (DCM/HCM/RCM)",
-      "Diastolic Dysfunction — Grade II or III",
-      "Pulmonary Hypertension",
-      "Intracardiac Mass / Thrombus",
-      "Other Complete Adult TTE",
     ],
   },
   {
@@ -537,8 +529,88 @@ function CaseTracker({ tier }: { tier: StaffTier }) {
     );
   }
 
+  // ─── Per-category summary data ───────────────────────────────────────────────
+  const categorySummary = MODALITIES.map(m => {
+    const logged = cases.filter((c: any) => c.modality === m.id).length;
+    const required = m.staffBased ? (m.casesByTier?.[tier] ?? 0) : null;
+    const pct = required ? Math.min(100, Math.round((logged / required) * 100)) : null;
+    const isComplete = required !== null && logged >= required;
+    return { ...m, logged, required, pct, isComplete };
+  });
+
+  const completedCount = categorySummary.filter(s => s.isComplete).length;
+  const totalWithRequirements = categorySummary.filter(s => s.required !== null).length;
+
   return (
     <div className="space-y-4">
+      {/* ── Case Count Summary Banner ─────────────────────────────────────────── */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ClipboardList className="w-4 h-4" style={{ color: BRAND }} />
+            <span className="text-sm font-bold text-gray-800">Case Count Summary</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs text-gray-500">Categories met:</span>
+            <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{
+              background: completedCount === totalWithRequirements ? "#dcfce7" : BRAND + "15",
+              color: completedCount === totalWithRequirements ? "#16a34a" : BRAND
+            }}>
+              {completedCount} / {totalWithRequirements}
+            </span>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-0 divide-x divide-y divide-gray-50">
+          {categorySummary.map(s => (
+            <button
+              key={s.id}
+              onClick={() => { setActiveModality(s.id); setShowForm(false); }}
+              className={`flex flex-col gap-2 px-4 py-3 text-left hover:bg-gray-50 transition-colors ${
+                activeModality === s.id ? "bg-gray-50" : ""
+              }`}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5">
+                  <s.icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: s.color }} />
+                  <span className="text-xs font-semibold text-gray-700 leading-tight">{s.label}</span>
+                </div>
+                {s.isComplete ? (
+                  <CheckCheck className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+                ) : s.required !== null && s.logged > 0 ? (
+                  <Clock className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                ) : s.required !== null ? (
+                  <AlertTriangle className="w-3.5 h-3.5 text-gray-300 flex-shrink-0" />
+                ) : null}
+              </div>
+              {s.required !== null ? (
+                <>
+                  <div className="flex items-end justify-between">
+                    <span className="text-lg font-black leading-none" style={{
+                      fontFamily: "JetBrains Mono, monospace",
+                      color: s.isComplete ? "#16a34a" : s.color
+                    }}>
+                      {s.logged}
+                    </span>
+                    <span className="text-xs text-gray-400 font-medium">/ {s.required}</span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${s.pct ?? 0}%`, background: s.isComplete ? "#10b981" : s.color }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-gray-400">
+                    {s.isComplete ? "Requirement met" : `${s.required! - s.logged} more needed`}
+                  </span>
+                </>
+              ) : (
+                <span className="text-xs text-gray-400 italic">Per MD discretion</span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Modality selector */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="flex overflow-x-auto">
