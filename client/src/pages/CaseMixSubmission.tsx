@@ -85,8 +85,7 @@ const MODALITIES: ModalityRequirement[] = [
     lookbackMonths: 12,
     caseTypeOptions: [
       "LV RWMA (Regional Wall Motion Abnormality)",
-      "Aortic Stenosis — Moderate",
-      "Aortic Stenosis — Severe",
+      "Aortic Stenosis",
     ],
   },
   {
