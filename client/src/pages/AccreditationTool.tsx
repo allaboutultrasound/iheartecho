@@ -24,6 +24,7 @@ import EchoCorrelationTab from "./EchoCorrelation";
 import { toast } from "sonner";
 import { getLoginUrl } from "@/const";
 import jsPDF from "jspdf";
+import { Link } from "wouter";
 
 const BRAND = "#189aa1";
 const MODALITIES = ["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS"] as const;
@@ -1194,6 +1195,15 @@ export default function AccreditationTool() {
               <p className="text-white/70 text-sm mt-1 max-w-xl">
                 Quality reviews, peer review tracking, policy creation, and appropriate use monitoring — everything you need to prepare for IAC accreditation.
               </p>
+              <div className="mt-3">
+                <Link href="/accreditation-navigator">
+                  <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/25 text-white hover:bg-white/20 transition-all">
+                    <BookOpen className="w-3.5 h-3.5 text-[#4ad9e0]" />
+                    EchoAccreditation Navigator™
+                    <span className="text-[#4ad9e0] text-xs">→</span>
+                  </button>
+                </Link>
+              </div>
             </div>
           </div>
         </div>

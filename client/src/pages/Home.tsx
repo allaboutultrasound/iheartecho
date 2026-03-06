@@ -155,14 +155,6 @@ const modules = [
     badge: "Accreditation",
     color: BRAND,
   },
-  {
-    path: "/accreditation-navigator",
-    icon: Award,
-    title: "EchoAccreditation Navigator™",
-    description: "Searchable IAC standards guide for TTE, TEE, Stress, Pediatric, Fetal, and HOCM — case requirements, CME, staff qualifications, and policies.",
-    badge: "Accreditation",
-    color: BRAND,
-  },
 ];
 
 const stats = [
