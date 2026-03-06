@@ -332,12 +332,12 @@ function OverviewTab({ lab, members, snapshot }: {
 function StaffTab({ lab, members, onRefresh }: { lab: any; members: any[]; onRefresh: () => void }) {
   const [addOpen, setAddOpen] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
-  const [form, setForm] = useState({ inviteEmail: "", displayName: "", credentials: "", role: "sonographer" as "admin" | "reviewer" | "sonographer" | "physician", specialty: "", department: "" });
+  const [form, setForm] = useState({ inviteEmail: "", displayName: "", credentials: "", role: "technical_staff" as "admin" | "medical_director" | "technical_director" | "medical_staff" | "technical_staff", specialty: "", department: "" });
   const [editForm, setEditForm] = useState<any>({});
 
   const utils = trpc.useUtils();
   const addMember = trpc.lab.addMember.useMutation({
-    onSuccess: () => { toast.success("Staff member added."); utils.lab.getMembers.invalidate(); setAddOpen(false); setForm({ inviteEmail: "", displayName: "", credentials: "", role: "sonographer" as "admin" | "reviewer" | "sonographer" | "physician", specialty: "", department: "" }); },
+    onSuccess: () => { toast.success("Staff member added."); utils.lab.getMembers.invalidate(); setAddOpen(false); setForm({ inviteEmail: "", displayName: "", credentials: "", role: "technical_staff" as "admin" | "medical_director" | "technical_director" | "medical_staff" | "technical_staff", specialty: "", department: "" }); },
     onError: (e) => toast.error(e.message),
   });
   const updateMember = trpc.lab.updateMember.useMutation({
@@ -349,7 +349,8 @@ function StaffTab({ lab, members, onRefresh }: { lab: any; members: any[]; onRef
     onError: (e) => toast.error(e.message),
   });
 
-  const roleColors: Record<string, string> = { admin: "#7c3aed", reviewer: BRAND, sonographer: "#d97706", physician: "#0e4a50" };
+  const roleColors: Record<string, string> = { admin: "#7c3aed", medical_director: "#0e4a50", technical_director: "#189aa1", medical_staff: "#0e6b72", technical_staff: "#d97706" };
+  const roleLabels: Record<string, string> = { admin: "Admin", medical_director: "Medical Director", technical_director: "Technical Director", medical_staff: "Medical Staff", technical_staff: "Technical Staff" };
 
   return (
     <div className="space-y-4">
@@ -384,9 +385,10 @@ function StaffTab({ lab, members, onRefresh }: { lab: any; members: any[]; onRef
                 <Select value={form.role} onValueChange={(v: any) => setForm(f => ({ ...f, role: v }))}>
                   <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="sonographer">Sonographer</SelectItem>
-                    <SelectItem value="physician">Physician</SelectItem>
-                    <SelectItem value="reviewer">Reviewer</SelectItem>
+                    <SelectItem value="medical_director">Medical Director</SelectItem>
+                    <SelectItem value="technical_director">Technical Director</SelectItem>
+                    <SelectItem value="medical_staff">Medical Staff</SelectItem>
+                    <SelectItem value="technical_staff">Technical Staff</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                   </SelectContent>
                 </Select>
@@ -425,9 +427,10 @@ function StaffTab({ lab, members, onRefresh }: { lab: any; members: any[]; onRef
                     <Select value={editForm.role ?? m.role} onValueChange={(v: any) => setEditForm((f: any) => ({ ...f, role: v }))}>
                       <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="sonographer">Sonographer</SelectItem>
-                        <SelectItem value="physician">Physician</SelectItem>
-                        <SelectItem value="reviewer">Reviewer</SelectItem>
+                        <SelectItem value="medical_director">Medical Director</SelectItem>
+                        <SelectItem value="technical_director">Technical Director</SelectItem>
+                        <SelectItem value="medical_staff">Medical Staff</SelectItem>
+                        <SelectItem value="technical_staff">Technical Staff</SelectItem>
                         <SelectItem value="admin">Admin</SelectItem>
                       </SelectContent>
                     </Select>
@@ -453,7 +456,7 @@ function StaffTab({ lab, members, onRefresh }: { lab: any; members: any[]; onRef
                       <span className="font-semibold text-sm text-gray-800">{m.displayName ?? m.inviteEmail}</span>
                       {m.credentials && <span className="text-xs text-gray-500">{m.credentials}</span>}
                       <span className="text-xs px-1.5 py-0.5 rounded-full font-semibold capitalize" style={{ background: (roleColors[m.role] ?? BRAND) + "18", color: roleColors[m.role] ?? BRAND }}>
-                        {m.role}
+                        {roleLabels[m.role] ?? m.role}
                       </span>
                       <span className="text-xs px-1.5 py-0.5 rounded-full font-semibold capitalize" style={{ background: m.inviteStatus === "accepted" ? "#dcfce7" : "#fef3c7", color: m.inviteStatus === "accepted" ? "#16a34a" : "#d97706" }}>
                         {m.inviteStatus}

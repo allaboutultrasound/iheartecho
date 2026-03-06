@@ -40,8 +40,8 @@ const navGroups = [
   {
     label: "Accreditation",
     items: [
-      { path: "/accreditation", label: "DIY Accreditation Tool™", icon: ClipboardList },
       { path: "/accreditation-navigator", label: "EchoAccreditation Navigator™", icon: Award },
+      { path: "/accreditation", label: "DIY Accreditation Tool™", icon: ClipboardList },
     ],
   },
   {

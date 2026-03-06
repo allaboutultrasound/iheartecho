@@ -63,6 +63,14 @@ const modules = [
     color: BRAND,
   },
   {
+    path: "/accreditation-navigator",
+    icon: Award,
+    title: "EchoAccreditation Navigator™",
+    description: "Free IAC standards guide — search case mix requirements, CME, staff qualifications, policies, and common deficiencies for TTE, TEE, Stress, Pediatric, Fetal, and HOCM.",
+    badge: "Free · IAC",
+    color: BRAND,
+  },
+  {
     path: "/accreditation",
     icon: ClipboardList,
     title: "DIY Accreditation Tool™",
