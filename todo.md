@@ -351,3 +351,13 @@
 - [ ] Rebuild Home.tsx with 9 consolidated cards: EchoNavigator, ScanCoach, EchoAssist, Hemodynamics Lab, Report Builder, Echo Case Lab, DIY Accreditation, Hub
 - [ ] Update App.tsx routes for new landing pages
 - [ ] Update sidebar to reflect new structure
+
+## Accreditation Readiness Tool & Case Mix Revision
+- [ ] Add accreditationReadiness table to DB schema (per-lab checklist progress stored as JSON)
+- [ ] Add caseMixSubmissions table revision with IAC case type categories
+- [ ] Add DB helpers: saveReadinessProgress, getReadinessProgress, createCaseMixEntry, getCaseMixEntries
+- [ ] Add tRPC procedures: accreditation.saveReadiness, getReadiness, createCase, listCases, deleteCase
+- [ ] Build AccreditationReadiness.tsx component with full IAC checklist (5 steps, all sub-items, progress markers)
+- [ ] Revise CaseMix tab in DIY Accreditation Tool with IAC-compliant case categories and staff count-driven requirements
+- [ ] Wire both features as tabs in AccreditationTool.tsx
+- [ ] Write vitest tests

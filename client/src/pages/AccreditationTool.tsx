@@ -16,11 +16,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   ClipboardList, Star, FileText, BarChart2, Plus, CheckCircle, AlertTriangle,
   XCircle, Clock, ChevronDown, ChevronUp, Shield, Award, BookOpen, Loader2, Download,
-  TrendingUp, TrendingDown, Minus, Info, ImageIcon, GitCompare
+  TrendingUp, TrendingDown, Minus, Info, ImageIcon, GitCompare, CheckSquare, Stethoscope
 } from "lucide-react";
 import PhysicianPeerReview from "./PhysicianPeerReview";
 import ImageQualityReviewTab from "./ImageQualityReview";
 import EchoCorrelationTab from "./EchoCorrelation";
+import AccreditationReadiness from "./AccreditationReadiness";
+import CaseMixSubmission from "./CaseMixSubmission";
 import { toast } from "sonner";
 import { getLoginUrl } from "@/const";
 import jsPDF from "jspdf";
@@ -1148,7 +1150,7 @@ function AppropriateUseTab() {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function AccreditationTool() {
   const { isAuthenticated, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState<"qa" | "iqr" | "echo-correlation" | "peer" | "policy" | "auc">("qa");
+  const [activeTab, setActiveTab] = useState<"qa" | "iqr" | "echo-correlation" | "peer" | "policy" | "auc" | "readiness" | "case-mix">("qa");
 
   if (loading) {
     return (
@@ -1219,13 +1221,15 @@ export default function AccreditationTool() {
             <TabBtn active={activeTab === "peer"} onClick={() => setActiveTab("peer")} icon={Star} label="Peer Review" />
             <TabBtn active={activeTab === "policy"} onClick={() => setActiveTab("policy")} icon={FileText} label="Policy Builder" />
             <TabBtn active={activeTab === "auc"} onClick={() => setActiveTab("auc")} icon={BarChart2} label="Appropriate Use" />
+            <TabBtn active={activeTab === "readiness"} onClick={() => setActiveTab("readiness")} icon={CheckSquare} label="Readiness" />
+            <TabBtn active={activeTab === "case-mix"} onClick={() => setActiveTab("case-mix")} icon={Stethoscope} label="Case Mix" />
           </div>
         </div>
       </div>
 
       {/* Content */}
       <div className="container py-6">
-        <div className={(activeTab === "iqr" || activeTab === "echo-correlation") ? "" : "max-w-3xl"}>
+        <div className={(activeTab === "iqr" || activeTab === "echo-correlation" || activeTab === "case-mix" || activeTab === "readiness") ? "" : "max-w-3xl"}>
           {/* Disclaimer */}
           <div className="mb-4 p-3 rounded-lg border border-amber-200 bg-amber-50 flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
@@ -1240,6 +1244,8 @@ export default function AccreditationTool() {
           {activeTab === "peer" && <PhysicianPeerReview />}
           {activeTab === "policy" && <PolicyBuilderTab />}
           {activeTab === "auc" && <AppropriateUseTab />}
+          {activeTab === "readiness" && <AccreditationReadiness />}
+          {activeTab === "case-mix" && <CaseMixSubmission />}
         </div>
       </div>
 

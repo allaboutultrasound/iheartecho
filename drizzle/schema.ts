@@ -670,3 +670,55 @@ export const physicianNotifications = mysqlTable("physicianNotifications", {
 });
 export type PhysicianNotification = typeof physicianNotifications.$inferSelect;
 export type InsertPhysicianNotification = typeof physicianNotifications.$inferInsert;
+
+// ─── Accreditation Readiness ──────────────────────────────────────────────────
+// Stores per-lab IAC checklist progress (JSON blob of checked item IDs)
+export const accreditationReadiness = mysqlTable("accreditationReadiness", {
+  id: int("id").primaryKey().autoincrement(),
+  labId: int("labId").notNull(),
+  userId: int("userId").notNull(),
+  // JSON: { [itemId: string]: boolean } — maps checklist item IDs to checked state
+  checklistProgress: text("checklistProgress").notNull(),
+  // JSON: { [itemId: string]: string } — optional notes per item
+  itemNotes: text("itemNotes").notNull(),
+  // Cached overall completion percentage (0-100)
+  completionPct: int("completionPct").notNull().default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type AccreditationReadiness = typeof accreditationReadiness.$inferSelect;
+export type InsertAccreditationReadiness = typeof accreditationReadiness.$inferInsert;
+
+// ─── Case Mix Submissions ─────────────────────────────────────────────────────
+// IAC-compliant case study submissions tracked per lab
+export const caseMixSubmissions = mysqlTable("caseMixSubmissions", {
+  id: int("id").primaryKey().autoincrement(),
+  labId: int("labId").notNull(),
+  submittedByUserId: int("submittedByUserId").notNull(),
+  // Modality: ATTE | ATEE | STRESS | ACTE | PTTE | PTEE | FETAL
+  modality: varchar("modality", { length: 20 }).notNull(),
+  // IAC case type category
+  caseType: varchar("caseType", { length: 80 }).notNull(),
+  // De-identified study identifier (no PHI)
+  studyIdentifier: varchar("studyIdentifier", { length: 100 }).notNull(),
+  // Date of study
+  studyDate: varchar("studyDate", { length: 20 }),
+  // Sonographer lab member ID (FK → labMembers.id)
+  sonographerLabMemberId: int("sonographerLabMemberId"),
+  sonographerName: varchar("sonographerName", { length: 100 }),
+  // Physician lab member ID (FK → labMembers.id)
+  physicianLabMemberId: int("physicianLabMemberId"),
+  physicianName: varchar("physicianName", { length: 100 }),
+  // Whether this case is from the Technical Director (required by IAC)
+  isTechDirectorCase: boolean("isTechDirectorCase").notNull().default(false),
+  // Whether the Medical Director is represented in this case
+  isMedDirectorCase: boolean("isMedDirectorCase").notNull().default(false),
+  // Free-text notes
+  notes: text("notes"),
+  // Submission status: draft | submitted | accepted | rejected
+  status: varchar("status", { length: 20 }).notNull().default("draft"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type CaseMixSubmission = typeof caseMixSubmissions.$inferSelect;
+export type InsertCaseMixSubmission = typeof caseMixSubmissions.$inferInsert;

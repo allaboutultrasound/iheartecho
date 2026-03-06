@@ -90,6 +90,13 @@ import {
   markPhysicianNotificationRead,
   markAllPhysicianNotificationsRead,
   dismissPhysicianNotification,
+  getAccreditationReadiness,
+  saveAccreditationReadiness,
+  createCaseMixSubmission,
+  getCaseMixSubmissions,
+  getCaseMixSummary,
+  deleteCaseMixSubmission,
+  updateCaseMixSubmissionStatus,
 } from "./db";
 
 export const appRouter = router({
@@ -1000,12 +1007,7 @@ export const appRouter = router({
       }),
   }),
 
-    // ─── Case Mix Tracker ─────────────────────────────────────────────────
-  caseMix: router({
-    get: protectedProcedure.query(async ({ ctx }) => {
-      return getCaseMix(ctx.user.id);
-    }),
-  }),
+    // ─── Case Mix Tracker (legacy get, merged into new caseMix router below) ───
 
   // ─── Physician Peer Review ───────────────────────────────────────────────
   physicianPeerReview: router({
@@ -1238,6 +1240,99 @@ export const appRouter = router({
         await dismissPhysicianNotification(input.id, ctx.user.id);
         return { success: true };
       }),
+  }),
+
+  // ─── Accreditation Readiness ──────────────────────────────────────────────────
+  accreditationReadiness: router({
+    /** Get or initialize readiness checklist for the current user's lab */
+    get: protectedProcedure.query(async ({ ctx }) => {
+      const lab = await getLabByMemberUserId(ctx.user.id);
+      if (!lab) return null;
+      return getAccreditationReadiness(lab.id, ctx.user.id);
+    }),
+    /** Save checklist progress */
+    save: protectedProcedure
+      .input(z.object({
+        checklistProgress: z.record(z.string(), z.boolean()),
+        itemNotes: z.record(z.string(), z.string()),
+        completionPct: z.number().min(0).max(100),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const lab = await getLabByMemberUserId(ctx.user.id);
+        if (!lab) throw new TRPCError({ code: "NOT_FOUND", message: "No lab found for this user" });
+        await saveAccreditationReadiness(lab.id, ctx.user.id, input.checklistProgress, input.itemNotes, input.completionPct);
+        return { success: true };
+      }),
+  }),
+
+  // ─── Case Mix Submissions ─────────────────────────────────────────────────────
+  caseMix: router({
+    /** Get all case submissions for the current user's lab */
+    list: protectedProcedure.query(async ({ ctx }) => {
+      const lab = await getLabByMemberUserId(ctx.user.id);
+      if (!lab) return [];
+      return getCaseMixSubmissions(lab.id);
+    }),
+    /** Get case mix summary (counts by modality/caseType) */
+    summary: protectedProcedure.query(async ({ ctx }) => {
+      const lab = await getLabByMemberUserId(ctx.user.id);
+      if (!lab) return [];
+      return getCaseMixSummary(lab.id);
+    }),
+    /** Submit a new case */
+    create: protectedProcedure
+      .input(z.object({
+        modality: z.enum(["ATTE", "ATEE", "STRESS", "ACTE", "PTTE", "PTEE", "FETAL"]),
+        caseType: z.string().min(1).max(80),
+        studyIdentifier: z.string().min(1).max(100),
+        studyDate: z.string().optional(),
+        sonographerLabMemberId: z.number().optional(),
+        sonographerName: z.string().max(100).optional(),
+        physicianLabMemberId: z.number().optional(),
+        physicianName: z.string().max(100).optional(),
+        isTechDirectorCase: z.boolean().default(false),
+        isMedDirectorCase: z.boolean().default(false),
+        notes: z.string().max(1000).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const lab = await getLabByMemberUserId(ctx.user.id);
+        if (!lab) throw new TRPCError({ code: "NOT_FOUND", message: "No lab found for this user" });
+        await createCaseMixSubmission({
+          ...input,
+          labId: lab.id,
+          submittedByUserId: ctx.user.id,
+          status: "draft",
+        });
+        return { success: true };
+      }),
+    /** Delete a case submission */
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const lab = await getLabByMemberUserId(ctx.user.id);
+        if (!lab) throw new TRPCError({ code: "NOT_FOUND", message: "No lab found" });
+        await deleteCaseMixSubmission(input.id, lab.id);
+        return { success: true };
+      }),
+    /** Update case status */
+    updateStatus: protectedProcedure
+      .input(z.object({ id: z.number(), status: z.enum(["draft", "submitted", "accepted", "rejected"]) }))
+      .mutation(async ({ ctx, input }) => {
+        const lab = await getLabByMemberUserId(ctx.user.id);
+        if (!lab) throw new TRPCError({ code: "NOT_FOUND", message: "No lab found" });
+        await updateCaseMixSubmissionStatus(input.id, lab.id, input.status);
+        return { success: true };
+      }),
+    /** Get lab staff for case mix dropdowns */
+    getLabStaff: protectedProcedure.query(async ({ ctx }) => {
+      const lab = await getLabByMemberUserId(ctx.user.id);
+      if (!lab) return { sonographers: [], physicians: [] };
+      const members = await getLabMembers(lab.id);
+      return {
+        sonographers: members.filter(m => m.role === "sonographer" || m.role === "admin"),
+        physicians: members.filter(m => m.role === "physician" || m.role === "reviewer"),
+      };
+    }),
   }),
 });
 export type AppRouter = typeof appRouter;

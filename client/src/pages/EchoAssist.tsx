@@ -834,6 +834,21 @@ function StrainEngine() {
   const [rars, setRars] = useState("");
   const [lvSr, setLvSr] = useState("");
   const [rvSr, setRvSr] = useState("");
+  // RAS (Relative Apical Strain)
+  const [rasApical, setRasApical] = useState("");
+  const [rasBasal, setRasBasal] = useState("");
+  const [rasMid, setRasMid] = useState("");
+  const rasApicalNum = parseFloat(rasApical);
+  const rasBasalNum = parseFloat(rasBasal);
+  const rasMidNum = parseFloat(rasMid);
+  const rasValue = (!isNaN(rasApicalNum) && !isNaN(rasBasalNum) && !isNaN(rasMidNum) && (rasBasalNum + rasMidNum) !== 0)
+    ? Math.abs(rasApicalNum) / (Math.abs(rasBasalNum) + Math.abs(rasMidNum))
+    : null;
+  const rasInterpretation = rasValue !== null
+    ? rasValue > 1.0
+      ? { label: "Apical-Sparing Pattern", color: "#dc2626", text: `EchoAssist™ Suggests: RAS = ${rasValue.toFixed(2)} (> 1.0). This apical-sparing longitudinal strain pattern is a hallmark of cardiac amyloidosis (sensitivity ~80%, specificity ~80% vs. HCM). Prompt further evaluation with T1 mapping, nuclear scintigraphy (PYP/DPD), or serum/urine protein electrophoresis.`, note: "EchoAssist™ Note: Apical-sparing strain is defined as relatively preserved apical GLS with disproportionate reduction in basal and mid-ventricular segments. This pattern reflects the characteristic base-to-apex amyloid deposition gradient.", tip: "EchoAssist™ Tip: RAS > 1.0 combined with increased LV wall thickness (≥ 12 mm), low-voltage ECG, and diastolic dysfunction should trigger a comprehensive amyloidosis workup. Transthyretin (ATTR) amyloidosis is treatable with tafamidis." }
+      : { label: "Non-Apical-Sparing Pattern", color: "#15803d", text: `EchoAssist™ Suggests: RAS = ${rasValue.toFixed(2)} (≤ 1.0). No apical-sparing pattern identified. This does not exclude amyloidosis but makes it less likely. Diffuse or ischemic patterns should be considered based on clinical context.`, note: "EchoAssist™ Note: RAS ≤ 1.0 with reduced GLS is more consistent with ischemic cardiomyopathy, dilated cardiomyopathy, or HCM. Regional wall motion abnormalities and coronary territory correlation are recommended.", tip: "EchoAssist™ Tip: In HCM, strain is typically reduced in the hypertrophied segments (often septal/basal) with relatively preserved apical strain — RAS may approach but usually does not exceed 1.0 as prominently as in amyloidosis." }
+    : null;
 
   const getLvGlsSeverity = (): { sev: Severity; label: string; criteria: string[] } => {
     if (!has(lvGls)) return { sev: "indeterminate", label: "Enter LV GLS", criteria: [] };
@@ -922,6 +937,60 @@ function StrainEngine() {
         return { suggests: suggests || "Strain parameters entered.", note, tip };
       })()}
       />
+      {/* RAS Calculator */}
+      <div className="mt-4 border-t border-gray-100 pt-4">
+        <div className="text-sm font-bold text-gray-700 mb-1">Relative Apical Strain (RAS) Calculator</div>
+        <div className="text-xs text-gray-500 mb-3">Apical-sparing pattern · Amyloidosis vs. HCM · RAS = |Apical GLS| / (|Basal GLS| + |Mid GLS|)</div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+          <NumInput label="Apical GLS (average)" value={rasApical} onChange={setRasApical} unit="%" placeholder="e.g. −19.5" hint="Apical 4 segments avg" />
+          <NumInput label="Basal GLS (average)" value={rasBasal} onChange={setRasBasal} unit="%" placeholder="e.g. −12.0" hint="Basal 6 segments avg" />
+          <NumInput label="Mid GLS (average)" value={rasMid} onChange={setRasMid} unit="%" placeholder="e.g. −14.0" hint="Mid 6 segments avg" />
+        </div>
+        {rasValue !== null && (
+          <div className="rounded-lg p-3 mb-3 flex items-center gap-3" style={{ background: "#f0fbfc", border: "1px solid #189aa140" }}>
+            <div className="text-3xl font-black font-mono" style={{ color: "#189aa1" }}>{rasValue.toFixed(2)}</div>
+            <div>
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">RAS Value</div>
+              <div className="text-xs text-gray-600">Threshold: &gt; 1.0 = apical-sparing pattern</div>
+            </div>
+          </div>
+        )}
+        {rasInterpretation && (
+          <div className="rounded-lg p-4 mb-3" style={{ background: rasInterpretation.color + "18", borderLeft: `4px solid ${rasInterpretation.color}` }}>
+            <div className="font-bold text-sm mb-2" style={{ color: rasInterpretation.color }}>{rasInterpretation.label}</div>
+            <p className="text-xs text-gray-700 leading-relaxed mb-2">{rasInterpretation.text}</p>
+            <p className="text-xs text-gray-600 leading-relaxed mb-2">{rasInterpretation.note}</p>
+            <p className="text-xs text-gray-500 leading-relaxed italic">{rasInterpretation.tip}</p>
+          </div>
+        )}
+        {rasValue === null && (
+          <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-xs text-blue-800 leading-relaxed">
+            <strong>How to use:</strong> Enter the average strain values for the apical segments (segments 13–17), basal segments (1–6), and mid segments (7–12) from the Strain Navigator bull's-eye. RAS &gt; 1.0 indicates an apical-sparing pattern, a hallmark of cardiac amyloidosis.
+          </div>
+        )}
+      </div>
+
+      {/* Clinical Applications */}
+      <div className="mt-4 border-t border-gray-100 pt-4">
+        <div className="text-sm font-bold text-gray-700 mb-1">Clinical Applications of Strain Imaging</div>
+        <div className="text-xs text-gray-500 mb-3">Cardio-oncology · Cardiomyopathy · Diastolic dysfunction · Amyloidosis</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {[
+            { title: "Cardio-Oncology (CTRCD Monitoring)", content: "A relative reduction in LV GLS of >15% from baseline is considered a subclinical sign of cancer therapy-related cardiac dysfunction (CTRCD) per ASE/ESMO 2022. Serial strain imaging every 3 months during cardiotoxic therapy is recommended. GLS decline precedes EF decline by weeks to months.", color: "#7c3aed" },
+            { title: "Cardiac Amyloidosis", content: "Apical-sparing strain pattern (normal apical GLS with reduced basal/mid segments) is a hallmark of cardiac amyloidosis (sensitivity ~80%, specificity ~80% vs. HCM). Relative Apical Strain (RAS) = apical / (basal + mid) > 1 is the diagnostic threshold.", color: "#dc2626" },
+            { title: "HFpEF and Diastolic Dysfunction", content: "LA reservoir strain < 23% is associated with elevated LV filling pressures (E/e′ > 14) and predicts HF hospitalization. LV GLS is often mildly reduced (−16 to −19%) in HFpEF despite preserved EF. Combined GLS + LA strain improves diastolic grading accuracy.", color: "#189aa1" },
+            { title: "Hypertrophic Cardiomyopathy (HCM)", content: "LV GLS is typically reduced in HCM despite hyperdynamic EF. Basal septal strain is most affected. Strain helps differentiate HCM from athlete's heart (athletes have normal or supranormal GLS). RV strain may be reduced in obstructive HCM.", color: "#0284c7" },
+            { title: "Ischemic Heart Disease", content: "Regional strain abnormalities follow coronary territory distributions. Basal inferior/inferolateral reduction suggests RCA/LCx territory. Anterior/anteroseptal reduction suggests LAD territory. Strain is more sensitive than wall motion scoring for detecting subendocardial ischemia.", color: "#b45309" },
+            { title: "Peripartum Cardiomyopathy", content: "LV GLS is often reduced before EF declines in peripartum cardiomyopathy. GLS < −17% at diagnosis is associated with worse recovery. Serial strain imaging at 1, 3, and 6 months postpartum guides therapy and timing of medication discontinuation.", color: "#be185d" },
+          ].map(({ title, content, color }) => (
+            <div key={title} className="rounded-lg p-3 border-l-4" style={{ background: color + "0d", borderLeftColor: color }}>
+              <h4 className="font-bold text-xs mb-1" style={{ color }}>{title}</h4>
+              <p className="text-xs text-gray-600 leading-relaxed">{content}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <p className="text-xs text-gray-400 mt-3">Reference: ASE 2025 Strain Guideline (Thomas et al.); ASE 2015 LARS/RARS recommendations</p>
     </EngineSection>
   );

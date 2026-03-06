@@ -25,6 +25,12 @@ import {
   echoCorrelations,
   physicianPeerReviews,
   physicianNotifications,
+  accreditationReadiness,
+  caseMixSubmissions,
+  type AccreditationReadiness,
+  type InsertAccreditationReadiness,
+  type CaseMixSubmission,
+  type InsertCaseMixSubmission,
   type ImageQualityReview,
   type InsertImageQualityReview,
   type LabSubscription,
@@ -1306,4 +1312,110 @@ export async function dismissPhysicianNotification(id: number, recipientUserId: 
       eq(physicianNotifications.id, id),
       eq(physicianNotifications.recipientUserId, recipientUserId),
     ));
+}
+
+// ─── Accreditation Readiness Helpers ─────────────────────────────────────────
+
+/** Get or initialize readiness record for a lab */
+export async function getAccreditationReadiness(labId: number, userId: number): Promise<AccreditationReadiness | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const existing = await db.select().from(accreditationReadiness)
+    .where(eq(accreditationReadiness.labId, labId))
+    .orderBy(desc(accreditationReadiness.updatedAt))
+    .limit(1);
+  if (existing.length > 0) return existing[0];
+  // Auto-create a blank record
+  await db.insert(accreditationReadiness).values({
+    labId,
+    userId,
+    checklistProgress: "{}",
+    itemNotes: "{}",
+    completionPct: 0,
+  });
+  const created = await db.select().from(accreditationReadiness)
+    .where(eq(accreditationReadiness.labId, labId)).limit(1);
+  return created[0] ?? null;
+}
+
+/** Save checklist progress for a lab */
+export async function saveAccreditationReadiness(
+  labId: number,
+  userId: number,
+  checklistProgress: Record<string, boolean>,
+  itemNotes: Record<string, string>,
+  completionPct: number,
+) {
+  const db = await getDb();
+  if (!db) return;
+  const existing = await db.select({ id: accreditationReadiness.id })
+    .from(accreditationReadiness)
+    .where(eq(accreditationReadiness.labId, labId))
+    .limit(1);
+  const progressStr = JSON.stringify(checklistProgress);
+  const notesStr = JSON.stringify(itemNotes);
+  if (existing.length > 0) {
+    await db.update(accreditationReadiness)
+      .set({ checklistProgress: progressStr, itemNotes: notesStr, completionPct, userId })
+      .where(eq(accreditationReadiness.labId, labId));
+  } else {
+    await db.insert(accreditationReadiness).values({
+      labId,
+      userId,
+      checklistProgress: progressStr,
+      itemNotes: notesStr,
+      completionPct,
+    });
+  }
+}
+
+// ─── Case Mix Submission Helpers ──────────────────────────────────────────────
+
+/** Create a new case mix submission */
+export async function createCaseMixSubmission(data: InsertCaseMixSubmission) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  await db.insert(caseMixSubmissions).values(data);
+}
+
+/** Get all case mix submissions for a lab */
+export async function getCaseMixSubmissions(labId: number, limit = 200, offset = 0): Promise<CaseMixSubmission[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(caseMixSubmissions)
+    .where(eq(caseMixSubmissions.labId, labId))
+    .orderBy(desc(caseMixSubmissions.createdAt))
+    .limit(limit).offset(offset);
+}
+
+/** Get case mix submission counts by modality and caseType for a lab */
+export async function getCaseMixSummary(labId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select({
+    modality: caseMixSubmissions.modality,
+    caseType: caseMixSubmissions.caseType,
+    count: count(caseMixSubmissions.id),
+  })
+    .from(caseMixSubmissions)
+    .where(eq(caseMixSubmissions.labId, labId))
+    .groupBy(caseMixSubmissions.modality, caseMixSubmissions.caseType);
+  return rows;
+}
+
+/** Delete a case mix submission */
+export async function deleteCaseMixSubmission(id: number, labId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(caseMixSubmissions)
+    .where(and(eq(caseMixSubmissions.id, id), eq(caseMixSubmissions.labId, labId)));
+}
+
+/** Update a case mix submission status */
+export async function updateCaseMixSubmissionStatus(id: number, labId: number, status: string) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(caseMixSubmissions)
+    .set({ status })
+    .where(and(eq(caseMixSubmissions.id, id), eq(caseMixSubmissions.labId, labId)));
 }
