@@ -361,3 +361,9 @@
 - [ ] Revise CaseMix tab in DIY Accreditation Tool with IAC-compliant case categories and staff count-driven requirements
 - [ ] Wire both features as tabs in AccreditationTool.tsx
 - [ ] Write vitest tests
+
+## Strain ScanCoach
+- [x] Create StrainScanCoach.tsx with bull's-eye, segmental strain curves, LV GLS calculator
+- [x] Add Tips & Tricks section with ASE 2025 acquisition guidance
+- [ ] Update StrainNavigator with ASE 2025 scanning tips, mid-wall strain, imaging parameters, checklists
+- [x] Wire StrainScanCoach into App.tsx routing, ScanCoachHub.tsx (hub pattern — no direct sidebar entry needed)

@@ -5,7 +5,7 @@
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import {
-  Scan, Stethoscope, Baby, Heart, Users, BarChart3,
+  Scan, Stethoscope, Baby, Heart, Users, BarChart3, Activity,
   ArrowRight, Stethoscope as ScopeIcon
 } from "lucide-react";
 
@@ -41,12 +41,11 @@ const coaches = [
     badge: "Congenital Heart",
   },
   {
-    path: "/strain",
-    icon: BarChart3,
+    path: "/strain-scan-coach",
+    icon: Activity,
     title: "Strain ScanCoach™",
-    description: "17-segment bull's-eye display, segmental strain curves, wall motion scoring, and LV/RV/LA strain acquisition tips.",
+    description: "Interactive 17-segment bull's-eye, segmental strain curves, LV GLS calculator, ASE 2025 acquisition guidance, and Tips & Tricks for strain imaging.",
     badge: "Adult Echo",
-    note: "Via Strain Navigator™",
   },
 ];
 
@@ -102,7 +101,7 @@ export default function ScanCoachHub() {
       {/* Coach Grid */}
       <div className="container py-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {coaches.map(({ path, icon: Icon, title, description, badge, note }) => {
+          {coaches.map(({ path, icon: Icon, title, description, badge, note }: { path: string; icon: React.ElementType; title: string; description: string; badge: string; note?: string }) => {
             const badgeColor = badgeColors[badge] ?? BRAND;
             return (
               <Link key={path} href={path}>
