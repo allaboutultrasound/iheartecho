@@ -389,3 +389,32 @@
 
 ## Case Mix Submission — IAC Rewrite
 - [x] Rewrite CaseMixSubmission to reflect exact IAC requirements (staff-count selector, per-modality case volumes, case type breakdowns, submission rules)
+
+## Stress EchoAssist
+- [x] Add Stress EchoAssist engine to EchoAssist with WMSI, target HR/dosing, interpretation, and case saving
+- [x] Remove wall motion scoring section from Stress Navigator
+- [x] Ensure case saving is only in EchoAssist (not in Navigator)
+
+## Echo Calculator — EchoAssist Link
+- [x] Add link from Echo Calculators page to EchoAssist
+
+## Strain ScanCoach — Dyssynchrony Curves
+- [ ] Update dyssynchrony strain curves to show abnormal timing patterns (delayed peak, post-systolic shortening, opposing wall timing mismatch)
+
+## Strain Navigator — Move LA/RA/RV Calculators to EchoAssist
+- [x] Read LA, RA, RV strain calculator code in Strain Navigator
+- [x] LA, RA, RV already in StrainEngine in EchoAssist (confirmed)
+- [x] Remove LA, RA, RV strain calculators from Strain Navigator; add EchoAssist CTA link
+
+## EchoAssist Anchor Links
+- [x] StrainScanCoach EchoAssist link uses #engine-strain anchor
+- [ ] Ensure all other "Open in Stress EchoAssist" links use #engine-stress anchor
+
+## Strain Guidelines/Reference Position
+- [x] Move Strain Guidelines and reference section to bottom of Strain Navigator
+- [x] Move Strain Guidelines and reference section to bottom of Strain ScanCoach
+
+## Strain ScanCoach — 17 Individual Segment Curves
+- [x] Rewrite SegmentalStrainCurves to show all 17 individual segment waveforms (not wall-averaged groups)
+- [x] Add wall-group filter toggles so user can show/hide by wall (Anterior, Septal, Inferior, Lateral, Apex)
+- [x] Basal=dashed, mid=dotted, apical/apex=solid line styles

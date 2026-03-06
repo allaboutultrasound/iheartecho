@@ -9,7 +9,7 @@ import Layout from "@/components/Layout";
 import {
   Activity, ChevronDown, ChevronUp, Info, AlertCircle,
   BookOpen, ExternalLink, Save, X, Plus, CheckCircle2,
-  Camera, Lightbulb, BarChart3
+  Camera, Lightbulb, BarChart3, Zap, ArrowRight
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -52,17 +52,7 @@ function interpretLvGls(val: number): { severity: string; color: string; suggest
   };
 }
 
-function interpretRvStrain(val: number): { severity: string; color: string; suggests: string } {
-  if (val <= -29) return { severity: "Normal RV Free-Wall Strain", color: "#15803d", suggests: `EchoAssist™ Suggests: RV free-wall strain is normal (${val.toFixed(1)}%). Normal threshold is ≤ −29% (ASE/EACVI 2022). RV longitudinal function is preserved.` };
-  if (val <= -20) return { severity: "Mildly Reduced RV Strain", color: "#ca8a04", suggests: `EchoAssist™ Suggests: RV free-wall strain is mildly reduced (${val.toFixed(1)}%). Values between −20% and −29% suggest early RV dysfunction. Correlate with TAPSE, S', FAC, and PA pressure.` };
-  return { severity: "Significantly Reduced RV Strain", color: "#dc2626", suggests: `EchoAssist™ Suggests: RV free-wall strain is significantly reduced (${val.toFixed(1)}%). Values > −20% indicate significant RV dysfunction. Evaluate for pulmonary hypertension, RV pressure/volume overload, and RVMI.` };
-}
 
-function interpretLaStrain(val: number): { severity: string; color: string; suggests: string } {
-  if (val >= 38) return { severity: "Normal LA Reservoir Strain", color: "#15803d", suggests: `EchoAssist™ Suggests: LA reservoir strain is normal (${val.toFixed(1)}%). Normal threshold is ≥ 38% (ASE/EACVI 2022). LA mechanical function is preserved.` };
-  if (val >= 25) return { severity: "Mildly Reduced LA Strain", color: "#ca8a04", suggests: `EchoAssist™ Suggests: LA reservoir strain is mildly reduced (${val.toFixed(1)}%). Values between 25–38% suggest early LA dysfunction, often seen in Grade I–II diastolic dysfunction, atrial fibrillation risk, and hypertensive heart disease.` };
-  return { severity: "Significantly Reduced LA Strain", color: "#dc2626", suggests: `EchoAssist™ Suggests: LA reservoir strain is significantly reduced (${val.toFixed(1)}%). Values < 25% indicate significant LA dysfunction, associated with Grade III diastolic dysfunction, elevated LA pressure, and high risk of AF and HF hospitalization.` };
-}
 
 // ─── Numeric Input ────────────────────────────────────────────────────────────
 
@@ -299,18 +289,7 @@ export default function StrainNavigator() {
   const [vendor, setVendor] = useState("");
   const [frameRate, setFrameRate] = useState("");
 
-  // RV Strain
-  const [rvStrain, setRvStrain] = useState("");
 
-  // LA Strain
-  const [laReservoir, setLaReservoir] = useState("");
-  const [laConduit, setLaConduit] = useState("");
-  const [laBooster, setLaBooster] = useState("");
-
-  // RAS
-  const [rasApical, setRasApical] = useState("");
-  const [rasBasal, setRasBasal] = useState("");
-  const [rasMid, setRasMid] = useState("");
 
   // Imaging checklist
   const [acqChecks, setAcqChecks] = useState<Record<string, boolean>>({});
@@ -319,24 +298,7 @@ export default function StrainNavigator() {
   const [showSaveModal, setShowSaveModal] = useState(false);
 
   const lvGlsNum = parseFloat(lvGls);
-  const rvStrainNum = parseFloat(rvStrain);
-  const laReservoirNum = parseFloat(laReservoir);
-
   const lvInterp = !isNaN(lvGlsNum) ? interpretLvGls(lvGlsNum) : null;
-  const rvInterp = !isNaN(rvStrainNum) ? interpretRvStrain(rvStrainNum) : null;
-  const laInterp = !isNaN(laReservoirNum) ? interpretLaStrain(laReservoirNum) : null;
-
-  const rasApicalNum = parseFloat(rasApical);
-  const rasBasalNum = parseFloat(rasBasal);
-  const rasMidNum = parseFloat(rasMid);
-  const rasValue = (!isNaN(rasApicalNum) && !isNaN(rasBasalNum) && !isNaN(rasMidNum) && (rasBasalNum + rasMidNum) !== 0)
-    ? Math.abs(rasApicalNum) / (Math.abs(rasBasalNum) + Math.abs(rasMidNum))
-    : null;
-  const rasInterpretation = rasValue !== null
-    ? rasValue > 1.0
-      ? { label: "Apical-Sparing Pattern", color: "#dc2626", text: `EchoAssist™ Suggests: RAS = ${rasValue.toFixed(2)} (> 1.0). This apical-sparing longitudinal strain pattern is a hallmark of cardiac amyloidosis (sensitivity ~80%, specificity ~80% vs. HCM). Prompt further evaluation with T1 mapping, nuclear scintigraphy (PYP/DPD), or serum/urine protein electrophoresis.`, note: "EchoAssist™ Note: Apical-sparing strain is defined as relatively preserved apical GLS with disproportionate reduction in basal and mid-ventricular segments. This pattern reflects the characteristic base-to-apex amyloid deposition gradient.", tip: "EchoAssist™ Tip: RAS > 1.0 combined with increased LV wall thickness (≥ 12 mm), low-voltage ECG, and diastolic dysfunction should trigger a comprehensive amyloidosis workup. Transthyretin (ATTR) amyloidosis is treatable with tafamidis." }
-      : { label: "Non-Apical-Sparing Pattern", color: "#15803d", text: `EchoAssist™ Suggests: RAS = ${rasValue.toFixed(2)} (≤ 1.0). No apical-sparing pattern identified. This does not exclude amyloidosis but makes it less likely. Diffuse or ischemic patterns should be considered based on clinical context.`, note: "EchoAssist™ Note: RAS ≤ 1.0 with reduced GLS is more consistent with ischemic cardiomyopathy, dilated cardiomyopathy, or HCM. Regional wall motion abnormalities and coronary territory correlation are recommended.", tip: "EchoAssist™ Tip: In HCM, strain is typically reduced in the hypertrophied segments (often septal/basal) with relatively preserved apical strain — RAS may approach but usually does not exceed 1.0 as prominently as in amyloidosis." }
-    : null;
 
   function toggleAcq(key: string) {
     setAcqChecks(prev => ({ ...prev, [key]: !prev[key] }));
@@ -497,61 +459,21 @@ export default function StrainNavigator() {
               </div>
             </SectionCard>
 
-            {/* RV Strain */}
-            <SectionCard title="RV Free-Wall Longitudinal Strain" subtitle="Normal ≤ −29% · ASE/EACVI 2022" defaultOpen={false}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                <NumInput label="RV Free-Wall Strain" value={rvStrain} onChange={setRvStrain} unit="%" placeholder="e.g. −28" hint="Normal ≤ −29%" />
-              </div>
-              {rvInterp && (
-                <div className="rounded-lg p-4" style={{ background: rvInterp.color + "18", borderLeft: `4px solid ${rvInterp.color}` }}>
-                  <div className="font-bold text-sm mb-1" style={{ color: rvInterp.color }}>{rvInterp.severity}</div>
-                  <p className="text-xs text-gray-700 leading-relaxed">{rvInterp.suggests}</p>
-                </div>
-              )}
-            </SectionCard>
-
-            {/* LA Strain */}
-            <SectionCard title="LA Reservoir Strain" subtitle="Normal ≥ 38% · ASE/EACVI 2022" defaultOpen={false}>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-                <NumInput label="LA Reservoir Strain" value={laReservoir} onChange={setLaReservoir} unit="%" placeholder="e.g. 40" hint="Normal ≥ 38%" />
-                <NumInput label="LA Conduit Strain" value={laConduit} onChange={setLaConduit} unit="%" placeholder="e.g. 22" hint="Normal ≥ 23%" />
-                <NumInput label="LA Booster Strain" value={laBooster} onChange={setLaBooster} unit="%" placeholder="e.g. 15" hint="Normal ≥ 15%" />
-              </div>
-              {laInterp && (
-                <div className="rounded-lg p-4" style={{ background: laInterp.color + "18", borderLeft: `4px solid ${laInterp.color}` }}>
-                  <div className="font-bold text-sm mb-1" style={{ color: laInterp.color }}>{laInterp.severity}</div>
-                  <p className="text-xs text-gray-700 leading-relaxed">{laInterp.suggests}</p>
-                </div>
-              )}
-            </SectionCard>
-
-            {/* RAS */}
-            <SectionCard title="Relative Apical Strain (RAS)" subtitle="Amyloidosis screening · Normal ≤ 1.0" defaultOpen={false}>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-                <NumInput label="Apical GLS" value={rasApical} onChange={setRasApical} unit="%" placeholder="e.g. −22" hint="Apical segments avg" />
-                <NumInput label="Basal GLS" value={rasBasal} onChange={setRasBasal} unit="%" placeholder="e.g. −14" hint="Basal segments avg" />
-                <NumInput label="Mid GLS" value={rasMid} onChange={setRasMid} unit="%" placeholder="e.g. −16" hint="Mid segments avg" />
-              </div>
-              {rasValue !== null && (
-                <div className="rounded-lg p-4 mb-3" style={{ background: "#f0fbfc", borderLeft: `4px solid ${BRAND}` }}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: BRAND }}>RAS Value</span>
-                    <span className="text-xs text-gray-400">Normal ≤ 1.0</span>
+            {/* EchoAssist CTA — RV, LA, RA, RAS calculators */}
+            <Link href="/echoassist#engine-strain">
+              <div className="rounded-xl p-4 cursor-pointer hover:opacity-90 transition-all border-2" style={{ background: "#f0fbfc", borderColor: BRAND + "40" }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: BRAND + "20" }}>
+                    <Zap className="w-4 h-4" style={{ color: BRAND }} />
                   </div>
-                  <div className="text-2xl font-black font-mono mb-1" style={{ color: rasValue > 1.0 ? "#dc2626" : "#15803d" }}>
-                    {rasValue.toFixed(2)}
+                  <div className="flex-1">
+                    <div className="text-xs font-bold mb-0.5" style={{ color: BRAND }}>Open EchoAssist™ — Strain Engine</div>
+                    <p className="text-xs text-gray-500 leading-snug">RV Free-Wall Strain · LA Reservoir Strain (LARS) · RA Reservoir Strain (RARS) · Relative Apical Strain (RAS) · Guideline-based interpretation</p>
                   </div>
+                  <ArrowRight className="w-4 h-4 flex-shrink-0" style={{ color: BRAND }} />
                 </div>
-              )}
-              {rasInterpretation && (
-                <div className="rounded-lg p-4" style={{ background: rasInterpretation.color + "18", borderLeft: `4px solid ${rasInterpretation.color}` }}>
-                  <div className="font-bold text-sm mb-2" style={{ color: rasInterpretation.color }}>{rasInterpretation.label}</div>
-                  <p className="text-xs text-gray-700 leading-relaxed mb-2">{rasInterpretation.text}</p>
-                  <p className="text-xs text-gray-600 leading-relaxed mb-2">{rasInterpretation.note}</p>
-                  <p className="text-xs text-gray-500 leading-relaxed italic">{rasInterpretation.tip}</p>
-                </div>
-              )}
-            </SectionCard>
+              </div>
+            </Link>
 
             {/* Imaging Checklist */}
             <SectionCard
@@ -582,30 +504,6 @@ export default function StrainNavigator() {
               </div>
             </SectionCard>
 
-            {/* References */}
-            <SectionCard title="References & Guidelines" subtitle="ASE · EACVI · ESC · Cardio-Oncology" defaultOpen={false} icon={<BookOpen className="w-4 h-4" />}>
-              <div className="space-y-2">
-                {[
-                  { ref: "ASE. Recommendations for the Standardization and Interpretation of Echocardiographic Strain. JASE 2025 (August).", url: "https://www.asecho.org/wp-content/uploads/2025/08/Strain-Guideline-AIP-August-2025.pdf" },
-                  { ref: "ASE/WFTF. Recommendations for Cardiac Chamber Quantification by Echocardiography in Adults. 2018 Update.", url: "https://asecho.org/wp-content/uploads/2018/08/WFTF-Chamber-Quantification-Summary-Doc-Final-July-18.pdf" },
-                  { ref: "Marwick TH et al. Recommendations on the Use of Echocardiography in Adult Hypertension. JASE 2015;28:727–54.", url: "https://www.asecho.org" },
-                  { ref: "Plana JC et al. Expert Consensus for Multimodality Imaging Evaluation of Adult Patients during and after Cancer Therapy (Cardio-Oncology). JASE 2014;27:911–39.", url: "https://www.asecho.org" },
-                  { ref: "Smiseth OA et al. Myocardial strain imaging: how useful is it in clinical decision making? Eur Heart J 2016;37:1196–207.", url: "https://academic.oup.com/eurheartj" },
-                  { ref: "Nagueh SF et al. Recommendations for the Evaluation of Left Ventricular Diastolic Function by Echocardiography. JASE 2016;29:277–314.", url: "https://www.asecho.org/guideline/diastolic-dysfunction/" },
-                  { ref: "Badano LP et al. Recommendations for the Use of Cardiac Imaging to Assess and Follow Patients with Hypertrophic Cardiomyopathy. Eur Heart J Cardiovasc Imaging 2023.", url: "https://academic.oup.com/ehjcimaging" },
-                ].map(({ ref, url }) => (
-                  <a key={ref} href={url} target="_blank" rel="noopener noreferrer"
-                    className="flex items-start gap-2 p-3 rounded-lg transition-colors group" style={{ background: "#f0fbfc" }}
-                    onMouseEnter={e => (e.currentTarget.style.background = "#d4f5f7")}
-                    onMouseLeave={e => (e.currentTarget.style.background = "#f0fbfc")}>
-                    <BookOpen className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: BRAND }} />
-                    <span className="text-xs text-gray-600 leading-relaxed group-hover:text-gray-800">{ref}</span>
-                    <ExternalLink className="w-3 h-3 flex-shrink-0 mt-0.5 text-gray-400 group-hover:text-gray-600" />
-                  </a>
-                ))}
-              </div>
-            </SectionCard>
-
           </div>
 
           {/* ── Right Column — Summary + Reference Values ── */}
@@ -616,17 +514,8 @@ export default function StrainNavigator() {
               <h3 className="font-bold text-sm text-gray-800 mb-4" style={{ fontFamily: "Merriweather, serif" }}>Strain Summary</h3>
               <div className="space-y-3">
                 <ResultBox label="LV GLS" value={lvGls} normal="≤ −20" unit="%" interpretation={lvInterp?.severity ?? ""} />
-                <ResultBox label="RV Free-Wall Strain" value={rvStrain} normal="≤ −29" unit="%" interpretation={rvInterp?.severity ?? ""} />
-                <ResultBox label="LA Reservoir Strain" value={laReservoir} normal="≥ 38" unit="%" interpretation={laInterp?.severity ?? ""} />
-                {rasValue !== null && (
-                  <div className="rounded-lg p-4 border" style={{ background: "#f0fbfc", borderColor: BRAND + "30" }}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: BRAND }}>RAS</span>
-                      <span className="text-xs text-gray-400">Normal ≤ 1.0</span>
-                    </div>
-                    <div className="text-2xl font-black font-mono" style={{ color: rasValue > 1.0 ? "#dc2626" : "#15803d" }}>{rasValue.toFixed(2)}</div>
-                    <div className="text-xs text-gray-600 mt-1">{rasInterpretation?.label}</div>
-                  </div>
+                {!lvGls && (
+                  <p className="text-xs text-gray-400 text-center py-3">Enter LV GLS above to see summary. For RV, LA, RA, and RAS — use EchoAssist™ Strain Engine.</p>
                 )}
               </div>
             </div>
@@ -753,12 +642,38 @@ export default function StrainNavigator() {
         </div>
       </div>
 
+      {/* ── References & Guidelines ── */}
+      <div className="mt-6">
+        <SectionCard title="References & Guidelines" subtitle="ASE · EACVI · ESC · Cardio-Oncology" defaultOpen={false} icon={<BookOpen className="w-4 h-4" />}>
+          <div className="space-y-2">
+            {[
+              { ref: "ASE. Recommendations for the Standardization and Interpretation of Echocardiographic Strain. JASE 2025 (August).", url: "https://www.asecho.org/wp-content/uploads/2025/08/Strain-Guideline-AIP-August-2025.pdf" },
+              { ref: "ASE/WFTF. Recommendations for Cardiac Chamber Quantification by Echocardiography in Adults. 2018 Update.", url: "https://asecho.org/wp-content/uploads/2018/08/WFTF-Chamber-Quantification-Summary-Doc-Final-July-18.pdf" },
+              { ref: "Marwick TH et al. Recommendations on the Use of Echocardiography in Adult Hypertension. JASE 2015;28:727–54.", url: "https://www.asecho.org" },
+              { ref: "Plana JC et al. Expert Consensus for Multimodality Imaging Evaluation of Adult Patients during and after Cancer Therapy (Cardio-Oncology). JASE 2014;27:911–39.", url: "https://www.asecho.org" },
+              { ref: "Smiseth OA et al. Myocardial strain imaging: how useful is it in clinical decision making? Eur Heart J 2016;37:1196–207.", url: "https://academic.oup.com/eurheartj" },
+              { ref: "Nagueh SF et al. Recommendations for the Evaluation of Left Ventricular Diastolic Function by Echocardiography. JASE 2016;29:277–314.", url: "https://www.asecho.org/guideline/diastolic-dysfunction/" },
+              { ref: "Badano LP et al. Recommendations for the Use of Cardiac Imaging to Assess and Follow Patients with Hypertrophic Cardiomyopathy. Eur Heart J Cardiovasc Imaging 2023.", url: "https://academic.oup.com/ehjcimaging" },
+            ].map(({ ref, url }) => (
+              <a key={ref} href={url} target="_blank" rel="noopener noreferrer"
+                className="flex items-start gap-2 p-3 rounded-lg transition-colors group" style={{ background: "#f0fbfc" }}
+                onMouseEnter={e => (e.currentTarget.style.background = "#d4f5f7")}
+                onMouseLeave={e => (e.currentTarget.style.background = "#f0fbfc")}>
+                <BookOpen className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: BRAND }} />
+                <span className="text-xs text-gray-600 leading-relaxed group-hover:text-gray-800">{ref}</span>
+                <ExternalLink className="w-3 h-3 flex-shrink-0 mt-0.5 text-gray-400 group-hover:text-gray-600" />
+              </a>
+            ))}
+          </div>
+        </SectionCard>
+      </div>
+
       {showSaveModal && (
         <SaveToCaseModal
           onClose={() => setShowSaveModal(false)}
           lvGls={lvGls}
-          rvStrain={rvStrain}
-          laReservoir={laReservoir}
+          rvStrain=""
+          laReservoir=""
           vendor={vendor}
           frameRate={frameRate}
         />

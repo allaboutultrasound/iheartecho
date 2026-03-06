@@ -1132,6 +1132,22 @@ export default function EchoCalculator() {
           </p>
         </div>
 
+        {/* EchoAssist link banner */}
+        <div className="flex items-center justify-between bg-[#f0fbfc] border border-[#b2e8ec] rounded-xl px-5 py-3 mb-5">
+          <div className="flex items-center gap-3">
+            <Zap className="w-4 h-4 text-[#189aa1] flex-shrink-0" />
+            <p className="text-xs text-[#0e7490]">
+              <strong>Need full guideline-based interpretation?</strong> EchoAssist™ provides instant severity classification with clinical narrative for all domains.
+            </p>
+          </div>
+          <Link href="/echoassist"
+            className="flex-shrink-0 ml-4 flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90"
+            style={{ background: "#189aa1" }}>
+            <Zap className="w-3.5 h-3.5" />
+            Open EchoAssist™
+          </Link>
+        </div>
+
         <div className="flex flex-wrap gap-2 mb-6">
           {calculators.map(c => (
             <button key={c.id} onClick={() => setActive(c.id)}

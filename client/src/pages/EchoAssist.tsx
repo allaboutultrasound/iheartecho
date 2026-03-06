@@ -8,7 +8,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearch } from "wouter";
 import Layout from "@/components/Layout";
-import { Zap, ChevronDown, ChevronUp, Info, Lightbulb, MessageSquare, AlertCircle, TrendingUp } from "lucide-react";
+import { Zap, ChevronDown, ChevronUp, Info, Lightbulb, MessageSquare, AlertCircle, TrendingUp, Activity, Save, CheckCircle2 } from "lucide-react";
+import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
 import FrankStarlingGraph, { type FrankStarlingParams } from "@/components/FrankStarlingGraph";
 
 // ─── UI PRIMITIVES ────────────────────────────────────────────────────────────
@@ -1547,6 +1549,418 @@ function FrankStarlingEngine() {
   );
 }
 
+// ─── STRESS ECHO ASSIST ENGINE ──────────────────────────────────────────────
+
+const stressSegments17 = [
+  { id: "bas_ant", label: "Basal Anterior", territory: "LAD" },
+  { id: "bas_antlat", label: "Basal Anterolateral", territory: "LCx" },
+  { id: "bas_inflat", label: "Basal Inferolateral", territory: "LCx" },
+  { id: "bas_inf", label: "Basal Inferior", territory: "RCA" },
+  { id: "bas_infsep", label: "Basal Inferoseptal", territory: "RCA" },
+  { id: "bas_antsep", label: "Basal Anteroseptal", territory: "LAD" },
+  { id: "mid_ant", label: "Mid Anterior", territory: "LAD" },
+  { id: "mid_antlat", label: "Mid Anterolateral", territory: "LCx" },
+  { id: "mid_inflat", label: "Mid Inferolateral", territory: "LCx" },
+  { id: "mid_inf", label: "Mid Inferior", territory: "RCA" },
+  { id: "mid_infsep", label: "Mid Inferoseptal", territory: "RCA" },
+  { id: "mid_antsep", label: "Mid Anteroseptal", territory: "LAD" },
+  { id: "ap_ant", label: "Apical Anterior", territory: "LAD" },
+  { id: "ap_lat", label: "Apical Lateral", territory: "LCx" },
+  { id: "ap_inf", label: "Apical Inferior", territory: "RCA" },
+  { id: "ap_sep", label: "Apical Septal", territory: "LAD" },
+  { id: "apex", label: "Apex", territory: "LAD" },
+];
+
+const wmScoreLabels: Record<number, { label: string; color: string }> = {
+  1: { label: "Normal", color: "#16a34a" },
+  2: { label: "Hypokinetic", color: "#d97706" },
+  3: { label: "Akinetic", color: "#ea580c" },
+  4: { label: "Dyskinetic", color: "#dc2626" },
+  5: { label: "Aneurysmal", color: "#b45309" },
+};
+
+const stressInterpretation = [
+  {
+    result: "Positive (Ischemia)",
+    color: "#dc2626",
+    criteria: [
+      "New or worsening wall motion abnormality at peak stress",
+      "New RWMA in ≥2 adjacent segments",
+      "Transient LV dilation at peak stress",
+      "EF decrease ≥5% at peak stress",
+      "New MR at peak (papillary muscle ischemia)",
+    ],
+  },
+  {
+    result: "Negative (No Ischemia)",
+    color: "#16a34a",
+    criteria: [
+      "No new wall motion abnormalities at peak stress",
+      "Normal or improved wall motion throughout",
+      "EF maintained or increased at peak",
+      "Target HR achieved (≥85% max HR)",
+    ],
+  },
+  {
+    result: "Inconclusive",
+    color: "#d97706",
+    criteria: [
+      "Suboptimal HR response (<80% max HR without atropine)",
+      "Poor image quality at peak",
+      "LBBB development at peak (limits wall motion interpretation)",
+      "Inadequate stress achieved",
+    ],
+  },
+  {
+    result: "Viability (Low-Dose DSE)",
+    color: "#0369a1",
+    criteria: [
+      "Biphasic response: improved at low dose → worsens at high dose = viable + ischemic",
+      "Sustained improvement at all doses = viable, no significant ischemia",
+      "No change at any dose = non-viable (scar)",
+      "Worsens at low dose = non-viable or severe ischemia",
+    ],
+  },
+];
+
+function StressEchoAssistEngine() {
+  const { isAuthenticated } = useAuth();
+  // Inner tab
+  const [innerTab, setInnerTab] = useState<"wmsi" | "target_hr" | "interpretation">("wmsi");
+  // WMSI state
+  const [scores, setScores] = useState<Record<string, number>>({});
+  const [stage, setStage] = useState<"rest" | "stress">("rest");
+  // Target HR
+  const [age, setAge] = useState("");
+  const [protocol, setProtocol] = useState("exercise");
+  // Case saving
+  const [studyId, setStudyId] = useState("");
+  const [studyDate, setStudyDate] = useState("");
+  const [savedOk, setSavedOk] = useState(false);
+
+  const setScore = (id: string, score: number) => {
+    setScores(prev => ({ ...prev, [`${stage}_${id}`]: score }));
+  };
+  const getScore = (id: string) => scores[`${stage}_${id}`] || 0;
+
+  const scoredSegments = stressSegments17.filter(s => scores[`${stage}_${s.id}`] > 0);
+  const wmsi = scoredSegments.length > 0
+    ? (scoredSegments.reduce((acc, s) => acc + (scores[`${stage}_${s.id}`] || 1), 0) / stressSegments17.length).toFixed(2)
+    : null;
+
+  const newAbnormal = stage === "stress" ? stressSegments17.filter(s => {
+    const restScore = scores[`rest_${s.id}`] || 1;
+    const stressScore = scores[`stress_${s.id}`] || 1;
+    return stressScore > restScore;
+  }) : [];
+
+  const territories = ["LAD", "LCx", "RCA"];
+  const territoryAbnormal = territories.map(t => ({
+    territory: t,
+    segments: newAbnormal.filter(s => s.territory === t),
+  })).filter(t => t.segments.length > 0);
+
+  // Target HR calc
+  const maxHR = age ? 220 - parseFloat(age) : 0;
+  const target85 = maxHR ? Math.round(maxHR * 0.85) : 0;
+  const target80 = maxHR ? Math.round(maxHR * 0.80) : 0;
+
+  // EchoAssist interpretation
+  const hasNewWMA = newAbnormal.length > 0;
+  const wmsiNum = wmsi ? parseFloat(wmsi) : null;
+  const getInterpretation = () => {
+    if (!wmsi) return null;
+    if (stage === "stress" && hasNewWMA) {
+      const terrs = territoryAbnormal.map(t => `${t.territory} (${t.segments.map(s => s.label).join(", ")})`).join("; ");
+      return {
+        suggests: `Positive Stress Echo — Inducible ischemia identified. WMSI = ${wmsi}. New wall motion abnormalities at stress in: ${terrs}.`,
+        note: "EchoAssist™ Note: New or worsening regional wall motion abnormalities at peak stress in ≥2 adjacent segments are the primary criterion for a positive stress echo. Transient LV dilation and EF drop ≥5% are additional positive markers.",
+        tip: "EchoAssist™ Tip: Correlate with the coronary territory distribution of the new WMAs to guide catheterization planning. LAD territory involvement carries higher risk than isolated RCA or LCx disease.",
+      };
+    }
+    if (stage === "stress" && wmsiNum !== null && wmsiNum <= 1.0) {
+      return {
+        suggests: `Negative Stress Echo — No new wall motion abnormalities at stress. WMSI = ${wmsi} (normal = 1.0). All 17 segments normal or hyperkinetic at peak stress.`,
+        note: "EchoAssist™ Note: A negative stress echo with adequate heart rate response (≥85% MPHR) has a high negative predictive value for significant obstructive CAD.",
+        tip: "EchoAssist™ Tip: Confirm target HR was achieved. A suboptimal HR response (<80% MPHR without atropine augmentation) renders the study inconclusive regardless of wall motion findings.",
+      };
+    }
+    if (stage === "rest") {
+      return {
+        suggests: `Resting WMSI = ${wmsi}. ${wmsiNum && wmsiNum > 1.0 ? "Resting wall motion abnormality present — consider prior MI, cardiomyopathy, or LBBB." : "Normal resting wall motion."}`,
+        note: "EchoAssist™ Note: Switch to Stress stage and enter peak stress scores to generate a full stress echo interpretation.",
+        tip: "EchoAssist™ Tip: Document resting WMSI before stress to identify baseline abnormalities that may confound stress interpretation.",
+      };
+    }
+    return null;
+  };
+  const interpretation = getInterpretation();
+
+  const saveMutation = trpc.caseMix.create.useMutation({
+    onSuccess: () => { setSavedOk(true); setTimeout(() => setSavedOk(false), 3000); },
+  });
+
+  const handleSave = () => {
+    if (!studyId.trim()) return;
+    saveMutation.mutate({
+      modality: "STRESS",
+      caseType: hasNewWMA ? "Positive Stress Echo — Inducible Ischemia" : "Negative Stress Echo",
+      studyIdentifier: studyId.trim(),
+      studyDate: studyDate || undefined,
+      notes: interpretation ? `${interpretation.suggests}` : undefined,
+    });
+  };
+
+  return (
+    <EngineSection id="engine-stress" title="Stress Echo EchoAssist™" subtitle="17-Segment WMSI · Target HR · Protocol Dosing · Interpretation · Save as Case">
+      <div>
+            <div className="flex flex-wrap gap-2 mb-5">
+              {(["wmsi", "target_hr", "interpretation"] as const).map(t => (
+                <button key={t} onClick={() => setInnerTab(t)}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                    innerTab === t ? "text-white shadow-sm" : "bg-gray-50 text-gray-600 border border-gray-200 hover:border-[#189aa1] hover:text-[#189aa1]"
+                  }`}
+                  style={innerTab === t ? { background: "#189aa1" } : {}}>
+                  {t === "wmsi" ? "Wall Motion Scoring" : t === "target_hr" ? "Target HR / Dosing" : "Interpretation"}
+                </button>
+              ))}
+            </div>
+
+            {innerTab === "wmsi" && (
+              <div className="space-y-4">
+                <div className="flex gap-2">
+                  {(["rest", "stress"] as const).map(s => (
+                    <button key={s} onClick={() => setStage(s)}
+                      className={`px-4 py-2 rounded-lg text-sm font-semibold capitalize transition-all ${
+                        stage === s ? "text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      }`}
+                      style={stage === s ? { background: "#189aa1" } : {}}>
+                      {s} Images
+                    </button>
+                  ))}
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {stressSegments17.map(seg => {
+                    const score = getScore(seg.id);
+                    const wmInfo = wmScoreLabels[score];
+                    return (
+                      <div key={seg.id} className="border border-gray-100 rounded-lg p-2 bg-white">
+                        <div className="text-xs font-medium text-gray-600 mb-1">{seg.label}</div>
+                        <div className="text-xs text-gray-400 mb-2">{seg.territory}</div>
+                        <div className="flex gap-1">
+                          {[1, 2, 3, 4].map(s => (
+                            <button key={s} onClick={() => setScore(seg.id, score === s ? 0 : s)}
+                              className="flex-1 py-1 rounded text-xs font-bold transition-all"
+                              style={{
+                                background: score === s ? wmScoreLabels[s].color : "#f3f4f6",
+                                color: score === s ? "white" : "#6b7280",
+                              }}>
+                              {s}
+                            </button>
+                          ))}
+                        </div>
+                        {score > 0 && (
+                          <div className="text-xs font-semibold mt-1" style={{ color: wmInfo.color }}>{wmInfo.label}</div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                {wmsi && (
+                  <div className="rounded-lg p-4 border border-[#189aa1]/20 bg-[#f0fbfc] animate-in fade-in duration-300">
+                    <div className="flex items-center gap-6 mb-2">
+                      <div>
+                        <div className="text-xs text-gray-500">WMSI</div>
+                        <div className="text-3xl font-black text-[#189aa1]" style={{ fontFamily: "JetBrains Mono, monospace" }}>{wmsi}</div>
+                        <div className="text-xs text-gray-500">Normal = 1.0</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-500">Abnormal segments</div>
+                        <div className="text-2xl font-black text-[#189aa1]" style={{ fontFamily: "JetBrains Mono, monospace" }}>
+                          {scoredSegments.filter(s => (scores[`${stage}_${s.id}`] || 1) > 1).length}/17
+                        </div>
+                      </div>
+                    </div>
+                    {stage === "stress" && newAbnormal.length > 0 && (
+                      <div className="mt-2 p-2 rounded bg-red-50 border border-red-200">
+                        <div className="text-xs font-bold text-red-700 mb-1">⚠ New wall motion abnormalities at stress:</div>
+                        {territoryAbnormal.map(t => (
+                          <div key={t.territory} className="text-xs text-red-600">
+                            <strong>{t.territory}:</strong> {t.segments.map(s => s.label).join(", ")}
+                          </div>
+                        ))}
+                        <div className="text-xs text-red-600 mt-1 font-semibold">Positive stress echo — inducible ischemia</div>
+                      </div>
+                    )}
+                    {interpretation && (
+                      <div className="mt-3 rounded-xl overflow-hidden border border-[#189aa1]/30">
+                        <div className="flex items-start gap-3 px-4 py-3 bg-[#f0fbfc] border-b border-[#189aa1]/20">
+                          <MessageSquare className="w-4 h-4 text-[#189aa1] flex-shrink-0 mt-0.5" />
+                          <div>
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-[#0e7490] block mb-0.5">EchoAssist™ Suggests</span>
+                            <p className="text-sm text-[#0e7490] font-medium leading-snug">{interpretation.suggests}</p>
+                          </div>
+                        </div>
+                        {interpretation.note && (
+                          <div className="flex items-start gap-3 px-4 py-3 bg-amber-50 border-b border-amber-100">
+                            <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-amber-700 block mb-0.5">EchoAssist™ Note</span>
+                              <p className="text-xs text-amber-700 leading-snug">{interpretation.note}</p>
+                            </div>
+                          </div>
+                        )}
+                        {interpretation.tip && (
+                          <div className="flex items-start gap-3 px-4 py-3 bg-sky-50">
+                            <Lightbulb className="w-4 h-4 text-sky-600 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-sky-700 block mb-0.5">EchoAssist™ Tip</span>
+                              <p className="text-xs text-sky-700 leading-snug">{interpretation.tip}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+                <div className="text-xs text-gray-400">Score: 1=Normal | 2=Hypokinetic | 3=Akinetic | 4=Dyskinetic</div>
+
+                {/* Save as Case */}
+                {isAuthenticated && (
+                  <div className="mt-4 p-4 rounded-xl border border-[#189aa1]/20 bg-white">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Save className="w-4 h-4 text-[#189aa1]" />
+                      <span className="text-sm font-bold text-gray-700">Save as Accreditation Case</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 mb-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1">Study Identifier *</label>
+                        <input value={studyId} onChange={e => setStudyId(e.target.value)}
+                          placeholder="e.g. STR-2024-001"
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#189aa1]/30 focus:border-[#189aa1]" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1">Study Date</label>
+                        <input type="date" value={studyDate} onChange={e => setStudyDate(e.target.value)}
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#189aa1]/30 focus:border-[#189aa1]" />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button onClick={handleSave}
+                        disabled={!studyId.trim() || saveMutation.isPending}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50"
+                        style={{ background: "#189aa1" }}>
+                        <Save className="w-3.5 h-3.5" />
+                        {saveMutation.isPending ? "Saving..." : "Save Case"}
+                      </button>
+                      {savedOk && (
+                        <div className="flex items-center gap-1.5 text-sm text-green-600 font-semibold animate-in fade-in">
+                          <CheckCircle2 className="w-4 h-4" /> Case saved to accreditation tracker
+                        </div>
+                      )}
+                      {saveMutation.isError && (
+                        <div className="text-sm text-red-600">Error saving — please try again</div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {innerTab === "target_hr" && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Patient Age</label>
+                    <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#189aa1]/30">
+                      <input type="number" value={age} onChange={e => setAge(e.target.value)} placeholder="e.g. 65"
+                        className="flex-1 px-3 py-2 text-sm outline-none" style={{ fontFamily: "JetBrains Mono, monospace" }} />
+                      <span className="px-2 py-2 text-xs text-gray-400 bg-gray-50 border-l border-gray-200">yrs</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Protocol</label>
+                    <select value={protocol} onChange={e => setProtocol(e.target.value)}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#189aa1]/30">
+                      <option value="exercise">Exercise Stress Echo</option>
+                      <option value="dse">Dobutamine Stress Echo (DSE)</option>
+                      <option value="vasodilator">Vasodilator (Regadenoson/Adenosine)</option>
+                    </select>
+                  </div>
+                </div>
+                {maxHR > 0 && (
+                  <div className="rounded-lg p-4 border border-[#189aa1]/20 bg-[#f0fbfc] animate-in fade-in duration-300">
+                    <div className="grid grid-cols-3 gap-4 mb-3">
+                      <div className="text-center">
+                        <div className="text-xs text-gray-500">Max HR (220-age)</div>
+                        <div className="text-2xl font-black text-gray-700" style={{ fontFamily: "JetBrains Mono, monospace" }}>{maxHR}</div>
+                        <div className="text-xs text-gray-400">bpm</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs text-gray-500">Target (85%)</div>
+                        <div className="text-2xl font-black text-[#189aa1]" style={{ fontFamily: "JetBrains Mono, monospace" }}>{target85}</div>
+                        <div className="text-xs text-gray-400">bpm</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs text-gray-500">Adequate (80%)</div>
+                        <div className="text-2xl font-black text-[#189aa1]" style={{ fontFamily: "JetBrains Mono, monospace" }}>{target80}</div>
+                        <div className="text-xs text-gray-400">bpm</div>
+                      </div>
+                    </div>
+                    {protocol === "dse" && (
+                      <div className="p-3 rounded bg-white border border-gray-100 text-xs text-gray-600">
+                        <div className="font-bold text-[#189aa1] mb-1">DSE Protocol (Standard)</div>
+                        <div className="grid grid-cols-2 gap-2">
+                          {[["5 min", "5 μg/kg/min"],["10 min", "10 μg/kg/min"],["15 min", "20 μg/kg/min"],["20 min", "30 μg/kg/min"],["25 min", "40 μg/kg/min"],["If target not reached", "Atropine 0.25–1 mg IV"]].map(([time, dose]) => (
+                            <div key={time} className="flex justify-between">
+                              <span className="text-gray-500">{time}:</span>
+                              <span className="font-mono font-bold text-[#189aa1]">{dose}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mt-2 font-semibold text-amber-600">Target: {Math.round(maxHR * 0.85)} bpm or ≥85% max HR</div>
+                      </div>
+                    )}
+                    {protocol === "vasodilator" && (
+                      <div className="p-3 rounded bg-white border border-gray-100 text-xs text-gray-600">
+                        <div className="font-bold text-[#189aa1] mb-1">Regadenoson Protocol</div>
+                        <div>Single bolus: 0.4 mg IV over 10 seconds</div>
+                        <div>Images: 60–90 seconds post-injection</div>
+                        <div className="mt-1 text-amber-600 font-semibold">Contraindicated: 2nd/3rd degree AV block, severe asthma/COPD</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {innerTab === "interpretation" && (
+              <div className="space-y-3">
+                {stressInterpretation.map((crit, ci) => (
+                  <div key={ci} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="px-5 py-3 flex items-center gap-3" style={{ borderLeft: `4px solid ${crit.color}` }}>
+                      <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ background: crit.color }} />
+                      <h4 className="font-bold text-sm text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>{crit.result}</h4>
+                    </div>
+                    <div className="px-5 pb-4">
+                      <ul className="space-y-1.5 mt-2">
+                        {crit.criteria.map((c, i) => (
+                          <li key={i} className="flex items-start gap-2 text-xs text-gray-600">
+                            <span className="mt-0.5 flex-shrink-0 text-[#189aa1]">•</span>
+                            <span>{c}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+      </div>
+    </EngineSection>
+  );
+}
+
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 export default function EchoAssist() {
   // Fire hash-based open event on mount so the matching engine auto-opens
@@ -1589,9 +2003,10 @@ export default function EchoAssist() {
 
         {/* Engine sections */}
         <div className="space-y-4">
-          <LVSystolicEngine />
+            <LVSystolicEngine />
           <DiastolicEngine />
           <StrainEngine />
+          <StressEchoAssistEngine />
           <AorticStenosisEngine />
           <MitraStenosisEngine />
           <AorticRegurgEngine />

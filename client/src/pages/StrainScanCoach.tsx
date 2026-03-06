@@ -257,6 +257,19 @@ function BullsEye({ values, onSelect, selected }: {
 
 // ─── Segmental Strain Curves ──────────────────────────────────────────────────
 
+// Segment color by wall group
+function segColor(wall: string): string {
+  const w = WALL_GROUPS.find(g => g.key === wall);
+  return w?.color ?? BRAND;
+}
+
+// Stroke style varies by ring for visual distinction
+function segStroke(ring: string): string {
+  if (ring === "basal") return "6 3";   // dashed
+  if (ring === "mid") return "2 2";     // dotted
+  return "0";                           // apical/apex = solid
+}
+
 function SegmentalStrainCurves({
   segValues,
   wallMotionScores,
@@ -267,6 +280,7 @@ function SegmentalStrainCurves({
   const [activeWalls, setActiveWalls] = useState<Set<string>>(
     new Set(WALL_GROUPS.map(w => w.key))
   );
+  const [hoveredSeg, setHoveredSeg] = useState<number | null>(null);
 
   function toggleWall(key: string) {
     setActiveWalls(prev => {
@@ -276,24 +290,21 @@ function SegmentalStrainCurves({
     });
   }
 
+  // Build chart data: one key per segment ("s1" ... "s17")
   const chartData = useMemo(() => {
     const timePoints = 51;
     const data: Record<string, number | string>[] = [];
     for (let i = 0; i < timePoints; i++) {
       const t = i * 2;
       const row: Record<string, number | string> = { t };
-      WALL_GROUPS.forEach(wall => {
-        if (!activeWalls.has(wall.key)) return;
-        const curves = wall.segIds.map(segId => {
-          const wms = wallMotionScores[segId] ?? 1;
-          const val = segValues[segId] ?? null;
-          return generateStrainCurve(val, wms, segId);
-        });
-        const avgAtT = curves.reduce((sum, curve) => {
-          const pt = curve.find(p => p.t === t);
-          return sum + (pt?.strain ?? 0);
-        }, 0) / curves.length;
-        row[wall.key] = parseFloat(avgAtT.toFixed(2));
+      SEGMENTS_17.forEach(seg => {
+        const wallGroup = WALL_GROUPS.find(g => g.key === seg.wall);
+        if (!wallGroup || !activeWalls.has(seg.wall)) return;
+        const wms = wallMotionScores[seg.id] ?? 1;
+        const val = segValues[seg.id] ?? null;
+        const curve = generateStrainCurve(val, wms, seg.id);
+        const pt = curve.find(p => p.t === t);
+        row[`s${seg.id}`] = pt ? parseFloat(pt.strain.toFixed(2)) : 0;
       });
       data.push(row);
     }
@@ -309,12 +320,14 @@ function SegmentalStrainCurves({
     : parseFloat(wmsi) <= 1.5 ? "#ca8a04"
     : "#dc2626";
 
+  const visibleSegs = SEGMENTS_17.filter(seg => activeWalls.has(seg.wall));
+
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <div>
-          <h3 className="font-bold text-sm text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Segmental Strain Curves</h3>
-          <p className="text-xs text-gray-500 mt-0.5">Time-strain waveforms by wall · Adjusted by wall motion score</p>
+          <h3 className="font-bold text-sm text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>17-Segment Strain Curves</h3>
+          <p className="text-xs text-gray-500 mt-0.5">Individual time-strain waveforms · Dashed = basal · Dotted = mid · Solid = apical/apex</p>
         </div>
         {wmsi !== null && (
           <div className="text-center px-3 py-1.5 rounded-lg" style={{ background: wmsiColor + "15", border: `1px solid ${wmsiColor}30` }}>
@@ -323,7 +336,9 @@ function SegmentalStrainCurves({
           </div>
         )}
       </div>
-      <div className="flex flex-wrap gap-2 mb-4">
+
+      {/* Wall group toggles */}
+      <div className="flex flex-wrap gap-2 mb-3">
         {WALL_GROUPS.map(wall => (
           <button key={wall.key} onClick={() => toggleWall(wall.key)}
             className="text-xs font-semibold px-2.5 py-1 rounded-full border transition-all"
@@ -332,25 +347,74 @@ function SegmentalStrainCurves({
               borderColor: activeWalls.has(wall.key) ? wall.color : "#e5e7eb",
               color: activeWalls.has(wall.key) ? wall.color : "#9ca3af",
             }}>
-            {wall.label}
+            {wall.label} ({WALL_GROUPS.find(g => g.key === wall.key)?.segIds.length})
           </button>
         ))}
       </div>
-      <div style={{ height: 220 }}>
+
+      {/* Chart */}
+      <div style={{ height: 260 }}>
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+          <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}
+            onMouseLeave={() => setHoveredSeg(null)}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis dataKey="t" tickFormatter={v => v === 0 ? "ED" : v === 35 ? "ES" : v === 100 ? "ED" : ""} ticks={[0, 35, 70, 100]} tick={{ fontSize: 9, fill: "#9ca3af" }} />
-            <YAxis domain={[-30, 10]} tick={{ fontSize: 9, fill: "#9ca3af" }} tickFormatter={v => `${v}%`} />
-            <Tooltip formatter={(val: number, name: string) => [`${val.toFixed(1)}%`, WALL_GROUPS.find(w => w.key === name)?.label ?? name]} labelFormatter={t => `Time: ${t}%`} contentStyle={{ fontSize: 11, borderRadius: 8, border: `1px solid ${BRAND}30` }} />
+            <XAxis dataKey="t"
+              tickFormatter={v => v === 0 ? "ED" : v === 35 ? "ES" : v === 70 ? "" : v === 100 ? "ED" : ""}
+              ticks={[0, 35, 100]}
+              tick={{ fontSize: 9, fill: "#9ca3af" }} />
+            <YAxis domain={[-35, 15]} tick={{ fontSize: 9, fill: "#9ca3af" }} tickFormatter={v => `${v}%`} />
+            <Tooltip
+              formatter={(val: number, name: string) => {
+                const segId = parseInt(name.replace("s", ""));
+                const seg = SEGMENTS_17.find(s => s.id === segId);
+                return [`${val.toFixed(1)}%`, seg?.label ?? name];
+              }}
+              labelFormatter={t => `Time: ${t}%`}
+              contentStyle={{ fontSize: 10, borderRadius: 8, border: `1px solid ${BRAND}30`, maxHeight: 200, overflowY: "auto" }}
+            />
             <ReferenceLine y={0} stroke="#e5e7eb" strokeWidth={1} />
-            <ReferenceLine y={-20} stroke="#dc262640" strokeDasharray="4 2" strokeWidth={1} label={{ value: "Normal", position: "right", fontSize: 8, fill: "#dc2626" }} />
-            {WALL_GROUPS.filter(w => activeWalls.has(w.key)).map(wall => (
-              <Line key={wall.key} type="monotone" dataKey={wall.key} stroke={wall.color} strokeWidth={2} dot={false} activeDot={{ r: 3 }} />
+            <ReferenceLine y={-20} stroke="#dc262640" strokeDasharray="4 2" strokeWidth={1}
+              label={{ value: "Normal ≤−20%", position: "right", fontSize: 8, fill: "#dc2626" }} />
+            {visibleSegs.map(seg => (
+              <Line
+                key={`s${seg.id}`}
+                type="monotone"
+                dataKey={`s${seg.id}`}
+                stroke={segColor(seg.wall)}
+                strokeWidth={hoveredSeg === seg.id ? 3 : 1.5}
+                strokeDasharray={segStroke(seg.ring)}
+                dot={false}
+                activeDot={{ r: 4, fill: segColor(seg.wall) }}
+                opacity={hoveredSeg === null || hoveredSeg === seg.id ? 1 : 0.25}
+                onMouseEnter={() => setHoveredSeg(seg.id)}
+              />
             ))}
           </LineChart>
         </ResponsiveContainer>
       </div>
+
+      {/* Segment legend */}
+      <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-1">
+        {visibleSegs.map(seg => (
+          <div key={seg.id}
+            className="flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer transition-colors"
+            style={{ background: hoveredSeg === seg.id ? segColor(seg.wall) + "15" : "transparent" }}
+            onMouseEnter={() => setHoveredSeg(seg.id)}
+            onMouseLeave={() => setHoveredSeg(null)}>
+            <div className="w-5 h-0 flex-shrink-0" style={{
+              borderTop: `2px ${seg.ring === "basal" ? "dashed" : seg.ring === "mid" ? "dotted" : "solid"} ${segColor(seg.wall)}`
+            }} />
+            <span className="text-xs text-gray-600 truncate">{seg.id}. {seg.label}</span>
+            {segValues[seg.id] !== null && segValues[seg.id] !== undefined && (
+              <span className="text-xs font-mono font-bold ml-auto flex-shrink-0" style={{ color: segColor(seg.wall) }}>
+                {(segValues[seg.id] as number).toFixed(1)}%
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Wall Motion Scoring */}
       <details className="mt-4">
         <summary className="text-xs font-semibold cursor-pointer flex items-center gap-1" style={{ color: BRAND }}>
           <BarChart3 className="w-3.5 h-3.5" /> Wall Motion Scoring (click to expand)
@@ -699,11 +763,9 @@ export default function StrainScanCoach() {
                     <Activity className="w-3.5 h-3.5" /> Strain Navigator™
                   </button>
                 </Link>
-                <Link href="/echoassist">
-                  <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all">
+                <a href="/echoassist#engine-strain" className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all">
                     <Zap className="w-3.5 h-3.5" /> EchoAssist™ Strain
-                  </button>
-                </Link>
+                </a>
               </div>
             </div>
             <div className="hidden md:flex flex-col items-end gap-2">
@@ -1038,33 +1100,6 @@ export default function StrainScanCoach() {
               </div>
             </SectionCard>
 
-            {/* ── References ── */}
-            <SectionCard
-              title="References & Guidelines"
-              subtitle="ASE 2025 · EACVI · ESC · Cardio-Oncology"
-              defaultOpen={false}
-              icon={<BookOpen className="w-4 h-4" style={{ color: BRAND }} />}
-            >
-              <div className="space-y-2">
-                {[
-                  { ref: "ASE. Recommendations for the Standardization and Interpretation of Echocardiographic Strain. JASE 2025 (August).", url: "https://www.asecho.org/wp-content/uploads/2025/08/Strain-Guideline-AIP-August-2025.pdf" },
-                  { ref: "ASE/WFTF. Recommendations for Cardiac Chamber Quantification by Echocardiography in Adults. 2018 Update.", url: "https://asecho.org/wp-content/uploads/2018/08/WFTF-Chamber-Quantification-Summary-Doc-Final-July-18.pdf" },
-                  { ref: "Plana JC et al. Expert Consensus for Multimodality Imaging Evaluation during and after Cancer Therapy. JASE 2014;27:911–39.", url: "https://www.asecho.org" },
-                  { ref: "Smiseth OA et al. Myocardial strain imaging: how useful is it in clinical decision making? Eur Heart J 2016;37:1196–207.", url: "https://academic.oup.com/eurheartj" },
-                  { ref: "Nagueh SF et al. Recommendations for the Evaluation of Left Ventricular Diastolic Function. JASE 2016;29:277–314.", url: "https://www.asecho.org/guideline/diastolic-dysfunction/" },
-                ].map(({ ref, url }) => (
-                  <a key={ref} href={url} target="_blank" rel="noopener noreferrer"
-                    className="flex items-start gap-2 p-3 rounded-lg transition-colors group" style={{ background: "#f0fbfc" }}
-                    onMouseEnter={e => (e.currentTarget.style.background = "#d4f5f7")}
-                    onMouseLeave={e => (e.currentTarget.style.background = "#f0fbfc")}>
-                    <BookOpen className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: BRAND }} />
-                    <span className="text-xs text-gray-600 leading-relaxed group-hover:text-gray-800">{ref}</span>
-                    <ExternalLink className="w-3 h-3 flex-shrink-0 mt-0.5 text-gray-400 group-hover:text-gray-600" />
-                  </a>
-                ))}
-              </div>
-            </SectionCard>
-
           </div>
 
           {/* ── Right Column — Bull's Eye + Curves + Summary ── */}
@@ -1205,6 +1240,35 @@ export default function StrainScanCoach() {
 
           </div>
         </div>
+      </div>
+
+      {/* ── References & Guidelines ── */}
+      <div className="mt-6">
+        <SectionCard
+          title="References & Guidelines"
+          subtitle="ASE 2025 · EACVI · ESC · Cardio-Oncology"
+          defaultOpen={false}
+          icon={<BookOpen className="w-4 h-4" style={{ color: BRAND }} />}
+        >
+          <div className="space-y-2">
+            {[
+              { ref: "ASE. Recommendations for the Standardization and Interpretation of Echocardiographic Strain. JASE 2025 (August).", url: "https://www.asecho.org/wp-content/uploads/2025/08/Strain-Guideline-AIP-August-2025.pdf" },
+              { ref: "ASE/WFTF. Recommendations for Cardiac Chamber Quantification by Echocardiography in Adults. 2018 Update.", url: "https://asecho.org/wp-content/uploads/2018/08/WFTF-Chamber-Quantification-Summary-Doc-Final-July-18.pdf" },
+              { ref: "Plana JC et al. Expert Consensus for Multimodality Imaging Evaluation during and after Cancer Therapy. JASE 2014;27:911–39.", url: "https://www.asecho.org" },
+              { ref: "Smiseth OA et al. Myocardial strain imaging: how useful is it in clinical decision making? Eur Heart J 2016;37:1196–207.", url: "https://academic.oup.com/eurheartj" },
+              { ref: "Nagueh SF et al. Recommendations for the Evaluation of Left Ventricular Diastolic Function. JASE 2016;29:277–314.", url: "https://www.asecho.org/guideline/diastolic-dysfunction/" },
+            ].map(({ ref, url }) => (
+              <a key={ref} href={url} target="_blank" rel="noopener noreferrer"
+                className="flex items-start gap-2 p-3 rounded-lg transition-colors group" style={{ background: "#f0fbfc" }}
+                onMouseEnter={e => (e.currentTarget.style.background = "#d4f5f7")}
+                onMouseLeave={e => (e.currentTarget.style.background = "#f0fbfc")}>
+                <BookOpen className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: BRAND }} />
+                <span className="text-xs text-gray-600 leading-relaxed group-hover:text-gray-800">{ref}</span>
+                <ExternalLink className="w-3 h-3 flex-shrink-0 mt-0.5 text-gray-400 group-hover:text-gray-600" />
+              </a>
+            ))}
+          </div>
+        </SectionCard>
       </div>
     </Layout>
   );

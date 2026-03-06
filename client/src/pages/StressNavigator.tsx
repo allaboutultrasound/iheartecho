@@ -373,7 +373,7 @@ const interpretationCriteria = [
 ];
 
 // --- MAIN COMPONENT -----------------------------------------------------------
-type TabId = "protocol" | "wmsi" | "target_hr" | "interpretation" | "reference";
+type TabId = "protocol" | "target_hr" | "interpretation" | "reference";
 
 export default function StressNavigator() {
   const [tab, setTab] = useState<TabId>("protocol");
@@ -395,7 +395,6 @@ export default function StressNavigator() {
 
   const tabs = [
     { id: "protocol" as TabId, label: "Protocol Checklist" },
-    { id: "wmsi" as TabId, label: "Wall Motion Scoring" },
     { id: "target_hr" as TabId, label: "Target HR / Dosing" },
     { id: "interpretation" as TabId, label: "Interpretation" },
     { id: "reference" as TabId, label: "Normal Reference Values" },
@@ -409,16 +408,22 @@ export default function StressNavigator() {
             Stress Echo Navigator
           </h1>
           <p className="text-sm text-gray-500">
-            Exercise and dobutamine stress echo protocols, 17-segment wall motion scoring, target HR calculator, and interpretation criteria.
+            Exercise and dobutamine stress echo protocols, target HR calculator, and interpretation criteria. For 17-segment WMSI scoring, use Stress Echo EchoAssist™.
           </p>
         </div>
 
-        {/* ScanCoach Link */}
-        <div className="mb-4">
+        {/* Action Links */}
+        <div className="flex flex-wrap gap-2 mb-4">
           <Link href="/scan-coach?tab=tte">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90" style={{ background: "#189aa1" }}>
               <Scan className="w-4 h-4" />
               Open in ScanCoach™
+            </div>
+          </Link>
+          <Link href="/echoassist#engine-stress">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold border border-[#189aa1] text-[#189aa1] bg-white transition-all hover:bg-[#f0fbfc]">
+              <Zap className="w-4 h-4" />
+              WMSI in Stress EchoAssist™
             </div>
           </Link>
         </div>
@@ -562,19 +567,6 @@ export default function StressNavigator() {
                   </div>
                 );
               })}
-            </div>
-          </div>
-        )}
-
-        {tab === "wmsi" && (
-          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="teal-header px-5 py-4">
-              <h3 className="font-bold text-sm text-white" style={{ fontFamily: "Merriweather, serif" }}>
-                17-Segment Wall Motion Score Index (WMSI)
-              </h3>
-            </div>
-            <div className="p-5">
-              <WallMotionScorer />
             </div>
           </div>
         )}
