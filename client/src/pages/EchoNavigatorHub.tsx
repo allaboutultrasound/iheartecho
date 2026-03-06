@@ -6,10 +6,19 @@ import { useState } from "react";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import PremiumModal from "@/components/PremiumModal";
+import { useAuth } from "@/_core/hooks/useAuth";
 import {
   Stethoscope, Microscope, Zap, Users, Baby, Heart,
   Cpu, FlaskConical, BarChart3, ArrowRight, Scan, Lock
 } from "lucide-react";
+
+// Roles that grant premium access
+const PREMIUM_ROLES = ["premium_user", "diy_user", "diy_admin", "platform_admin"];
+function hasPremiumAccess(user: any): boolean {
+  if (!user) return false;
+  const roles: string[] = (user as any).appRoles ?? [];
+  return roles.some(r => PREMIUM_ROLES.includes(r));
+}
 
 const BRAND = "#189aa1";
 
@@ -93,6 +102,8 @@ const badgeColors: Record<string, string> = {
 };
 
 export default function EchoNavigatorHub() {
+  const { user } = useAuth();
+  const isPremium = hasPremiumAccess(user);
   const [premiumModal, setPremiumModal] = useState<{ name: string; description: string } | null>(null);
   return (
     <Layout>
@@ -149,7 +160,7 @@ export default function EchoNavigatorHub() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {navigators.map(({ path, icon: Icon, title, description, badge, premium }) => {
             const badgeColor = badgeColors[badge] ?? BRAND;
-            if (premium) {
+            if (premium && !isPremium) {
               return (
                 <div
                   key={path}

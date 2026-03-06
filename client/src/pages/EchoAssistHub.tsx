@@ -6,10 +6,19 @@ import { useState } from "react";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import PremiumModal from "@/components/PremiumModal";
+import { useAuth } from "@/_core/hooks/useAuth";
 import {
   Zap, Activity, BarChart3, Wind, Heart, TrendingUp,
   ArrowRight, Calculator, Stethoscope, Scan, Lock
 } from "lucide-react";
+
+// Roles that grant premium access
+const PREMIUM_ROLES = ["premium_user", "diy_user", "diy_admin", "platform_admin"];
+function hasPremiumAccess(user: any): boolean {
+  if (!user) return false;
+  const roles: string[] = (user as any).appRoles ?? [];
+  return roles.some(r => PREMIUM_ROLES.includes(r));
+}
 
 const BRAND = "#189aa1";
 
@@ -106,6 +115,8 @@ const badgeColors: Record<string, string> = {
 };
 
 export default function EchoAssistHub() {
+  const { user } = useAuth();
+  const isPremium = hasPremiumAccess(user);
   const [premiumModal, setPremiumModal] = useState<{ name: string; description: string } | null>(null);
   return (
     <Layout>
@@ -167,7 +178,7 @@ export default function EchoAssistHub() {
                 className="relative bg-white rounded-xl border border-gray-100 p-5 cursor-pointer group h-full hover:shadow-md transition-all hover:border-[#189aa1]/30"
                 style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
               >
-                {premium ? (
+                {premium && !isPremium ? (
                   <div className="absolute top-0 right-0 overflow-hidden rounded-tr-xl rounded-bl-xl">
                     <div
                       className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-white"
@@ -177,7 +188,7 @@ export default function EchoAssistHub() {
                       PREMIUM
                     </div>
                   </div>
-                ) : (
+                ) : !premium ? (
                   <div className="absolute top-0 right-0 overflow-hidden rounded-tr-xl rounded-bl-xl">
                     <div
                       className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-white"
@@ -186,7 +197,7 @@ export default function EchoAssistHub() {
                       FREE
                     </div>
                   </div>
-                )}
+                ) : null}
                 <div className="flex items-start justify-between mb-3">
                   <div
                     className="w-10 h-10 rounded-lg flex items-center justify-center"
@@ -213,13 +224,13 @@ export default function EchoAssistHub() {
                 )}
                 <div
                   className="flex items-center gap-1 text-xs font-semibold group-hover:gap-2 transition-all"
-                  style={{ color: premium ? "#d97706" : BRAND }}
+                  style={{ color: (premium && !isPremium) ? "#d97706" : BRAND }}
                 >
-                  {premium ? <><Lock className="w-3 h-3" /> Premium Access</> : <>Open Engine <ArrowRight className="w-3 h-3" /></>}
+                  {(premium && !isPremium) ? <><Lock className="w-3 h-3" /> Premium Access</> : <>Open Engine <ArrowRight className="w-3 h-3" /></>}
                 </div>
               </div>
             );
-            if (premium) {
+            if (premium && !isPremium) {
               return (
                 <div key={path} className="cursor-pointer" onClick={() => setPremiumModal({ name: title, description })}>
                   {cardInner}

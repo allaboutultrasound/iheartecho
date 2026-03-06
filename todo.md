@@ -563,3 +563,6 @@
 ## Account Card Enhancements
 - [x] Layout sidebar: add 'My Subscription' badges to account card showing active roles (Premium, DIY Accreditation, Lab Admin, Platform Admin)
 - [x] Layout: move Sign In button and account profile (with subscription badges) from sidebar to top header bar; remove sidebar account section
+
+## Premium Guard Fix
+- [x] Fix premium role checks in EchoNavigator and EchoAssist: diy_user, diy_admin, and platform_admin should all pass as premium-equivalent
