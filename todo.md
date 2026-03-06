@@ -367,3 +367,9 @@
 - [x] Add Tips & Tricks section with ASE 2025 acquisition guidance
 - [ ] Update StrainNavigator with ASE 2025 scanning tips, mid-wall strain, imaging parameters, checklists
 - [x] Wire StrainScanCoach into App.tsx routing, ScanCoachHub.tsx (hub pattern — no direct sidebar entry needed)
+
+## StrainNavigator Restructure
+- [x] Move imaging checklist from StrainScanCoach into StrainNavigator
+- [x] Add normal reference values section to StrainNavigator (GLS, RV, LA, mid-wall, 3D, vendor-specific)
+- [x] Remove bull's-eye and strain curves from StrainNavigator (keep in StrainScanCoach only)
+- [x] Remove imaging checklist from StrainScanCoach (moved to StrainNavigator)

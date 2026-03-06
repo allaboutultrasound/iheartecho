@@ -497,9 +497,6 @@ export default function StrainScanCoach() {
   const [vendor, setVendor] = useState("");
   const [frameRate, setFrameRate] = useState("");
 
-  // Acquisition checklist state
-  const [acqChecks, setAcqChecks] = useState<Record<string, boolean>>({});
-
   const lvGlsNum = parseFloat(lvGls);
   const lvInterp = !isNaN(lvGlsNum) ? interpretLvGls(lvGlsNum) : null;
 
@@ -538,28 +535,7 @@ export default function StrainScanCoach() {
     setSegInput("");
   }, []);
 
-  function toggleAcq(key: string) {
-    setAcqChecks(prev => ({ ...prev, [key]: !prev[key] }));
-  }
 
-  const acqItems = [
-    { key: "hr", label: "Heart rate documented and within acceptable range (ideally 60–80 bpm for strain)" },
-    { key: "fr", label: "Frame rate ≥ 40 fps (ideally 60–80 fps) confirmed on all 3 apical views" },
-    { key: "harmonic", label: "Tissue harmonic imaging enabled (reduces noise, improves endocardial definition)" },
-    { key: "depth", label: "Depth minimized to include only the LV — apex to base just fitting the screen" },
-    { key: "focus", label: "Single focus zone placed at the level of the mitral valve" },
-    { key: "gain", label: "Gain optimized — endocardium clearly visible without over-gain artifact" },
-    { key: "foreshorten", label: "True apex confirmed — no foreshortening (apex should appear rounded, not flat)" },
-    { key: "3views", label: "All 3 apical views acquired: A4C, A2C, A3C (APLAX)" },
-    { key: "3beats", label: "Minimum 3 consecutive cardiac cycles stored per view (5 for AF)" },
-    { key: "ecg", label: "ECG gating active and QRS trigger confirmed on all clips" },
-    { key: "breath", label: "Patient instructed to hold breath at end-expiration during acquisition" },
-    { key: "vendor", label: "Vendor and software version documented (affects normal range reference)" },
-    { key: "midwall", label: "Mid-wall strain reviewed separately (ASE 2025: mid-wall GLS ≥ −17% is normal)" },
-    { key: "3d", label: "3D strain considered if 2D image quality is suboptimal or for volumetric accuracy" },
-  ];
-
-  const acqDone = acqItems.filter(i => acqChecks[i.key]).length;
 
   return (
     <Layout>
@@ -593,8 +569,8 @@ export default function StrainScanCoach() {
             </div>
             <div className="hidden md:flex flex-col items-end gap-2">
               <div className="text-right">
-                <div className="text-xs text-white/50 mb-0.5">Acquisition Checklist</div>
-                <div className="text-2xl font-black font-mono text-[#4ad9e0]">{acqDone}/{acqItems.length}</div>
+                <div className="text-xs text-white/50 mb-0.5">Segments Entered</div>
+                <div className="text-2xl font-black font-mono text-[#4ad9e0]">{enteredSegs.length}/17</div>
               </div>
             </div>
           </div>
@@ -772,27 +748,7 @@ export default function StrainScanCoach() {
               </div>
             </SectionCard>
 
-            {/* ── Imaging Parameters Checklist ── */}
-            <SectionCard
-              title="Imaging Parameters Checklist"
-              subtitle={`${acqDone}/${acqItems.length} items confirmed · ASE 2025`}
-              icon={<CheckCircle2 className="w-4 h-4" style={{ color: BRAND }} />}
-            >
-              <div className="mb-3">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-gray-500">Acquisition readiness</span>
-                  <span className="text-xs font-bold" style={{ color: BRAND }}>{Math.round((acqDone / acqItems.length) * 100)}%</span>
-                </div>
-                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <div className="h-full rounded-full transition-all" style={{ width: `${(acqDone / acqItems.length) * 100}%`, background: BRAND }} />
-                </div>
-              </div>
-              <div className="space-y-1">
-                {acqItems.map(item => (
-                  <CheckItem key={item.key} label={item.label} checked={!!acqChecks[item.key]} onToggle={() => toggleAcq(item.key)} />
-                ))}
-              </div>
-            </SectionCard>
+            {/* Imaging checklist moved to Strain Navigator™ */}
 
             {/* ── LV GLS Calculator ── */}
             <SectionCard

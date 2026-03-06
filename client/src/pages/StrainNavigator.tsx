@@ -1,785 +1,23 @@
 /*
   Strain Navigator™ — iHeartEcho
-  LV GLS · RV Free-Wall Strain · LA Reservoir Strain
-  Bull's-eye segmental display · Segmental Strain Curves · Wall Motion Scoring
-  Save to Case · ASE/EACVI 2022 reference values
+  LV GLS · RV Free-Wall Strain · LA Reservoir Strain · RAS
+  Imaging Checklist · Normal Reference Values · ASE 2025
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useState, useCallback } from "react";
 import Layout from "@/components/Layout";
 import {
   Activity, ChevronDown, ChevronUp, Info, AlertCircle,
-  TrendingDown, Zap, BookOpen, ExternalLink, BarChart3,
-  Save, X, Plus, CheckCircle2
+  BookOpen, ExternalLink, Save, X, Plus, CheckCircle2,
+  Camera, Lightbulb, BarChart3
 } from "lucide-react";
-import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  Legend, ResponsiveContainer, ReferenceLine
-} from "recharts";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { toast } from "sonner";
+import { Link } from "wouter";
 
 const BRAND = "#189aa1";
 const BRAND_DARK = "#0e4a50";
-
-// ─── Reference Values (ASE/EACVI 2022) ──────────────────────────────────────
-
-const LV_GLS_NORMAL = -20;
-const LV_GLS_MILDLY_REDUCED = -16;
-const LV_GLS_MODERATELY_REDUCED = -12;
-const RV_STRAIN_NORMAL = -29;
-const LA_RESERVOIR_NORMAL = 38;
-
-// ─── Wall Motion Score Labels ─────────────────────────────────────────────────
-// 1=Normal, 2=Hypokinetic, 3=Akinetic, 4=Dyskinetic, 5=Aneurysmal
-const WMS_LABELS: Record<number, string> = {
-  1: "Normal",
-  2: "Hypokinetic",
-  3: "Akinetic",
-  4: "Dyskinetic",
-  5: "Aneurysmal",
-};
-
-// ─── Segment Definitions ─────────────────────────────────────────────────────
-
-const SEGMENTS_17 = [
-  // Basal (6)
-  { id: 1, label: "Basal Anterior", ring: "basal", pos: 0, wall: "anterior" },
-  { id: 2, label: "Basal Anteroseptal", ring: "basal", pos: 1, wall: "septal" },
-  { id: 3, label: "Basal Inferoseptal", ring: "basal", pos: 2, wall: "septal" },
-  { id: 4, label: "Basal Inferior", ring: "basal", pos: 3, wall: "inferior" },
-  { id: 5, label: "Basal Inferolateral", ring: "basal", pos: 4, wall: "lateral" },
-  { id: 6, label: "Basal Anterolateral", ring: "basal", pos: 5, wall: "lateral" },
-  // Mid (6)
-  { id: 7, label: "Mid Anterior", ring: "mid", pos: 0, wall: "anterior" },
-  { id: 8, label: "Mid Anteroseptal", ring: "mid", pos: 1, wall: "septal" },
-  { id: 9, label: "Mid Inferoseptal", ring: "mid", pos: 2, wall: "septal" },
-  { id: 10, label: "Mid Inferior", ring: "mid", pos: 3, wall: "inferior" },
-  { id: 11, label: "Mid Inferolateral", ring: "mid", pos: 4, wall: "lateral" },
-  { id: 12, label: "Mid Anterolateral", ring: "mid", pos: 5, wall: "lateral" },
-  // Apical (4)
-  { id: 13, label: "Apical Anterior", ring: "apical", pos: 0, wall: "anterior" },
-  { id: 14, label: "Apical Septal", ring: "apical", pos: 1, wall: "septal" },
-  { id: 15, label: "Apical Inferior", ring: "apical", pos: 2, wall: "inferior" },
-  { id: 16, label: "Apical Lateral", ring: "apical", pos: 3, wall: "lateral" },
-  // Apex (1)
-  { id: 17, label: "Apex", ring: "apex", pos: 0, wall: "apex" },
-];
-
-// Wall groups for curve display
-const WALL_GROUPS = [
-  { key: "anterior", label: "Anterior Wall", color: "#dc2626", segIds: [1, 7, 13] },
-  { key: "septal", label: "Septal Wall", color: "#f472b6", segIds: [2, 3, 8, 9, 14] },
-  { key: "inferior", label: "Inferior Wall", color: "#fb923c", segIds: [4, 10, 15] },
-  { key: "lateral", label: "Lateral Wall", color: "#189aa1", segIds: [5, 6, 11, 12, 16] },
-  { key: "apex", label: "Apex", color: "#7c3aed", segIds: [17] },
-];
-
-// ─── Strain Color ─────────────────────────────────────────────────────────────
-
-function strainColor(val: number | null): string {
-  if (val === null) return "#d1d5db"; // gray — not entered
-  if (val <= -20) return "#991b1b";   // dark red — normal (≤ −20%)
-  if (val <= -18) return "#ef4444";   // red — borderline (−18 to −20%)
-  if (val <= -16) return "#f9a8d4";   // pink — mildly reduced (−16 to −18%)
-  if (val <= -12) return "#fbcfe8";   // light pink — moderately reduced (−12 to −16%)
-  if (val <= -8)  return "#93c5fd";   // light blue — mod-severely reduced (−8 to −12%)
-  return "#1d4ed8";                   // dark blue — severely reduced (> −8%)
-}
-
-// ─── Synthetic Strain Waveform Generator ─────────────────────────────────────
-// Generates a time-strain curve based on strain value and wall motion score
-// Points: 0 = ED, 30 = peak systole, 60 = ES, 80 = early diastole, 100 = ED2
-
-function generateStrainCurve(
-  strainVal: number | null,
-  wms: number, // 1-5
-  segId: number
-): { t: number; strain: number }[] {
-  const points = 50;
-  const result: { t: number; strain: number }[] = [];
-
-  // Effective strain value — if null, use a placeholder based on WMS
-  let peak: number;
-  if (strainVal !== null) {
-    peak = strainVal;
-  } else {
-    // Estimate from WMS if no strain entered
-    const wmsDefaults: Record<number, number> = { 1: -20, 2: -12, 3: -2, 4: 3, 5: 5 };
-    peak = wmsDefaults[wms] ?? -20;
-  }
-
-  // Waveform shape modifiers by WMS
-  // Normal: smooth deep negative curve with post-systolic dip
-  // Hypokinetic: shallow negative curve
-  // Akinetic: near-flat with slight negative
-  // Dyskinetic: positive systolic deflection (paradoxical)
-  // Aneurysmal: positive with exaggerated deflection
-
-  for (let i = 0; i <= points; i++) {
-    const t = (i / points) * 100; // 0–100 normalized time
-    let strain = 0;
-
-    if (wms === 1 || wms === 2) {
-      // Normal/hypokinetic: sinusoidal negative curve
-      // Peak at ~35% of cycle (end-systole)
-      const amplitude = Math.abs(peak);
-      if (t <= 35) {
-        strain = -(amplitude * Math.sin((t / 35) * Math.PI * 0.5));
-      } else if (t <= 50) {
-        // Post-systolic slight rebound
-        const psr = wms === 1 ? amplitude * 0.05 : 0;
-        strain = -amplitude + (amplitude + psr) * ((t - 35) / 15);
-      } else {
-        // Diastolic return to 0
-        const midVal = wms === 1 ? amplitude * 0.05 : 0;
-        strain = midVal * (1 - (t - 50) / 50);
-      }
-    } else if (wms === 3) {
-      // Akinetic: near-flat, slight negative drift
-      strain = peak * 0.15 * Math.sin((t / 100) * Math.PI);
-    } else if (wms === 4) {
-      // Dyskinetic: positive systolic deflection (paradoxical motion)
-      const amp = Math.abs(peak) * 0.6;
-      if (t <= 35) {
-        strain = amp * Math.sin((t / 35) * Math.PI * 0.5);
-      } else {
-        strain = amp * (1 - (t - 35) / 65);
-      }
-    } else {
-      // Aneurysmal: exaggerated positive
-      const amp = Math.abs(peak) * 0.8;
-      if (t <= 40) {
-        strain = amp * Math.sin((t / 40) * Math.PI * 0.5);
-      } else {
-        strain = amp * (1 - (t - 40) / 60);
-      }
-    }
-
-    result.push({ t: Math.round(t), strain: parseFloat(strain.toFixed(2)) });
-  }
-
-  return result;
-}
-
-// ─── Bull's Eye SVG ──────────────────────────────────────────────────────────
-
-function BullsEye({ values, onSelect, selected }: {
-  values: Record<number, number | null>;
-  onSelect: (id: number) => void;
-  selected: number | null;
-}) {
-  const cx = 160, cy = 160;
-  const radii = { basal: 120, mid: 80, apical: 45, apex: 18 };
-
-  const segments: React.ReactElement[] = [];
-
-  // Basal ring — 6 segments
-  for (let i = 0; i < 6; i++) {
-    const seg = SEGMENTS_17.find(s => s.ring === "basal" && s.pos === i)!;
-    const startAngle = (i * 60 - 90) * (Math.PI / 180);
-    const endAngle = ((i + 1) * 60 - 90) * (Math.PI / 180);
-    const r1 = radii.mid, r2 = radii.basal;
-    const x1 = cx + r1 * Math.cos(startAngle), y1 = cy + r1 * Math.sin(startAngle);
-    const x2 = cx + r2 * Math.cos(startAngle), y2 = cy + r2 * Math.sin(startAngle);
-    const x3 = cx + r2 * Math.cos(endAngle), y3 = cy + r2 * Math.sin(endAngle);
-    const x4 = cx + r1 * Math.cos(endAngle), y4 = cy + r1 * Math.sin(endAngle);
-    const d = `M ${x1} ${y1} L ${x2} ${y2} A ${r2} ${r2} 0 0 1 ${x3} ${y3} L ${x4} ${y4} A ${r1} ${r1} 0 0 0 ${x1} ${y1} Z`;
-    const val = values[seg.id] ?? null;
-    const midAngle = (startAngle + endAngle) / 2;
-    const labelR = (r1 + r2) / 2;
-    segments.push(
-      <g key={seg.id} onClick={() => onSelect(seg.id)} style={{ cursor: "pointer" }}>
-        <path d={d} fill={strainColor(val)} stroke={selected === seg.id ? "#0e1e2e" : "#fff"} strokeWidth={selected === seg.id ? 2.5 : 1} />
-        {val !== null && (
-          <text x={cx + labelR * Math.cos(midAngle)} y={cy + labelR * Math.sin(midAngle)}
-            textAnchor="middle" dominantBaseline="middle" fontSize="9" fontWeight="bold" fill="#1f2937">
-            {val.toFixed(1)}
-          </text>
-        )}
-      </g>
-    );
-  }
-
-  // Mid ring — 6 segments
-  for (let i = 0; i < 6; i++) {
-    const seg = SEGMENTS_17.find(s => s.ring === "mid" && s.pos === i)!;
-    const startAngle = (i * 60 - 90) * (Math.PI / 180);
-    const endAngle = ((i + 1) * 60 - 90) * (Math.PI / 180);
-    const r1 = radii.apical, r2 = radii.mid;
-    const x1 = cx + r1 * Math.cos(startAngle), y1 = cy + r1 * Math.sin(startAngle);
-    const x2 = cx + r2 * Math.cos(startAngle), y2 = cy + r2 * Math.sin(startAngle);
-    const x3 = cx + r2 * Math.cos(endAngle), y3 = cy + r2 * Math.sin(endAngle);
-    const x4 = cx + r1 * Math.cos(endAngle), y4 = cy + r1 * Math.sin(endAngle);
-    const d = `M ${x1} ${y1} L ${x2} ${y2} A ${r2} ${r2} 0 0 1 ${x3} ${y3} L ${x4} ${y4} A ${r1} ${r1} 0 0 0 ${x1} ${y1} Z`;
-    const val = values[seg.id] ?? null;
-    const midAngle = (startAngle + endAngle) / 2;
-    const labelR = (r1 + r2) / 2;
-    segments.push(
-      <g key={seg.id} onClick={() => onSelect(seg.id)} style={{ cursor: "pointer" }}>
-        <path d={d} fill={strainColor(val)} stroke={selected === seg.id ? "#0e1e2e" : "#fff"} strokeWidth={selected === seg.id ? 2.5 : 1} />
-        {val !== null && (
-          <text x={cx + labelR * Math.cos(midAngle)} y={cy + labelR * Math.sin(midAngle)}
-            textAnchor="middle" dominantBaseline="middle" fontSize="9" fontWeight="bold" fill="#1f2937">
-            {val.toFixed(1)}
-          </text>
-        )}
-      </g>
-    );
-  }
-
-  // Apical ring — 4 segments
-  for (let i = 0; i < 4; i++) {
-    const seg = SEGMENTS_17.find(s => s.ring === "apical" && s.pos === i)!;
-    const startAngle = (i * 90 - 90) * (Math.PI / 180);
-    const endAngle = ((i + 1) * 90 - 90) * (Math.PI / 180);
-    const r1 = radii.apex, r2 = radii.apical;
-    const x1 = cx + r1 * Math.cos(startAngle), y1 = cy + r1 * Math.sin(startAngle);
-    const x2 = cx + r2 * Math.cos(startAngle), y2 = cy + r2 * Math.sin(startAngle);
-    const x3 = cx + r2 * Math.cos(endAngle), y3 = cy + r2 * Math.sin(endAngle);
-    const x4 = cx + r1 * Math.cos(endAngle), y4 = cy + r1 * Math.sin(endAngle);
-    const d = `M ${x1} ${y1} L ${x2} ${y2} A ${r2} ${r2} 0 0 1 ${x3} ${y3} L ${x4} ${y4} A ${r1} ${r1} 0 0 0 ${x1} ${y1} Z`;
-    const val = values[seg.id] ?? null;
-    const midAngle = (startAngle + endAngle) / 2;
-    const labelR = (r1 + r2) / 2;
-    segments.push(
-      <g key={seg.id} onClick={() => onSelect(seg.id)} style={{ cursor: "pointer" }}>
-        <path d={d} fill={strainColor(val)} stroke={selected === seg.id ? "#0e1e2e" : "#fff"} strokeWidth={selected === seg.id ? 2.5 : 1} />
-        {val !== null && (
-          <text x={cx + labelR * Math.cos(midAngle)} y={cy + labelR * Math.sin(midAngle)}
-            textAnchor="middle" dominantBaseline="middle" fontSize="9" fontWeight="bold" fill="#1f2937">
-            {val.toFixed(1)}
-          </text>
-        )}
-      </g>
-    );
-  }
-
-  // Apex segment
-  const apexSeg = SEGMENTS_17.find(s => s.ring === "apex")!;
-  const apexVal = values[apexSeg.id] ?? null;
-  segments.push(
-    <g key={apexSeg.id} onClick={() => onSelect(apexSeg.id)} style={{ cursor: "pointer" }}>
-      <circle cx={cx} cy={cy} r={radii.apex} fill={strainColor(apexVal)}
-        stroke={selected === apexSeg.id ? "#0e1e2e" : "#fff"} strokeWidth={selected === apexSeg.id ? 2.5 : 1} />
-      {apexVal !== null && (
-        <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle" fontSize="9" fontWeight="bold" fill="#1f2937">
-          {apexVal.toFixed(1)}
-        </text>
-      )}
-    </g>
-  );
-
-  return (
-    <svg viewBox="0 0 320 320" className="w-full max-w-xs mx-auto" style={{ userSelect: "none" }}>
-      {segments}
-      <text x="160" y="22" textAnchor="middle" fontSize="10" fill="#6b7280" fontWeight="600">Anterior</text>
-      <text x="160" y="308" textAnchor="middle" fontSize="10" fill="#6b7280" fontWeight="600">Inferior</text>
-      <text x="18" y="165" textAnchor="middle" fontSize="10" fill="#6b7280" fontWeight="600" transform="rotate(-90,18,165)">Lateral</text>
-      <text x="302" y="165" textAnchor="middle" fontSize="10" fill="#6b7280" fontWeight="600" transform="rotate(90,302,165)">Septal</text>
-    </svg>
-  );
-}
-
-// ─── Segmental Strain Curves Component ───────────────────────────────────────
-
-function SegmentalStrainCurves({
-  segValues,
-  wallMotionScores,
-}: {
-  segValues: Record<number, number | null>;
-  wallMotionScores: Record<number, number>;
-}) {
-  const [activeWalls, setActiveWalls] = useState<Set<string>>(
-    new Set(WALL_GROUPS.map(w => w.key))
-  );
-
-  function toggleWall(key: string) {
-    setActiveWalls(prev => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-  }
-
-  // Build chart data: one point per time step (0–100), one line per wall group
-  const chartData = useMemo(() => {
-    const timePoints = 51; // 0, 2, 4, ... 100
-    const data: Record<string, number | string>[] = [];
-
-    for (let i = 0; i < timePoints; i++) {
-      const t = i * 2;
-      const row: Record<string, number | string> = { t };
-
-      WALL_GROUPS.forEach(wall => {
-        if (!activeWalls.has(wall.key)) return;
-        // Average the curves of all segments in this wall group
-        const curves = wall.segIds.map(segId => {
-          const wms = wallMotionScores[segId] ?? 1;
-          const val = segValues[segId] ?? null;
-          return generateStrainCurve(val, wms, segId);
-        });
-
-        // Average at this time point
-        const avgAtT = curves.reduce((sum, curve) => {
-          const pt = curve.find(p => p.t === t);
-          return sum + (pt?.strain ?? 0);
-        }, 0) / curves.length;
-
-        row[wall.key] = parseFloat(avgAtT.toFixed(2));
-      });
-
-      data.push(row);
-    }
-    return data;
-  }, [segValues, wallMotionScores, activeWalls]);
-
-  // WMSI calculation
-  const scoredSegs = SEGMENTS_17.filter(s => wallMotionScores[s.id] !== undefined);
-  const wmsi = scoredSegs.length > 0
-    ? (scoredSegs.reduce((sum, s) => sum + (wallMotionScores[s.id] ?? 1), 0) / scoredSegs.length).toFixed(2)
-    : null;
-
-  const wmsiColor = wmsi === null ? BRAND
-    : parseFloat(wmsi) <= 1.0 ? "#15803d"
-    : parseFloat(wmsi) <= 1.5 ? "#ca8a04"
-    : "#dc2626";
-
-  return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h3 className="font-bold text-sm text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-            Segmental Strain Curves
-          </h3>
-          <p className="text-xs text-gray-500 mt-0.5">Time-strain waveforms by wall · Adjusted by wall motion score</p>
-        </div>
-        {wmsi !== null && (
-          <div className="text-center px-3 py-1.5 rounded-lg" style={{ background: wmsiColor + "15", border: `1px solid ${wmsiColor}30` }}>
-            <div className="text-xs text-gray-500">WMSI</div>
-            <div className="text-lg font-black font-mono" style={{ color: wmsiColor }}>{wmsi}</div>
-          </div>
-        )}
-      </div>
-
-      {/* Wall toggle buttons */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        {WALL_GROUPS.map(wall => (
-          <button
-            key={wall.key}
-            onClick={() => toggleWall(wall.key)}
-            className="text-xs font-semibold px-2.5 py-1 rounded-full border transition-all"
-            style={{
-              background: activeWalls.has(wall.key) ? wall.color + "20" : "#f9fafb",
-              borderColor: activeWalls.has(wall.key) ? wall.color : "#e5e7eb",
-              color: activeWalls.has(wall.key) ? wall.color : "#9ca3af",
-            }}
-          >
-            {wall.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Chart */}
-      <div style={{ height: 220 }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis
-              dataKey="t"
-              tickFormatter={v => v === 0 ? "ED" : v === 35 ? "ES" : v === 100 ? "ED" : ""}
-              ticks={[0, 35, 70, 100]}
-              tick={{ fontSize: 9, fill: "#9ca3af" }}
-            />
-            <YAxis
-              domain={[-30, 10]}
-              tick={{ fontSize: 9, fill: "#9ca3af" }}
-              tickFormatter={v => `${v}%`}
-            />
-            <Tooltip
-              formatter={(val: number, name: string) => [`${val.toFixed(1)}%`, WALL_GROUPS.find(w => w.key === name)?.label ?? name]}
-              labelFormatter={t => `Time: ${t}%`}
-              contentStyle={{ fontSize: 11, borderRadius: 8, border: `1px solid ${BRAND}30` }}
-            />
-            <ReferenceLine y={0} stroke="#e5e7eb" strokeWidth={1} />
-            <ReferenceLine y={-20} stroke="#dc262640" strokeDasharray="4 2" strokeWidth={1} label={{ value: "Normal", position: "right", fontSize: 8, fill: "#dc2626" }} />
-            {WALL_GROUPS.filter(w => activeWalls.has(w.key)).map(wall => (
-              <Line
-                key={wall.key}
-                type="monotone"
-                dataKey={wall.key}
-                stroke={wall.color}
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 3 }}
-              />
-            ))}
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Wall motion score inputs per segment */}
-      <details className="mt-4">
-        <summary className="text-xs font-semibold cursor-pointer flex items-center gap-1" style={{ color: BRAND }}>
-          <BarChart3 className="w-3.5 h-3.5" /> Wall Motion Scoring (click to expand)
-        </summary>
-        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {SEGMENTS_17.map(seg => {
-            const wms = wallMotionScores[seg.id] ?? 1;
-            const wallGroup = WALL_GROUPS.find(w => w.segIds.includes(seg.id));
-            return (
-              <div key={seg.id} className="flex items-center gap-2 p-2 rounded-lg" style={{ background: "#f9fafb" }}>
-                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: wallGroup?.color ?? BRAND }} />
-                <span className="text-xs text-gray-600 flex-1 min-w-0 truncate">{seg.label}</span>
-                <select
-                  value={wms}
-                  onChange={e => {
-                    // This is handled by parent — we use a callback
-                    const event = new CustomEvent("wms-change", { detail: { segId: seg.id, score: parseInt(e.target.value) } });
-                    document.dispatchEvent(event);
-                  }}
-                  className="text-xs border rounded px-1 py-0.5 flex-shrink-0"
-                  style={{ borderColor: BRAND + "40", color: wms > 1 ? "#dc2626" : "#15803d" }}
-                >
-                  {Object.entries(WMS_LABELS).map(([score, label]) => (
-                    <option key={score} value={score}>{score} — {label}</option>
-                  ))}
-                </select>
-              </div>
-            );
-          })}
-        </div>
-        {wmsi !== null && (
-          <div className="mt-3 p-3 rounded-lg flex items-center gap-3" style={{ background: wmsiColor + "10", border: `1px solid ${wmsiColor}30` }}>
-            <div>
-              <div className="text-xs text-gray-500">Wall Motion Score Index (WMSI)</div>
-              <div className="text-xl font-black font-mono" style={{ color: wmsiColor }}>{wmsi}</div>
-            </div>
-            <div className="text-xs text-gray-600 leading-relaxed">
-              {parseFloat(wmsi) <= 1.0 ? "Normal wall motion — no regional abnormalities scored" :
-               parseFloat(wmsi) <= 1.5 ? "Mild-moderate wall motion abnormality — correlate with ischemia workup" :
-               "Significant wall motion abnormality — consider ischemia, cardiomyopathy, or acute MI"}
-            </div>
-          </div>
-        )}
-      </details>
-    </div>
-  );
-}
-
-// ─── Save to Case Modal ───────────────────────────────────────────────────────
-
-function SaveToCaseModal({
-  onClose,
-  segValues,
-  wallMotionScores,
-  lvGls,
-  rvStrain,
-  laReservoir,
-  wmsi,
-  vendor,
-  frameRate,
-}: {
-  onClose: () => void;
-  segValues: Record<number, number | null>;
-  wallMotionScores: Record<number, number>;
-  lvGls: string;
-  rvStrain: string;
-  laReservoir: string;
-  wmsi: string | null;
-  vendor: string;
-  frameRate: string;
-}) {
-  const { isAuthenticated } = useAuth();
-  const [mode, setMode] = useState<"pick" | "new">("pick");
-  const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
-  const [newCaseTitle, setNewCaseTitle] = useState("");
-  const [notes, setNotes] = useState("");
-  const [saved, setSaved] = useState(false);
-
-  const { data: cases, isLoading: casesLoading } = trpc.strain.listMyCases.useQuery(undefined, {
-    enabled: isAuthenticated,
-  });
-
-  const saveSnapshot = trpc.strain.saveSnapshot.useMutation({
-    onSuccess: () => {
-      setSaved(true);
-      toast.success("Saved to Case — Strain snapshot attached successfully.");
-      setTimeout(onClose, 1500);
-    },
-    onError: (err: { message: string }) => {
-      toast.error(`Save failed: ${err.message}`);
-    },
-  });
-
-  const createCaseAndSave = trpc.strain.createCaseAndSaveSnapshot.useMutation({
-    onSuccess: () => {
-      setSaved(true);
-      toast.success("Case Created & Saved — New case created with strain snapshot.");
-      setTimeout(onClose, 1500);
-    },
-    onError: (err: { message: string }) => {
-      toast.error(`Save failed: ${err.message}`);
-    },
-  });
-
-  function handleSave() {
-    const snapshotData = {
-      segmentValues: JSON.stringify(segValues),
-      wallMotionScores: JSON.stringify(wallMotionScores),
-      lvGls: lvGls || null,
-      rvStrain: rvStrain || null,
-      laStrain: laReservoir || null,
-      wmsi: wmsi || null,
-      vendor: vendor || null,
-      frameRate: frameRate ? parseInt(frameRate) : null,
-      notes: notes || null,
-    };
-
-    if (mode === "new") {
-      if (!newCaseTitle.trim()) return;
-      createCaseAndSave.mutate({ caseTitle: newCaseTitle.trim(), ...snapshotData });
-    } else {
-      saveSnapshot.mutate({ caseId: selectedCaseId ?? undefined, ...snapshotData });
-    }
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-        <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Save to Case</h3>
-            <button onClick={onClose}><X className="w-4 h-4 text-gray-400" /></button>
-          </div>
-          <p className="text-sm text-gray-600 mb-4">You need to be signed in to save strain snapshots to a case.</p>
-          <button
-            onClick={onClose}
-            className="w-full py-2 rounded-lg text-sm font-semibold text-white"
-            style={{ background: BRAND }}
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: BRAND + "20" }}>
-              <Save className="w-4 h-4" style={{ color: BRAND }} />
-            </div>
-            <h3 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Save to Case</h3>
-          </div>
-          <button onClick={onClose}><X className="w-4 h-4 text-gray-400 hover:text-gray-600" /></button>
-        </div>
-
-        {saved ? (
-          <div className="flex flex-col items-center gap-3 py-6">
-            <CheckCircle2 className="w-12 h-12" style={{ color: "#15803d" }} />
-            <p className="font-semibold text-gray-700">Snapshot saved successfully!</p>
-          </div>
-        ) : (
-          <>
-            {/* Snapshot preview */}
-            <div className="rounded-lg p-3 mb-4" style={{ background: "#f0fbfc", border: `1px solid ${BRAND}30` }}>
-              <div className="text-xs font-semibold mb-2" style={{ color: BRAND }}>Snapshot Preview</div>
-              <div className="grid grid-cols-3 gap-2 text-xs">
-                <div><span className="text-gray-500">LV GLS:</span> <span className="font-mono font-bold text-gray-700">{lvGls || "—"}%</span></div>
-                <div><span className="text-gray-500">RV Strain:</span> <span className="font-mono font-bold text-gray-700">{rvStrain || "—"}%</span></div>
-                <div><span className="text-gray-500">LA Strain:</span> <span className="font-mono font-bold text-gray-700">{laReservoir || "—"}%</span></div>
-                <div><span className="text-gray-500">WMSI:</span> <span className="font-mono font-bold text-gray-700">{wmsi || "—"}</span></div>
-                <div><span className="text-gray-500">Vendor:</span> <span className="font-bold text-gray-700">{vendor || "—"}</span></div>
-                <div><span className="text-gray-500">Segments:</span> <span className="font-bold text-gray-700">{Object.values(segValues).filter(v => v !== null).length}/17</span></div>
-              </div>
-            </div>
-
-            {/* Mode toggle */}
-            <div className="flex rounded-lg overflow-hidden border mb-4" style={{ borderColor: BRAND + "40" }}>
-              <button
-                onClick={() => setMode("pick")}
-                className="flex-1 py-2 text-xs font-semibold transition-colors"
-                style={{
-                  background: mode === "pick" ? BRAND : "white",
-                  color: mode === "pick" ? "white" : BRAND,
-                }}
-              >
-                Attach to Existing Case
-              </button>
-              <button
-                onClick={() => setMode("new")}
-                className="flex-1 py-2 text-xs font-semibold transition-colors"
-                style={{
-                  background: mode === "new" ? BRAND : "white",
-                  color: mode === "new" ? "white" : BRAND,
-                }}
-              >
-                <Plus className="w-3 h-3 inline mr-1" />
-                Create New Case
-              </button>
-            </div>
-
-            {mode === "pick" && (
-              <div className="mb-4">
-                {casesLoading ? (
-                  <div className="text-xs text-gray-400 py-2">Loading cases...</div>
-                ) : cases && cases.length > 0 ? (
-                  <div className="space-y-1.5 max-h-40 overflow-y-auto">
-                    {cases.map((c: { id: number; title: string; createdAt: Date }) => (
-                      <button
-                        key={c.id}
-                        onClick={() => setSelectedCaseId(c.id)}
-                        className="w-full text-left p-2.5 rounded-lg border text-xs transition-all"
-                        style={{
-                          borderColor: selectedCaseId === c.id ? BRAND : "#e5e7eb",
-                          background: selectedCaseId === c.id ? BRAND + "10" : "white",
-                          color: "#374151",
-                        }}
-                      >
-                        <div className="font-semibold">{c.title}</div>
-                        <div className="text-gray-400 mt-0.5">{new Date(c.createdAt).toLocaleDateString()}</div>
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-xs text-gray-400 py-2 text-center">
-                    No cases yet. Create a new case to get started.
-                  </div>
-                )}
-              </div>
-            )}
-
-            {mode === "new" && (
-              <div className="mb-4">
-                <label className="text-xs font-semibold text-gray-600 block mb-1">Case Title *</label>
-                <input
-                  type="text"
-                  value={newCaseTitle}
-                  onChange={e => setNewCaseTitle(e.target.value)}
-                  placeholder="e.g. 65M with DCM, EF 30%"
-                  className="w-full border rounded-lg px-3 py-2 text-sm text-gray-700 outline-none"
-                  style={{ borderColor: BRAND + "60" }}
-                />
-              </div>
-            )}
-
-            {/* Notes */}
-            <div className="mb-5">
-              <label className="text-xs font-semibold text-gray-600 block mb-1">Clinical Notes (optional)</label>
-              <textarea
-                value={notes}
-                onChange={e => setNotes(e.target.value)}
-                placeholder="e.g. Ischemic pattern, LAD territory, pre-chemo baseline..."
-                rows={2}
-                className="w-full border rounded-lg px-3 py-2 text-sm text-gray-700 outline-none resize-none"
-                style={{ borderColor: BRAND + "40" }}
-              />
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-3">
-              <button
-                onClick={onClose}
-                className="flex-1 py-2.5 rounded-lg text-sm font-semibold border transition-colors"
-                style={{ borderColor: BRAND + "40", color: BRAND }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={saveSnapshot.isPending || createCaseAndSave.isPending || (mode === "new" && !newCaseTitle.trim())}
-                className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white transition-all disabled:opacity-50"
-                style={{ background: BRAND }}
-              >
-                {saveSnapshot.isPending || createCaseAndSave.isPending ? "Saving..." : "Save Snapshot"}
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ─── Numeric Input ────────────────────────────────────────────────────────────
-
-function NumInput({ label, value, onChange, unit, placeholder, hint }: {
-  label: string; value: string; onChange: (v: string) => void;
-  unit?: string; placeholder?: string; hint?: string;
-}) {
-  return (
-    <div className="flex flex-col gap-1">
-      <label className="text-xs font-semibold text-gray-600">{label}</label>
-      <div className="flex items-center gap-1 bg-white border rounded-lg px-3 py-2" style={{ borderColor: "#189aa1" + "40" }}>
-        <input
-          type="number" step="0.1"
-          value={value} onChange={e => onChange(e.target.value)}
-          placeholder={placeholder ?? ""}
-          className="flex-1 bg-transparent text-sm font-mono text-gray-800 outline-none min-w-0"
-        />
-        {unit && <span className="text-xs text-gray-400 flex-shrink-0">{unit}</span>}
-      </div>
-      {hint && <span className="text-xs text-gray-400">{hint}</span>}
-    </div>
-  );
-}
-
-// ─── Section Card ─────────────────────────────────────────────────────────────
-
-function SectionCard({ title, subtitle, children, defaultOpen = true }: {
-  title: string; subtitle?: string; children: React.ReactNode; defaultOpen?: boolean;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="w-full px-5 py-3 flex items-center justify-between text-left"
-        style={{ background: `linear-gradient(90deg, ${BRAND_DARK}, ${BRAND})` }}
-      >
-        <div>
-          <h3 className="font-bold text-sm text-white" style={{ fontFamily: "Merriweather, serif" }}>{title}</h3>
-          {subtitle && <p className="text-xs text-white/70 mt-0.5">{subtitle}</p>}
-        </div>
-        {open ? <ChevronUp className="w-4 h-4 text-white/70 flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-white/70 flex-shrink-0" />}
-      </button>
-      {open && <div className="p-5">{children}</div>}
-    </div>
-  );
-}
-
-// ─── Result Box ───────────────────────────────────────────────────────────────
-
-function ResultBox({ label, value, normal, unit, interpretation }: {
-  label: string; value: string; normal: string; unit: string; interpretation: string;
-}) {
-  const numVal = parseFloat(value);
-  const isGood = !isNaN(numVal);
-  return (
-    <div className="rounded-lg p-4 border" style={{ background: "#f0fbfc", borderColor: "#189aa1" + "30" }}>
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#189aa1" }}>{label}</span>
-        <span className="text-xs text-gray-400">nl: {normal} {unit}</span>
-      </div>
-      {isGood ? (
-        <>
-          <div className="text-2xl font-black font-mono" style={{ color: BRAND }}>{value} {unit}</div>
-          <div className="text-xs text-gray-600 mt-1">{interpretation}</div>
-        </>
-      ) : (
-        <div className="text-sm text-gray-400 italic">Enter value above</div>
-      )}
-    </div>
-  );
-}
 
 // ─── LV GLS Interpretation ────────────────────────────────────────────────────
 
@@ -802,7 +40,7 @@ function interpretLvGls(val: number): { severity: string; color: string; suggest
     severity: "Moderately Reduced LV GLS",
     color: "#ea580c",
     suggests: `EchoAssist™ Suggests: LV Global Longitudinal Strain is moderately reduced (${val.toFixed(1)}%). Values between −12% and −16% indicate significant longitudinal dysfunction. This range is commonly seen in dilated cardiomyopathy, ischemic disease, and advanced Stage B/C HFpEF.`,
-    note: `EchoAssist™ Note: Segmental strain analysis (bull's-eye) should be reviewed for regional patterns. Ischemic patterns show basal-dominant reduction; non-ischemic patterns tend to be diffuse or apical-sparing.`,
+    note: `EchoAssist™ Note: Segmental strain analysis (bull's-eye) should be reviewed for regional patterns. Ischemic patterns show basal-dominant reduction; non-ischemic patterns tend to be diffuse or apical-sparing. Use Strain ScanCoach™ for interactive segmental analysis.`,
     tip: `EchoAssist™ Tip: Apical-sparing strain pattern (normal apical segments with reduced basal/mid segments) is a hallmark of cardiac amyloidosis and should prompt further evaluation with T1 mapping or nuclear imaging.`,
   };
   return {
@@ -826,19 +64,240 @@ function interpretLaStrain(val: number): { severity: string; color: string; sugg
   return { severity: "Significantly Reduced LA Strain", color: "#dc2626", suggests: `EchoAssist™ Suggests: LA reservoir strain is significantly reduced (${val.toFixed(1)}%). Values < 25% indicate significant LA dysfunction, associated with Grade III diastolic dysfunction, elevated LA pressure, and high risk of AF and HF hospitalization.` };
 }
 
+// ─── Numeric Input ────────────────────────────────────────────────────────────
+
+function NumInput({ label, value, onChange, unit, placeholder, hint }: {
+  label: string; value: string; onChange: (v: string) => void;
+  unit?: string; placeholder?: string; hint?: string;
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="text-xs font-semibold text-gray-600">{label}</label>
+      <div className="flex items-center gap-1 bg-white border rounded-lg px-3 py-2" style={{ borderColor: BRAND + "40" }}>
+        <input
+          type="number" step="0.1"
+          value={value} onChange={e => onChange(e.target.value)}
+          placeholder={placeholder ?? ""}
+          className="flex-1 bg-transparent text-sm font-mono text-gray-800 outline-none min-w-0"
+        />
+        {unit && <span className="text-xs text-gray-400 flex-shrink-0">{unit}</span>}
+      </div>
+      {hint && <span className="text-xs text-gray-400">{hint}</span>}
+    </div>
+  );
+}
+
+// ─── Section Card ─────────────────────────────────────────────────────────────
+
+function SectionCard({ title, subtitle, children, defaultOpen = true, icon }: {
+  title: string; subtitle?: string; children: React.ReactNode; defaultOpen?: boolean; icon?: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full px-5 py-3 flex items-center justify-between text-left"
+        style={{ background: `linear-gradient(90deg, ${BRAND_DARK}, ${BRAND})` }}
+      >
+        <div className="flex items-center gap-2">
+          {icon && <span className="text-white/80">{icon}</span>}
+          <div>
+            <h3 className="font-bold text-sm text-white" style={{ fontFamily: "Merriweather, serif" }}>{title}</h3>
+            {subtitle && <p className="text-xs text-white/70 mt-0.5">{subtitle}</p>}
+          </div>
+        </div>
+        {open ? <ChevronUp className="w-4 h-4 text-white/70 flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-white/70 flex-shrink-0" />}
+      </button>
+      {open && <div className="p-5">{children}</div>}
+    </div>
+  );
+}
+
+// ─── Result Box ───────────────────────────────────────────────────────────────
+
+function ResultBox({ label, value, normal, unit, interpretation }: {
+  label: string; value: string; normal: string; unit: string; interpretation: string;
+}) {
+  const numVal = parseFloat(value);
+  const isGood = !isNaN(numVal);
+  return (
+    <div className="rounded-lg p-4 border" style={{ background: "#f0fbfc", borderColor: BRAND + "30" }}>
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: BRAND }}>{label}</span>
+        <span className="text-xs text-gray-400">nl: {normal} {unit}</span>
+      </div>
+      {isGood ? (
+        <>
+          <div className="text-2xl font-black font-mono" style={{ color: BRAND }}>{value} {unit}</div>
+          <div className="text-xs text-gray-600 mt-1">{interpretation}</div>
+        </>
+      ) : (
+        <div className="text-sm text-gray-400 italic">Enter value above</div>
+      )}
+    </div>
+  );
+}
+
+// ─── Checklist Item ───────────────────────────────────────────────────────────
+
+function CheckItem({ label, checked, onToggle }: { label: string; checked: boolean; onToggle: () => void }) {
+  return (
+    <button
+      onClick={onToggle}
+      className="w-full flex items-start gap-3 p-2.5 rounded-lg text-left transition-colors hover:bg-gray-50"
+    >
+      <div className={`w-4 h-4 rounded flex-shrink-0 mt-0.5 flex items-center justify-center border-2 transition-all ${checked ? "border-teal-600 bg-teal-600" : "border-gray-300"}`}>
+        {checked && <CheckCircle2 className="w-3 h-3 text-white" />}
+      </div>
+      <span className={`text-xs leading-relaxed ${checked ? "line-through text-gray-400" : "text-gray-700"}`}>{label}</span>
+    </button>
+  );
+}
+
+// ─── Save to Case Modal ───────────────────────────────────────────────────────
+
+function SaveToCaseModal({ onClose, lvGls, rvStrain, laReservoir, vendor, frameRate }: {
+  onClose: () => void;
+  lvGls: string; rvStrain: string; laReservoir: string; vendor: string; frameRate: string;
+}) {
+  const { isAuthenticated } = useAuth();
+  const [mode, setMode] = useState<"pick" | "new">("pick");
+  const [selectedCaseId, setSelectedCaseId] = useState<number | null>(null);
+  const [newCaseTitle, setNewCaseTitle] = useState("");
+  const [notes, setNotes] = useState("");
+  const [saved, setSaved] = useState(false);
+
+  const { data: cases, isLoading: casesLoading } = trpc.strain.listMyCases.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
+
+  const saveSnapshot = trpc.strain.saveSnapshot.useMutation({
+    onSuccess: () => { setSaved(true); toast.success("Saved to Case — Strain snapshot attached successfully."); setTimeout(onClose, 1500); },
+    onError: (err: { message: string }) => { toast.error(`Save failed: ${err.message}`); },
+  });
+
+  const createCaseAndSave = trpc.strain.createCaseAndSaveSnapshot.useMutation({
+    onSuccess: () => { setSaved(true); toast.success("Case Created & Saved — New case created with strain snapshot."); setTimeout(onClose, 1500); },
+    onError: (err: { message: string }) => { toast.error(`Save failed: ${err.message}`); },
+  });
+
+  function handleSave() {
+    const snapshotData = {
+      segmentValues: JSON.stringify({}),
+      wallMotionScores: JSON.stringify({}),
+      lvGls: lvGls || null,
+      rvStrain: rvStrain || null,
+      laStrain: laReservoir || null,
+      wmsi: null,
+      vendor: vendor || null,
+      frameRate: frameRate ? parseInt(frameRate) : null,
+      notes: notes || null,
+    };
+    if (mode === "new") {
+      if (!newCaseTitle.trim()) return;
+      createCaseAndSave.mutate({ caseTitle: newCaseTitle.trim(), ...snapshotData });
+    } else {
+      saveSnapshot.mutate({ caseId: selectedCaseId ?? undefined, ...snapshotData });
+    }
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Save to Case</h3>
+            <button onClick={onClose}><X className="w-4 h-4 text-gray-400" /></button>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">You need to be signed in to save strain snapshots to a case.</p>
+          <button onClick={onClose} className="w-full py-2 rounded-lg text-sm font-semibold text-white" style={{ background: BRAND }}>Close</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: BRAND + "20" }}>
+              <Save className="w-4 h-4" style={{ color: BRAND }} />
+            </div>
+            <h3 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Save to Case</h3>
+          </div>
+          <button onClick={onClose}><X className="w-4 h-4 text-gray-400 hover:text-gray-600" /></button>
+        </div>
+        {saved ? (
+          <div className="flex flex-col items-center gap-3 py-6">
+            <CheckCircle2 className="w-12 h-12" style={{ color: "#15803d" }} />
+            <p className="font-semibold text-gray-700">Snapshot saved successfully!</p>
+          </div>
+        ) : (
+          <>
+            <div className="rounded-lg p-3 mb-4" style={{ background: "#f0fbfc", border: `1px solid ${BRAND}30` }}>
+              <div className="text-xs font-semibold mb-2" style={{ color: BRAND }}>Snapshot Preview</div>
+              <div className="grid grid-cols-3 gap-2 text-xs">
+                <div><span className="text-gray-500">LV GLS:</span> <span className="font-mono font-bold text-gray-700">{lvGls || "—"}%</span></div>
+                <div><span className="text-gray-500">RV Strain:</span> <span className="font-mono font-bold text-gray-700">{rvStrain || "—"}%</span></div>
+                <div><span className="text-gray-500">LA Strain:</span> <span className="font-mono font-bold text-gray-700">{laReservoir || "—"}%</span></div>
+                <div><span className="text-gray-500">Vendor:</span> <span className="font-bold text-gray-700">{vendor || "—"}</span></div>
+                <div><span className="text-gray-500">Frame Rate:</span> <span className="font-bold text-gray-700">{frameRate || "—"} fps</span></div>
+              </div>
+            </div>
+            <div className="flex rounded-lg overflow-hidden border mb-4" style={{ borderColor: BRAND + "40" }}>
+              <button onClick={() => setMode("pick")} className="flex-1 py-2 text-xs font-semibold transition-colors" style={{ background: mode === "pick" ? BRAND : "white", color: mode === "pick" ? "white" : BRAND }}>Attach to Existing Case</button>
+              <button onClick={() => setMode("new")} className="flex-1 py-2 text-xs font-semibold transition-colors" style={{ background: mode === "new" ? BRAND : "white", color: mode === "new" ? "white" : BRAND }}><Plus className="w-3 h-3 inline mr-1" />Create New Case</button>
+            </div>
+            {mode === "pick" && (
+              <div className="mb-4">
+                {casesLoading ? (
+                  <div className="text-xs text-gray-400 py-2">Loading cases...</div>
+                ) : cases && cases.length > 0 ? (
+                  <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                    {cases.map((c: { id: number; title: string; createdAt: Date }) => (
+                      <button key={c.id} onClick={() => setSelectedCaseId(c.id)} className="w-full text-left p-2.5 rounded-lg border text-xs transition-all" style={{ borderColor: selectedCaseId === c.id ? BRAND : "#e5e7eb", background: selectedCaseId === c.id ? BRAND + "10" : "white", color: "#374151" }}>
+                        <div className="font-semibold">{c.title}</div>
+                        <div className="text-gray-400 mt-0.5">{new Date(c.createdAt).toLocaleDateString()}</div>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-xs text-gray-400 py-2 text-center">No cases yet. Create a new case to get started.</div>
+                )}
+              </div>
+            )}
+            {mode === "new" && (
+              <div className="mb-4">
+                <label className="text-xs font-semibold text-gray-600 block mb-1">Case Title *</label>
+                <input type="text" value={newCaseTitle} onChange={e => setNewCaseTitle(e.target.value)} placeholder="e.g. 65M with DCM, EF 30%" className="w-full border rounded-lg px-3 py-2 text-sm text-gray-700 outline-none" style={{ borderColor: BRAND + "60" }} />
+              </div>
+            )}
+            <div className="mb-5">
+              <label className="text-xs font-semibold text-gray-600 block mb-1">Clinical Notes (optional)</label>
+              <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="e.g. Ischemic pattern, LAD territory, pre-chemo baseline..." rows={2} className="w-full border rounded-lg px-3 py-2 text-sm text-gray-700 outline-none resize-none" style={{ borderColor: BRAND + "40" }} />
+            </div>
+            <div className="flex gap-3">
+              <button onClick={onClose} className="flex-1 py-2.5 rounded-lg text-sm font-semibold border transition-colors" style={{ borderColor: BRAND + "40", color: BRAND }}>Cancel</button>
+              <button onClick={handleSave} disabled={saveSnapshot.isPending || createCaseAndSave.isPending || (mode === "new" && !newCaseTitle.trim())} className="flex-1 py-2.5 rounded-lg text-sm font-semibold text-white transition-all disabled:opacity-50" style={{ background: BRAND }}>
+                {saveSnapshot.isPending || createCaseAndSave.isPending ? "Saving..." : "Save Snapshot"}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 
 export default function StrainNavigator() {
-  // LV GLS — global and segmental
+  // LV GLS
   const [lvGls, setLvGls] = useState("");
-  const [segValues, setSegValues] = useState<Record<number, number | null>>(
-    () => Object.fromEntries(SEGMENTS_17.map(s => [s.id, -22])) as Record<number, number | null>
-  );
-  const [selectedSeg, setSelectedSeg] = useState<number | null>(null);
-  const [segInput, setSegInput] = useState("");
-
-  // Wall motion scores per segment (default 1 = normal)
-  const [wallMotionScores, setWallMotionScores] = useState<Record<number, number>>({});
+  const [vendor, setVendor] = useState("");
+  const [frameRate, setFrameRate] = useState("");
 
   // RV Strain
   const [rvStrain, setRvStrain] = useState("");
@@ -848,14 +307,16 @@ export default function StrainNavigator() {
   const [laConduit, setLaConduit] = useState("");
   const [laBooster, setLaBooster] = useState("");
 
-  // Vendor / technique
-  const [vendor, setVendor] = useState("");
-  const [frameRate, setFrameRate] = useState("");
+  // RAS
+  const [rasApical, setRasApical] = useState("");
+  const [rasBasal, setRasBasal] = useState("");
+  const [rasMid, setRasMid] = useState("");
 
-  // Save to Case modal
+  // Imaging checklist
+  const [acqChecks, setAcqChecks] = useState<Record<string, boolean>>({});
+
+  // Save modal
   const [showSaveModal, setShowSaveModal] = useState(false);
-  // Ref for the segment input — used for scroll-to-focus on bull's-eye click
-  const segInputRef = useRef<HTMLInputElement>(null);
 
   const lvGlsNum = parseFloat(lvGls);
   const rvStrainNum = parseFloat(rvStrain);
@@ -864,11 +325,6 @@ export default function StrainNavigator() {
   const lvInterp = !isNaN(lvGlsNum) ? interpretLvGls(lvGlsNum) : null;
   const rvInterp = !isNaN(rvStrainNum) ? interpretRvStrain(rvStrainNum) : null;
   const laInterp = !isNaN(laReservoirNum) ? interpretLaStrain(laReservoirNum) : null;
-
-  // RAS (Relative Apical Strain)
-  const [rasApical, setRasApical] = useState("");
-  const [rasBasal, setRasBasal] = useState("");
-  const [rasMid, setRasMid] = useState("");
 
   const rasApicalNum = parseFloat(rasApical);
   const rasBasalNum = parseFloat(rasBasal);
@@ -882,107 +338,77 @@ export default function StrainNavigator() {
       : { label: "Non-Apical-Sparing Pattern", color: "#15803d", text: `EchoAssist™ Suggests: RAS = ${rasValue.toFixed(2)} (≤ 1.0). No apical-sparing pattern identified. This does not exclude amyloidosis but makes it less likely. Diffuse or ischemic patterns should be considered based on clinical context.`, note: "EchoAssist™ Note: RAS ≤ 1.0 with reduced GLS is more consistent with ischemic cardiomyopathy, dilated cardiomyopathy, or HCM. Regional wall motion abnormalities and coronary territory correlation are recommended.", tip: "EchoAssist™ Tip: In HCM, strain is typically reduced in the hypertrophied segments (often septal/basal) with relatively preserved apical strain — RAS may approach but usually does not exceed 1.0 as prominently as in amyloidosis." }
     : null;
 
-  // Segmental GLS average
-  const enteredSegs = Object.values(segValues).filter(v => v !== null) as number[];
-  const segAvg = enteredSegs.length > 0
-    ? (enteredSegs.reduce((a, b) => a + b, 0) / enteredSegs.length).toFixed(1)
-    : null;
-
-  // WMSI
-  const scoredSegs = SEGMENTS_17.filter(s => wallMotionScores[s.id] !== undefined);
-  const wmsi = scoredSegs.length > 0
-    ? (scoredSegs.reduce((sum, s) => sum + (wallMotionScores[s.id] ?? 1), 0) / scoredSegs.length).toFixed(2)
-    : null;
-
-  const handleSegSelect = useCallback((id: number) => {
-    setSelectedSeg(id);
-    setSegInput(segValues[id] !== null && segValues[id] !== undefined ? String(segValues[id]) : "");
-    // Scroll to and focus the input on next tick (after React re-renders the input)
-    setTimeout(() => {
-      if (segInputRef.current) {
-        segInputRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
-        segInputRef.current.focus();
-        segInputRef.current.select();
-      }
-    }, 40);
-  }, [segValues]);
-
-  function handleSegInputChange(v: string) {
-    setSegInput(v);
-    const num = parseFloat(v);
-    if (selectedSeg !== null) {
-      setSegValues(prev => ({ ...prev, [selectedSeg]: isNaN(num) ? null : num }));
-    }
+  function toggleAcq(key: string) {
+    setAcqChecks(prev => ({ ...prev, [key]: !prev[key] }));
   }
 
-  function clearAllSegments() {
-    setSegValues({});
-    setSelectedSeg(null);
-    setSegInput("");
-    setWallMotionScores({});
-  }
-
-  // Listen for wall motion score changes from the SegmentalStrainCurves component
-  useMemo(() => {
-    const handler = (e: Event) => {
-      const { segId, score } = (e as CustomEvent).detail;
-      setWallMotionScores(prev => ({ ...prev, [segId]: score }));
-    };
-    document.addEventListener("wms-change", handler);
-    return () => document.removeEventListener("wms-change", handler);
-  }, []);
-
-  const selectedSegLabel = selectedSeg !== null
-    ? SEGMENTS_17.find(s => s.id === selectedSeg)?.label ?? ""
-    : "";
-
-  // Color legend — clinical convention: dark red = normal, dark blue = severely reduced
-  const legend = [
-    { color: "#991b1b", label: "Normal (≤ −20%)", textColor: "#fff" },
-    { color: "#ef4444", label: "Borderline (−18 to −20%)", textColor: "#fff" },
-    { color: "#f9a8d4", label: "Mildly reduced (−16 to −18%)", textColor: "#1f2937" },
-    { color: "#fbcfe8", label: "Moderately reduced (−12 to −16%)", textColor: "#1f2937" },
-    { color: "#93c5fd", label: "Mod-severely reduced (−8 to −12%)", textColor: "#1f2937" },
-    { color: "#1d4ed8", label: "Severely reduced (> −8%)", textColor: "#fff" },
-    { color: "#d1d5db", label: "Not entered", textColor: "#6b7280" },
+  const acqItems = [
+    { key: "hr", label: "Heart rate documented and within acceptable range (ideally 60–80 bpm for strain)" },
+    { key: "fr", label: "Frame rate ≥ 40 fps (ideally 60–80 fps) confirmed on all 3 apical views" },
+    { key: "harmonic", label: "Tissue harmonic imaging enabled (reduces noise, improves endocardial definition)" },
+    { key: "depth", label: "Depth minimized to include only the LV — apex to base just fitting the screen" },
+    { key: "focus", label: "Single focus zone placed at the level of the mitral valve" },
+    { key: "gain", label: "Gain optimized — endocardium clearly visible without over-gain artifact" },
+    { key: "foreshorten", label: "True apex confirmed — no foreshortening (apex should appear rounded, not flat)" },
+    { key: "3views", label: "All 3 apical views acquired: A4C, A2C, A3C (APLAX)" },
+    { key: "3beats", label: "Minimum 3 consecutive cardiac cycles stored per view (5 for AF)" },
+    { key: "ecg", label: "ECG gating active and QRS trigger confirmed on all clips" },
+    { key: "breath", label: "Patient instructed to hold breath at end-expiration during acquisition" },
+    { key: "vendor", label: "Vendor and software version documented (affects normal range reference)" },
+    { key: "midwall", label: "Mid-wall strain reviewed separately (ASE 2025: mid-wall GLS ≥ −17% is normal)" },
+    { key: "3d", label: "3D strain considered if 2D image quality is suboptimal or for volumetric accuracy" },
   ];
+
+  const acqDone = acqItems.filter(i => acqChecks[i.key]).length;
 
   return (
     <Layout>
-      <div className="container py-6">
-        {/* Header */}
-        <div className="flex items-start gap-4 mb-6">
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: `linear-gradient(135deg, ${BRAND_DARK}, ${BRAND})` }}>
-            <Activity className="w-6 h-6 text-white" />
-          </div>
-          <div className="flex-1">
-            <h1 className="text-2xl font-black text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-              Strain Navigator™
-            </h1>
-            <p className="text-sm text-gray-500 mt-0.5">
-              LV GLS · RV Free-Wall Strain · LA Reservoir Strain · Segmental Bull's-Eye · Wall Motion Scoring · ASE/EACVI 2022
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowSaveModal(true)}
-              className="hidden sm:flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg text-white transition-all hover:opacity-90"
-              style={{ background: BRAND }}
-            >
-              <Save className="w-3.5 h-3.5" />
-              Save to Case
-            </button>
-            <a href="https://www.asecho.org/wp-content/uploads/2025/08/Strain-Guideline-AIP-August-2025.pdf"
-              target="_blank" rel="noopener noreferrer"
-              className="hidden sm:flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border"
-              style={{ color: BRAND, borderColor: BRAND + "40", background: BRAND + "10" }}>
-              <ExternalLink className="w-3.5 h-3.5" />
-              ASE Strain Guidelines 2025
-            </a>
+      {/* Header */}
+      <div className="relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${BRAND_DARK} 0%, #0e3a40 60%, ${BRAND} 100%)` }}>
+        <div className="relative container py-8 md:py-10">
+          <div className="flex items-start justify-between gap-4">
+            <div className="max-w-2xl">
+              <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-3">
+                <Activity className="w-3.5 h-3.5 text-[#4ad9e0]" />
+                <span className="text-xs text-white/80 font-medium">EchoNavigator™ · Strain Imaging</span>
+              </div>
+              <h1 className="text-2xl md:text-3xl font-black text-white mb-2" style={{ fontFamily: "Merriweather, serif" }}>
+                Strain Navigator™
+              </h1>
+              <p className="text-white/70 text-sm leading-relaxed mb-4">
+                LV GLS · RV Free-Wall Strain · LA Reservoir Strain · Relative Apical Strain · Imaging Checklist · ASE 2025 Reference Values
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setShowSaveModal(true)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-white transition-all hover:opacity-90"
+                  style={{ background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)" }}
+                >
+                  <Save className="w-3.5 h-3.5" /> Save to Case
+                </button>
+                <Link href="/strain-scan-coach">
+                  <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all">
+                    <Camera className="w-3.5 h-3.5" /> Strain ScanCoach™
+                  </button>
+                </Link>
+                <a href="https://www.asecho.org/wp-content/uploads/2025/08/Strain-Guideline-AIP-August-2025.pdf"
+                  target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all">
+                  <ExternalLink className="w-3.5 h-3.5" /> ASE 2025 Guidelines
+                </a>
+              </div>
+            </div>
+            <div className="hidden md:flex flex-col items-end gap-2">
+              <div className="text-right">
+                <div className="text-xs text-white/50 mb-0.5">Imaging Checklist</div>
+                <div className="text-2xl font-black font-mono text-[#4ad9e0]">{acqDone}/{acqItems.length}</div>
+              </div>
+            </div>
           </div>
         </div>
+      </div>
 
+      <div className="container py-6">
         {/* Disclaimer */}
         <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-6 flex gap-3">
           <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
@@ -992,17 +418,18 @@ export default function StrainNavigator() {
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          {/* Left column — inputs */}
+
+          {/* ── Left Column — Calculators ── */}
           <div className="xl:col-span-2 flex flex-col gap-5">
 
-            {/* LV GLS Global */}
-            <SectionCard title="LV Global Longitudinal Strain (GLS)" subtitle="Global value · ASE/EACVI 2022 · Vendor-neutral reference ≤ −20%">
+            {/* LV GLS */}
+            <SectionCard title="LV Global Longitudinal Strain (GLS)" subtitle="Global value · ASE/EACVI 2022 · Vendor-neutral reference ≤ −20%" icon={<Activity className="w-4 h-4" />}>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                 <NumInput label="LV GLS" value={lvGls} onChange={setLvGls} unit="%" placeholder="e.g. −19.5" hint="Normal ≤ −20%" />
                 <div>
                   <label className="text-xs font-semibold text-gray-600 block mb-1">Vendor / Platform</label>
                   <select value={vendor} onChange={e => setVendor(e.target.value)}
-                    className="w-full bg-white border rounded-lg px-3 py-2 text-sm text-gray-700" style={{ borderColor: "#189aa1" + "40" }}>
+                    className="w-full bg-white border rounded-lg px-3 py-2 text-sm text-gray-700" style={{ borderColor: BRAND + "40" }}>
                     <option value="">Select vendor</option>
                     <option>GE HealthCare</option>
                     <option>Philips</option>
@@ -1016,7 +443,6 @@ export default function StrainNavigator() {
                 </div>
                 <NumInput label="Frame Rate" value={frameRate} onChange={setFrameRate} unit="fps" placeholder="≥ 40" hint="Recommended ≥ 40 fps" />
               </div>
-
               {lvInterp && (
                 <div className="rounded-lg p-4 mb-4" style={{ background: lvInterp.color + "18", borderLeft: `4px solid ${lvInterp.color}` }}>
                   <div className="font-bold text-sm mb-2" style={{ color: lvInterp.color }}>{lvInterp.severity}</div>
@@ -1025,10 +451,8 @@ export default function StrainNavigator() {
                   <p className="text-xs text-gray-500 leading-relaxed italic">{lvInterp.tip}</p>
                 </div>
               )}
-
-              {/* Vendor-specific reference table */}
               <details className="mt-2">
-                <summary className="text-xs font-semibold text-teal-700 cursor-pointer hover:underline flex items-center gap-1">
+                <summary className="text-xs font-semibold cursor-pointer hover:underline flex items-center gap-1" style={{ color: BRAND }}>
                   <Info className="w-3.5 h-3.5" /> Vendor-specific normal ranges (ASE/EACVI 2022)
                 </summary>
                 <div className="mt-3 overflow-x-auto">
@@ -1059,11 +483,107 @@ export default function StrainNavigator() {
                   </table>
                 </div>
               </details>
+              {/* Mid-wall strain note */}
+              <div className="mt-4 rounded-lg p-3 border" style={{ background: "#7c3aed08", borderColor: "#7c3aed25" }}>
+                <div className="flex items-start gap-2">
+                  <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: "#7c3aed" }} />
+                  <div>
+                    <div className="text-xs font-bold mb-1" style={{ color: "#7c3aed" }}>ASE 2025 — Mid-Wall GLS</div>
+                    <p className="text-xs text-gray-600 leading-relaxed">
+                      Normal mid-wall GLS is ≥ −17% (less negative than endocardial GLS). Mid-wall strain is more sensitive for subendocardial ischemia and early HCM. Most vendors report this automatically — check your software version.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </SectionCard>
 
-            {/* References — EchoAssist has RV/LA/RAS/Clinical sections; StrainNavigator retains LV GLS only */}
+            {/* RV Strain */}
+            <SectionCard title="RV Free-Wall Longitudinal Strain" subtitle="Normal ≤ −29% · ASE/EACVI 2022" defaultOpen={false}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <NumInput label="RV Free-Wall Strain" value={rvStrain} onChange={setRvStrain} unit="%" placeholder="e.g. −28" hint="Normal ≤ −29%" />
+              </div>
+              {rvInterp && (
+                <div className="rounded-lg p-4" style={{ background: rvInterp.color + "18", borderLeft: `4px solid ${rvInterp.color}` }}>
+                  <div className="font-bold text-sm mb-1" style={{ color: rvInterp.color }}>{rvInterp.severity}</div>
+                  <p className="text-xs text-gray-700 leading-relaxed">{rvInterp.suggests}</p>
+                </div>
+              )}
+            </SectionCard>
+
+            {/* LA Strain */}
+            <SectionCard title="LA Reservoir Strain" subtitle="Normal ≥ 38% · ASE/EACVI 2022" defaultOpen={false}>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                <NumInput label="LA Reservoir Strain" value={laReservoir} onChange={setLaReservoir} unit="%" placeholder="e.g. 40" hint="Normal ≥ 38%" />
+                <NumInput label="LA Conduit Strain" value={laConduit} onChange={setLaConduit} unit="%" placeholder="e.g. 22" hint="Normal ≥ 23%" />
+                <NumInput label="LA Booster Strain" value={laBooster} onChange={setLaBooster} unit="%" placeholder="e.g. 15" hint="Normal ≥ 15%" />
+              </div>
+              {laInterp && (
+                <div className="rounded-lg p-4" style={{ background: laInterp.color + "18", borderLeft: `4px solid ${laInterp.color}` }}>
+                  <div className="font-bold text-sm mb-1" style={{ color: laInterp.color }}>{laInterp.severity}</div>
+                  <p className="text-xs text-gray-700 leading-relaxed">{laInterp.suggests}</p>
+                </div>
+              )}
+            </SectionCard>
+
+            {/* RAS */}
+            <SectionCard title="Relative Apical Strain (RAS)" subtitle="Amyloidosis screening · Normal ≤ 1.0" defaultOpen={false}>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                <NumInput label="Apical GLS" value={rasApical} onChange={setRasApical} unit="%" placeholder="e.g. −22" hint="Apical segments avg" />
+                <NumInput label="Basal GLS" value={rasBasal} onChange={setRasBasal} unit="%" placeholder="e.g. −14" hint="Basal segments avg" />
+                <NumInput label="Mid GLS" value={rasMid} onChange={setRasMid} unit="%" placeholder="e.g. −16" hint="Mid segments avg" />
+              </div>
+              {rasValue !== null && (
+                <div className="rounded-lg p-4 mb-3" style={{ background: "#f0fbfc", borderLeft: `4px solid ${BRAND}` }}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: BRAND }}>RAS Value</span>
+                    <span className="text-xs text-gray-400">Normal ≤ 1.0</span>
+                  </div>
+                  <div className="text-2xl font-black font-mono mb-1" style={{ color: rasValue > 1.0 ? "#dc2626" : "#15803d" }}>
+                    {rasValue.toFixed(2)}
+                  </div>
+                </div>
+              )}
+              {rasInterpretation && (
+                <div className="rounded-lg p-4" style={{ background: rasInterpretation.color + "18", borderLeft: `4px solid ${rasInterpretation.color}` }}>
+                  <div className="font-bold text-sm mb-2" style={{ color: rasInterpretation.color }}>{rasInterpretation.label}</div>
+                  <p className="text-xs text-gray-700 leading-relaxed mb-2">{rasInterpretation.text}</p>
+                  <p className="text-xs text-gray-600 leading-relaxed mb-2">{rasInterpretation.note}</p>
+                  <p className="text-xs text-gray-500 leading-relaxed italic">{rasInterpretation.tip}</p>
+                </div>
+              )}
+            </SectionCard>
+
+            {/* Imaging Checklist */}
+            <SectionCard
+              title="Imaging Parameters Checklist"
+              subtitle={`${acqDone}/${acqItems.length} items confirmed · ASE 2025`}
+              icon={<Camera className="w-4 h-4" />}
+            >
+              <div className="mb-3">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-gray-500">Acquisition readiness</span>
+                  <span className="text-xs font-bold" style={{ color: BRAND }}>{Math.round((acqDone / acqItems.length) * 100)}%</span>
+                </div>
+                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full transition-all" style={{ width: `${(acqDone / acqItems.length) * 100}%`, background: BRAND }} />
+                </div>
+              </div>
+              <div className="space-y-1">
+                {acqItems.map(item => (
+                  <CheckItem key={item.key} label={item.label} checked={!!acqChecks[item.key]} onToggle={() => toggleAcq(item.key)} />
+                ))}
+              </div>
+              <div className="mt-4 rounded-lg p-3 border flex items-start gap-2" style={{ background: BRAND + "08", borderColor: BRAND + "25" }}>
+                <Lightbulb className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: BRAND }} />
+                <p className="text-xs text-gray-600 leading-relaxed">
+                  For detailed acquisition tips, probe guidance, and interactive bull's-eye analysis, open{" "}
+                  <Link href="/strain-scan-coach" className="font-semibold underline" style={{ color: BRAND }}>Strain ScanCoach™</Link>.
+                </p>
+              </div>
+            </SectionCard>
+
             {/* References */}
-            <SectionCard title="References & Guidelines" subtitle="ASE · EACVI · ESC · Cardio-Oncology" defaultOpen={false}>
+            <SectionCard title="References & Guidelines" subtitle="ASE · EACVI · ESC · Cardio-Oncology" defaultOpen={false} icon={<BookOpen className="w-4 h-4" />}>
               <div className="space-y-2">
                 {[
                   { ref: "ASE. Recommendations for the Standardization and Interpretation of Echocardiographic Strain. JASE 2025 (August).", url: "https://www.asecho.org/wp-content/uploads/2025/08/Strain-Guideline-AIP-August-2025.pdf" },
@@ -1085,160 +605,160 @@ export default function StrainNavigator() {
                 ))}
               </div>
             </SectionCard>
+
           </div>
 
-          {/* Right column — Bull's Eye + Curves + Summary */}
+          {/* ── Right Column — Summary + Reference Values ── */}
           <div className="flex flex-col gap-5">
 
-            {/* Bull's Eye */}
+            {/* Results Summary */}
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-bold text-sm text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-                  17-Segment Bull's-Eye
-                </h3>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setShowSaveModal(true)}
-                    className="sm:hidden text-xs font-semibold px-2 py-0.5 rounded transition-colors flex items-center gap-1"
-                    style={{ color: "white", background: BRAND }}
-                  >
-                    <Save className="w-3 h-3" /> Save
-                  </button>
-                  <button onClick={clearAllSegments}
-                    className="text-xs font-semibold px-2 py-0.5 rounded transition-colors"
-                    style={{ color: "#189aa1", background: "#189aa1" + "15" }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#dc262618"; (e.currentTarget as HTMLButtonElement).style.color = "#dc2626"; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#189aa1" + "15"; (e.currentTarget as HTMLButtonElement).style.color = "#189aa1"; }}>
-                    Clear all
-                  </button>
-                </div>
-              </div>
-              <p className="text-xs text-gray-500 mb-3">Click a segment to enter its strain value. Outer ring = basal, inner ring = apical.</p>
-
-              <BullsEye values={segValues} onSelect={handleSegSelect} selected={selectedSeg} />
-
-              {selectedSeg !== null && (
-                <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
-                  <label className="text-xs font-semibold text-gray-600 block mb-1">
-                    {selectedSegLabel} Strain (%)
-                  </label>
-                  <input
-                    ref={segInputRef}
-                    type="number" step="0.1"
-                    value={segInput}
-                    onChange={e => handleSegInputChange(e.target.value)}
-                    onKeyDown={e => {
-                      // Tab or Enter advances to the next segment automatically
-                      if (e.key === "Tab" || e.key === "Enter") {
-                        e.preventDefault();
-                        const ids = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17];
-                        const cur = ids.indexOf(selectedSeg ?? 1);
-                        handleSegSelect(ids[(cur + 1) % ids.length]);
-                      }
-                    }}
-                    placeholder="e.g. −18.5"
-                    className="w-full bg-white border rounded-lg px-3 py-2 text-sm font-mono text-gray-800 outline-none"
-                    style={{ borderColor: "#189aa1" + "60" }}
-                  />
-                </div>
-              )}
-
-              {segAvg !== null && (
-                <div className="mt-3 p-3 rounded-lg text-center" style={{ background: BRAND + "15" }}>
-                  <div className="text-xs text-gray-500 mb-0.5">Segmental Average ({enteredSegs.length} segments)</div>
-                  <div className="text-xl font-black font-mono" style={{ color: BRAND }}>{segAvg}%</div>
-                </div>
-              )}
-
-              {/* Legend */}
-              <div className="mt-4 space-y-1">
-                {legend.map(({ color, label, textColor }) => (
-                  <div key={label} className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-sm flex-shrink-0" style={{ background: color, border: "1px solid #cbd5e1" }} />
-                    <span className="text-xs" style={{ color: "#6b7280" }}>{label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Segmental Strain Curves — below bull's-eye */}
-            <SegmentalStrainCurves
-              segValues={segValues}
-              wallMotionScores={wallMotionScores}
-            />
-
-            {/* Summary Panel */}
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-              <h3 className="font-bold text-sm text-gray-800 mb-4" style={{ fontFamily: "Merriweather, serif" }}>
-                Strain Summary
-              </h3>
+              <h3 className="font-bold text-sm text-gray-800 mb-4" style={{ fontFamily: "Merriweather, serif" }}>Strain Summary</h3>
               <div className="space-y-3">
                 <ResultBox label="LV GLS" value={lvGls} normal="≤ −20" unit="%" interpretation={lvInterp?.severity ?? ""} />
                 <ResultBox label="RV Free-Wall Strain" value={rvStrain} normal="≤ −29" unit="%" interpretation={rvInterp?.severity ?? ""} />
                 <ResultBox label="LA Reservoir Strain" value={laReservoir} normal="≥ 38" unit="%" interpretation={laInterp?.severity ?? ""} />
-                {segAvg !== null && (
-                  <div className="rounded-lg p-4 border" style={{ background: "#f0fbfc", borderColor: "#189aa1" + "30" }}>
+                {rasValue !== null && (
+                  <div className="rounded-lg p-4 border" style={{ background: "#f0fbfc", borderColor: BRAND + "30" }}>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#189aa1" }}>Segmental Avg GLS</span>
-                      <span className="text-xs text-gray-400">{enteredSegs.length}/17 segs</span>
+                      <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: BRAND }}>RAS</span>
+                      <span className="text-xs text-gray-400">Normal ≤ 1.0</span>
                     </div>
-                    <div className="text-2xl font-black font-mono" style={{ color: BRAND }}>{segAvg}%</div>
-                  </div>
-                )}
-                {wmsi !== null && (
-                  <div className="rounded-lg p-4 border" style={{ background: "#f0fbfc", borderColor: "#189aa1" + "30" }}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#189aa1" }}>WMSI</span>
-                      <span className="text-xs text-gray-400">{scoredSegs.length} segs scored</span>
-                    </div>
-                    <div className="text-2xl font-black font-mono" style={{ color: parseFloat(wmsi) <= 1.0 ? "#15803d" : parseFloat(wmsi) <= 1.5 ? "#ca8a04" : "#dc2626" }}>{wmsi}</div>
-                    <div className="text-xs text-gray-500 mt-1">Normal = 1.0 · Abnormal &gt; 1.0</div>
+                    <div className="text-2xl font-black font-mono" style={{ color: rasValue > 1.0 ? "#dc2626" : "#15803d" }}>{rasValue.toFixed(2)}</div>
+                    <div className="text-xs text-gray-600 mt-1">{rasInterpretation?.label}</div>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Quick Reference */}
+            {/* Normal Reference Values */}
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-              <h3 className="font-bold text-sm text-gray-800 mb-3" style={{ fontFamily: "Merriweather, serif" }}>
-                Quick Reference
-              </h3>
-              <div className="space-y-2 text-xs">
+              <div className="flex items-center gap-2 mb-4">
+                <BarChart3 className="w-4 h-4 flex-shrink-0" style={{ color: BRAND }} />
+                <h3 className="font-bold text-sm text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Normal Reference Values</h3>
+              </div>
+              <div className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: BRAND }}>LV Strain · ASE 2025</div>
+              <div className="space-y-1.5 mb-4">
                 {[
-                  ["LV GLS Normal", "≤ −20%"],
-                  ["LV GLS Mildly Reduced", "−16 to −20%"],
-                  ["LV GLS Mod. Reduced", "−12 to −16%"],
-                  ["LV GLS Severely Reduced", "> −12%"],
-                  ["RV FW Strain Normal", "≤ −29%"],
-                  ["RV FW Strain Reduced", "> −20%"],
-                  ["LA Reservoir Normal", "≥ 38%"],
-                  ["LA Reservoir Reduced", "< 25%"],
-                  ["CTRCD Threshold (relative)", ">15% drop from baseline"],
-                  ["Apical Sparing RAS", "> 1.0"],
-                  ["WMSI Normal", "1.0"],
-                  ["WMSI Abnormal", "> 1.0"],
-                ].map(([label, val]) => (
-                  <div key={label} className="flex justify-between items-center py-1 border-b border-gray-50">
-                    <span className="text-gray-600">{label}</span>
-                    <span className="font-mono font-semibold" style={{ color: BRAND }}>{val}</span>
+                  ["LV GLS (endocardial)", "≤ −20%", "Vendor-neutral"],
+                  ["LV GLS (mid-wall) ★", "≥ −17%", "ASE 2025 new"],
+                  ["LV GLS (3D)", "≤ −19%", "When available"],
+                  ["LV GLS (women)", "−21 to −22%", "Sex-specific"],
+                  ["LV GLS (men)", "−19 to −21%", "Sex-specific"],
+                  ["LV GLS (age > 70)", "−18 to −20%", "Age-adjusted"],
+                ].map(([param, val, note]) => (
+                  <div key={param} className="flex justify-between items-center py-1 border-b border-gray-50">
+                    <div>
+                      <span className="text-xs text-gray-700">{param}</span>
+                      {note && <span className="text-xs text-gray-400 ml-1.5">({note})</span>}
+                    </div>
+                    <span className="font-mono font-semibold text-xs" style={{ color: BRAND }}>{val}</span>
                   </div>
                 ))}
               </div>
+
+              <div className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: BRAND }}>RV Strain · ASE 2025</div>
+              <div className="space-y-1.5 mb-4">
+                {[
+                  ["RV Free-Wall Strain", "≤ −29%", ""],
+                  ["RV Global Strain", "≤ −24%", "Includes septum"],
+                  ["RV Basal Strain", "≤ −27%", ""],
+                  ["RV Mid Strain", "≤ −29%", ""],
+                  ["RV Apical Strain", "≤ −32%", ""],
+                ].map(([param, val, note]) => (
+                  <div key={param} className="flex justify-between items-center py-1 border-b border-gray-50">
+                    <div>
+                      <span className="text-xs text-gray-700">{param}</span>
+                      {note && <span className="text-xs text-gray-400 ml-1.5">({note})</span>}
+                    </div>
+                    <span className="font-mono font-semibold text-xs" style={{ color: BRAND }}>{val}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: BRAND }}>LA Strain · ASE 2025</div>
+              <div className="space-y-1.5 mb-4">
+                {[
+                  ["LA Reservoir Strain", "≥ 38%", ""],
+                  ["LA Conduit Strain", "≥ 23%", ""],
+                  ["LA Booster Strain", "≥ 15%", ""],
+                ].map(([param, val, note]) => (
+                  <div key={param} className="flex justify-between items-center py-1 border-b border-gray-50">
+                    <div>
+                      <span className="text-xs text-gray-700">{param}</span>
+                      {note && <span className="text-xs text-gray-400 ml-1.5">({note})</span>}
+                    </div>
+                    <span className="font-mono font-semibold text-xs" style={{ color: BRAND }}>{val}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: BRAND }}>Cardio-Oncology Thresholds</div>
+              <div className="space-y-1.5 mb-4">
+                {[
+                  ["CTRCD threshold", "> 15% relative drop", "From baseline"],
+                  ["Subclinical dysfunction", "GLS −16 to −20%", "With preserved EF"],
+                  ["Monitoring interval", "Every 3–6 months", "During therapy"],
+                ].map(([param, val, note]) => (
+                  <div key={param} className="flex justify-between items-center py-1 border-b border-gray-50">
+                    <div>
+                      <span className="text-xs text-gray-700">{param}</span>
+                      {note && <span className="text-xs text-gray-400 ml-1.5">({note})</span>}
+                    </div>
+                    <span className="font-mono font-semibold text-xs" style={{ color: BRAND }}>{val}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: BRAND }}>Acquisition Parameters</div>
+              <div className="space-y-1.5">
+                {[
+                  ["Frame rate (minimum)", "≥ 40 fps", ""],
+                  ["Frame rate (ideal)", "60–80 fps", ""],
+                  ["Cycles per view", "≥ 3 (≥ 5 for AF)", ""],
+                  ["Segments required", "≥ 14/17", "For valid GLS"],
+                  ["RAS normal", "≤ 1.0", "Amyloid screen"],
+                ].map(([param, val, note]) => (
+                  <div key={param} className="flex justify-between items-center py-1 border-b border-gray-50">
+                    <div>
+                      <span className="text-xs text-gray-700">{param}</span>
+                      {note && <span className="text-xs text-gray-400 ml-1.5">({note})</span>}
+                    </div>
+                    <span className="font-mono font-semibold text-xs" style={{ color: BRAND }}>{val}</span>
+                  </div>
+                ))}
+              </div>
+
+              <p className="text-xs text-gray-400 mt-4 leading-relaxed">
+                ★ Mid-wall GLS is new in ASE 2025. Values sourced from ASE/EACVI 2022 consensus and ASE 2025 Strain Guideline.
+              </p>
             </div>
+
+            {/* ScanCoach CTA */}
+            <Link href="/strain-scan-coach">
+              <div className="rounded-xl p-4 cursor-pointer hover:opacity-90 transition-all" style={{ background: `linear-gradient(135deg, ${BRAND_DARK}, ${BRAND})` }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-white/15 flex-shrink-0">
+                    <Camera className="w-4 h-4 text-white" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-white mb-0.5">Open Strain ScanCoach™</div>
+                    <p className="text-xs text-white/70 leading-snug">Interactive bull's-eye · Segmental curves · Acquisition tips</p>
+                  </div>
+                </div>
+              </div>
+            </Link>
+
           </div>
         </div>
       </div>
 
-      {/* Save to Case Modal */}
       {showSaveModal && (
         <SaveToCaseModal
           onClose={() => setShowSaveModal(false)}
-          segValues={segValues}
-          wallMotionScores={wallMotionScores}
           lvGls={lvGls}
           rvStrain={rvStrain}
           laReservoir={laReservoir}
-          wmsi={wmsi}
           vendor={vendor}
           frameRate={frameRate}
         />
