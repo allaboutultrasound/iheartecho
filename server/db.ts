@@ -895,3 +895,60 @@ export async function getEchoCorrelationsByLab(labId: number) {
     .where(eq(echoCorrelations.labId, labId))
     .orderBy(desc(echoCorrelations.createdAt));
 }
+
+// ─── Case Mix Tracker ─────────────────────────────────────────────────────────
+/** Aggregate reviewed case counts per exam type from IQR, Peer Reviews, and Echo Correlations */
+export async function getCaseMix(userId: number) {
+  const db = await getDb();
+  if (!db) return { iqr: [], peerReview: [], echoCorrelation: [] };
+
+  // IQR counts by examType
+  const iqrCounts = await db.select({
+    examType: imageQualityReviews.examType,
+    count: count(),
+  }).from(imageQualityReviews)
+    .where(eq(imageQualityReviews.userId, userId))
+    .groupBy(imageQualityReviews.examType);
+
+  // Peer Review counts by modality
+  const peerCounts = await db.select({
+    modality: peerReviews.modality,
+    count: count(),
+  }).from(peerReviews)
+    .where(eq(peerReviews.reviewerId, userId))
+    .groupBy(peerReviews.modality);
+
+  // Echo Correlation counts by examType
+  const corrCounts = await db.select({
+    examType: echoCorrelations.examType,
+    count: count(),
+  }).from(echoCorrelations)
+    .where(eq(echoCorrelations.userId, userId))
+    .groupBy(echoCorrelations.examType);
+
+  return {
+    iqr: iqrCounts,
+    peerReview: peerCounts,
+    echoCorrelation: corrCounts,
+  };
+}
+
+// ─── Get lab by member userId (for non-admin members to fetch their lab's staff) ─
+export async function getLabByMemberUserId(userId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  // First check if user is admin of a lab
+  const adminLab = await db.select().from(labSubscriptions)
+    .where(eq(labSubscriptions.adminUserId, userId))
+    .limit(1);
+  if (adminLab.length > 0) return adminLab[0];
+  // Otherwise check if user is a member of a lab
+  const membership = await db.select().from(labMembers)
+    .where(and(eq(labMembers.userId, userId), eq(labMembers.isActive, true)))
+    .limit(1);
+  if (membership.length === 0) return null;
+  const lab = await db.select().from(labSubscriptions)
+    .where(eq(labSubscriptions.id, membership[0].labId))
+    .limit(1);
+  return lab.length > 0 ? lab[0] : null;
+}

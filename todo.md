@@ -287,3 +287,19 @@
 - [ ] Update all chamber quantification references to ASE/WFTF 2018: https://asecho.org/wp-content/uploads/2018/08/WFTF-Chamber-Quantification-Summary-Doc-Final-July-18.pdf
 - [ ] Update all pulmonary hypertension/right heart references to ASE 2025: https://www.asecho.org/wp-content/uploads/2025/03/PIIS0894731725000379.pdf
 - [ ] Add both guidelines to EchoAssist™ references section
+
+## Image Quality Review™ — Full Rebuild from Formsite API
+- [x] Add getLabByMemberUserId db helper so non-admin lab members can also fetch their lab's staff
+- [x] Add getLabStaffForReview tRPC procedure to return lab members for the current user's lab
+- [x] Rebuild ImageQualityReview.tsx with full branching logic from Formsite API (all 6 exam types)
+- [x] Implement exam-type-specific required views checklists (TTE 13 views, TEE 20 views, Stress 9 views, Ped TTE, Ped TEE, Fetal 16 views)
+- [x] Implement stress type sub-question branching (ESE/DSE ± Doppler → different view sets)
+- [x] Implement contrast/UAE branching (Yes → show settings question)
+- [x] Implement AS-specific Pedoff CW branching (AS present → show 3 Pedoff questions)
+- [x] Implement MR PISA branching (significant MR → show PISA/ERO question)
+- [x] Implement diastolic function multi-select checklist (Mitral Inflow PW, TDI, Pulm Vein, Valsalva)
+- [x] Implement right heart function multi-select checklist (RV view, TR inflow, TDI, TAPSE, RV dims, RA volume)
+- [x] Add sonographer dropdown from Lab Admin members (role=sonographer) with optional free-text fallback
+- [x] Add physician dropdown from Lab Admin members (role=physician) with optional free-text fallback
+- [x] Implement per-exam-type quality score calculation matching Formsite scoring
+- [x] Add vitest tests for new IQR procedures

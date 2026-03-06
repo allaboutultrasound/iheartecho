@@ -73,6 +73,8 @@ import {
   updateEchoCorrelation,
   deleteEchoCorrelation,
   getEchoCorrelationsByLab,
+  getCaseMix,
+  getLabByMemberUserId,
 } from "./db";
 
 export const appRouter = router({
@@ -813,9 +815,14 @@ export const appRouter = router({
         reviewerEmail: z.string().optional(),
         notifyAdmin: z.string().optional(),
         notifySonographer: z.string().optional(),
+        revieweeLabMemberId: z.number().optional(),
+        comparableToPrevious: z.string().optional(),
+        dob: z.string().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
-        const review = await createImageQualityReview({ ...input, userId: ctx.user.id });
+        // Map comparableToPrevious → comparableToPreview for DB compatibility
+        const { comparableToPrevious, dob: _dob, ...rest } = input;
+        const review = await createImageQualityReview({ ...rest, comparableToPreview: comparableToPrevious, userId: ctx.user.id });
         return review;
       }),
 
@@ -836,11 +843,11 @@ export const appRouter = router({
     update: protectedProcedure
       .input(z.object({ id: z.number() }).passthrough())
       .mutation(async ({ ctx, input }) => {
-        const { id, ...data } = input;
-        await updateImageQualityReview(id, ctx.user.id, data as Parameters<typeof updateImageQualityReview>[2]);
+        const { id, comparableToPrevious, dob: _dob, ...data } = input as Record<string, unknown> & { id: number; comparableToPrevious?: string; dob?: string };
+        const mapped = { ...data, ...(comparableToPrevious !== undefined ? { comparableToPreview: comparableToPrevious } : {}) };
+        await updateImageQualityReview(id, ctx.user.id, mapped as Parameters<typeof updateImageQualityReview>[2]);
         return { success: true };
       }),
-
     delete: protectedProcedure
       .input(z.object({ id: z.number() }))
       .mutation(async ({ ctx, input }) => {
@@ -850,6 +857,18 @@ export const appRouter = router({
 
     getStats: protectedProcedure.query(async ({ ctx }) => {
       return getIqrStats(ctx.user.id);
+    }),
+    getLabStaffForReview: protectedProcedure.query(async ({ ctx }) => {
+      const lab = await getLabByMemberUserId(ctx.user.id);
+      if (!lab) return { sonographers: [], physicians: [], labName: null };
+      const members = await getLabMembers(lab.id);
+      const sonographers = members.filter(m => m.role === 'sonographer' || m.role === 'admin' || m.role === 'reviewer');
+      const physicians = members.filter(m => m.role === 'physician' || m.role === 'admin');
+      return {
+        labName: lab.labName,
+        sonographers: sonographers.map(m => ({ id: m.id, name: m.displayName ?? m.inviteEmail, role: m.role })),
+        physicians: physicians.map(m => ({ id: m.id, name: m.displayName ?? m.inviteEmail, role: m.role })),
+      };
     }),
   }),
 
@@ -923,6 +942,13 @@ export const appRouter = router({
       .query(async ({ input }) => {
         return getEchoCorrelationsByLab(input.labId);
       }),
+  }),
+
+  // ─── Case Mix Tracker ─────────────────────────────────────────────────────
+  caseMix: router({
+    get: protectedProcedure.query(async ({ ctx }) => {
+      return getCaseMix(ctx.user.id);
+    }),
   }),
 });
 export type AppRouter = typeof appRouter;
