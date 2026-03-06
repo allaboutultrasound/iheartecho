@@ -1528,3 +1528,138 @@ export async function saveAccreditationReadinessNavigator(
     });
   }
 }
+
+// ─── Readiness Auto-Check Signals ────────────────────────────────────────────
+/**
+ * Returns a map of checklist item IDs → true when the corresponding DB records
+ * exist for the given lab. Only items that can be auto-detected are included.
+ * Items NOT in the returned map must be checked manually by the user.
+ */
+export async function getReadinessAutoChecks(labId: number): Promise<Record<string, boolean>> {
+  const db = await getDb();
+  if (!db) return {};
+
+  const result: Record<string, boolean> = {};
+
+  // ── Personnel ──────────────────────────────────────────────────────────────
+  const members = await db
+    .select({ role: labMembers.role, id: labMembers.id })
+    .from(labMembers)
+    .where(and(eq(labMembers.labId, labId), eq(labMembers.isActive, true)));
+
+  const hasMedDir = members.some(m => m.role === "medical_director");
+  const hasTechDir = members.some(m => m.role === "technical_director");
+  const hasSonographers = members.some(m => m.role === "technical_staff");
+  const hasPhysicians = members.some(m => m.role === "medical_staff");
+
+  result["s2-md-1"] = hasMedDir;
+  result["s2-td-1"] = hasTechDir;
+  result["s2-s-1"] = hasSonographers;
+  result["s2-s-2"] = hasSonographers;
+  result["s2-p-1"] = hasPhysicians;
+
+  // ── CME documented ─────────────────────────────────────────────────────────
+  const cmeRows = await db
+    .select({ labMemberId: cmeEntries.labMemberId, total: count(cmeEntries.id) })
+    .from(cmeEntries)
+    .where(eq(cmeEntries.labId, labId))
+    .groupBy(cmeEntries.labMemberId);
+
+  const membersWithCme = new Set(cmeRows.filter(r => r.total > 0).map(r => r.labMemberId));
+  const medDirIds = members.filter(m => m.role === "medical_director").map(m => m.id);
+  const techDirIds = members.filter(m => m.role === "technical_director").map(m => m.id);
+  const sonoIds = members.filter(m => m.role === "technical_staff").map(m => m.id);
+  const physIds = members.filter(m => m.role === "medical_staff").map(m => m.id);
+
+  result["s2-md-6"] = medDirIds.length > 0 && medDirIds.some(id => membersWithCme.has(id));
+  result["s2-td-5"] = techDirIds.length > 0 && techDirIds.some(id => membersWithCme.has(id));
+  result["s2-s-6"] = sonoIds.length > 0 && sonoIds.some(id => membersWithCme.has(id));
+  result["s2-p-4"] = physIds.length > 0 && physIds.some(id => membersWithCme.has(id));
+
+  // ── Policies ───────────────────────────────────────────────────────────────
+  // Policies are scoped by authorId. For lab admins the authorId is the userId
+  // of the lab owner, so we look up the lab's adminUserId first.
+  const labRow = await db
+    .select({ adminUserId: labSubscriptions.adminUserId })
+    .from(labSubscriptions)
+    .where(eq(labSubscriptions.id, labId))
+    .limit(1);
+
+  if (labRow.length > 0) {
+    const adminUserId = labRow[0].adminUserId;
+    const activePolicies = await db
+      .select({ category: policies.category })
+      .from(policies)
+      .where(and(eq(policies.authorId, adminUserId), eq(policies.status, "active")));
+
+    const policyCategories = new Set(activePolicies.map(p => p.category));
+    result["s4-c-1"] = policyCategories.has("protocol");
+    result["s4-c-2"] = policyCategories.has("protocol");
+    result["s4-c-3"] = policyCategories.has("protocol");
+    result["s4-c-4"] = policyCategories.has("protocol");
+    result["s4-s-1"] = policyCategories.has("emergency");
+    result["s4-s-2"] = policyCategories.has("infection_control");
+    result["s4-s-3"] = policyCategories.has("patient_safety");
+    result["s4-qa-1"] = policyCategories.has("quality_assurance");
+    result["s4-qa-2"] = policyCategories.has("quality_assurance");
+    result["s4-qa-3"] = policyCategories.has("quality_assurance");
+    result["s4-qa-4"] = policyCategories.has("report_turnaround");
+    result["s4-a-3"] = policyCategories.has("staff_competency");
+    result["s4-a-5"] = policyCategories.has("staff_competency");
+  }
+
+  // ── Image Quality Reviews ──────────────────────────────────────────────────
+  const iqrCount = await db
+    .select({ n: count(imageQualityReviews.id) })
+    .from(imageQualityReviews)
+    .where(eq(imageQualityReviews.labId, labId));
+  const hasIqr = (iqrCount[0]?.n ?? 0) > 0;
+  result["s5-iqr-1"] = hasIqr;
+  result["s5-iqr-2"] = hasIqr;
+
+  // ── Physician Peer Reviews ─────────────────────────────────────────────────
+  const pprCount = await db
+    .select({ n: count(physicianPeerReviews.id) })
+    .from(physicianPeerReviews)
+    .where(eq(physicianPeerReviews.labId, labId));
+  const hasPpr = (pprCount[0]?.n ?? 0) > 0;
+  result["s5-pr-1"] = hasPpr;
+  result["s5-pr-2"] = hasPpr;
+  result["s2-p-5"] = hasPpr;
+
+  // ── Correlation Studies ────────────────────────────────────────────────────
+  // echoCorrelations uses userId (the lab admin's userId) as the scope key
+  if (labRow.length > 0) {
+    const adminUserId = labRow[0].adminUserId;
+    const corrCount = await db
+      .select({ n: count(echoCorrelations.id) })
+      .from(echoCorrelations)
+      .where(eq(echoCorrelations.userId, adminUserId));
+    const hasCorr = (corrCount[0]?.n ?? 0) > 0;
+    result["s5-cor-1"] = hasCorr;
+    result["s5-cor-2"] = hasCorr;
+  }
+
+  // ── Case Mix Submissions ───────────────────────────────────────────────────
+  const caseMixRows = await db
+    .select({
+      modality: caseMixSubmissions.modality,
+      isTechDir: caseMixSubmissions.isTechDirectorCase,
+      isMedDir: caseMixSubmissions.isMedDirectorCase,
+    })
+    .from(caseMixSubmissions)
+    .where(eq(caseMixSubmissions.labId, labId));
+
+  const modalitiesPresent = new Set(caseMixRows.map(r => r.modality));
+  result["s6-cm-1"] = modalitiesPresent.has("ATTE");
+  result["s6-cm-2"] = modalitiesPresent.has("ATEE");
+  result["s6-cm-3"] = modalitiesPresent.has("STRESS");
+  result["s6-cm-4"] = modalitiesPresent.has("ACTE");
+  result["s6-cm-5"] = modalitiesPresent.has("PTTE");
+  result["s6-cm-6"] = modalitiesPresent.has("PTEE");
+  result["s6-cm-7"] = modalitiesPresent.has("FETAL");
+  result["s6-cm-9"] = caseMixRows.some(r => r.isTechDir);
+  result["s6-cm-10"] = caseMixRows.some(r => r.isMedDir);
+
+  return result;
+}

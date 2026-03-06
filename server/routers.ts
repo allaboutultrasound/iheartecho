@@ -94,6 +94,7 @@ import {
   saveAccreditationReadiness,
   getAccreditationReadinessNavigator,
   saveAccreditationReadinessNavigator,
+  getReadinessAutoChecks,
   createCaseMixSubmission,
   getCaseMixSubmissions,
   getCaseMixSummary,
@@ -1276,6 +1277,12 @@ export const appRouter = router({
         await saveAccreditationReadiness(lab.id, ctx.user.id, input.checklistProgress, input.itemNotes, input.completionPct);
         return { success: true };
       }),
+    /** Get auto-check signals derived from real DB records for the current lab */
+    autoChecks: protectedProcedure.query(async ({ ctx }) => {
+      const lab = await getLabByMemberUserId(ctx.user.id);
+      if (!lab) return {} as Record<string, boolean>;
+      return getReadinessAutoChecks(lab.id);
+    }),
   }),
 
   // ─── Accreditation Readiness Navigator (Free-Tier) ───────────────────────────

@@ -6,7 +6,7 @@
  * NOTE: Case Mix Requirements items are clickable/trackable but do NOT count toward
  * overall readiness progress — they are tracked separately as "acknowledged" items.
  */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -318,6 +318,12 @@ export default function AccreditationReadiness({ trpcNamespace = "accreditationR
     enabled: trpcNamespace === "accreditationReadinessNavigator",
     retry: false,
   });
+  // Auto-check signals from DB (DIY tool only — Navigator has no lab membership)
+  const autoChecksQuery = trpc.accreditationReadiness.autoChecks.useQuery(undefined, {
+    enabled: trpcNamespace === "accreditationReadiness",
+    retry: false,
+  });
+  const autoChecks: Record<string, boolean> = autoChecksQuery.data ?? {};
 
   const savedData = trpcNamespace === "accreditationReadiness" ? diyQuery.data : navQuery.data;
   const isLoading = trpcNamespace === "accreditationReadiness" ? diyQuery.isLoading : navQuery.isLoading;
@@ -346,23 +352,34 @@ export default function AccreditationReadiness({ trpcNamespace = "accreditationR
   });
   const saveMutation = trpcNamespace === "accreditationReadiness" ? diySave : navSave;
 
+  // Effective check state: auto-checked items are always true (but user can still manually override)
+  const effectiveProgress = useMemo(() => {
+    const merged: Record<string, boolean> = { ...checklistProgress };
+    for (const [id, val] of Object.entries(autoChecks)) {
+      if (val) merged[id] = true; // auto-check overrides unchecked state
+    }
+    return merged;
+  }, [checklistProgress, autoChecks]);
+
   // ── Progress calculations — exclude caseMixStep/caseMixItem from readiness % ──
   const readinessSteps = IAC_CHECKLIST.filter(s => !s.caseMixStep);
   const allReadinessItems = readinessSteps.flatMap(s => s.sections.flatMap(sec => sec.items));
   const requiredItems = allReadinessItems.filter(i => i.required !== false);
-  const checkedTotal = allReadinessItems.filter(i => checklistProgress[i.id]).length;
-  const checkedRequired = requiredItems.filter(i => checklistProgress[i.id]).length;
+  const checkedTotal = allReadinessItems.filter(i => effectiveProgress[i.id]).length;
+  const checkedRequired = requiredItems.filter(i => effectiveProgress[i.id]).length;
   const overallPct = allReadinessItems.length > 0 ? Math.round((checkedTotal / allReadinessItems.length) * 100) : 0;
   const requiredPct = requiredItems.length > 0 ? Math.round((checkedRequired / requiredItems.length) * 100) : 0;
 
   // Case mix acknowledged count (separate from readiness %)
   const caseMixItems = IAC_CHECKLIST.filter(s => s.caseMixStep).flatMap(s => s.sections.flatMap(sec => sec.items));
-  const caseMixAcknowledged = caseMixItems.filter(i => checklistProgress[i.id]).length;
+  const caseMixAcknowledged = caseMixItems.filter(i => effectiveProgress[i.id]).length;
 
   const handleCheck = useCallback((itemId: string, checked: boolean) => {
+    // If auto-checked, don't allow unchecking — the data needs to be removed from the source
+    if (autoChecks[itemId] && !checked) return;
     setChecklistProgress(prev => ({ ...prev, [itemId]: checked }));
     setIsDirty(true);
-  }, []);
+  }, [autoChecks]);
 
   const handleSave = useCallback(() => {
     saveMutation.mutate({ checklistProgress, itemNotes, completionPct: overallPct });
@@ -385,19 +402,13 @@ export default function AccreditationReadiness({ trpcNamespace = "accreditationR
   };
 
   const getStepProgress = (step: ChecklistStep) => {
-    if (step.caseMixStep) {
-      // For case mix step, show acknowledged count only
-      const items = step.sections.flatMap(s => s.items);
-      const checked = items.filter(i => checklistProgress[i.id]).length;
-      return { checked, total: items.length, pct: items.length > 0 ? Math.round((checked / items.length) * 100) : 0 };
-    }
     const items = step.sections.flatMap(s => s.items);
-    const checked = items.filter(i => checklistProgress[i.id]).length;
+    const checked = items.filter(i => effectiveProgress[i.id]).length;
     return { checked, total: items.length, pct: items.length > 0 ? Math.round((checked / items.length) * 100) : 0 };
   };
 
   const getSectionProgress = (section: ChecklistSection) => {
-    const checked = section.items.filter(i => checklistProgress[i.id]).length;
+    const checked = section.items.filter(i => effectiveProgress[i.id]).length;
     return { checked, total: section.items.length, pct: section.items.length > 0 ? Math.round((checked / section.items.length) * 100) : 0 };
   };
 
@@ -572,7 +583,8 @@ export default function AccreditationReadiness({ trpcNamespace = "accreditationR
                         {isSectionExpanded && (
                           <div className="px-5 pb-3 space-y-1">
                             {section.items.map((item) => {
-                              const isChecked = !!checklistProgress[item.id];
+                              const isAutoChecked = !!autoChecks[item.id];
+                              const isChecked = !!effectiveProgress[item.id];
                               const hasNote = !!itemNotes[item.id];
                               const isEditingThis = editingNote === item.id;
                               const isCaseMixItem = !!item.caseMixItem;
@@ -588,19 +600,22 @@ export default function AccreditationReadiness({ trpcNamespace = "accreditationR
                                 >
                                   <div className="flex items-start gap-3">
                                     <button
-                                      className="mt-0.5 flex-shrink-0"
-                                      onClick={() => handleCheck(item.id, !isChecked)}
-                                      title={isCaseMixItem ? "Mark as acknowledged (does not affect readiness score)" : undefined}
+                                      className={`mt-0.5 flex-shrink-0 ${isAutoChecked ? "cursor-default" : ""}`}
+                                      onClick={() => !isAutoChecked && handleCheck(item.id, !isChecked)}
+                                      title={isAutoChecked ? "Auto-verified from your lab data — remove the source record to uncheck" : isCaseMixItem ? "Mark as acknowledged (does not affect readiness score)" : undefined}
                                     >
                                       {isChecked
-                                        ? <CheckCircle2 className={`w-5 h-5 ${isCaseMixItem ? "text-amber-500" : "text-green-500"}`} />
+                                        ? <CheckCircle2 className={`w-5 h-5 ${isCaseMixItem ? "text-amber-500" : isAutoChecked ? "text-teal-500" : "text-green-500"}`} />
                                         : <Circle className="w-5 h-5 text-gray-300 hover:text-gray-400" />
                                       }
                                     </button>
                                     <div className="flex-1 min-w-0">
                                       <div className={`text-sm leading-snug ${isChecked ? "text-gray-500 line-through" : "text-gray-700"}`}>
                                         {item.text}
-                                        {item.required === false && !isCaseMixItem && (
+                                        {isAutoChecked && (
+                                          <span className="ml-2 inline-flex items-center gap-0.5 text-xs font-medium text-teal-700 bg-teal-50 border border-teal-200 rounded px-1.5 py-0.5 no-underline" style={{ textDecoration: "none" }}>auto-verified</span>
+                                        )}
+                                        {item.required === false && !isCaseMixItem && !isAutoChecked && (
                                           <span className="ml-2 text-xs text-gray-400 no-underline">(recommended)</span>
                                         )}
                                         {isCaseMixItem && (

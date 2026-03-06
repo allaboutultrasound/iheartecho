@@ -493,3 +493,10 @@
 - [x] EchoAccreditation Navigator: Paid DIY Tool subscribers see prompt to use the full DIY Tool instead
 - [x] Separate backend: accreditationReadinessNavigator table + tRPC procedures (independent from DIY tool)
 - [x] AccreditationReadiness component: trpcNamespace prop routes to correct backend
+
+## Auto-Check Readiness Items from DB (Completed)
+- [x] Audit IAC_CHECKLIST items and map each to DB data sources
+- [x] Build tRPC procedure: accreditationReadiness.autoChecks — returns signals from DB
+- [x] Wire auto-check signals into AccreditationReadiness — merge with manual checks, show auto-verified badge
+- [x] Auto-checked items show teal checkmark + "auto-verified" badge, cannot be manually unchecked
+- [x] All 227 tests passing
