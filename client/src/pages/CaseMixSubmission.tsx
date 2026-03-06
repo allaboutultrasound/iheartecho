@@ -1049,10 +1049,10 @@ function CaseTracker({ tier }: { tier: StaffTier }) {
 }
 
 // ─── Main Component ────────────────────────────────────────────────────────────
-export default function CaseMixSubmission() {
+export default function CaseMixSubmission({ initialView }: { initialView?: "requirements" | "tracker" }) {
   const { isAuthenticated } = useAuth();
   const [tier, setTier] = useState<StaffTier>("le5");
-  const [view, setView] = useState<"requirements" | "tracker">("requirements");
+  const [view, setView] = useState<"requirements" | "tracker">(initialView ?? "requirements");
 
   // Fetch lab info to get accreditation types for filtering
   const { data: labData } = trpc.lab.getMyLab.useQuery(undefined, { enabled: isAuthenticated });

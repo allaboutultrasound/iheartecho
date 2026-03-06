@@ -538,7 +538,7 @@ function CaseMixRequirementsView() {
           </h2>
           <p className="text-xs text-gray-500 mt-0.5">IAC Echocardiography Accreditation — Updated 6-8-2023</p>
         </div>
-        <Link href="/accreditation">
+        <Link href="/accreditation?tab=case-mix&view=tracker">
           <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors hover:bg-[#f0fbfc]" style={{ color: BRAND, borderColor: BRAND + "40" }}>
             <ClipboardList className="w-3.5 h-3.5" />
             Open Case Tracker →

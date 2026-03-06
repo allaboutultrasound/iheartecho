@@ -1,0 +1,8 @@
+{
+  "query": "SELECT u.username, u.email, ur.role FROM users u JOIN userRoles ur ON u.id = ur.userId WHERE ur.role IN ('diy_user', 'diy_admin', 'platform_admin') ORDER BY u.id, ur.role;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mhhtxpXA9Esras.root --database etVPnUidWNWG8W4GHnRqzv --execute SELECT u.username, u.email, ur.role FROM users u JOIN userRoles ur ON u.id = ur.userId WHERE ur.role IN ('diy_user', 'diy_admin', 'platform_admin') ORDER BY u.id, ur.role;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'u.username' in 'field list'"
+  ]
+}

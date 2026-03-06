@@ -3,10 +3,11 @@
   Tabs: Quality Review | Peer Review | Policy Builder | Appropriate Use Monitor
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { useSearch } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -1309,7 +1310,10 @@ function DIYReportsTab() {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function AccreditationTool() {
   const { isAuthenticated, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState<"iqr" | "peer" | "echo-correlation" | "auc" | "case-mix" | "policy" | "readiness" | "reports">("iqr");
+  const searchString = useSearch();
+  const params = new URLSearchParams(searchString);
+  const initialTab = (params.get("tab") as "iqr" | "peer" | "echo-correlation" | "auc" | "case-mix" | "policy" | "readiness" | "reports" | null) ?? "iqr";
+  const [activeTab, setActiveTab] = useState<"iqr" | "peer" | "echo-correlation" | "auc" | "case-mix" | "policy" | "readiness" | "reports">(initialTab);
 
   if (loading) {
     return (
@@ -1407,7 +1411,7 @@ export default function AccreditationTool() {
           {activeTab === "policy" && <PolicyBuilderTab />}
           {activeTab === "auc" && <AppropriateUseTab />}
           {activeTab === "readiness" && <AccreditationReadiness />}
-          {activeTab === "case-mix" && <CaseMixSubmission />}
+          {activeTab === "case-mix" && <CaseMixSubmission initialView={(params.get("view") as "requirements" | "tracker" | null) ?? "requirements"} />}
           {activeTab === "reports" && <DIYReportsTab />}
         </div>
       </div>

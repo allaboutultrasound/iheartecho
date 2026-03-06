@@ -546,3 +546,16 @@
 ## Bug Fixes
 - [x] ImageQualityReview: remove duplicate page-level h1 header (title + subtitle row inside the page content)
 - [x] ImageQualityReview: remove ™ trademark from "Image Quality Review™" page title
+
+## DIY Tool Access & Navigation Fixes
+- [ ] AccreditationNavigator: fix "Open Case Tracker" button to link directly to DIY Case Mix → Case Tracker tab
+- [ ] DIY Accreditation Tool: gate entire /accreditation route with RoleGuard (diy_user or diy_admin required)
+
+## DIY Tool Access & Navigation Fixes
+- [ ] AccreditationNavigator: fix "Open Case Tracker" button to link directly to DIY Case Mix → Case Tracker tab
+- [ ] DIY Accreditation Tool: gate entire /accreditation route with RoleGuard (diy_user or diy_admin required) — HOLD until owner confirms login works
+
+## Login & Navigation Fixes
+- [x] Layout sidebar: add branded Sign In / Account section (teal/aqua, dark sidebar) — shows Login button when logged out, avatar + name + logout when logged in
+- [x] AccreditationNavigator: fix "Open Case Tracker" button to deep-link to /accreditation?tab=case-mix&view=tracker
+- [x] AccreditationTool: read ?tab= and ?view= URL params on mount to support deep-linking
