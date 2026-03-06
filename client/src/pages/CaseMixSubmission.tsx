@@ -396,6 +396,16 @@ function ModalityCard({ modality, tier }: { modality: ModalityRequirement; tier:
 // ─── Case Tracker ─────────────────────────────────────────────────────────────
 type ModalityId = "ATTE" | "ATEE" | "STRESS" | "ACTE" | "PTTE" | "PTEE" | "FETAL";
 
+/** Helper: format a staff member's display label with credentials */
+function staffLabel(m: any): string {
+  const name = m.displayName || m.inviteEmail || "Unknown";
+  const creds = m.credentials ? `, ${m.credentials}` : "";
+  const roleLabel =
+    m.role === "technical_director" ? " [Tech Dir]" :
+    m.role === "medical_director" ? " [Med Dir]" : "";
+  return `${name}${creds}${roleLabel}`;
+}
+
 function CaseTracker({ tier }: { tier: StaffTier }) {
   const { isAuthenticated } = useAuth();
   const [activeModality, setActiveModality] = useState<string>(MODALITIES[0].id);
@@ -405,8 +415,12 @@ function CaseTracker({ tier }: { tier: StaffTier }) {
   const [studyId, setStudyId] = useState("");
   const [studyDate, setStudyDate] = useState("");
   const [caseType, setCaseType] = useState("");
-  const [sonographerName, setSonographerName] = useState("");
-  const [physicianName, setPhysicianName] = useState("");
+  // Sonographer — either a lab member ID (number) or "_freetext_"
+  const [sonographerMemberId, setSonographerMemberId] = useState<number | "_freetext_" | null>(null);
+  const [sonographerFreeText, setSonographerFreeText] = useState("");
+  // Physician — either a lab member ID (number) or "_freetext_"
+  const [physicianMemberId, setPhysicianMemberId] = useState<number | "_freetext_" | null>(null);
+  const [physicianFreeText, setPhysicianFreeText] = useState("");
   const [isTechDir, setIsTechDir] = useState(false);
   const [isMedDir, setIsMedDir] = useState(false);
   const [notes, setNotes] = useState("");
@@ -421,16 +435,18 @@ function CaseTracker({ tier }: { tier: StaffTier }) {
       resetForm();
       setShowForm(false);
     },
-   onError: (err) => toast.error("Error", { description: err.message }),
-    });
-  const deleteMutation= trpc.caseMix.delete.useMutation({
+    onError: (err) => toast.error("Error", { description: err.message }),
+  });
+  const deleteMutation = trpc.caseMix.delete.useMutation({
     onSuccess: () => { toast.success("Case removed"); refetch(); },
     onError: (err) => toast.error("Error", { description: err.message }),
   });
 
   function resetForm() {
-    setStudyId(""); setStudyDate(""); setCaseType(""); setSonographerName("");
-    setPhysicianName(""); setIsTechDir(false); setIsMedDir(false); setNotes("");
+    setStudyId(""); setStudyDate(""); setCaseType("");
+    setSonographerMemberId(null); setSonographerFreeText("");
+    setPhysicianMemberId(null); setPhysicianFreeText("");
+    setIsTechDir(false); setIsMedDir(false); setNotes("");
   }
 
   const modality = MODALITIES.find(m => m.id === activeModality)!;
@@ -441,17 +457,70 @@ function CaseTracker({ tier }: { tier: StaffTier }) {
   const sonographers = staffData?.sonographers ?? [];
   const physicians = staffData?.physicians ?? [];
 
+  /** When a sonographer is selected from the dropdown, auto-set IAC Tech Dir flag */
+  function handleSonographerSelect(val: string) {
+    if (val === "_freetext_") {
+      setSonographerMemberId("_freetext_");
+      setIsTechDir(false);
+    } else {
+      const id = Number(val);
+      setSonographerMemberId(id);
+      const member = sonographers.find((s: any) => s.id === id);
+      if (member?.role === "technical_director") setIsTechDir(true);
+      else setIsTechDir(false);
+    }
+  }
+
+  /** When a physician is selected from the dropdown, auto-set IAC Med Dir flag */
+  function handlePhysicianSelect(val: string) {
+    if (val === "_freetext_") {
+      setPhysicianMemberId("_freetext_");
+      setIsMedDir(false);
+    } else {
+      const id = Number(val);
+      setPhysicianMemberId(id);
+      const member = physicians.find((p: any) => p.id === id);
+      if (member?.role === "medical_director") setIsMedDir(true);
+      else setIsMedDir(false);
+    }
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!studyId.trim()) { toast.error("Study ID required"); return; }
     if (!caseType) { toast.error("Case type required"); return; }
+
+    // Resolve sonographer
+    let resolvedSonoId: number | undefined;
+    let resolvedSonoName: string | undefined;
+    if (sonographerMemberId === "_freetext_") {
+      resolvedSonoName = sonographerFreeText || undefined;
+    } else if (typeof sonographerMemberId === "number") {
+      resolvedSonoId = sonographerMemberId;
+      const m = sonographers.find((s: any) => s.id === sonographerMemberId);
+      resolvedSonoName = m ? (m.displayName || m.inviteEmail) : undefined;
+    }
+
+    // Resolve physician
+    let resolvedMdId: number | undefined;
+    let resolvedMdName: string | undefined;
+    if (physicianMemberId === "_freetext_") {
+      resolvedMdName = physicianFreeText || undefined;
+    } else if (typeof physicianMemberId === "number") {
+      resolvedMdId = physicianMemberId;
+      const m = physicians.find((p: any) => p.id === physicianMemberId);
+      resolvedMdName = m ? (m.displayName || m.inviteEmail) : undefined;
+    }
+
     createMutation.mutate({
       modality: activeModality as ModalityId,
       caseType,
       studyIdentifier: studyId.trim(),
       studyDate: studyDate || undefined,
-      sonographerName: sonographerName || undefined,
-      physicianName: physicianName || undefined,
+      sonographerLabMemberId: resolvedSonoId,
+      sonographerName: resolvedSonoName,
+      physicianLabMemberId: resolvedMdId,
+      physicianName: resolvedMdName,
       isTechDirectorCase: isTechDir,
       isMedDirectorCase: isMedDir,
       notes: notes || undefined,
@@ -599,73 +668,93 @@ function CaseTracker({ tier }: { tier: StaffTier }) {
                   </SelectContent>
                 </Select>
               </div>
-              {/* Sonographer */}
+              {/* Sonographer — linked to Lab Admin staff */}
               <div>
-                <label className="text-xs font-medium text-gray-600 mb-1 block">Sonographer</label>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">
+                  Sonographer
+                  {sonographers.length > 0 && (
+                    <span className="ml-1.5 text-[10px] font-normal text-teal-600 bg-teal-50 px-1.5 py-0.5 rounded-full">from Lab Admin</span>
+                  )}
+                </label>
                 {sonographers.length > 0 ? (
-                  <Select value={sonographerName} onValueChange={setSonographerName}>
-                    <SelectTrigger className="text-xs h-8">
-                      <SelectValue placeholder="Select or type name..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="_freetext_" className="text-xs italic text-gray-500">Enter name manually</SelectItem>
-                      {sonographers.map((s: any) => (
-                        <SelectItem key={s.id} value={s.displayName || s.inviteEmail} className="text-xs">
-                          {s.displayName || s.inviteEmail}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <>
+                    <Select
+                      value={sonographerMemberId !== null ? String(sonographerMemberId) : ""}
+                      onValueChange={handleSonographerSelect}
+                    >
+                      <SelectTrigger className="text-xs h-8">
+                        <SelectValue placeholder="Select staff member..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {sonographers.map((s: any) => (
+                          <SelectItem key={s.id} value={String(s.id)} className="text-xs">
+                            {staffLabel(s)}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="_freetext_" className="text-xs italic text-gray-400">Enter name manually…</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {sonographerMemberId === "_freetext_" && (
+                      <Input
+                        value={sonographerFreeText}
+                        onChange={e => setSonographerFreeText(e.target.value)}
+                        placeholder="Enter sonographer name..."
+                        className="text-xs h-8 mt-1"
+                        autoFocus
+                      />
+                    )}
+                  </>
                 ) : (
                   <Input
-                    value={sonographerName}
-                    onChange={e => setSonographerName(e.target.value)}
+                    value={sonographerFreeText}
+                    onChange={e => setSonographerFreeText(e.target.value)}
                     placeholder="Sonographer name (optional)"
                     className="text-xs h-8"
                   />
                 )}
-                {sonographerName === "_freetext_" && (
-                  <Input
-                    value=""
-                    onChange={e => setSonographerName(e.target.value)}
-                    placeholder="Enter name..."
-                    className="text-xs h-8 mt-1"
-                    autoFocus
-                  />
-                )}
               </div>
-              {/* Physician */}
+              {/* Interpreting Physician — linked to Lab Admin staff */}
               <div>
-                <label className="text-xs font-medium text-gray-600 mb-1 block">Interpreting Physician</label>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">
+                  Interpreting Physician
+                  {physicians.length > 0 && (
+                    <span className="ml-1.5 text-[10px] font-normal text-teal-600 bg-teal-50 px-1.5 py-0.5 rounded-full">from Lab Admin</span>
+                  )}
+                </label>
                 {physicians.length > 0 ? (
-                  <Select value={physicianName} onValueChange={setPhysicianName}>
-                    <SelectTrigger className="text-xs h-8">
-                      <SelectValue placeholder="Select or type name..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="_freetext_" className="text-xs italic text-gray-500">Enter name manually</SelectItem>
-                      {physicians.map((p: any) => (
-                        <SelectItem key={p.id} value={p.displayName || p.inviteEmail} className="text-xs">
-                          {p.displayName || p.inviteEmail}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <>
+                    <Select
+                      value={physicianMemberId !== null ? String(physicianMemberId) : ""}
+                      onValueChange={handlePhysicianSelect}
+                    >
+                      <SelectTrigger className="text-xs h-8">
+                        <SelectValue placeholder="Select staff member..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {physicians.map((p: any) => (
+                          <SelectItem key={p.id} value={String(p.id)} className="text-xs">
+                            {staffLabel(p)}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="_freetext_" className="text-xs italic text-gray-400">Enter name manually…</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {physicianMemberId === "_freetext_" && (
+                      <Input
+                        value={physicianFreeText}
+                        onChange={e => setPhysicianFreeText(e.target.value)}
+                        placeholder="Enter physician name..."
+                        className="text-xs h-8 mt-1"
+                        autoFocus
+                      />
+                    )}
+                  </>
                 ) : (
                   <Input
-                    value={physicianName}
-                    onChange={e => setPhysicianName(e.target.value)}
+                    value={physicianFreeText}
+                    onChange={e => setPhysicianFreeText(e.target.value)}
                     placeholder="Physician name (optional)"
                     className="text-xs h-8"
-                  />
-                )}
-                {physicianName === "_freetext_" && (
-                  <Input
-                    value=""
-                    onChange={e => setPhysicianName(e.target.value)}
-                    placeholder="Enter name..."
-                    className="text-xs h-8 mt-1"
-                    autoFocus
                   />
                 )}
               </div>
@@ -681,14 +770,20 @@ function CaseTracker({ tier }: { tier: StaffTier }) {
               </div>
             </div>
             {/* IAC flags */}
-            <div className="flex gap-4">
+            <div className="flex flex-wrap gap-4">
               <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
                 <input type="checkbox" checked={isTechDir} onChange={e => setIsTechDir(e.target.checked)} className="rounded" />
-                Technical Director case
+                <span>Technical Director case</span>
+                {isTechDir && typeof sonographerMemberId === "number" && (
+                  <span className="text-[10px] text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full font-medium">auto-set</span>
+                )}
               </label>
               <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
                 <input type="checkbox" checked={isMedDir} onChange={e => setIsMedDir(e.target.checked)} className="rounded" />
-                Medical Director represented
+                <span>Medical Director represented</span>
+                {isMedDir && typeof physicianMemberId === "number" && (
+                  <span className="text-[10px] text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded-full font-medium">auto-set</span>
+                )}
               </label>
             </div>
             <div className="flex justify-end gap-2">
@@ -733,8 +828,24 @@ function CaseTracker({ tier }: { tier: StaffTier }) {
                     </div>
                     <div className="flex items-center gap-3 mt-0.5 flex-wrap">
                       {c.studyDate && <span className="text-xs text-gray-400">{c.studyDate}</span>}
-                      {c.sonographerName && <span className="text-xs text-gray-500">Sono: {c.sonographerName}</span>}
-                      {c.physicianName && <span className="text-xs text-gray-500">MD: {c.physicianName}</span>}
+                      {c.sonographerName && (
+                        <span className="text-xs text-gray-500 flex items-center gap-1">
+                          <span className="font-medium text-gray-400">Sono:</span>
+                          {c.sonographerName}
+                          {c.sonographerLabMemberId && (
+                            <span className="text-[10px] text-teal-600 bg-teal-50 px-1 py-0.5 rounded">linked</span>
+                          )}
+                        </span>
+                      )}
+                      {c.physicianName && (
+                        <span className="text-xs text-gray-500 flex items-center gap-1">
+                          <span className="font-medium text-gray-400">MD:</span>
+                          {c.physicianName}
+                          {c.physicianLabMemberId && (
+                            <span className="text-[10px] text-teal-600 bg-teal-50 px-1 py-0.5 rounded">linked</span>
+                          )}
+                        </span>
+                      )}
                     </div>
                     {c.notes && <p className="text-xs text-gray-400 mt-0.5 italic">{c.notes}</p>}
                   </div>

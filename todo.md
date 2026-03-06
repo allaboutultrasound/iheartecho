@@ -441,3 +441,14 @@
 - [ ] Build CME Tracker UI per staff member (add/edit/delete CME entries, hours summary)
 - [ ] Add CME section to AccreditationReadiness checklist
 - [ ] Update CaseMixSubmission Case Tracker dropdowns to use new role mappings
+
+## Case Mix Staff Linking [COMPLETED]
+- [x] Case Mix tracker sonographer/physician fields linked to Lab Admin staff roster
+- [x] Dropdown shows staff name + credentials + role tag (e.g. "Jane Smith, RDCS [Tech Dir]")
+- [x] Selecting a staff member stores labMemberId FK in caseMixSubmissions table
+- [x] Auto-sets "Technical Director case" IAC flag when technical_director is selected
+- [x] Auto-sets "Medical Director represented" IAC flag when medical_director is selected
+- [x] "auto-set" badge shown on IAC flags when they were set automatically
+- [x] "linked" badge shown on case list entries where staff is linked to a lab member
+- [x] Free-text fallback available for staff not in Lab Admin roster
+- [x] 21 vitest tests covering staffLabel, resolveStaff, IAC flag logic, and role filtering

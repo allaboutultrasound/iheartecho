@@ -275,6 +275,32 @@ const STAFF_TIERS: { id: StaffTier; label: string }[] = [
 
 const CM_MODALITIES: ModalityRequirement[] = [
   {
+    id: "ATTE", label: "Adult TTE", fullName: "Adult Transthoracic Echocardiography",
+    icon: Stethoscope, color: "#189aa1", staffBased: true,
+    casesByTier: { le5: 4, "6to8": 6, "9to15": 8, "16to25": 10, gt25: 12 },
+    breakdownByTier: {
+      le5:     [{ label: "Abnormal LV systolic function (EF < 50%)", count: 1 }, { label: "Aortic stenosis (moderate or severe)", count: 1 }, { label: "Other complete TTE", count: 2 }],
+      "6to8":  [{ label: "Abnormal LV systolic function (EF < 50%)", count: 2 }, { label: "Aortic stenosis (moderate or severe)", count: 1 }, { label: "Other complete TTE", count: 3 }],
+      "9to15": [{ label: "Abnormal LV systolic function (EF < 50%)", count: 2 }, { label: "Aortic stenosis (moderate or severe)", count: 2 }, { label: "Other complete TTE", count: 4 }],
+      "16to25":[{ label: "Abnormal LV systolic function (EF < 50%)", count: 3 }, { label: "Aortic stenosis (moderate or severe)", count: 2 }, { label: "Other complete TTE", count: 5 }],
+      gt25:    [{ label: "Abnormal LV systolic function (EF < 50%)", count: 3 }, { label: "Aortic stenosis (moderate or severe)", count: 3 }, { label: "Other complete TTE", count: 6 }],
+    },
+    caseTypeRules: [
+      "ALL cases must be COMPLETE examinations (not focused or limited).",
+      "At least ONE case must demonstrate abnormal LV systolic function (EF < 50%).",
+      "At least ONE case must demonstrate aortic stenosis (moderate or severe).",
+      "Cases must include standard views, Doppler assessments, and measurements per ASE guidelines.",
+    ],
+    submissionRules: [
+      "Represent as many CURRENT staff members as possible without duplicating.",
+      "One case study must be submitted from the Technical Director.",
+      "Medical Director must be represented.",
+      "Cases must NOT be independently performed by sonographer or physician trainees.",
+      "The same case may not be submitted twice within a testing section.",
+    ],
+    lookbackMonths: 12,
+  },
+  {
     id: "STRESS", label: "Adult Stress Echo", fullName: "Adult Stress Echocardiography",
     icon: Activity, color: "#d97706", staffBased: true,
     casesByTier: { le5: 4, "6to8": 6, "9to15": 8, "16to25": 10, gt25: 12 },
