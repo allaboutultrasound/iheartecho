@@ -1062,7 +1062,7 @@ function SubscriptionTab({ lab }: { lab: any }) {
 // ─── Main Lab Admin Page ──────────────────────────────────────────────────────
 export default function LabAdmin() {
   const { user, loading, isAuthenticated } = useAuth();
-  const [tab, setTab] = useState<"overview" | "staff" | "analytics" | "reports" | "subscription">("overview");
+  const [tab, setTab] = useState<"overview" | "staff" | "reports-analytics" | "subscription">("overview");
 
   const { data: lab, isLoading: labLoading, refetch: refetchLab } = trpc.lab.getMyLab.useQuery(undefined, { enabled: isAuthenticated });
   const { data: members = [], refetch: refetchMembers } = trpc.lab.getMembers.useQuery(undefined, { enabled: !!lab });
@@ -1122,16 +1122,25 @@ export default function LabAdmin() {
         <div className="flex gap-1 p-1 rounded-xl mb-6 overflow-x-auto" style={{ background: "#e6f7f8" }}>
           <TabBtn active={tab === "overview"} onClick={() => setTab("overview")} icon={Building2} label="Overview" />
           <TabBtn active={tab === "staff"} onClick={() => setTab("staff")} icon={Users} label="Staff" badge={members.length} />
-          <TabBtn active={tab === "analytics"} onClick={() => setTab("analytics")} icon={BarChart2} label="Analytics" />
-          <TabBtn active={tab === "reports"} onClick={() => setTab("reports")} icon={FileText} label="Reports" />
+          <TabBtn active={tab === "reports-analytics"} onClick={() => setTab("reports-analytics")} icon={BarChart2} label="Reports & Analytics" />
           <TabBtn active={tab === "subscription"} onClick={() => setTab("subscription")} icon={CreditCard} label="Subscription" />
         </div>
 
         {/* Tab content */}
         {tab === "overview" && <OverviewTab lab={lab} members={members} snapshot={snapshot} />}
         {tab === "staff" && <StaffTab lab={lab} members={members} onRefresh={onRefresh} />}
-        {tab === "analytics" && <AnalyticsTab members={members} />}
-        {tab === "reports" && <ReportsTab lab={lab} members={members} />}
+        {tab === "reports-analytics" && (
+          <div className="space-y-8">
+            <AnalyticsTab members={members} />
+            <div className="border-t border-gray-200 pt-6">
+              <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2 mb-4">
+                <FileText className="w-4 h-4" style={{ color: BRAND }} />
+                Lab Performance Reports
+              </h2>
+              <ReportsTab lab={lab} members={members} />
+            </div>
+          </div>
+        )}
         {tab === "subscription" && <SubscriptionTab lab={lab} />}
       </div>
     </Layout>

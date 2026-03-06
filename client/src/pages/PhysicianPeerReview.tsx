@@ -402,7 +402,7 @@ export default function PhysicianPeerReview() {
   });
 
   // ── Form state ──────────────────────────────────────────────────────────────
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
   const [step, setStep] = useState(0);
 
   const [header, setHeader] = useState({
@@ -565,9 +565,7 @@ export default function PhysicianPeerReview() {
                 <span className="text-xs font-normal text-gray-400">({physicians.length} physician{physicians.length !== 1 ? "s" : ""} in lab)</span>
               )}
             </CardTitle>
-            <button onClick={() => { setExpanded(!expanded); if (!expanded) setStep(0); }} className="text-gray-400 hover:text-gray-600">
-              {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </button>
+
           </div>
         </CardHeader>
 

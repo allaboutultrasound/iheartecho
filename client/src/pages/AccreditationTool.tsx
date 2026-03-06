@@ -1150,7 +1150,7 @@ function AppropriateUseTab() {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function AccreditationTool() {
   const { isAuthenticated, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState<"qa" | "iqr" | "echo-correlation" | "peer" | "policy" | "auc" | "readiness" | "case-mix">("qa");
+  const [activeTab, setActiveTab] = useState<"iqr" | "echo-correlation" | "peer" | "policy" | "auc" | "readiness" | "case-mix">("iqr");
 
   if (loading) {
     return (
@@ -1215,7 +1215,6 @@ export default function AccreditationTool() {
       <div className="border-b border-gray-200 bg-[#f0fbfc]">
         <div className="container py-2">
           <div className="flex flex-wrap gap-1">
-            <TabBtn active={activeTab === "qa"} onClick={() => setActiveTab("qa")} icon={ClipboardList} label="Quality Review" />
             <TabBtn active={activeTab === "iqr"} onClick={() => setActiveTab("iqr")} icon={ImageIcon} label="Image Quality Review" />
             <TabBtn active={activeTab === "echo-correlation"} onClick={() => setActiveTab("echo-correlation")} icon={GitCompare} label="Echo Correlation" />
             <TabBtn active={activeTab === "peer"} onClick={() => setActiveTab("peer")} icon={Star} label="Peer Review" />
@@ -1238,7 +1237,6 @@ export default function AccreditationTool() {
             </p>
           </div>
 
-          {activeTab === "qa" && <QualityReviewTab />}
           {activeTab === "iqr" && (
             <div className="[&_aside]:hidden [&_.min-h-screen]:min-h-0 [&_.flex.min-h-screen]:block">
               <ImageQualityReviewTab />
