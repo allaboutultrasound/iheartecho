@@ -589,3 +589,12 @@
 - [x] Add feature-level premium lock to EchoNavigatorHub (TEE, ICE, Strain, Device) using hasPremiumAccess
 - [x] Add feature-level premium lock to EchoAssistHub (MS, AS, AR, MR, Strain, RV, PA) using hasPremiumAccess
 - [x] Vitest: roles.ts utility tests (25 tests, 304 total passing)
+
+## Platform Admin — User Management
+- [x] DB helper: findUserByEmail(email) — lookup existing user by email
+- [x] tRPC: platformAdmin.findUserByEmail — search user by email (admin only)
+- [x] tRPC: platformAdmin.assignRoleByEmail — assign role by email in one step (user must already exist)
+- [x] Platform Admin UI: "Add User by Email" panel with search → preview → assign role flow
+- [x] Platform Admin UI: inline role chip removal (X button on each role badge)
+- [x] Remove Platform Admin link from sidebar navigation
+- [x] Vitest: findUserByEmail and assignRoleByEmail procedure tests (14 tests, 318 total passing)

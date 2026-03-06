@@ -9,6 +9,7 @@ import {
   countUsers,
   getDiyUsersForLab,
   getLabByAdmin,
+  findUserByEmailWithRoles,
   type AppRole,
 } from "../db";
 
@@ -104,6 +105,62 @@ export const platformAdminRouter = router({
   myRoles: protectedProcedure.query(async ({ ctx }) => {
     return getUserRoles(ctx.user.id);
   }),
+
+  /**
+   * Look up a user by email address.
+   * Returns the user + their current roles, or null if not found.
+   * Used by the "Add user by email" flow in Platform Admin.
+   */
+  findUserByEmail: protectedProcedure
+    .input(z.object({ email: z.string().email("Please enter a valid email address") }))
+    .query(async ({ ctx, input }) => {
+      const myRoles = await getUserRoles(ctx.user.id);
+      if (ctx.user.role !== "admin" && !myRoles.includes("platform_admin")) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Platform admin access required" });
+      }
+      const found = await findUserByEmailWithRoles(input.email);
+      if (!found) return null;
+      return {
+        id: found.id,
+        name: found.name,
+        email: found.email,
+        displayName: found.displayName,
+        role: found.role,
+        roles: found.roles,
+        createdAt: found.createdAt,
+        lastSignedIn: found.lastSignedIn,
+      };
+    }),
+
+  /**
+   * Assign a role to a user looked up by email.
+   * Convenience wrapper so the UI can do email → role in one step.
+   */
+  assignRoleByEmail: protectedProcedure
+    .input(z.object({
+      email: z.string().email(),
+      role: z.enum(["user", "premium_user", "diy_admin", "diy_user", "platform_admin"]),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const myRoles = await getUserRoles(ctx.user.id);
+      const isOwner = ctx.user.role === "admin";
+      const isPlatformAdmin = myRoles.includes("platform_admin");
+      if (!isOwner && !isPlatformAdmin) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+      if (input.role === "platform_admin" && !isOwner) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only the owner can assign platform_admin" });
+      }
+      const found = await findUserByEmailWithRoles(input.email);
+      if (!found) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `No account found for ${input.email}. The user must sign in at least once before roles can be assigned.`,
+        });
+      }
+      await assignRole(found.id, input.role as AppRole, ctx.user.id);
+      return { success: true, userId: found.id, displayName: found.displayName ?? found.name };
+    }),
 });
 
 // ─── Lab Seat Management Router ───────────────────────────────────────────────

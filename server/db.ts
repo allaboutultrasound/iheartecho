@@ -1778,6 +1778,26 @@ export async function getUsersByRole(role: AppRole) {
   }));
 }
 
+/** Find a user by email address (case-insensitive) */
+export async function findUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const normalised = email.trim().toLowerCase();
+  // Try exact match first, then case-insensitive via sql
+  const result = await db.select().from(users)
+    .where(sql`LOWER(${users.email}) = ${normalised}`)
+    .limit(1);
+  return result[0] ?? undefined;
+}
+
+/** Find a user by email and return with their roles */
+export async function findUserByEmailWithRoles(email: string) {
+  const user = await findUserByEmail(email);
+  if (!user) return undefined;
+  const roles = await getUserRoles(user.id);
+  return { ...user, roles };
+}
+
 /** Get DIY users for a specific lab (seat management) */
 export async function getDiyUsersForLab(labId: number) {
   const db = await getDb();
