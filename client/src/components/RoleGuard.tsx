@@ -16,9 +16,12 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Link, useLocation } from "wouter";
-import { Loader2, ShieldAlert, ArrowLeft } from "lucide-react";
-import { useEffect } from "react";
+import { Loader2, ShieldAlert, ArrowLeft, CheckCircle2, Send } from "lucide-react";
+import { useEffect, useState } from "react";
+import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 
 type AppRole = "user" | "premium_user" | "diy_admin" | "diy_user" | "platform_admin";
 
@@ -47,7 +50,23 @@ const ROLE_DESCRIPTIONS: Record<string, string> = {
 
 export function RoleGuard({ roles, allowAdmin = true, children }: RoleGuardProps) {
   const { user, loading, isAuthenticated } = useAuth();
-  const [, navigate] = useLocation();
+  const [location] = useLocation();
+  const [message, setMessage] = useState("");
+  const [requested, setRequested] = useState(false);
+
+  const requestAccess = trpc.system.requestAccess.useMutation({
+    onSuccess: (data) => {
+      setRequested(true);
+      if (data.success) {
+        toast.success("Request sent — the platform administrator has been notified.");
+      } else {
+        toast.success("Request submitted — please contact support@iheartecho.com if you need immediate assistance.");
+      }
+    },
+    onError: () => {
+      toast.error("Could not send request. Please email support@iheartecho.com directly.");
+    },
+  });
 
   // Redirect unauthenticated users to login
   useEffect(() => {
@@ -91,6 +110,13 @@ export function RoleGuard({ roles, allowAdmin = true, children }: RoleGuardProps
   const requiredRoleLabels = roles.map(r => ROLE_LABELS[r]).join(" or ");
   const description = roles.map(r => ROLE_DESCRIPTIONS[r] ?? ROLE_LABELS[r]).join(" or ");
 
+  const handleRequestAccess = () => {
+    requestAccess.mutate({
+      requestedRoute: location,
+      message: message.trim() || undefined,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-6">
       <div className="max-w-md w-full text-center space-y-6">
@@ -100,7 +126,11 @@ export function RoleGuard({ roles, allowAdmin = true, children }: RoleGuardProps
             className="w-20 h-20 rounded-full flex items-center justify-center"
             style={{ background: "linear-gradient(135deg, #0e4a50, #189aa1)" }}
           >
-            <ShieldAlert className="w-10 h-10 text-white" />
+            {requested ? (
+              <CheckCircle2 className="w-10 h-10 text-white" />
+            ) : (
+              <ShieldAlert className="w-10 h-10 text-white" />
+            )}
           </div>
         </div>
 
@@ -110,16 +140,22 @@ export function RoleGuard({ roles, allowAdmin = true, children }: RoleGuardProps
             className="text-2xl font-bold text-foreground"
             style={{ fontFamily: "Merriweather, serif" }}
           >
-            Access Required
+            {requested ? "Request Sent" : "Access Required"}
           </h1>
-          <p className="text-muted-foreground text-sm leading-relaxed">
-            This section requires <strong>{requiredRoleLabels}</strong> access.
-            {description && (
-              <span className="block mt-1 text-xs text-muted-foreground/70">
-                {description} is needed to view this page.
-              </span>
-            )}
-          </p>
+          {requested ? (
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              Your access request has been sent to the platform administrator. You will be notified when access is granted.
+            </p>
+          ) : (
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              This section requires <strong>{requiredRoleLabels}</strong> access.
+              {description && (
+                <span className="block mt-1 text-xs text-muted-foreground/70">
+                  {description} is needed to view this page.
+                </span>
+              )}
+            </p>
+          )}
         </div>
 
         {/* Role info */}
@@ -148,25 +184,52 @@ export function RoleGuard({ roles, allowAdmin = true, children }: RoleGuardProps
         </div>
 
         {/* Actions */}
-        <div className="flex flex-col gap-3">
-          <a
-            href="mailto:support@iheartecho.com?subject=DIY%20Accreditation%20Tool%20Access"
-            className="w-full"
-          >
+        {!requested ? (
+          <div className="flex flex-col gap-3">
+            {/* Optional message */}
+            <Textarea
+              placeholder="Optional: describe why you need access or your role at the lab…"
+              className="text-sm resize-none"
+              rows={3}
+              value={message}
+              onChange={e => setMessage(e.target.value)}
+              maxLength={500}
+            />
             <Button
-              className="w-full font-semibold"
+              className="w-full font-semibold gap-2"
               style={{ background: "#189aa1" }}
+              onClick={handleRequestAccess}
+              disabled={requestAccess.isPending}
             >
-              Request Access
+              {requestAccess.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Sending…
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4" />
+                  Request Access
+                </>
+              )}
             </Button>
-          </a>
-          <Link href="/">
-            <Button variant="outline" className="w-full gap-2">
-              <ArrowLeft className="w-4 h-4" />
-              Back to Dashboard
-            </Button>
-          </Link>
-        </div>
+            <Link href="/">
+              <Button variant="outline" className="w-full gap-2">
+                <ArrowLeft className="w-4 h-4" />
+                Back to Dashboard
+              </Button>
+            </Link>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            <Link href="/">
+              <Button variant="outline" className="w-full gap-2">
+                <ArrowLeft className="w-4 h-4" />
+                Back to Dashboard
+              </Button>
+            </Link>
+          </div>
+        )}
 
         {/* Help text */}
         <p className="text-xs text-muted-foreground">

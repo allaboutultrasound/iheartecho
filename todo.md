@@ -522,3 +522,7 @@
 - [x] auth.me now returns appRoles array alongside user data
 - [x] platform_admin bypasses all role checks by default (allowAdmin=true)
 - [x] All 227 tests passing
+
+## Owner Promotion & Access Request Notification
+- [x] Promote owner (OWNER_OPEN_ID) to platform_admin and diy_admin roles in DB
+- [x] Wire RoleGuard "Request Access" button to send owner notification via notifyOwner
