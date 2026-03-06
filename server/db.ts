@@ -24,6 +24,7 @@ import {
   imageQualityReviews,
   echoCorrelations,
   physicianPeerReviews,
+  physicianNotifications,
   type ImageQualityReview,
   type InsertImageQualityReview,
   type LabSubscription,
@@ -31,6 +32,7 @@ import {
   type LabPeerReview,
   type PhysicianPeerReview,
   type InsertPhysicianPeerReview,
+  type PhysicianNotification,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -1214,4 +1216,94 @@ export async function getPhysicianPeerReviewTrend(labId: number, revieweeLabMemb
     ))
     .groupBy(sql`DATE_FORMAT(${physicianPeerReviews.createdAt}, '%Y-%m')`)
     .orderBy(sql`DATE_FORMAT(${physicianPeerReviews.createdAt}, '%Y-%m')`);
+}
+
+// ─── Physician Notifications ──────────────────────────────────────────────────
+
+/** Create a notification for a physician after a Physician Peer Review is submitted */
+export async function createPhysicianNotification(data: {
+  recipientUserId: number;
+  recipientLabMemberId?: number;
+  reviewId: number;
+  title: string;
+  message: string;
+  payload?: object;
+}) {
+  const db = await getDb();
+  if (!db) return null;
+  await db.insert(physicianNotifications).values({
+    recipientUserId: data.recipientUserId,
+    recipientLabMemberId: data.recipientLabMemberId ?? null,
+    reviewId: data.reviewId,
+    type: "peer_review_result",
+    title: data.title,
+    message: data.message,
+    payload: data.payload ? JSON.stringify(data.payload) : null,
+    isRead: false,
+    isDismissed: false,
+  });
+}
+
+/** Get all notifications for a user (newest first, excluding dismissed) */
+export async function getPhysicianNotifications(recipientUserId: number, limit = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select()
+    .from(physicianNotifications)
+    .where(and(
+      eq(physicianNotifications.recipientUserId, recipientUserId),
+      eq(physicianNotifications.isDismissed, false),
+    ))
+    .orderBy(desc(physicianNotifications.createdAt))
+    .limit(limit);
+}
+
+/** Count unread notifications for a user */
+export async function countUnreadPhysicianNotifications(recipientUserId: number): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+  const result = await db.select({ cnt: count() })
+    .from(physicianNotifications)
+    .where(and(
+      eq(physicianNotifications.recipientUserId, recipientUserId),
+      eq(physicianNotifications.isRead, false),
+      eq(physicianNotifications.isDismissed, false),
+    ));
+  return result[0]?.cnt ?? 0;
+}
+
+/** Mark a single notification as read */
+export async function markPhysicianNotificationRead(id: number, recipientUserId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(physicianNotifications)
+    .set({ isRead: true, readAt: new Date() })
+    .where(and(
+      eq(physicianNotifications.id, id),
+      eq(physicianNotifications.recipientUserId, recipientUserId),
+    ));
+}
+
+/** Mark all notifications as read for a user */
+export async function markAllPhysicianNotificationsRead(recipientUserId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(physicianNotifications)
+    .set({ isRead: true, readAt: new Date() })
+    .where(and(
+      eq(physicianNotifications.recipientUserId, recipientUserId),
+      eq(physicianNotifications.isRead, false),
+    ));
+}
+
+/** Dismiss (soft-delete) a notification */
+export async function dismissPhysicianNotification(id: number, recipientUserId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(physicianNotifications)
+    .set({ isDismissed: true })
+    .where(and(
+      eq(physicianNotifications.id, id),
+      eq(physicianNotifications.recipientUserId, recipientUserId),
+    ));
 }

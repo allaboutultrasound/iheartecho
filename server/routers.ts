@@ -84,6 +84,12 @@ import {
   getPhysicianPeerReviewStaffSnapshot,
   getPhysicianPeerReviewMonthlySummary,
   getPhysicianPeerReviewTrend,
+  createPhysicianNotification,
+  getPhysicianNotifications,
+  countUnreadPhysicianNotifications,
+  markPhysicianNotificationRead,
+  markAllPhysicianNotificationsRead,
+  dismissPhysicianNotification,
 } from "./db";
 
 export const appRouter = router({
@@ -1089,7 +1095,57 @@ export const appRouter = router({
       }))
       .mutation(async ({ ctx, input }) => {
         const labId = input.labId ?? (await getLabByMemberUserId(ctx.user.id))?.id;
-        return createPhysicianPeerReview({ ...input, userId: ctx.user.id, labId });
+        const review = await createPhysicianPeerReview({ ...input, userId: ctx.user.id, labId });
+
+        // ── Trigger notification to the reviewed physician ──────────────────────
+        // Only send if the reviewee is a linked lab member with a userId
+        if (input.revieweeLabMemberId && review) {
+          try {
+            // Look up the lab member to get their userId
+            const labMembers = labId ? await getLabMembers(labId) : [];
+            const revieweeMember = labMembers.find(m => m.id === input.revieweeLabMemberId);
+            if (revieweeMember?.userId) {
+              const examType = input.examType ?? "Echo";
+              const examDate = input.examDos ?? input.dateReviewCompleted ?? new Date().toLocaleDateString();
+              const reviewerName = input.reviewerName ?? ctx.user.name ?? "A reviewer";
+              const concordance = input.concordanceScore != null ? `${input.concordanceScore}%` : "N/A";
+              const discordant = input.discordanceFields
+                ? JSON.parse(input.discordanceFields).slice(0, 5).join(", ")
+                : "None";
+
+              const title = `Physician Peer Review Result — ${examType} (${examDate})`;
+              const message = [
+                `A Physician Peer Review has been completed for your ${examType} study dated ${examDate}.`,
+                ``,
+                `**Concordance Score:** ${concordance}`,
+                `**Discordant Fields:** ${discordant}`,
+                input.reviewComments ? `**Reviewer Comments:** ${input.reviewComments}` : null,
+                ``,
+                `Reviewed by: ${reviewerName}`,
+              ].filter(Boolean).join("\n");
+
+              await createPhysicianNotification({
+                recipientUserId: revieweeMember.userId,
+                recipientLabMemberId: input.revieweeLabMemberId,
+                reviewId: (review as unknown as { insertId: number }).insertId ?? 0,
+                title,
+                message,
+                payload: {
+                  concordanceScore: input.concordanceScore,
+                  discordantFields: input.discordanceFields ? JSON.parse(input.discordanceFields) : [],
+                  reviewerName,
+                  examType,
+                  examDate,
+                },
+              });
+            }
+          } catch (notifErr) {
+            // Notification failure should not block review creation
+            console.warn("[PhysicianPeerReview] Notification failed:", notifErr);
+          }
+        }
+
+        return review;
       }),
 
     /** List Physician Peer Reviews for the current user */
@@ -1146,6 +1202,41 @@ export const appRouter = router({
         const lab = await getLabByAdmin(ctx.user.id);
         if (!lab) return [];
         return getPhysicianPeerReviewTrend(lab.id, input.revieweeLabMemberId);
+      }),
+  }),
+
+  // ─── Physician Notifications ─────────────────────────────────────────────
+  notification: router({
+    /** Get all notifications for the current user */
+    getMyNotifications: protectedProcedure.query(async ({ ctx }) => {
+      const notifications = await getPhysicianNotifications(ctx.user.id);
+      return notifications.map(n => ({
+        ...n,
+        payload: n.payload ? JSON.parse(n.payload) : null,
+      }));
+    }),
+    /** Count unread notifications */
+    getUnreadCount: protectedProcedure.query(async ({ ctx }) => {
+      return countUnreadPhysicianNotifications(ctx.user.id);
+    }),
+    /** Mark a single notification as read */
+    markRead: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await markPhysicianNotificationRead(input.id, ctx.user.id);
+        return { success: true };
+      }),
+    /** Mark all notifications as read */
+    markAllRead: protectedProcedure.mutation(async ({ ctx }) => {
+      await markAllPhysicianNotificationsRead(ctx.user.id);
+      return { success: true };
+    }),
+    /** Dismiss (soft-delete) a notification */
+    dismiss: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await dismissPhysicianNotification(input.id, ctx.user.id);
+        return { success: true };
       }),
   }),
 });

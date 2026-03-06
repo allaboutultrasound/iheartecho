@@ -642,3 +642,31 @@ export const physicianPeerReviews = mysqlTable("physicianPeerReviews", {
 });
 export type PhysicianPeerReview = typeof physicianPeerReviews.$inferSelect;
 export type InsertPhysicianPeerReview = typeof physicianPeerReviews.$inferInsert;
+
+// ─── Physician Notifications ──────────────────────────────────────────────────
+// In-app notifications sent to physicians when a Physician Peer Review is submitted
+export const physicianNotifications = mysqlTable("physicianNotifications", {
+  id: int("id").primaryKey().autoincrement(),
+  // The physician who receives the notification (FK → users.id)
+  recipientUserId: int("recipientUserId").notNull(),
+  // The lab member record for the physician (FK → labMembers.id), if linked
+  recipientLabMemberId: int("recipientLabMemberId"),
+  // The review that triggered this notification (FK → physicianPeerReviews.id)
+  reviewId: int("reviewId").notNull(),
+  // Notification type
+  type: varchar("type", { length: 50 }).notNull().default("peer_review_result"),
+  // Short title shown in the bell dropdown
+  title: varchar("title", { length: 255 }).notNull(),
+  // Full message body (includes concordance score, discordant fields, comments)
+  message: text("message").notNull(),
+  // Structured payload (JSON): { concordanceScore, discordantFields, reviewerName, examType, examDate }
+  payload: text("payload"),
+  // Whether the physician has read this notification
+  isRead: boolean("isRead").notNull().default(false),
+  // Whether the notification has been dismissed
+  isDismissed: boolean("isDismissed").notNull().default(false),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  readAt: timestamp("readAt"),
+});
+export type PhysicianNotification = typeof physicianNotifications.$inferSelect;
+export type InsertPhysicianNotification = typeof physicianNotifications.$inferInsert;

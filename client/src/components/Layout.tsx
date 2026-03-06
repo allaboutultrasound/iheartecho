@@ -10,6 +10,8 @@ import {
   Scan, BookOpen, FileText, Menu, X, ChevronRight,
   Stethoscope, Microscope, Zap, Users, ExternalLink, ShoppingBag, FlaskConical, Cpu, Layers, MessageCircle, Radio, Wind, Shield, Award, Building2, BarChart3
 } from "lucide-react";
+import NotificationBell from "@/components/NotificationBell";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 const navGroups = [
   {
@@ -84,6 +86,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [rawLocation] = useLocation();
   const location = rawLocation.split("?")[0];
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   return (
     <div className="flex min-h-screen bg-[#f0fbfc]">
@@ -191,8 +194,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               {navItems.find(n => n.path === location)?.label ?? "iHeartEcho"}
             </span>
           </div>
-          <div className="ml-auto text-xs text-gray-400 hidden sm:block">
-            Echocardiography Clinical Companion
+          <div className="ml-auto flex items-center gap-2">
+            <span className="text-xs text-gray-400 hidden sm:block">Echocardiography Clinical Companion</span>
+            {isAuthenticated && <NotificationBell />}
           </div>
         </header>
 

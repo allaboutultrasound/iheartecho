@@ -320,11 +320,20 @@
 - [ ] Write vitest tests for new IQR analytics DB helpers
 
 ## Physician Variability Echo Form — Peer Review Tab Replacement
-- [ ] Add physicianVariabilityReviews table to drizzle/schema.ts (with revieweeLabMemberId, reviewerLabMemberId for Lab Admin linkage)
-- [ ] Add DB helpers: createPhysVariabilityReview, getPhysVariabilityReviews, getPhysVariabilityStaffSnapshot, getPhysVariabilityMonthlySummary
-- [ ] Add tRPC procedures: physVariability.create, list, getStaffSnapshot, getMonthlySummary, getLabStaffForReview
-- [ ] Build PhysicianVariabilityReview.tsx form with full branching (Adult TTE / Stress / Pediatric / Fetal sections)
-- [ ] Staff dropdowns: Original Interpreting Physician + Over-Reading Physician pull from Lab Admin physician-role members
-- [ ] Replace PeerReviewTab in AccreditationTool.tsx with new PhysicianVariabilityReview component
-- [ ] Wire Lab Admin Analytics tab to show physician variability data alongside IQR data
-- [ ] Wire Lab Admin Reports tab to include physician variability monthly summary
+- [x] Add physicianPeerReviews table to drizzle/schema.ts (with revieweeLabMemberId, reviewerLabMemberId for Lab Admin linkage)
+- [x] Add DB helpers: createPhysicianPeerReview, getPhysicianPeerReviews, getPhysicianPeerReviewStaffSnapshot, getPhysicianPeerReviewMonthlySummary
+- [x] Add tRPC procedures: physicianPeerReview.create, list, getStaffSnapshot, getMonthlySummary, getLabStaffForReview
+- [x] Build PhysicianPeerReview.tsx form with full branching (Adult TTE / Stress / Pediatric / Fetal sections)
+- [x] Staff dropdowns: Original Interpreting Physician + Over-Reading Physician pull from Lab Admin physician-role members
+- [x] Replace PeerReviewTab in AccreditationTool.tsx with new PhysicianPeerReview component
+- [x] Wire Lab Admin Analytics tab to show physician peer review concordance data alongside IQR data
+- [x] Wire Lab Admin Reports tab to include physician peer review monthly concordance summary
+
+## Physician Peer Review — Notification System
+- [x] Add physicianNotifications table to DB schema
+- [x] Add DB helpers: createPhysicianNotification, getPhysicianNotifications, markNotificationRead, markAllRead
+- [x] Add tRPC procedures: notification.getMyNotifications, notification.markRead, notification.markAllRead
+- [x] Trigger notification on Physician Peer Review submission (server-side, in create mutation)
+- [x] Build NotificationBell component in the app header (badge count, dropdown)
+- [x] Build Notifications panel/page for physicians to view full review details
+- [x] Write vitest tests for notification logic
