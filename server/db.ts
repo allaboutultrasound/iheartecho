@@ -29,6 +29,9 @@ import {
   accreditationReadinessNavigator,
   caseMixSubmissions,
   cmeEntries,
+  userRoles,
+  type UserRole,
+  type InsertUserRole,
   type CmeEntry,
   type InsertCmeEntry,
   type AccreditationReadiness,
@@ -1662,4 +1665,125 @@ export async function getReadinessAutoChecks(labId: number): Promise<Record<stri
   result["s6-cm-10"] = caseMixRows.some(r => r.isMedDir);
 
   return result;
+}
+
+// ─── RBAC / User Roles ────────────────────────────────────────────────────────
+
+export type AppRole = "user" | "premium_user" | "diy_admin" | "diy_user" | "platform_admin";
+
+/** Return all roles assigned to a user */
+export async function getUserRoles(userId: number): Promise<AppRole[]> {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select().from(userRoles).where(eq(userRoles.userId, userId));
+  return rows.map(r => r.role as AppRole);
+}
+
+/** Check if a user has a specific role */
+export async function userHasRole(userId: number, role: AppRole): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  const rows = await db.select().from(userRoles)
+    .where(and(eq(userRoles.userId, userId), eq(userRoles.role, role))).limit(1);
+  return rows.length > 0;
+}
+
+/** Assign a role to a user (idempotent) */
+export async function assignRole(
+  userId: number,
+  role: AppRole,
+  assignedByUserId: number,
+  grantedByLabId?: number,
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  // Check if already assigned
+  const existing = await db.select().from(userRoles)
+    .where(and(eq(userRoles.userId, userId), eq(userRoles.role, role))).limit(1);
+  if (existing.length > 0) return; // already has role
+  await db.insert(userRoles).values({
+    userId,
+    role,
+    assignedByUserId,
+    grantedByLabId: grantedByLabId ?? null,
+  });
+}
+
+/** Remove a role from a user */
+export async function removeRole(userId: number, role: AppRole): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(userRoles)
+    .where(and(eq(userRoles.userId, userId), eq(userRoles.role, role)));
+}
+
+/** Ensure a user has the base "user" role (called on every login) */
+export async function ensureUserRole(userId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  const existing = await db.select().from(userRoles)
+    .where(and(eq(userRoles.userId, userId), eq(userRoles.role, "user"))).limit(1);
+  if (existing.length > 0) return;
+  await db.insert(userRoles).values({ userId, role: "user", assignedByUserId: userId });
+}
+
+/** List all users with their roles (for admin panel) */
+export async function listUsersWithRoles(limit = 100, offset = 0) {
+  const db = await getDb();
+  if (!db) return [];
+  const allUsers = await db.select().from(users)
+    .orderBy(desc(users.createdAt)).limit(limit).offset(offset);
+  if (allUsers.length === 0) return [];
+  const userIds = allUsers.map(u => u.id);
+  const allRoles = await db.select().from(userRoles)
+    .where(or(...userIds.map(id => eq(userRoles.userId, id))));
+  const roleMap = new Map<number, AppRole[]>();
+  for (const r of allRoles) {
+    const list = roleMap.get(r.userId) ?? [];
+    list.push(r.role as AppRole);
+    roleMap.set(r.userId, list);
+  }
+  return allUsers.map(u => ({
+    ...u,
+    roles: roleMap.get(u.id) ?? [],
+  }));
+}
+
+/** Count total users */
+export async function countUsers(): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+  const result = await db.select({ total: count() }).from(users);
+  return result[0]?.total ?? 0;
+}
+
+/** Get users with a specific role (for seat management) */
+export async function getUsersByRole(role: AppRole) {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select().from(userRoles).where(eq(userRoles.role, role));
+  if (rows.length === 0) return [];
+  const userIds = rows.map(r => r.userId);
+  const userList = await db.select().from(users)
+    .where(or(...userIds.map(id => eq(users.id, id))));
+  return userList.map(u => ({
+    ...u,
+    roleRow: rows.find(r => r.userId === u.id),
+  }));
+}
+
+/** Get DIY users for a specific lab (seat management) */
+export async function getDiyUsersForLab(labId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select().from(userRoles)
+    .where(and(eq(userRoles.role, "diy_user"), eq(userRoles.grantedByLabId, labId)));
+  if (rows.length === 0) return [];
+  const userIds = rows.map(r => r.userId);
+  const userList = await db.select().from(users)
+    .where(or(...userIds.map(id => eq(users.id, id))));
+  return userList.map(u => ({
+    ...u,
+    grantedAt: rows.find(r => r.userId === u.id)?.createdAt,
+  }));
 }

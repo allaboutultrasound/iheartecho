@@ -5,6 +5,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { storagePut } from "./storage";
+import { platformAdminRouter, labSeatsRouter } from "./routers/adminRouter";
 import {
   acceptHubTerms,
   createComment,
@@ -104,6 +105,17 @@ import {
   getCmeEntriesForMember,
   addCmeEntry,
   deleteCmeEntry,
+  // RBAC
+  getUserRoles,
+  userHasRole,
+  assignRole,
+  removeRole,
+  ensureUserRole,
+  listUsersWithRoles,
+  countUsers,
+  getUsersByRole,
+  getDiyUsersForLab,
+  type AppRole,
 } from "./db";
 
 export const appRouter = router({
@@ -1425,5 +1437,10 @@ export const appRouter = router({
         return { success: true };
       }),
   }),
+
+  // ─── Platform Admin & Seat Management ────────────────────────────────────
+  platformAdmin: platformAdminRouter,
+  labSeats: labSeatsRouter,
 });
 export type AppRouter = typeof appRouter;
+

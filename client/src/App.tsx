@@ -33,6 +33,7 @@ import StrainNavigator from "./pages/StrainNavigator";
 import AccreditationTool from "./pages/AccreditationTool";
 import AccreditationNavigator from "./pages/AccreditationNavigator";
 import LabAdmin from "./pages/LabAdmin";
+import PlatformAdmin from "./pages/PlatformAdmin";
 import ImageQualityReview from "./pages/ImageQualityReview";
 import EchoCorrelation from "./pages/EchoCorrelation";
 import EchoNavigatorHub from "./pages/EchoNavigatorHub";
@@ -69,6 +70,7 @@ function Router() {
       <Route path="/accreditation" component={AccreditationTool} />
       <Route path="/accreditation-navigator" component={AccreditationNavigator} />
       <Route path="/lab-admin" component={LabAdmin} />
+      <Route path="/platform-admin" component={PlatformAdmin} />
       <Route path="/image-quality-review" component={ImageQualityReview} />
       <Route path="/echo-correlation" component={() => { window.location.replace("/accreditation"); return null; }} />
       <Route path="/echo-navigators" component={EchoNavigatorHub} />

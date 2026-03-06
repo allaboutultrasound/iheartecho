@@ -774,3 +774,32 @@ export const accreditationReadinessNavigator = mysqlTable("accreditationReadines
 });
 export type AccreditationReadinessNavigator = typeof accreditationReadinessNavigator.$inferSelect;
 export type InsertAccreditationReadinessNavigator = typeof accreditationReadinessNavigator.$inferInsert;
+
+// ─── User Roles (RBAC) ────────────────────────────────────────────────────────
+// Multi-role assignment: a user can hold multiple app-level roles simultaneously.
+// Roles:
+//   user           — default on registration, basic access
+//   premium_user   — access to premium navigator features
+//   diy_admin      — Lab Admin who manages the DIY Accreditation Tool & assigns seats
+//   diy_user       — seat-assigned user with DIY Accreditation Tool access
+//   platform_admin — full platform management access (owner-level)
+export const appRoleEnum = mysqlEnum("appRole", [
+  "user",
+  "premium_user",
+  "diy_admin",
+  "diy_user",
+  "platform_admin",
+]);
+
+export const userRoles = mysqlTable("userRoles", {
+  id: int("id").primaryKey().autoincrement(),
+  userId: int("userId").notNull(),
+  role: mysqlEnum("role", ["user", "premium_user", "diy_admin", "diy_user", "platform_admin"]).notNull(),
+  // For diy_user: which lab subscription granted this seat
+  grantedByLabId: int("grantedByLabId"),
+  // Who assigned this role (platform_admin or diy_admin userId)
+  assignedByUserId: int("assignedByUserId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type UserRole = typeof userRoles.$inferSelect;
+export type InsertUserRole = typeof userRoles.$inferInsert;

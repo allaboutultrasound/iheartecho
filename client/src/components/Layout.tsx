@@ -8,8 +8,9 @@ import { Link, useLocation } from "wouter";
 import {
   Heart, Calculator, ClipboardList, Activity,
   Scan, BookOpen, FileText, Menu, X, ChevronRight,
-  Stethoscope, Zap, ExternalLink, ShoppingBag, FlaskConical, MessageCircle, Award
+  Stethoscope, Zap, ExternalLink, ShoppingBag, FlaskConical, MessageCircle, Award, Shield
 } from "lucide-react";
+import { trpc } from "@/lib/trpc";
 import NotificationBell from "@/components/NotificationBell";
 import { useAuth } from "@/_core/hooks/useAuth";
 
@@ -60,6 +61,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const location = rawLocation.split("?")[0];
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { isAuthenticated } = useAuth();
+  const { data: isAdmin } = trpc.platformAdmin.isAdmin.useQuery(undefined, { enabled: isAuthenticated });
 
   return (
     <div className="flex min-h-screen bg-[#f0fbfc]">
@@ -125,6 +127,24 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </div>
           ))}
         </nav>
+
+        {/* Platform Admin link — only for admins */}
+        {isAdmin && (
+          <div className="px-3 pb-1">
+            <Link href="/platform-admin">
+              <div
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-150 group w-full
+                  ${location === "/platform-admin"
+                    ? "bg-purple-600 text-white"
+                    : "text-white/50 hover:bg-white/10 hover:text-white"}`}
+                onClick={() => setSidebarOpen(false)}
+              >
+                <Shield className="w-4 h-4 flex-shrink-0 text-purple-400 group-hover:text-white" />
+                <span className="text-xs font-medium">Platform Admin</span>
+              </div>
+            </Link>
+          </div>
+        )}
 
         {/* SonoShop */}
         <div className="px-3 pb-2">

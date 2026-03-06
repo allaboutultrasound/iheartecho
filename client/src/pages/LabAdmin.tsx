@@ -1211,10 +1211,140 @@ function SubscriptionTab({ lab }: { lab: any }) {
   );
 }
 
+// ─── Seats Tab ───────────────────────────────────────────────────────────────
+function SeatsTab({ lab }: { lab: any }) {
+  const [inviteEmail, setInviteEmail] = useState("");
+  const utils = trpc.useUtils();
+
+  const { data: seats = [], isLoading, refetch: refetchSeats } = trpc.labSeats.listDiyUsers.useQuery();
+
+  const assignSeat = trpc.labSeats.assignSeat.useMutation({
+    onSuccess: () => {
+      toast.success("Seat assigned.");
+      setInviteEmail("");
+      refetchSeats();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const revokeSeat = trpc.labSeats.revokeSeat.useMutation({
+    onSuccess: () => {
+      toast.success("Seat revoked.");
+      refetchSeats();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const planSeats = lab?.plan === "enterprise" ? 999 : lab?.plan === "professional" ? 25 : 5;
+  const usedSeats = seats.length;
+  const remainingSeats = planSeats === 999 ? "Unlimited" : Math.max(0, planSeats - usedSeats);
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>DIY Accreditation User Seats</h2>
+          <p className="text-xs text-gray-500 mt-0.5">Assign seats to give users access to the DIY Accreditation Tool.</p>
+        </div>
+        <div className="text-right">
+          <div className="text-xs text-gray-500">Seats used</div>
+          <div className="text-lg font-black" style={{ color: BRAND }}>
+            {usedSeats} / {planSeats === 999 ? "∞" : planSeats}
+          </div>
+          <div className="text-xs text-gray-400">{remainingSeats} remaining</div>
+        </div>
+      </div>
+
+      {/* Assign new seat */}
+      <Card className="border border-[#189aa1]/20">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-bold text-gray-700 flex items-center gap-2">
+            <Plus className="w-4 h-4" style={{ color: BRAND }} />
+            Assign a Seat by User ID or Email
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2">
+            <Input
+              className="h-9 text-sm flex-1"
+              placeholder="User ID or registered email"
+              value={inviteEmail}
+              onChange={e => setInviteEmail(e.target.value)}
+            />
+            <Button
+              className="text-white h-9 px-4 text-sm"
+              style={{ background: BRAND }}
+              disabled={!inviteEmail.trim() || assignSeat.isPending}
+              onClick={() => {
+                const parsed = parseInt(inviteEmail.trim());
+                if (isNaN(parsed)) { toast.error("Please enter a numeric User ID."); return; }
+                assignSeat.mutate({ userId: parsed });
+              }}
+            >
+              {assignSeat.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : "Assign"}
+            </Button>
+          </div>
+          <p className="text-xs text-gray-400 mt-2">The user must already have an account. Enter their user ID or the email they registered with.</p>
+        </CardContent>
+      </Card>
+
+      {/* Current seat holders */}
+      <Card className="border border-[#189aa1]/20">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-bold text-gray-700 flex items-center gap-2">
+            <Users className="w-4 h-4" style={{ color: BRAND }} />
+            Current Seat Holders
+            <Badge className="ml-1 text-[10px]" style={{ background: BRAND + "20", color: BRAND }}>{usedSeats}</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center py-6"><Loader2 className="w-5 h-5 animate-spin" style={{ color: BRAND }} /></div>
+          ) : seats.length === 0 ? (
+            <div className="text-center py-8">
+              <Shield className="w-8 h-8 text-gray-200 mx-auto mb-2" />
+              <p className="text-xs text-gray-400">No seats assigned yet. Add users above to give them DIY Accreditation Tool access.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {seats.map((seat: any) => (
+                <div key={seat.userId} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 bg-gray-50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: BRAND }}>
+                      {(seat.userName || seat.userEmail || "?").charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-gray-800">{seat.userName || "Unknown User"}</div>
+                      <div className="text-xs text-gray-400">{seat.userEmail || seat.userId}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge className="text-[10px]" style={{ background: "#dcfce7", color: "#16a34a" }}>Active</Badge>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs text-red-600 border-red-200 hover:bg-red-50"
+                      disabled={revokeSeat.isPending}
+                      onClick={() => revokeSeat.mutate({ userId: seat.userId })}
+                    >
+                      Revoke
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 // ─── Main Lab Admin Page ──────────────────────────────────────────────────────
 export default function LabAdmin() {
   const { user, loading, isAuthenticated } = useAuth();
-  const [tab, setTab] = useState<"overview" | "staff" | "reports-analytics" | "subscription">("overview");
+  const [tab, setTab] = useState<"overview" | "staff" | "reports-analytics" | "subscription" | "seats">("overview");
 
   const { data: lab, isLoading: labLoading, refetch: refetchLab } = trpc.lab.getMyLab.useQuery(undefined, { enabled: isAuthenticated });
   const { data: members = [], refetch: refetchMembers } = trpc.lab.getMembers.useQuery(undefined, { enabled: !!lab });
@@ -1276,6 +1406,7 @@ export default function LabAdmin() {
           <TabBtn active={tab === "staff"} onClick={() => setTab("staff")} icon={Users} label="Staff" badge={members.length} />
           <TabBtn active={tab === "reports-analytics"} onClick={() => setTab("reports-analytics")} icon={BarChart2} label="Reports & Analytics" />
           <TabBtn active={tab === "subscription"} onClick={() => setTab("subscription")} icon={CreditCard} label="Subscription" />
+          <TabBtn active={tab === "seats"} onClick={() => setTab("seats")} icon={Shield} label="User Seats" />
         </div>
 
         {/* Tab content */}
@@ -1297,6 +1428,7 @@ export default function LabAdmin() {
           </div>
         )}
         {tab === "subscription" && <SubscriptionTab lab={lab} />}
+        {tab === "seats" && <SeatsTab lab={lab} />}
       </div>
     </Layout>
   );

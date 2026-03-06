@@ -162,6 +162,13 @@
       "when": 1772820765409,
       "tag": "0022_swift_lucky_pierre",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "5",
+      "when": 1772823728608,
+      "tag": "0023_fluffy_king_bedlam",
+      "breakpoints": true
     }
   ]
 }

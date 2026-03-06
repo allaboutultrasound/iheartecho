@@ -500,3 +500,16 @@
 - [x] Wire auto-check signals into AccreditationReadiness — merge with manual checks, show auto-verified badge
 - [x] Auto-checked items show teal checkmark + "auto-verified" badge, cannot be manually unchecked
 - [x] All 227 tests passing
+
+## Login & Role-Based Access Control System
+- [ ] Extend users schema: roles enum (user, premium_user, diy_admin, diy_user, platform_admin)
+- [ ] Auto-assign "user" role on first OAuth login (upsert logic in auth callback)
+- [ ] tRPC: admin.listUsers, admin.assignRole, admin.removeRole, admin.getUserRoles
+- [ ] tRPC: lab seat management — assign/revoke diy_user seats per lab subscription
+- [ ] Admin Backend Management UI (/admin) — user list, role assignment, seat management
+- [ ] Role guards: premium routes check isPremium or premium_user role
+- [ ] Role guards: DIY Accreditation Tool checks diy_admin or diy_user role
+- [ ] Role guards: Admin panel checks platform_admin role
+- [ ] Login page / sign-in flow with Manus OAuth
+- [ ] Registration auto-creates user with "user" role (no other permissions)
+- [ ] Role badge display on user profile and admin panel

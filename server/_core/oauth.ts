@@ -36,6 +36,12 @@ export function registerOAuthRoutes(app: Express) {
         lastSignedIn: new Date(),
       });
 
+      // Auto-assign the base "user" role on every login (idempotent)
+      const createdUser = await db.getUserByOpenId(userInfo.openId);
+      if (createdUser) {
+        await db.ensureUserRole(createdUser.id);
+      }
+
       const sessionToken = await sdk.createSessionToken(userInfo.openId, {
         name: userInfo.name || "",
         expiresInMs: ONE_YEAR_MS,
