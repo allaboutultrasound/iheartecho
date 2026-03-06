@@ -386,3 +386,6 @@
 
 ## Fetal Echo Navigator
 - [x] Move image protocol checklist to the first tab
+
+## Case Mix Submission — IAC Rewrite
+- [x] Rewrite CaseMixSubmission to reflect exact IAC requirements (staff-count selector, per-modality case volumes, case type breakdowns, submission rules)
