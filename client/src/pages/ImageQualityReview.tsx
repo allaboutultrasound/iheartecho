@@ -1025,11 +1025,6 @@ export default function ImageQualityReview({ embedded = false }: { embedded?: bo
       {/* Header — hidden when embedded; compact action bar shown instead */}
       <div className={embedded ? "flex items-center justify-between mb-4" : "flex items-center justify-between mb-6"}>
         <div>
-          {!embedded && (
-            <h1 className="text-2xl font-black text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-              Image Quality Review™
-            </h1>
-          )}
           <p className="text-sm text-gray-500 mt-0.5">
             {editingId ? `Editing Review #${editingId}` : "New Review"} · {form.examType || "Select exam type"}
           </p>

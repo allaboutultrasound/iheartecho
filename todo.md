@@ -542,3 +542,7 @@
 - [x] Scrape CME collections page to extract course names, images, prices, and checkout URLs
 - [x] Replace Thinkific API-driven catalog with hardcoded CME course data from the collections page
 - [x] Email-prefilled checkout deep links for logged-in users
+
+## Bug Fixes
+- [x] ImageQualityReview: remove duplicate page-level h1 header (title + subtitle row inside the page content)
+- [x] ImageQualityReview: remove ™ trademark from "Image Quality Review™" page title

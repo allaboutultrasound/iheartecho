@@ -54,8 +54,11 @@ const navGroups = [
   },
 ];
 
-// Flat list for header label lookup
-const navItems = navGroups.flatMap(g => g.items);
+// Flat list for header label lookup (includes hidden routes not shown in sidebar)
+const hiddenNavItems = [
+  { path: "/image-quality-review", label: "Image Quality Review" },
+];
+const navItems = [...navGroups.flatMap(g => g.items), ...hiddenNavItems];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [rawLocation] = useLocation();
