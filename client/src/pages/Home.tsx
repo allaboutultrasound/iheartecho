@@ -13,7 +13,8 @@ import {
 
 const BRAND = "#189aa1";
 
-const modules = [
+type Module = { path: string; icon: any; title: string; description: string; badge: string; color: string; premium?: boolean };
+const modules: Module[] = [
   {
     path: "/echo-navigators",
     icon: Stethoscope,
@@ -77,6 +78,7 @@ const modules = [
     description: "Quality reviews, peer review tracking, policy builder, and appropriate use monitoring — everything your lab needs for IAC accreditation.",
     badge: "Accreditation",
     color: BRAND,
+    premium: true,
   },
   {
     path: "/hub",
@@ -187,16 +189,25 @@ export default function Home() {
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {modules.map(({ path, icon: Icon, title, description, badge, color }) => (
+          {modules.map(({ path, icon: Icon, title, description, badge, color, premium }) => (
             <Link key={path} href={path}>
-              <div className="module-card bg-white rounded-xl p-5 cursor-pointer group h-full">
+              <div className="module-card bg-white rounded-xl p-5 cursor-pointer group h-full relative overflow-hidden">
+                {premium && (
+                  <div className="absolute top-0 right-0">
+                    <div className="bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-[10px] font-bold px-3 py-0.5 rounded-bl-lg tracking-wide uppercase shadow-sm">
+                      Premium
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-start justify-between mb-3">
                   <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: color + "18" }}>
                     <Icon className="w-5 h-5" style={{ color }} />
                   </div>
-                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: color + "15", color }}>
-                    {badge}
-                  </span>
+                  {!premium && (
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: color + "15", color }}>
+                      {badge}
+                    </span>
+                  )}
                 </div>
                 <h3 className="font-bold text-gray-800 mb-1.5 text-sm leading-snug" style={{ fontFamily: "Merriweather, serif" }}>
                   {title}
