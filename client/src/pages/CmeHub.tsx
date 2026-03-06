@@ -1,16 +1,22 @@
 /*
   iHeartEcho — CME Hub
-  Displays All About Ultrasound CME courses from member.allaboutultrasound.com/collections/cme
+  Displays All About Ultrasound CME courses from the E-Learning & CME collection on Thinkific.
+  Course data is fetched live from the Thinkific API via tRPC (cached, refreshed every 6 hours).
+  Static fallback data is used if the API is unavailable.
   Checkout links are prefilled with the logged-in user's email for fast checkout.
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
 import React, { useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import Layout from "@/components/Layout";
-import { GraduationCap, ExternalLink, Star, BookOpen, Clock } from "lucide-react";
+import { trpc } from "@/lib/trpc";
+import { GraduationCap, ExternalLink, Star, BookOpen, Clock, Info, RefreshCw } from "lucide-react";
+import { parseCreditHoursFromName } from "@/lib/cmeUtils";
 
 const BRAND = "#189aa1";
-const THINKIFIC_BASE = "https://member.allaboutultrasound.com";
+
+// ─── Static Fallback Data ─────────────────────────────────────────────────────
+// Used when the Thinkific API is unavailable. Keep in sync with live data.
 
 interface CmeCourse {
   id: string;
@@ -22,12 +28,14 @@ interface CmeCourse {
   creditType: string;
   category: string;
   enrollUrl: string;
+  /** Thinkific product page URL for "Learn More" */
+  courseUrl: string;
   isFeatured?: boolean;
   isBundle?: boolean;
   isFree?: boolean;
 }
 
-const CME_COURSES: CmeCourse[] = [
+const STATIC_CME_COURSES: CmeCourse[] = [
   // --- Featured Bundle ---
   {
     id: "cme-membership",
@@ -39,6 +47,7 @@ const CME_COURSES: CmeCourse[] = [
     creditType: "SDMS",
     category: "Bundle",
     enrollUrl: "https://member.allaboutultrasound.com/enroll/3612790",
+    courseUrl: "https://member.allaboutultrasound.com/products/cme-membership",
     isFeatured: true,
     isBundle: true,
   },
@@ -53,6 +62,7 @@ const CME_COURSES: CmeCourse[] = [
     creditType: "SDMS CME",
     category: "Ergonomics",
     enrollUrl: "https://member.allaboutultrasound.com/enroll/617498",
+    courseUrl: "https://member.allaboutultrasound.com/products/sonographer-ergonomics-1-sdms-cme",
     isFree: true,
   },
   {
@@ -65,6 +75,7 @@ const CME_COURSES: CmeCourse[] = [
     creditType: "SDMS CME",
     category: "Adult Echo",
     enrollUrl: "https://member.allaboutultrasound.com/enroll/603157",
+    courseUrl: "https://member.allaboutultrasound.com/products/doppler-hemodynamics-cme",
   },
   {
     id: "upper-extremity-duplex",
@@ -76,6 +87,7 @@ const CME_COURSES: CmeCourse[] = [
     creditType: "SDMS CME",
     category: "Vascular",
     enrollUrl: "https://member.allaboutultrasound.com/enroll/3512551",
+    courseUrl: "https://member.allaboutultrasound.com/products/all-about-upper-extremity-duplex-sdms-cme",
   },
   {
     id: "venous-insufficiency",
@@ -87,6 +99,7 @@ const CME_COURSES: CmeCourse[] = [
     creditType: "SDMS CME",
     category: "Vascular",
     enrollUrl: "https://member.allaboutultrasound.com/enroll/3512552",
+    courseUrl: "https://member.allaboutultrasound.com/products/all-about-venous-insufficiency-sdms-cme",
   },
   {
     id: "lv-diastology",
@@ -98,6 +111,7 @@ const CME_COURSES: CmeCourse[] = [
     creditType: "SDMS CME",
     category: "Adult Echo",
     enrollUrl: "https://member.allaboutultrasound.com/enroll/3512545",
+    courseUrl: "https://member.allaboutultrasound.com/products/all-about-left-ventricular-diastology-sdms-cme",
   },
   {
     id: "aortic-stenosis",
@@ -109,6 +123,7 @@ const CME_COURSES: CmeCourse[] = [
     creditType: "SDMS CME",
     category: "Adult Echo",
     enrollUrl: "https://member.allaboutultrasound.com/enroll/3512549",
+    courseUrl: "https://member.allaboutultrasound.com/products/all-about-aortic-stenosis-sdms-cme",
   },
   {
     id: "determining-situs",
@@ -120,6 +135,7 @@ const CME_COURSES: CmeCourse[] = [
     creditType: "SDMS CME",
     category: "Fetal Echo",
     enrollUrl: "https://member.allaboutultrasound.com/enroll/3510863",
+    courseUrl: "https://member.allaboutultrasound.com/products/determining-situs-cme",
   },
   {
     id: "constrictive-pericarditis",
@@ -131,6 +147,7 @@ const CME_COURSES: CmeCourse[] = [
     creditType: "SDMS CME",
     category: "Adult Echo",
     enrollUrl: "https://member.allaboutultrasound.com/order?ct=ce76d1e8-7fa8-4e7a-92b0-97c07287581e",
+    courseUrl: "https://member.allaboutultrasound.com/products/all-about-constrictive-pericarditis-echo-cme",
   },
   {
     id: "ultrasound-fundamentals",
@@ -142,6 +159,7 @@ const CME_COURSES: CmeCourse[] = [
     creditType: "Fundamentals",
     category: "Foundations",
     enrollUrl: "https://member.allaboutultrasound.com/enroll/3584663",
+    courseUrl: "https://member.allaboutultrasound.com/products/ultrasound101-fundamentals",
   },
   {
     id: "fetal-echo-fundamentals",
@@ -153,25 +171,86 @@ const CME_COURSES: CmeCourse[] = [
     creditType: "Fundamentals",
     category: "Fetal Echo",
     enrollUrl: "https://member.allaboutultrasound.com/enroll/3523147",
+    courseUrl: "https://member.allaboutultrasound.com/products/fetal-echo-fundamentals",
   },
 ];
 
 const CATEGORIES = ["All", "Bundle", "Adult Echo", "Vascular", "Fetal Echo", "Foundations", "Ergonomics"];
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
 function buildCheckoutUrl(enrollUrl: string, email?: string | null): string {
   if (!email) return enrollUrl;
-  // Append email as prefill parameter for Thinkific checkout
   const separator = enrollUrl.includes("?") ? "&" : "?";
   return `${enrollUrl}${separator}prefill_email=${encodeURIComponent(email)}`;
 }
+
+/** Map a live Thinkific catalog course to the local CmeCourse shape */
+function mapLiveCourse(c: {
+  thinkificProductId: number;
+  name: string;
+  description: string | null;
+  price: string;
+  cardImageUrl: string | null;
+  enrollUrl: string;
+  courseUrl: string;
+  hasCertificate: boolean;
+}): CmeCourse {
+  const credit = parseCreditHoursFromName(c.name);
+  const isFree = parseFloat(c.price) === 0;
+  const isBundle = c.name.toLowerCase().includes("membership") || c.name.toLowerCase().includes("bundle");
+
+  // Derive category from name keywords
+  let category = "E-Learning";
+  if (/fetal/i.test(c.name)) category = "Fetal Echo";
+  else if (/vascular|duplex|venous|arterial/i.test(c.name)) category = "Vascular";
+  else if (/ergonomic/i.test(c.name)) category = "Ergonomics";
+  else if (/echo|cardiac|doppler|diastol|stenosis|pericarditis/i.test(c.name)) category = "Adult Echo";
+  else if (/fundamental|foundation/i.test(c.name)) category = "Foundations";
+  else if (/bundle|membership/i.test(c.name)) category = "Bundle";
+
+  const priceNum = parseFloat(c.price);
+  const priceDisplay = isFree ? "Free" : `$${priceNum.toFixed(2)}`;
+
+  return {
+    id: `live-${c.thinkificProductId}`,
+    title: c.name,
+    description: c.description ?? "",
+    image: c.cardImageUrl ?? "https://import.cdn.thinkific.com/109594/bBfoeeNT6Sky2NMI5wIg_Ultrasound%20Fundamenta%3Bs.png",
+    price: priceDisplay,
+    credits: credit?.hours ?? (isBundle ? "All CME" : "Course"),
+    creditType: credit?.type === "SDMS" ? "SDMS CME" : (credit?.type ?? "CME"),
+    category,
+    enrollUrl: c.enrollUrl,
+    courseUrl: c.courseUrl,
+    isFeatured: isBundle,
+    isBundle,
+    isFree,
+  };
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function CmeHub() {
   const { user } = useAuth();
   const [category, setCategory] = useState("All");
 
+  // Fetch live courses from Thinkific (via DB cache, refreshed every 6h)
+  const { data: liveCatalog, isLoading, isError } = trpc.cmeCatalog.getCatalog.useQuery(undefined, {
+    staleTime: 5 * 60 * 1000, // treat as fresh for 5 min client-side
+    retry: 1,
+  });
+
+  // Use live data when available, fall back to static
+  const allCourses: CmeCourse[] = (liveCatalog && liveCatalog.length > 0)
+    ? liveCatalog.map(mapLiveCourse)
+    : STATIC_CME_COURSES;
+
+  const isLiveData = liveCatalog && liveCatalog.length > 0;
+
   const filtered = category === "All"
-    ? CME_COURSES
-    : CME_COURSES.filter(c => c.category === category);
+    ? allCourses
+    : allCourses.filter(c => c.category === category);
 
   const featured = filtered.find(c => c.isFeatured);
   const regular = filtered.filter(c => !c.isFeatured);
@@ -194,7 +273,7 @@ export default function CmeHub() {
             </h1>
             <p className="text-[#4ad9e0] font-semibold text-base mb-3">All About Ultrasound — E-Learning & CME</p>
             <p className="text-white/70 text-sm leading-relaxed max-w-lg">
-              Browse accredited continuing medical education courses from All About Ultrasound. Click any course to enroll directly — your email is pre-filled for fast checkout.
+              Browse accredited continuing medical education courses from All About Ultrasound. Click "Learn More" to view course details or "Enroll" to go directly to checkout — your email is pre-filled.
             </p>
             {user && (
               <div className="mt-3 inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-lg px-3 py-1.5">
@@ -207,6 +286,21 @@ export default function CmeHub() {
       </div>
 
       <div className="container py-8">
+
+        {/* Live data indicator */}
+        {isLiveData && (
+          <div className="flex items-center gap-1.5 text-xs text-[#189aa1] mb-4">
+            <RefreshCw className="w-3 h-3" />
+            <span>Live course data from Thinkific — auto-refreshes every 6 hours</span>
+          </div>
+        )}
+        {isError && (
+          <div className="flex items-center gap-1.5 text-xs text-amber-600 mb-4 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            <Info className="w-3.5 h-3.5 flex-shrink-0" />
+            <span>Could not reach Thinkific — showing cached course list. Refresh to retry.</span>
+          </div>
+        )}
+
         {/* Category Filter */}
         <div className="flex flex-wrap gap-2 mb-8">
           {CATEGORIES.map(cat => (
@@ -225,14 +319,27 @@ export default function CmeHub() {
           ))}
         </div>
 
+        {/* Loading skeleton */}
+        {isLoading && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mb-8">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="bg-white rounded-xl overflow-hidden shadow-sm border border-[#189aa1]/10 animate-pulse">
+                <div className="h-40 bg-gray-200" />
+                <div className="p-4 space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-3/4" />
+                  <div className="h-3 bg-gray-100 rounded w-full" />
+                  <div className="h-3 bg-gray-100 rounded w-2/3" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Featured Bundle — shown when "All" or "Bundle" selected */}
-        {featured && (
+        {!isLoading && featured && (
           <div className="mb-8">
-            <a
-              href={buildCheckoutUrl(featured.enrollUrl, user?.email)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block rounded-2xl overflow-hidden group transition-transform hover:scale-[1.01]"
+            <div
+              className="block rounded-2xl overflow-hidden"
               style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}
             >
               <div className="flex flex-col md:flex-row">
@@ -240,7 +347,7 @@ export default function CmeHub() {
                   <img
                     src={featured.image}
                     alt={featured.title}
-                    className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                    className="w-full h-full object-cover opacity-80"
                   />
                 </div>
                 <div className="flex-1 p-6 md:p-8 flex flex-col justify-center">
@@ -253,40 +360,50 @@ export default function CmeHub() {
                     {featured.title}
                   </h2>
                   <p className="text-white/70 text-sm leading-relaxed mb-4 max-w-lg">{featured.description}</p>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3 flex-wrap">
                     <span className="text-2xl font-black text-white">{featured.price}</span>
-                    <span className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all group-hover:opacity-90"
-                      style={{ background: BRAND }}>
+                    <a
+                      href={featured.courseUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold border border-white/30 text-white hover:bg-white/10 transition-all"
+                    >
+                      Learn More <Info className="w-3.5 h-3.5" />
+                    </a>
+                    <a
+                      href={buildCheckoutUrl(featured.enrollUrl, user?.email)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90"
+                      style={{ background: BRAND }}
+                    >
                       Enroll Now <ExternalLink className="w-3.5 h-3.5" />
-                    </span>
+                    </a>
                   </div>
                 </div>
               </div>
-            </a>
+            </div>
           </div>
         )}
 
         {/* Course Grid */}
-        {regular.length > 0 && (
+        {!isLoading && regular.length > 0 && (
           <>
             <h2 className="text-lg font-bold text-gray-800 mb-4" style={{ fontFamily: "Merriweather, serif" }}>
               {category === "All" ? "Individual Courses" : `${category} Courses`}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {regular.map(course => (
-                <a
+                <div
                   key={course.id}
-                  href={buildCheckoutUrl(course.enrollUrl, user?.email)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group bg-white rounded-xl overflow-hidden shadow-sm border border-[#189aa1]/10 hover:shadow-md hover:border-[#189aa1]/30 transition-all flex flex-col"
+                  className="bg-white rounded-xl overflow-hidden shadow-sm border border-[#189aa1]/10 hover:shadow-md hover:border-[#189aa1]/30 transition-all flex flex-col"
                 >
                   {/* Thumbnail */}
                   <div className="relative h-40 overflow-hidden bg-[#0e1e2e] flex-shrink-0">
                     <img
                       src={course.image}
                       alt={course.title}
-                      className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300"
+                      className="w-full h-full object-cover opacity-90 hover:opacity-100 hover:scale-105 transition-all duration-300"
                     />
                     {/* Credit badge */}
                     <div className="absolute top-2 right-2">
@@ -315,24 +432,47 @@ export default function CmeHub() {
                       {course.description.length > 120 ? course.description.substring(0, 117) + "..." : course.description}
                     </p>
 
-                    {/* Footer */}
-                    <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-                      <span className={`text-base font-black ${course.isFree ? "text-green-600" : "text-gray-800"}`}>
-                        {course.price}
-                      </span>
-                      <span className="flex items-center gap-1 text-xs font-semibold group-hover:gap-1.5 transition-all" style={{ color: BRAND }}>
-                        Enroll <ExternalLink className="w-3 h-3" />
-                      </span>
+                    {/* Footer — price + two action buttons */}
+                    <div className="pt-2 border-t border-gray-100">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className={`text-base font-black ${course.isFree ? "text-green-600" : "text-gray-800"}`}>
+                          {course.price}
+                        </span>
+                      </div>
+                      <div className="flex gap-2">
+                        {/* Learn More — links to Thinkific product page */}
+                        <a
+                          href={course.courseUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 flex items-center justify-center gap-1 text-xs font-semibold py-1.5 px-2 rounded-lg border transition-all hover:bg-[#f0fbfc]"
+                          style={{ borderColor: BRAND, color: BRAND }}
+                          onClick={e => e.stopPropagation()}
+                        >
+                          Learn More <Info className="w-3 h-3" />
+                        </a>
+                        {/* Enroll — links to Thinkific checkout */}
+                        <a
+                          href={buildCheckoutUrl(course.enrollUrl, user?.email)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 flex items-center justify-center gap-1 text-xs font-semibold py-1.5 px-2 rounded-lg text-white transition-all hover:opacity-90"
+                          style={{ background: BRAND }}
+                          onClick={e => e.stopPropagation()}
+                        >
+                          Enroll <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
                     </div>
                   </div>
-                </a>
+                </div>
               ))}
             </div>
           </>
         )}
 
         {/* Empty state */}
-        {regular.length === 0 && !featured && (
+        {!isLoading && regular.length === 0 && !featured && (
           <div className="text-center py-16 text-gray-400">
             <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-30" />
             <p className="text-sm">No courses in this category.</p>
@@ -343,7 +483,7 @@ export default function CmeHub() {
         <div className="mt-10 p-4 rounded-xl bg-[#f0fbfc] border border-[#189aa1]/20 flex flex-col sm:flex-row items-start sm:items-center gap-3">
           <Clock className="w-4 h-4 text-[#189aa1] flex-shrink-0 mt-0.5 sm:mt-0" />
           <p className="text-xs text-gray-600 leading-relaxed">
-            All courses are hosted on <strong>All About Ultrasound</strong> via Thinkific. Clicking "Enroll" opens the checkout page in a new tab
+            All courses are hosted on <strong>All About Ultrasound</strong> via Thinkific. "Learn More" opens the course details page; "Enroll" opens the checkout page
             {user?.email ? ` with your email (${user.email}) pre-filled` : " — log in to iHeartEcho to have your email pre-filled automatically"}.
             SDMS CME credits are awarded upon course completion and post-test.
           </p>
@@ -360,5 +500,3 @@ export default function CmeHub() {
     </Layout>
   );
 }
-
-

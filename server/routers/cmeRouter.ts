@@ -14,6 +14,9 @@ import { getDb } from "../db";
 import { cmeCoursesCache } from "../../drizzle/schema";
 import { getVisibleProducts, buildCourseUrl, buildEnrollUrl } from "../thinkific";
 
+/** Thinkific collection ID for "E-Learning & CME" on allaboutultrasound */
+const CME_COLLECTION_ID = 131827;
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface CatalogCourse {
@@ -43,6 +46,7 @@ export async function syncCatalogToDb(): Promise<number> {
   let synced = 0;
 
   for (const p of products) {
+    const collectionIdsJson = JSON.stringify(p.collection_ids ?? []);
     await db
       .insert(cmeCoursesCache)
       .values({
@@ -56,6 +60,7 @@ export async function syncCatalogToDb(): Promise<number> {
         instructorNames: p.instructor_names,
         hasCertificate: p.has_certificate,
         thinkificStatus: p.status,
+        collectionIds: collectionIdsJson,
         syncedAt: new Date(),
       })
       .onDuplicateKeyUpdate({
@@ -68,6 +73,7 @@ export async function syncCatalogToDb(): Promise<number> {
           instructorNames: p.instructor_names,
           hasCertificate: p.has_certificate,
           thinkificStatus: p.status,
+          collectionIds: collectionIdsJson,
           syncedAt: new Date(),
         },
       });
@@ -118,7 +124,20 @@ export const cmeRouter = router({
       }
     }
 
-    const courses = await db.select().from(cmeCoursesCache);
-    return courses.map(mapToCatalogCourse);
+    const allCourses = await db.select().from(cmeCoursesCache);
+    // Filter to only courses in the E-Learning & CME collection (ID 131827)
+    const courses = allCourses.filter((c) => {
+      if (!c.collectionIds) return false;
+      try {
+        const ids: number[] = JSON.parse(c.collectionIds);
+        return ids.includes(CME_COLLECTION_ID);
+      } catch {
+        return false;
+      }
+    });
+    // If no courses pass the filter (e.g. first sync before collectionIds are stored),
+    // fall back to showing all courses so the page is never blank.
+    const result = courses.length > 0 ? courses : allCourses;
+    return result.map(mapToCatalogCourse);
   }),
 });

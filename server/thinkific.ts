@@ -178,6 +178,24 @@ export function parseCreditHoursFromName(name: string): {
   return null;
 }
 
+// ─── Collections ─────────────────────────────────────────────────────────────
+
+export interface ThinkificCollection {
+  id: number;
+  name: string;
+  slug: string;
+  description: string | null;
+  position: number;
+  product_ids: number[];
+}
+
+/**
+ * Fetch all collections (categories) from Thinkific.
+ */
+export async function getCollections(): Promise<ThinkificCollection[]> {
+  return fetchAllPages<ThinkificCollection>("/collections");
+}
+
 /**
  * Build the direct course URL on Thinkific.
  */

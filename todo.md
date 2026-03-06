@@ -609,3 +609,18 @@
 
 ## CME Hub Fixes
 - [x] Swap enrollment URLs: Sonographer Ergonomics now → /enroll/617498, Doppler & Hemodynamics now → /enroll/603157
+
+## Thinkific Live Course Sync & CME Hub Learn More Links
+- [x] Found E-Learning & CME collection ID = 131827 via Thinkific Collections API
+- [x] Added collectionIds column to cmeCoursesCache schema (pnpm db:push)
+- [x] syncCatalogToDb now stores collectionIds and filters to collection 131827 only (11 courses)
+- [x] getCatalog procedure filters by collectionIds so only E-Learning & CME courses are returned
+- [x] courseUrl exposed in catalog response (Thinkific product page URL)
+- [x] CME Hub now fetches live data via trpc.cmeCatalog.getCatalog with static fallback
+- [x] "Learn More" button added to each course card → Thinkific product page
+- [x] "Enroll" button retained → Thinkific checkout with email prefill
+- [x] Loading skeleton shown while fetching live data
+- [x] Live data indicator + error banner when Thinkific is unreachable
+- [x] Webhook endpoint POST /api/webhooks/thinkific — handles product.created/updated/deleted, triggers background re-sync
+- [x] cmeUtils.ts client helper for parseCreditHoursFromName
+- [x] Vitest: 16 webhook + parseCreditHoursFromName tests, 350 total passing

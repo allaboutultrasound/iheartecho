@@ -822,6 +822,8 @@ export const cmeCoursesCache = mysqlTable("cmeCoursesCache", {
   hasCertificate: boolean("hasCertificate").default(false).notNull(),
   // Raw Thinkific status fields (for reference)
   thinkificStatus: varchar("thinkificStatus", { length: 20 }),
+  // JSON array of Thinkific collection IDs this product belongs to
+  collectionIds: text("collectionIds"),
   syncedAt: timestamp("syncedAt").defaultNow().notNull(),
 });
 export type CmeCourseCache = typeof cmeCoursesCache.$inferSelect;
