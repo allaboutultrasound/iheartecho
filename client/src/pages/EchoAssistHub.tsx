@@ -2,8 +2,10 @@
   EchoAssist Hub — iHeartEcho
   Landing page listing all EchoAssist engines
 */
+import { useState } from "react";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
+import PremiumModal from "@/components/PremiumModal";
 import {
   Zap, Activity, BarChart3, Wind, Heart, TrendingUp,
   ArrowRight, Calculator, Stethoscope, Scan, Lock
@@ -104,6 +106,7 @@ const badgeColors: Record<string, string> = {
 };
 
 export default function EchoAssistHub() {
+  const [premiumModal, setPremiumModal] = useState<{ name: string; description: string } | null>(null);
   return (
     <Layout>
       {/* Header */}
@@ -159,61 +162,81 @@ export default function EchoAssistHub() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {engines.map(({ path, icon: Icon, title, description, badge, note, premium }) => {
             const badgeColor = badgeColors[badge] ?? BRAND;
-            return (
-              <Link key={path} href={path}>
-                <div
-                  className="relative bg-white rounded-xl border border-gray-100 p-5 cursor-pointer group h-full hover:shadow-md transition-all hover:border-[#189aa1]/30"
-                  style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
-                >
-                  {premium && (
-                    <div className="absolute top-0 right-0 overflow-hidden rounded-tr-xl rounded-bl-xl">
-                      <div
-                        className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-white"
-                        style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}
-                      >
-                        <Lock className="w-2.5 h-2.5" />
-                        PREMIUM
-                      </div>
-                    </div>
-                  )}
-                  <div className="flex items-start justify-between mb-3">
+            const cardInner = (
+              <div
+                className="relative bg-white rounded-xl border border-gray-100 p-5 cursor-pointer group h-full hover:shadow-md transition-all hover:border-[#189aa1]/30"
+                style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
+              >
+                {premium ? (
+                  <div className="absolute top-0 right-0 overflow-hidden rounded-tr-xl rounded-bl-xl">
                     <div
-                      className="w-10 h-10 rounded-lg flex items-center justify-center"
-                      style={{ background: BRAND + "15" }}
+                      className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-white"
+                      style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}
                     >
-                      <Icon className="w-5 h-5" style={{ color: BRAND }} />
+                      <Lock className="w-2.5 h-2.5" />
+                      PREMIUM
                     </div>
-                    {!premium && (
-                      <span
-                        className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                        style={{ background: badgeColor + "15", color: badgeColor }}
-                      >
-                        {badge}
-                      </span>
-                    )}
                   </div>
-                  <h3
-                    className="font-bold text-gray-800 mb-1.5 text-sm leading-snug"
-                    style={{ fontFamily: "Merriweather, serif" }}
-                  >
-                    {title}
-                  </h3>
-                  <p className="text-xs text-gray-500 leading-relaxed mb-3">{description}</p>
-                  {note && (
-                    <p className="text-xs text-[#189aa1]/70 italic mb-2">{note}</p>
-                  )}
+                ) : (
+                  <div className="absolute top-0 right-0 overflow-hidden rounded-tr-xl rounded-bl-xl">
+                    <div
+                      className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold text-white"
+                      style={{ background: "linear-gradient(135deg, #059669, #047857)" }}
+                    >
+                      FREE
+                    </div>
+                  </div>
+                )}
+                <div className="flex items-start justify-between mb-3">
                   <div
-                    className="flex items-center gap-1 text-xs font-semibold group-hover:gap-2 transition-all"
-                    style={{ color: premium ? "#d97706" : BRAND }}
+                    className="w-10 h-10 rounded-lg flex items-center justify-center"
+                    style={{ background: BRAND + "15" }}
                   >
-                    {premium ? <><Lock className="w-3 h-3" /> Premium Access</> : <>Open Engine <ArrowRight className="w-3 h-3" /></>}
+                    <Icon className="w-5 h-5" style={{ color: BRAND }} />
                   </div>
+                  <span
+                    className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                    style={{ background: badgeColor + "15", color: badgeColor }}
+                  >
+                    {badge}
+                  </span>
                 </div>
-              </Link>
+                <h3
+                  className="font-bold text-gray-800 mb-1.5 text-sm leading-snug"
+                  style={{ fontFamily: "Merriweather, serif" }}
+                >
+                  {title}
+                </h3>
+                <p className="text-xs text-gray-500 leading-relaxed mb-3">{description}</p>
+                {note && (
+                  <p className="text-xs text-[#189aa1]/70 italic mb-2">{note}</p>
+                )}
+                <div
+                  className="flex items-center gap-1 text-xs font-semibold group-hover:gap-2 transition-all"
+                  style={{ color: premium ? "#d97706" : BRAND }}
+                >
+                  {premium ? <><Lock className="w-3 h-3" /> Premium Access</> : <>Open Engine <ArrowRight className="w-3 h-3" /></>}
+                </div>
+              </div>
             );
+            if (premium) {
+              return (
+                <div key={path} className="cursor-pointer" onClick={() => setPremiumModal({ name: title, description })}>
+                  {cardInner}
+                </div>
+              );
+            }
+            return <Link key={path} href={path}>{cardInner}</Link>;
           })}
         </div>
       </div>
+      {premiumModal && (
+        <PremiumModal
+          featureName={premiumModal.name}
+          featureDescription={premiumModal.description}
+          onClose={() => setPremiumModal(null)}
+        />
+      )}
     </Layout>
   );
 }

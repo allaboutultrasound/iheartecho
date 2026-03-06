@@ -2,8 +2,10 @@
   EchoNavigator Hub — iHeartEcho
   Landing page listing all EchoNavigator modules
 */
+import { useState } from "react";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
+import PremiumModal from "@/components/PremiumModal";
 import {
   Stethoscope, Microscope, Zap, Users, Baby, Heart,
   Cpu, FlaskConical, BarChart3, ArrowRight, Scan, Lock
@@ -91,6 +93,7 @@ const badgeColors: Record<string, string> = {
 };
 
 export default function EchoNavigatorHub() {
+  const [premiumModal, setPremiumModal] = useState<{ name: string; description: string } | null>(null);
   return (
     <Layout>
       {/* Header */}
@@ -146,8 +149,13 @@ export default function EchoNavigatorHub() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {navigators.map(({ path, icon: Icon, title, description, badge, premium }) => {
             const badgeColor = badgeColors[badge] ?? BRAND;
-            return (
-              <Link key={path} href={path}>
+            if (premium) {
+              return (
+                <div
+                  key={path}
+                  className="cursor-pointer"
+                  onClick={() => setPremiumModal({ name: title, description })}
+                >
                 <div
                   className="relative bg-white rounded-xl border border-gray-100 p-5 cursor-pointer group h-full hover:shadow-md transition-all hover:border-[#189aa1]/30"
                   style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
@@ -193,11 +201,41 @@ export default function EchoNavigatorHub() {
                     {premium ? <><Lock className="w-3 h-3" /> Premium Access</> : <>Open Protocol <ArrowRight className="w-3 h-3" /></>}
                   </div>
                 </div>
+                </div>
+              );
+            }
+            return (
+              <Link key={path} href={path}>
+                <div
+                  className="relative bg-white rounded-xl border border-gray-100 p-5 cursor-pointer group h-full hover:shadow-md transition-all hover:border-[#189aa1]/30"
+                  style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: BRAND + "15" }}>
+                      <Icon className="w-5 h-5" style={{ color: BRAND }} />
+                    </div>
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: badgeColors[badge] + "15", color: badgeColors[badge] }}>
+                      {badge}
+                    </span>
+                  </div>
+                  <h3 className="font-bold text-gray-800 mb-1.5 text-sm leading-snug" style={{ fontFamily: "Merriweather, serif" }}>{title}</h3>
+                  <p className="text-xs text-gray-500 leading-relaxed mb-3">{description}</p>
+                  <div className="flex items-center gap-1 text-xs font-semibold group-hover:gap-2 transition-all" style={{ color: BRAND }}>
+                    Open Protocol <ArrowRight className="w-3 h-3" />
+                  </div>
+                </div>
               </Link>
             );
           })}
         </div>
       </div>
+      {premiumModal && (
+        <PremiumModal
+          featureName={premiumModal.name}
+          featureDescription={premiumModal.description}
+          onClose={() => setPremiumModal(null)}
+        />
+      )}
     </Layout>
   );
 }
