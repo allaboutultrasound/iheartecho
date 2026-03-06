@@ -6,7 +6,7 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
-import { Calculator, Baby, ClipboardList, Activity, Scan, BookOpen, FileText, ArrowRight, Users, Award, Zap, Stethoscope, Microscope, ExternalLink, Heart, MessageCircle, Radio, Wind, Shield, BarChart3, Building2 } from "lucide-react";
+import { Calculator, Baby, ClipboardList, Activity, Scan, BookOpen, FileText, ArrowRight, Users, Award, Zap, Stethoscope, Microscope, ExternalLink, Heart, MessageCircle, Radio, Wind, Shield, BarChart3 } from "lucide-react";
 
 const BRAND = "#189aa1";
 const modules = [
@@ -161,30 +161,6 @@ const modules = [
     title: "EchoAccreditation Navigator™",
     description: "Searchable IAC standards guide for TTE, TEE, Stress, Pediatric, Fetal, and HOCM — case requirements, CME, staff qualifications, and policies.",
     badge: "Accreditation",
-    color: BRAND,
-  },
-  {
-    path: "/lab-admin",
-    icon: Building2,
-    title: "Lab Admin Portal",
-    description: "Monthly subscription for Echo labs — manage staff, track peer review Quality Scores, view growth curves, and export IAC-ready accreditation reports.",
-    badge: "Lab Subscription",
-    color: BRAND,
-  },
-  {
-    path: "/image-quality-review",
-    icon: ClipboardList,
-    title: "Image Quality Review™",
-    description: "Structured image quality review form for IAC accreditation — score views, Doppler, report accuracy, and generate custom PDF reports for submission.",
-    badge: "IAC Accreditation",
-    color: BRAND,
-  },
-  {
-    path: "/echo-correlation",
-    icon: BarChart3,
-    title: "Echo Correlation Review™",
-    description: "Compare original echo findings against correlative studies (cath, CTA, MRI, nuclear) with concordance scoring and PDF export for QI submissions.",
-    badge: "QI / Accreditation",
     color: BRAND,
   },
 ];

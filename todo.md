@@ -337,3 +337,9 @@
 - [x] Build NotificationBell component in the app header (badge count, dropdown)
 - [x] Build Notifications panel/page for physicians to view full review details
 - [x] Write vitest tests for notification logic
+
+## Dashboard Cleanup — Remove from Home grid
+- [x] Remove Image Quality Review card from Home.tsx modules grid
+- [x] Remove Echo Correlation Review card from Home.tsx modules grid
+- [x] Remove Lab Admin Portal card from Home.tsx modules grid
+- [x] Remove Lab Admin Portal from sidebar navigation in Layout.tsx
