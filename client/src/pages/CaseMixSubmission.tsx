@@ -397,9 +397,30 @@ function staffLabel(m: any): string {
   return `${name}${creds}${roleLabel}`;
 }
 
+// Modality IDs that belong to each accreditation type
+const ADULT_ECHO_MODALITIES = ["ATTE", "STRESS", "ATEE", "ACTE"];
+const PEDS_FETAL_MODALITIES = ["PTTE", "PTEE", "FETAL"];
+
 function CaseTracker({ tier }: { tier: StaffTier }) {
   const { isAuthenticated } = useAuth();
-  const [activeModality, setActiveModality] = useState<string>(MODALITIES[0].id);
+
+  // Fetch lab info to get accreditation types
+  const { data: labData } = trpc.lab.getMyLab.useQuery(undefined, { enabled: isAuthenticated });
+  const accreditationTypes: string[] = (() => {
+    try { return JSON.parse((labData as any)?.accreditationTypes ?? "[]"); } catch { return []; }
+  })();
+
+  // Filter modalities based on accreditation type selection
+  // If no selection yet, show all modalities
+  const visibleModalities = accreditationTypes.length === 0
+    ? MODALITIES
+    : MODALITIES.filter(m => {
+        if (ADULT_ECHO_MODALITIES.includes(m.id) && accreditationTypes.includes("adult_echo")) return true;
+        if (PEDS_FETAL_MODALITIES.includes(m.id) && accreditationTypes.includes("pediatric_fetal_echo")) return true;
+        return false;
+      });
+
+  const [activeModality, setActiveModality] = useState<string>(() => visibleModalities[0]?.id ?? MODALITIES[0].id);
   const [showForm, setShowForm] = useState(false);
 
   // Form state
@@ -440,7 +461,11 @@ function CaseTracker({ tier }: { tier: StaffTier }) {
     setIsTechDir(false); setIsMedDir(false); setNotes("");
   }
 
-  const modality = MODALITIES.find(m => m.id === activeModality)!;
+  // Ensure activeModality is always within visible modalities
+  const effectiveModality = visibleModalities.find(m => m.id === activeModality)
+    ? activeModality
+    : (visibleModalities[0]?.id ?? activeModality);
+  const modality = MODALITIES.find(m => m.id === effectiveModality)!;
   const modalityCases = cases.filter((c: any) => c.modality === activeModality);
   const required = modality.staffBased ? (modality.casesByTier?.[tier] ?? 0) : null;
   const pct = required ? Math.min(100, Math.round((modalityCases.length / required) * 100)) : null;
@@ -529,7 +554,7 @@ function CaseTracker({ tier }: { tier: StaffTier }) {
   }
 
   // ─── Per-category summary data ───────────────────────────────────────────────
-  const categorySummary = MODALITIES.map(m => {
+  const categorySummary = visibleModalities.map(m => {
     const logged = cases.filter((c: any) => c.modality === m.id).length;
     const required = m.staffBased ? (m.casesByTier?.[tier] ?? 0) : null;
     const pct = required ? Math.min(100, Math.round((logged / required) * 100)) : null;
@@ -613,7 +638,7 @@ function CaseTracker({ tier }: { tier: StaffTier }) {
       {/* Modality selector */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="flex overflow-x-auto">
-          {MODALITIES.map(m => {
+          {visibleModalities.map(m => {
             const mCases = cases.filter((c: any) => c.modality === m.id);
             const mRequired = m.staffBased ? (m.casesByTier?.[tier] ?? 0) : null;
             const isActive = activeModality === m.id;
@@ -975,7 +1000,7 @@ function CaseTracker({ tier }: { tier: StaffTier }) {
               </tr>
             </thead>
             <tbody>
-              {MODALITIES.map(m => {
+              {visibleModalities.map(m => {
                 const mCases = cases.filter((c: any) => c.modality === m.id);
                 const mRequired = m.staffBased ? (m.casesByTier?.[tier] ?? 0) : null;
                 const isComplete = mRequired !== null && mCases.length >= mRequired;
@@ -1025,8 +1050,22 @@ function CaseTracker({ tier }: { tier: StaffTier }) {
 
 // ─── Main Component ────────────────────────────────────────────────────────────
 export default function CaseMixSubmission() {
+  const { isAuthenticated } = useAuth();
   const [tier, setTier] = useState<StaffTier>("le5");
   const [view, setView] = useState<"requirements" | "tracker">("requirements");
+
+  // Fetch lab info to get accreditation types for filtering
+  const { data: labData } = trpc.lab.getMyLab.useQuery(undefined, { enabled: isAuthenticated });
+  const accreditationTypes: string[] = (() => {
+    try { return JSON.parse((labData as any)?.accreditationTypes ?? "[]"); } catch { return []; }
+  })();
+  const visibleModalities = accreditationTypes.length === 0
+    ? MODALITIES
+    : MODALITIES.filter(m => {
+        if (ADULT_ECHO_MODALITIES.includes(m.id) && accreditationTypes.includes("adult_echo")) return true;
+        if (PEDS_FETAL_MODALITIES.includes(m.id) && accreditationTypes.includes("pediatric_fetal_echo")) return true;
+        return false;
+      });
 
   return (
     <div className="space-y-5">
@@ -1083,6 +1122,41 @@ export default function CaseMixSubmission() {
         </div>
       </div>
 
+      {/* Accreditation Type Filter Indicator */}
+      {accreditationTypes.length > 0 && (
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#189aa1]/20 bg-[#189aa1]/5 text-xs">
+          <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" style={{ color: BRAND }} />
+          <span className="text-gray-600">
+            Showing modalities for:
+            {accreditationTypes.includes("adult_echo") && (
+              <span className="ml-1 font-semibold text-gray-800">Adult Echocardiography</span>
+            )}
+            {accreditationTypes.includes("adult_echo") && accreditationTypes.includes("pediatric_fetal_echo") && (
+              <span className="mx-1 text-gray-400">+</span>
+            )}
+            {accreditationTypes.includes("pediatric_fetal_echo") && (
+              <span className="font-semibold text-gray-800">Pediatric / Fetal Echocardiography</span>
+            )}
+          </span>
+          <span className="ml-auto text-[#189aa1] font-medium cursor-pointer hover:underline"
+            onClick={() => window.location.href = "/lab-admin"}>
+            Change in Lab Admin
+          </span>
+        </div>
+      )}
+      {accreditationTypes.length === 0 && isAuthenticated && (
+        <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-amber-200 bg-amber-50 text-xs">
+          <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 text-amber-500" />
+          <span className="text-amber-700">
+            No accreditation type selected — showing all modalities.
+          </span>
+          <span className="ml-auto text-amber-600 font-medium cursor-pointer hover:underline"
+            onClick={() => window.location.href = "/lab-admin"}>
+            Set in Lab Admin
+          </span>
+        </div>
+      )}
+
       {/* Content */}
       {view === "requirements" ? (
         <div className="space-y-4">
@@ -1104,7 +1178,7 @@ export default function CaseMixSubmission() {
                   </tr>
                 </thead>
                 <tbody>
-                  {MODALITIES.map(m => {
+                  {visibleModalities.map(m => {
                     const count = m.staffBased ? m.casesByTier?.[tier] : null;
                     return (
                       <tr key={m.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
@@ -1154,7 +1228,7 @@ export default function CaseMixSubmission() {
           <div>
             <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Modality-Specific Requirements</div>
             <div className="space-y-3">
-              {MODALITIES.map(m => <ModalityCard key={m.id} modality={m} tier={tier} />)}
+              {visibleModalities.map(m => <ModalityCard key={m.id} modality={m} tier={tier} />)}
             </div>
           </div>
 

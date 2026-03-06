@@ -221,6 +221,105 @@ function SetupWizard({ onCreated }: { onCreated: () => void }) {
   );
 }
 
+// ─── Accreditation Type Card ────────────────────────────────────────────────
+const ACCREDITATION_TYPES = [
+  {
+    id: "adult_echo" as const,
+    label: "Adult Echocardiography",
+    description: "TTE, TEE, Stress Echo, Strain — adult patients",
+    icon: Stethoscope,
+    color: BRAND,
+  },
+  {
+    id: "pediatric_fetal_echo" as const,
+    label: "Pediatric / Fetal Echocardiography",
+    description: "Pediatric echo, fetal echo, congenital heart disease",
+    icon: Users,
+    color: "#7c3aed",
+  },
+];
+
+function AccreditationTypeCard({ lab }: { lab: any }) {
+  const utils = trpc.useUtils();
+  const updateLab = trpc.lab.updateLab.useMutation({
+    onSuccess: () => {
+      toast.success("Accreditation types saved.");
+      utils.lab.getMyLab.invalidate();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const currentTypes: string[] = (() => {
+    try { return JSON.parse(lab.accreditationTypes ?? "[]"); } catch { return []; }
+  })();
+
+  const toggle = (id: string) => {
+    const next = currentTypes.includes(id)
+      ? currentTypes.filter((t) => t !== id)
+      : [...currentTypes, id];
+    updateLab.mutate({ accreditationTypes: next as ("adult_echo" | "pediatric_fetal_echo")[] });
+  };
+
+  return (
+    <Card className="border border-[#189aa1]/20">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
+          <Shield className="w-4 h-4" style={{ color: BRAND }} />
+          IAC Accreditation Type
+        </CardTitle>
+        <p className="text-xs text-gray-400 mt-0.5">
+          Select the accreditation type(s) your lab is seeking or currently holds. This filters the Case Mix tracker to show only the relevant modalities.
+        </p>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {ACCREDITATION_TYPES.map(({ id, label, description, icon: Icon, color }) => {
+            const selected = currentTypes.includes(id);
+            return (
+              <button
+                key={id}
+                onClick={() => toggle(id)}
+                disabled={updateLab.isPending}
+                className={`flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-all ${
+                  selected
+                    ? "border-[#189aa1] bg-[#189aa1]/5"
+                    : "border-gray-100 bg-white hover:border-gray-200"
+                }`}
+              >
+                <div
+                  className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
+                  style={{ background: selected ? color + "20" : "#f3f4f6" }}
+                >
+                  <Icon className="w-4.5 h-4.5" style={{ color: selected ? color : "#9ca3af" }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className={`text-sm font-bold ${ selected ? "text-gray-800" : "text-gray-500" }`}>
+                      {label}
+                    </span>
+                    {selected && (
+                      <span className="flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: color }}>
+                        <Check className="w-2.5 h-2.5 text-white" />
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">{description}</p>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+        {currentTypes.length === 0 && (
+          <p className="text-xs text-amber-600 mt-3 flex items-center gap-1.5">
+            <AlertTriangle className="w-3.5 h-3.5" />
+            Select at least one accreditation type to filter the Case Mix tracker.
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 // ─── Overview Tab ─────────────────────────────────────────────────────────────
 function OverviewTab({ lab, members, snapshot }: {
   lab: any; members: any[]; snapshot: any[];
@@ -285,6 +384,9 @@ function OverviewTab({ lab, members, snapshot }: {
           </Card>
         ))}
       </div>
+
+      {/* Accreditation Type Selection */}
+      <AccreditationTypeCard lab={lab} />
 
       {/* Staff leaderboard */}
       {snapshot.length > 0 && (

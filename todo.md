@@ -458,3 +458,20 @@
 - [ ] Premium lock overlay on TEE, Stress, Strain, ICE, Device navigator pages (blurred content + upgrade CTA)
 - [ ] Staff Coverage Report in Case Mix tracker (who has been represented vs. missing)
 - [x] Adult TTE case types restricted to "LV RWMA" and "AS" only (remove all others)
+- [ ] Remove extra/duplicate header on Image Quality Review tab in DIY Accreditation tool
+- [ ] Fix extra header on Image Quality Review embedded tab
+- [ ] Add accreditation type onboarding to Lab Admin (Adult Echo, Pediatric/Fetal Echo)
+- [ ] Filter Case Mix modalities by lab accreditation type
+
+## Accreditation Type Onboarding [COMPLETED - 2026-03-06]
+- [x] Fix extra/duplicate header on Image Quality Review tab in DIY Accreditation tool (embedded prop)
+- [x] Add accreditationTypes column to labSubscriptions schema (JSON array, db:push applied)
+- [x] Add isPremium column to users schema (db:push applied)
+- [x] AccreditationTypeCard component in Lab Admin Overview tab — toggle Adult Echo / Pediatric+Fetal Echo
+- [x] updateLab mutation accepts accreditationTypes array and serializes to JSON
+- [x] Case Mix tracker reads lab accreditationTypes and filters visible modalities
+- [x] Adult Echo modalities: ATTE, STRESS, ATEE, ACTE
+- [x] Pediatric/Fetal modalities: PTTE, PTEE, FETAL
+- [x] Accreditation type filter indicator banner in Case Mix tracker (teal if set, amber warning if not)
+- [x] "Change in Lab Admin" / "Set in Lab Admin" quick-link from Case Mix tracker
+- [x] All 227 tests passing

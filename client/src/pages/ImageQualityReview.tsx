@@ -227,7 +227,7 @@ function StaffDropdown({
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function ImageQualityReview() {
+export default function ImageQualityReview({ embedded = false }: { embedded?: boolean }) {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<IQRFormData>({ ...EMPTY_FORM });
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -929,9 +929,8 @@ export default function ImageQualityReview() {
 
   // ─── History view ────────────────────────────────────────────────────────────
   if (showHistory) {
-    return (
-      <Layout>
-        <div className="container py-6 max-w-4xl">
+    const historyContent = (
+      <div className={embedded ? "" : "container py-6 max-w-4xl"}>
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl font-black text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
@@ -1013,122 +1012,124 @@ export default function ImageQualityReview() {
             )}
           </div>
         </div>
-      </Layout>
     );
+    return embedded ? historyContent : <Layout>{historyContent}</Layout>;
   }
 
   // ─── Main form view ──────────────────────────────────────────────────────────
   const currentStep = STEPS[step - 1];
   const StepIcon = currentStep.icon;
 
-  return (
-    <Layout>
-      <div className="container py-6 max-w-3xl">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
+  const mainContent = (
+    <div className={embedded ? "" : "container py-6 max-w-3xl"}>
+      {/* Header — hidden when embedded; compact action bar shown instead */}
+      <div className={embedded ? "flex items-center justify-between mb-4" : "flex items-center justify-between mb-6"}>
+        <div>
+          {!embedded && (
             <h1 className="text-2xl font-black text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
               Image Quality Review™
             </h1>
-            <p className="text-sm text-gray-500 mt-0.5">
-              {editingId ? `Editing Review #${editingId}` : "New Review"} · {form.examType || "Select exam type"}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            {editingId && (
-              <button onClick={resetForm}
-                className="text-xs px-3 py-2 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50">
-                Cancel Edit
-              </button>
-            )}
-            <button onClick={() => setShowHistory(true)}
-              className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg border border-[#189aa1]/40 text-[#189aa1] hover:bg-[#189aa1]/8 font-medium">
-              <ClipboardList className="w-3.5 h-3.5" /> History
-            </button>
-          </div>
+          )}
+          <p className="text-sm text-gray-500 mt-0.5">
+            {editingId ? `Editing Review #${editingId}` : "New Review"} · {form.examType || "Select exam type"}
+          </p>
         </div>
-
-        {/* Live score badge */}
-        {form.examType && (
-          <div className="flex items-center gap-3 mb-4 p-3 rounded-xl border border-[#189aa1]/20 bg-white">
-            <div className="text-xs text-gray-500">Live Score:</div>
-            <div className="text-lg font-black" style={{ color: TEAL }}>{qualityScore}</div>
-            <span className="text-xs px-2 py-0.5 rounded-full font-bold"
-              style={{ background: scoreTier.bg, color: scoreTier.color }}>
-              {scoreTier.label}
-            </span>
-            <div className="flex-1 bg-gray-100 rounded-full h-1.5">
-              <div className="h-1.5 rounded-full transition-all" style={{ width: `${qualityScore}%`, background: TEAL }} />
-            </div>
-          </div>
-        )}
-
-        {/* Step progress */}
-        <div className="flex items-center gap-1 mb-6 overflow-x-auto pb-1">
-          {STEPS.map((s, i) => {
-            const Icon = s.icon;
-            const isDone = step > s.id;
-            const isCurrent = step === s.id;
-            return (
-              <button key={s.id} onClick={() => setStep(s.id)}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 ${isCurrent ? "text-white" : isDone ? "text-[#189aa1] bg-[#189aa1]/10" : "text-gray-400 bg-gray-50 hover:bg-gray-100"}`}
-                style={isCurrent ? { background: TEAL } : {}}>
-                <Icon className="w-3 h-3" />
-                <span className="hidden sm:inline">{s.shortLabel}</span>
-                <span className="sm:hidden">{s.id}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Step content */}
-        <div className="bg-white rounded-2xl border border-[#189aa1]/15 p-6 shadow-sm mb-6">
-          <div className="flex items-center gap-2 mb-5">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: `${TEAL}18` }}>
-              <StepIcon className="w-4 h-4" style={{ color: TEAL }} />
-            </div>
-            <div>
-              <h2 className="font-bold text-gray-800 text-base">{currentStep.label}</h2>
-              <p className="text-xs text-gray-400">Step {step} of {STEPS.length}</p>
-            </div>
-          </div>
-          {stepRenderers[step - 1]()}
-        </div>
-
-        {/* Navigation */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => setStep(s => Math.max(1, s - 1))}
-            disabled={step === 1}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <ChevronLeft className="w-4 h-4" /> Back
-          </button>
-
-          <div className="text-xs text-gray-400">{step} / {STEPS.length}</div>
-
-          {step < STEPS.length ? (
-            <button
-              onClick={() => setStep(s => Math.min(STEPS.length, s + 1))}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold text-white"
-              style={{ background: TEAL }}
-            >
-              Next <ChevronRight className="w-4 h-4" />
-            </button>
-          ) : (
-            <button
-              onClick={handleSubmit}
-              disabled={createMutation.isPending || updateMutation.isPending}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-60"
-              style={{ background: TEAL }}
-            >
-              <Save className="w-4 h-4" />
-              {editingId ? "Update Review" : "Save Review"}
+        <div className="flex gap-2">
+          {editingId && (
+            <button onClick={resetForm}
+              className="text-xs px-3 py-2 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50">
+              Cancel Edit
             </button>
           )}
+          <button onClick={() => setShowHistory(true)}
+            className="flex items-center gap-1.5 text-xs px-3 py-2 rounded-lg border border-[#189aa1]/40 text-[#189aa1] hover:bg-[#189aa1]/8 font-medium">
+            <ClipboardList className="w-3.5 h-3.5" /> History
+          </button>
         </div>
       </div>
-    </Layout>
+
+      {/* Live score badge */}
+      {form.examType && (
+        <div className="flex items-center gap-3 mb-4 p-3 rounded-xl border border-[#189aa1]/20 bg-white">
+          <div className="text-xs text-gray-500">Live Score:</div>
+          <div className="text-lg font-black" style={{ color: TEAL }}>{qualityScore}</div>
+          <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+            style={{ background: scoreTier.bg, color: scoreTier.color }}>
+            {scoreTier.label}
+          </span>
+          <div className="flex-1 bg-gray-100 rounded-full h-1.5">
+            <div className="h-1.5 rounded-full transition-all" style={{ width: `${qualityScore}%`, background: TEAL }} />
+          </div>
+        </div>
+      )}
+
+      {/* Step progress */}
+      <div className="flex items-center gap-1 mb-6 overflow-x-auto pb-1">
+        {STEPS.map((s, i) => {
+          const Icon = s.icon;
+          const isDone = step > s.id;
+          const isCurrent = step === s.id;
+          return (
+            <button key={s.id} onClick={() => setStep(s.id)}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 ${isCurrent ? "text-white" : isDone ? "text-[#189aa1] bg-[#189aa1]/10" : "text-gray-400 bg-gray-50 hover:bg-gray-100"}`}
+              style={isCurrent ? { background: TEAL } : {}}>
+              <Icon className="w-3 h-3" />
+              <span className="hidden sm:inline">{s.shortLabel}</span>
+              <span className="sm:hidden">{s.id}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Step content */}
+      <div className="bg-white rounded-2xl border border-[#189aa1]/15 p-6 shadow-sm mb-6">
+        <div className="flex items-center gap-2 mb-5">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+            style={{ background: `${TEAL}18` }}>
+            <StepIcon className="w-4 h-4" style={{ color: TEAL }} />
+          </div>
+          <div>
+            <h2 className="font-bold text-gray-800 text-base">{currentStep.label}</h2>
+            <p className="text-xs text-gray-400">Step {step} of {STEPS.length}</p>
+          </div>
+        </div>
+        {stepRenderers[step - 1]()}
+      </div>
+
+      {/* Navigation */}
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => setStep(s => Math.max(1, s - 1))}
+          disabled={step === 1}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <ChevronLeft className="w-4 h-4" /> Back
+        </button>
+
+        <div className="text-xs text-gray-400">{step} / {STEPS.length}</div>
+
+        {step < STEPS.length ? (
+          <button
+            onClick={() => setStep(s => Math.min(STEPS.length, s + 1))}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold text-white"
+            style={{ background: TEAL }}
+          >
+            Next <ChevronRight className="w-4 h-4" />
+          </button>
+        ) : (
+          <button
+            onClick={handleSubmit}
+            disabled={createMutation.isPending || updateMutation.isPending}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-60"
+            style={{ background: TEAL }}
+          >
+            <Save className="w-4 h-4" />
+            {editingId ? "Update Review" : "Save Review"}
+          </button>
+        )}
+      </div>
+    </div>
   );
+
+  return embedded ? mainContent : <Layout>{mainContent}</Layout>;
 }

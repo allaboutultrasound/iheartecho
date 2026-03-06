@@ -513,13 +513,20 @@ export const appRouter = router({
         labPhone: z.string().optional(),
         plan: z.enum(["basic", "professional", "enterprise"]).optional(),
         notes: z.string().optional(),
+        accreditationTypes: z.array(z.enum(["adult_echo", "pediatric_fetal_echo"])).optional(),
+        accreditationOnboardingComplete: z.boolean().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
         const lab = await getLabByAdmin(ctx.user.id);
         if (!lab) throw new Error("No lab found.");
         // Update seats if plan changed
         const seats = input.plan === "enterprise" ? 999 : input.plan === "professional" ? 25 : input.plan === "basic" ? 5 : undefined;
-        await updateLabSubscription(lab.id, { ...input, ...(seats ? { seats } : {}) });
+        const { accreditationTypes, ...rest } = input;
+        await updateLabSubscription(lab.id, {
+          ...rest,
+          ...(seats ? { seats } : {}),
+          ...(accreditationTypes !== undefined ? { accreditationTypes: JSON.stringify(accreditationTypes) } : {}),
+        });
         return { success: true };
       }),
 

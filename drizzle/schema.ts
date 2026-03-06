@@ -290,6 +290,10 @@ export const labSubscriptions = mysqlTable("labSubscriptions", {
   trialEndsAt: timestamp("trialEndsAt"),
   canceledAt: timestamp("canceledAt"),
   notes: text("notes"),
+  // IAC accreditation types the lab is seeking or currently holds (JSON array)
+  // Values: "adult_echo" | "pediatric_fetal_echo"
+  accreditationTypes: text("accreditationTypes"),
+  accreditationOnboardingComplete: boolean("accreditationOnboardingComplete").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
