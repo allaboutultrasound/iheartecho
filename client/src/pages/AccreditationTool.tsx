@@ -18,6 +18,7 @@ import {
   XCircle, Clock, ChevronDown, ChevronUp, Shield, Award, BookOpen, Loader2, Download,
   TrendingUp, TrendingDown, Minus, Info, ImageIcon, GitCompare
 } from "lucide-react";
+import PhysicianPeerReview from "./PhysicianPeerReview";
 import ImageQualityReviewTab from "./ImageQualityReview";
 import EchoCorrelationTab from "./EchoCorrelation";
 import { toast } from "sonner";
@@ -1226,7 +1227,7 @@ export default function AccreditationTool() {
           {activeTab === "qa" && <QualityReviewTab />}
           {activeTab === "iqr" && <ImageQualityReviewTab />}
           {activeTab === "echo-correlation" && <EchoCorrelationTab />}
-          {activeTab === "peer" && <PeerReviewTab />}
+          {activeTab === "peer" && <PhysicianPeerReview />}
           {activeTab === "policy" && <PolicyBuilderTab />}
           {activeTab === "auc" && <AppropriateUseTab />}
         </div>

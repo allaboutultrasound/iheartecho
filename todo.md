@@ -303,3 +303,28 @@
 - [x] Add physician dropdown from Lab Admin members (role=physician) with optional free-text fallback
 - [x] Implement per-exam-type quality score calculation matching Formsite scoring
 - [x] Add vitest tests for new IQR procedures
+
+## Lab Admin Analytics — IQR Real Data Integration
+
+- [ ] Add getIqrLabSnapshot db helper: aggregate imageQualityReviews by revieweeLabMemberId for lab-wide leaderboard
+- [ ] Add getIqrStaffTrend db helper: monthly trend for a specific lab member from imageQualityReviews
+- [ ] Add getIqrLabMonthlySummary db helper: monthly lab-wide summary from imageQualityReviews
+- [ ] Add getIqrExamTypeBreakdown db helper: count and avg score by examType for a lab
+- [ ] Add lab.getIqrStaffSnapshot tRPC procedure
+- [ ] Add lab.getIqrStaffTrend tRPC procedure
+- [ ] Add lab.getIqrMonthlySummary tRPC procedure
+- [ ] Add lab.getIqrExamTypeBreakdown tRPC procedure
+- [ ] Update AnalyticsTab to show IQR data: staff leaderboard, growth curves, domain breakdown, exam type chart
+- [ ] Add data source toggle (IQR vs Peer Review) in Analytics tab
+- [ ] Update ReportsTab monthly summary to include IQR data
+- [ ] Write vitest tests for new IQR analytics DB helpers
+
+## Physician Variability Echo Form — Peer Review Tab Replacement
+- [ ] Add physicianVariabilityReviews table to drizzle/schema.ts (with revieweeLabMemberId, reviewerLabMemberId for Lab Admin linkage)
+- [ ] Add DB helpers: createPhysVariabilityReview, getPhysVariabilityReviews, getPhysVariabilityStaffSnapshot, getPhysVariabilityMonthlySummary
+- [ ] Add tRPC procedures: physVariability.create, list, getStaffSnapshot, getMonthlySummary, getLabStaffForReview
+- [ ] Build PhysicianVariabilityReview.tsx form with full branching (Adult TTE / Stress / Pediatric / Fetal sections)
+- [ ] Staff dropdowns: Original Interpreting Physician + Over-Reading Physician pull from Lab Admin physician-role members
+- [ ] Replace PeerReviewTab in AccreditationTool.tsx with new PhysicianVariabilityReview component
+- [ ] Wire Lab Admin Analytics tab to show physician variability data alongside IQR data
+- [ ] Wire Lab Admin Reports tab to include physician variability monthly summary

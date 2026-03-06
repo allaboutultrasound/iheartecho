@@ -535,3 +535,110 @@ export const echoCorrelations = mysqlTable("echoCorrelations", {
 });
 export type EchoCorrelation = typeof echoCorrelations.$inferSelect;
 export type InsertEchoCorrelation = typeof echoCorrelations.$inferInsert;
+
+// ─── Physician Peer Reviews ─────────────────────────────────────────────────
+// Mirrors the Formsite PhysVariabilityECHO form with Lab Admin staff linkage.
+// revieweeLabMemberId → the Original Interpreting Physician (labMembers.id)
+// reviewerLabMemberId → the Over-Reading Physician Reviewer (labMembers.id)
+export const physicianPeerReviews = mysqlTable("physicianPeerReviews", {
+  id: int("id").primaryKey().autoincrement(),
+  userId: int("userId").notNull(),
+  labId: int("labId"),
+
+  // ── Header ──────────────────────────────────────────────────────────────────
+  facilityAccountNumber: varchar("facilityAccountNumber", { length: 50 }),
+  organization: varchar("organization", { length: 255 }),
+  dateReviewCompleted: varchar("dateReviewCompleted", { length: 20 }),
+  examIdentifier: varchar("examIdentifier", { length: 100 }),
+  dob: varchar("dob", { length: 20 }),
+  examDos: varchar("examDos", { length: 20 }),
+  examType: varchar("examType", { length: 50 }),
+
+  // ── Staff linkage ────────────────────────────────────────────────────────────
+  revieweeLabMemberId: int("revieweeLabMemberId"),
+  revieweeName: varchar("revieweeName", { length: 255 }),
+  reviewerLabMemberId: int("reviewerLabMemberId"),
+  reviewerName: varchar("reviewerName", { length: 255 }),
+  qualityReviewAssignedBy: varchar("qualityReviewAssignedBy", { length: 255 }),
+  reviewerEmail: varchar("reviewerEmail", { length: 255 }),
+
+  // ── Stress-specific header ───────────────────────────────────────────────────
+  postStressDopplerPerformed: varchar("postStressDopplerPerformed", { length: 10 }),
+
+  // ── Adult TTE / Pediatric / Fetal shared findings ───────────────────────────
+  situs: varchar("situs", { length: 100 }),
+  cardiacPosition: varchar("cardiacPosition", { length: 100 }),
+  leftHeart: varchar("leftHeart", { length: 100 }),
+  rightHeart: varchar("rightHeart", { length: 100 }),
+  efPercent: varchar("efPercent", { length: 50 }),
+  lvWallThickness: varchar("lvWallThickness", { length: 100 }),
+  ventricularSeptalDefect: varchar("ventricularSeptalDefect", { length: 100 }),
+  atrialSeptalDefect: varchar("atrialSeptalDefect", { length: 100 }),
+  patentForamenOvale: varchar("patentForamenOvale", { length: 100 }),
+  lvChamberSize: varchar("lvChamberSize", { length: 100 }),
+  laChamberSize: varchar("laChamberSize", { length: 100 }),
+  rvChamberSize: varchar("rvChamberSize", { length: 100 }),
+  raChamberSize: varchar("raChamberSize", { length: 100 }),
+  regionalWallMotionAbnormalities: varchar("regionalWallMotionAbnormalities", { length: 200 }),
+  aorticValve: varchar("aorticValve", { length: 100 }),
+  mitralValve: varchar("mitralValve", { length: 100 }),
+  tricuspidValve: varchar("tricuspidValve", { length: 100 }),
+  pulmonicValve: varchar("pulmonicValve", { length: 100 }),
+  aorticStenosis: varchar("aorticStenosis", { length: 100 }),
+  aorticInsufficiency: varchar("aorticInsufficiency", { length: 100 }),
+  mitralStenosis: varchar("mitralStenosis", { length: 100 }),
+  mitralRegurgitation: varchar("mitralRegurgitation", { length: 100 }),
+  tricuspidStenosis: varchar("tricuspidStenosis", { length: 100 }),
+  tricuspidRegurgitation: varchar("tricuspidRegurgitation", { length: 100 }),
+  pulmonicStenosis: varchar("pulmonicStenosis", { length: 100 }),
+  pulmonicInsufficiency: varchar("pulmonicInsufficiency", { length: 100 }),
+  rvspmm: varchar("rvspmm", { length: 50 }),
+  pericardialEffusion: varchar("pericardialEffusion", { length: 100 }),
+
+  // ── Pediatric/Congenital extra fields ────────────────────────────────────────
+  peripheralPulmonaryStenosis: varchar("peripheralPulmonaryStenosis", { length: 100 }),
+  pulmonaryVeins: varchar("pulmonaryVeins", { length: 100 }),
+  coronaryAnatomy: varchar("coronaryAnatomy", { length: 100 }),
+  aorticArch: varchar("aorticArch", { length: 100 }),
+  greatVessels: varchar("greatVessels", { length: 100 }),
+  pdaDuctalArch: varchar("pdaDuctalArch", { length: 100 }),
+  conotruncalAnatomy: varchar("conotruncalAnatomy", { length: 100 }),
+
+  // ── Stress Echo fields ───────────────────────────────────────────────────────
+  restingEfPercent: varchar("restingEfPercent", { length: 50 }),
+  postStressEfPercent: varchar("postStressEfPercent", { length: 50 }),
+  restingRwma: varchar("restingRwma", { length: 200 }),
+  postStressRwma: varchar("postStressRwma", { length: 200 }),
+  responseToStress: varchar("responseToStress", { length: 100 }),
+  stressAorticStenosis: varchar("stressAorticStenosis", { length: 100 }),
+  stressAorticInsufficiency: varchar("stressAorticInsufficiency", { length: 100 }),
+  stressMitralStenosis: varchar("stressMitralStenosis", { length: 100 }),
+  stressMitralRegurgitation: varchar("stressMitralRegurgitation", { length: 100 }),
+  stressTricuspidStenosis: varchar("stressTricuspidStenosis", { length: 100 }),
+  stressTricuspidRegurgitation: varchar("stressTricuspidRegurgitation", { length: 100 }),
+  stressPulmonicStenosis: varchar("stressPulmonicStenosis", { length: 100 }),
+  stressPulmonicInsufficiency: varchar("stressPulmonicInsufficiency", { length: 100 }),
+  stressRvspmm: varchar("stressRvspmm", { length: 50 }),
+
+  // ── Fetal Echo fields ────────────────────────────────────────────────────────
+  fetalBiometry: varchar("fetalBiometry", { length: 100 }),
+  fetalPosition: varchar("fetalPosition", { length: 100 }),
+  fetalHeartRateRhythm: varchar("fetalHeartRateRhythm", { length: 100 }),
+
+  // ── Other findings (3 free-text) ─────────────────────────────────────────────
+  otherFindings1: text("otherFindings1"),
+  otherFindings2: text("otherFindings2"),
+  otherFindings3: text("otherFindings3"),
+
+  // ── Review comments ──────────────────────────────────────────────────────────
+  reviewComments: text("reviewComments"),
+
+  // ── Concordance / variability result ────────────────────────────────────────
+  concordanceScore: int("concordanceScore"),
+  discordanceFields: text("discordanceFields"),
+
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type PhysicianPeerReview = typeof physicianPeerReviews.$inferSelect;
+export type InsertPhysicianPeerReview = typeof physicianPeerReviews.$inferInsert;

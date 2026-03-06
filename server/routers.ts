@@ -75,6 +75,15 @@ import {
   getEchoCorrelationsByLab,
   getCaseMix,
   getLabByMemberUserId,
+  createPhysicianPeerReview,
+  getPhysicianPeerReviewsByUser,
+  getPhysicianPeerReviewsByLab,
+  getPhysicianPeerReviewById,
+  updatePhysicianPeerReview,
+  deletePhysicianPeerReview,
+  getPhysicianPeerReviewStaffSnapshot,
+  getPhysicianPeerReviewMonthlySummary,
+  getPhysicianPeerReviewTrend,
 } from "./db";
 
 export const appRouter = router({
@@ -607,6 +616,47 @@ export const appRouter = router({
         if (!lab) return [];
         return getLabMonthlySummary(lab.id, input.months);
       }),
+
+    // ─── IQR Analytics (real data from imageQualityReviews) ──────────────────
+
+    /** Lab-wide IQR snapshot: avg score + review count per staff member */
+    getIqrStaffSnapshot: protectedProcedure.query(async ({ ctx }) => {
+      const lab = await getLabByAdmin(ctx.user.id);
+      if (!lab) return [];
+      return getLabStaffIQRStats(lab.id);
+    }),
+
+    /** Monthly IQR quality score trend for a specific staff member */
+    getIqrStaffTrend: protectedProcedure
+      .input(z.object({ revieweeLabMemberId: z.number(), months: z.number().default(12) }))
+      .query(async ({ ctx, input }) => {
+        const lab = await getLabByAdmin(ctx.user.id);
+        if (!lab) return [];
+        return getStaffIQRTrend(lab.id, input.revieweeLabMemberId);
+      }),
+
+    /** Domain-level breakdown for a specific staff member */
+    getIqrDomainBreakdown: protectedProcedure
+      .input(z.object({ revieweeLabMemberId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const lab = await getLabByAdmin(ctx.user.id);
+        if (!lab) return [];
+        return getStaffIQRDomainBreakdown(lab.id, input.revieweeLabMemberId);
+      }),
+
+    /** Monthly lab-wide IQR summary for the Reports tab */
+    getIqrMonthlySummary: protectedProcedure.query(async ({ ctx }) => {
+      const lab = await getLabByAdmin(ctx.user.id);
+      if (!lab) return [];
+      return getLabIQRMonthlySummary(lab.id);
+    }),
+
+    /** Lab members enriched with IQR stats (for Staff tab) */
+    getMembersWithIqrStats: protectedProcedure.query(async ({ ctx }) => {
+      const lab = await getLabByAdmin(ctx.user.id);
+      if (!lab) return [];
+      return getLabMembersWithIQRStats(lab.id);
+    }),
   }),
   // ─── Strain Navigator ────────────────────────────────────────────────────────
 
@@ -944,11 +994,159 @@ export const appRouter = router({
       }),
   }),
 
-  // ─── Case Mix Tracker ─────────────────────────────────────────────────────
+    // ─── Case Mix Tracker ─────────────────────────────────────────────────
   caseMix: router({
     get: protectedProcedure.query(async ({ ctx }) => {
       return getCaseMix(ctx.user.id);
     }),
+  }),
+
+  // ─── Physician Peer Review ───────────────────────────────────────────────
+  physicianPeerReview: router({
+    /** Create a new Physician Peer Review */
+    create: protectedProcedure
+      .input(z.object({
+        labId: z.number().optional(),
+        facilityAccountNumber: z.string().optional(),
+        organization: z.string().optional(),
+        dateReviewCompleted: z.string().optional(),
+        examIdentifier: z.string().optional(),
+        dob: z.string().optional(),
+        examDos: z.string().optional(),
+        examType: z.string().optional(),
+        // Staff linkage
+        revieweeLabMemberId: z.number().optional(),
+        revieweeName: z.string().optional(),
+        reviewerLabMemberId: z.number().optional(),
+        reviewerName: z.string().optional(),
+        qualityReviewAssignedBy: z.string().optional(),
+        reviewerEmail: z.string().optional(),
+        // Stress
+        postStressDopplerPerformed: z.string().optional(),
+        // Shared findings
+        situs: z.string().optional(),
+        cardiacPosition: z.string().optional(),
+        leftHeart: z.string().optional(),
+        rightHeart: z.string().optional(),
+        efPercent: z.string().optional(),
+        lvWallThickness: z.string().optional(),
+        ventricularSeptalDefect: z.string().optional(),
+        atrialSeptalDefect: z.string().optional(),
+        patentForamenOvale: z.string().optional(),
+        lvChamberSize: z.string().optional(),
+        laChamberSize: z.string().optional(),
+        rvChamberSize: z.string().optional(),
+        raChamberSize: z.string().optional(),
+        regionalWallMotionAbnormalities: z.string().optional(),
+        aorticValve: z.string().optional(),
+        mitralValve: z.string().optional(),
+        tricuspidValve: z.string().optional(),
+        pulmonicValve: z.string().optional(),
+        aorticStenosis: z.string().optional(),
+        aorticInsufficiency: z.string().optional(),
+        mitralStenosis: z.string().optional(),
+        mitralRegurgitation: z.string().optional(),
+        tricuspidStenosis: z.string().optional(),
+        tricuspidRegurgitation: z.string().optional(),
+        pulmonicStenosis: z.string().optional(),
+        pulmonicInsufficiency: z.string().optional(),
+        rvspmm: z.string().optional(),
+        pericardialEffusion: z.string().optional(),
+        // Pediatric extra
+        peripheralPulmonaryStenosis: z.string().optional(),
+        pulmonaryVeins: z.string().optional(),
+        coronaryAnatomy: z.string().optional(),
+        aorticArch: z.string().optional(),
+        greatVessels: z.string().optional(),
+        pdaDuctalArch: z.string().optional(),
+        conotruncalAnatomy: z.string().optional(),
+        // Stress
+        restingEfPercent: z.string().optional(),
+        postStressEfPercent: z.string().optional(),
+        restingRwma: z.string().optional(),
+        postStressRwma: z.string().optional(),
+        responseToStress: z.string().optional(),
+        stressAorticStenosis: z.string().optional(),
+        stressAorticInsufficiency: z.string().optional(),
+        stressMitralStenosis: z.string().optional(),
+        stressMitralRegurgitation: z.string().optional(),
+        stressTricuspidStenosis: z.string().optional(),
+        stressTricuspidRegurgitation: z.string().optional(),
+        stressPulmonicStenosis: z.string().optional(),
+        stressPulmonicInsufficiency: z.string().optional(),
+        stressRvspmm: z.string().optional(),
+        // Fetal
+        fetalBiometry: z.string().optional(),
+        fetalPosition: z.string().optional(),
+        fetalHeartRateRhythm: z.string().optional(),
+        // Other
+        otherFindings1: z.string().optional(),
+        otherFindings2: z.string().optional(),
+        otherFindings3: z.string().optional(),
+        reviewComments: z.string().optional(),
+        concordanceScore: z.number().optional(),
+        discordanceFields: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const labId = input.labId ?? (await getLabByMemberUserId(ctx.user.id))?.id;
+        return createPhysicianPeerReview({ ...input, userId: ctx.user.id, labId });
+      }),
+
+    /** List Physician Peer Reviews for the current user */
+    list: protectedProcedure
+      .input(z.object({ limit: z.number().default(50), offset: z.number().default(0) }))
+      .query(async ({ ctx, input }) => {
+        return getPhysicianPeerReviewsByUser(ctx.user.id, input.limit, input.offset);
+      }),
+
+    /** Get a single Physician Peer Review by ID */
+    getById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const review = await getPhysicianPeerReviewById(input.id);
+        if (!review || review.userId !== ctx.user.id) return null;
+        return review;
+      }),
+
+    /** Delete a Physician Peer Review */
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        await deletePhysicianPeerReview(input.id, ctx.user.id);
+        return { success: true };
+      }),
+
+    /** Get lab staff (physician role) for the dropdowns */
+    getLabStaffForReview: protectedProcedure.query(async ({ ctx }) => {
+      const lab = await getLabByMemberUserId(ctx.user.id);
+      if (!lab) return { physicians: [] };
+      const members = await getLabMembers(lab.id);
+      const physicians = members.filter(m => m.role === "physician" || m.role === "admin");
+      return { physicians };
+    }),
+
+    /** Lab-wide staff snapshot for Analytics tab */
+    getStaffSnapshot: protectedProcedure.query(async ({ ctx }) => {
+      const lab = await getLabByAdmin(ctx.user.id);
+      if (!lab) return [];
+      return getPhysicianPeerReviewStaffSnapshot(lab.id);
+    }),
+
+    /** Monthly summary for Reports tab */
+    getMonthlySummary: protectedProcedure.query(async ({ ctx }) => {
+      const lab = await getLabByAdmin(ctx.user.id);
+      if (!lab) return [];
+      return getPhysicianPeerReviewMonthlySummary(lab.id);
+    }),
+
+    /** Trend for a specific physician */
+    getPhysicianTrend: protectedProcedure
+      .input(z.object({ revieweeLabMemberId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const lab = await getLabByAdmin(ctx.user.id);
+        if (!lab) return [];
+        return getPhysicianPeerReviewTrend(lab.id, input.revieweeLabMemberId);
+      }),
   }),
 });
 export type AppRouter = typeof appRouter;

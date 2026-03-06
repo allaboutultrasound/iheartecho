@@ -23,11 +23,14 @@ import {
   strainSnapshots,
   imageQualityReviews,
   echoCorrelations,
+  physicianPeerReviews,
   type ImageQualityReview,
   type InsertImageQualityReview,
   type LabSubscription,
   type LabMember,
   type LabPeerReview,
+  type PhysicianPeerReview,
+  type InsertPhysicianPeerReview,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -773,6 +776,10 @@ export async function getLabStaffIQRStats(labId: number) {
     reviewCount: count(),
     avgScore: avg(imageQualityReviews.qualityScore),
     latestReviewDate: sql<string>`MAX(${imageQualityReviews.dateReviewCompleted})`,
+    excellentCount: sql<number>`SUM(CASE WHEN ${imageQualityReviews.qualityScore} >= 90 THEN 1 ELSE 0 END)`,
+    goodCount: sql<number>`SUM(CASE WHEN ${imageQualityReviews.qualityScore} >= 75 AND ${imageQualityReviews.qualityScore} < 90 THEN 1 ELSE 0 END)`,
+    adequateCount: sql<number>`SUM(CASE WHEN ${imageQualityReviews.qualityScore} >= 60 AND ${imageQualityReviews.qualityScore} < 75 THEN 1 ELSE 0 END)`,
+    needsImprovementCount: sql<number>`SUM(CASE WHEN ${imageQualityReviews.qualityScore} < 60 THEN 1 ELSE 0 END)`,
   })
     .from(imageQualityReviews)
     .where(and(
@@ -801,26 +808,27 @@ export async function getStaffIQRTrend(labId: number, revieweeLabMemberId: numbe
     .orderBy(sql`DATE_FORMAT(${imageQualityReviews.createdAt}, '%Y-%m')`);
 }
 
-/** Get domain-level breakdown for a staff member */
+/** Get exam-type-level breakdown for a staff member: avg score + count per exam type */
 export async function getStaffIQRDomainBreakdown(labId: number, revieweeLabMemberId: number) {
   const db = await getDb();
   if (!db) return [];
   return db.select({
-    imageOptimizationSummary: imageQualityReviews.imageOptimizationSummary,
-    measurementAccuracySummary: imageQualityReviews.measurementAccuracySummary,
-    dopplerSettingsSummary: imageQualityReviews.dopplerSettingsSummary,
-    protocolSequenceFollowed: imageQualityReviews.protocolSequenceFollowed,
-    iacAcceptable: imageQualityReviews.iacAcceptable,
-    qualityScore: imageQualityReviews.qualityScore,
-    createdAt: imageQualityReviews.createdAt,
+    examType: imageQualityReviews.examType,
+    reviewCount: count(),
+    avgScore: avg(imageQualityReviews.qualityScore),
+    excellentCount: sql<number>`SUM(CASE WHEN ${imageQualityReviews.qualityScore} >= 90 THEN 1 ELSE 0 END)`,
+    goodCount: sql<number>`SUM(CASE WHEN ${imageQualityReviews.qualityScore} >= 75 AND ${imageQualityReviews.qualityScore} < 90 THEN 1 ELSE 0 END)`,
+    adequateCount: sql<number>`SUM(CASE WHEN ${imageQualityReviews.qualityScore} >= 60 AND ${imageQualityReviews.qualityScore} < 75 THEN 1 ELSE 0 END)`,
+    needsImprovementCount: sql<number>`SUM(CASE WHEN ${imageQualityReviews.qualityScore} < 60 THEN 1 ELSE 0 END)`,
   })
     .from(imageQualityReviews)
     .where(and(
       eq(imageQualityReviews.labId, labId),
-      eq(imageQualityReviews.revieweeLabMemberId, revieweeLabMemberId)
+      eq(imageQualityReviews.revieweeLabMemberId, revieweeLabMemberId),
+      sql`${imageQualityReviews.examType} IS NOT NULL`,
     ))
-    .orderBy(desc(imageQualityReviews.createdAt))
-    .limit(20);
+    .groupBy(imageQualityReviews.examType)
+    .orderBy(sql`count(*) DESC`);
 }
 
 /** Lab-wide monthly summary for the Reports tab */
@@ -832,6 +840,10 @@ export async function getLabIQRMonthlySummary(labId: number) {
     reviewCount: count(),
     avgScore: avg(imageQualityReviews.qualityScore),
     staffReviewed: sql<number>`COUNT(DISTINCT ${imageQualityReviews.revieweeLabMemberId})`,
+    excellentCount: sql<number>`SUM(CASE WHEN ${imageQualityReviews.qualityScore} >= 90 THEN 1 ELSE 0 END)`,
+    goodCount: sql<number>`SUM(CASE WHEN ${imageQualityReviews.qualityScore} >= 75 AND ${imageQualityReviews.qualityScore} < 90 THEN 1 ELSE 0 END)`,
+    adequateCount: sql<number>`SUM(CASE WHEN ${imageQualityReviews.qualityScore} >= 60 AND ${imageQualityReviews.qualityScore} < 75 THEN 1 ELSE 0 END)`,
+    needsImprovementCount: sql<number>`SUM(CASE WHEN ${imageQualityReviews.qualityScore} < 60 THEN 1 ELSE 0 END)`,
   })
     .from(imageQualityReviews)
     .where(eq(imageQualityReviews.labId, labId))
@@ -951,4 +963,255 @@ export async function getLabByMemberUserId(userId: number) {
     .where(eq(labSubscriptions.id, membership[0].labId))
     .limit(1);
   return lab.length > 0 ? lab[0] : null;
+}
+
+// ─── IQR Analytics — Lab Admin ────────────────────────────────────────────────
+
+/**
+ * Lab-wide IQR snapshot: one row per staff member with avg quality score,
+ * review count, last review date, and exam type breakdown.
+ * Used for the Lab Admin Analytics leaderboard chart.
+ */
+export async function getIqrLabSnapshot(labId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select({
+    revieweeLabMemberId: imageQualityReviews.revieweeLabMemberId,
+    revieweeName: imageQualityReviews.revieweeName,
+    avgScore: avg(imageQualityReviews.qualityScore),
+    reviewCount: count(imageQualityReviews.id),
+    lastReviewDate: sql<string>`MAX(DATE_FORMAT(${imageQualityReviews.createdAt}, '%Y-%m'))`,
+    excellentCount: sql<number>`SUM(CASE WHEN ${imageQualityReviews.qualityScore} >= 90 THEN 1 ELSE 0 END)`,
+    goodCount: sql<number>`SUM(CASE WHEN ${imageQualityReviews.qualityScore} >= 75 AND ${imageQualityReviews.qualityScore} < 90 THEN 1 ELSE 0 END)`,
+    adequateCount: sql<number>`SUM(CASE WHEN ${imageQualityReviews.qualityScore} >= 60 AND ${imageQualityReviews.qualityScore} < 75 THEN 1 ELSE 0 END)`,
+    needsImprovementCount: sql<number>`SUM(CASE WHEN ${imageQualityReviews.qualityScore} < 60 THEN 1 ELSE 0 END)`,
+  })
+    .from(imageQualityReviews)
+    .where(
+      and(
+        eq(imageQualityReviews.labId, labId),
+        sql`${imageQualityReviews.revieweeLabMemberId} IS NOT NULL`,
+        sql`${imageQualityReviews.qualityScore} IS NOT NULL`,
+      )
+    )
+    .groupBy(imageQualityReviews.revieweeLabMemberId, imageQualityReviews.revieweeName)
+    .orderBy(sql`avg(${imageQualityReviews.qualityScore}) DESC`);
+  return rows;
+}
+
+/**
+ * Monthly IQR quality score trend for a specific lab member.
+ * Used for the individual staff growth curve chart.
+ */
+export async function getIqrStaffTrend(labId: number, revieweeLabMemberId: number, months = 12) {
+  const db = await getDb();
+  if (!db) return [];
+  const cutoff = new Date();
+  cutoff.setMonth(cutoff.getMonth() - months);
+  const rows = await db.select({
+    reviewMonth: sql<string>`DATE_FORMAT(${imageQualityReviews.createdAt}, '%Y-%m')`,
+    avgScore: avg(imageQualityReviews.qualityScore),
+    reviewCount: count(imageQualityReviews.id),
+    examTypes: sql<string>`GROUP_CONCAT(DISTINCT ${imageQualityReviews.examType})`,
+  })
+    .from(imageQualityReviews)
+    .where(
+      and(
+        eq(imageQualityReviews.labId, labId),
+        eq(imageQualityReviews.revieweeLabMemberId, revieweeLabMemberId),
+        sql`${imageQualityReviews.qualityScore} IS NOT NULL`,
+        gte(imageQualityReviews.createdAt, cutoff),
+      )
+    )
+    .groupBy(sql`DATE_FORMAT(${imageQualityReviews.createdAt}, '%Y-%m')`)
+    .orderBy(sql`DATE_FORMAT(${imageQualityReviews.createdAt}, '%Y-%m')`);
+  return rows;
+}
+
+/**
+ * Monthly lab-wide IQR summary: avg score, review count, tier breakdown.
+ * Used for the Reports tab monthly chart.
+ */
+export async function getIqrLabMonthlySummary(labId: number, months = 12) {
+  const db = await getDb();
+  if (!db) return [];
+  const cutoff = new Date();
+  cutoff.setMonth(cutoff.getMonth() - months);
+  const rows = await db.select({
+    reviewMonth: sql<string>`DATE_FORMAT(${imageQualityReviews.createdAt}, '%Y-%m')`,
+    avgScore: avg(imageQualityReviews.qualityScore),
+    reviewCount: count(imageQualityReviews.id),
+    excellentCount: sql<number>`SUM(CASE WHEN ${imageQualityReviews.qualityScore} >= 90 THEN 1 ELSE 0 END)`,
+    goodCount: sql<number>`SUM(CASE WHEN ${imageQualityReviews.qualityScore} >= 75 AND ${imageQualityReviews.qualityScore} < 90 THEN 1 ELSE 0 END)`,
+    adequateCount: sql<number>`SUM(CASE WHEN ${imageQualityReviews.qualityScore} >= 60 AND ${imageQualityReviews.qualityScore} < 75 THEN 1 ELSE 0 END)`,
+    needsImprovementCount: sql<number>`SUM(CASE WHEN ${imageQualityReviews.qualityScore} < 60 THEN 1 ELSE 0 END)`,
+  })
+    .from(imageQualityReviews)
+    .where(
+      and(
+        eq(imageQualityReviews.labId, labId),
+        sql`${imageQualityReviews.qualityScore} IS NOT NULL`,
+        gte(imageQualityReviews.createdAt, cutoff),
+      )
+    )
+    .groupBy(sql`DATE_FORMAT(${imageQualityReviews.createdAt}, '%Y-%m')`)
+    .orderBy(sql`DATE_FORMAT(${imageQualityReviews.createdAt}, '%Y-%m')`);
+  return rows;
+}
+
+/**
+ * Exam type breakdown for a lab: count and avg score per exam type.
+ * Used for the Analytics tab exam type distribution chart.
+ */
+export async function getIqrExamTypeBreakdown(labId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select({
+    examType: imageQualityReviews.examType,
+    reviewCount: count(imageQualityReviews.id),
+    avgScore: avg(imageQualityReviews.qualityScore),
+  })
+    .from(imageQualityReviews)
+    .where(
+      and(
+        eq(imageQualityReviews.labId, labId),
+        sql`${imageQualityReviews.examType} IS NOT NULL`,
+      )
+    )
+    .groupBy(imageQualityReviews.examType)
+    .orderBy(sql`count(${imageQualityReviews.id}) DESC`);
+  return rows;
+}
+
+/**
+ * Per-member exam type breakdown: how many of each exam type a staff member has been reviewed on.
+ */
+export async function getIqrMemberExamBreakdown(labId: number, revieweeLabMemberId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({
+    examType: imageQualityReviews.examType,
+    reviewCount: count(imageQualityReviews.id),
+    avgScore: avg(imageQualityReviews.qualityScore),
+  })
+    .from(imageQualityReviews)
+    .where(
+      and(
+        eq(imageQualityReviews.labId, labId),
+        eq(imageQualityReviews.revieweeLabMemberId, revieweeLabMemberId),
+        sql`${imageQualityReviews.examType} IS NOT NULL`,
+      )
+    )
+    .groupBy(imageQualityReviews.examType)
+    .orderBy(sql`count(${imageQualityReviews.id}) DESC`);
+}
+
+// ─── Physician Peer Review DB Helpers ────────────────────────────────────────
+
+/** Create a new Physician Peer Review */
+export async function createPhysicianPeerReview(data: InsertPhysicianPeerReview) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  const [result] = await db.insert(physicianPeerReviews).values(data);
+  return result;
+}
+
+/** Get all Physician Peer Reviews for a user (most recent first) */
+export async function getPhysicianPeerReviewsByUser(userId: number, limit = 50, offset = 0) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(physicianPeerReviews)
+    .where(eq(physicianPeerReviews.userId, userId))
+    .orderBy(desc(physicianPeerReviews.createdAt))
+    .limit(limit)
+    .offset(offset);
+}
+
+/** Get all Physician Peer Reviews for a lab (most recent first) */
+export async function getPhysicianPeerReviewsByLab(labId: number, limit = 100, offset = 0) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(physicianPeerReviews)
+    .where(eq(physicianPeerReviews.labId, labId))
+    .orderBy(desc(physicianPeerReviews.createdAt))
+    .limit(limit)
+    .offset(offset);
+}
+
+/** Get a single Physician Peer Review by ID */
+export async function getPhysicianPeerReviewById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const [row] = await db.select().from(physicianPeerReviews).where(eq(physicianPeerReviews.id, id));
+  return row ?? null;
+}
+
+/** Update a Physician Peer Review */
+export async function updatePhysicianPeerReview(id: number, userId: number, data: Partial<InsertPhysicianPeerReview>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  return db.update(physicianPeerReviews).set({ ...data, updatedAt: new Date() })
+    .where(and(eq(physicianPeerReviews.id, id), eq(physicianPeerReviews.userId, userId)));
+}
+
+/** Delete a Physician Peer Review */
+export async function deletePhysicianPeerReview(id: number, userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  return db.delete(physicianPeerReviews)
+    .where(and(eq(physicianPeerReviews.id, id), eq(physicianPeerReviews.userId, userId)));
+}
+
+/** Lab-wide staff snapshot for Physician Peer Reviews (for Lab Admin Analytics) */
+export async function getPhysicianPeerReviewStaffSnapshot(labId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({
+    revieweeLabMemberId: physicianPeerReviews.revieweeLabMemberId,
+    revieweeName: physicianPeerReviews.revieweeName,
+    reviewCount: count(physicianPeerReviews.id),
+    avgConcordanceScore: avg(physicianPeerReviews.concordanceScore),
+    lastReviewDate: sql<string>`MAX(${physicianPeerReviews.createdAt})`,
+  })
+    .from(physicianPeerReviews)
+    .where(and(
+      eq(physicianPeerReviews.labId, labId),
+      sql`${physicianPeerReviews.revieweeLabMemberId} IS NOT NULL`,
+    ))
+    .groupBy(physicianPeerReviews.revieweeLabMemberId, physicianPeerReviews.revieweeName)
+    .orderBy(sql`avg(${physicianPeerReviews.concordanceScore}) DESC`);
+}
+
+/** Monthly summary for Physician Peer Reviews (for Lab Admin Reports) */
+export async function getPhysicianPeerReviewMonthlySummary(labId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({
+    month: sql<string>`DATE_FORMAT(${physicianPeerReviews.createdAt}, '%Y-%m')`,
+    reviewCount: count(),
+    avgConcordanceScore: avg(physicianPeerReviews.concordanceScore),
+    physiciansReviewed: sql<number>`COUNT(DISTINCT ${physicianPeerReviews.revieweeLabMemberId})`,
+  })
+    .from(physicianPeerReviews)
+    .where(eq(physicianPeerReviews.labId, labId))
+    .groupBy(sql`DATE_FORMAT(${physicianPeerReviews.createdAt}, '%Y-%m')`)
+    .orderBy(sql`DATE_FORMAT(${physicianPeerReviews.createdAt}, '%Y-%m')`);
+}
+
+/** Trend for a specific physician (for Lab Admin Analytics growth curve) */
+export async function getPhysicianPeerReviewTrend(labId: number, revieweeLabMemberId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({
+    month: sql<string>`DATE_FORMAT(${physicianPeerReviews.createdAt}, '%Y-%m')`,
+    avgConcordanceScore: avg(physicianPeerReviews.concordanceScore),
+    reviewCount: count(),
+  })
+    .from(physicianPeerReviews)
+    .where(and(
+      eq(physicianPeerReviews.labId, labId),
+      eq(physicianPeerReviews.revieweeLabMemberId, revieweeLabMemberId),
+    ))
+    .groupBy(sql`DATE_FORMAT(${physicianPeerReviews.createdAt}, '%Y-%m')`)
+    .orderBy(sql`DATE_FORMAT(${physicianPeerReviews.createdAt}, '%Y-%m')`);
 }
