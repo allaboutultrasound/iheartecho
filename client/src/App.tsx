@@ -43,6 +43,7 @@ import EchoAssistHub from "./pages/EchoAssistHub";
 import StrainScanCoach from "./pages/StrainScanCoach";
 import TEEScanCoach from "./pages/TEEScanCoach";
 import ICEScanCoach from "./pages/ICEScanCoach";
+import CmeHub from "./pages/CmeHub";
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
@@ -62,6 +63,7 @@ function Router() {
       <Route path="/scan-coach" component={ScanCoach} />
       <Route path="/cases" component={CaseLab} />
       <Route path="/report" component={ReportBuilder} />
+      <Route path="/cme" component={CmeHub} />
       <Route path="/echoassist" component={EchoAssist} />
       <Route path="/hub" component={Hub} />
       <Route path="/cardiac-pocus" component={CardiacPOCUS} />

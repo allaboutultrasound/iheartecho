@@ -6,6 +6,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { storagePut } from "./storage";
 import { platformAdminRouter, labSeatsRouter } from "./routers/adminRouter";
+import { cmeRouter } from "./routers/cmeRouter";
 import {
   acceptHubTerms,
   createComment,
@@ -1445,6 +1446,9 @@ export const appRouter = router({
   // ─── Platform Admin & Seat Management ────────────────────────────────────
   platformAdmin: platformAdminRouter,
   labSeats: labSeatsRouter,
+
+  // ─── CME Hub (Thinkific Catalog) ──────────────────────────────────────────────
+  cmeCatalog: cmeRouter,
 });
 export type AppRouter = typeof appRouter;
 

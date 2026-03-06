@@ -8,7 +8,7 @@ import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import {
   Calculator, ClipboardList, Activity, Scan, BookOpen, FileText,
-  ArrowRight, Users, Award, Zap, Stethoscope, ExternalLink, MessageCircle
+  ArrowRight, Users, Award, Zap, Stethoscope, ExternalLink, MessageCircle, GraduationCap
 } from "lucide-react";
 
 const BRAND = "#189aa1";
@@ -86,6 +86,14 @@ const modules: Module[] = [
     title: "iHeartEcho Hub™",
     description: "Professional echo community — 5 specialty hubs, case discussions, DMs, and peer learning for echo professionals.",
     badge: "Community",
+    color: BRAND,
+  },
+  {
+    path: "/cme",
+    icon: GraduationCap,
+    title: "CME Hub",
+    description: "Browse accredited CME courses from All About Ultrasound — SDMS, AMA PRA, and more. Click to enroll directly on Thinkific.",
+    badge: "CME",
     color: BRAND,
   },
 ];

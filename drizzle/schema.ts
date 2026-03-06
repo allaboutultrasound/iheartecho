@@ -803,3 +803,72 @@ export const userRoles = mysqlTable("userRoles", {
 });
 export type UserRole = typeof userRoles.$inferSelect;
 export type InsertUserRole = typeof userRoles.$inferInsert;
+
+// ─── CME Hub: Thinkific Course Cache ─────────────────────────────────────────
+// Cached copy of Thinkific product catalog (synced every 6 hours).
+// Only non-hidden, published, non-archived products are stored here.
+export const cmeCoursesCache = mysqlTable("cmeCoursesCache", {
+  id: int("id").primaryKey().autoincrement(),
+  // Thinkific product ID (used for deep-link URLs and enrollment lookups)
+  thinkificProductId: int("thinkificProductId").notNull().unique(),
+  // Thinkific course ID (different from product ID)
+  thinkificCourseId: int("thinkificCourseId"),
+  name: varchar("name", { length: 300 }).notNull(),
+  slug: varchar("slug", { length: 200 }).notNull(),
+  description: text("description"),
+  price: varchar("price", { length: 20 }),
+  cardImageUrl: text("cardImageUrl"),
+  instructorNames: text("instructorNames"),
+  hasCertificate: boolean("hasCertificate").default(false).notNull(),
+  // Raw Thinkific status fields (for reference)
+  thinkificStatus: varchar("thinkificStatus", { length: 20 }),
+  syncedAt: timestamp("syncedAt").defaultNow().notNull(),
+});
+export type CmeCourseCache = typeof cmeCoursesCache.$inferSelect;
+export type InsertCmeCourseCache = typeof cmeCoursesCache.$inferInsert;
+
+// ─── CME Hub: Course Metadata ─────────────────────────────────────────────────
+// Admin-managed CME credit metadata not stored in Thinkific.
+// One row per Thinkific product — upserted by platform_admin via the CME Hub admin panel.
+export const cmeCourseMeta = mysqlTable("cmeCourseMeta", {
+  id: int("id").primaryKey().autoincrement(),
+  thinkificProductId: int("thinkificProductId").notNull().unique(),
+  // Credit hours (e.g. 2.5 stored as "2.5")
+  creditHours: varchar("creditHours", { length: 10 }),
+  // Credit type: SDMS, AMA_PRA_1, ANCC, etc.
+  creditType: mysqlEnum("creditType", ["SDMS", "AMA_PRA_1", "ANCC", "OTHER"]),
+  // Specialty category for filtering
+  specialty: varchar("specialty", { length: 100 }),
+  // Accreditation body name
+  accreditationBody: varchar("accreditationBody", { length: 100 }),
+  // Whether to show in the public catalog (admin override)
+  isVisible: boolean("isVisible").default(true).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedByUserId: int("updatedByUserId"),
+});
+export type CmeCourseMeta = typeof cmeCourseMeta.$inferSelect;
+export type InsertCmeCourseMeta = typeof cmeCourseMeta.$inferInsert;
+
+// ─── CME Hub: Enrollment Cache ────────────────────────────────────────────────
+// Per-user enrollment progress cached from Thinkific.
+// Keyed by (userId, thinkificProductId) — refreshed on-demand when user visits CME Hub.
+export const cmeEnrollmentCache = mysqlTable("cmeEnrollmentCache", {
+  id: int("id").primaryKey().autoincrement(),
+  // iHeartEcho user ID
+  userId: int("userId").notNull(),
+  // Thinkific user ID (resolved by email match)
+  thinkificUserId: int("thinkificUserId"),
+  // Thinkific product ID
+  thinkificProductId: int("thinkificProductId").notNull(),
+  thinkificCourseId: int("thinkificCourseId"),
+  courseName: varchar("courseName", { length: 300 }),
+  percentCompleted: varchar("percentCompleted", { length: 10 }),
+  completed: boolean("completed").default(false).notNull(),
+  completedAt: timestamp("completedAt"),
+  startedAt: timestamp("startedAt"),
+  expiryDate: timestamp("expiryDate"),
+  expired: boolean("expired").default(false).notNull(),
+  syncedAt: timestamp("syncedAt").defaultNow().notNull(),
+});
+export type CmeEnrollmentCache = typeof cmeEnrollmentCache.$inferSelect;
+export type InsertCmeEnrollmentCache = typeof cmeEnrollmentCache.$inferInsert;

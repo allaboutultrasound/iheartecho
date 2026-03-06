@@ -8,7 +8,7 @@ import { Link, useLocation } from "wouter";
 import {
   Heart, Calculator, ClipboardList, Activity,
   Scan, BookOpen, FileText, Menu, X, ChevronRight,
-  Stethoscope, Zap, ExternalLink, ShoppingBag, FlaskConical, MessageCircle, Award, Shield
+  Stethoscope, Zap, ExternalLink, ShoppingBag, FlaskConical, MessageCircle, Award, Shield, GraduationCap
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import NotificationBell from "@/components/NotificationBell";
@@ -36,6 +36,7 @@ const navGroups = [
     items: [
       { path: "/cases", label: "Echo Case Lab", icon: BookOpen },
       { path: "/report", label: "Report Builder", icon: FileText },
+      { path: "/cme", label: "CME Hub", icon: GraduationCap },
     ],
   },
   {

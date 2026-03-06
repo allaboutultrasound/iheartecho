@@ -169,6 +169,13 @@
       "when": 1772823728608,
       "tag": "0023_fluffy_king_bedlam",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "5",
+      "when": 1772828547321,
+      "tag": "0024_fancy_firestar",
+      "breakpoints": true
     }
   ]
 }

@@ -526,3 +526,19 @@
 ## Owner Promotion & Access Request Notification
 - [x] Promote owner (OWNER_OPEN_ID) to platform_admin and diy_admin roles in DB
 - [x] Wire RoleGuard "Request Access" button to send owner notification via notifyOwner
+
+## CME Hub — Thinkific Catalog (Simplified)
+- [x] THINKIFIC_API_KEY and THINKIFIC_SUBDOMAIN secrets stored
+- [x] DB schema: cmeCoursesCache table (productId, name, slug, description, price, cardImageUrl, instructorNames, hasCertificate, syncedAt)
+- [x] Server: Thinkific API helper (server/thinkific.ts) with getVisibleProducts, getUserByEmail, parseCreditHoursFromName
+- [ ] Server: cme.getCatalog — public procedure, returns visible non-hidden non-archived courses with email-prefilled deep links
+- [ ] Wire cmeRouter into appRouter
+- [ ] Frontend: CMEHub.tsx — public course grid, each card links to Thinkific with user email pre-filled
+- [ ] Sidebar: CME Hub entry added under Learning section
+- [ ] Home dashboard: CME Hub card added to module grid
+- [ ] Vitest: cme router tests (catalog filter, deep-link generation)
+
+## CME Hub — Revised (member.allaboutultrasound.com/collections/cme)
+- [x] Scrape CME collections page to extract course names, images, prices, and checkout URLs
+- [x] Replace Thinkific API-driven catalog with hardcoded CME course data from the collections page
+- [x] Email-prefilled checkout deep links for logged-in users
