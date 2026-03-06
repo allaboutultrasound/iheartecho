@@ -418,3 +418,26 @@
 - [x] Rewrite SegmentalStrainCurves to show all 17 individual segment waveforms (not wall-averaged groups)
 - [x] Add wall-group filter toggles so user can show/hide by wall (Anterior, Septal, Inferior, Lateral, Apex)
 - [x] Basal=dashed, mid=dotted, apical/apex=solid line styles
+
+## DIY Accreditation Tool — IQR Nav Fix & Case Mix Data Entry
+- [ ] Fix IQR extra side navigation when embedded in DIY Accreditation Tool
+- [ ] Add caseMixEntries DB table (caseId, userId, labId, modality, caseType, deidentifiedId, sonographer, physician, notes, createdAt)
+- [ ] Add tRPC procedures: caseMix.addEntry, caseMix.listEntries, caseMix.deleteEntry
+- [ ] Rebuild CaseMixSubmission with per-case data entry form per modality (de-identified ID, sonographer, physician, case type)
+- [ ] Show running case total under each modality category with progress toward IAC requirement
+- [ ] Allow saving cases and viewing case list per modality
+
+## Accreditation Readiness — Facility Info Removal
+- [x] Remove facility information section from the accreditation readiness checklist
+
+## Lab Roles Restructure & CME Tracker
+- [ ] Update DB schema: labMember role enum → medical_director, technical_director, medical_staff, technical_staff
+- [ ] Add cmeEntries table (labMemberId, title, date, hours, category, provider, certNumber, notes)
+- [ ] Run db:push to apply schema changes
+- [ ] Update tRPC router: lab member role procedures, CME CRUD procedures
+- [ ] Update LabAdmin UI: replace physician/sonographer with 4 new roles
+- [ ] Map physician → medical_director + medical_staff in all review forms and readiness lists
+- [ ] Map sonographer → technical_director + technical_staff in all review forms and readiness lists
+- [ ] Build CME Tracker UI per staff member (add/edit/delete CME entries, hours summary)
+- [ ] Add CME section to AccreditationReadiness checklist
+- [ ] Update CaseMixSubmission Case Tracker dropdowns to use new role mappings

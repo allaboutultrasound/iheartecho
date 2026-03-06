@@ -120,6 +120,27 @@
       "when": 1772799830277,
       "tag": "0016_great_vulture",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "5",
+      "when": 1772807530360,
+      "tag": "0017_messy_rocket_raccoon",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "5",
+      "when": 1772807583906,
+      "tag": "0018_woozy_songbird",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "5",
+      "when": 1772807618632,
+      "tag": "0019_thick_purifiers",
+      "breakpoints": true
     }
   ]
 }

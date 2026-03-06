@@ -63,11 +63,18 @@ function strainColor(val: number | null): string {
 }
 
 // ─── Strain Curve Generator ───────────────────────────────────────────────────
+//
+// curveType options:
+//   "normal"        — standard longitudinal shortening (default)
+//   "septalFlash"   — LBBB: early shortening → rebound stretch → late re-shortening
+//   "lateralDelay"  — LBBB: delayed onset, late peak strain, post-systolic shortening
+//   "postSystolic"  — general post-systolic shortening (ischemia, HCM)
 
 function generateStrainCurve(
   strainVal: number | null,
   wms: number,
-  _segId: number
+  _segId: number,
+  curveType: "normal" | "septalFlash" | "lateralDelay" | "postSystolic" = "normal"
 ): { t: number; strain: number }[] {
   const points = 50;
   const result: { t: number; strain: number }[] = [];
@@ -78,30 +85,85 @@ function generateStrainCurve(
     const wmsDefaults: Record<number, number> = { 1: -20, 2: -12, 3: -2, 4: 3, 5: 5 };
     peak = wmsDefaults[wms] ?? -20;
   }
+
   for (let i = 0; i <= points; i++) {
     const t = (i / points) * 100;
     let strain = 0;
-    if (wms === 1 || wms === 2) {
-      const amplitude = Math.abs(peak);
-      if (t <= 35) {
-        strain = -(amplitude * Math.sin((t / 35) * Math.PI * 0.5));
-      } else if (t <= 50) {
-        const psr = wms === 1 ? amplitude * 0.05 : 0;
-        strain = -amplitude + (amplitude + psr) * ((t - 35) / 15);
+    const amplitude = Math.abs(peak);
+
+    if (curveType === "septalFlash") {
+      // LBBB septal flash:
+      // 0–15%: rapid early shortening (septal flash) reaching ~60% of amplitude
+      // 15–35%: rebound stretch back toward 0 and briefly positive (paradoxical)
+      // 35–60%: slow re-shortening as lateral wall activates and septum is pulled
+      // 60–100%: return to baseline
+      if (t <= 15) {
+        strain = -(amplitude * 0.6) * Math.sin((t / 15) * Math.PI * 0.5);
+      } else if (t <= 35) {
+        // rebound from -60% amplitude back to +15% (paradoxical stretch)
+        const reboundPeak = amplitude * 0.15;
+        strain = -(amplitude * 0.6) + (amplitude * 0.6 + reboundPeak) * ((t - 15) / 20);
+      } else if (t <= 60) {
+        // re-shortening to ~50% of amplitude
+        const startVal = amplitude * 0.15;
+        const endVal = -(amplitude * 0.5);
+        strain = startVal + (endVal - startVal) * ((t - 35) / 25);
       } else {
-        const midVal = wms === 1 ? amplitude * 0.05 : 0;
-        strain = midVal * (1 - (t - 50) / 50);
+        // return to baseline
+        strain = -(amplitude * 0.5) * (1 - (t - 60) / 40);
       }
-    } else if (wms === 3) {
-      strain = peak * 0.15 * Math.sin((t / 100) * Math.PI);
-    } else if (wms === 4) {
-      const amp = Math.abs(peak) * 0.6;
-      if (t <= 35) strain = amp * Math.sin((t / 35) * Math.PI * 0.5);
-      else strain = amp * (1 - (t - 35) / 65);
+    } else if (curveType === "lateralDelay") {
+      // LBBB lateral wall: delayed activation, late peak, post-systolic shortening
+      // 0–25%: minimal/no shortening (waiting for activation)
+      // 25–65%: progressive shortening reaching full amplitude (late peak)
+      // 65–80%: partial return (systole ends, but still shortening = post-systolic)
+      // 80–100%: return to baseline
+      if (t <= 25) {
+        strain = -(amplitude * 0.05) * (t / 25); // near-flat early
+      } else if (t <= 65) {
+        strain = -(amplitude * 0.05) - (amplitude * 0.95) * Math.sin(((t - 25) / 40) * Math.PI * 0.5);
+      } else if (t <= 80) {
+        // post-systolic: still at peak or slight rebound
+        strain = -amplitude + (amplitude * 0.15) * ((t - 65) / 15);
+      } else {
+        strain = -(amplitude * 0.85) * (1 - (t - 80) / 20);
+      }
+    } else if (curveType === "postSystolic") {
+      // Post-systolic shortening: reduced systolic strain, peak after aortic valve closure (~35%)
+      // 0–35%: minimal shortening
+      // 35–60%: shortening peaks post-systole
+      // 60–100%: return
+      if (t <= 35) {
+        strain = -(amplitude * 0.3) * Math.sin((t / 35) * Math.PI * 0.5);
+      } else if (t <= 60) {
+        const startVal = -(amplitude * 0.3);
+        strain = startVal - (amplitude * 0.7) * Math.sin(((t - 35) / 25) * Math.PI * 0.5);
+      } else {
+        strain = -amplitude * (1 - (t - 60) / 40);
+      }
     } else {
-      const amp = Math.abs(peak) * 0.8;
-      if (t <= 40) strain = amp * Math.sin((t / 40) * Math.PI * 0.5);
-      else strain = amp * (1 - (t - 40) / 60);
+      // Standard normal/reduced curve
+      if (wms === 1 || wms === 2) {
+        if (t <= 35) {
+          strain = -(amplitude * Math.sin((t / 35) * Math.PI * 0.5));
+        } else if (t <= 50) {
+          const psr = wms === 1 ? amplitude * 0.05 : 0;
+          strain = -amplitude + (amplitude + psr) * ((t - 35) / 15);
+        } else {
+          const midVal = wms === 1 ? amplitude * 0.05 : 0;
+          strain = midVal * (1 - (t - 50) / 50);
+        }
+      } else if (wms === 3) {
+        strain = peak * 0.15 * Math.sin((t / 100) * Math.PI);
+      } else if (wms === 4) {
+        const amp = Math.abs(peak) * 0.6;
+        if (t <= 35) strain = amp * Math.sin((t / 35) * Math.PI * 0.5);
+        else strain = amp * (1 - (t - 35) / 65);
+      } else {
+        const amp = Math.abs(peak) * 0.8;
+        if (t <= 40) strain = amp * Math.sin((t / 40) * Math.PI * 0.5);
+        else strain = amp * (1 - (t - 40) / 60);
+      }
     }
     result.push({ t: Math.round(t), strain: parseFloat(strain.toFixed(2)) });
   }
@@ -273,9 +335,11 @@ function segStroke(ring: string): string {
 function SegmentalStrainCurves({
   segValues,
   wallMotionScores,
+  activePattern,
 }: {
   segValues: Record<number, number | null>;
   wallMotionScores: Record<number, number>;
+  activePattern?: string | null;
 }) {
   const [activeWalls, setActiveWalls] = useState<Set<string>>(
     new Set(WALL_GROUPS.map(w => w.key))
@@ -292,6 +356,7 @@ function SegmentalStrainCurves({
 
   // Build chart data: one key per segment ("s1" ... "s17")
   const chartData = useMemo(() => {
+    const isDyssync = activePattern === "lbbb";
     const timePoints = 51;
     const data: Record<string, number | string>[] = [];
     for (let i = 0; i < timePoints; i++) {
@@ -302,14 +367,20 @@ function SegmentalStrainCurves({
         if (!wallGroup || !activeWalls.has(seg.wall)) return;
         const wms = wallMotionScores[seg.id] ?? 1;
         const val = segValues[seg.id] ?? null;
-        const curve = generateStrainCurve(val, wms, seg.id);
+        // Determine curve type based on active pattern and wall group
+        let curveType: "normal" | "septalFlash" | "lateralDelay" | "postSystolic" = "normal";
+        if (isDyssync) {
+          if (seg.wall === "septal") curveType = "septalFlash";
+          else if (seg.wall === "lateral") curveType = "lateralDelay";
+        }
+        const curve = generateStrainCurve(val, wms, seg.id, curveType);
         const pt = curve.find(p => p.t === t);
         row[`s${seg.id}`] = pt ? parseFloat(pt.strain.toFixed(2)) : 0;
       });
       data.push(row);
     }
     return data;
-  }, [segValues, wallMotionScores, activeWalls]);
+  }, [segValues, wallMotionScores, activeWalls, activePattern]);
 
   const scoredSegs = SEGMENTS_17.filter(s => wallMotionScores[s.id] !== undefined);
   const wmsi = scoredSegs.length > 0
@@ -328,6 +399,12 @@ function SegmentalStrainCurves({
         <div>
           <h3 className="font-bold text-sm text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>17-Segment Strain Curves</h3>
           <p className="text-xs text-gray-500 mt-0.5">Individual time-strain waveforms · Dashed = basal · Dotted = mid · Solid = apical/apex</p>
+          {activePattern === "lbbb" && (
+            <div className="mt-1 inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "#0369a115", color: "#0369a1", border: "1px solid #0369a130" }}>
+              <span className="w-2 h-2 rounded-full bg-[#0369a1] animate-pulse inline-block" />
+              Dyssynchrony mode: septal flash + lateral delay curves active
+            </div>
+          )}
         </div>
         {wmsi !== null && (
           <div className="text-center px-3 py-1.5 rounded-lg" style={{ background: wmsiColor + "15", border: `1px solid ${wmsiColor}30` }}>
@@ -661,13 +738,13 @@ const CLINICAL_PATTERNS: {
   {
     id: "lbbb",
     title: "LBBB / Dyssynchrony",
-    subtitle: "Septal flash pattern",
+    subtitle: "Septal flash + lateral delay",
     color: "#0369a1",
     gls: "−14%",
     glsRange: "−10 to −18%",
-    keyFeature: "Septal early shortening then rebound (septal flash); lateral wall delayed peak strain",
-    description: "Left bundle branch block causes septal dyssynchrony. Septal segments show early shortening followed by rebound stretch. Lateral wall has delayed peak strain. CRT may improve dyssynchrony if QRS > 150 ms with LBBB morphology.",
-    pattern: { 1:-20,2:-8,3:-8,4:-20,5:-20,6:-20, 7:-20,8:-8,9:-8,10:-20,11:-20,12:-20, 13:-18,14:-10,15:-18,16:-18, 17:-16 },
+    keyFeature: "Septal flash (early shortening → rebound stretch); lateral wall delayed activation with post-systolic shortening",
+    description: "LBBB dyssynchrony: septal segments activate early (septal flash — early shortening then paradoxical rebound stretch), while lateral wall activates late with delayed peak strain and post-systolic shortening. Net GLS is reduced due to dyssynchronous timing, not intrinsic myocardial disease. CRT indicated if QRS ≥ 150 ms with LBBB morphology and LVEF ≤ 35%. The strain curves (not the bull's-eye values) show the characteristic timing abnormality.",
+    pattern: { 1:-20,2:-12,3:-12,4:-20,5:-20,6:-20, 7:-20,8:-12,9:-12,10:-20,11:-20,12:-20, 13:-18,14:-14,15:-18,16:-18, 17:-16 },
   },
 ];
 
@@ -724,6 +801,9 @@ export default function StrainScanCoach() {
     setSelectedSeg(null);
     setSegInput("");
   }, []);
+
+  // Left-column tab state
+  const [leftTab, setLeftTab] = useState<"patterns" | "tips">("patterns");
 
   // Active clinical pattern
   const [activePattern, setActivePattern] = useState<string | null>(null);
@@ -784,321 +864,272 @@ export default function StrainScanCoach() {
           {/* ── Left Column ── */}
           <div className="lg:col-span-2 flex flex-col gap-5">
 
-            {/* ── Tips & Tricks ── */}
-            <SectionCard
-              title="Tips & Tricks"
-              subtitle="Practical acquisition guidance · ASE 2025 · Vendor-neutral"
-              icon={<Lightbulb className="w-4 h-4" style={{ color: BRAND }} />}
-            >
-              <div className="space-y-4">
+            {/* ── Tab Bar ── */}
+            <div className="flex gap-1 bg-white rounded-xl border border-gray-100 shadow-sm p-1">
+              <button
+                onClick={() => setLeftTab("patterns")}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all"
+                style={leftTab === "patterns"
+                  ? { background: BRAND, color: "#fff" }
+                  : { color: "#6b7280" }}
+              >
+                <FlaskConical className="w-4 h-4" />
+                Clinical Pattern Library
+              </button>
+              <button
+                onClick={() => setLeftTab("tips")}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all"
+                style={leftTab === "tips"
+                  ? { background: BRAND, color: "#fff" }
+                  : { color: "#6b7280" }}
+              >
+                <Lightbulb className="w-4 h-4" />
+                Tips & Tricks
+              </button>
+            </div>
 
-                {/* Patient & Setup */}
-                <div>
-                  <div className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: BRAND }}>Patient & Setup</div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <TipCard
-                      icon={<Target className="w-3.5 h-3.5" />}
-                      title="Patient Positioning"
-                      tip="Left lateral decubitus with left arm raised above the head. Use a cardiac wedge or pillow under the right hip. This opens the intercostal spaces and brings the heart closer to the chest wall for optimal apical windows."
-                    />
-                    <TipCard
-                      icon={<Activity className="w-3.5 h-3.5" />}
-                      title="Heart Rate Optimization"
-                      tip="Ideal heart rate for strain acquisition is 60–80 bpm. At higher rates, frame rate requirements increase proportionally. For HR > 100 bpm, target ≥ 60 fps. Avoid strain analysis if HR is irregular (AF) without averaging ≥ 5 cycles."
-                    />
-                    <TipCard
-                      icon={<Settings className="w-3.5 h-3.5" />}
-                      title="Machine Settings First"
-                      tip="Before acquiring strain clips, set: depth (LV only), single focus at MV level, tissue harmonic imaging ON, gain optimized, sector width narrowed to maximize frame rate. Save these as a strain preset on your machine."
-                    />
-                    <TipCard
-                      icon={<Eye className="w-3.5 h-3.5" />}
-                      title="Breath-Hold Technique"
-                      tip="Ask the patient to breathe out gently and hold. Acquire during end-expiration to minimize respiratory motion artifact. For patients who cannot hold their breath, use respiratory gating if available, or average multiple cycles."
-                    />
+            {/* ── Clinical Pattern Library Tab ── */}
+            {leftTab === "patterns" && (
+              <>
+                {/* ── LV GLS Calculator (top of patterns tab) ── */}
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: BRAND + "18" }}>
+                      <Activity className="w-4 h-4" style={{ color: BRAND }} />
+                    </div>
+                    <div>
+                      <div className="font-bold text-sm text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>LV GLS Calculator</div>
+                      <div className="text-xs text-gray-500">Global value · ASE 2025 · Vendor-neutral reference ≤ −20%</div>
+                    </div>
                   </div>
-                </div>
-
-                {/* Acquisition */}
-                <div>
-                  <div className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: BRAND }}>Acquisition</div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <TipCard
-                      icon={<Camera className="w-3.5 h-3.5" />}
-                      title="Frame Rate Is Critical"
-                      tip="ASE 2025 recommends ≥ 40 fps, ideally 60–80 fps. Low frame rate (< 40 fps) underestimates peak systolic strain. Increase frame rate by: narrowing sector width, reducing depth, turning off color Doppler, and reducing line density."
-                      color="#7c3aed"
-                    />
-                    <TipCard
-                      icon={<AlertCircle className="w-3.5 h-3.5" />}
-                      title="Avoid Foreshortening"
-                      tip="The single most common error in strain acquisition. The apex must appear rounded and pointed — not flat or cut off. Move the probe one interspace lower and tilt more superiorly if the apex looks foreshortened. Confirm in both A4C and A2C."
-                      color="#dc2626"
-                    />
-                    <TipCard
-                      icon={<Zap className="w-3.5 h-3.5" />}
-                      title="Three Views, Every Time"
-                      tip="GLS requires A4C, A2C, and A3C (APLAX). Acquiring only A4C underestimates GLS by up to 3–4%. Each view contributes 6 segments. The apex (segment 17) is shared across all three views — ensure it is clearly visualized in each."
-                    />
-                    <TipCard
-                      icon={<BarChart3 className="w-3.5 h-3.5" />}
-                      title="ECG Gating"
-                      tip="Confirm the QRS trigger is correctly identifying the R-wave on every clip. Mis-triggering causes incorrect systolic timing and false strain values. If ECG signal is poor, use the machine's internal trigger or a limb-lead electrode repositioning."
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+                    <NumInput label="LV GLS" value={lvGls} onChange={setLvGls} unit="%" placeholder="e.g. −19.5" hint="Normal ≤ −20%" />
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 block mb-1">Vendor / Platform</label>
+                      <select value={vendor} onChange={e => setVendor(e.target.value)}
+                        className="w-full bg-white border rounded-lg px-3 py-2 text-sm text-gray-700" style={{ borderColor: BRAND + "40" }}>
+                        <option value="">Select vendor</option>
+                        <option>GE HealthCare</option>
+                        <option>Philips</option>
+                        <option>Siemens Healthineers</option>
+                        <option>Canon Medical</option>
+                        <option>Fujifilm</option>
+                        <option>Samsung Medison</option>
+                        <option>Mindray</option>
+                        <option>Other</option>
+                      </select>
+                    </div>
+                    <NumInput label="Frame Rate" value={frameRate} onChange={setFrameRate} unit="fps" placeholder="≥ 40" hint="Recommended ≥ 40 fps" />
                   </div>
-                </div>
 
-                {/* ASE 2025 Updates */}
-                <div>
-                  <div className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: "#7c3aed" }}>ASE 2025 Updates</div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <TipCard
-                      icon={<Info className="w-3.5 h-3.5" />}
-                      title="Mid-Wall Strain (New 2025)"
-                      tip="ASE 2025 introduces mid-wall GLS as a separate parameter. Normal mid-wall GLS is ≥ −17%. Mid-wall strain is more sensitive for detecting subendocardial ischemia and early HCM. Most vendors now report this automatically — ensure your software is updated."
-                      color="#7c3aed"
-                    />
-                    <TipCard
-                      icon={<Activity className="w-3.5 h-3.5" />}
-                      title="Updated Normal Thresholds"
-                      tip="ASE 2025 updates normal GLS to ≤ −20% (unchanged from 2022 consensus). However, age- and sex-specific ranges are now recommended: women have slightly more negative GLS (−21 to −22%) than men (−19 to −21%). Adjust interpretation accordingly."
-                      color="#7c3aed"
-                    />
-                    <TipCard
-                      icon={<Zap className="w-3.5 h-3.5" />}
-                      title="3D Strain Preferred When Available"
-                      tip="ASE 2025 endorses 3D GLS as the preferred method when image quality allows (avoids foreshortening, single-beat acquisition). 3D GLS normal range: ≤ −19%. Use 2D GLS when 3D image quality is suboptimal."
-                      color="#7c3aed"
-                    />
-                    <TipCard
-                      icon={<CheckCircle2 className="w-3.5 h-3.5" />}
-                      title="Vendor Normalization"
-                      tip="ASE 2025 continues to recommend vendor-specific normal ranges due to inter-vendor variability of up to 2–3%. When comparing serial studies, always use the same vendor and software version. Document vendor and software version in every report."
-                      color="#7c3aed"
-                    />
-                  </div>
-                </div>
+                  {lvInterp && (
+                    <div className="rounded-lg p-4 mb-4" style={{ background: lvInterp.color + "18", borderLeft: `4px solid ${lvInterp.color}` }}>
+                      <div className="font-bold text-sm mb-2" style={{ color: lvInterp.color }}>{lvInterp.severity}</div>
+                      <p className="text-xs text-gray-700 leading-relaxed mb-2">{lvInterp.suggests}</p>
+                      <p className="text-xs text-gray-600 leading-relaxed mb-2">{lvInterp.note}</p>
+                      <p className="text-xs text-gray-500 leading-relaxed italic">{lvInterp.tip}</p>
+                    </div>
+                  )}
 
-                {/* Common Pitfalls */}
-                <div>
-                  <div className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: "#dc2626" }}>Common Pitfalls</div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <TipCard
-                      icon={<AlertCircle className="w-3.5 h-3.5" />}
-                      title="Over-Gain Artifact"
-                      tip="Excessive gain causes endocardial dropout and tracking failure. The endocardium should be a clear, bright, continuous line. If the myocardium appears 'washed out' or the cavity is bright, reduce gain until the endocardium is sharp."
-                      color="#dc2626"
-                    />
-                    <TipCard
-                      icon={<AlertCircle className="w-3.5 h-3.5" />}
-                      title="Pericardial Effusion Interference"
-                      tip="Even small effusions can cause the tracking algorithm to follow the pericardium instead of the endocardium. Manually review tracking quality in all segments. Exclude segments where tracking clearly fails — do not report GLS if > 3 segments are excluded."
-                      color="#dc2626"
-                    />
-                    <TipCard
-                      icon={<AlertCircle className="w-3.5 h-3.5" />}
-                      title="Prosthetic Valves & Pacemakers"
-                      tip="Metallic artifacts from prosthetic valves and pacemaker leads cause shadowing that disrupts tracking in adjacent segments. Document affected segments and interpret GLS with caution. 3D strain may be less affected."
-                      color="#dc2626"
-                    />
-                    <TipCard
-                      icon={<AlertCircle className="w-3.5 h-3.5" />}
-                      title="LBBB Pattern"
-                      tip="Left bundle branch block causes paradoxical septal motion that makes GLS unreliable as a measure of intrinsic myocardial function. In LBBB, report segmental strain patterns rather than global GLS. Consider mechanical dyssynchrony analysis."
-                      color="#dc2626"
-                    />
-                  </div>
-                </div>
+                  {/* Vendor-specific reference table */}
+                  <details className="mt-2">
+                    <summary className="text-xs font-semibold text-teal-700 cursor-pointer hover:underline flex items-center gap-1">
+                      <Info className="w-3.5 h-3.5" /> Vendor-specific normal ranges (ASE/EACVI 2022)
+                    </summary>
+                    <div className="mt-3 overflow-x-auto">
+                      <table className="w-full text-xs border-collapse">
+                        <thead>
+                          <tr style={{ background: BRAND + "15" }}>
+                            <th className="text-left px-3 py-2 font-semibold text-gray-700">Vendor</th>
+                            <th className="text-left px-3 py-2 font-semibold text-gray-700">Normal GLS (mean ± SD)</th>
+                            <th className="text-left px-3 py-2 font-semibold text-gray-700">Lower Limit of Normal</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {[
+                            ["GE HealthCare (EchoPAC)", "−20.2 ± 1.9%", "−16.4%"],
+                            ["Philips (QLAB)", "−20.4 ± 2.1%", "−16.2%"],
+                            ["Siemens (syngo.via)", "−19.8 ± 2.0%", "−15.8%"],
+                            ["Canon Medical (Aplio)", "−20.0 ± 2.0%", "−16.0%"],
+                            ["Fujifilm (Arietta)", "−20.1 ± 2.0%", "−16.1%"],
+                            ["Vendor-neutral consensus", "−20.0 ± 2.0%", "−16.0%"],
+                          ].map(([v, mean, lln]) => (
+                            <tr key={v} className="border-t border-gray-100">
+                              <td className="px-3 py-2 text-gray-700 font-medium">{v}</td>
+                              <td className="px-3 py-2 text-gray-600 font-mono">{mean}</td>
+                              <td className="px-3 py-2 text-gray-600 font-mono">{lln}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </details>
 
-                {/* Contrast & Difficult Windows */}
-                <div>
-                  <div className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: "#ca8a04" }}>Contrast & Difficult Windows</div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <TipCard
-                      icon={<Camera className="w-3.5 h-3.5" />}
-                      title="When to Use Contrast"
-                      tip="Use ultrasound enhancing agents (UEA) when ≥ 2 contiguous segments are not visualized. Contrast improves endocardial definition and tracking quality. Most strain software supports contrast-enhanced tracking — confirm with your vendor."
-                      color="#ca8a04"
-                    />
-                    <TipCard
-                      icon={<Settings className="w-3.5 h-3.5" />}
-                      title="Subcostal Window Alternative"
-                      tip="For patients with poor apical windows (COPD, obesity, post-surgical), the subcostal 4-chamber view can be used for strain if the endocardium is clearly visualized. Note the alternative window in the report as it may affect normal range applicability."
-                      color="#ca8a04"
-                    />
-                  </div>
-                </div>
-
-                {/* Reporting */}
-                <div>
-                  <div className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: BRAND }}>Reporting</div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <TipCard
-                      icon={<BookOpen className="w-3.5 h-3.5" />}
-                      title="What to Report"
-                      tip="Always report: (1) GLS value with vendor/software version, (2) number of segments tracked/excluded, (3) frame rate, (4) whether contrast was used, (5) clinical context (baseline vs. follow-up, cardio-oncology, etc.). Include the bull's-eye image in the report."
-                    />
-                    <TipCard
-                      icon={<ArrowRight className="w-3.5 h-3.5" />}
-                      title="Serial Comparisons"
-                      tip="For serial monitoring (cardio-oncology, HF), always compare same vendor, same software version, same view, same frame rate. A relative GLS decrease ≥ 15% from baseline is the ASE 2022 CTRCD threshold. Document the baseline value in every follow-up report."
-                    />
-                  </div>
-                </div>
-
-              </div>
-            </SectionCard>
-
-            {/* Imaging checklist moved to Strain Navigator™ */}
-
-            {/* ── Clinical Pattern Library ── */}
-            <SectionCard
-              title="Clinical Pattern Library"
-              subtitle="Click a pattern to load representative segmental values into the bull's-eye"
-              icon={<FlaskConical className="w-4 h-4" style={{ color: BRAND }} />}
-            >
-              <p className="text-xs text-gray-500 mb-4 leading-relaxed">
-                Each card represents a characteristic strain pattern for a specific disease. Clicking a card loads representative 17-segment values into the interactive bull's-eye. Use these as teaching references or to compare against your patient's actual data.
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {CLINICAL_PATTERNS.map(p => (
-                  <button
-                    key={p.id}
-                    onClick={() => loadPattern(p.id)}
-                    className="text-left rounded-xl p-4 border-2 transition-all hover:shadow-md group"
-                    style={{
-                      background: activePattern === p.id ? p.color + "12" : "#f8fafc",
-                      borderColor: activePattern === p.id ? p.color : "transparent",
-                    }}
-                  >
-                    <div className="flex items-start justify-between gap-2 mb-2">
+                  {/* Mid-wall strain note */}
+                  <div className="mt-4 rounded-lg p-3 border" style={{ background: "#7c3aed08", borderColor: "#7c3aed25" }}>
+                    <div className="flex items-start gap-2">
+                      <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: "#7c3aed" }} />
                       <div>
-                        <div className="font-bold text-xs text-gray-800 leading-snug" style={{ fontFamily: "Merriweather, serif" }}>{p.title}</div>
-                        <div className="text-xs mt-0.5" style={{ color: p.color }}>{p.subtitle}</div>
-                      </div>
-                      <div className="flex-shrink-0 flex items-center gap-1">
-                        {activePattern === p.id && (
-                          <span className="text-xs font-bold px-1.5 py-0.5 rounded-full text-white" style={{ background: p.color }}>Active</span>
-                        )}
-                        <ArrowRight className="w-3.5 h-3.5 opacity-40 group-hover:opacity-100 transition-opacity" style={{ color: p.color }} />
+                        <div className="text-xs font-bold mb-1" style={{ color: "#7c3aed" }}>ASE 2025 — Mid-Wall GLS</div>
+                        <p className="text-xs text-gray-600 leading-relaxed">
+                          Normal mid-wall GLS is ≥ −17% (less negative than endocardial GLS). Mid-wall strain is more sensitive for subendocardial ischemia and early HCM. Most vendors report this automatically — check your software version for availability.
+                        </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="font-mono font-bold text-sm" style={{ color: p.color }}>{p.gls}</span>
-                      <span className="text-xs text-gray-400">typical GLS</span>
-                      <span className="text-xs text-gray-400">({p.glsRange})</span>
+                  </div>
+                </div>{/* end LV GLS Calculator card */}
+
+                {/* ── Clinical Pattern Library ── */}
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: BRAND + "18" }}>
+                      <FlaskConical className="w-4 h-4" style={{ color: BRAND }} />
                     </div>
-                    <p className="text-xs text-gray-500 leading-relaxed">{p.keyFeature}</p>
-                  </button>
-                ))}
-              </div>
-              {activePattern && (
-                <div className="mt-4 rounded-lg p-3 border flex items-start gap-2" style={{ background: BRAND + "08", borderColor: BRAND + "25" }}>
-                  <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: BRAND }} />
+                    <div>
+                      <div className="font-bold text-sm text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Clinical Pattern Library</div>
+                      <div className="text-xs text-gray-500">Click a pattern to load representative segmental values into the bull's-eye</div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+                    Each card represents a characteristic strain pattern for a specific disease. Clicking a card loads representative 17-segment values into the interactive bull's-eye. Use these as teaching references or to compare against your patient's actual data.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {CLINICAL_PATTERNS.map(p => (
+                      <button
+                        key={p.id}
+                        onClick={() => loadPattern(p.id)}
+                        className="text-left rounded-xl p-4 border-2 transition-all hover:shadow-md group"
+                        style={{
+                          background: activePattern === p.id ? p.color + "12" : "#f8fafc",
+                          borderColor: activePattern === p.id ? p.color : "transparent",
+                        }}
+                      >
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <div>
+                            <div className="font-bold text-xs text-gray-800 leading-snug" style={{ fontFamily: "Merriweather, serif" }}>{p.title}</div>
+                            <div className="text-xs mt-0.5" style={{ color: p.color }}>{p.subtitle}</div>
+                          </div>
+                          <div className="flex-shrink-0 flex items-center gap-1">
+                            {activePattern === p.id && (
+                              <span className="text-xs font-bold px-1.5 py-0.5 rounded-full text-white" style={{ background: p.color }}>Active</span>
+                            )}
+                            <ArrowRight className="w-3.5 h-3.5 opacity-40 group-hover:opacity-100 transition-opacity" style={{ color: p.color }} />
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="font-mono font-bold text-sm" style={{ color: p.color }}>{p.gls}</span>
+                          <span className="text-xs text-gray-400">typical GLS</span>
+                          <span className="text-xs text-gray-400">({p.glsRange})</span>
+                        </div>
+                        <p className="text-xs text-gray-500 leading-relaxed">{p.keyFeature}</p>
+                      </button>
+                    ))}
+                  </div>
+                  {activePattern && (
+                    <div className="mt-4 rounded-lg p-3 border flex items-start gap-2" style={{ background: BRAND + "08", borderColor: BRAND + "25" }}>
+                      <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: BRAND }} />
+                      <div>
+                        <div className="text-xs font-bold mb-1" style={{ color: BRAND }}>
+                          {CLINICAL_PATTERNS.find(x => x.id === activePattern)?.title} — Pattern Loaded
+                        </div>
+                        <p className="text-xs text-gray-600 leading-relaxed">
+                          {CLINICAL_PATTERNS.find(x => x.id === activePattern)?.description}
+                        </p>
+                        <button
+                          onClick={() => {
+                            setActivePattern(null);
+                            setSegValues(Object.fromEntries(SEGMENTS_17.map(s => [s.id, -22])) as Record<number, number | null>);
+                          }}
+                          className="mt-2 text-xs font-semibold underline"
+                          style={{ color: BRAND }}
+                        >
+                          Reset to normal (−22%)
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+
+            {/* ── Tips & Tricks Tab ── */}
+            {leftTab === "tips" && (
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: BRAND + "18" }}>
+                    <Lightbulb className="w-4 h-4" style={{ color: BRAND }} />
+                  </div>
                   <div>
-                    <div className="text-xs font-bold mb-1" style={{ color: BRAND }}>
-                      {CLINICAL_PATTERNS.find(x => x.id === activePattern)?.title} — Pattern Loaded
-                    </div>
-                    <p className="text-xs text-gray-600 leading-relaxed">
-                      {CLINICAL_PATTERNS.find(x => x.id === activePattern)?.description}
-                    </p>
-                    <button
-                      onClick={() => {
-                        setActivePattern(null);
-                        setSegValues(Object.fromEntries(SEGMENTS_17.map(s => [s.id, -22])) as Record<number, number | null>);
-                      }}
-                      className="mt-2 text-xs font-semibold underline"
-                      style={{ color: BRAND }}
-                    >
-                      Reset to normal (−22%)
-                    </button>
+                    <div className="font-bold text-sm text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Tips & Tricks</div>
+                    <div className="text-xs text-gray-500">Practical acquisition guidance · ASE 2025 · Vendor-neutral</div>
                   </div>
                 </div>
-              )}
-            </SectionCard>
+                <div className="space-y-4">
 
-            {/* ── LV GLS Calculator ── */}
-            <SectionCard
-              title="LV GLS Calculator"
-              subtitle="Global value · ASE 2025 · Vendor-neutral reference ≤ −20%"
-              icon={<Activity className="w-4 h-4" style={{ color: BRAND }} />}
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-                <NumInput label="LV GLS" value={lvGls} onChange={setLvGls} unit="%" placeholder="e.g. −19.5" hint="Normal ≤ −20%" />
-                <div>
-                  <label className="text-xs font-semibold text-gray-600 block mb-1">Vendor / Platform</label>
-                  <select value={vendor} onChange={e => setVendor(e.target.value)}
-                    className="w-full bg-white border rounded-lg px-3 py-2 text-sm text-gray-700" style={{ borderColor: BRAND + "40" }}>
-                    <option value="">Select vendor</option>
-                    <option>GE HealthCare</option>
-                    <option>Philips</option>
-                    <option>Siemens Healthineers</option>
-                    <option>Canon Medical</option>
-                    <option>Fujifilm</option>
-                    <option>Samsung Medison</option>
-                    <option>Mindray</option>
-                    <option>Other</option>
-                  </select>
-                </div>
-                <NumInput label="Frame Rate" value={frameRate} onChange={setFrameRate} unit="fps" placeholder="≥ 40" hint="Recommended ≥ 40 fps" />
-              </div>
-
-              {lvInterp && (
-                <div className="rounded-lg p-4 mb-4" style={{ background: lvInterp.color + "18", borderLeft: `4px solid ${lvInterp.color}` }}>
-                  <div className="font-bold text-sm mb-2" style={{ color: lvInterp.color }}>{lvInterp.severity}</div>
-                  <p className="text-xs text-gray-700 leading-relaxed mb-2">{lvInterp.suggests}</p>
-                  <p className="text-xs text-gray-600 leading-relaxed mb-2">{lvInterp.note}</p>
-                  <p className="text-xs text-gray-500 leading-relaxed italic">{lvInterp.tip}</p>
-                </div>
-              )}
-
-              {/* Vendor-specific reference table */}
-              <details className="mt-2">
-                <summary className="text-xs font-semibold text-teal-700 cursor-pointer hover:underline flex items-center gap-1">
-                  <Info className="w-3.5 h-3.5" /> Vendor-specific normal ranges (ASE/EACVI 2022)
-                </summary>
-                <div className="mt-3 overflow-x-auto">
-                  <table className="w-full text-xs border-collapse">
-                    <thead>
-                      <tr style={{ background: BRAND + "15" }}>
-                        <th className="text-left px-3 py-2 font-semibold text-gray-700">Vendor</th>
-                        <th className="text-left px-3 py-2 font-semibold text-gray-700">Normal GLS (mean ± SD)</th>
-                        <th className="text-left px-3 py-2 font-semibold text-gray-700">Lower Limit of Normal</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {[
-                        ["GE HealthCare (EchoPAC)", "−20.2 ± 1.9%", "−16.4%"],
-                        ["Philips (QLAB)", "−20.4 ± 2.1%", "−16.2%"],
-                        ["Siemens (syngo.via)", "−19.8 ± 2.0%", "−15.8%"],
-                        ["Canon Medical (Aplio)", "−20.0 ± 2.0%", "−16.0%"],
-                        ["Fujifilm (Arietta)", "−20.1 ± 2.0%", "−16.1%"],
-                        ["Vendor-neutral consensus", "−20.0 ± 2.0%", "−16.0%"],
-                      ].map(([v, mean, lln]) => (
-                        <tr key={v} className="border-t border-gray-100">
-                          <td className="px-3 py-2 text-gray-700 font-medium">{v}</td>
-                          <td className="px-3 py-2 text-gray-600 font-mono">{mean}</td>
-                          <td className="px-3 py-2 text-gray-600 font-mono">{lln}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </details>
-
-              {/* Mid-wall strain note */}
-              <div className="mt-4 rounded-lg p-3 border" style={{ background: "#7c3aed08", borderColor: "#7c3aed25" }}>
-                <div className="flex items-start gap-2">
-                  <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: "#7c3aed" }} />
+                  {/* Patient & Setup */}
                   <div>
-                    <div className="text-xs font-bold mb-1" style={{ color: "#7c3aed" }}>ASE 2025 — Mid-Wall GLS</div>
-                    <p className="text-xs text-gray-600 leading-relaxed">
-                      Normal mid-wall GLS is ≥ −17% (less negative than endocardial GLS). Mid-wall strain is more sensitive for subendocardial ischemia and early HCM. Most vendors report this automatically — check your software version for availability.
-                    </p>
+                    <div className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: BRAND }}>Patient & Setup</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <TipCard icon={<Target className="w-3.5 h-3.5" />} title="Patient Positioning" tip="Left lateral decubitus with left arm raised above the head. Use a cardiac wedge or pillow under the right hip. This opens the intercostal spaces and brings the heart closer to the chest wall for optimal apical windows." />
+                      <TipCard icon={<Activity className="w-3.5 h-3.5" />} title="Heart Rate Optimization" tip="Ideal heart rate for strain acquisition is 60–80 bpm. At higher rates, frame rate requirements increase proportionally. For HR > 100 bpm, target ≥ 60 fps. Avoid strain analysis if HR is irregular (AF) without averaging ≥ 5 cycles." />
+                      <TipCard icon={<Settings className="w-3.5 h-3.5" />} title="Machine Settings First" tip="Before acquiring strain clips, set: depth (LV only), single focus at MV level, tissue harmonic imaging ON, gain optimized, sector width narrowed to maximize frame rate. Save these as a strain preset on your machine." />
+                      <TipCard icon={<Eye className="w-3.5 h-3.5" />} title="Breath-Hold Technique" tip="Ask the patient to breathe out gently and hold. Acquire during end-expiration to minimize respiratory motion artifact. For patients who cannot hold their breath, use respiratory gating if available, or average multiple cycles." />
+                    </div>
                   </div>
+
+                  {/* Acquisition */}
+                  <div>
+                    <div className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: BRAND }}>Acquisition</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <TipCard icon={<Camera className="w-3.5 h-3.5" />} title="Frame Rate Is Critical" tip="ASE 2025 recommends ≥ 40 fps, ideally 60–80 fps. Low frame rate (< 40 fps) underestimates peak systolic strain. Increase frame rate by: narrowing sector width, reducing depth, turning off color Doppler, and reducing line density." color="#7c3aed" />
+                      <TipCard icon={<AlertCircle className="w-3.5 h-3.5" />} title="Avoid Foreshortening" tip="The single most common error in strain acquisition. The apex must appear rounded and pointed — not flat or cut off. Move the probe one interspace lower and tilt more superiorly if the apex looks foreshortened. Confirm in both A4C and A2C." color="#dc2626" />
+                      <TipCard icon={<Zap className="w-3.5 h-3.5" />} title="Three Views, Every Time" tip="GLS requires A4C, A2C, and A3C (APLAX). Acquiring only A4C underestimates GLS by up to 3–4%. Each view contributes 6 segments. The apex (segment 17) is shared across all three views — ensure it is clearly visualized in each." />
+                      <TipCard icon={<BarChart3 className="w-3.5 h-3.5" />} title="ECG Gating" tip="Confirm the QRS trigger is correctly identifying the R-wave on every clip. Mis-triggering causes incorrect systolic timing and false strain values. If ECG signal is poor, use the machine's internal trigger or a limb-lead electrode repositioning." />
+                    </div>
+                  </div>
+
+                  {/* ASE 2025 Updates — 3D strain card removed (not endorsed) */}
+                  <div>
+                    <div className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: "#7c3aed" }}>ASE 2025 Updates</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <TipCard icon={<Info className="w-3.5 h-3.5" />} title="Mid-Wall Strain (New 2025)" tip="ASE 2025 introduces mid-wall GLS as a separate parameter. Normal mid-wall GLS is ≥ −17%. Mid-wall strain is more sensitive for detecting subendocardial ischemia and early HCM. Most vendors now report this automatically — ensure your software is updated." color="#7c3aed" />
+                      <TipCard icon={<Activity className="w-3.5 h-3.5" />} title="Updated Normal Thresholds" tip="ASE 2025 updates normal GLS to ≤ −20% (unchanged from 2022 consensus). However, age- and sex-specific ranges are now recommended: women have slightly more negative GLS (−21 to −22%) than men (−19 to −21%). Adjust interpretation accordingly." color="#7c3aed" />
+                      <TipCard icon={<CheckCircle2 className="w-3.5 h-3.5" />} title="Vendor Normalization" tip="ASE 2025 continues to recommend vendor-specific normal ranges due to inter-vendor variability of up to 2–3%. When comparing serial studies, always use the same vendor and software version. Document vendor and software version in every report." color="#7c3aed" />
+                    </div>
+                  </div>
+
+                  {/* Common Pitfalls */}
+                  <div>
+                    <div className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: "#dc2626" }}>Common Pitfalls</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <TipCard icon={<AlertCircle className="w-3.5 h-3.5" />} title="Over-Gain Artifact" tip="Excessive gain causes endocardial dropout and tracking failure. The endocardium should be a clear, bright, continuous line. If the myocardium appears 'washed out' or the cavity is bright, reduce gain until the endocardium is sharp." color="#dc2626" />
+                      <TipCard icon={<AlertCircle className="w-3.5 h-3.5" />} title="Pericardial Effusion Interference" tip="Even small effusions can cause the tracking algorithm to follow the pericardium instead of the endocardium. Manually review tracking quality in all segments. Exclude segments where tracking clearly fails — do not report GLS if > 3 segments are excluded." color="#dc2626" />
+                      <TipCard icon={<AlertCircle className="w-3.5 h-3.5" />} title="Prosthetic Valves & Pacemakers" tip="Metallic artifacts from prosthetic valves and pacemaker leads cause shadowing that disrupts tracking in adjacent segments. Document affected segments and interpret GLS with caution." color="#dc2626" />
+                      <TipCard icon={<AlertCircle className="w-3.5 h-3.5" />} title="LBBB Pattern" tip="Left bundle branch block causes paradoxical septal motion that makes GLS unreliable as a measure of intrinsic myocardial function. In LBBB, report segmental strain patterns rather than global GLS. Consider mechanical dyssynchrony analysis." color="#dc2626" />
+                    </div>
+                  </div>
+
+                  {/* Contrast & Difficult Windows */}
+                  <div>
+                    <div className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: "#ca8a04" }}>Contrast & Difficult Windows</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <TipCard icon={<Camera className="w-3.5 h-3.5" />} title="When to Use Contrast" tip="Use ultrasound enhancing agents (UEA) when ≥ 2 contiguous segments are not visualized. Contrast improves endocardial definition and tracking quality. Most strain software supports contrast-enhanced tracking — confirm with your vendor." color="#ca8a04" />
+                      <TipCard icon={<Settings className="w-3.5 h-3.5" />} title="Subcostal Window Alternative" tip="For patients with poor apical windows (COPD, obesity, post-surgical), the subcostal 4-chamber view can be used for strain if the endocardium is clearly visualized. Note the alternative window in the report as it may affect normal range applicability." color="#ca8a04" />
+                    </div>
+                  </div>
+
+                  {/* Reporting */}
+                  <div>
+                    <div className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: BRAND }}>Reporting</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <TipCard icon={<BookOpen className="w-3.5 h-3.5" />} title="What to Report" tip="Always report: (1) GLS value with vendor/software version, (2) number of segments tracked/excluded, (3) frame rate, (4) whether contrast was used, (5) clinical context (baseline vs. follow-up, cardio-oncology, etc.). Include the bull's-eye image in the report." />
+                      <TipCard icon={<ArrowRight className="w-3.5 h-3.5" />} title="Serial Comparisons" tip="For serial monitoring (cardio-oncology, HF), always compare same vendor, same software version, same view, same frame rate. A relative GLS decrease ≥ 15% from baseline is the ASE 2022 CTRCD threshold. Document the baseline value in every follow-up report." />
+                    </div>
+                  </div>
+
                 </div>
               </div>
-            </SectionCard>
+            )}{/* end tips tab */}
 
           </div>
 
@@ -1167,7 +1198,7 @@ export default function StrainScanCoach() {
             </div>
 
             {/* Segmental Strain Curves */}
-            <SegmentalStrainCurves segValues={segValues} wallMotionScores={wallMotionScores} />
+            <SegmentalStrainCurves segValues={segValues} wallMotionScores={wallMotionScores} activePattern={activePattern} />
 
             {/* Summary Panel */}
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
@@ -1221,7 +1252,6 @@ export default function StrainScanCoach() {
                   ["LV GLS Mod. Reduced", "−12 to −16%"],
                   ["LV GLS Severely Reduced", "> −12%"],
                   ["Mid-Wall GLS Normal (2025)", "≥ −17%"],
-                  ["3D GLS Normal", "≤ −19%"],
                   ["RV FW Strain Normal", "≤ −29%"],
                   ["LA Reservoir Normal", "≥ 38%"],
                   ["CTRCD Threshold (relative)", ">15% drop from baseline"],

@@ -39,28 +39,8 @@ interface ChecklistStep {
 
 const IAC_CHECKLIST: ChecklistStep[] = [
   {
-    id: "step1",
-    step: 1,
-    title: "Facility Information",
-    description: "Basic facility and accreditation program details required for the application.",
-    sections: [
-      {
-        id: "s1-facility",
-        title: "Facility Details",
-        items: [
-          { id: "s1-1", text: "Facility name, address, and contact information documented", required: true },
-          { id: "s1-2", text: "Accreditation program(s) selected (ATTE, ATEE, STRESS, ACTE, PTTE, PTEE, FETAL)", required: true },
-          { id: "s1-3", text: "Facility type identified (hospital, outpatient, physician office, mobile)", required: true },
-          { id: "s1-4", text: "Number of echo studies performed annually documented", required: true },
-          { id: "s1-5", text: "Hours of operation documented", required: true },
-          { id: "s1-6", text: "Satellite/off-site locations identified (if applicable)", required: false },
-        ],
-      },
-    ],
-  },
-  {
     id: "step2",
-    step: 2,
+    step: 1,
     title: "Personnel",
     description: "Medical Director, Technical Director, sonographers, and interpreting physicians must meet IAC qualifications.",
     sections: [
@@ -118,7 +98,7 @@ const IAC_CHECKLIST: ChecklistStep[] = [
   },
   {
     id: "step3",
-    step: 3,
+    step: 2,
     title: "Equipment",
     description: "All equipment must meet IAC technical standards and be properly maintained.",
     sections: [
@@ -159,7 +139,7 @@ const IAC_CHECKLIST: ChecklistStep[] = [
   },
   {
     id: "step4",
-    step: 4,
+    step: 3,
     title: "Policies & Procedures",
     description: "Written policies and procedures must be in place, reviewed annually, and signed by the Medical Director.",
     sections: [
@@ -217,7 +197,7 @@ const IAC_CHECKLIST: ChecklistStep[] = [
   },
   {
     id: "step5",
-    step: 5,
+    step: 4,
     title: "Quality Assurance Program",
     description: "Active QA program with documented results is required. Case studies must be submitted as part of the application.",
     sections: [
@@ -289,7 +269,7 @@ const IAC_CHECKLIST: ChecklistStep[] = [
 const BRAND = "#189aa1";
 
 export default function AccreditationReadiness() {
-  const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set(["step1"]));
+  const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set(["step2"]));
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [checklistProgress, setChecklistProgress] = useState<Record<string, boolean>>({});
   const [itemNotes, setItemNotes] = useState<Record<string, string>>({});

@@ -305,7 +305,7 @@ export const labMembers = mysqlTable("labMembers", {
   inviteEmail: varchar("inviteEmail", { length: 320 }).notNull(),
   displayName: varchar("displayName", { length: 100 }),
   credentials: varchar("credentials", { length: 200 }),
-  role: mysqlEnum("role", ["admin", "reviewer", "sonographer", "physician"]).default("sonographer").notNull(),
+  role: mysqlEnum("role", ["medical_director", "technical_director", "medical_staff", "technical_staff", "admin"]).default("technical_staff").notNull(),
   specialty: varchar("specialty", { length: 100 }),
   department: varchar("department", { length: 100 }),
   inviteStatus: mysqlEnum("inviteStatus", ["pending", "accepted", "declined"]).default("pending").notNull(),
@@ -318,6 +318,35 @@ export const labMembers = mysqlTable("labMembers", {
 
 export type LabMember = typeof labMembers.$inferSelect;
 export type InsertLabMember = typeof labMembers.$inferInsert;
+
+// ─── CME Entries ──────────────────────────────────────────────────────────────
+// Continuing Medical/Technical Education entries per lab member
+
+export const cmeEntries = mysqlTable("cmeEntries", {
+  id: int("id").autoincrement().primaryKey(),
+  labMemberId: int("labMemberId").notNull(),          // FK → labMembers.id
+  labId: int("labId").notNull(),                      // FK → labSubscriptions.id (for scoping)
+  title: varchar("title", { length: 200 }).notNull(),
+  provider: varchar("provider", { length: 200 }),
+  category: mysqlEnum("category", [
+    "echo_specific",
+    "cardiovascular",
+    "general_medical",
+    "technical",
+    "safety",
+    "leadership",
+    "other"
+  ]).default("echo_specific").notNull(),
+  activityDate: varchar("activityDate", { length: 20 }).notNull(), // YYYY-MM-DD
+  creditHours: int("creditHours").notNull().default(0),
+  certificationNumber: varchar("certificationNumber", { length: 100 }),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CmeEntry = typeof cmeEntries.$inferSelect;
+export type InsertCmeEntry = typeof cmeEntries.$inferInsert;
 
 // ─── Lab Peer Reviews (extends peerReviews with lab context) ─────────────────
 // We add labId + revieweeId + qualityScore to peerReviews via a separate

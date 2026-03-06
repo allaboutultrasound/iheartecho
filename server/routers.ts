@@ -535,7 +535,7 @@ export const appRouter = router({
         inviteEmail: z.string().email(),
         displayName: z.string().optional(),
         credentials: z.string().optional(),
-        role: z.enum(["admin", "reviewer", "sonographer", "physician"]).optional(),
+        role: z.enum(["admin", "medical_director", "technical_director", "medical_staff", "technical_staff"]).optional(),
         specialty: z.string().optional(),
         department: z.string().optional(),
       }))
@@ -559,7 +559,7 @@ export const appRouter = router({
         memberId: z.number(),
         displayName: z.string().optional(),
         credentials: z.string().optional(),
-        role: z.enum(["admin", "reviewer", "sonographer", "physician"]).optional(),
+        role: z.enum(["admin", "medical_director", "technical_director", "medical_staff", "technical_staff"]).optional(),
         specialty: z.string().optional(),
         department: z.string().optional(),
       }))
@@ -925,8 +925,8 @@ export const appRouter = router({
       const lab = await getLabByMemberUserId(ctx.user.id);
       if (!lab) return { sonographers: [], physicians: [], labName: null };
       const members = await getLabMembers(lab.id);
-      const sonographers = members.filter(m => m.role === 'sonographer' || m.role === 'admin' || m.role === 'reviewer');
-      const physicians = members.filter(m => m.role === 'physician' || m.role === 'admin');
+      const sonographers = members.filter(m => m.role === 'technical_director' || m.role === 'technical_staff' || m.role === 'admin');
+      const physicians = members.filter(m => m.role === 'medical_director' || m.role === 'medical_staff' || m.role === 'admin');
       return {
         labName: lab.labName,
         sonographers: sonographers.map(m => ({ id: m.id, name: m.displayName ?? m.inviteEmail, role: m.role })),
@@ -1179,7 +1179,7 @@ export const appRouter = router({
       const lab = await getLabByMemberUserId(ctx.user.id);
       if (!lab) return { physicians: [] };
       const members = await getLabMembers(lab.id);
-      const physicians = members.filter(m => m.role === "physician" || m.role === "admin");
+      const physicians = members.filter(m => m.role === "medical_director" || m.role === "medical_staff" || m.role === "admin");
       return { physicians };
     }),
 
@@ -1329,8 +1329,8 @@ export const appRouter = router({
       if (!lab) return { sonographers: [], physicians: [] };
       const members = await getLabMembers(lab.id);
       return {
-        sonographers: members.filter(m => m.role === "sonographer" || m.role === "admin"),
-        physicians: members.filter(m => m.role === "physician" || m.role === "reviewer"),
+        sonographers: members.filter(m => m.role === "technical_director" || m.role === "technical_staff" || m.role === "admin"),
+        physicians: members.filter(m => m.role === "medical_director" || m.role === "medical_staff" || m.role === "admin"),
       };
     }),
   }),
