@@ -28,6 +28,7 @@ import {
   sendMessage,
   toggleReaction,
   updateHubProfile,
+  updateUserProfile,
   createPeerReview,
   getPeerReviews,
   createPolicy,
@@ -133,6 +134,16 @@ export const appRouter = router({
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
     }),
+
+    updateProfile: protectedProcedure
+      .input(z.object({
+        email: z.string().email().optional(),
+        displayName: z.string().min(1).max(100).optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        await updateUserProfile(ctx.user.id, input);
+        return { success: true };
+      }),
   }),
 
   // ─── Hub Communities ──────────────────────────────────────────────────────

@@ -44,6 +44,7 @@ import StrainScanCoach from "./pages/StrainScanCoach";
 import TEEScanCoach from "./pages/TEEScanCoach";
 import ICEScanCoach from "./pages/ICEScanCoach";
 import CmeHub from "./pages/CmeHub";
+import Profile from "./pages/Profile";
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
@@ -93,6 +94,7 @@ function Router() {
         )}
       </Route>
       <Route path="/image-quality-review" component={ImageQualityReview} />
+      <Route path="/profile" component={Profile} />
       <Route path="/echo-correlation" component={() => { window.location.replace("/accreditation"); return null; }} />
       <Route path="/echo-navigators" component={EchoNavigatorHub} />
       <Route path="/scan-coach-hub" component={ScanCoachHub} />

@@ -122,6 +122,12 @@ export async function updateHubProfile(userId: number, data: { displayName?: str
   await db.update(users).set(data).where(eq(users.id, userId));
 }
 
+export async function updateUserProfile(userId: number, data: { email?: string; displayName?: string; name?: string }) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(users).set(data).where(eq(users.id, userId));
+}
+
 export async function getAllCommunities() {
   const db = await getDb();
   if (!db) return [];

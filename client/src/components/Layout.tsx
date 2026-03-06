@@ -4,13 +4,14 @@
   Fonts: Merriweather headings, Open Sans body
 */
 import { useState } from "react";
-import { Link, useLocation } from "wouter";
+import { Link, Link as WouterLink, useLocation } from "wouter";
 import {
   Heart, Calculator, ClipboardList, Activity,
   Scan, BookOpen, FileText, Menu, X, ChevronRight,
   Stethoscope, Zap, ExternalLink, ShoppingBag, FlaskConical, MessageCircle, Award, Shield, GraduationCap,
-  LogIn, LogOut, User
+  LogIn, LogOut, User, Settings, ChevronDown
 } from "lucide-react";
+
 import { trpc } from "@/lib/trpc";
 import NotificationBell from "@/components/NotificationBell";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -59,6 +60,7 @@ const navGroups = [
 // Flat list for header label lookup (includes hidden routes not shown in sidebar)
 const hiddenNavItems = [
   { path: "/image-quality-review", label: "Image Quality Review" },
+  { path: "/profile", label: "My Profile" },
 ];
 const navItems = [...navGroups.flatMap(g => g.items), ...hiddenNavItems];
 
@@ -66,6 +68,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [rawLocation] = useLocation();
   const location = rawLocation.split("?")[0];
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const { isAuthenticated, user, logout } = useAuth();
   const { data: isAdmin } = trpc.platformAdmin.isAdmin.useQuery(undefined, { enabled: isAuthenticated });
 
@@ -198,70 +201,130 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             {isAuthenticated && <NotificationBell />}
             {/* Account / Login in header */}
             {isAuthenticated && user ? (
-              <div className="relative group">
-                {/* Avatar trigger */}
-                <button className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-[#f0fbfc] transition-all border border-transparent hover:border-[#189aa1]/20">
+              <div className="relative">
+                {/* Avatar trigger — click to toggle */}
+                <button
+                  onClick={() => setAccountOpen(o => !o)}
+                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-[#f0fbfc] transition-all border border-transparent hover:border-[#189aa1]/20"
+                >
                   <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
                     style={{ background: "linear-gradient(135deg, #189aa1, #4ad9e0)" }}>
                     <User className="w-3.5 h-3.5 text-white" />
                   </div>
                   <span className="text-xs font-semibold text-gray-700 hidden sm:block max-w-[100px] truncate">
-                    {user.name || user.displayName || "Account"}
+                    {user.displayName || user.name || "Account"}
                   </span>
+                  <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform hidden sm:block ${accountOpen ? "rotate-180" : ""}`} />
                 </button>
-                {/* Dropdown on hover */}
-                <div className="absolute right-0 top-full mt-1.5 w-64 bg-white rounded-xl shadow-lg border border-gray-100 p-3 space-y-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50">
-                  {/* User info */}
-                  <div className="flex items-center gap-2.5 pb-2 border-b border-gray-100">
-                    <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
-                      style={{ background: "linear-gradient(135deg, #189aa1, #4ad9e0)" }}>
-                      <User className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-semibold text-gray-800 truncate">
-                        {user.name || user.displayName || "Account"}
-                      </div>
-                      <div className="text-[10px] text-gray-400 truncate">{user.email}</div>
-                    </div>
-                  </div>
-                  {/* Subscription badges */}
-                  {(() => {
-                    const roles = (user as any).appRoles as string[] | undefined;
-                    if (!roles || roles.length === 0) return null;
-                    const ROLE_LABELS: Record<string, { label: string; color: string }> = {
-                      premium_user:   { label: "Premium",         color: "#189aa1" },
-                      diy_user:       { label: "DIY Accreditation", color: "#f59e0b" },
-                      diy_admin:      { label: "Lab Admin",        color: "#f97316" },
-                      platform_admin: { label: "Platform Admin",  color: "#a78bfa" },
-                    };
-                    const badges = roles.filter(r => ROLE_LABELS[r]).map(r => ROLE_LABELS[r]);
-                    if (badges.length === 0) return null;
-                    return (
-                      <div>
-                        <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1">My Subscriptions</div>
-                        <div className="flex flex-wrap gap-1">
-                          {badges.map(({ label, color }) => (
-                            <span
-                              key={label}
-                              className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold"
-                              style={{ background: color + "15", color, border: `1px solid ${color}40` }}
-                            >
-                              {label}
-                            </span>
-                          ))}
+
+                {/* Click-away overlay */}
+                {accountOpen && (
+                  <div className="fixed inset-0 z-40" onClick={() => setAccountOpen(false)} />
+                )}
+
+                {/* Dropdown */}
+                {accountOpen && (() => {
+                  const roles = (user as any).appRoles as string[] | undefined ?? [];
+                  const hasDiyAdmin = roles.includes("diy_admin");
+                  const hasPlatformAdmin = roles.includes("platform_admin");
+                  const ROLE_LABELS: Record<string, { label: string; color: string }> = {
+                    premium_user:   { label: "Premium",           color: "#189aa1" },
+                    diy_user:       { label: "DIY Accreditation", color: "#f59e0b" },
+                    diy_admin:      { label: "Lab Admin",         color: "#f97316" },
+                    platform_admin: { label: "Platform Admin",   color: "#a78bfa" },
+                  };
+                  const badges = roles.filter(r => ROLE_LABELS[r]).map(r => ROLE_LABELS[r]);
+                  return (
+                    <div className="absolute right-0 top-full mt-1.5 w-72 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+                      {/* User info header */}
+                      <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-[#f0fbfc] to-white">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                          style={{ background: "linear-gradient(135deg, #189aa1, #4ad9e0)" }}>
+                          <User className="w-5 h-5 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold text-gray-800 truncate">
+                            {user.displayName || user.name || "Account"}
+                          </div>
+                          <div className="text-xs text-gray-400 truncate">{user.email}</div>
                         </div>
                       </div>
-                    );
-                  })()}
-                  {/* Sign out */}
-                  <button
-                    onClick={() => logout()}
-                    className="flex items-center gap-2 w-full px-2 py-1.5 rounded-lg text-xs text-gray-500 hover:text-red-600 hover:bg-red-50 transition-all"
-                  >
-                    <LogOut className="w-3.5 h-3.5" />
-                    Sign Out
-                  </button>
-                </div>
+
+                      {/* Subscription badges */}
+                      {badges.length > 0 && (
+                        <div className="px-4 py-2.5 border-b border-gray-100">
+                          <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">My Subscriptions</div>
+                          <div className="flex flex-wrap gap-1">
+                            {badges.map(({ label, color }) => (
+                              <span key={label} className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold"
+                                style={{ background: color + "15", color, border: `1px solid ${color}40` }}>
+                                {label}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Profile section */}
+                      <div className="px-2 py-1.5">
+                        <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider px-2 mb-1">Profile</div>
+                        <WouterLink href="/profile">
+                          <button onClick={() => setAccountOpen(false)}
+                            className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-[#f0fbfc] hover:text-[#189aa1] transition-all text-left">
+                            <Settings className="w-3.5 h-3.5 text-[#189aa1]" />
+                            Edit Profile &amp; Manage Subscriptions
+                          </button>
+                        </WouterLink>
+                      </div>
+
+                      {/* Lab Admin section — only for diy_admin */}
+                      {hasDiyAdmin && (
+                        <div className="px-2 py-1.5 border-t border-gray-100">
+                          <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider px-2 mb-1">Lab Admin</div>
+                          <WouterLink href="/lab-admin">
+                            <button onClick={() => setAccountOpen(false)}
+                              className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-all text-left">
+                              <ClipboardList className="w-3.5 h-3.5 text-orange-500" />
+                              Lab Admin Dashboard
+                            </button>
+                          </WouterLink>
+                          <WouterLink href="/accreditation">
+                            <button onClick={() => setAccountOpen(false)}
+                              className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-all text-left">
+                              <Award className="w-3.5 h-3.5 text-orange-500" />
+                              DIY Accreditation Tool
+                            </button>
+                          </WouterLink>
+                        </div>
+                      )}
+
+                      {/* Platform Admin section — only for platform_admin */}
+                      {hasPlatformAdmin && (
+                        <div className="px-2 py-1.5 border-t border-gray-100">
+                          <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider px-2 mb-1">Platform Admin</div>
+                          <WouterLink href="/platform-admin">
+                            <button onClick={() => setAccountOpen(false)}
+                              className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-all text-left">
+                              <Shield className="w-3.5 h-3.5 text-purple-500" />
+                              Platform Admin Dashboard
+                            </button>
+                          </WouterLink>
+                        </div>
+                      )}
+
+                      {/* Sign out */}
+                      <div className="px-2 py-1.5 border-t border-gray-100">
+                        <button
+                          onClick={() => { logout(); setAccountOpen(false); }}
+                          className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-500 hover:text-red-600 hover:bg-red-50 transition-all"
+                        >
+                          <LogOut className="w-3.5 h-3.5" />
+                          Sign Out
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             ) : (
               <a

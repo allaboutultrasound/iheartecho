@@ -566,3 +566,10 @@
 
 ## Premium Guard Fix
 - [x] Fix premium role checks in EchoNavigator and EchoAssist: diy_user, diy_admin, and platform_admin should all pass as premium-equivalent
+
+## Profile & Header Dropdown
+- [x] tRPC: auth.updateProfile procedure (update displayName and email)
+- [x] Header: click-toggle role-aware dropdown (Profile, Lab Admin, Platform Admin sections — shown only for eligible roles)
+- [x] Profile page (/profile): edit form for displayName and email, subscription badges, manage subscription links
+- [x] Route: /profile registered in App.tsx, /profile added to hidden nav items for header label
+- [x] Vitest: 21 profile/role hierarchy tests passing
