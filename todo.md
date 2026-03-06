@@ -573,3 +573,11 @@
 - [x] Profile page (/profile): edit form for displayName and email, subscription badges, manage subscription links
 - [x] Route: /profile registered in App.tsx, /profile added to hidden nav items for header label
 - [x] Vitest: 21 profile/role hierarchy tests passing
+
+## Avatar Upload
+- [x] DB schema: avatarUrl column already existed in users table (no migration needed)
+- [x] Server: updateUserProfile db helper updated to support avatarUrl
+- [x] Server: auth.uploadAvatar tRPC procedure — receives dataUri + mimeType, uploads to S3, saves URL to user record
+- [x] Frontend: Profile page — avatar upload field with camera overlay, preview, Save/Cancel controls
+- [x] Frontend: Layout header — shows custom avatar image (or initials fallback) in both trigger and dropdown
+- [x] Vitest: 12 avatar upload validation tests passing

@@ -9,7 +9,7 @@ import {
   Heart, Calculator, ClipboardList, Activity,
   Scan, BookOpen, FileText, Menu, X, ChevronRight,
   Stethoscope, Zap, ExternalLink, ShoppingBag, FlaskConical, MessageCircle, Award, Shield, GraduationCap,
-  LogIn, LogOut, User, Settings, ChevronDown
+  LogIn, LogOut, Settings, ChevronDown
 } from "lucide-react";
 
 import { trpc } from "@/lib/trpc";
@@ -207,10 +207,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   onClick={() => setAccountOpen(o => !o)}
                   className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-[#f0fbfc] transition-all border border-transparent hover:border-[#189aa1]/20"
                 >
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ background: "linear-gradient(135deg, #189aa1, #4ad9e0)" }}>
-                    <User className="w-3.5 h-3.5 text-white" />
-                  </div>
+                  {(user as any).avatarUrl ? (
+                    <img
+                      src={(user as any).avatarUrl}
+                      alt="Avatar"
+                      className="w-7 h-7 rounded-full object-cover flex-shrink-0 border border-[#189aa1]/30"
+                    />
+                  ) : (
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
+                      style={{ background: "linear-gradient(135deg, #189aa1, #4ad9e0)" }}>
+                      <span className="text-xs font-bold text-white">
+                        {(user.displayName || user.name || "?").charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
                   <span className="text-xs font-semibold text-gray-700 hidden sm:block max-w-[100px] truncate">
                     {user.displayName || user.name || "Account"}
                   </span>
@@ -238,10 +248,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     <div className="absolute right-0 top-full mt-1.5 w-72 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
                       {/* User info header */}
                       <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-[#f0fbfc] to-white">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                          style={{ background: "linear-gradient(135deg, #189aa1, #4ad9e0)" }}>
-                          <User className="w-5 h-5 text-white" />
-                        </div>
+                        {(user as any).avatarUrl ? (
+                          <img
+                            src={(user as any).avatarUrl}
+                            alt="Avatar"
+                            className="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-[#189aa1]/30"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                            style={{ background: "linear-gradient(135deg, #189aa1, #4ad9e0)" }}>
+                            <span className="text-base font-bold text-white">
+                              {(user.displayName || user.name || "?").charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-semibold text-gray-800 truncate">
                             {user.displayName || user.name || "Account"}

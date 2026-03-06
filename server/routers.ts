@@ -144,6 +144,26 @@ export const appRouter = router({
         await updateUserProfile(ctx.user.id, input);
         return { success: true };
       }),
+
+    uploadAvatar: protectedProcedure
+      .input(z.object({
+        // base64-encoded image data URI, e.g. "data:image/jpeg;base64,..."
+        dataUri: z.string().min(1).max(5_000_000), // ~3.75 MB raw → ~5 MB base64
+        mimeType: z.enum(["image/jpeg", "image/png", "image/webp", "image/gif"]),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // Decode base64 → Buffer
+        const base64Data = input.dataUri.replace(/^data:[^;]+;base64,/, "");
+        const buffer = Buffer.from(base64Data, "base64");
+        if (buffer.byteLength > 4 * 1024 * 1024) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Avatar image must be under 4 MB" });
+        }
+        const ext = input.mimeType.split("/")[1];
+        const fileKey = `avatars/${ctx.user.id}-${Date.now()}.${ext}`;
+        const { url } = await storagePut(fileKey, buffer, input.mimeType);
+        await updateUserProfile(ctx.user.id, { avatarUrl: url });
+        return { avatarUrl: url };
+      }),
   }),
 
   // ─── Hub Communities ──────────────────────────────────────────────────────
