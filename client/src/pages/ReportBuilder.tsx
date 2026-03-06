@@ -4,9 +4,9 @@
   Brand: Teal #189aa1, Aqua #4ad9e0
   Fonts: Merriweather headings, Open Sans body, JetBrains Mono data
 */
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import Layout from "@/components/Layout";
-import { FileText, Copy, Download, CheckCircle2, ChevronDown, ChevronUp, Printer } from "lucide-react";
+import { FileText, Copy, Download, CheckCircle2, ChevronDown, ChevronUp, Printer, MessageSquarePlus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 // ─── UI PRIMITIVES ──────────────────────────────────────────────────────────
@@ -47,17 +47,51 @@ function SelectField({ label, value, onChange, options, hint, span2 }: {
   );
 }
 
-function Section({ title, children, defaultOpen = true }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
+function Section({ title, children, defaultOpen = true, comment, onCommentChange }: {
+  title: string; children: React.ReactNode; defaultOpen?: boolean;
+  comment?: string; onCommentChange?: (v: string) => void;
+}) {
   const [open, setOpen] = useState(defaultOpen);
+  const [notesOpen, setNotesOpen] = useState(false);
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
       <button onClick={() => setOpen(o => !o)}
         className="w-full px-4 py-2.5 flex items-center justify-between"
         style={{ background: "linear-gradient(135deg, #189aa1, #0e7a80)" }}>
         <h3 className="font-bold text-sm text-white" style={{ fontFamily: "Merriweather, serif" }}>{title}</h3>
-        {open ? <ChevronUp className="w-4 h-4 text-white/70" /> : <ChevronDown className="w-4 h-4 text-white/70" />}
+        <div className="flex items-center gap-2">
+          {comment && comment.trim() && (
+            <span className="text-[10px] bg-[#4ad9e0]/30 text-white px-1.5 py-0.5 rounded-full font-semibold">note</span>
+          )}
+          {open ? <ChevronUp className="w-4 h-4 text-white/70" /> : <ChevronDown className="w-4 h-4 text-white/70" />}
+        </div>
       </button>
-      {open && <div className="p-4 grid grid-cols-2 gap-3">{children}</div>}
+      {open && (
+        <div className="p-4 grid grid-cols-2 gap-3">
+          {children}
+          {onCommentChange && (
+            <div className="col-span-2 mt-1">
+              <button
+                type="button"
+                onClick={() => setNotesOpen(o => !o)}
+                className="flex items-center gap-1.5 text-xs font-semibold text-[#189aa1] hover:text-[#0e7a80] transition-colors mb-1"
+              >
+                <MessageSquarePlus className="w-3.5 h-3.5" />
+                {notesOpen ? "Hide section notes" : (comment && comment.trim() ? "Edit section notes" : "Add section notes")}
+              </button>
+              {notesOpen && (
+                <textarea
+                  value={comment ?? ""}
+                  onChange={e => onCommentChange(e.target.value)}
+                  rows={3}
+                  placeholder="Enter custom notes or comments for this section..."
+                  className="w-full border border-[#189aa1]/30 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#189aa1]/30 focus:border-[#189aa1] resize-none bg-[#f0fbfc]"
+                />
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -270,6 +304,16 @@ interface ReportData {
 
   // Conclusions
   conclusions: string;
+
+  // Per-section notes/comments
+  noteStudy: string;
+  noteMMode: string;
+  note2D: string;
+  noteMv: string;
+  noteTv: string;
+  noteAv: string;
+  notePv: string;
+  notePhysician: string;
 }
 
 // ─── REPORT GENERATOR ───────────────────────────────────────────────────────
@@ -294,6 +338,7 @@ function generateReport(d: ReportData): string {
   if (n(d.heartRate)) lines.push(`Heart Rate:    ${d.heartRate} bpm`);
   if (n(d.indication)) lines.push(`Indication:    ${d.indication}`);
   if (n(d.studyQuality)) lines.push(`Study Quality: ${d.studyQuality}`);
+  if (n(d.noteStudy)) { lines.push(""); lines.push("STUDY NOTES:"); d.noteStudy.split("\n").forEach(l => lines.push(`  ${l}`)); }
   lines.push(sep);
 
   // ── MEASUREMENTS ──
@@ -359,11 +404,13 @@ function generateReport(d: ReportData): string {
     lines.push("");
     lines.push("M-MODE MEASUREMENTS:");
     mMode.forEach(m => lines.push(`  ${m}`));
+    if (n(d.noteMMode)) { lines.push(""); lines.push("  NOTE:"); d.noteMMode.split("\n").forEach(l => lines.push(`    ${l}`)); }
   }
   if (twoDim.length > 0) {
     lines.push("");
     lines.push("2D MEASUREMENTS:");
     twoDim.forEach(m => lines.push(`  ${m}`));
+    if (n(d.note2D)) { lines.push(""); lines.push("  NOTE:"); d.note2D.split("\n").forEach(l => lines.push(`    ${l}`)); }
   }
 
   // ── MITRAL VALVE ──
@@ -413,6 +460,7 @@ function generateReport(d: ReportData): string {
     lines.push("");
     lines.push("MITRAL VALVE:");
     mvLines.forEach(l => lines.push(`  ${l}`));
+    if (n(d.noteMv)) { lines.push(""); lines.push("  NOTE:"); d.noteMv.split("\n").forEach(l => lines.push(`    ${l}`)); }
   }
 
   // ── TRICUSPID VALVE ──
@@ -448,6 +496,7 @@ function generateReport(d: ReportData): string {
     lines.push("");
     lines.push("TRICUSPID VALVE & RIGHT HEART PRESSURES:");
     tvLines.forEach(l => lines.push(`  ${l}`));
+    if (n(d.noteTv)) { lines.push(""); lines.push("  NOTE:"); d.noteTv.split("\n").forEach(l => lines.push(`    ${l}`)); }
   }
 
   // ── AORTIC VALVE ──
@@ -491,6 +540,7 @@ function generateReport(d: ReportData): string {
     lines.push("");
     lines.push("AORTIC VALVE:");
     avLines.forEach(l => lines.push(`  ${l}`));
+    if (n(d.noteAv)) { lines.push(""); lines.push("  NOTE:"); d.noteAv.split("\n").forEach(l => lines.push(`    ${l}`)); }
   }
 
   // ── PULMONIC VALVE ──
@@ -515,6 +565,7 @@ function generateReport(d: ReportData): string {
     lines.push("");
     lines.push("PULMONIC VALVE & RVOT:");
     pvLines.forEach(l => lines.push(`  ${l}`));
+    if (n(d.notePv)) { lines.push(""); lines.push("  NOTE:"); d.notePv.split("\n").forEach(l => lines.push(`    ${l}`)); }
   }
 
   // ── PHYSICIAN REVIEW FINDINGS ──
@@ -544,6 +595,7 @@ function generateReport(d: ReportData): string {
         val.split("\n").forEach(l => lines.push(`    ${l}`));
       }
     });
+    if (n(d.notePhysician)) { lines.push(""); lines.push("  PHYSICIAN NOTES:"); d.notePhysician.split("\n").forEach(l => lines.push(`    ${l}`)); }
   }
 
   // ── AUTO-GENERATED CONCLUSIONS ──
@@ -708,6 +760,8 @@ const EMPTY: ReportData = {
   findSummary: "", findRv: "", findRa: "", findTv: "", findPv: "", findPa: "",
   findDiastolic: "", findOther: "",
   conclusions: "",
+  // Per-section notes
+  noteStudy: "", noteMMode: "", note2D: "", noteMv: "", noteTv: "", noteAv: "", notePv: "", notePhysician: "",
 };
 
 export default function ReportBuilder() {
@@ -717,6 +771,12 @@ export default function ReportBuilder() {
 
   const report = useMemo(() => generateReport(data), [data]);
   const set = (key: keyof ReportData) => (v: string) => setData(d => ({ ...d, [key]: v }));
+  const clearAll = useCallback(() => {
+    if (window.confirm("Clear all measurements, findings, and notes? This cannot be undone.")) {
+      setData(EMPTY);
+      toast.success("Worksheet cleared.");
+    }
+  }, []);
 
   const copyReport = () => {
     navigator.clipboard.writeText(report);
@@ -760,6 +820,13 @@ export default function ReportBuilder() {
               Enter measurements and findings — a complete structured report is generated automatically.
             </p>
           </div>
+          {/* Actions */}
+          <div className="flex items-center gap-2">
+            <button onClick={clearAll}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-red-200 text-red-600 text-xs font-semibold hover:bg-red-50 transition-all">
+              <Trash2 className="w-3.5 h-3.5" />
+              Clear All
+            </button>
           {/* Tab switcher */}
           <div className="flex rounded-lg border border-gray-200 overflow-hidden text-sm font-semibold">
             <button onClick={() => setActiveTab("worksheet")}
@@ -773,13 +840,14 @@ export default function ReportBuilder() {
               Report Preview
             </button>
           </div>
+          </div>
         </div>
 
         {activeTab === "worksheet" ? (
           <div className="space-y-4">
 
             {/* Study Info */}
-            <Section title="Study Information">
+            <Section title="Study Information" comment={data.noteStudy} onCommentChange={set("noteStudy")}>
               <SelectField label="Study Type" span2 value={data.studyType} onChange={set("studyType")}
                 options={["Transthoracic Echocardiogram (TTE)", "Limited TTE", "Stress Echo", "Contrast Echo", "3D TTE", "TEE", "ICE"]} />
               <Field label="Indication" span2 value={data.indication} onChange={set("indication")}
@@ -803,7 +871,7 @@ export default function ReportBuilder() {
             </Section>
 
             {/* M-Mode */}
-            <Section title="M-Mode Measurements" defaultOpen={false}>
+            <Section title="M-Mode Measurements" defaultOpen={false} comment={data.noteMMode} onCommentChange={set("noteMMode")}>
               <Field label="RVIDd" value={data.mRvid} onChange={set("mRvid")} unit="cm" hint="(nl 1.9–2.6)" placeholder="1.9–2.6" />
               <Field label="LVIDd" value={data.mLvedd} onChange={set("mLvedd")} unit="cm" hint="(nl 4.2–5.9)" placeholder="4.2–5.9" />
               <Field label="LVIDd Index" value={data.mLveddIndex} onChange={set("mLveddIndex")} unit="cm/m²" hint="(nl 2.2–3.1)" />
@@ -830,7 +898,7 @@ export default function ReportBuilder() {
             </Section>
 
             {/* 2D */}
-            <Section title="2D Measurements" defaultOpen={false}>
+            <Section title="2D Measurements" defaultOpen={false} comment={data.note2D} onCommentChange={set("note2D")}>
               <Field label="RVIDd" value={data.dRvid} onChange={set("dRvid")} unit="cm" hint="(nl 1.9–2.6)" />
               <Field label="RV Basal Diam" value={data.dRvBasal} onChange={set("dRvBasal")} unit="cm" />
               <Field label="LVIDd" value={data.dLvedd} onChange={set("dLvedd")} unit="cm" hint="(nl 4.2–5.9)" />
@@ -878,7 +946,7 @@ export default function ReportBuilder() {
             </Section>
 
             {/* Mitral Valve */}
-            <Section title="Mitral Valve">
+            <Section title="Mitral Valve" comment={data.noteMv} onCommentChange={set("noteMv")}>
               <SelectField label="Regurgitation" value={data.mvRegurg} onChange={set("mvRegurg")} options={SEVERITY_OPTIONS} />
               <SelectField label="Stenosis" value={data.mvStenosis} onChange={set("mvStenosis")} options={SEVERITY_OPTIONS} />
               <Field label="Mitral PV" value={data.mvPeakVel} onChange={set("mvPeakVel")} unit="m/s" />
@@ -919,7 +987,7 @@ export default function ReportBuilder() {
             </Section>
 
             {/* Tricuspid Valve */}
-            <Section title="Tricuspid Valve">
+            <Section title="Tricuspid Valve" comment={data.noteTv} onCommentChange={set("noteTv")}>
               <SelectField label="Regurgitation" value={data.tvRegurg} onChange={set("tvRegurg")} options={SEVERITY_OPTIONS} />
               <Field label="Peak Velocity" value={data.tvPeakVel} onChange={set("tvPeakVel")} unit="m/s" hint="(nl 0.3–0.7)" />
               <Field label="Peak Gradient" value={data.tvPeakGrad} onChange={set("tvPeakGrad")} unit="mmHg" hint="(nl ≤2)" />
@@ -932,7 +1000,7 @@ export default function ReportBuilder() {
             </Section>
 
             {/* Aortic Valve */}
-            <Section title="Aortic Valve">
+            <Section title="Aortic Valve" comment={data.noteAv} onCommentChange={set("noteAv")}>
               <SelectField label="Regurgitation" value={data.avRegurg} onChange={set("avRegurg")} options={SEVERITY_OPTIONS} />
               <SelectField label="Stenosis" value={data.avStenosis} onChange={set("avStenosis")} options={SEVERITY_OPTIONS} />
               <Field label="AVA Planimetry" value={data.avaPlanimetry} onChange={set("avaPlanimetry")} unit="cm²" />
@@ -954,7 +1022,7 @@ export default function ReportBuilder() {
             </Section>
 
             {/* Pulmonic Valve */}
-            <Section title="Pulmonic Valve & RVOT" defaultOpen={false}>
+            <Section title="Pulmonic Valve & RVOT" defaultOpen={false} comment={data.notePv} onCommentChange={set("notePv")}>
               <SelectField label="Regurgitation" value={data.pvRegurg} onChange={set("pvRegurg")} options={SEVERITY_OPTIONS} />
               <Field label="Peak Velocity" value={data.pvPeakVel} onChange={set("pvPeakVel")} unit="m/s" hint="(nl 0.6–0.9)" />
               <Field label="Peak Gradient" value={data.pvPeakGrad} onChange={set("pvPeakGrad")} unit="mmHg" hint="(nl ≤3)" />
@@ -970,7 +1038,7 @@ export default function ReportBuilder() {
             </Section>
 
             {/* Physician Review */}
-            <Section title="Physician Review — Findings by Chamber">
+            <Section title="Physician Review — Findings by Chamber" comment={data.notePhysician} onCommentChange={set("notePhysician")}>
               {([
                 ["Left Ventricle", "findLv"],
                 ["Left Atrium", "findLa"],
