@@ -379,3 +379,7 @@
 - [x] Each pattern card populates the bull's-eye with representative 17-segment strain values
 - [x] Show pattern description, key features, and GLS range on card
 - [x] Remove/reduce clinical applications from EchoAssist strain section (replaced with link to ScanCoach)
+
+## Hemodynamics Lab — Aortic Waveform Fixes
+- [x] Remove "LVOT" from aortic waveform pattern labels
+- [x] Fix HCM obstructive pattern to dagger-shaped late-peaking waveform

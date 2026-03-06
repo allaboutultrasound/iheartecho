@@ -705,7 +705,7 @@ function generateAVOutflowPath(p: Params, W: number, H: number): {
 
   let pattern = "Normal";
   if (shape === "tardus") pattern = `Aortic Stenosis — Vmax ${vmax.toFixed(1)} m/s`;
-  else if (shape === "dynamic") pattern = "HCM — Dynamic LVOT Obstruction";
+  else if (shape === "dynamic") pattern = "HCM — Dynamic Outflow Obstruction";
   else if (vmax > 2.0) pattern = "Elevated Velocity";
 
   const maxVelDisplay = vmax * 1.2; // auto-scale so Vmax fills ~83% of canvas
@@ -738,9 +738,22 @@ function generateAVOutflowPath(p: Params, W: number, H: number): {
           if (frac < peakFrac) vel = vmax * Math.pow(frac / peakFrac, 1.5);
           else vel = vmax * Math.pow((1 - frac) / (1 - peakFrac), 1.2);
         } else if (shape === "dynamic") {
-          const earlyPeak = vmax * 0.55 * Math.sin(frac * Math.PI * 2.5);
-          const latePeak = frac > 0.5 ? vmax * Math.pow((frac - 0.5) / 0.5, 0.7) * Math.sin((frac - 0.5) * Math.PI / 0.5) : 0;
-          vel = Math.max(0, earlyPeak + latePeak * 0.8);
+          // True dagger shape: slow initial rise, accelerates sharply in late systole,
+          // peaks very late (~75-80% of ejection), then drops steeply.
+          // This mimics the Venturi / SAM-induced late obstruction in HCM-LVOTO.
+          const peakFrac = 0.78; // late peak
+          if (frac < 0.15) {
+            // Early gentle rise (pre-obstruction flow)
+            vel = vmax * 0.25 * (frac / 0.15);
+          } else if (frac < peakFrac) {
+            // Accelerating rise — concave upward (dagger blade)
+            const progress = (frac - 0.15) / (peakFrac - 0.15);
+            vel = vmax * (0.25 + 0.75 * Math.pow(progress, 2.2));
+          } else {
+            // Steep fall after late peak
+            const fallFrac = (frac - peakFrac) / (1 - peakFrac);
+            vel = vmax * Math.pow(1 - fallFrac, 1.8);
+          }
         }
         vel = Math.max(0, vel);
       }
@@ -1416,7 +1429,7 @@ export default function HemodynamicsLab() {
             {/* AV Outflow */}
             <div>
               <DopplerTracing
-                title="Aortic Valve Outflow (CW)"
+                title="Aortic Outflow (CW)"
                 subtitle={avOutflowData.pattern}
                 pathData={avOutflowData.path}
                 color="#22d3ee"
