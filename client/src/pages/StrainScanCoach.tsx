@@ -393,6 +393,73 @@ function SegmentalStrainCurves({
 
   const visibleSegs = SEGMENTS_17.filter(seg => activeWalls.has(seg.wall));
 
+  // ── Dyssynchrony Index Calculations ──────────────────────────────────────────
+  // Time-to-peak strain (TTP): the time point (0–100% RR) at which each segment
+  // reaches its most negative (peak) strain value.
+  // Expressed in ms assuming a typical RR of 800 ms (75 bpm).
+  const RR_MS = 800; // assumed RR interval in ms
+  const dyssyncMetrics = useMemo(() => {
+    const isDyssync = activePattern === "lbbb";
+    // Compute TTP for each segment
+    const ttpMap: Record<number, number> = {};
+    SEGMENTS_17.forEach(seg => {
+      const wms = wallMotionScores[seg.id] ?? 1;
+      const val = segValues[seg.id] ?? null;
+      let curveType: "normal" | "septalFlash" | "lateralDelay" | "postSystolic" = "normal";
+      if (isDyssync) {
+        if (seg.wall === "septal") curveType = "septalFlash";
+        else if (seg.wall === "lateral") curveType = "lateralDelay";
+      }
+      const curve = generateStrainCurve(val, wms, seg.id, curveType);
+      // Find the time point with the most negative strain value
+      let peakStrain = 0;
+      let peakT = 0;
+      curve.forEach(pt => {
+        if (pt.strain < peakStrain) {
+          peakStrain = pt.strain;
+          peakT = pt.t;
+        }
+      });
+      ttpMap[seg.id] = peakT;
+    });
+
+    // Septal segments: 2, 3, 8, 9, 14
+    const septalIds = [2, 3, 8, 9, 14];
+    // Lateral segments: 5, 6, 11, 12, 16
+    const lateralIds = [5, 6, 11, 12, 16];
+
+    const septalTTPs = septalIds.map(id => ttpMap[id]).filter(v => v !== undefined);
+    const lateralTTPs = lateralIds.map(id => ttpMap[id]).filter(v => v !== undefined);
+
+    const avgSeptalTTP = septalTTPs.length > 0
+      ? septalTTPs.reduce((a, b) => a + b, 0) / septalTTPs.length
+      : null;
+    const avgLateralTTP = lateralTTPs.length > 0
+      ? lateralTTPs.reduce((a, b) => a + b, 0) / lateralTTPs.length
+      : null;
+
+    // SPWMD: lateral TTP − septal TTP (positive = lateral is later = dyssynchrony)
+    const spwmdPct = avgSeptalTTP !== null && avgLateralTTP !== null
+      ? avgLateralTTP - avgSeptalTTP
+      : null;
+    const spwmdMs = spwmdPct !== null ? Math.round((spwmdPct / 100) * RR_MS) : null;
+
+    // Dyssynchrony Index (DI): SD of TTP across all 17 segments
+    const allTTPs = SEGMENTS_17.map(s => ttpMap[s.id]).filter(v => v !== undefined);
+    const meanTTP = allTTPs.reduce((a, b) => a + b, 0) / allTTPs.length;
+    const variance = allTTPs.reduce((sum, v) => sum + Math.pow(v - meanTTP, 2), 0) / allTTPs.length;
+    const diPct = Math.sqrt(variance);
+    const diMs = Math.round((diPct / 100) * RR_MS);
+
+    // Per-segment TTP in ms for display
+    const ttpMsMap: Record<number, number> = {};
+    SEGMENTS_17.forEach(seg => {
+      ttpMsMap[seg.id] = Math.round((ttpMap[seg.id] / 100) * RR_MS);
+    });
+
+    return { ttpMap, ttpMsMap, avgSeptalTTP, avgLateralTTP, spwmdMs, diMs };
+  }, [segValues, wallMotionScores, activePattern]);
+
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
       <div className="flex items-center justify-between mb-3">
@@ -490,6 +557,118 @@ function SegmentalStrainCurves({
           </div>
         ))}
       </div>
+
+      {/* ── Dyssynchrony Index Readout ── */}
+      <details className="mt-4" open={activePattern === "lbbb"}>
+        <summary className="text-xs font-semibold cursor-pointer flex items-center gap-1.5" style={{ color: "#0369a1" }}>
+          <Activity className="w-3.5 h-3.5" />
+          Dyssynchrony Index Readout
+          {activePattern === "lbbb" && (
+            <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold" style={{ background: "#0369a115", color: "#0369a1" }}>LBBB active</span>
+          )}
+        </summary>
+        <div className="mt-3 space-y-3">
+          {/* Key metrics row */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {/* SPWMD */}
+            {(() => {
+              const { spwmdMs } = dyssyncMetrics;
+              const isAbnormal = spwmdMs !== null && spwmdMs >= 130;
+              const color = spwmdMs === null ? "#9ca3af" : isAbnormal ? "#dc2626" : "#15803d";
+              return (
+                <div className="rounded-lg p-3 text-center" style={{ background: color + "10", border: `1px solid ${color}25` }}>
+                  <div className="text-[10px] text-gray-500 font-medium mb-1">SPWMD</div>
+                  <div className="text-xl font-black font-mono" style={{ color }}>
+                    {spwmdMs !== null ? `${spwmdMs}` : "—"}
+                    <span className="text-xs font-normal ml-0.5">ms</span>
+                  </div>
+                  <div className="text-[9px] mt-0.5" style={{ color }}>
+                    {spwmdMs === null ? "" : isAbnormal ? "≥ 130 ms — Dyssynchrony" : "< 130 ms — Normal"}
+                  </div>
+                </div>
+              );
+            })()}
+            {/* Dyssynchrony Index */}
+            {(() => {
+              const { diMs } = dyssyncMetrics;
+              const isAbnormal = diMs >= 34;
+              const color = isAbnormal ? "#dc2626" : "#15803d";
+              return (
+                <div className="rounded-lg p-3 text-center" style={{ background: color + "10", border: `1px solid ${color}25` }}>
+                  <div className="text-[10px] text-gray-500 font-medium mb-1">DI (SD-TTP)</div>
+                  <div className="text-xl font-black font-mono" style={{ color }}>
+                    {diMs}
+                    <span className="text-xs font-normal ml-0.5">ms</span>
+                  </div>
+                  <div className="text-[9px] mt-0.5" style={{ color }}>
+                    {isAbnormal ? "≥ 34 ms — Dyssynchrony" : "< 34 ms — Normal"}
+                  </div>
+                </div>
+              );
+            })()}
+            {/* Avg Septal TTP */}
+            {(() => {
+              const { avgSeptalTTP } = dyssyncMetrics;
+              const ms = avgSeptalTTP !== null ? Math.round((avgSeptalTTP / 100) * RR_MS) : null;
+              return (
+                <div className="rounded-lg p-3 text-center" style={{ background: "#f472b610", border: "1px solid #f472b625" }}>
+                  <div className="text-[10px] text-gray-500 font-medium mb-1">Avg Septal TTP</div>
+                  <div className="text-xl font-black font-mono" style={{ color: "#db2777" }}>
+                    {ms !== null ? ms : "—"}
+                    <span className="text-xs font-normal ml-0.5">ms</span>
+                  </div>
+                  <div className="text-[9px] mt-0.5 text-gray-400">Segs 2,3,8,9,14</div>
+                </div>
+              );
+            })()}
+            {/* Avg Lateral TTP */}
+            {(() => {
+              const { avgLateralTTP } = dyssyncMetrics;
+              const ms = avgLateralTTP !== null ? Math.round((avgLateralTTP / 100) * RR_MS) : null;
+              return (
+                <div className="rounded-lg p-3 text-center" style={{ background: "#189aa110", border: "1px solid #189aa125" }}>
+                  <div className="text-[10px] text-gray-500 font-medium mb-1">Avg Lateral TTP</div>
+                  <div className="text-xl font-black font-mono" style={{ color: BRAND }}>
+                    {ms !== null ? ms : "—"}
+                    <span className="text-xs font-normal ml-0.5">ms</span>
+                  </div>
+                  <div className="text-[9px] mt-0.5 text-gray-400">Segs 5,6,11,12,16</div>
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Per-segment TTP table */}
+          <details className="mt-1">
+            <summary className="text-[10px] font-semibold cursor-pointer text-gray-400 hover:text-gray-600">Per-segment TTP (click to expand)</summary>
+            <div className="mt-2 grid grid-cols-2 sm:grid-cols-3 gap-1">
+              {SEGMENTS_17.map(seg => {
+                const ttpMs = dyssyncMetrics.ttpMsMap[seg.id];
+                const isSeptal = [2,3,8,9,14].includes(seg.id);
+                const isLateral = [5,6,11,12,16].includes(seg.id);
+                const dotColor = isSeptal ? "#db2777" : isLateral ? BRAND : segColor(seg.wall);
+                return (
+                  <div key={seg.id} className="flex items-center justify-between px-2 py-1 rounded" style={{ background: dotColor + "08" }}>
+                    <span className="text-[10px] text-gray-600 truncate flex-1">{seg.id}. {seg.label}</span>
+                    <span className="text-[10px] font-mono font-bold ml-2 flex-shrink-0" style={{ color: dotColor }}>{ttpMs} ms</span>
+                  </div>
+                );
+              })}
+            </div>
+          </details>
+
+          {/* Clinical thresholds note */}
+          <div className="rounded-lg p-3 text-[10px] leading-relaxed" style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+            <div className="font-semibold text-gray-700 mb-1">Clinical Thresholds (ASE / PROSPECT)</div>
+            <div className="text-gray-500 space-y-0.5">
+              <div><span className="font-medium text-gray-700">SPWMD ≥ 130 ms</span> — Septal-to-posterior wall motion delay; predicts CRT response (sensitivity ~58%, specificity ~70%)</div>
+              <div><span className="font-medium text-gray-700">DI (SD-TTP) ≥ 34 ms</span> — Standard deviation of TTP across 12 segments; predicts CRT response (PROSPECT trial)</div>
+              <div><span className="font-medium text-gray-700">RR assumed:</span> 800 ms (75 bpm). Values scale linearly with actual RR interval.</div>
+              <div className="mt-1 text-[9px] text-gray-400">Note: TTP values are derived from the strain curve model. In clinical practice, measure directly from vendor-generated strain curves.</div>
+            </div>
+          </div>
+        </div>
+      </details>
 
       {/* Wall Motion Scoring */}
       <details className="mt-4">
