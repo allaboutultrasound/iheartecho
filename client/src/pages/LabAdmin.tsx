@@ -743,6 +743,56 @@ function AnalyticsTab({ members }: { members: any[] }) {
   );
 }
 
+// ─── CME Summary Card ────────────────────────────────────────────────────────
+function CmeSummaryCard({ members }: { members: any[] }) {
+  const { data: cmeSummary = [] } = trpc.cme.getStaffSummary.useQuery();
+  const TRIENNIUM_CREDITS = 30;
+  const cmeByMember = new Map(cmeSummary.map((c: any) => [c.labMemberId, Number(c.totalCredits ?? 0)]));
+
+  return (
+    <div>
+      <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2 mb-4">
+        <Award className="w-4 h-4" style={{ color: BRAND }} />
+        CME Credit Progress — Triennium (30 Credits Required)
+      </h2>
+      <Card className="border border-gray-100">
+        <CardContent className="p-4">
+          {members.length === 0 ? (
+            <div className="text-xs text-gray-400 py-4 text-center">No staff members found. Add staff in the Staff tab to track CME credits.</div>
+          ) : (
+            <div className="space-y-3">
+              {members.map((m: any) => {
+                const credits = cmeByMember.get(m.id) ?? 0;
+                const pct = Math.min(100, Math.round((credits / TRIENNIUM_CREDITS) * 100));
+                const color = pct >= 100 ? "#16a34a" : pct >= 60 ? "#d97706" : "#dc2626";
+                const roleLabel = m.role === "medical_director" ? "Medical Director"
+                  : m.role === "technical_director" ? "Technical Director"
+                  : m.role === "medical_staff" ? "Medical Staff"
+                  : m.role === "technical_staff" ? "Technical Staff"
+                  : m.role === "admin" ? "Admin" : m.role;
+                return (
+                  <div key={m.id} className="flex items-center gap-3">
+                    <div className="w-36 flex-shrink-0">
+                      <div className="text-xs font-medium text-gray-700 truncate">{m.displayName ?? m.credentials ?? `Member #${m.id}`}</div>
+                      <div className="text-[10px] text-gray-400">{roleLabel}</div>
+                    </div>
+                    <div className="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
+                    </div>
+                    <div className="text-xs font-bold w-16 text-right" style={{ color }}>{credits}/{TRIENNIUM_CREDITS} hrs</div>
+                    <div className="text-[10px] text-gray-400 w-8 text-right">{pct}%</div>
+                    {pct >= 100 && <CheckCircle className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 // ─── Reports Tab ──────────────────────────────────────────────────────────────
 function ReportsTab({ lab, members }: { lab: any; members: any[] }) {
   // Use real IQR monthly summary data
@@ -1132,6 +1182,9 @@ export default function LabAdmin() {
         {tab === "reports-analytics" && (
           <div className="space-y-8">
             <AnalyticsTab members={members} />
+            <div className="border-t border-gray-200 pt-6">
+              <CmeSummaryCard members={members} />
+            </div>
             <div className="border-t border-gray-200 pt-6">
               <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2 mb-4">
                 <FileText className="w-4 h-4" style={{ color: BRAND }} />

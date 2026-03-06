@@ -16,7 +16,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   ClipboardList, Star, FileText, BarChart2, Plus, CheckCircle, AlertTriangle,
   XCircle, Clock, ChevronDown, ChevronUp, Shield, Award, BookOpen, Loader2, Download,
-  TrendingUp, TrendingDown, Minus, Info, ImageIcon, GitCompare, CheckSquare, Stethoscope
+  TrendingUp, TrendingDown, Minus, Info, ImageIcon, GitCompare, CheckSquare, Stethoscope,
+  BarChart, Users, Activity
 } from "lucide-react";
 import PhysicianPeerReview from "./PhysicianPeerReview";
 import ImageQualityReviewTab from "./ImageQualityReview";
@@ -96,7 +97,6 @@ function AucBadge({ rating }: { rating?: string | null }) {
 // ─── Quality Review Tab ───────────────────────────────────────────────────────
 function QualityReviewTab() {
   
-  const [expanded, setExpanded] = useState(false);
   const [form, setForm] = useState({
     category: "" as string,
     title: "",
@@ -114,7 +114,6 @@ function QualityReviewTab() {
       toast.success("QA log entry saved.");
       utils.accreditation.getQaLogs.invalidate();
       setForm({ category: "", title: "", description: "", finding: "", actionRequired: "", actionTaken: "", dueDate: "" });
-      setExpanded(false);
     },
     onError: (e) => toast.error(e.message),
   });
@@ -156,12 +155,8 @@ function QualityReviewTab() {
               <ClipboardList className="w-4 h-4" style={{ color: BRAND }} />
               New Quality Review Entry
             </CardTitle>
-            <button onClick={() => setExpanded(!expanded)} className="text-gray-400 hover:text-gray-600">
-              {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </button>
           </div>
         </CardHeader>
-        {expanded && (
           <CardContent className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
@@ -217,7 +212,6 @@ function QualityReviewTab() {
               Save Entry
             </Button>
           </CardContent>
-        )}
       </Card>
 
       {/* Log List */}
@@ -565,7 +559,6 @@ function exportPeerReviewPDF(reviews: PeerReviewRow[]) {
 // ─── Peer Review Tab ──────────────────────────────────────────────────────────
 function PeerReviewTab() {
   
-  const [expanded, setExpanded] = useState(false);
   const [form, setForm] = useState({
     patientId: "",
     studyDate: "",
@@ -589,7 +582,6 @@ function PeerReviewTab() {
       toast.success("Peer review saved.");
       utils.accreditation.getPeerReviews.invalidate();
       setForm({ patientId: "", studyDate: "", modality: "", sonographerInitials: "", imageQuality: "", imageQualityNotes: "", reportAccuracy: "", reportNotes: "", technicalAdherence: "", technicalNotes: "", overallScore: "", feedback: "", status: "draft" });
-      setExpanded(false);
     },
     onError: (e) => toast.error(e.message),
   });
@@ -625,12 +617,8 @@ function PeerReviewTab() {
               <Star className="w-4 h-4" style={{ color: BRAND }} />
               New Peer Review
             </CardTitle>
-            <button onClick={() => setExpanded(!expanded)} className="text-gray-400 hover:text-gray-600">
-              {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </button>
           </div>
         </CardHeader>
-        {expanded && (
           <CardContent className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
@@ -734,7 +722,6 @@ function PeerReviewTab() {
               Save Review
             </Button>
           </CardContent>
-        )}
       </Card>
 
       {isLoading ? (
@@ -805,7 +792,6 @@ function PeerReviewTab() {
 // ─── Policy Builder Tab ───────────────────────────────────────────────────────
 function PolicyBuilderTab() {
   
-  const [expanded, setExpanded] = useState(false);
   const [form, setForm] = useState({
     title: "",
     category: "" as string,
@@ -824,7 +810,6 @@ function PolicyBuilderTab() {
       toast.success("Policy saved.");
       utils.accreditation.getPolicies.invalidate();
       setForm({ title: "", category: "", modality: "All", content: "", version: "1.0", effectiveDate: "", reviewDate: "", status: "draft" });
-      setExpanded(false);
     },
     onError: (e) => toast.error(e.message),
   });
@@ -876,12 +861,8 @@ function PolicyBuilderTab() {
               <FileText className="w-4 h-4" style={{ color: BRAND }} />
               New Policy
             </CardTitle>
-            <button onClick={() => setExpanded(!expanded)} className="text-gray-400 hover:text-gray-600">
-              {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </button>
           </div>
         </CardHeader>
-        {expanded && (
           <CardContent className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
@@ -942,7 +923,6 @@ function PolicyBuilderTab() {
               Save Policy
             </Button>
           </CardContent>
-        )}
       </Card>
 
       {isLoading ? (
@@ -979,7 +959,6 @@ function PolicyBuilderTab() {
 // ─── Appropriate Use Monitor Tab ──────────────────────────────────────────────
 function AppropriateUseTab() {
   
-  const [expanded, setExpanded] = useState(false);
   const [form, setForm] = useState({
     studyDate: "",
     modality: "" as string,
@@ -998,7 +977,6 @@ function AppropriateUseTab() {
       toast.success("AUC entry saved.");
       utils.accreditation.getAucEntries.invalidate();
       setForm({ studyDate: "", modality: "", indication: "", appropriatenessRating: "", clinicalScenario: "", outcome: "", notes: "", flagged: false });
-      setExpanded(false);
     },
     onError: (e) => toast.error(e.message),
   });
@@ -1054,12 +1032,8 @@ function AppropriateUseTab() {
               <BarChart2 className="w-4 h-4" style={{ color: BRAND }} />
               New AUC Entry
             </CardTitle>
-            <button onClick={() => setExpanded(!expanded)} className="text-gray-400 hover:text-gray-600">
-              {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </button>
           </div>
         </CardHeader>
-        {expanded && (
           <CardContent className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
@@ -1113,7 +1087,6 @@ function AppropriateUseTab() {
               Save Entry
             </Button>
           </CardContent>
-        )}
       </Card>
 
       {isLoading ? (
@@ -1147,10 +1120,196 @@ function AppropriateUseTab() {
   );
 }
 
+// ─── DIY Reports & Analytics Tab ─────────────────────────────────────────────
+function DIYReportsTab() {
+  const { data: iqrSnapshot = [] } = trpc.lab.getIqrStaffSnapshot.useQuery();
+  const { data: monthly = [] } = trpc.lab.getIqrMonthlySummary.useQuery();
+  const { data: physicianMonthly = [] } = trpc.physicianPeerReview.getMonthlySummary.useQuery();
+  const { data: cmeSummary = [] } = trpc.cme.getStaffSummary.useQuery();
+  const { data: members = [] } = trpc.lab.getMembers.useQuery();
+
+  // Date range filter state
+  const now = new Date();
+  const [startDate, setStartDate] = useState(() => {
+    const d = new Date(now); d.setMonth(d.getMonth() - 6);
+    return d.toISOString().slice(0, 7); // YYYY-MM
+  });
+  const [endDate, setEndDate] = useState(() => now.toISOString().slice(0, 7));
+
+  const filteredMonthly = monthly.filter(m => {
+    const mo = (m.month ?? "");
+    return mo >= startDate && mo <= endDate;
+  });
+
+  const filteredPhysician = physicianMonthly.filter((m: any) => {
+    const mo = (m.month ?? "");
+    return mo >= startDate && mo <= endDate;
+  });
+
+  const TRIENNIUM_CREDITS = 30;
+
+  const cmeByMember = new Map(cmeSummary.map(c => [c.labMemberId, Number(c.totalCredits ?? 0)]));
+
+  return (
+    <div className="space-y-6">
+      {/* Date Range Filter */}
+      <div className="flex flex-wrap items-center gap-3 p-3 rounded-lg border border-[#189aa1]/20 bg-[#f0fbfc]">
+        <span className="text-xs font-semibold text-gray-600">Date Range:</span>
+        <div className="flex items-center gap-2">
+          <input type="month" className="h-8 px-2 text-xs border border-gray-200 rounded-md" value={startDate} onChange={e => setStartDate(e.target.value)} />
+          <span className="text-xs text-gray-400">to</span>
+          <input type="month" className="h-8 px-2 text-xs border border-gray-200 rounded-md" value={endDate} onChange={e => setEndDate(e.target.value)} />
+        </div>
+        <div className="flex gap-2 ml-auto">
+          {["3M", "6M", "12M", "YTD"].map(preset => (
+            <button key={preset} onClick={() => {
+              const d = new Date(now);
+              if (preset === "3M") d.setMonth(d.getMonth() - 3);
+              else if (preset === "6M") d.setMonth(d.getMonth() - 6);
+              else if (preset === "12M") d.setMonth(d.getMonth() - 12);
+              else if (preset === "YTD") d.setMonth(0);
+              setStartDate(d.toISOString().slice(0, 7));
+              setEndDate(now.toISOString().slice(0, 7));
+            }} className="px-2.5 py-1 text-xs rounded-md border border-[#189aa1]/30 text-[#189aa1] hover:bg-[#189aa1] hover:text-white transition-colors">
+              {preset}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* IQR Summary Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: "Total IQR Reviews", value: filteredMonthly.reduce((s, m) => s + Number(m.reviewCount ?? 0), 0), icon: Activity, color: BRAND },
+          { label: "Avg Quality Score", value: filteredMonthly.length > 0 ? Math.round(filteredMonthly.reduce((s, m) => s + Number(m.avgScore ?? 0), 0) / filteredMonthly.length) + "/100" : "—", icon: BarChart, color: "#16a34a" },
+          { label: "Peer Reviews", value: filteredPhysician.reduce((s: number, m: any) => s + Number(m.reviewCount ?? 0), 0), icon: Users, color: "#7c3aed" },
+          { label: "Staff Tracked", value: members.length, icon: Users, color: "#d97706" },
+        ].map(({ label, value, icon: Icon, color }) => (
+          <Card key={label} className="border border-gray-100">
+            <CardContent className="p-3">
+              <div className="flex items-center gap-2 mb-1">
+                <Icon className="w-4 h-4" style={{ color }} />
+                <span className="text-xs text-gray-500">{label}</span>
+              </div>
+              <div className="text-xl font-black" style={{ color }}>{value}</div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* IQR Monthly Trend */}
+      {filteredMonthly.length > 0 && (
+        <Card className="border border-gray-100">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
+              <Activity className="w-4 h-4" style={{ color: BRAND }} />
+              IQR Monthly Quality Score Trend
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-gray-100">
+                    <th className="text-left py-1.5 text-gray-500 font-semibold">Month</th>
+                    <th className="text-right py-1.5 text-gray-500 font-semibold">Reviews</th>
+                    <th className="text-right py-1.5 text-gray-500 font-semibold">Avg QS</th>
+                    <th className="text-right py-1.5 text-gray-500 font-semibold">Excellent</th>
+                    <th className="text-right py-1.5 text-gray-500 font-semibold">Good</th>
+                    <th className="text-right py-1.5 text-gray-500 font-semibold">Adequate</th>
+                    <th className="text-right py-1.5 text-gray-500 font-semibold">Needs Impr.</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredMonthly.map((m, i) => (
+                    <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
+                      <td className="py-1.5 font-medium text-gray-700">{m.month}</td>
+                      <td className="py-1.5 text-right text-gray-600">{m.reviewCount}</td>
+                      <td className="py-1.5 text-right font-bold" style={{ color: BRAND }}>{m.avgScore != null ? Math.round(Number(m.avgScore)) : "—"}</td>
+                      <td className="py-1.5 text-right text-green-600">{m.excellentCount ?? 0}</td>
+                      <td className="py-1.5 text-right text-blue-600">{m.goodCount ?? 0}</td>
+                      <td className="py-1.5 text-right text-amber-600">{m.adequateCount ?? 0}</td>
+                      <td className="py-1.5 text-right text-red-600">{m.needsImprovementCount ?? 0}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* CME Tracker Summary */}
+      <Card className="border border-gray-100">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
+            <BookOpen className="w-4 h-4" style={{ color: BRAND }} />
+            CME Credit Progress (Triennium — 30 Credits Required)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {members.length === 0 ? (
+            <div className="text-xs text-gray-400 py-4 text-center">No staff members found. Add staff in Lab Admin to track CME credits.</div>
+          ) : (
+            <div className="space-y-2">
+              {members.map(m => {
+                const credits = cmeByMember.get(m.id) ?? 0;
+                const pct = Math.min(100, Math.round((credits / TRIENNIUM_CREDITS) * 100));
+                const color = pct >= 100 ? "#16a34a" : pct >= 60 ? "#d97706" : "#dc2626";
+                return (
+                  <div key={m.id} className="flex items-center gap-3">
+                    <div className="w-28 text-xs font-medium text-gray-700 truncate">{m.displayName ?? m.credentials ?? `Member #${m.id}`}</div>
+                    <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
+                    </div>
+                    <div className="text-xs font-bold w-16 text-right" style={{ color }}>{credits}/{TRIENNIUM_CREDITS} hrs</div>
+                    {pct >= 100 && <CheckCircle className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Staff IQR Leaderboard */}
+      {iqrSnapshot.length > 0 && (
+        <Card className="border border-gray-100">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
+              <BarChart className="w-4 h-4" style={{ color: BRAND }} />
+              Staff IQR Quality Score Leaderboard
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {[...iqrSnapshot].sort((a, b) => Number(b.avgScore ?? 0) - Number(a.avgScore ?? 0)).map((s, i) => {
+                const qs = Math.round(Number(s.avgScore ?? 0));
+                const color = qs >= 85 ? "#16a34a" : qs >= 70 ? "#d97706" : "#dc2626";
+                return (
+                  <div key={i} className="flex items-center gap-3">
+                    <span className="text-xs text-gray-400 w-4">{i + 1}.</span>
+                    <div className="w-28 text-xs font-medium text-gray-700 truncate">{s.revieweeName ?? `Member #${s.revieweeLabMemberId}`}</div>
+                    <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full" style={{ width: `${qs}%`, background: color }} />
+                    </div>
+                    <span className="text-xs font-bold w-12 text-right" style={{ color }}>{qs}/100</span>
+                    <span className="text-xs text-gray-400 w-16 text-right">{s.reviewCount} reviews</span>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function AccreditationTool() {
   const { isAuthenticated, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState<"iqr" | "echo-correlation" | "peer" | "policy" | "auc" | "readiness" | "case-mix">("iqr");
+  const [activeTab, setActiveTab] = useState<"iqr" | "peer" | "echo-correlation" | "auc" | "case-mix" | "policy" | "readiness" | "reports">("iqr");
 
   if (loading) {
     return (
@@ -1216,19 +1375,20 @@ export default function AccreditationTool() {
         <div className="container py-2">
           <div className="flex flex-wrap gap-1">
             <TabBtn active={activeTab === "iqr"} onClick={() => setActiveTab("iqr")} icon={ImageIcon} label="Image Quality Review" />
-            <TabBtn active={activeTab === "echo-correlation"} onClick={() => setActiveTab("echo-correlation")} icon={GitCompare} label="Echo Correlation" />
-            <TabBtn active={activeTab === "peer"} onClick={() => setActiveTab("peer")} icon={Star} label="Peer Review" />
-            <TabBtn active={activeTab === "policy"} onClick={() => setActiveTab("policy")} icon={FileText} label="Policy Builder" />
+            <TabBtn active={activeTab === "peer"} onClick={() => setActiveTab("peer")} icon={Star} label="Physician Peer Review" />
+            <TabBtn active={activeTab === "echo-correlation"} onClick={() => setActiveTab("echo-correlation")} icon={GitCompare} label="Echo Correlations" />
             <TabBtn active={activeTab === "auc"} onClick={() => setActiveTab("auc")} icon={BarChart2} label="Appropriate Use" />
-            <TabBtn active={activeTab === "readiness"} onClick={() => setActiveTab("readiness")} icon={CheckSquare} label="Readiness" />
             <TabBtn active={activeTab === "case-mix"} onClick={() => setActiveTab("case-mix")} icon={Stethoscope} label="Case Mix" />
+            <TabBtn active={activeTab === "policy"} onClick={() => setActiveTab("policy")} icon={FileText} label="Policy Builder" />
+            <TabBtn active={activeTab === "reports"} onClick={() => setActiveTab("reports")} icon={TrendingUp} label="Reports & Analytics" />
+            <TabBtn active={activeTab === "readiness"} onClick={() => setActiveTab("readiness")} icon={CheckSquare} label="Readiness" />
           </div>
         </div>
       </div>
 
       {/* Content */}
       <div className="container py-6">
-        <div className={(activeTab === "iqr" || activeTab === "echo-correlation" || activeTab === "case-mix" || activeTab === "readiness") ? "" : "max-w-3xl"}>
+        <div className={(activeTab === "iqr" || activeTab === "echo-correlation" || activeTab === "case-mix" || activeTab === "readiness" || activeTab === "reports") ? "" : "max-w-3xl"}>
           {/* Disclaimer */}
           <div className="mb-4 p-3 rounded-lg border border-amber-200 bg-amber-50 flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
@@ -1248,6 +1408,7 @@ export default function AccreditationTool() {
           {activeTab === "auc" && <AppropriateUseTab />}
           {activeTab === "readiness" && <AccreditationReadiness />}
           {activeTab === "case-mix" && <CaseMixSubmission />}
+          {activeTab === "reports" && <DIYReportsTab />}
         </div>
       </div>
 

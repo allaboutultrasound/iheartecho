@@ -16,7 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Loader2, Plus, ChevronDown, ChevronUp, Download, Trash2,
   Stethoscope, User, FileText, ChevronRight, ChevronLeft,
-  CheckCircle2, AlertCircle
+  CheckCircle2, AlertCircle, Send
 } from "lucide-react";
 import jsPDF from "jspdf";
 
@@ -376,6 +376,58 @@ function FindingRow({
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
+// ─── Send Feedback Button ─────────────────────────────────────────────────────
+function SendFeedbackButton({
+  revieweeName,
+  reviewerName,
+  examType,
+  concordanceScore,
+  discordantFields,
+}: {
+  revieweeName: string;
+  reviewerName: string;
+  examType: string;
+  concordanceScore: number | null;
+  discordantFields: string[];
+}) {
+  const notify = trpc.system.notifyOwner.useMutation({
+    onSuccess: () => toast.success("Feedback notification sent to lab director."),
+    onError: (e) => toast.error(e.message),
+  });
+
+  const handleSend = () => {
+    const concordanceText = concordanceScore != null
+      ? `Concordance Score: ${concordanceScore}%`
+      : "Concordance Score: Not calculated";
+    const discordantText = discordantFields.length > 0
+      ? `Discordant Fields: ${discordantFields.join(", ")}`
+      : "No discordant fields identified.";
+    notify.mutate({
+      title: "Physician Peer Review — Feedback Notification",
+      content: [
+        `Exam Type: ${examType || "Not specified"}`,
+        `Original Interpreting Physician: ${revieweeName || "Not specified"}`,
+        `Over-Reading Reviewer: ${reviewerName || "Not specified"}`,
+        concordanceText,
+        discordantText,
+      ].join("\n"),
+    });
+  };
+
+  return (
+    <Button
+      size="sm"
+      variant="outline"
+      onClick={handleSend}
+      disabled={notify.isPending}
+      className="w-full border-[#189aa1] text-[#189aa1] hover:bg-[#f0fbfc] gap-1.5"
+    >
+      {notify.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+      Send Feedback to Lab Director
+    </Button>
+  );
+}
+
 export default function PhysicianPeerReview() {
   const utils = trpc.useUtils();
 
@@ -830,6 +882,13 @@ export default function PhysicianPeerReview() {
                   {createReview.isPending ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Plus className="w-3 h-3 mr-1" />}
                   Save Physician Peer Review
                 </Button>
+                <SendFeedbackButton
+                  revieweeName={revieweeName || revieweeFreeText}
+                  reviewerName={reviewerName || reviewerFreeText}
+                  examType={header.examType}
+                  concordanceScore={concordanceScore}
+                  discordantFields={discordantFields}
+                />
               </div>
             )}
 

@@ -1422,3 +1422,54 @@ export async function updateCaseMixSubmissionStatus(id: number, labId: number, s
     .set({ status })
     .where(and(eq(caseMixSubmissions.id, id), eq(caseMixSubmissions.labId, labId)));
 }
+
+// ─── CME Helpers ──────────────────────────────────────────────────────────────
+/** Get CME credit totals per staff member for a lab */
+export async function getCmeStaffSummary(labId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const rows = await db.select({
+    labMemberId: cmeEntries.labMemberId,
+    totalCredits: sql<number>`COALESCE(SUM(${cmeEntries.creditHours}), 0)`,
+    entryCount: count(cmeEntries.id),
+  })
+    .from(cmeEntries)
+    .where(eq(cmeEntries.labId, labId))
+    .groupBy(cmeEntries.labMemberId);
+  return rows;
+}
+
+/** Get all CME entries for a specific lab member */
+export async function getCmeEntriesForMember(labId: number, labMemberId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select()
+    .from(cmeEntries)
+    .where(and(eq(cmeEntries.labId, labId), eq(cmeEntries.labMemberId, labMemberId)))
+    .orderBy(desc(cmeEntries.activityDate));
+}
+
+/** Add a CME entry for a staff member */
+export async function addCmeEntry(data: {
+  labId: number;
+  labMemberId: number;
+  title: string;
+  provider?: string;
+  category: "echo_specific" | "cardiovascular" | "general_medical" | "technical" | "safety" | "leadership" | "other";
+  activityDate: string;
+  creditHours: number;
+  certificationNumber?: string;
+  notes?: string;
+}) {
+  const db = await getDb();
+  if (!db) return null;
+  await db.insert(cmeEntries).values(data);
+}
+
+/** Delete a CME entry */
+export async function deleteCmeEntry(id: number, labId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(cmeEntries)
+    .where(and(eq(cmeEntries.id, id), eq(cmeEntries.labId, labId)));
+}

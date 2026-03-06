@@ -97,6 +97,10 @@ import {
   getCaseMixSummary,
   deleteCaseMixSubmission,
   updateCaseMixSubmissionStatus,
+  getCmeStaffSummary,
+  getCmeEntriesForMember,
+  addCmeEntry,
+  deleteCmeEntry,
 } from "./db";
 
 export const appRouter = router({
@@ -1333,6 +1337,51 @@ export const appRouter = router({
         physicians: members.filter(m => m.role === "medical_director" || m.role === "medical_staff" || m.role === "admin"),
       };
     }),
+  }),
+
+  // ─── CME Router ───────────────────────────────────────────────────────────
+  cme: router({
+    /** Get CME credit summary for all staff in the lab */
+    getStaffSummary: protectedProcedure.query(async ({ ctx }) => {
+      const lab = await getLabByMemberUserId(ctx.user.id);
+      if (!lab) return [];
+      return getCmeStaffSummary(lab.id);
+    }),
+    /** Get all CME entries for a specific lab member */
+    getEntriesForMember: protectedProcedure
+      .input(z.object({ labMemberId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const lab = await getLabByMemberUserId(ctx.user.id);
+        if (!lab) return [];
+        return getCmeEntriesForMember(lab.id, input.labMemberId);
+      }),
+    /** Add a CME entry */
+    addEntry: protectedProcedure
+      .input(z.object({
+        labMemberId: z.number(),
+        title: z.string().min(1),
+        provider: z.string().optional(),
+        category: z.enum(["echo_specific", "cardiovascular", "general_medical", "technical", "safety", "leadership", "other"]),
+        activityDate: z.string(),
+        creditHours: z.number().min(0).max(100),
+        certificationNumber: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const lab = await getLabByMemberUserId(ctx.user.id);
+        if (!lab) throw new TRPCError({ code: "NOT_FOUND", message: "No lab found" });
+        await addCmeEntry({ ...input, labId: lab.id });
+        return { success: true };
+      }),
+    /** Delete a CME entry */
+    deleteEntry: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const lab = await getLabByMemberUserId(ctx.user.id);
+        if (!lab) throw new TRPCError({ code: "NOT_FOUND", message: "No lab found" });
+        await deleteCmeEntry(input.id, lab.id);
+        return { success: true };
+      }),
   }),
 });
 export type AppRouter = typeof appRouter;
