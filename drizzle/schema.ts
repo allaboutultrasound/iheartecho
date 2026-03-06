@@ -756,3 +756,21 @@ export const caseMixSubmissions = mysqlTable("caseMixSubmissions", {
 });
 export type CaseMixSubmission = typeof caseMixSubmissions.$inferSelect;
 export type InsertCaseMixSubmission = typeof caseMixSubmissions.$inferInsert;
+
+// ─── Accreditation Readiness (Navigator / Free-Tier) ─────────────────────────
+// Separate from the DIY Tool readiness — stored independently so paid features
+// can be added to the DIY version without affecting the free Navigator version.
+export const accreditationReadinessNavigator = mysqlTable("accreditationReadinessNavigator", {
+  id: int("id").primaryKey().autoincrement(),
+  userId: int("userId").notNull(),
+  // JSON: { [itemId: string]: boolean }
+  checklistProgress: text("checklistProgress").notNull(),
+  // JSON: { [itemId: string]: string }
+  itemNotes: text("itemNotes").notNull(),
+  // Cached overall completion percentage (0-100)
+  completionPct: int("completionPct").notNull().default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type AccreditationReadinessNavigator = typeof accreditationReadinessNavigator.$inferSelect;
+export type InsertAccreditationReadinessNavigator = typeof accreditationReadinessNavigator.$inferInsert;

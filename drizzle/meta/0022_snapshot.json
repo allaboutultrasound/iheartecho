@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "f39e1689-deae-45f9-a1da-2e655ec47758",
-  "prevId": "b517b716-2b34-4769-b110-43d6e697db2b",
+  "id": "65c9d6cb-00aa-43a7-82b0-82c9cd34c488",
+  "prevId": "f39e1689-deae-45f9-a1da-2e655ec47758",
   "tables": {
     "accreditationReadiness": {
       "name": "accreditationReadiness",
@@ -73,6 +73,76 @@
       "compositePrimaryKeys": {
         "accreditationReadiness_id": {
           "name": "accreditationReadiness_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "accreditationReadinessNavigator": {
+      "name": "accreditationReadinessNavigator",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "userId": {
+          "name": "userId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "checklistProgress": {
+          "name": "checklistProgress",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "itemNotes": {
+          "name": "itemNotes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "completionPct": {
+          "name": "completionPct",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "accreditationReadinessNavigator_id": {
+          "name": "accreditationReadinessNavigator_id",
           "columns": [
             "id"
           ]

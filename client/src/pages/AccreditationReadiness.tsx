@@ -2,15 +2,21 @@
  * Accreditation Readiness Tool
  * Full IAC Echocardiography Accreditation Checklist (2023) with per-section progress markers.
  * Data is persisted per lab via tRPC.
+ *
+ * NOTE: Case Mix Requirements items are clickable/trackable but do NOT count toward
+ * overall readiness progress — they are tracked separately as "acknowledged" items.
  */
 import { useState, useEffect, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle2, Circle, ChevronDown, ChevronRight, Save, ClipboardList, AlertCircle, Info } from "lucide-react";
+import {
+  CheckCircle2, Circle, ChevronDown, ChevronRight,
+  Save, AlertCircle, Info, ClipboardCheck,
+} from "lucide-react";
 import { toast } from "sonner";
 
 // ─── IAC Checklist Data ───────────────────────────────────────────────────────
@@ -18,8 +24,10 @@ import { toast } from "sonner";
 interface ChecklistItem {
   id: string;
   text: string;
-  note?: string; // guidance note
-  required?: boolean; // IAC required vs recommended
+  note?: string;
+  required?: boolean;
+  /** If true: clickable/trackable but excluded from readiness progress calculations */
+  caseMixItem?: boolean;
 }
 
 interface ChecklistSection {
@@ -35,6 +43,8 @@ interface ChecklistStep {
   title: string;
   description: string;
   sections: ChecklistSection[];
+  /** If true: this entire step is excluded from readiness % (Case Mix category) */
+  caseMixStep?: boolean;
 }
 
 const IAC_CHECKLIST: ChecklistStep[] = [
@@ -199,7 +209,7 @@ const IAC_CHECKLIST: ChecklistStep[] = [
     id: "step5",
     step: 4,
     title: "Quality Assurance Program",
-    description: "Active QA program with documented results is required. Case studies must be submitted as part of the application.",
+    description: "Active QA program with documented results is required for all accreditation programs.",
     sections: [
       {
         id: "s5-iqr",
@@ -234,23 +244,6 @@ const IAC_CHECKLIST: ChecklistStep[] = [
         ],
       },
       {
-        id: "s5-casemix",
-        title: "Case Mix Requirements",
-        subtitle: "Minimum case volumes per modality must be met before application",
-        items: [
-          { id: "s5-cm-1", text: "ATTE: Minimum required cases documented (per IAC volume requirements)", required: true, note: "IAC requires a representative case mix including LV dysfunction, valvular disease, and other pathology" },
-          { id: "s5-cm-2", text: "ATEE: Minimum required TEE cases documented (if applying)", required: false },
-          { id: "s5-cm-3", text: "STRESS: Minimum required stress echo cases documented (if applying)", required: false },
-          { id: "s5-cm-4", text: "ACTE: Minimum required adult congenital cases documented (if applying)", required: false },
-          { id: "s5-cm-5", text: "PTTE: Minimum required pediatric TTE cases documented (if applying)", required: false },
-          { id: "s5-cm-6", text: "PTEE: Minimum required pediatric TEE cases documented (if applying)", required: false },
-          { id: "s5-cm-7", text: "FETAL: Minimum required fetal echo cases documented (if applying)", required: false },
-          { id: "s5-cm-8", text: "Case mix reflects variety of pathology and clinical indications", required: true },
-          { id: "s5-cm-9", text: "Technical Director cases included in case mix (required by IAC)", required: true },
-          { id: "s5-cm-10", text: "Medical Director cases included in case mix (required by IAC)", required: true },
-        ],
-      },
-      {
         id: "s5-reporting",
         title: "Reporting & Turnaround Times",
         items: [
@@ -262,13 +255,53 @@ const IAC_CHECKLIST: ChecklistStep[] = [
       },
     ],
   },
+  // ─── Case Mix Requirements — standalone category, items do NOT count toward readiness % ───
+  {
+    id: "step6",
+    step: 5,
+    title: "Case Mix Requirements",
+    description: "Minimum case volumes per modality must be documented before application. These items are tracked separately and do not affect your overall readiness score.",
+    caseMixStep: true,
+    sections: [
+      {
+        id: "s6-casemix",
+        title: "Case Volume Documentation",
+        subtitle: "Check off each modality once minimum required cases are documented. These are tracked for awareness only.",
+        items: [
+          { id: "s6-cm-1", text: "ATTE: Minimum required cases documented (per IAC volume requirements)", caseMixItem: true, note: "IAC requires a representative case mix including LV RWMA and Aortic Stenosis" },
+          { id: "s6-cm-2", text: "ATEE: Minimum required TEE cases documented (if applying)", caseMixItem: true },
+          { id: "s6-cm-3", text: "STRESS: Minimum required stress echo cases documented (if applying)", caseMixItem: true },
+          { id: "s6-cm-4", text: "ACTE: Minimum required adult congenital cases documented (if applying)", caseMixItem: true },
+          { id: "s6-cm-5", text: "PTTE: Minimum required pediatric TTE cases documented (if applying)", caseMixItem: true },
+          { id: "s6-cm-6", text: "PTEE: Minimum required pediatric TEE cases documented (if applying)", caseMixItem: true },
+          { id: "s6-cm-7", text: "FETAL: Minimum required fetal echo cases documented (if applying)", caseMixItem: true },
+          { id: "s6-cm-8", text: "Case mix reflects variety of pathology and clinical indications", caseMixItem: true },
+          { id: "s6-cm-9", text: "Technical Director cases included in case mix (required by IAC)", caseMixItem: true },
+          { id: "s6-cm-10", text: "Medical Director cases included in case mix (required by IAC)", caseMixItem: true },
+        ],
+      },
+    ],
+  },
 ];
+
+// ─── Shared checklist data export for free-tier Navigator use ─────────────────
+export { IAC_CHECKLIST };
+export type { ChecklistItem, ChecklistSection, ChecklistStep };
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const BRAND = "#189aa1";
 
-export default function AccreditationReadiness() {
+/**
+ * Props for embedding in other contexts (e.g. EchoAccreditation Navigator).
+ * When `trpcProcedure` is provided, uses that instead of the default DIY tool procedure.
+ */
+interface AccreditationReadinessProps {
+  /** tRPC procedure namespace to use. Defaults to "accreditationReadiness" (DIY tool). */
+  trpcNamespace?: "accreditationReadiness" | "accreditationReadinessNavigator";
+}
+
+export default function AccreditationReadiness({ trpcNamespace = "accreditationReadiness" }: AccreditationReadinessProps = {}) {
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set(["step2"]));
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [checklistProgress, setChecklistProgress] = useState<Record<string, boolean>>({});
@@ -276,10 +309,18 @@ export default function AccreditationReadiness() {
   const [editingNote, setEditingNote] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
 
-  // Load saved progress
-  const { data: savedData, isLoading } = trpc.accreditationReadiness.get.useQuery(undefined, {
+  // ── Data loading — use the correct tRPC namespace ──
+  const diyQuery = trpc.accreditationReadiness.get.useQuery(undefined, {
+    enabled: trpcNamespace === "accreditationReadiness",
     retry: false,
   });
+  const navQuery = trpc.accreditationReadinessNavigator.get.useQuery(undefined, {
+    enabled: trpcNamespace === "accreditationReadinessNavigator",
+    retry: false,
+  });
+
+  const savedData = trpcNamespace === "accreditationReadiness" ? diyQuery.data : navQuery.data;
+  const isLoading = trpcNamespace === "accreditationReadiness" ? diyQuery.isLoading : navQuery.isLoading;
 
   useEffect(() => {
     if (savedData) {
@@ -294,24 +335,29 @@ export default function AccreditationReadiness() {
     }
   }, [savedData]);
 
-  const saveMutation = trpc.accreditationReadiness.save.useMutation({
-    onSuccess: () => {
-      setIsDirty(false);
-      toast.success("Progress saved — your accreditation readiness checklist has been updated.");
-    },
-    onError: (err) => {
-      toast.error(`Save failed: ${err.message}`);
-    },
+  // ── Save mutations — one per namespace ──
+  const diySave = trpc.accreditationReadiness.save.useMutation({
+    onSuccess: () => { setIsDirty(false); toast.success("Progress saved."); },
+    onError: (err) => toast.error(`Save failed: ${err.message}`),
   });
+  const navSave = trpc.accreditationReadinessNavigator.save.useMutation({
+    onSuccess: () => { setIsDirty(false); toast.success("Progress saved."); },
+    onError: (err) => toast.error(`Save failed: ${err.message}`),
+  });
+  const saveMutation = trpcNamespace === "accreditationReadiness" ? diySave : navSave;
 
-  // Calculate overall completion
-  const allItems = IAC_CHECKLIST.flatMap(s => s.sections.flatMap(sec => sec.items));
-  const requiredItems = allItems.filter(i => i.required !== false);
-  const totalItems = allItems.length;
-  const checkedTotal = allItems.filter(i => checklistProgress[i.id]).length;
+  // ── Progress calculations — exclude caseMixStep/caseMixItem from readiness % ──
+  const readinessSteps = IAC_CHECKLIST.filter(s => !s.caseMixStep);
+  const allReadinessItems = readinessSteps.flatMap(s => s.sections.flatMap(sec => sec.items));
+  const requiredItems = allReadinessItems.filter(i => i.required !== false);
+  const checkedTotal = allReadinessItems.filter(i => checklistProgress[i.id]).length;
   const checkedRequired = requiredItems.filter(i => checklistProgress[i.id]).length;
-  const overallPct = totalItems > 0 ? Math.round((checkedTotal / totalItems) * 100) : 0;
+  const overallPct = allReadinessItems.length > 0 ? Math.round((checkedTotal / allReadinessItems.length) * 100) : 0;
   const requiredPct = requiredItems.length > 0 ? Math.round((checkedRequired / requiredItems.length) * 100) : 0;
+
+  // Case mix acknowledged count (separate from readiness %)
+  const caseMixItems = IAC_CHECKLIST.filter(s => s.caseMixStep).flatMap(s => s.sections.flatMap(sec => sec.items));
+  const caseMixAcknowledged = caseMixItems.filter(i => checklistProgress[i.id]).length;
 
   const handleCheck = useCallback((itemId: string, checked: boolean) => {
     setChecklistProgress(prev => ({ ...prev, [itemId]: checked }));
@@ -339,6 +385,12 @@ export default function AccreditationReadiness() {
   };
 
   const getStepProgress = (step: ChecklistStep) => {
+    if (step.caseMixStep) {
+      // For case mix step, show acknowledged count only
+      const items = step.sections.flatMap(s => s.items);
+      const checked = items.filter(i => checklistProgress[i.id]).length;
+      return { checked, total: items.length, pct: items.length > 0 ? Math.round((checked / items.length) * 100) : 0 };
+    }
     const items = step.sections.flatMap(s => s.items);
     const checked = items.filter(i => checklistProgress[i.id]).length;
     return { checked, total: items.length, pct: items.length > 0 ? Math.round((checked / items.length) * 100) : 0 };
@@ -399,7 +451,7 @@ export default function AccreditationReadiness() {
                 <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${status.color}`}>{status.label}</span>
               </div>
               <div className="text-3xl font-bold" style={{ color: BRAND }}>{overallPct}%</div>
-              <div className="text-xs text-gray-500">Overall completion</div>
+              <div className="text-xs text-gray-500">Overall readiness</div>
             </div>
             <div>
               <div className="text-sm font-semibold text-gray-700 mb-2">Required Items</div>
@@ -408,10 +460,12 @@ export default function AccreditationReadiness() {
               <div className="text-xs text-gray-500 mt-1">{requiredPct}% of required items complete</div>
             </div>
             <div>
-              <div className="text-sm font-semibold text-gray-700 mb-2">All Items</div>
-              <div className="text-2xl font-bold text-gray-800">{checkedTotal}<span className="text-base font-normal text-gray-400">/{totalItems}</span></div>
-              <Progress value={overallPct} className="mt-2 h-2" />
-              <div className="text-xs text-gray-500 mt-1">{totalItems - checkedTotal} items remaining</div>
+              <div className="text-sm font-semibold text-gray-700 mb-2">Case Mix Acknowledged</div>
+              <div className="text-2xl font-bold text-gray-800">{caseMixAcknowledged}<span className="text-base font-normal text-gray-400">/{caseMixItems.length}</span></div>
+              <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                <ClipboardCheck className="w-3 h-3" />
+                Tracked separately — not included in readiness %
+              </div>
             </div>
           </div>
         </CardContent>
@@ -422,35 +476,54 @@ export default function AccreditationReadiness() {
         {IAC_CHECKLIST.map((step) => {
           const stepProg = getStepProgress(step);
           const isExpanded = expandedSteps.has(step.id);
+          const isCaseMix = !!step.caseMixStep;
 
           return (
-            <Card key={step.id} className="border border-gray-200 overflow-hidden">
+            <Card
+              key={step.id}
+              className={`overflow-hidden ${isCaseMix ? "border border-amber-200" : "border border-gray-200"}`}
+            >
               {/* Step Header */}
-              <button
-                className="w-full text-left"
-                onClick={() => toggleStep(step.id)}
-              >
-                <div className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
+              <button className="w-full text-left" onClick={() => toggleStep(step.id)}>
+                <div className={`flex items-center justify-between p-4 transition-colors ${isCaseMix ? "hover:bg-amber-50 bg-amber-50/40" : "hover:bg-gray-50"}`}>
                   <div className="flex items-center gap-3">
                     <div
                       className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
-                      style={{ background: stepProg.pct === 100 ? "#22c55e" : BRAND }}
+                      style={{
+                        background: isCaseMix
+                          ? "#d97706"
+                          : stepProg.pct === 100 ? "#22c55e" : BRAND,
+                      }}
                     >
-                      {stepProg.pct === 100 ? <CheckCircle2 className="w-4 h-4" /> : step.step}
+                      {isCaseMix
+                        ? <ClipboardCheck className="w-4 h-4" />
+                        : stepProg.pct === 100 ? <CheckCircle2 className="w-4 h-4" /> : step.step
+                      }
                     </div>
                     <div>
-                      <div className="font-semibold text-gray-800 text-sm">{step.title}</div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-gray-800 text-sm">{step.title}</span>
+                        {isCaseMix && (
+                          <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
+                            Tracked separately
+                          </span>
+                        )}
+                      </div>
                       <div className="text-xs text-gray-500">{step.description}</div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 flex-shrink-0">
                     <div className="text-right hidden sm:block">
-                      <div className="text-sm font-semibold" style={{ color: BRAND }}>{stepProg.checked}/{stepProg.total}</div>
-                      <div className="text-xs text-gray-400">{stepProg.pct}% done</div>
+                      <div className="text-sm font-semibold" style={{ color: isCaseMix ? "#d97706" : BRAND }}>
+                        {stepProg.checked}/{stepProg.total}
+                      </div>
+                      <div className="text-xs text-gray-400">{isCaseMix ? "acknowledged" : `${stepProg.pct}% done`}</div>
                     </div>
-                    <div className="w-16 hidden sm:block">
-                      <Progress value={stepProg.pct} className="h-1.5" />
-                    </div>
+                    {!isCaseMix && (
+                      <div className="w-16 hidden sm:block">
+                        <Progress value={stepProg.pct} className="h-1.5" />
+                      </div>
+                    )}
                     {isExpanded ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />}
                   </div>
                 </div>
@@ -479,12 +552,17 @@ export default function AccreditationReadiness() {
                               <Badge
                                 variant="outline"
                                 className="text-xs"
-                                style={{ borderColor: secProg.pct === 100 ? "#22c55e" : BRAND, color: secProg.pct === 100 ? "#22c55e" : BRAND }}
+                                style={{
+                                  borderColor: isCaseMix ? "#d97706" : secProg.pct === 100 ? "#22c55e" : BRAND,
+                                  color: isCaseMix ? "#d97706" : secProg.pct === 100 ? "#22c55e" : BRAND,
+                                }}
                               >
                                 {secProg.checked}/{secProg.total}
                               </Badge>
                               {step.sections.length > 1 && (
-                                isSectionExpanded ? <ChevronDown className="w-3.5 h-3.5 text-gray-400" /> : <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
+                                isSectionExpanded
+                                  ? <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+                                  : <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
                               )}
                             </div>
                           </div>
@@ -497,24 +575,36 @@ export default function AccreditationReadiness() {
                               const isChecked = !!checklistProgress[item.id];
                               const hasNote = !!itemNotes[item.id];
                               const isEditingThis = editingNote === item.id;
+                              const isCaseMixItem = !!item.caseMixItem;
 
                               return (
-                                <div key={item.id} className={`rounded-lg p-3 transition-colors ${isChecked ? "bg-green-50" : "bg-gray-50 hover:bg-gray-100"}`}>
+                                <div
+                                  key={item.id}
+                                  className={`rounded-lg p-3 transition-colors ${
+                                    isChecked
+                                      ? isCaseMixItem ? "bg-amber-50" : "bg-green-50"
+                                      : "bg-gray-50 hover:bg-gray-100"
+                                  }`}
+                                >
                                   <div className="flex items-start gap-3">
                                     <button
                                       className="mt-0.5 flex-shrink-0"
                                       onClick={() => handleCheck(item.id, !isChecked)}
+                                      title={isCaseMixItem ? "Mark as acknowledged (does not affect readiness score)" : undefined}
                                     >
                                       {isChecked
-                                        ? <CheckCircle2 className="w-5 h-5 text-green-500" />
+                                        ? <CheckCircle2 className={`w-5 h-5 ${isCaseMixItem ? "text-amber-500" : "text-green-500"}`} />
                                         : <Circle className="w-5 h-5 text-gray-300 hover:text-gray-400" />
                                       }
                                     </button>
                                     <div className="flex-1 min-w-0">
                                       <div className={`text-sm leading-snug ${isChecked ? "text-gray-500 line-through" : "text-gray-700"}`}>
                                         {item.text}
-                                        {item.required === false && (
+                                        {item.required === false && !isCaseMixItem && (
                                           <span className="ml-2 text-xs text-gray-400 no-underline">(recommended)</span>
+                                        )}
+                                        {isCaseMixItem && (
+                                          <span className="ml-2 text-xs text-amber-600 no-underline font-medium">(tracked separately)</span>
                                         )}
                                       </div>
                                       {item.note && (

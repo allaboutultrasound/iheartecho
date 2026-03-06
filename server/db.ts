@@ -26,12 +26,15 @@ import {
   physicianPeerReviews,
   physicianNotifications,
   accreditationReadiness,
+  accreditationReadinessNavigator,
   caseMixSubmissions,
   cmeEntries,
   type CmeEntry,
   type InsertCmeEntry,
   type AccreditationReadiness,
   type InsertAccreditationReadiness,
+  type AccreditationReadinessNavigator,
+  type InsertAccreditationReadinessNavigator,
   type CaseMixSubmission,
   type InsertCaseMixSubmission,
   type ImageQualityReview,
@@ -1472,4 +1475,56 @@ export async function deleteCmeEntry(id: number, labId: number) {
   if (!db) return;
   await db.delete(cmeEntries)
     .where(and(eq(cmeEntries.id, id), eq(cmeEntries.labId, labId)));
+}
+
+// ─── Accreditation Readiness Navigator (Free-Tier) ────────────────────────────
+// Independent from the DIY Tool readiness — keyed by userId only (no labId required).
+
+/** Get or initialize readiness record for a user (Navigator / free-tier) */
+export async function getAccreditationReadinessNavigator(userId: number): Promise<AccreditationReadinessNavigator | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const existing = await db.select().from(accreditationReadinessNavigator)
+    .where(eq(accreditationReadinessNavigator.userId, userId))
+    .limit(1);
+  if (existing.length > 0) return existing[0];
+  // Auto-create a blank record
+  await db.insert(accreditationReadinessNavigator).values({
+    userId,
+    checklistProgress: "{}",
+    itemNotes: "{}",
+    completionPct: 0,
+  });
+  const created = await db.select().from(accreditationReadinessNavigator)
+    .where(eq(accreditationReadinessNavigator.userId, userId)).limit(1);
+  return created[0] ?? null;
+}
+
+/** Save checklist progress for a user (Navigator / free-tier) */
+export async function saveAccreditationReadinessNavigator(
+  userId: number,
+  checklistProgress: Record<string, boolean>,
+  itemNotes: Record<string, string>,
+  completionPct: number,
+) {
+  const db = await getDb();
+  if (!db) return;
+  const existing = await db.select({ id: accreditationReadinessNavigator.id })
+    .from(accreditationReadinessNavigator)
+    .where(eq(accreditationReadinessNavigator.userId, userId))
+    .limit(1);
+  const progressStr = JSON.stringify(checklistProgress);
+  const notesStr = JSON.stringify(itemNotes);
+  if (existing.length > 0) {
+    await db.update(accreditationReadinessNavigator)
+      .set({ checklistProgress: progressStr, itemNotes: notesStr, completionPct })
+      .where(eq(accreditationReadinessNavigator.userId, userId));
+  } else {
+    await db.insert(accreditationReadinessNavigator).values({
+      userId,
+      checklistProgress: progressStr,
+      itemNotes: notesStr,
+      completionPct,
+    });
+  }
 }

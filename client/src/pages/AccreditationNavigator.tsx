@@ -7,12 +7,14 @@
 import { useState, useMemo } from "react";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
+import { trpc } from "@/lib/trpc";
+import AccreditationReadiness from "./AccreditationReadiness";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
   Search, BookOpen, ChevronDown, ChevronUp, ExternalLink, Award, Users,
   FileText, Clock, GraduationCap, Stethoscope, Activity, Baby, Heart, Zap,
-  Info, CheckCircle2, Building2, Zap as ZapIcon, ClipboardList
+  Info, CheckCircle2, Building2, Zap as ZapIcon, ClipboardList, ShieldCheck, Lock
 } from "lucide-react";
 import { Microscope } from "lucide-react";
 
@@ -671,9 +673,14 @@ function CaseMixRequirementsView() {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function AccreditationNavigator() {
+  const [activeTab, setActiveTab] = useState<"standards" | "readiness">("standards");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeModality, setActiveModality] = useState<Modality | "All">("All");
   const [activeCategory, setActiveCategory] = useState<Category | "All">("All");
+
+  // Check if user has an active paid DIY Tool subscription
+  const { data: myLab } = trpc.lab.getMyLab.useQuery(undefined, { retry: false });
+  const hasPaidSubscription = myLab?.status === "active";
 
   const filtered = useMemo(() => {
     const q = searchQuery.toLowerCase();
@@ -728,8 +735,73 @@ export default function AccreditationNavigator() {
         </div>
       </div>
 
+      {/* Tab Bar */}
+      <div className="border-b border-gray-200 bg-white sticky top-0 z-10">
+        <div className="container">
+          <div className="flex gap-0">
+            <button
+              onClick={() => setActiveTab("standards")}
+              className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all ${
+                activeTab === "standards"
+                  ? "border-[#189aa1] text-[#189aa1]"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <BookOpen className="w-4 h-4" />
+              Standards & Requirements
+            </button>
+            <button
+              onClick={() => setActiveTab("readiness")}
+              className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all ${
+                activeTab === "readiness"
+                  ? "border-[#189aa1] text-[#189aa1]"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              <ShieldCheck className="w-4 h-4" />
+              Accreditation Readiness
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Readiness Tab */}
+      {activeTab === "readiness" && (
+        <div className="container py-6 max-w-3xl">
+          {hasPaidSubscription ? (
+            // Paid subscribers → prompt to use the full DIY Tool
+            <div className="rounded-xl border border-[#189aa1]/30 bg-gradient-to-br from-[#f0fbfc] to-white p-8 text-center">
+              <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "#189aa1" }}>
+                <Lock className="w-7 h-7 text-white" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-800 mb-2" style={{ fontFamily: "Merriweather, serif" }}>
+                You have access to the full DIY Accreditation Tool™
+              </h2>
+              <p className="text-sm text-gray-500 mb-6 max-w-md mx-auto">
+                Your active subscription includes the complete Accreditation Readiness checklist with staff linking, case data integration, and more — available in the DIY Tool.
+              </p>
+              <Link href="/accreditation">
+                <button
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
+                  style={{ background: "#189aa1" }}
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  Open DIY Accreditation Tool™
+                </button>
+              </Link>
+            </div>
+          ) : (
+            // Free users → full interactive readiness checklist (Navigator backend)
+            <AccreditationReadiness trpcNamespace="accreditationReadinessNavigator" />
+          )}
+        </div>
+      )}
+
+      {/* Standards Tab content */}
+      {activeTab !== "readiness" && (
+      <>
       {/* Search & Filters */}
-      <div className="border-b border-gray-200 bg-[#f0fbfc] sticky top-0 z-10">
+      <div className="border-b border-gray-200 bg-[#f0fbfc] sticky top-[49px] z-10">
         <div className="container py-3 space-y-2">
           {/* Search */}
           <div className="relative max-w-xl">
@@ -823,6 +895,8 @@ export default function AccreditationNavigator() {
           </>
         )}
       </div>
+      </>
+      )}
 
       {/* Footer */}
       <div className="border-t border-gray-200 bg-white">

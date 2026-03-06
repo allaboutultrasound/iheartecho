@@ -92,6 +92,8 @@ import {
   dismissPhysicianNotification,
   getAccreditationReadiness,
   saveAccreditationReadiness,
+  getAccreditationReadinessNavigator,
+  saveAccreditationReadinessNavigator,
   createCaseMixSubmission,
   getCaseMixSubmissions,
   getCaseMixSummary,
@@ -1272,6 +1274,32 @@ export const appRouter = router({
         const lab = await getLabByMemberUserId(ctx.user.id);
         if (!lab) throw new TRPCError({ code: "NOT_FOUND", message: "No lab found for this user" });
         await saveAccreditationReadiness(lab.id, ctx.user.id, input.checklistProgress, input.itemNotes, input.completionPct);
+        return { success: true };
+      }),
+  }),
+
+  // ─── Accreditation Readiness Navigator (Free-Tier) ───────────────────────────
+  // Independent backend — keyed by userId only, no lab membership required.
+  // Visible only to users without an active paid DIY Tool subscription.
+  accreditationReadinessNavigator: router({
+    /** Get or initialize readiness checklist for the current user (Navigator free-tier) */
+    get: protectedProcedure.query(async ({ ctx }) => {
+      return getAccreditationReadinessNavigator(ctx.user.id);
+    }),
+    /** Save checklist progress (Navigator free-tier) */
+    save: protectedProcedure
+      .input(z.object({
+        checklistProgress: z.record(z.string(), z.boolean()),
+        itemNotes: z.record(z.string(), z.string()),
+        completionPct: z.number().min(0).max(100),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        await saveAccreditationReadinessNavigator(
+          ctx.user.id,
+          input.checklistProgress,
+          input.itemNotes,
+          input.completionPct,
+        );
         return { success: true };
       }),
   }),

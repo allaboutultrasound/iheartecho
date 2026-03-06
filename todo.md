@@ -475,3 +475,21 @@
 - [x] Accreditation type filter indicator banner in Case Mix tracker (teal if set, amber warning if not)
 - [x] "Change in Lab Admin" / "Set in Lab Admin" quick-link from Case Mix tracker
 - [x] All 227 tests passing
+
+## Free-Tier Accreditation Type in EchoAccreditation Navigator [IN PROGRESS]
+- [ ] Separate backend: new tRPC router (accreditationReadiness) with its own DB table/field for free-tier accreditation type selection
+- [ ] AccreditationType selection UI embedded in EchoAccreditation Navigator (visible only to non-paying users)
+- [ ] Paid lab subscribers see a prompt to use the full DIY Accreditation Tool instead
+
+## Accreditation Readiness Fixes [IN PROGRESS]
+- [ ] DIY Tool Readiness: Move Case Mix Requirements out of QA section into its own standalone category
+- [ ] DIY Tool Readiness: Case list items are clickable/trackable but do NOT count toward overall readiness progress %
+- [ ] EchoAccreditation Navigator: Add standalone Readiness form (copy of DIY checklist, no staff links, click+save, hidden for paid DIY subscribers)
+
+## Accreditation Readiness Fixes & Navigator Copy (Completed)
+- [x] DIY Tool Readiness tab: Case Mix moved to standalone category (no longer under QA)
+- [x] DIY Tool Readiness tab: Case mix items are clickable/trackable but excluded from readiness % calculation
+- [x] EchoAccreditation Navigator: "Readiness" tab added with full interactive checklist for free-tier users
+- [x] EchoAccreditation Navigator: Paid DIY Tool subscribers see prompt to use the full DIY Tool instead
+- [x] Separate backend: accreditationReadinessNavigator table + tRPC procedures (independent from DIY tool)
+- [x] AccreditationReadiness component: trpcNamespace prop routes to correct backend
