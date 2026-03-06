@@ -5,8 +5,8 @@
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import {
-  Scan, Stethoscope, Baby, Heart, Users, BarChart3, Activity,
-  ArrowRight, Zap
+  Scan, Stethoscope, Baby, Heart, Users, Activity,
+  ArrowRight, Zap, Microscope
 } from "lucide-react";
 
 const BRAND = "#189aa1";
@@ -47,11 +47,27 @@ const coaches = [
     description: "Interactive 17-segment bull's-eye, segmental strain curves, LV GLS calculator, ASE 2025 acquisition guidance, and Tips & Tricks for strain imaging.",
     badge: "Adult Echo",
   },
+  {
+    path: "/tee-scan-coach",
+    icon: Microscope,
+    title: "TEE ScanCoach™",
+    description: "View-by-view TEE acquisition guide covering all ME, TG, and UE views with probe angle/depth, anatomy descriptions, Doppler tips, and reference image placeholders.",
+    badge: "TEE",
+  },
+  {
+    path: "/ice-scan-coach",
+    icon: Scan,
+    title: "ICE ScanCoach™",
+    description: "Intracardiac echocardiography guide with catheter positioning, rotation technique, procedural Doppler guidance, and reference image placeholders for all 7 standard ICE views.",
+    badge: "ICE",
+  },
 ];
 
 const badgeColors: Record<string, string> = {
   "Adult Echo": "#189aa1",
   "Congenital Heart": "#0369a1",
+  "TEE": "#0e7490",
+  "ICE": "#0f766e",
 };
 
 export default function ScanCoachHub() {

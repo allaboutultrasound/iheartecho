@@ -39,6 +39,8 @@ import EchoNavigatorHub from "./pages/EchoNavigatorHub";
 import ScanCoachHub from "./pages/ScanCoachHub";
 import EchoAssistHub from "./pages/EchoAssistHub";
 import StrainScanCoach from "./pages/StrainScanCoach";
+import TEEScanCoach from "./pages/TEEScanCoach";
+import ICEScanCoach from "./pages/ICEScanCoach";
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
@@ -72,6 +74,8 @@ function Router() {
       <Route path="/echo-navigators" component={EchoNavigatorHub} />
       <Route path="/scan-coach-hub" component={ScanCoachHub} />
       <Route path="/strain-scan-coach" component={StrainScanCoach} />
+      <Route path="/tee-scan-coach" component={TEEScanCoach} />
+      <Route path="/ice-scan-coach" component={ICEScanCoach} />
       <Route path="/echo-assist-hub" component={EchoAssistHub} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
