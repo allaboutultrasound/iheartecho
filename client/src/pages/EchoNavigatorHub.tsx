@@ -6,7 +6,7 @@ import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import {
   Stethoscope, Microscope, Zap, Users, Baby, Heart,
-  Cpu, FlaskConical, BarChart3, ArrowRight, BookOpen
+  Cpu, FlaskConical, BarChart3, ArrowRight, Scan
 } from "lucide-react";
 
 const BRAND = "#189aa1";
@@ -114,11 +114,18 @@ export default function EchoNavigatorHub() {
               <p className="text-white/70 text-sm mt-1 max-w-xl">
                 Structured echo protocols with view-by-view checklists, normal reference values, scanning tips, and guideline-based interpretation — for every modality and patient population.
               </p>
-              <div className="mt-3">
+              <div className="mt-3 flex flex-wrap gap-2">
                 <Link href="/scan-coach">
                   <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/25 text-white hover:bg-white/20 transition-all">
-                    <BookOpen className="w-3.5 h-3.5 text-[#4ad9e0]" />
-                    Open ScanCoach™
+                    <Scan className="w-3.5 h-3.5 text-[#4ad9e0]" />
+                    ScanCoach™
+                    <span className="text-[#4ad9e0] text-xs">→</span>
+                  </button>
+                </Link>
+                <Link href="/echoassist-hub">
+                  <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/25 text-white hover:bg-white/20 transition-all">
+                    <Zap className="w-3.5 h-3.5 text-[#4ad9e0]" />
+                    EchoAssist™
                     <span className="text-[#4ad9e0] text-xs">→</span>
                   </button>
                 </Link>
