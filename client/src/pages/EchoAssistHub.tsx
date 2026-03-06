@@ -7,18 +7,11 @@ import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import PremiumModal from "@/components/PremiumModal";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { hasPremiumAccess } from "@/lib/roles";
 import {
   Zap, Activity, BarChart3, Wind, Heart, TrendingUp,
   ArrowRight, Calculator, Stethoscope, Scan, Lock
 } from "lucide-react";
-
-// Roles that grant premium access
-const PREMIUM_ROLES = ["premium_user", "diy_user", "diy_admin", "platform_admin"];
-function hasPremiumAccess(user: any): boolean {
-  if (!user) return false;
-  const roles: string[] = (user as any).appRoles ?? [];
-  return roles.some(r => PREMIUM_ROLES.includes(r));
-}
 
 const BRAND = "#189aa1";
 
@@ -116,7 +109,8 @@ const badgeColors: Record<string, string> = {
 
 export default function EchoAssistHub() {
   const { user } = useAuth();
-  const isPremium = hasPremiumAccess(user);
+  const appRoles: string[] = (user as any)?.appRoles ?? [];
+  const isPremium = hasPremiumAccess(appRoles);
   const [premiumModal, setPremiumModal] = useState<{ name: string; description: string } | null>(null);
   return (
     <Layout>

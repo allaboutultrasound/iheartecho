@@ -581,3 +581,11 @@
 - [x] Frontend: Profile page — avatar upload field with camera overlay, preview, Save/Cancel controls
 - [x] Frontend: Layout header — shows custom avatar image (or initials fallback) in both trigger and dropdown
 - [x] Vitest: 12 avatar upload validation tests passing
+
+## Role Guard & Shared Utility
+- [x] Create client/src/lib/roles.ts with hasPremiumAccess(appRoles) helper
+- [x] Refactor EchoNavigatorHub and EchoAssistHub to use shared hasPremiumAccess
+- [x] Add RoleGuard to /accreditation route (diy_user or diy_admin required) [already existed, confirmed]
+- [x] Add feature-level premium lock to EchoNavigatorHub (TEE, ICE, Strain, Device) using hasPremiumAccess
+- [x] Add feature-level premium lock to EchoAssistHub (MS, AS, AR, MR, Strain, RV, PA) using hasPremiumAccess
+- [x] Vitest: roles.ts utility tests (25 tests, 304 total passing)
