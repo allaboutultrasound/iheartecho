@@ -370,7 +370,7 @@ function FetalProtocolChecklist() {
 }
 
 export default function FetalNavigator() {
-  const [view, setView] = useState<"3vv" | "4ch" | "zscore" | "protocol">("3vv");
+  const [view, setView] = useState<"protocol" | "3vv" | "4ch" | "zscore">("protocol");
   const [selected, setSelected] = useState<number | null>(null);
 
   const findings = view === "3vv" ? findings3VV : findingsFC;
@@ -401,10 +401,10 @@ export default function FetalNavigator() {
 
         <div className="flex flex-wrap gap-2 mb-6">
           {[
+            { id: "protocol", label: "Protocol Checklist" },
             { id: "3vv", label: "3-Vessel View" },
             { id: "4ch", label: "4-Chamber View" },
             { id: "zscore", label: "Z-Score Calculator" },
-            { id: "protocol", label: "Protocol Checklist" },
           ].map(tab => (
             <button key={tab.id} onClick={() => { setView(tab.id as any); setSelected(null); }}
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${

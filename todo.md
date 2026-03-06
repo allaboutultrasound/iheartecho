@@ -383,3 +383,6 @@
 ## Hemodynamics Lab — Aortic Waveform Fixes
 - [x] Remove "LVOT" from aortic waveform pattern labels
 - [x] Fix HCM obstructive pattern to dagger-shaped late-peaking waveform
+
+## Fetal Echo Navigator
+- [x] Move image protocol checklist to the first tab
