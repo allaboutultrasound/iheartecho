@@ -373,3 +373,9 @@
 - [x] Add normal reference values section to StrainNavigator (GLS, RV, LA, mid-wall, 3D, vendor-specific)
 - [x] Remove bull's-eye and strain curves from StrainNavigator (keep in StrainScanCoach only)
 - [x] Remove imaging checklist from StrainScanCoach (moved to StrainNavigator)
+
+## Strain ScanCoach — Clinical Pattern Library
+- [x] Add clickable clinical strain pattern cards to StrainScanCoach (DCM, HCM, ATTR amyloid, ischemic CAD, Takotsubo, LBBB, cardiotoxicity, myocarditis)
+- [x] Each pattern card populates the bull's-eye with representative 17-segment strain values
+- [x] Show pattern description, key features, and GLS range on card
+- [x] Remove/reduce clinical applications from EchoAssist strain section (replaced with link to ScanCoach)

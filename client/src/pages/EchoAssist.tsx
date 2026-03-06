@@ -972,23 +972,23 @@ function StrainEngine() {
 
       {/* Clinical Applications */}
       <div className="mt-4 border-t border-gray-100 pt-4">
-        <div className="text-sm font-bold text-gray-700 mb-1">Clinical Applications of Strain Imaging</div>
-        <div className="text-xs text-gray-500 mb-3">Cardio-oncology · Cardiomyopathy · Diastolic dysfunction · Amyloidosis</div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {[
-            { title: "Cardio-Oncology (CTRCD Monitoring)", content: "A relative reduction in LV GLS of >15% from baseline is considered a subclinical sign of cancer therapy-related cardiac dysfunction (CTRCD) per ASE/ESMO 2022. Serial strain imaging every 3 months during cardiotoxic therapy is recommended. GLS decline precedes EF decline by weeks to months.", color: "#7c3aed" },
-            { title: "Cardiac Amyloidosis", content: "Apical-sparing strain pattern (normal apical GLS with reduced basal/mid segments) is a hallmark of cardiac amyloidosis (sensitivity ~80%, specificity ~80% vs. HCM). Relative Apical Strain (RAS) = apical / (basal + mid) > 1 is the diagnostic threshold.", color: "#dc2626" },
-            { title: "HFpEF and Diastolic Dysfunction", content: "LA reservoir strain < 23% is associated with elevated LV filling pressures (E/e′ > 14) and predicts HF hospitalization. LV GLS is often mildly reduced (−16 to −19%) in HFpEF despite preserved EF. Combined GLS + LA strain improves diastolic grading accuracy.", color: "#189aa1" },
-            { title: "Hypertrophic Cardiomyopathy (HCM)", content: "LV GLS is typically reduced in HCM despite hyperdynamic EF. Basal septal strain is most affected. Strain helps differentiate HCM from athlete's heart (athletes have normal or supranormal GLS). RV strain may be reduced in obstructive HCM.", color: "#0284c7" },
-            { title: "Ischemic Heart Disease", content: "Regional strain abnormalities follow coronary territory distributions. Basal inferior/inferolateral reduction suggests RCA/LCx territory. Anterior/anteroseptal reduction suggests LAD territory. Strain is more sensitive than wall motion scoring for detecting subendocardial ischemia.", color: "#b45309" },
-            { title: "Peripartum Cardiomyopathy", content: "LV GLS is often reduced before EF declines in peripartum cardiomyopathy. GLS < −17% at diagnosis is associated with worse recovery. Serial strain imaging at 1, 3, and 6 months postpartum guides therapy and timing of medication discontinuation.", color: "#be185d" },
-          ].map(({ title, content, color }) => (
-            <div key={title} className="rounded-lg p-3 border-l-4" style={{ background: color + "0d", borderLeftColor: color }}>
-              <h4 className="font-bold text-xs mb-1" style={{ color }}>{title}</h4>
-              <p className="text-xs text-gray-600 leading-relaxed">{content}</p>
-            </div>
-          ))}
-        </div>
+        <div className="text-sm font-bold text-gray-700 mb-1">Clinical Pattern Library</div>
+        <div className="text-xs text-gray-500 mb-3">Interactive disease-specific strain patterns have moved to Strain ScanCoach™</div>
+        <a
+          href="/strain-scan-coach"
+          className="flex items-center justify-between gap-3 rounded-xl p-4 border-2 transition-all hover:shadow-md group"
+          style={{ background: "#f0fbfc", borderColor: "#189aa1" + "40" }}
+        >
+          <div>
+            <div className="font-bold text-sm text-gray-800 mb-1" style={{ fontFamily: "Merriweather, serif" }}>Strain ScanCoach™ — Clinical Pattern Library</div>
+            <p className="text-xs text-gray-500 leading-relaxed">
+              10 clickable disease patterns (DCM, HCM, ATTR amyloid, LAD/RCA ischemia, Takotsubo, cardiotoxicity, myocarditis, LBBB) that load representative 17-segment values into the interactive bull's-eye for visual comparison and teaching.
+            </p>
+          </div>
+          <div className="flex-shrink-0 flex items-center gap-1 px-3 py-2 rounded-lg font-semibold text-xs text-white" style={{ background: "#189aa1" }}>
+            Open
+          </div>
+        </a>
       </div>
 
       <p className="text-xs text-gray-400 mt-3">Reference: ASE 2025 Strain Guideline (Thomas et al.); ASE 2015 LARS/RARS recommendations</p>

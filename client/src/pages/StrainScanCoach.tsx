@@ -9,7 +9,7 @@ import Layout from "@/components/Layout";
 import {
   Activity, ChevronDown, ChevronUp, Info, AlertCircle,
   BarChart3, CheckCircle2, Lightbulb, Target, Zap,
-  Camera, Settings, Eye, BookOpen, ExternalLink, ArrowRight
+  Camera, Settings, Eye, BookOpen, ExternalLink, ArrowRight, FlaskConical
 } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -480,8 +480,134 @@ const legend = [
   { color: "#d1d5db", label: "Not entered", textColor: "#6b7280" },
 ];
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ─── Clinical Pattern Library ────────────────────────────────────────────────
 
+type SegPattern = Record<number, number | null>;
+
+const CLINICAL_PATTERNS: {
+  id: string;
+  title: string;
+  subtitle: string;
+  color: string;
+  gls: string;
+  glsRange: string;
+  keyFeature: string;
+  description: string;
+  pattern: SegPattern;
+}[] = [
+  {
+    id: "normal",
+    title: "Normal",
+    subtitle: "Uniform longitudinal shortening",
+    color: "#15803d",
+    gls: "−22%",
+    glsRange: "≤ −20%",
+    keyFeature: "Homogeneous dark red pattern throughout all 17 segments",
+    description: "Normal LV GLS with uniform longitudinal shortening across all walls. All segments ≤ −20%. No regional variation.",
+    pattern: { 1:-22,2:-22,3:-22,4:-22,5:-22,6:-22, 7:-22,8:-22,9:-22,10:-22,11:-22,12:-22, 13:-22,14:-22,15:-22,16:-22, 17:-22 },
+  },
+  {
+    id: "dcm",
+    title: "Dilated Cardiomyopathy",
+    subtitle: "Diffuse global reduction",
+    color: "#dc2626",
+    gls: "−10%",
+    glsRange: "−8 to −14%",
+    keyFeature: "Diffuse global reduction — all segments similarly impaired, no regional pattern",
+    description: "Diffuse global longitudinal dysfunction without regional predilection. All walls equally reduced. EF typically < 40%. No coronary territory pattern.",
+    pattern: { 1:-10,2:-10,3:-10,4:-10,5:-10,6:-10, 7:-10,8:-10,9:-10,10:-10,11:-10,12:-10, 13:-11,14:-11,15:-11,16:-11, 17:-12 },
+  },
+  {
+    id: "amyloid",
+    title: "Cardiac Amyloidosis (ATTR)",
+    subtitle: "Apical-sparing pattern",
+    color: "#7c3aed",
+    gls: "−13%",
+    glsRange: "−10 to −16%",
+    keyFeature: "Basal and mid segments severely reduced; apical segments relatively preserved (RAS > 1.0)",
+    description: "Classic apical-sparing pattern. Basal and mid-ventricular segments severely reduced due to amyloid deposition gradient. Apical segments relatively preserved. RAS > 1.0. Sensitivity ~80%, specificity ~80% vs HCM.",
+    pattern: { 1:-6,2:-6,3:-6,4:-6,5:-6,6:-6, 7:-9,8:-9,9:-9,10:-9,11:-9,12:-9, 13:-18,14:-18,15:-18,16:-18, 17:-20 },
+  },
+  {
+    id: "hcm",
+    title: "Hypertrophic Cardiomyopathy",
+    subtitle: "Basal septal predominance",
+    color: "#0284c7",
+    gls: "−15%",
+    glsRange: "−12 to −18%",
+    keyFeature: "Basal and mid septal reduction despite hyperdynamic EF; apical strain relatively preserved",
+    description: "LV GLS reduced despite preserved or hyperdynamic EF. Basal septal and anteroseptal segments most affected. Apical strain relatively preserved. RAS may approach but rarely exceeds 1.0 as in amyloidosis.",
+    pattern: { 1:-16,2:-10,3:-10,4:-16,5:-16,6:-16, 7:-16,8:-11,9:-11,10:-16,11:-16,12:-16, 13:-18,14:-17,15:-18,16:-18, 17:-19 },
+  },
+  {
+    id: "lad",
+    title: "LAD Territory Ischemia",
+    subtitle: "Anterior / anteroseptal reduction",
+    color: "#b45309",
+    gls: "−14%",
+    glsRange: "Variable by territory",
+    keyFeature: "Anterior and anteroseptal segments reduced; inferior and lateral walls preserved",
+    description: "Regional strain reduction in the LAD territory: anterior, anteroseptal, and apical segments. Inferior and lateral walls preserved. Apical involvement common due to LAD wrap. Strain more sensitive than wall motion for subendocardial ischemia.",
+    pattern: { 1:-8,2:-8,3:-20,4:-22,5:-22,6:-20, 7:-8,8:-8,9:-20,10:-22,11:-22,12:-20, 13:-8,14:-10,15:-20,16:-20, 17:-8 },
+  },
+  {
+    id: "rca",
+    title: "RCA Territory Ischemia",
+    subtitle: "Inferior / inferoseptal reduction",
+    color: "#c2410c",
+    gls: "−15%",
+    glsRange: "Variable by territory",
+    keyFeature: "Basal and mid inferior, inferoseptal, and inferolateral segments reduced",
+    description: "Regional strain reduction in the RCA territory: basal and mid inferior, inferoseptal, and inferolateral segments. Anterior and lateral walls preserved.",
+    pattern: { 1:-22,2:-22,3:-8,4:-8,5:-10,6:-22, 7:-22,8:-22,9:-8,10:-8,11:-10,12:-22, 13:-20,14:-18,15:-16,16:-20, 17:-18 },
+  },
+  {
+    id: "takotsubo",
+    title: "Takotsubo Cardiomyopathy",
+    subtitle: "Apical ballooning pattern",
+    color: "#be185d",
+    gls: "−12%",
+    glsRange: "−8 to −15%",
+    keyFeature: "Apical and mid segments severely reduced; basal segments hyperkinetic (preserved or supranormal)",
+    description: "Apical ballooning: apical and mid-ventricular segments severely reduced or akinetic. Basal segments preserved or hyperdynamic. Does not follow coronary territory. Typically reversible within weeks.",
+    pattern: { 1:-22,2:-22,3:-22,4:-22,5:-22,6:-22, 7:-8,8:-8,9:-8,10:-8,11:-8,12:-8, 13:-4,14:-4,15:-4,16:-4, 17:-3 },
+  },
+  {
+    id: "cardiotox",
+    title: "Cardiotoxicity (CTRCD)",
+    subtitle: "Subclinical global reduction",
+    color: "#7c3aed",
+    gls: "−17%",
+    glsRange: "−14 to −19% (with preserved EF)",
+    keyFeature: "Mild diffuse global reduction with preserved EF — GLS decline precedes EF drop by weeks to months",
+    description: "Cancer therapy-related cardiac dysfunction. Mild diffuse global reduction in GLS with preserved EF (> 50%). A relative drop of > 15% from baseline is clinically significant per ASE/ESMO 2022.",
+    pattern: { 1:-17,2:-17,3:-17,4:-17,5:-17,6:-17, 7:-17,8:-17,9:-17,10:-17,11:-17,12:-17, 13:-18,14:-18,15:-18,16:-18, 17:-18 },
+  },
+  {
+    id: "myocarditis",
+    title: "Myocarditis",
+    subtitle: "Lateral wall predominance",
+    color: "#0891b2",
+    gls: "−16%",
+    glsRange: "Variable — often −14 to −18%",
+    keyFeature: "Lateral and inferolateral wall reduction; may be diffuse in fulminant cases",
+    description: "Lateral and inferolateral wall predominance in viral myocarditis. May be diffuse in fulminant myocarditis. RV strain often co-reduced. CMR with LGE is the gold standard for diagnosis.",
+    pattern: { 1:-20,2:-20,3:-20,4:-20,5:-10,6:-10, 7:-20,8:-20,9:-20,10:-20,11:-10,12:-10, 13:-20,14:-20,15:-20,16:-12, 17:-18 },
+  },
+  {
+    id: "lbbb",
+    title: "LBBB / Dyssynchrony",
+    subtitle: "Septal flash pattern",
+    color: "#0369a1",
+    gls: "−14%",
+    glsRange: "−10 to −18%",
+    keyFeature: "Septal early shortening then rebound (septal flash); lateral wall delayed peak strain",
+    description: "Left bundle branch block causes septal dyssynchrony. Septal segments show early shortening followed by rebound stretch. Lateral wall has delayed peak strain. CRT may improve dyssynchrony if QRS > 150 ms with LBBB morphology.",
+    pattern: { 1:-20,2:-8,3:-8,4:-20,5:-20,6:-20, 7:-20,8:-8,9:-8,10:-20,11:-20,12:-20, 13:-18,14:-10,15:-18,16:-18, 17:-16 },
+  },
+];
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 export default function StrainScanCoach() {
   // Bull's-eye state — default to -22 (normal) per preference
   const [segValues, setSegValues] = useState<Record<number, number | null>>(
@@ -535,7 +661,20 @@ export default function StrainScanCoach() {
     setSegInput("");
   }, []);
 
+  // Active clinical pattern
+  const [activePattern, setActivePattern] = useState<string | null>(null);
 
+  function loadPattern(patternId: string) {
+    const p = CLINICAL_PATTERNS.find(x => x.id === patternId);
+    if (!p) return;
+    setSegValues({ ...p.pattern });
+    setActivePattern(patternId);
+    setSelectedSeg(null);
+    setSegInput("");
+    setTimeout(() => {
+      document.getElementById("bullseye-panel")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }, 100);
+  }
 
   return (
     <Layout>
@@ -750,6 +889,72 @@ export default function StrainScanCoach() {
 
             {/* Imaging checklist moved to Strain Navigator™ */}
 
+            {/* ── Clinical Pattern Library ── */}
+            <SectionCard
+              title="Clinical Pattern Library"
+              subtitle="Click a pattern to load representative segmental values into the bull's-eye"
+              icon={<FlaskConical className="w-4 h-4" style={{ color: BRAND }} />}
+            >
+              <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+                Each card represents a characteristic strain pattern for a specific disease. Clicking a card loads representative 17-segment values into the interactive bull's-eye. Use these as teaching references or to compare against your patient's actual data.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {CLINICAL_PATTERNS.map(p => (
+                  <button
+                    key={p.id}
+                    onClick={() => loadPattern(p.id)}
+                    className="text-left rounded-xl p-4 border-2 transition-all hover:shadow-md group"
+                    style={{
+                      background: activePattern === p.id ? p.color + "12" : "#f8fafc",
+                      borderColor: activePattern === p.id ? p.color : "transparent",
+                    }}
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div>
+                        <div className="font-bold text-xs text-gray-800 leading-snug" style={{ fontFamily: "Merriweather, serif" }}>{p.title}</div>
+                        <div className="text-xs mt-0.5" style={{ color: p.color }}>{p.subtitle}</div>
+                      </div>
+                      <div className="flex-shrink-0 flex items-center gap-1">
+                        {activePattern === p.id && (
+                          <span className="text-xs font-bold px-1.5 py-0.5 rounded-full text-white" style={{ background: p.color }}>Active</span>
+                        )}
+                        <ArrowRight className="w-3.5 h-3.5 opacity-40 group-hover:opacity-100 transition-opacity" style={{ color: p.color }} />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="font-mono font-bold text-sm" style={{ color: p.color }}>{p.gls}</span>
+                      <span className="text-xs text-gray-400">typical GLS</span>
+                      <span className="text-xs text-gray-400">({p.glsRange})</span>
+                    </div>
+                    <p className="text-xs text-gray-500 leading-relaxed">{p.keyFeature}</p>
+                  </button>
+                ))}
+              </div>
+              {activePattern && (
+                <div className="mt-4 rounded-lg p-3 border flex items-start gap-2" style={{ background: BRAND + "08", borderColor: BRAND + "25" }}>
+                  <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: BRAND }} />
+                  <div>
+                    <div className="text-xs font-bold mb-1" style={{ color: BRAND }}>
+                      {CLINICAL_PATTERNS.find(x => x.id === activePattern)?.title} — Pattern Loaded
+                    </div>
+                    <p className="text-xs text-gray-600 leading-relaxed">
+                      {CLINICAL_PATTERNS.find(x => x.id === activePattern)?.description}
+                    </p>
+                    <button
+                      onClick={() => {
+                        setActivePattern(null);
+                        setSegValues(Object.fromEntries(SEGMENTS_17.map(s => [s.id, -22])) as Record<number, number | null>);
+                      }}
+                      className="mt-2 text-xs font-semibold underline"
+                      style={{ color: BRAND }}
+                    >
+                      Reset to normal (−22%)
+                    </button>
+                  </div>
+                </div>
+              )}
+            </SectionCard>
+
             {/* ── LV GLS Calculator ── */}
             <SectionCard
               title="LV GLS Calculator"
@@ -866,7 +1071,7 @@ export default function StrainScanCoach() {
           <div className="flex flex-col gap-5">
 
             {/* Bull's Eye */}
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+            <div id="bullseye-panel" className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-bold text-sm text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
                   17-Segment Bull's-Eye
