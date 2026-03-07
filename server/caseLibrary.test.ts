@@ -358,3 +358,49 @@ describe("caseLibrary.updateCase", () => {
     ).rejects.toThrow();
   });
 });
+
+// ── AI Generator Procedures ──────────────────────────────────────────────────
+
+describe("caseLibrary.aiGenerateCase", () => {
+  it("throws FORBIDDEN for non-admin users", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeUser()));
+    await expect(
+      caller.caseLibrary.aiGenerateCase({ prompt: "valid prompt", modality: "TTE", difficulty: "intermediate", questionCount: 2 })
+    ).rejects.toThrow();
+  });
+
+  it("throws UNAUTHORIZED when called without authentication", async () => {
+    const caller = appRouter.createCaller(makeCtx(null));
+    await expect(
+      caller.caseLibrary.aiGenerateCase({ prompt: "valid prompt", modality: "TTE", difficulty: "intermediate", questionCount: 2 })
+    ).rejects.toThrow();
+  });
+
+  it("rejects empty prompt", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeAdminUser()));
+    await expect(
+      caller.caseLibrary.aiGenerateCase({ prompt: "", modality: "TTE", difficulty: "intermediate", questionCount: 2 })
+    ).rejects.toThrow();
+  });
+
+  it("rejects questionCount above maximum (5)", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeAdminUser()));
+    await expect(
+      caller.caseLibrary.aiGenerateCase({ prompt: "valid prompt", modality: "TTE", difficulty: "intermediate", questionCount: 10 })
+    ).rejects.toThrow();
+  });
+
+  it("rejects questionCount below minimum (1)", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeAdminUser()));
+    await expect(
+      caller.caseLibrary.aiGenerateCase({ prompt: "valid prompt", modality: "TTE", difficulty: "intermediate", questionCount: 0 })
+    ).rejects.toThrow();
+  });
+
+  it("rejects invalid modality", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeAdminUser()));
+    await expect(
+      caller.caseLibrary.aiGenerateCase({ prompt: "valid prompt", modality: "INVALID" as any, difficulty: "intermediate", questionCount: 2 })
+    ).rejects.toThrow();
+  });
+});

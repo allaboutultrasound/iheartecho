@@ -45,6 +45,8 @@ import {
   Tag,
   BookOpen,
   Stethoscope,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -365,6 +367,14 @@ export default function AdminCaseManagement() {
   // Reject dialog
   const [rejectTarget, setRejectTarget] = useState<{ id: number; title: string } | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  // AI case generator
+  const [aiCaseOpen, setAiCaseOpen] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiModality, setAiModality] = useState<string>("TTE");
+  const [aiDifficulty, setAiDifficulty] = useState<string>("intermediate");
+  const [aiQCount, setAiQCount] = useState(3);
+  const [aiCasePreview, setAiCasePreview] = useState<any | null>(null);
+  const [aiSaving, setAiSaving] = useState(false);
 
   // Pending cases
   const pendingQuery = trpc.caseLibrary.listPendingCases.useQuery(undefined, {
@@ -402,6 +412,23 @@ export default function AdminCaseManagement() {
     onError: (err) => toast.error(err.message || "Failed to reject case."),
   });
 
+  const aiGenerateCaseMutation = trpc.caseLibrary.aiGenerateCase.useMutation({
+    onSuccess: (data: any) => {
+      setAiCasePreview(data);
+      toast.success("Case generated — review below and save to library.");
+    },
+    onError: (err: any) => toast.error(err.message || "AI generation failed."),
+  });
+  const adminCreateCaseMutation = trpc.caseLibrary.adminCreateCase.useMutation({
+    onSuccess: () => {
+      toast.success("Case saved to library.");
+      utils.caseLibrary.listAllCases.invalidate();
+      setAiCaseOpen(false);
+      setAiCasePreview(null);
+      setAiPrompt("");
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to save case."),
+  });
   const deleteMutation = trpc.caseLibrary.adminDeleteCase.useMutation({
     onSuccess: () => {
       toast.success("Case deleted.");
@@ -569,6 +596,14 @@ export default function AdminCaseManagement() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 border-purple-400 text-purple-600"
+              onClick={() => { setAiCasePreview(null); setAiCaseOpen(true); }}
+            >
+              <Sparkles className="w-4 h-4" /> AI Generate Case
+            </Button>
             {pendingCases.length > 0 && (
               <span className="inline-flex items-center gap-1.5 bg-amber-100 text-amber-700 text-xs font-semibold px-3 py-1.5 rounded-full border border-amber-200">
                 <Clock className="w-3.5 h-3.5" />
@@ -720,7 +755,176 @@ export default function AdminCaseManagement() {
         isApproving={approveMutation.isPending}
       />
 
-      {/* ── Reject Dialog ──────────────────────────────────────────────────── */}
+      {/* ── AI Case Generator Dialog ───────────────────────────────────────── */}
+      <Dialog open={aiCaseOpen} onOpenChange={(o) => { setAiCaseOpen(o); if (!o) { setAiCasePreview(null); setAiPrompt(""); } }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-purple-500" /> AI Echo Case Generator
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-gray-500">
+              Describe a clinical scenario and the AI will generate a complete echo case with clinical history, diagnosis, teaching points, and MCQs. Review the output before saving to the library.
+            </p>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Clinical Scenario <span className="text-red-500">*</span></label>
+                <Textarea
+                  placeholder="e.g. 72-year-old male with exertional dyspnoea, systolic murmur, and syncope. Describe the echo findings and management..."
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                  rows={3}
+                  className="resize-none"
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Modality</label>
+                  <Select value={aiModality} onValueChange={setAiModality}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {["TTE","TEE","Stress","Pediatric","Fetal","HOCM","POCUS","Other"].map((m) => (
+                        <SelectItem key={m} value={m}>{m}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Difficulty</label>
+                  <Select value={aiDifficulty} onValueChange={setAiDifficulty}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="beginner">Beginner</SelectItem>
+                      <SelectItem value="intermediate">Intermediate</SelectItem>
+                      <SelectItem value="advanced">Advanced</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 mb-1.5 block">MCQ Count (1–5)</label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={5}
+                    value={aiQCount}
+                    onChange={(e) => setAiQCount(Math.min(5, Math.max(1, parseInt(e.target.value) || 1)))}
+                  />
+                </div>
+              </div>
+            </div>
+            <Button
+              className="w-full gap-2 text-white"
+              style={{ background: "#7c3aed" }}
+              onClick={() => aiGenerateCaseMutation.mutate({ prompt: aiPrompt, modality: aiModality as any, difficulty: aiDifficulty as any, questionCount: aiQCount })}
+              disabled={!aiPrompt.trim() || aiGenerateCaseMutation.isPending}
+            >
+              {aiGenerateCaseMutation.isPending
+                ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating…</>
+                : <><Sparkles className="w-4 h-4" /> Generate Case</>}
+            </Button>
+            {aiCasePreview && (
+              <div className="space-y-3 border border-purple-200 rounded-xl p-4 bg-purple-50">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-purple-800">Preview — review before saving</p>
+                  <Button
+                    size="sm"
+                    className="gap-1.5 text-white"
+                    style={{ background: "#189aa1" }}
+                    disabled={aiSaving || adminCreateCaseMutation.isPending}
+                    onClick={async () => {
+                      setAiSaving(true);
+                      try {
+                        await adminCreateCaseMutation.mutateAsync({
+                          title: aiCasePreview.title,
+                          summary: aiCasePreview.summary,
+                          clinicalHistory: aiCasePreview.clinicalHistory,
+                          diagnosis: aiCasePreview.diagnosis,
+                          teachingPoints: aiCasePreview.teachingPoints,
+                          modality: aiCasePreview.modality,
+                          difficulty: aiCasePreview.difficulty,
+                          tags: aiCasePreview.tags ?? [],
+                          hipaaAcknowledged: true,
+                          media: [],
+                          questions: aiCasePreview.questions.map((q: any, i: number) => ({
+                            question: q.question,
+                            options: q.options,
+                            correctAnswer: q.correctAnswer,
+                            explanation: q.explanation,
+                            sortOrder: i,
+                          })),
+                        });
+                      } finally {
+                        setAiSaving(false);
+                      }
+                    }}
+                  >
+                    {aiSaving ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving…</> : <><CheckCircle2 className="w-3.5 h-3.5" /> Save to Library</>}
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-0.5">Title</p>
+                    <p className="text-sm font-bold text-gray-800">{aiCasePreview.title}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-0.5">Summary</p>
+                    <p className="text-sm text-gray-700">{aiCasePreview.summary}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-0.5">Clinical History</p>
+                    <p className="text-sm text-gray-700">{aiCasePreview.clinicalHistory}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-0.5">Diagnosis</p>
+                    <p className="text-sm font-semibold text-[#189aa1]">{aiCasePreview.diagnosis}</p>
+                  </div>
+                  {aiCasePreview.teachingPoints?.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-0.5">Teaching Points</p>
+                      <ul className="list-disc list-inside space-y-0.5">
+                        {aiCasePreview.teachingPoints.map((tp: string, i: number) => (
+                          <li key={i} className="text-sm text-gray-700">{tp}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {aiCasePreview.questions?.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">MCQ Questions ({aiCasePreview.questions.length})</p>
+                      <div className="space-y-2">
+                        {aiCasePreview.questions.map((q: any, qi: number) => (
+                          <div key={qi} className="bg-white rounded-lg p-2.5 border border-gray-100">
+                            <p className="text-xs font-medium text-gray-800 mb-1.5">Q{qi + 1}. {q.question}</p>
+                            {q.options?.map((opt: string, oi: number) => (
+                              <p key={oi} className={`text-xs ${oi === q.correctAnswer ? "text-green-700 font-semibold" : "text-gray-500"}`}>
+                                {oi === q.correctAnswer ? "✓" : "○"} {opt}
+                              </p>
+                            ))}
+                            {q.explanation && <p className="text-xs text-gray-400 mt-1 italic">{q.explanation}</p>}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {aiCasePreview.tags?.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {aiCasePreview.tags.map((tag: string) => (
+                        <span key={tag} className="text-xs bg-white border border-purple-200 text-purple-600 px-2 py-0.5 rounded-full">{tag}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setAiCaseOpen(false); setAiCasePreview(null); setAiPrompt(""); }}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Reject Dialog ──────────────────────────────────────────────── */}
       <Dialog open={!!rejectTarget} onOpenChange={(open) => !open && setRejectTarget(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>

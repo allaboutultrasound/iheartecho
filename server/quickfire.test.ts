@@ -33,6 +33,10 @@ function makeUser(overrides: Partial<AuthenticatedUser> = {}): AuthenticatedUser
   };
 }
 
+function makeAdminUser(): AuthenticatedUser {
+  return makeUser({ id: 1, role: "admin", email: "admin@iheartecho.com" });
+}
+
 function makeCtx(user: AuthenticatedUser | null = null): TrpcContext {
   return {
     user,
@@ -87,5 +91,44 @@ describe("quickfire.getLeaderboard", () => {
   it("throws INTERNAL_SERVER_ERROR when DB is unavailable (public procedure)", async () => {
     const caller = appRouter.createCaller(makeCtx());
     await expect(caller.quickfire.getLeaderboard()).rejects.toThrow("DB unavailable");
+  });
+});
+
+// ── AI Generator Procedures ──────────────────────────────────────────────────
+
+describe("quickfire.aiGenerateQuestions", () => {
+  it("throws FORBIDDEN for non-admin users", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeUser()));
+    await expect(
+      caller.quickfire.aiGenerateQuestions({ topic: "aortic stenosis", type: "scenario", difficulty: "intermediate", count: 3 })
+    ).rejects.toThrow();
+  });
+
+  it("throws UNAUTHORIZED when called without authentication", async () => {
+    const caller = appRouter.createCaller(makeCtx(null));
+    await expect(
+      caller.quickfire.aiGenerateQuestions({ topic: "aortic stenosis", type: "scenario", difficulty: "intermediate", count: 3 })
+    ).rejects.toThrow();
+  });
+
+  it("rejects empty topic", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeAdminUser()));
+    await expect(
+      caller.quickfire.aiGenerateQuestions({ topic: "", type: "scenario", difficulty: "intermediate", count: 3 })
+    ).rejects.toThrow();
+  });
+
+  it("rejects count above maximum (20)", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeAdminUser()));
+    await expect(
+      caller.quickfire.aiGenerateQuestions({ topic: "mitral regurgitation", type: "scenario", difficulty: "intermediate", count: 50 })
+    ).rejects.toThrow();
+  });
+
+  it("rejects count below minimum (1)", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeAdminUser()));
+    await expect(
+      caller.quickfire.aiGenerateQuestions({ topic: "mitral regurgitation", type: "scenario", difficulty: "intermediate", count: 0 })
+    ).rejects.toThrow();
   });
 });

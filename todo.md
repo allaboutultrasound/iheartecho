@@ -955,3 +955,15 @@
 - [ ] CaseLibrary.tsx My Submissions tab — "Edit & Resubmit" button for rejected cases
 - [ ] App.tsx — add /case-library/edit/:id route
 - [ ] vitest tests for getMyCase and updateCase
+
+## QuickFire CSV Bulk Import
+- [ ] Add bulkImportQuestions tRPC procedure to quickfire router
+- [ ] Build CSV import UI in QuickFireAdmin.tsx (template download, upload, parse, preview, confirm)
+- [ ] Write vitest tests for bulkImportQuestions
+
+## AI Bulk Content Generator
+- [x] Add quickfire.aiGenerateQuestions tRPC procedure (AI generates N questions for a given topic/type)
+- [x] Add caseLibrary.aiGenerateCase tRPC procedure (AI generates a full echo case with MCQs)
+- [x] Build AI question generator panel in QuickFireAdmin.tsx (topic input, count, type, preview, bulk insert)
+- [x] Build AI case generator panel in AdminCaseManagement.tsx (scenario prompt, preview, save as draft)
+- [x] Write vitest tests for both AI procedures

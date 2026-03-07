@@ -51,6 +51,10 @@ import {
   Calendar,
   CheckCircle2,
   X,
+  Sparkles,
+  Loader2,
+  CheckSquare,
+  Square,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -105,6 +109,15 @@ export default function QuickFireAdmin() {
   // Daily set generator
   const [genDate, setGenDate] = useState(new Date().toISOString().slice(0, 10));
   const [genOpen, setGenOpen] = useState(false);
+  // AI generator
+  const [aiOpen, setAiOpen] = useState(false);
+  const [aiTopic, setAiTopic] = useState("");
+  const [aiType, setAiType] = useState<QuestionType>("scenario");
+  const [aiDifficulty, setAiDifficulty] = useState<Difficulty>("intermediate");
+  const [aiCount, setAiCount] = useState(5);
+  const [aiPreview, setAiPreview] = useState<any[]>([]);
+  const [aiSelected, setAiSelected] = useState<Set<number>>(new Set());
+  const [aiImporting, setAiImporting] = useState(false);
 
   // Queries
   const listQuery = trpc.quickfire.listAllQuestions.useQuery({
@@ -141,6 +154,15 @@ export default function QuickFireAdmin() {
       utils.quickfire.listAllQuestions.invalidate();
     },
     onError: (err) => toast.error(err.message || "Failed to deactivate question."),
+  });
+
+  const aiGenerateMutation = trpc.quickfire.aiGenerateQuestions.useMutation({
+    onSuccess: (data: any) => {
+      setAiPreview(data.questions);
+      setAiSelected(new Set(data.questions.map((_: any, i: number) => i)));
+      toast.success(`Generated ${data.questions.length} questions — review and import below.`);
+    },
+    onError: (err: any) => toast.error(err.message || "AI generation failed."),
   });
 
   const generateMutation = trpc.quickfire.generateDailySet.useMutation({
@@ -281,6 +303,14 @@ export default function QuickFireAdmin() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 border-purple-400 text-purple-600"
+              onClick={() => { setAiPreview([]); setAiOpen(true); }}
+            >
+              <Sparkles className="w-4 h-4" /> AI Generate
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -636,6 +666,159 @@ export default function QuickFireAdmin() {
               <CheckCircle2 className="w-4 h-4" />
               {editingId !== null ? "Save Changes" : "Create Question"}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── AI Question Generator Dialog ─────────────────────────────────────── */}
+      <Dialog open={aiOpen} onOpenChange={(o) => { setAiOpen(o); if (!o) { setAiPreview([]); setAiTopic(""); } }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-purple-500" /> AI Question Generator
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-gray-500">
+              Describe a clinical topic and the AI will generate ready-to-use QuickFire questions with options, correct answers, and explanations.
+            </p>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Clinical Topic <span className="text-red-500">*</span></label>
+                <Textarea
+                  placeholder="e.g. Aortic stenosis severity grading by Doppler, diastolic dysfunction assessment, TAPSE and RV function..."
+                  value={aiTopic}
+                  onChange={(e) => setAiTopic(e.target.value)}
+                  rows={2}
+                  className="resize-none"
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Question Type</label>
+                  <Select value={aiType} onValueChange={(v) => setAiType(v as QuestionType)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="scenario">Scenario (MCQ)</SelectItem>
+                      <SelectItem value="image">Image-Based (MCQ)</SelectItem>
+                      <SelectItem value="quickReview">Quick Review</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Difficulty</label>
+                  <Select value={aiDifficulty} onValueChange={(v) => setAiDifficulty(v as Difficulty)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="beginner">Beginner</SelectItem>
+                      <SelectItem value="intermediate">Intermediate</SelectItem>
+                      <SelectItem value="advanced">Advanced</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Count (1–20)</label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={20}
+                    value={aiCount}
+                    onChange={(e) => setAiCount(Math.min(20, Math.max(1, parseInt(e.target.value) || 1)))}
+                  />
+                </div>
+              </div>
+            </div>
+            <Button
+              className="w-full gap-2 text-white"
+              style={{ background: "#7c3aed" }}
+              onClick={() => aiGenerateMutation.mutate({ topic: aiTopic, type: aiType, difficulty: aiDifficulty, count: aiCount, insertImmediately: false })}
+              disabled={!aiTopic.trim() || aiGenerateMutation.isPending}
+            >
+              {aiGenerateMutation.isPending
+                ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating…</>
+                : <><Sparkles className="w-4 h-4" /> Generate Questions</>}
+            </Button>
+            {aiPreview.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-gray-700">{aiPreview.length} questions — select which to import:</p>
+                  <div className="flex gap-2">
+                    <button className="text-xs text-[#189aa1] hover:underline" onClick={() => setAiSelected(new Set(aiPreview.map((_: any, i: number) => i)))}>All</button>
+                    <button className="text-xs text-gray-400 hover:underline" onClick={() => setAiSelected(new Set())}>None</button>
+                  </div>
+                </div>
+                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                  {aiPreview.map((q: any, i: number) => (
+                    <div
+                      key={i}
+                      className={`flex gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
+                        aiSelected.has(i) ? "border-purple-300 bg-purple-50" : "border-gray-100 bg-white opacity-60"
+                      }`}
+                      onClick={() => setAiSelected((prev) => { const next = new Set(prev); if (next.has(i)) next.delete(i); else next.add(i); return next; })}
+                    >
+                      <div className="flex-shrink-0 mt-0.5">
+                        {aiSelected.has(i) ? <CheckSquare className="w-4 h-4 text-purple-500" /> : <Square className="w-4 h-4 text-gray-300" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-800 leading-snug">{q.question}</p>
+                        {q.options && (
+                          <div className="mt-1.5 space-y-0.5">
+                            {q.options.map((opt: string, oi: number) => (
+                              <p key={oi} className={`text-xs ${oi === q.correctAnswer ? "text-green-700 font-semibold" : "text-gray-500"}`}>
+                                {oi === q.correctAnswer ? "✓" : "○"} {opt}
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                        {q.reviewAnswer && <p className="text-xs text-green-700 font-semibold mt-1">Answer: {q.reviewAnswer}</p>}
+                        {q.explanation && <p className="text-xs text-gray-400 mt-1 italic">{q.explanation}</p>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  className="w-full gap-2 text-white"
+                  style={{ background: "#189aa1" }}
+                  disabled={aiSelected.size === 0 || aiImporting}
+                  onClick={async () => {
+                    const selectedQs = aiPreview.filter((_: any, i: number) => aiSelected.has(i));
+                    setAiImporting(true);
+                    try {
+                      await Promise.all(
+                        selectedQs.map((q: any) =>
+                          createMutation.mutateAsync({
+                            type: aiType,
+                            question: q.question,
+                            options: q.options,
+                            correctAnswer: q.correctAnswer,
+                            explanation: q.explanation,
+                            reviewAnswer: q.reviewAnswer,
+                            difficulty: aiDifficulty,
+                            tags: q.tags ?? [],
+                          } as any)
+                        )
+                      );
+                      toast.success(`${selectedQs.length} question${selectedQs.length !== 1 ? "s" : ""} imported.`);
+                      utils.quickfire.listAllQuestions.invalidate();
+                      setAiOpen(false);
+                      setAiPreview([]);
+                      setAiTopic("");
+                    } catch (err: any) {
+                      toast.error(err.message || "Import failed.");
+                    } finally {
+                      setAiImporting(false);
+                    }
+                  }}
+                >
+                  {aiImporting
+                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Importing…</>
+                    : <><CheckCircle2 className="w-4 h-4" /> Import {aiSelected.size} Question{aiSelected.size !== 1 ? "s" : ""}</>}
+                </Button>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setAiOpen(false); setAiPreview([]); setAiTopic(""); }}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

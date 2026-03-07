@@ -21,6 +21,9 @@ import { z } from "zod";
 import { router, publicProcedure, protectedProcedure } from "../_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { getDb } from "../db";
+import { generateObject } from "ai";
+import { createOpenAI } from "@ai-sdk/openai";
+import { createPatchedFetch } from "../_core/patchedFetch";
 import {
   quickfireQuestions,
   quickfireDailySets,
@@ -440,6 +443,94 @@ export const quickfireRouter = router({
         total: totalResult[0]?.count ?? 0,
         page: input.page,
         limit: input.limit,
+      };
+    }),
+
+  /**
+   * AI-powered bulk question generator.
+   * Generates N questions for a given topic and inserts them into the DB.
+   * Returns the generated questions and their new IDs for preview.
+   */
+  aiGenerateQuestions: adminProcedure
+    .input(
+      z.object({
+        topic: z.string().min(3).max(500),
+        type: z.enum(["scenario", "image", "quickReview"]).default("scenario"),
+        difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("intermediate"),
+        count: z.number().int().min(1).max(20).default(5),
+        insertImmediately: z.boolean().default(false),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const openai = createOpenAI({
+        apiKey: process.env.BUILT_IN_FORGE_API_KEY,
+        baseURL: `${process.env.BUILT_IN_FORGE_API_URL}/v1`,
+        fetch: createPatchedFetch(fetch),
+      });
+      const model = openai.chat("gemini-2.5-flash");
+
+      const questionSchema = z.object({
+        questions: z.array(
+          z.object({
+            question: z.string().describe("The question text"),
+            options: z.array(z.string()).length(4).optional().describe("Exactly 4 answer options for scenario/image type"),
+            correctAnswer: z.number().int().min(0).max(3).optional().describe("0-indexed correct answer index"),
+            explanation: z.string().optional().describe("Explanation of the correct answer"),
+            reviewAnswer: z.string().optional().describe("The answer/fact for quickReview flashcard type"),
+            tags: z.array(z.string()).describe("2-4 relevant clinical tags"),
+          })
+        ),
+      });
+
+      const typeInstructions =
+        input.type === "quickReview"
+          ? `Each item is a flashcard: a short clinical question or fact prompt in 'question', and the concise answer in 'reviewAnswer'. Do NOT include options or correctAnswer.`
+          : `Each item is a multiple-choice question with exactly 4 options in 'options', a 0-indexed correctAnswer (0-3), and a clear explanation. Do NOT include reviewAnswer.`;
+
+      const { object } = await generateObject({
+        model,
+        schema: questionSchema,
+        prompt: `You are an expert echocardiography educator creating ${input.count} ${input.difficulty} ${input.type} questions about: "${input.topic}".
+
+${typeInstructions}
+
+Guidelines:
+- Use accurate, up-to-date ASE/AHA/ACC guidelines where applicable
+- Questions should be clinically relevant and educational
+- For MCQ: distractors should be plausible but clearly distinguishable from the correct answer
+- Tags: 2-4 specific clinical terms (e.g. "aortic stenosis", "ASE 2021", "Doppler")
+- Difficulty: ${input.difficulty} (beginner=basic concepts, intermediate=clinical application, advanced=complex interpretation)
+
+Return exactly ${input.count} questions.`,
+      });
+
+      // If insertImmediately is true, bulk-insert the generated questions
+      const insertedIds: number[] = [];
+      if (input.insertImmediately) {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+        for (const q of object.questions) {
+          const [result] = await db.insert(quickfireQuestions).values({
+            type: input.type,
+            question: q.question,
+            options: q.options ? JSON.stringify(q.options) : null,
+            correctAnswer: q.correctAnswer ?? null,
+            explanation: q.explanation ?? null,
+            reviewAnswer: q.reviewAnswer ?? null,
+            imageUrl: null,
+            difficulty: input.difficulty,
+            tags: JSON.stringify(q.tags),
+            isActive: true,
+            createdByUserId: ctx.user.id,
+          });
+          insertedIds.push((result as any).insertId);
+        }
+      }
+
+      return {
+        questions: object.questions,
+        insertedIds,
+        inserted: insertedIds.length,
       };
     }),
 

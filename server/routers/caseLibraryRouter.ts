@@ -37,6 +37,9 @@ import { eq, and, desc, sql, count, like, or } from "drizzle-orm";
 import { storagePut } from "../storage";
 import { sendEmail, buildCaseApprovedEmail, buildCaseRejectedEmail, buildNewCaseSubmissionAdminEmail } from "../_core/email";
 import { notifyOwner } from "../_core/notification";
+import { generateObject } from "ai";
+import { createOpenAI } from "@ai-sdk/openai";
+import { createPatchedFetch } from "../_core/patchedFetch";
 
 // ─── Admin guard ─────────────────────────────────────────────────────────────
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -922,6 +925,77 @@ export const caseLibraryRouter = router({
         total: totalResult[0]?.count ?? 0,
         page: input.page,
         limit: input.limit,
+      };
+    }),
+
+  /**
+   * AI-powered echo case generator.
+   * Given a clinical scenario prompt, generates a complete echo case with
+   * summary, clinical history, diagnosis, teaching points, and MCQs.
+   * Returns the generated case data for admin preview before saving.
+   */
+  aiGenerateCase: adminProcedure
+    .input(
+      z.object({
+        prompt: z.string().min(10).max(1000).describe("Clinical scenario description"),
+        modality: z.enum(["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "Other"]).default("TTE"),
+        difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("intermediate"),
+        questionCount: z.number().int().min(1).max(5).default(3),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const openai = createOpenAI({
+        apiKey: process.env.BUILT_IN_FORGE_API_KEY,
+        baseURL: `${process.env.BUILT_IN_FORGE_API_URL}/v1`,
+        fetch: createPatchedFetch(fetch),
+      });
+      const model = openai.chat("gemini-2.5-flash");
+
+      const caseSchema = z.object({
+        title: z.string().describe("Concise, descriptive case title (max 100 chars)"),
+        summary: z.string().describe("2-3 sentence case overview for the library card"),
+        clinicalHistory: z.string().describe("Detailed clinical history: age, sex, symptoms, relevant history, reason for echo"),
+        diagnosis: z.string().describe("Primary diagnosis or key finding (max 100 chars)"),
+        teachingPoints: z.array(z.string()).min(2).max(5).describe("2-5 concise clinical teaching points"),
+        tags: z.array(z.string()).min(2).max(8).describe("2-8 relevant clinical tags"),
+        questions: z.array(
+          z.object({
+            question: z.string().describe("MCQ question text"),
+            options: z.array(z.string()).length(4).describe("Exactly 4 answer options"),
+            correctAnswer: z.number().int().min(0).max(3).describe("0-indexed correct answer"),
+            explanation: z.string().describe("Explanation of the correct answer with clinical reasoning"),
+          })
+        ).min(1).max(5).describe("MCQ questions for this case"),
+      });
+
+      const { object } = await generateObject({
+        model,
+        schema: caseSchema,
+        prompt: `You are an expert echocardiography educator creating a ${input.difficulty} ${input.modality} echo case.
+
+Clinical scenario: "${input.prompt}"
+
+Generate a complete, educationally rich echo case with:
+1. A concise, descriptive title
+2. A 2-3 sentence summary suitable for a case library card
+3. Detailed clinical history (age, sex, presenting symptoms, relevant past history, reason for echo)
+4. Primary diagnosis or key finding
+5. ${input.questionCount} MCQ questions testing key concepts from this case
+6. 2-5 concise teaching points that highlight the educational value
+7. 2-8 relevant clinical tags
+
+Guidelines:
+- Use accurate ASE/AHA/ACC guidelines where applicable
+- Clinical history should be realistic and detailed enough to be educational
+- MCQ distractors should be plausible but clearly distinguishable
+- Teaching points should be actionable clinical pearls
+- Difficulty: ${input.difficulty} (beginner=basic concepts, intermediate=clinical application, advanced=complex interpretation)`,
+      });
+
+      return {
+        ...object,
+        modality: input.modality,
+        difficulty: input.difficulty,
       };
     }),
 });
