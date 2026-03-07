@@ -60,10 +60,6 @@ const navGroups = [
     items: [
       { path: "/echo-navigators", label: "EchoNavigator™", icon: Stethoscope },
       { path: "/scan-coach-hub", label: "ScanCoach™", icon: Scan },
-      { path: "/uea-navigator", label: "UEA Navigator™", icon: Droplets },
-      { path: "/uea-scan-coach", label: "UEA ScanCoach™", icon: Droplets },
-      { path: "/hocm-navigator", label: "HOCM Navigator™", icon: Activity },
-      { path: "/hocm-scan-coach", label: "HOCM ScanCoach™", icon: Activity },
       { path: "/echo-assist-hub", label: "EchoAssist™", icon: FlaskConical },
       { path: "/hemodynamics", label: "Hemodynamics Lab", icon: Activity },
       { path: "/calculator", label: "Echo Calculator", icon: Calculator },

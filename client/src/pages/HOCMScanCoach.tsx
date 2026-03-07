@@ -1,7 +1,7 @@
 /*
   HOCM ScanCoach™
   Hypertrophic Obstructive Cardiomyopathy — Acquisition Guide
-  Brand: Teal #189aa1, Aqua #4ad9e0 / HOCM accent: Purple #7c3aed
+  Brand: Teal #189aa1, Aqua #4ad9e0 / HOCM accent: Teal #189aa1
   Fonts: Merriweather headings, Open Sans body
 */
 
@@ -23,7 +23,7 @@ import {
 import { Link } from "wouter";
 
 const BRAND = "#189aa1";
-const PURPLE = "#7c3aed";
+const PURPLE = "#189aa1";
 
 // ─── SVG WAVEFORM COMPONENTS ─────────────────────────────────────────────────
 
@@ -55,8 +55,8 @@ function HOCMDopplerWaveform() {
       {/* Label bar */}
       <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800">
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-          <span className="text-xs font-bold text-amber-400">HOCM LVOT — CW Doppler (A5C)</span>
+          <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#4ad9e0" }} />
+          <span className="text-xs font-bold" style={{ color: "#4ad9e0" }}>HOCM LVOT — CW Doppler (A5C)</span>
         </div>
         <span className="text-[10px] text-gray-500">Dagger-shaped · Late-peaking · High velocity</span>
       </div>
@@ -71,23 +71,23 @@ function HOCMDopplerWaveform() {
         {/* Velocity labels */}
         <text x={8} y={baseline + 55} fill="#6b7280" fontSize={9}>1 m/s</text>
         <text x={8} y={baseline + 110} fill="#6b7280" fontSize={9}>2 m/s</text>
-        <text x={8} y={baseline + 148} fill="#ef4444" fontSize={9} fontWeight="bold">4+ m/s</text>
+        <text x={8} y={baseline + 148} fill="#189aa1" fontSize={9} fontWeight="bold">4+ m/s</text>
 
         {/* Dagger waveforms — 3 cycles */}
         {[20, 160, 300].map(x => (
-          <path key={x} d={cycle(x)} fill="rgba(251,191,36,0.15)" stroke="#fbbf24" strokeWidth={2} />
+          <path key={x} d={cycle(x)} fill="rgba(74,217,224,0.15)" stroke="#4ad9e0" strokeWidth={2} />
         ))}
 
         {/* Peak annotation */}
-        <line x1={110} y1={baseline + 108} x2={145} y2={baseline + 108} stroke="#ef4444" strokeWidth={1} strokeDasharray="3,2" />
-        <text x={148} y={baseline + 112} fill="#ef4444" fontSize={9} fontWeight="bold">Peak (late systole)</text>
+        <line x1={110} y1={baseline + 108} x2={145} y2={baseline + 108} stroke="#189aa1" strokeWidth={1} strokeDasharray="3,2" />
+        <text x={148} y={baseline + 112} fill="#189aa1" fontSize={9} fontWeight="bold">Peak (late systole)</text>
 
         {/* Dagger label */}
-        <text x={85} y={baseline + 135} fill="#fbbf24" fontSize={9} textAnchor="middle">▲ Dagger tip</text>
+        <text x={85} y={baseline + 135} fill="#4ad9e0" fontSize={9} textAnchor="middle">▲ Dagger tip</text>
       </svg>
       <div className="px-4 py-2 border-t border-gray-800">
         <p className="text-[10px] text-gray-400 leading-relaxed">
-          <span className="text-amber-400 font-bold">Key features:</span> Slow early rise → steep late acceleration → sharp peak in late systole → rapid fall. Peak velocity typically 3–6 m/s. Measure at the very tip of the dagger.
+          <span className="font-bold" style={{ color: "#4ad9e0" }}>Key features:</span> Slow early rise → steep late acceleration → sharp peak in late systole → rapid fall. Peak velocity typically 3–6 m/s. Measure at the very tip of the dagger.
         </p>
       </div>
     </div>
@@ -116,8 +116,8 @@ function MRDopplerWaveform() {
     <div className="rounded-xl overflow-hidden border border-gray-800" style={{ background: "#0a0a0a" }}>
       <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800">
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
-          <span className="text-xs font-bold text-red-400">MR — CW Doppler (A4C / A2C)</span>
+          <div className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
+          <span className="text-xs font-bold text-orange-400">MR — CW Doppler (A4C / A2C)</span>
         </div>
         <span className="text-[10px] text-gray-500">Holosystolic · Broad · Uniform velocity</span>
       </div>
@@ -130,24 +130,24 @@ function MRDopplerWaveform() {
         <line x1={0} y1={baseline} x2={w} y2={baseline} stroke="#374151" strokeWidth={1} />
         <text x={8} y={baseline + 55} fill="#6b7280" fontSize={9}>1 m/s</text>
         <text x={8} y={baseline + 110} fill="#6b7280" fontSize={9}>2 m/s</text>
-        <text x={8} y={baseline + 148} fill="#ef4444" fontSize={9} fontWeight="bold">4–5 m/s</text>
+        <text x={8} y={baseline + 148} fill="#f97316" fontSize={9} fontWeight="bold">4–5 m/s</text>
 
         {/* MR waveforms — 3 cycles */}
         {[20, 165, 310].map(x => (
-          <path key={x} d={mrCycle(x)} fill="rgba(239,68,68,0.15)" stroke="#ef4444" strokeWidth={2} />
+          <path key={x} d={mrCycle(x)} fill="rgba(249,115,22,0.15)" stroke="#f97316" strokeWidth={2} />
         ))}
 
         {/* Plateau annotation */}
-        <line x1={55} y1={baseline + 118} x2={105} y2={baseline + 118} stroke="#f97316" strokeWidth={1.5} />
-        <text x={80} y={baseline + 132} fill="#f97316" fontSize={9} textAnchor="middle">Broad plateau</text>
+        <line x1={55} y1={baseline + 118} x2={105} y2={baseline + 118} stroke="#fb923c" strokeWidth={1.5} />
+        <text x={80} y={baseline + 132} fill="#fb923c" fontSize={9} textAnchor="middle">Broad plateau</text>
 
         {/* Holosystolic label */}
-        <line x1={20} y1={baseline + 145} x2={148} y2={baseline + 145} stroke="#ef4444" strokeWidth={1} strokeDasharray="3,2" />
-        <text x={84} y={baseline + 158} fill="#ef4444" fontSize={9} textAnchor="middle">← Holosystolic →</text>
+        <line x1={20} y1={baseline + 145} x2={148} y2={baseline + 145} stroke="#f97316" strokeWidth={1} strokeDasharray="3,2" />
+        <text x={84} y={baseline + 158} fill="#f97316" fontSize={9} textAnchor="middle">← Holosystolic →</text>
       </svg>
       <div className="px-4 py-2 border-t border-gray-800">
         <p className="text-[10px] text-gray-400 leading-relaxed">
-          <span className="text-red-400 font-bold">Key features:</span> Starts at onset of systole (with QRS), broad uniform plateau, high velocity (4–5 m/s), ends at end-systole (with S2). Dense spectral envelope. No late-peaking dagger shape.
+          <span className="text-orange-400 font-bold">Key features:</span> Starts at onset of systole (with QRS), broad uniform plateau, high velocity (4–5 m/s), ends at end-systole (with S2). Dense spectral envelope. No late-peaking dagger shape.
         </p>
       </div>
     </div>
@@ -265,6 +265,7 @@ const views = [
     ],
     tips: [
       { label: "CW beam alignment", text: "Minimize angle between CW beam and LVOT flow (<20°). Rotate probe slightly to optimize alignment. Small angle errors significantly underestimate gradient." },
+      { label: "Avoid the Left Atrium", text: "When aligning the CW Doppler cursor for LVOT gradient measurement, ensure the cursor does not pass through the left atrium. If the cursor traverses the LA, any coexisting mitral regurgitation will be sampled simultaneously, producing a composite signal that can be misinterpreted as an elevated LVOT gradient. Align the cursor strictly along the LVOT axis, angling away from the LA, to ensure a clean, uncontaminated HOCM signal." },
       { label: "Dagger shape", text: "HOCM LVOT: dagger-shaped (late-peaking). Measure peak velocity at the TIP of the dagger — not the early systolic shoulder. AS: rounded, mid-peaking." },
       { label: "Valsalva from A5C", text: "Keep CW beam on LVOT during Valsalva. Start recording 3–5 beats before maneuver. Continue 5–10 beats after release to capture peak provoked gradient." },
       { label: "Sweep speed", text: "Use 100 mm/s sweep speed for gradient measurement. Use 50 mm/s for Valsalva to capture multiple beats on one sweep." },
@@ -408,13 +409,13 @@ export default function HOCMScanCoach() {
         <div className="relative container py-8 md:py-10">
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-3">
-              <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+              <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
               <span className="text-xs text-white/80 font-medium">HOCM Acquisition Guide</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-black text-white mb-1" style={{ fontFamily: "Merriweather, serif" }}>
               HOCM ScanCoach™
             </h1>
-            <p className="text-purple-200 font-semibold text-sm mb-3">Hypertrophic Obstructive Cardiomyopathy</p>
+            <p className="text-[#4ad9e0] font-semibold text-sm mb-3">Hypertrophic Obstructive Cardiomyopathy</p>
             <p className="text-white/70 text-sm leading-relaxed mb-4 max-w-lg">
               View-by-view acquisition guide for HOCM echo — probe positioning, CW Doppler technique, Valsalva acquisition, and Doppler differentiation (HOCM LVOT vs. MR).
             </p>
@@ -445,7 +446,7 @@ export default function HOCMScanCoach() {
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
                   activeTab === id ? "text-white" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                 }`}
-                style={activeTab === id ? { background: id === "doppler" ? "#dc2626" : PURPLE } : {}}
+                style={activeTab === id ? { background: id === "doppler" ? "#f97316" : PURPLE } : {}}
               >
                 <Icon className="w-3.5 h-3.5" />
                 {label}
@@ -639,10 +640,23 @@ export default function HOCMScanCoach() {
           </div>
 
           {/* Key concept */}
-          <div className="flex items-start gap-2 p-4 rounded-xl bg-amber-50 border border-amber-200 mb-6">
+          <div className="flex items-start gap-2 p-4 rounded-xl bg-amber-50 border border-amber-200 mb-4">
             <Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
             <div className="text-xs text-amber-800 leading-relaxed">
               <strong>Why this matters:</strong> Both HOCM LVOT obstruction and MR produce high-velocity, away-from-probe signals in the apical views. Confusing them leads to incorrect gradient measurement and misclassification of obstruction severity. The key differentiator is <strong>signal shape and timing</strong> — not velocity alone.
+            </div>
+          </div>
+
+          {/* CW Cursor LA Avoidance Tip */}
+          <div className="flex items-start gap-3 p-4 rounded-xl border mb-6" style={{ background: "#f0fbfc", borderColor: "#189aa1" + "40" }}>
+            <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "#189aa1" }}>
+              <Target className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <p className="text-xs font-bold mb-1" style={{ color: "#189aa1" }}>CW Doppler Cursor Positioning — Avoid the Left Atrium</p>
+              <p className="text-xs text-gray-700 leading-relaxed">
+                When aligning the CW Doppler cursor for LVOT gradient measurement, ensure the cursor does not pass through the left atrium. If the cursor traverses the LA, any coexisting mitral regurgitation will be sampled simultaneously, producing a composite signal that can be misinterpreted as an elevated LVOT gradient. Align the cursor strictly along the LVOT axis, angling away from the LA, to ensure a clean, uncontaminated HOCM signal.
+              </p>
             </div>
           </div>
 
@@ -714,7 +728,7 @@ export default function HOCMScanCoach() {
                   critical: false,
                 },
               ].map(({ step, title, detail, critical }) => (
-                <div key={step} className={`flex items-start gap-3 p-3 rounded-lg ${critical ? "bg-purple-50 border border-purple-100" : "bg-gray-50"}`}>
+                <div key={step} className={`flex items-start gap-3 p-3 rounded-lg ${critical ? "bg-[#f0fbfc] border border-[#189aa1]/20" : "bg-gray-50"}`}>
                   <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white flex-shrink-0"
                     style={{ background: critical ? PURPLE : BRAND }}>{step}</div>
                   <div className="flex-1">
@@ -777,9 +791,9 @@ export default function HOCMScanCoach() {
             <p className="text-sm text-gray-500">Sonographer's step-by-step guide for acquiring provoked LVOT gradients</p>
           </div>
 
-          <div className="flex items-start gap-2 p-4 rounded-xl bg-purple-50 border border-purple-200 mb-5">
-            <Info className="w-4 h-4 text-purple-600 flex-shrink-0 mt-0.5" />
-            <div className="text-xs text-purple-800 leading-relaxed">
+          <div className="flex items-start gap-2 p-4 rounded-xl bg-[#f0fbfc] border border-[#189aa1]/20 mb-5">
+            <Info className="w-4 h-4 text-[#189aa1] flex-shrink-0 mt-0.5" />
+            <div className="text-xs text-[#0e4a50] leading-relaxed">
               <strong>Goal:</strong> Capture the peak provoked LVOT gradient during the <strong>release phase</strong> of Valsalva. The most common error is stopping the recording at the end of the strain phase — the peak gradient occurs AFTER release.
             </div>
           </div>
@@ -869,7 +883,7 @@ export default function HOCMScanCoach() {
                 { check: "CW beam maintained on LVOT throughout", critical: false },
                 { check: "Peak gradient measured at dagger tip (late systole)", critical: false },
               ].map(({ check, critical }) => (
-                <div key={check} className={`flex items-center gap-2 p-2.5 rounded-lg ${critical ? "bg-purple-50 border border-purple-100" : "bg-gray-50"}`}>
+                <div key={check} className={`flex items-center gap-2 p-2.5 rounded-lg ${critical ? "bg-[#f0fbfc] border border-[#189aa1]/20" : "bg-gray-50"}`}>
                   <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: critical ? PURPLE : BRAND }} />
                   <span className="text-xs text-gray-700">{check}</span>
                   {critical && <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded text-white flex-shrink-0" style={{ background: PURPLE }}>REQUIRED</span>}
@@ -912,7 +926,7 @@ export default function HOCMScanCoach() {
           <div className="mt-5 p-5 rounded-xl flex flex-col sm:flex-row items-start sm:items-center gap-4"
             style={{ background: "linear-gradient(135deg, #0e1e2e, #1a0a2e)" }}>
             <div className="flex-1">
-              <p className="text-xs font-semibold text-purple-300 uppercase tracking-wider mb-0.5">Protocol Reference</p>
+              <p className="text-xs font-semibold text-[#4ad9e0] uppercase tracking-wider mb-0.5">Protocol Reference</p>
               <p className="text-white text-sm font-bold">HOCM EchoNavigator™</p>
               <p className="text-white/60 text-xs">SAM grading, gradient thresholds, Valsalva protocol, and reporting guide</p>
             </div>

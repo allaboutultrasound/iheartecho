@@ -445,7 +445,7 @@ const artifactGuide = [
 
 export default function UEAScanCoach() {
   const [selectedView, setSelectedView] = useState<string | null>("a4c");
-  const [activeTab, setActiveTab] = useState<"views" | "injection" | "bubble" | "artifacts" | "tips" | "vendors">("views");
+  const [activeTab, setActiveTab] = useState<"views" | "injection" | "bubble" | "artifacts" | "tips" | "vendors" | "peg">("views");
 
   const _currentViewRaw = UEA_VIEWS.find(v => v.id === selectedView);
   const { mergeView: mergeUEAView } = useScanCoachOverrides("uea");
@@ -502,7 +502,7 @@ export default function UEAScanCoach() {
       <div className="border-b border-gray-200 bg-white sticky top-0 z-10">
         <div className="container">
           <div className="flex gap-1 overflow-x-auto py-2">
-            {(["views", "injection", "bubble", "artifacts", "tips", "vendors"] as const).map(tab => (
+            {(["views", "injection", "bubble", "artifacts", "tips", "vendors", "peg"] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -519,12 +519,14 @@ export default function UEAScanCoach() {
                 {tab === "artifacts" && <AlertTriangle className="w-3.5 h-3.5" />}
                 {tab === "tips" && <Zap className="w-3.5 h-3.5" />}
                 {tab === "vendors" && <Shield className="w-3.5 h-3.5" />}
+                {tab === "peg" && <AlertTriangle className="w-3.5 h-3.5" />}
                 {tab === "views" && "View Guide"}
                 {tab === "injection" && "Injection Technique"}
                 {tab === "bubble" && "Bubble Study"}
                 {tab === "artifacts" && "Artifact Guide"}
                 {tab === "tips" && "Quick Tips"}
                 {tab === "vendors" && "Agent Reference"}
+                {tab === "peg" && "PEG Allergy"}
               </button>
             ))}
           </div>
@@ -1430,6 +1432,144 @@ export default function UEAScanCoach() {
             </div>
 
           </div>
+        </div>
+      )}
+
+      {/* ── PEG Allergy Tab ──────────────────────────────────────────────── */}
+      {activeTab === "peg" && (
+        <div className="container py-6 max-w-3xl">
+          <div className="mb-5">
+            <h2 className="text-lg font-bold text-gray-800 mb-1" style={{ fontFamily: "Merriweather, serif" }}>
+              PEG Allergy &amp; Contraindication Screening
+            </h2>
+            <p className="text-sm text-gray-500">Polyethylene glycol (PEG) sensitivity and contrast agent safety</p>
+          </div>
+
+          {/* Why PEG matters */}
+          <div className="flex items-start gap-3 p-4 rounded-xl border mb-5" style={{ background: "#fff7ed", borderColor: "#f97316" + "40" }}>
+            <AlertTriangle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: "#f97316" }} />
+            <div>
+              <p className="text-xs font-bold mb-1" style={{ color: "#f97316" }}>Why PEG Allergy Matters for UEA Administration</p>
+              <p className="text-xs text-gray-700 leading-relaxed">
+                Definity (perflutren lipid microspheres) and Lumason (sulfur hexafluoride lipid-type A microspheres) both contain polyethylene glycol (PEG) as a component of their lipid shell. Patients with known PEG hypersensitivity — including those with prior reactions to PEGylated medications, certain laxatives (MiraLAX), or COVID-19 mRNA vaccines — may be at increased risk for hypersensitivity reactions. Optison does not contain PEG and may be a safer alternative in PEG-sensitive patients.
+              </p>
+            </div>
+          </div>
+
+          {/* PEG content in each agent */}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-5"
+            style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <div className="px-5 py-3 border-b border-gray-100">
+              <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: BRAND }}>PEG Content by Agent</h3>
+            </div>
+            <div className="divide-y divide-gray-50">
+              {[
+                {
+                  agent: "Definity (Perflutren)",
+                  pegStatus: "Contains PEG",
+                  detail: "Lipid shell contains DPPA, DPPC, and MPEG5000 DPPE (a PEGylated phospholipid). PEG content is integral to the microbubble shell structure.",
+                  risk: "high",
+                },
+                {
+                  agent: "Lumason (SonoVue)",
+                  pegStatus: "Contains PEG",
+                  detail: "Lipid shell contains DSPC and macrogol 4000 stearate (PEG 4000 stearate). PEG is present as a stabilizing component of the shell.",
+                  risk: "high",
+                },
+                {
+                  agent: "Optison (Perflutren Protein)",
+                  pegStatus: "PEG-Free",
+                  detail: "Shell is composed of human serum albumin — no PEG component. Preferred alternative in patients with known or suspected PEG hypersensitivity. Note: albumin contraindication applies (see below).",
+                  risk: "low",
+                },
+              ].map(({ agent, pegStatus, detail, risk }) => (
+                <div key={agent} className="flex items-start gap-4 px-5 py-4">
+                  <div className={`mt-0.5 px-2 py-0.5 rounded text-[10px] font-bold flex-shrink-0 ${
+                    risk === "high" ? "bg-orange-100 text-orange-700" : "bg-green-100 text-green-700"
+                  }`}>{pegStatus}</div>
+                  <div>
+                    <p className="text-xs font-bold text-gray-800 mb-0.5">{agent}</p>
+                    <p className="text-xs text-gray-600 leading-relaxed">{detail}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Screening questions */}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-5"
+            style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <h3 className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: BRAND }}>Pre-Procedure PEG Screening Questions</h3>
+            <div className="space-y-2">
+              {[
+                "Have you ever had an allergic reaction to a medication or vaccine? If yes, which one?",
+                "Have you taken or been prescribed MiraLAX (polyethylene glycol laxative) and had a reaction?",
+                "Did you receive a COVID-19 mRNA vaccine (Pfizer-BioNTech or Moderna) and experience an immediate allergic reaction?",
+                "Have you ever had a reaction to a PEGylated biologic medication (e.g., pegfilgrastim/Neulasta, peginterferon, certolizumab/Cimzia)?",
+                "Do you have a known allergy to polyethylene glycol or polysorbate?",
+                "Have you had a prior reaction to an ultrasound contrast agent?",
+              ].map((q, i) => (
+                <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-gray-50">
+                  <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0" style={{ background: BRAND }}>{i + 1}</div>
+                  <p className="text-xs text-gray-700 leading-relaxed">{q}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Risk stratification */}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-5"
+            style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <h3 className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: BRAND }}>Risk Stratification &amp; Management</h3>
+            <div className="space-y-3">
+              {[
+                {
+                  level: "Low Risk",
+                  color: "green",
+                  criteria: "No history of PEG hypersensitivity, no prior UEA reaction, no known drug allergies",
+                  action: "Proceed with standard pre-procedure consent and monitoring. Any approved UEA may be used.",
+                },
+                {
+                  level: "Moderate Risk",
+                  color: "amber",
+                  criteria: "History of mild drug allergy (non-PEG), prior mild UEA reaction, or uncertain allergy history",
+                  action: "Discuss with ordering physician. Consider Optison (PEG-free) if Definity or Lumason is planned. Ensure IV access and emergency medications available. Extend post-procedure monitoring to 30 minutes.",
+                },
+                {
+                  level: "High Risk",
+                  color: "red",
+                  criteria: "Known PEG hypersensitivity, prior anaphylaxis to PEGylated agent, or prior severe UEA reaction",
+                  action: "Do NOT administer Definity or Lumason. Consult with ordering physician and allergy/immunology if needed. Optison (albumin-based) may be considered if no albumin contraindication. Document decision and obtain informed consent. Physician must be present during administration.",
+                },
+              ].map(({ level, color, criteria, action }) => (
+                <div key={level} className={`rounded-lg p-4 border ${
+                  color === "green" ? "bg-green-50 border-green-200" :
+                  color === "amber" ? "bg-amber-50 border-amber-200" :
+                  "bg-red-50 border-red-200"
+                }`}>
+                  <p className={`text-xs font-bold mb-1 ${
+                    color === "green" ? "text-green-700" :
+                    color === "amber" ? "text-amber-700" :
+                    "text-red-700"
+                  }`}>{level}</p>
+                  <p className="text-[11px] text-gray-700 mb-2"><span className="font-semibold">Criteria:</span> {criteria}</p>
+                  <p className="text-[11px] text-gray-700"><span className="font-semibold">Action:</span> {action}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Optison albumin note */}
+          <div className="flex items-start gap-3 p-4 rounded-xl border" style={{ background: "#f0fbfc", borderColor: "#189aa1" + "40" }}>
+            <Info className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: BRAND }} />
+            <div>
+              <p className="text-xs font-bold mb-1" style={{ color: BRAND }}>Optison Albumin Contraindication</p>
+              <p className="text-xs text-gray-700 leading-relaxed">
+                While Optison is PEG-free and preferred in PEG-sensitive patients, it contains human serum albumin. It is contraindicated in patients with known hypersensitivity to albumin or blood products. Always screen for albumin allergy before substituting Optison in PEG-sensitive patients.
+              </p>
+            </div>
+          </div>
+
         </div>
       )}
 

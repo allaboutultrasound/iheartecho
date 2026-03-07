@@ -800,8 +800,8 @@ export default function ReportBuilder() {
     const win = window.open("", "_blank");
     if (!win) return;
     win.document.write(`<html><head><title>Echo Report</title><style>
-      body { font-family: Arial, sans-serif; font-size: 12px; padding: 24px; color: #000; }
-      pre { white-space: pre-wrap; font-family: Arial, sans-serif; font-size: 12px; line-height: 1.6; }
+      body { font-family: 'Gill Sans', 'Gill Sans MT', Arial, sans-serif; font-size: 12px; padding: 24px; color: #000; }
+      pre { white-space: pre-wrap; font-family: 'Gill Sans', 'Gill Sans MT', Arial, sans-serif; font-size: 12px; line-height: 1.6; }
     </style></head><body><pre>${report.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre></body></html>`);
     win.document.close();
     win.print();
@@ -1113,7 +1113,7 @@ export default function ReportBuilder() {
             </div>
             <div className="p-6">
               <pre className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap overflow-auto"
-                style={{ fontFamily: "JetBrains Mono, monospace", maxHeight: "80vh" }}>
+                style={{ fontFamily: "'Gill Sans', 'Gill Sans MT', Arial, sans-serif", maxHeight: "80vh" }}>
                 {report}
               </pre>
             </div>

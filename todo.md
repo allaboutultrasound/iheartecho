@@ -1089,3 +1089,12 @@
 - [ ] Remove UEA ScanCoach sidebar link from Layout.tsx (accessible via ScanCoach hub only)
 - [ ] Remove HOCM Navigator sidebar link from Layout.tsx (accessible via EchoNavigator hub only)
 - [ ] Remove HOCM ScanCoach sidebar link from Layout.tsx (accessible via ScanCoach hub only)
+- [ ] Fix HOCM Navigator colors to match brand teal/aqua palette (#189aa1 / #4ad9e0)
+- [ ] Fix HOCM ScanCoach colors to match brand teal/aqua palette
+- [ ] Research PMID 39886312 goal-directed Valsalva criteria
+- [ ] Revise HOCM Navigator Valsalva section: instructed vs. goal-directed comparison, supplies/setup
+- [ ] Revise HOCM ScanCoach Valsalva section: same updates
+- [ ] Change HOCM Navigator reporting guide output font to Gill Sans / Arial
+- [ ] Change Report Builder output/preview font to Gill Sans / Arial
+- [ ] Fix HOCM ScanCoach SVG waveform colors to match brand teal/aqua palette (#189aa1 / #4ad9e0)
+- [ ] Add CW Doppler LA avoidance tip to HOCM ScanCoach (Doppler Differentiation section and A5C view tips)

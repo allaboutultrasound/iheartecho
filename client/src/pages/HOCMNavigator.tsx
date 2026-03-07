@@ -203,7 +203,7 @@ const protocolSections = [
     id: "provocation",
     title: "Provoked Gradient — Valsalva Protocol",
     icon: TrendingUp,
-    color: "#7c3aed",
+    color: "#189aa1",
     items: [
       {
         label: "Indication for provocation",
@@ -429,20 +429,20 @@ export default function HOCMNavigator() {
         <div className="relative container py-10 md:py-12">
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-4">
-              <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+              <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
               <span className="text-xs text-white/80 font-medium">ASE/AHA HCM Guidelines 2020</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-black text-white mb-2" style={{ fontFamily: "Merriweather, serif" }}>
               HOCM EchoNavigator™
             </h1>
-            <p className="text-purple-200 font-semibold mb-2">Hypertrophic Obstructive Cardiomyopathy</p>
+            <p className="text-[#4ad9e0] font-semibold mb-2">Hypertrophic Obstructive Cardiomyopathy</p>
             <p className="text-white/70 text-sm leading-relaxed mb-5 max-w-lg">
               Comprehensive echo protocol for HOCM assessment — morphology, SAM grading, LVOT gradients, goal-directed Valsalva provocation, MR evaluation, and structured reporting.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link href="/hocm-scan-coach">
                 <button className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
-                  style={{ background: "#7c3aed" }}>
+                  style={{ background: "#189aa1" }}>
                   <Target className="w-4 h-4" />
                   Open ScanCoach™
                 </button>
@@ -496,7 +496,7 @@ export default function HOCMNavigator() {
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
                   activeTab === id ? "text-white" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                 }`}
-                style={activeTab === id ? { background: id === "valsalva" ? "#7c3aed" : BRAND } : {}}
+                style={activeTab === id ? { background: id === "valsalva" ? "#189aa1" : BRAND } : {}}
               >
                 <Icon className="w-3.5 h-3.5" />
                 {label}
@@ -598,9 +598,9 @@ export default function HOCMNavigator() {
           </div>
 
           {/* Key concept */}
-          <div className="flex items-start gap-2 p-4 rounded-xl bg-purple-50 border border-purple-200 mb-5">
-            <Info className="w-4 h-4 text-purple-600 flex-shrink-0 mt-0.5" />
-            <div className="text-xs text-purple-800 leading-relaxed">
+          <div className="flex items-start gap-2 p-4 rounded-xl bg-[#f0fbfc] border border-[#189aa1]/20 mb-5">
+            <Info className="w-4 h-4 text-[#189aa1] flex-shrink-0 mt-0.5" />
+            <div className="text-xs text-[#0e4a50] leading-relaxed">
               <strong>Mechanism:</strong> In HOCM, the hypertrophied septum narrows the LVOT. High-velocity flow through the narrowed LVOT creates a Venturi effect that draws the anterior MV leaflet toward the septum (SAM). SAM-septal contact obstructs the LVOT and causes posteriorly directed MR.
             </div>
           </div>
@@ -689,7 +689,7 @@ export default function HOCMNavigator() {
 
           {/* Key formula */}
           <div className="p-4 rounded-xl mb-5" style={{ background: "linear-gradient(135deg, #0e1e2e, #1a0a2e)" }}>
-            <div className="text-xs font-bold text-purple-300 uppercase tracking-wider mb-1">Modified Bernoulli Equation</div>
+            <div className="text-xs font-bold text-[#4ad9e0] uppercase tracking-wider mb-1">Modified Bernoulli Equation</div>
             <div className="text-white font-black text-xl mb-1">ΔP = 4 × V²</div>
             <div className="text-white/60 text-xs">Peak instantaneous gradient (mmHg) = 4 × (peak velocity in m/s)²</div>
             <div className="mt-2 text-xs text-amber-300">
@@ -765,9 +765,9 @@ export default function HOCMNavigator() {
           </div>
 
           {/* Indication */}
-          <div className="flex items-start gap-2 p-4 rounded-xl bg-purple-50 border border-purple-200 mb-5">
-            <Info className="w-4 h-4 text-purple-600 flex-shrink-0 mt-0.5" />
-            <div className="text-xs text-purple-800 leading-relaxed">
+          <div className="flex items-start gap-2 p-4 rounded-xl bg-[#f0fbfc] border border-[#189aa1]/20 mb-5">
+            <Info className="w-4 h-4 text-[#189aa1] flex-shrink-0 mt-0.5" />
+            <div className="text-xs text-[#0e4a50] leading-relaxed">
               <strong>When to provoke:</strong> Perform Valsalva if resting LVOT gradient is &lt;50 mmHg AND the patient is symptomatic (dyspnea, chest pain, syncope, presyncope). A negative resting study does NOT exclude clinically significant HOCM.
             </div>
           </div>
@@ -775,15 +775,15 @@ export default function HOCMNavigator() {
           {/* Physiology */}
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-4"
             style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-            <h3 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: "#7c3aed" }}>Physiology of Valsalva</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: "#189aa1" }}>Physiology of Valsalva</h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {[
                 {
                   phase: "Strain Phase",
                   effect: "↓ Venous return → ↓ LV preload → ↓ LV cavity size → ↑ LVOT obstruction",
-                  color: "#7c3aed",
-                  bg: "#f5f3ff",
-                  border: "#ddd6fe",
+                  color: "#189aa1",
+                  bg: "#f0fbfc",
+                  border: "#189aa1",
                 },
                 {
                   phase: "Release Phase",
@@ -863,13 +863,13 @@ export default function HOCMNavigator() {
                   critical: false,
                 },
               ].map(({ step, title, detail, critical }) => (
-                <div key={step} className={`flex items-start gap-3 p-3 rounded-lg ${critical ? "bg-purple-50 border border-purple-100" : "bg-gray-50"}`}>
+                <div key={step} className={`flex items-start gap-3 p-3 rounded-lg ${critical ? "bg-[#f0fbfc] border border-[#189aa1]/20" : "bg-gray-50"}`}>
                   <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white flex-shrink-0"
-                    style={{ background: critical ? "#7c3aed" : BRAND }}>{step}</div>
+                    style={{ background: critical ? "#189aa1" : BRAND }}>{step}</div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-0.5">
                       <span className="text-xs font-bold text-gray-800">{title}</span>
-                      {critical && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded text-white" style={{ background: "#7c3aed" }}>KEY STEP</span>}
+                      {critical && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded text-white" style={{ background: "#189aa1" }}>KEY STEP</span>}
                     </div>
                     <p className="text-xs text-gray-600 leading-relaxed">{detail}</p>
                   </div>
@@ -979,7 +979,7 @@ export default function HOCMNavigator() {
                   {section.statements.map(stmt => (
                     <div key={stmt} className="flex items-start gap-2">
                       <ChevronRight className="w-3.5 h-3.5 text-gray-300 flex-shrink-0 mt-0.5" />
-                      <p className="text-xs text-gray-700 leading-relaxed font-mono">{stmt}</p>
+                      <p className="text-xs text-gray-700 leading-relaxed" style={{ fontFamily: "'Gill Sans', 'Gill Sans MT', Arial, sans-serif" }}>{stmt}</p>
                     </div>
                   ))}
                 </div>
@@ -991,13 +991,13 @@ export default function HOCMNavigator() {
           <div className="mt-6 p-5 rounded-xl flex flex-col sm:flex-row items-start sm:items-center gap-4"
             style={{ background: "linear-gradient(135deg, #0e1e2e, #1a0a2e)" }}>
             <div className="flex-1">
-              <p className="text-xs font-semibold text-purple-300 uppercase tracking-wider mb-0.5">Acquisition Guide</p>
+              <p className="text-xs font-semibold text-[#4ad9e0] uppercase tracking-wider mb-0.5">Acquisition Guide</p>
               <p className="text-white text-sm font-bold">HOCM ScanCoach™</p>
               <p className="text-white/60 text-xs">View-by-view probe positioning, CW Doppler technique, and Valsalva acquisition tips</p>
             </div>
             <Link href="/hocm-scan-coach">
               <button className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90 flex-shrink-0"
-                style={{ background: "#7c3aed" }}>
+                style={{ background: "#189aa1" }}>
                 <ArrowRight className="w-4 h-4" />
                 Open ScanCoach™
               </button>
