@@ -59,6 +59,7 @@ import CaseDetail from "./pages/CaseDetail";
 import SubmitCase from "./pages/SubmitCase";
 import AdminCaseManagement from "./pages/AdminCaseManagement";
 import QuickFireAdmin from "./pages/QuickFireAdmin";
+import Premium from "./pages/Premium";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -133,6 +134,8 @@ function Router() {
       <Route path="/case-library/:id" component={CaseDetail} />
       <Route path="/admin/cases" component={AdminCaseManagement} />
       <Route path="/admin/quickfire" component={QuickFireAdmin} />
+      {/* ── Premium Access ──────────────────────────────────────────────── */}
+      <Route path="/premium" component={Premium} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

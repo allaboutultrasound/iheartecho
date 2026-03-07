@@ -10,6 +10,7 @@ import { cmeRouter } from "./routers/cmeRouter";
 import { emailAuthRouter } from "./routers/emailAuthRouter";
 import { quickfireRouter } from "./routers/quickfireRouter";
 import { caseLibraryRouter } from "./routers/caseLibraryRouter";
+import { premiumRouter } from "./routers/premiumRouter";
 import {
   getUserById,
   getUsersByIds,
@@ -1479,6 +1480,9 @@ export const appRouter = router({
 
   // ─── Echo Case Library ────────────────────────────────────────────────────────
   caseLibrary: caseLibraryRouter,
+
+  // ─── Premium Access ───────────────────────────────────────────────────────────
+  premium: premiumRouter,
 });
 export type AppRouter = typeof appRouter;
 

@@ -30,6 +30,8 @@ export const users = mysqlTable("users", {
   website: varchar("website", { length: 255 }),
   isPublicProfile: boolean("isPublicProfile").default(true).notNull(),
   isPremium: boolean("isPremium").default(false).notNull(),
+  premiumGrantedAt: timestamp("premiumGrantedAt"),
+  premiumSource: varchar("premiumSource", { length: 64 }), // "thinkific" | "admin" | "manual"
   followersCount: int("followersCount").default(0).notNull(),
   followingCount: int("followingCount").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

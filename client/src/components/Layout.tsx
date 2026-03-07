@@ -9,7 +9,7 @@ import {
   Heart, Calculator, ClipboardList, Activity,
   Scan, BookOpen, FileText, Menu, X, ChevronRight,
   Stethoscope, Zap, ExternalLink, ShoppingBag, FlaskConical, MessageCircle, Award, Shield, GraduationCap,
-  BookMarked, Library, Plus,
+  BookMarked, Library, Plus, Crown,
   LogIn, LogOut, Settings, ChevronDown
 } from "lucide-react";
 
@@ -87,6 +87,12 @@ const navGroups = [
     label: "Community",
     items: [
       { path: "https://member.allaboutultrasound.com/products/communities/allaboutultrasound-community", label: "iHeartEcho Community", icon: MessageCircle, external: true },
+    ],
+  },
+  {
+    label: "Premium",
+    items: [
+      { path: "/premium", label: "Premium Access", icon: Crown },
     ],
   },
 ];
@@ -265,14 +271,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 {/* Dropdown */}
                 {accountOpen && (() => {
                   const roles: string[] = (user as any).thinkificRoles ?? [];
+                  const isPremiumUser = (user as any).isPremium === true;
                   const hasDiyAdmin = roles.includes("diy_admin");
                   const hasPlatformAdmin = roles.includes("platform_admin") || (user as any).role === "admin";
                   const ROLE_LABELS: Record<string, { label: string; color: string }> = {
-                    premium_user:   { label: "Premium",           color: "#189aa1" },
-                    diy_user:       { label: "DIY Accreditation", color: "#f59e0b" },
-                    diy_admin:      { label: "Lab Admin",         color: "#f97316" },
+                    diy_user:  { label: "DIY Accreditation", color: "#f59e0b" },
+                    diy_admin: { label: "Lab Admin",         color: "#f97316" },
                   };
-                  const badges = roles.filter(r => ROLE_LABELS[r]).map(r => ROLE_LABELS[r]);
+                  const roleBadges = roles.filter(r => ROLE_LABELS[r]).map(r => ROLE_LABELS[r]);
+                  const allBadges = [
+                    ...(isPremiumUser ? [{ label: "Premium", color: "#189aa1" }] : []),
+                    ...roleBadges,
+                  ];
                   return (
                     <div className="absolute right-0 top-full mt-1.5 w-72 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
                       {/* User info header */}
@@ -292,21 +302,29 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm font-semibold text-gray-800 truncate">
+                          <div className="text-sm font-semibold text-gray-800 truncate flex items-center gap-1.5">
                             {user.displayName || user.name || "Account"}
+                            {isPremiumUser && (
+                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold"
+                                style={{ background: "#189aa115", color: "#189aa1", border: "1px solid #189aa140" }}>
+                                <Crown className="w-2.5 h-2.5" />
+                                PREMIUM
+                              </span>
+                            )}
                           </div>
                           <div className="text-xs text-gray-400 truncate">{user.email}</div>
                         </div>
                       </div>
 
                       {/* Subscription badges */}
-                      {badges.length > 0 && (
+                      {allBadges.length > 0 && (
                         <div className="px-4 py-2.5 border-b border-gray-100">
                           <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">My Subscriptions</div>
                           <div className="flex flex-wrap gap-1">
-                            {badges.map(({ label, color }) => (
-                              <span key={label} className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold"
+                            {allBadges.map(({ label, color }) => (
+                              <span key={label} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold"
                                 style={{ background: color + "15", color, border: `1px solid ${color}40` }}>
+                                {label === "Premium" && <Crown className="w-2.5 h-2.5" />}
                                 {label}
                               </span>
                             ))}

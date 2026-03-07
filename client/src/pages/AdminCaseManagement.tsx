@@ -145,7 +145,7 @@ function CasePreviewModal({
                 </span>
               </div>
 
-              {/* ── Media Carousel ─────────────────────────────────────────── */}
+              {/* -- Media Carousel ------------------------------------------- */}
               {media.length > 0 && (
                 <div>
                   <p className="text-xs font-semibold text-gray-500 mb-2 flex items-center gap-1">
@@ -223,7 +223,7 @@ function CasePreviewModal({
                 </div>
               )}
 
-              {/* ── Case Text ──────────────────────────────────────────────── */}
+              {/* -- Case Text ------------------------------------------------ */}
               <div>
                 <p className="text-xs font-semibold text-gray-500 mb-1">Summary</p>
                 <p className="text-gray-700 leading-relaxed">{caseData.summary}</p>
@@ -265,7 +265,7 @@ function CasePreviewModal({
                 </div>
               )}
 
-              {/* ── MCQ Questions ──────────────────────────────────────────── */}
+              {/* -- MCQ Questions -------------------------------------------- */}
               {questions.length > 0 && (
                 <div>
                   <p className="text-xs font-semibold text-gray-500 mb-2 flex items-center gap-1">
@@ -305,7 +305,7 @@ function CasePreviewModal({
                 </div>
               )}
 
-              {/* ── Rejection reason (if rejected) ─────────────────────────── */}
+              {/* -- Rejection reason (if rejected) --------------------------- */}
               {caseData.status === "rejected" && caseData.rejectionReason && (
                 <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
                   <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
@@ -316,7 +316,7 @@ function CasePreviewModal({
                 </div>
               )}
 
-              {/* ── Inline approve/reject (pending only) ───────────────────── */}
+              {/* -- Inline approve/reject (pending only) --------------------- */}
               {caseData.status === "pending" && (
                 <div className="flex gap-2 pt-2 border-t">
                   <Button
@@ -633,7 +633,7 @@ export default function AdminCaseManagement() {
           ))}
         </div>
 
-        {/* ── Pending Tab ──────────────────────────────────────────────────── */}
+        {/* -- Pending Tab ---------------------------------------------------- */}
         {tab === "pending" && (
           <div>
             {pendingQuery.isLoading ? (
@@ -658,7 +658,7 @@ export default function AdminCaseManagement() {
           </div>
         )}
 
-        {/* ── All Cases Tab ─────────────────────────────────────────────────── */}
+        {/* -- All Cases Tab --------------------------------------------------- */}
         {tab === "all" && (
           <div>
             {/* Filters */}
@@ -745,7 +745,7 @@ export default function AdminCaseManagement() {
         )}
       </div>
 
-      {/* ── Full Case Preview Modal ──────────────────────────────────────────── */}
+      {/* -- Full Case Preview Modal -------------------------------------------- */}
       <CasePreviewModal
         caseId={previewCaseId}
         open={previewOpen}
@@ -755,7 +755,7 @@ export default function AdminCaseManagement() {
         isApproving={approveMutation.isPending}
       />
 
-      {/* ── AI Case Generator Dialog ───────────────────────────────────────── */}
+      {/* -- AI Case Generator Dialog ----------------------------------------- */}
       <Dialog open={aiCaseOpen} onOpenChange={(o) => { setAiCaseOpen(o); if (!o) { setAiCasePreview(null); setAiPrompt(""); } }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -924,7 +924,7 @@ export default function AdminCaseManagement() {
         </DialogContent>
       </Dialog>
 
-      {/* ── Reject Dialog ──────────────────────────────────────────────── */}
+      {/* -- Reject Dialog ------------------------------------------------ */}
       <Dialog open={!!rejectTarget} onOpenChange={(open) => !open && setRejectTarget(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>

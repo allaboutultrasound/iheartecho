@@ -982,3 +982,19 @@
 - [ ] Build Notification Preferences UI component (opt-in/out, reminder time)
 - [ ] Add Trigger Reminders control in QuickFireAdmin
 - [x] Write vitest tests for streak notification procedures
+
+## Premium Access Checkout Integration (Session Mar 7)
+- [x] DB: isPremium, premiumGrantedAt, premiumSource columns added to users table (db:push applied)
+- [x] premium tRPC router: getStatus (returns isPremium, manageUrl, checkoutUrl), checkAndSync (manual sync from Thinkific)
+- [x] Thinkific webhook handler extended: order.created grants premium, subscription.cancelled revokes premium
+- [x] Premium.tsx page: hero with $9/month pricing card, feature grid, free vs premium comparison, checkout button linking to Thinkific
+- [x] Auto-sync on return from checkout (?sync=1 URL param)
+- [x] /premium route registered in App.tsx
+- [x] PremiumGate component: wraps premium-only content, shows upgrade prompt for non-premium users (compact + full variants)
+- [x] Layout.tsx: "Premium Access" nav item added to sidebar under "Premium" section (Crown icon)
+- [x] Layout.tsx: account dropdown shows Crown badge next to username for premium users
+- [x] Layout.tsx: subscription badges section shows "Premium" with Crown icon when isPremium=true (from DB)
+- [x] Profile.tsx: subscriptions card shows "Premium Access" entry with Active badge and "Manage Premium Subscription" link when isPremium=true
+- [x] Profile.tsx: empty subscriptions state links to /premium upgrade page instead of generic browse link
+- [x] AdminCaseManagement.tsx: fixed JSX error from box-drawing Unicode characters in JSX comments (replaced with plain dashes)
+- [x] 583 tests passing

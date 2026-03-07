@@ -127,6 +127,20 @@ export async function getUserPasswordHash(userId: number): Promise<string | null
   return rows[0]?.passwordHash ?? null;
 }
 
+export async function setPremiumStatus(
+  userId: number,
+  isPremium: boolean,
+  source: "thinkific" | "admin" | "manual" = "admin"
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(users).set({
+    isPremium,
+    premiumGrantedAt: isPremium ? new Date() : null,
+    premiumSource: isPremium ? source : null,
+  }).where(eq(users.id, userId));
+}
+
 export async function updateUserPassword(userId: number, newHash: string): Promise<void> {
   const db = await getDb();
   if (!db) return;

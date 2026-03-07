@@ -217,7 +217,9 @@ export default function Profile() {
 
   const u = user as any;
   const roles = (u.appRoles as string[] | undefined) ?? [];
-  const activeSubscriptions = roles.filter((r: string) => ROLE_CONFIG[r]);
+  const isPremiumUser = u.isPremium === true;
+  // Filter out 'premium_user' Thinkific role since we now track isPremium from DB
+  const activeSubscriptions = roles.filter((r: string) => ROLE_CONFIG[r] && r !== "premium_user");
 
   const handleSave = () => {
     const trimmedName = displayName.trim();
@@ -436,7 +438,7 @@ export default function Profile() {
                 <p className="text-xs text-gray-400 mt-0.5">Your active access levels and plans.</p>
               </div>
               <div className="px-5 py-4">
-                {activeSubscriptions.length === 0 ? (
+                {!isPremiumUser && activeSubscriptions.length === 0 ? (
                   <div className="text-center py-4">
                     <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-2">
                       <Award className="w-4 h-4 text-gray-400" />
@@ -444,18 +446,46 @@ export default function Profile() {
                     <p className="text-xs text-gray-500 mb-1">No active subscriptions</p>
                     <p className="text-xs text-gray-400 mb-3">Unlock premium features and DIY accreditation tools.</p>
                     <a
-                      href="https://member.allaboutultrasound.com/collections/cme"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href="/premium"
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all hover:opacity-90"
                       style={{ background: "linear-gradient(135deg, #189aa1, #4ad9e0)" }}
                     >
-                      <ExternalLink className="w-3 h-3" />
-                      Browse Plans
+                      <Star className="w-3 h-3" />
+                      Upgrade to Premium
                     </a>
                   </div>
                 ) : (
                   <div className="space-y-2.5">
+                    {/* Premium Access (from DB isPremium flag) */}
+                    {isPremiumUser && (
+                      <div className="flex items-start gap-2.5 p-2.5 rounded-lg border"
+                        style={{ borderColor: "#189aa130", background: "#189aa108" }}>
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                          style={{ background: "#189aa120" }}>
+                          <Star className="w-3.5 h-3.5" style={{ color: "#189aa1" }} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span className="text-xs font-bold" style={{ color: "#189aa1" }}>Premium Access</span>
+                            <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full">
+                              <CheckCircle className="w-2.5 h-2.5" /> Active
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-500 leading-relaxed">Full access to all iHeartEcho premium features — $9/month.</p>
+                          <a
+                            href="https://member.allaboutultrasound.com/memberships/iheartecho-app-premium-access"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 mt-1 text-[10px] font-semibold hover:underline"
+                            style={{ color: "#189aa1" }}
+                          >
+                            <ExternalLink className="w-2.5 h-2.5" />
+                            Manage Premium Subscription
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                    {/* Other Thinkific role subscriptions */}
                     {activeSubscriptions.map((roleKey: string) => {
                       const config = ROLE_CONFIG[roleKey];
                       const Icon = config.icon;
