@@ -6,9 +6,10 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
+import { trpc } from "@/lib/trpc";
 import {
   Calculator, ClipboardList, Activity, Scan, BookOpen, FileText,
-  ArrowRight, Users, Award, Zap, Stethoscope, ExternalLink, MessageCircle, GraduationCap, Droplets
+  ArrowRight, Users, Award, Zap, Stethoscope, ExternalLink, MessageCircle, GraduationCap, Droplets, Crown
 } from "lucide-react";
 
 const BRAND = "#189aa1";
@@ -152,6 +153,11 @@ const stats = [
 
 export default function Home() {
   const { user } = useAuth();
+  const { data: premiumStatus } = trpc.premium.getStatus.useQuery(undefined, {
+    enabled: !!user,
+    staleTime: 60_000,
+  });
+  const isPremium = premiumStatus?.isPremium ?? false;
   return (
     <Layout>
       {/* Hero Banner */}
@@ -287,28 +293,44 @@ export default function Home() {
           })}
         </div>
 
-        {/* Premium CTA */}
-        <div className="mt-8 rounded-xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4"
-          style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}>
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <Award className="w-4 h-4 text-[#4ad9e0]" />
-              <span className="text-xs font-semibold text-[#4ad9e0] uppercase tracking-wider">Premium Access</span>
+        {/* Premium CTA — shown only to non-premium users */}
+        {!isPremium ? (
+          <div className="mt-8 rounded-xl p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4"
+            style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <Award className="w-4 h-4 text-[#4ad9e0]" />
+                <span className="text-xs font-semibold text-[#4ad9e0] uppercase tracking-wider">Premium Access</span>
+              </div>
+              <h3 className="text-white font-bold text-base mb-1" style={{ fontFamily: "Merriweather, serif" }}>
+                Unlock Full Clinical Suite
+              </h3>
+              <p className="text-white/60 text-xs">
+                UEA Navigator, HOCM Navigator, full interpretation engine, 500+ cases, and all premium modules — $9/month.
+              </p>
             </div>
-            <h3 className="text-white font-bold text-base mb-1" style={{ fontFamily: "Merriweather, serif" }}>
-              Unlock Full Clinical Suite
-            </h3>
-            <p className="text-white/60 text-xs">
-              UEA Navigator, HOCM Navigator, full interpretation engine, 500+ cases, and all premium modules — $9/month.
-            </p>
+            <a href="https://member.allaboutultrasound.com/order?ct=d0290929-3906-48ab-8c3a-ff71e2748af0" target="_blank" rel="noopener noreferrer"
+              className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
+              style={{ background: "#189aa1" }}>
+              <ExternalLink className="w-4 h-4" />
+              Upgrade
+            </a>
           </div>
-          <a href="https://member.allaboutultrasound.com/order?ct=d0290929-3906-48ab-8c3a-ff71e2748af0" target="_blank" rel="noopener noreferrer"
-            className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
-            style={{ background: "#189aa1" }}>
-            <ExternalLink className="w-4 h-4" />
-            Upgrade
-          </a>
-        </div>
+        ) : (
+          <div className="mt-8 rounded-xl p-5 flex items-center gap-4"
+            style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}>
+            <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ background: "#189aa1" }}>
+              <Crown className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="text-xs font-semibold text-[#4ad9e0] uppercase tracking-wider">Premium Active</span>
+              </div>
+              <p className="text-white font-semibold text-sm">You have full Premium Access — all modules are unlocked.</p>
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );
