@@ -989,7 +989,7 @@ export default function HOCMNavigator() {
               <div className="flex items-start gap-2 p-4 rounded-xl bg-[#f0fbfc] border border-[#189aa1]/20">
                 <Info className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: BRAND }} />
                 <div className="text-xs text-[#0e4a50] leading-relaxed">
-                  <strong>Goal:</strong> The patient blows into the manometer circuit until the gauge reads <strong>≥40 mmHg</strong>, then holds for <strong>10 seconds</strong>. This standardises intrathoracic pressure and produces significantly higher, more reproducible provoked gradients than instructed Valsalva (Kim et al., PMID 39886312).
+                  <strong>Goal:</strong> The patient blows into the manometer circuit until the gauge reads <strong>≥40 mmHg</strong>, then holds for <strong>10 seconds</strong>. This standardizes intrathoracic pressure and produces significantly higher, more reproducible provoked gradients than instructed Valsalva (Kim et al., PMID 39886312).
                 </div>
               </div>
               {/* Circuit assembly */}

@@ -1051,7 +1051,7 @@ export default function HOCMScanCoach() {
             </div>
             <div className="px-5 py-4 space-y-3">
               <p className="text-xs text-gray-700 leading-relaxed">
-                The Valsalva maneuver is a <strong>haemodynamic stress test</strong> that transiently alters preload, afterload, and venous return across four distinct phases. In HOCM, the critical window is the <strong>release phase</strong> — when venous return suddenly surges, the LV cavity is momentarily smallest, and the LVOT gradient peaks. Understanding each phase helps you anticipate the echo findings and time your measurements correctly.
+                The Valsalva maneuver is a <strong>hemodynamic stress test</strong> that transiently alters preload, afterload, and venous return across four distinct phases. In HOCM, the critical window is the <strong>release phase</strong> — when venous return suddenly surges, the LV cavity is momentarily smallest, and the LVOT gradient peaks. Understanding each phase helps you anticipate the echo findings and time your measurements correctly.
               </p>
               <div className="space-y-2">
                 {[
@@ -1116,7 +1116,7 @@ export default function HOCMScanCoach() {
               <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-50 border border-amber-200">
                 <Info className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
                 <p className="text-xs text-amber-800 leading-relaxed">
-                  <strong>Goal-Directed Valsalva advantage:</strong> By standardising the strain effort to 40 mmHg or more x 10 seconds, you ensure Phase II is sustained long enough to adequately reduce LV preload and unmask the maximum provoked gradient in Phase IV. Instructed Valsalva often fails to sustain Phase II adequately, leading to false-negative results.
+                  <strong>Goal-Directed Valsalva advantage:</strong> By standardizing the strain effort to 40 mmHg or more x 10 seconds, you ensure Phase II is sustained long enough to adequately reduce LV preload and unmask the maximum provoked gradient in Phase IV. Instructed Valsalva often fails to sustain Phase II adequately, leading to false-negative results.
                 </p>
               </div>
             </div>
@@ -1341,7 +1341,7 @@ export default function HOCMScanCoach() {
               <div className="flex items-start gap-2 p-4 rounded-xl bg-[#f0fbfc] border border-[#189aa1]/20 mb-2">
                 <Info className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: BRAND }} />
                 <div className="text-xs text-[#0e4a50] leading-relaxed">
-                  <strong>Goal:</strong> The patient blows into the manometer circuit until the gauge reads <strong>≥40 mmHg</strong>, then holds for <strong>10 seconds</strong>. This standardises intrathoracic pressure and produces significantly higher, more reproducible provoked gradients than instructed Valsalva (Kim et al., PMID 39886312).
+                  <strong>Goal:</strong> The patient blows into the manometer circuit until the gauge reads <strong>≥40 mmHg</strong>, then holds for <strong>10 seconds</strong>. This standardizes intrathoracic pressure and produces significantly higher, more reproducible provoked gradients than instructed Valsalva (Kim et al., PMID 39886312).
                 </div>
               </div>
 
@@ -1563,7 +1563,7 @@ export default function HOCMScanCoach() {
             </div>
             <div className="px-5 py-4 space-y-3">
               <p className="text-xs text-gray-700 leading-relaxed">
-                By reducing myosin cross-bridge cycling, myosin inhibitors produce a <strong>controlled reduction in LV contractility</strong>. In obstructive HOCM, this is therapeutically beneficial — the hypercontractile state is the root cause of obstruction. The haemodynamic consequences are predictable and measurable on echo:
+                By reducing myosin cross-bridge cycling, myosin inhibitors produce a <strong>controlled reduction in LV contractility</strong>. In obstructive HOCM, this is therapeutically beneficial — the hypercontractile state is the root cause of obstruction. The hemodynamic consequences are predictable and measurable on echo:
               </p>
               <div className="space-y-2">
                 {[
@@ -1676,7 +1676,7 @@ export default function HOCMScanCoach() {
             </div>
             <div className="px-5 py-4 space-y-3">
               <p className="text-xs text-gray-700 leading-relaxed">
-                Stroke volume is the most sensitive marker of haemodynamic improvement with myosin inhibitors. As LVOT obstruction resolves, forward flow increases and LVOT VTI rises — even before the LVEF visibly changes.
+                Stroke volume is the most sensitive marker of hemodynamic improvement with myosin inhibitors. As LVOT obstruction resolves, forward flow increases and LVOT VTI rises — even before the LVEF visibly changes.
               </p>
               <div className="rounded-xl p-4 space-y-3" style={{ background: "#f0fbfc", border: "1px solid #189aa1" + "30" }}>
                 <p className="text-xs font-bold" style={{ color: BRAND }}>Step-by-Step SV Calculation</p>
