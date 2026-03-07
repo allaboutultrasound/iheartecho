@@ -792,3 +792,16 @@
 - [x] App.tsx — /forgot-password and /reset-password routes already registered
 - [x] Profile.tsx — "Reset via email" link already wired to /forgot-password
 - [x] Vitest — 29 new tests (input validation, expiry logic, URL construction, email enumeration protection) — 474 tests total passing
+
+## Magic Link Login
+- [x] DB schema — add magicLinkToken, magicLinkExpiry columns to users table
+- [x] DB migration — pnpm db:push (migration 0030 applied, 37 columns in users table)
+- [x] DB helpers — setMagicLinkToken, getUserByMagicLinkToken, clearMagicLinkToken added to db.ts
+- [x] Email template — buildMagicLinkEmail added to server/_core/email.ts
+- [x] tRPC — auth.requestMagicLink: generate 96-char token, 15-min expiry, send email (email enumeration safe)
+- [x] tRPC — auth.verifyMagicLink: validate token+expiry, create session cookie, consume token (one-time use)
+- [x] MagicLinkRequest.tsx — branded email input page at /magic-link with sent confirmation state
+- [x] MagicLinkCallback.tsx — auto-verifies token on mount, shows verifying/success/error states, redirects to /
+- [x] App.tsx — /magic-link and /auth/magic routes registered
+- [x] Login.tsx — "Sign in with a magic link" button added below register CTA
+- [x] Vitest — 22 new tests (input validation, token generation, expiry, URL construction, enumeration protection, one-time use) — 496 tests total passing

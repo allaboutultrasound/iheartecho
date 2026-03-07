@@ -198,7 +198,20 @@ export default function Login() {
             </button>
           </Link>
 
-          <p className="mt-8 text-xs text-gray-400 text-center leading-relaxed">
+          <div className="flex items-center gap-3 my-4">
+            <div className="flex-1 h-px bg-gray-100" />
+            <span className="text-xs text-gray-400">or</span>
+            <div className="flex-1 h-px bg-gray-100" />
+          </div>
+
+          <Link href="/magic-link">
+            <button className="w-full flex items-center justify-center gap-2 py-3 px-6 rounded-xl font-medium text-sm transition-all hover:bg-[#f0fbfc] border border-[#189aa1]/30 text-[#189aa1]">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              Sign in with a magic link
+            </button>
+          </Link>
+
+          <p className="mt-6 text-xs text-gray-400 text-center leading-relaxed">
             By signing in you agree to the{" "}
             <a href="https://www.iheartecho.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">Terms of Service</a>
             {" "}and{" "}

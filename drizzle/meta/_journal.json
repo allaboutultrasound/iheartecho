@@ -211,6 +211,13 @@
       "when": 1772848463797,
       "tag": "0029_white_wallop",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "5",
+      "when": 1772850017254,
+      "tag": "0030_unusual_firebrand",
+      "breakpoints": true
     }
   ]
 }

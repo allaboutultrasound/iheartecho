@@ -241,6 +241,39 @@ export async function clearPasswordResetToken(userId: number): Promise<void> {
     .where(eq(users.id, userId));
 }
 
+export async function setMagicLinkToken(
+  userId: number,
+  token: string,
+  expiry: Date,
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(users)
+    .set({ magicLinkToken: token, magicLinkExpiry: expiry })
+    .where(eq(users.id, userId));
+}
+
+export async function getUserByMagicLinkToken(token: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db
+    .select()
+    .from(users)
+    .where(eq(users.magicLinkToken, token))
+    .limit(1);
+  return rows[0];
+}
+
+export async function clearMagicLinkToken(userId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(users)
+    .set({ magicLinkToken: null, magicLinkExpiry: null })
+    .where(eq(users.id, userId));
+}
+
 export async function getAllCommunities() {
   const db = await getDb();
   if (!db) return [];

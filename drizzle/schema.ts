@@ -51,6 +51,9 @@ export const users = mysqlTable("users", {
   pendingEmail: varchar("pendingEmail", { length: 320 }),
   pendingEmailToken: varchar("pendingEmailToken", { length: 128 }),
   pendingEmailExpiry: timestamp("pendingEmailExpiry"),
+  // Magic link login (passwordless)
+  magicLinkToken: varchar("magicLinkToken", { length: 128 }),
+  magicLinkExpiry: timestamp("magicLinkExpiry"),
 });
 
 export type User = typeof users.$inferSelect;

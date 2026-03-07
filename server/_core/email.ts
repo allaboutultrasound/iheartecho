@@ -224,6 +224,39 @@ export function buildEmailChangeVerificationEmail(opts: {
   return { subject, htmlBody, previewText };
 }
 
+export function buildMagicLinkEmail(opts: {
+  firstName: string;
+  magicUrl: string;
+}): { subject: string; htmlBody: string; previewText: string } {
+  const subject = "Your iHeartEcho sign-in link";
+  const previewText = "Click to sign in to iHeartEcho — link expires in 15 minutes";
+  const htmlBody = emailWrapper(`
+    <h2 style="margin:0 0 8px;font-size:20px;color:${brandDark};font-family:Georgia,serif;">
+      Sign in to iHeartEcho™
+    </h2>
+    <p style="margin:0 0 20px;font-size:15px;color:#475569;line-height:1.6;">
+      Hi ${opts.firstName}, click the button below to sign in instantly — no password needed.
+    </p>
+    <div style="text-align:center;margin:28px 0;">
+      <a href="${opts.magicUrl}"
+        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;">
+        Sign In to iHeartEcho
+      </a>
+    </div>
+    <div style="background:#fff8ed;border-left:3px solid #f59e0b;padding:12px 16px;border-radius:0 8px 8px 0;margin:0 0 20px;">
+      <p style="margin:0;font-size:13px;color:#92400e;">
+        <strong>This link expires in 15 minutes</strong> and can only be used once.
+        If you did not request this link, you can safely ignore this email.
+      </p>
+    </div>
+    <p style="margin:0;font-size:13px;color:#94a3b8;line-height:1.5;">
+      Or copy and paste this URL into your browser:<br/>
+      <a href="${opts.magicUrl}" style="color:${brandColor};word-break:break-all;">${opts.magicUrl}</a>
+    </p>
+  `);
+  return { subject, htmlBody, previewText };
+}
+
 export function buildWelcomeEmail(opts: {
   firstName: string;
   loginUrl: string;

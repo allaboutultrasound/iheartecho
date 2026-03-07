@@ -51,6 +51,8 @@ import Register from "./pages/Register";
 import VerifyEmail from "./pages/VerifyEmail";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import MagicLinkRequest from "./pages/MagicLinkRequest";
+import MagicLinkCallback from "./pages/MagicLinkCallback";
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
@@ -61,6 +63,8 @@ function Router() {
       <Route path="/verify-email" component={VerifyEmail} />
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password" component={ResetPassword} />
+      <Route path="/magic-link" component={MagicLinkRequest} />
+      <Route path="/auth/magic" component={MagicLinkCallback} />
       <Route path="/calculator" component={EchoCalculator} />
       <Route path="/fetal" component={FetalNavigator} />
       <Route path="/pediatric" component={PediatricNavigator} />

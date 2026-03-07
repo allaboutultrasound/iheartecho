@@ -350,6 +350,82 @@ export const appRouter = router({
 
         return { success: true };
       }),
+
+    // ─── Magic Link (Passwordless) Login ──────────────────────────────────
+
+    requestMagicLink: publicProcedure
+      .input(z.object({
+        email: z.string().email().max(320),
+      }))
+      .mutation(async ({ input }) => {
+        const { getUserByEmail, setMagicLinkToken } = await import('./db');
+        const { sendEmail, buildMagicLinkEmail } = await import('./_core/email');
+        const crypto = await import('crypto');
+
+        const email = input.email.trim().toLowerCase();
+        const user = await getUserByEmail(email);
+
+        // Always return success to prevent email enumeration
+        if (!user) {
+          return { success: true };
+        }
+
+        const token = crypto.randomBytes(48).toString('hex');
+        const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
+        await setMagicLinkToken(user.id, token, expiry);
+
+        const appUrl = process.env.VITE_APP_URL || 'https://app.iheartecho.com';
+        const magicUrl = `${appUrl}/auth/magic?token=${token}`;
+
+        const firstName = (user.displayName || user.name || 'there').split(' ')[0];
+        const emailPayload = buildMagicLinkEmail({ firstName, magicUrl });
+
+        await sendEmail({
+          to: { name: firstName, email: user.email! },
+          subject: emailPayload.subject,
+          htmlBody: emailPayload.htmlBody,
+          previewText: emailPayload.previewText,
+        });
+
+        return { success: true };
+      }),
+
+    verifyMagicLink: publicProcedure
+      .input(z.object({
+        token: z.string().min(1).max(200),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { getUserByMagicLinkToken, clearMagicLinkToken } = await import('./db');
+        const { sdk } = await import('./_core/sdk');
+        const { COOKIE_NAME, ONE_YEAR_MS } = await import('@shared/const');
+        const { getSessionCookieOptions } = await import('./_core/cookies');
+
+        const user = await getUserByMagicLinkToken(input.token);
+        if (!user) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Magic link is invalid or has already been used.' });
+        }
+        if (!user.magicLinkExpiry || new Date() > user.magicLinkExpiry) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'This magic link has expired. Please request a new one.' });
+        }
+
+        // Consume the token immediately (one-time use)
+        await clearMagicLinkToken(user.id);
+
+        // Determine the openId for session creation
+        // Email/password accounts use synthetic openId; OAuth accounts use their real openId
+        const openId = user.openId ?? `email:${user.email!.toLowerCase().trim()}`;
+        const name = user.displayName || user.name || user.email || '';
+
+        const sessionToken = await sdk.createSessionToken(openId, {
+          name,
+          expiresInMs: ONE_YEAR_MS,
+        });
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+
+        return { success: true };
+      }),
   }),
 
   // ─── Hub Communities ──────────────────────────────────────────────────────
