@@ -13,7 +13,7 @@ import {
 
 export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
-  openId: varchar("openId", { length: 64 }).notNull().unique(),
+  openId: varchar("openId", { length: 64 }).unique(), // nullable for email/password users
   name: text("name"),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
@@ -40,6 +40,13 @@ export const users = mysqlTable("users", {
   // Pre-registration: admin can create a stub account before the user first signs in
   isPending: boolean("isPending").default(false).notNull(),
   pendingCreatedAt: timestamp("pendingCreatedAt"),
+  // Custom email/password auth (white-label, no OAuth portal)
+  passwordHash: text("passwordHash"),
+  emailVerified: boolean("emailVerified").default(false).notNull(),
+  emailVerificationToken: varchar("emailVerificationToken", { length: 128 }),
+  emailVerificationExpiry: timestamp("emailVerificationExpiry"),
+  passwordResetToken: varchar("passwordResetToken", { length: 128 }),
+  passwordResetExpiry: timestamp("passwordResetExpiry"),
 });
 
 export type User = typeof users.$inferSelect;

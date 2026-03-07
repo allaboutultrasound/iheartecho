@@ -1875,3 +1875,14 @@ export async function getDiyUsersForLab(labId: number) {
     grantedAt: rows.find(r => r.userId === u.id)?.createdAt,
   }));
 }
+
+/** Count users who have been pre-registered but have not yet signed in (isPending = true) */
+export async function countPendingUsers(): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+  const rows = await db
+    .select({ count: sql<number>`COUNT(*)` })
+    .from(users)
+    .where(eq(users.isPending, true));
+  return Number(rows[0]?.count ?? 0);
+}

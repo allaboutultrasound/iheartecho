@@ -11,19 +11,94 @@ import {
   getLabByAdmin,
   findUserByEmailWithRoles,
   createPendingUser,
+  countPendingUsers,
   type AppRole,
 } from "../db";
 import { syncCatalogToDb } from "./cmeRouter";
+/** Send a welcome email to a pre-registered user via TinyEmail */
+async function sendPreRegistrationWelcome(email: string, roles: string[]): Promise<void> {
+  const apiKey = process.env.TINYEMAIL_API_KEY;
+  const senderEmail = process.env.TINYEMAIL_SENDER_EMAIL || "noreply@iheartecho.com";
+  const senderName = process.env.TINYEMAIL_SENDER_NAME || "iHeartEcho";
+  const appUrl = process.env.VITE_APP_URL ?? "https://app.iheartecho.com";
+
+  const roleLabels: Record<string, string> = {
+    premium_user: "Premium Access",
+    diy_user: "DIY Accreditation",
+    diy_admin: "Lab Admin",
+    platform_admin: "Platform Admin",
+  };
+  const roleList = roles
+    .filter(r => roleLabels[r])
+    .map(r => `<li style="margin:4px 0;color:#475569;">${roleLabels[r]}</li>`)
+    .join("");
+
+  const brandColor = "#189aa1";
+  const brandDark = "#0e1e2e";
+  const html = `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f0fbfc;font-family:Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fbfc;padding:32px 16px;"><tr><td align="center">
+<table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+<tr><td style="background:linear-gradient(135deg,${brandDark} 0%,#0e4a50 60%,${brandColor} 100%);padding:28px 32px;text-align:center;">
+<div style="font-size:22px;font-weight:700;color:#ffffff;font-family:Georgia,serif;">iHeartEcho™</div>
+<div style="font-size:12px;color:#4ad9e0;margin-top:4px;">Echocardiography Clinical Companion</div>
+</td></tr>
+<tr><td style="padding:32px;">
+<h2 style="margin:0 0 8px;font-size:20px;color:${brandDark};font-family:Georgia,serif;">Your iHeartEcho account is ready</h2>
+<p style="margin:0 0 16px;font-size:15px;color:#475569;line-height:1.6;">An administrator has set up an iHeartEcho account for you. You now have access to the clinical platform.</p>
+${roleList ? `<div style="background:#f0fbfc;border-left:3px solid ${brandColor};padding:12px 16px;border-radius:0 8px 8px 0;margin:0 0 20px;"><p style="margin:0 0 8px;font-size:13px;font-weight:700;color:${brandColor};">Your assigned access:</p><ul style="margin:0;padding-left:20px;font-size:14px;">${roleList}</ul></div>` : ""}
+<div style="text-align:center;margin:28px 0;"><a href="${appUrl}/login" style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;">Sign In to iHeartEcho</a></div>
+<p style="margin:0;font-size:13px;color:#94a3b8;">If you have questions, contact us at <a href="mailto:support@iheartecho.com" style="color:${brandColor};">support@iheartecho.com</a>.</p>
+</td></tr>
+<tr><td style="background:#f8fffe;border-top:1px solid #e5f7f8;padding:20px 32px;text-align:center;">
+<p style="margin:0;font-size:12px;color:#94a3b8;">© All About Ultrasound · <a href="https://www.iheartecho.com" style="color:${brandColor};text-decoration:none;">www.iheartecho.com</a></p>
+</td></tr></table></td></tr></table></body></html>`;
+
+  if (!apiKey) {
+    console.log(`[AdminEmail] Welcome email to ${email} (no TINYEMAIL_API_KEY set)`);
+    return;
+  }
+
+  const res = await fetch("https://api.tinyemail.com/relay/v1/email/campaign", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "X-RELAY-ACCESS-TOKEN": apiKey,
+    },
+    body: JSON.stringify({
+      subject: "Your iHeartEcho account is ready",
+      body: html,
+      preview: "Your account has been set up — sign in to get started",
+      sender: { from: { name: senderName, email: senderEmail }, replyTo: { name: senderName, email: senderEmail } },
+      recipients: { to: [{ name: email, email }] },
+      disableTrackingLinks: true,
+    }),
+  }).catch(err => { console.error("[AdminEmail] TinyEmail error:", err); return null; });
+
+  if (res && !res.ok) {
+    const text = await res.text();
+    console.error(`[AdminEmail] TinyEmail error ${res.status}: ${text}`);
+  }
+}
 
 // ─── Platform Admin Router ────────────────────────────────────────────────────
 // Manages user roles and seat assignments for the iHeartEcho platform.
 // Access: platform_admin role or owner (role === "admin")
 
 export const platformAdminRouter = router({
-  /** Check if current user is a platform admin */
+   /** Check if current user is a platform admin */
   isAdmin: protectedProcedure.query(async ({ ctx }) => {
     const roles = await getUserRoles(ctx.user.id);
     return ctx.user.role === "admin" || roles.includes("platform_admin");
+  }),
+
+  /** Count pre-registered users who have not yet signed in */
+  countPending: protectedProcedure.query(async ({ ctx }) => {
+    const roles = await getUserRoles(ctx.user.id);
+    const isOwner = ctx.user.role === "admin";
+    const isPlatformAdmin = roles.includes("platform_admin");
+    if (!isOwner && !isPlatformAdmin) return 0;
+    return countPendingUsers();
   }),
 
   /** List all users with their roles (paginated) */
@@ -171,6 +246,10 @@ export const platformAdminRouter = router({
             const newId = await createPendingUser(email);
             await assignRole(newId, input.role as AppRole, ctx.user.id);
             results.push({ email, status: "pre_registered" as const, displayName: email });
+            // Send welcome email asynchronously (don't block the response)
+            sendPreRegistrationWelcome(email, [input.role]).catch(err =>
+              console.error("[AdminEmail] Failed to send welcome email:", err)
+            );
             continue;
           }
           if (found.roles.includes(input.role)) {
@@ -220,6 +299,10 @@ export const platformAdminRouter = router({
         const newId = await createPendingUser(input.email);
         await assignRole(newId, input.role as AppRole, ctx.user.id);
         wasPreRegistered = true;
+        // Send welcome email asynchronously (don't block the response)
+        sendPreRegistrationWelcome(input.email, [input.role]).catch(err =>
+          console.error("[AdminEmail] Failed to send welcome email:", err)
+        );
         return { success: true, userId: newId, displayName: input.email, wasPreRegistered };
       }
       await assignRole(found.id, input.role as AppRole, ctx.user.id);

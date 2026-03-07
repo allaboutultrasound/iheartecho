@@ -7,6 +7,7 @@ import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { storagePut } from "./storage";
 import { platformAdminRouter, labSeatsRouter } from "./routers/adminRouter";
 import { cmeRouter } from "./routers/cmeRouter";
+import { emailAuthRouter } from "./routers/emailAuthRouter";
 import {
   acceptHubTerms,
   createComment,
@@ -1480,6 +1481,9 @@ export const appRouter = router({
 
   // ─── CME Hub (Thinkific Catalog) ──────────────────────────────────────────────
   cmeCatalog: cmeRouter,
+
+  // ─── Email/Password Auth (white-label, no OAuth portal) ──────────────────────
+  emailAuth: emailAuthRouter,
 });
 export type AppRouter = typeof appRouter;
 

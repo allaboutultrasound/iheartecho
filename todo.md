@@ -721,7 +721,27 @@
 - [x] No Manus/Meta branding visible — all sign-in flows go through branded /login page first
 
 ## Bug: Admin Dashboard — Add User by Email / Pre-register New User
-- [ ] Fix: "Add User by Email" panel — cannot find existing users or register new users
-- [ ] Fix: Pre-register new user flow — role selector + submit button must work end-to-end
-- [ ] Fix: assignRoleByEmail backend procedure — ensure createPendingUser is called when user not found
-- [ ] Fix: findUserByEmail backend procedure — ensure it returns correct data
+- [x] Fix: "Add User by Email" panel — converted findUserByEmail from query to mutation for reliable on-demand lookup
+- [x] Fix: Pre-register new user flow — role selector + submit button work end-to-end
+- [x] Fix: assignRoleByEmail backend procedure — createPendingUser called when user not found
+- [x] Fix: findUserByEmail backend procedure — returns correct data including isPending
+
+## Custom Email/Password Auth + SendGrid (Mar 7 2026)
+- [x] Extend DB schema: passwordHash, emailVerified, emailVerificationToken/Expiry, passwordResetToken/Expiry, openId nullable
+- [x] Build emailAuthRouter: register, login, logout, verifyEmail, forgotPassword, resetPassword
+- [x] Wire emailAuthRouter into main appRouter
+- [x] Fix sdk.ts authenticateRequest to skip OAuth sync for email-based openIds
+- [x] Build Login.tsx: branded email/password sign-in page (fully white-labelled, no Manus/Meta branding)
+- [x] Build Register.tsx: first name, last name, email, password, confirm password
+- [x] Build VerifyEmail.tsx: token-based email verification
+- [x] Build ForgotPassword.tsx: request password reset by email
+- [x] Build ResetPassword.tsx: set new password via reset token
+- [x] Register all 5 auth routes in App.tsx
+- [x] Update Layout.tsx with Register + Sign In buttons
+- [x] Replace TinyEmail helper with SendGrid API in email.ts
+- [x] Store SendGrid API key, sender email, sender name, app URL as secrets
+- [x] Write sendgrid.test.ts to validate API key (passes: Lara Williams / All About Ultrasound)
+- [x] Add countPendingUsers to db.ts and countPending procedure to adminRouter
+- [x] Add pending user count badge to Platform Admin nav in Layout.tsx
+- [x] Send welcome email on pre-registration (single assign + bulk CSV)
+- [x] All 388 tests pass

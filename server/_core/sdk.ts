@@ -270,8 +270,11 @@ class SDKServer {
     const signedInAt = new Date();
     let user = await db.getUserByOpenId(sessionUserId);
 
-    // If user not in DB, sync from OAuth server automatically
-    if (!user) {
+    // If user not in DB, sync from OAuth server automatically.
+    // Skip this for email/password accounts (synthetic openIds like "email:xxx") —
+    // they are not registered with the Manus OAuth server.
+    const isEmailPasswordUser = sessionUserId.startsWith("email:");
+    if (!user && !isEmailPasswordUser) {
       try {
         const userInfo = await this.getUserInfoWithJwt(sessionCookie ?? "");
         await db.upsertUser({
@@ -292,10 +295,23 @@ class SDKServer {
       throw ForbiddenError("User not found");
     }
 
-    await db.upsertUser({
-      openId: user.openId,
-      lastSignedIn: signedInAt,
-    });
+    // Update lastSignedIn — skip upsertUser for email/password users since it
+    // requires openId to be non-null and the update path is simpler via direct DB.
+    if (!isEmailPasswordUser && user.openId) {
+      await db.upsertUser({
+        openId: user.openId,
+        lastSignedIn: signedInAt,
+      });
+    } else {
+      // For email/password users, update lastSignedIn directly
+      const { getDb } = await import("../db");
+      const database = await getDb();
+      if (database) {
+        const { users } = await import("../../drizzle/schema");
+        const { eq } = await import("drizzle-orm");
+        await database.update(users).set({ lastSignedIn: signedInAt }).where(eq(users.id, user.id));
+      }
+    }
 
     return user;
   }

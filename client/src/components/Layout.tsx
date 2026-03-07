@@ -18,6 +18,20 @@ import NotificationBell from "@/components/NotificationBell";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 
+/** Small badge showing the count of pre-registered users awaiting first login */
+function PendingBadge() {
+  const { data: count } = trpc.platformAdmin.countPending.useQuery(undefined, {
+    staleTime: 60_000,
+    retry: false,
+  });
+  if (!count || count === 0) return null;
+  return (
+    <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold bg-orange-500 text-white">
+      {count > 99 ? "99+" : count}
+    </span>
+  );
+}
+
 const navGroups = [
   {
     label: "Overview",
@@ -218,7 +232,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 {accountOpen && (() => {
                   const roles = (user as any).appRoles as string[] | undefined ?? [];
                   const hasDiyAdmin = roles.includes("diy_admin");
-                  const hasPlatformAdmin = roles.includes("platform_admin");
+                  const hasPlatformAdmin = roles.includes("platform_admin") || (user as any).role === "admin";
                   const ROLE_LABELS: Record<string, { label: string; color: string }> = {
                     premium_user:   { label: "Premium",           color: "#189aa1" },
                     diy_user:       { label: "DIY Accreditation", color: "#f59e0b" },
@@ -308,7 +322,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                             <button onClick={() => setAccountOpen(false)}
                               className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-all text-left">
                               <Shield className="w-3.5 h-3.5 text-purple-500" />
-                              Platform Admin Dashboard
+                              <span className="flex-1">Platform Admin Dashboard</span>
+                              <PendingBadge />
                             </button>
                           </WouterLink>
                         </div>
@@ -329,14 +344,22 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 })()}
               </div>
             ) : (
-              <a
-                href="/login"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold text-xs text-white transition-all hover:opacity-90"
-                style={{ background: "linear-gradient(135deg, #189aa1 0%, #4ad9e0 100%)" }}
-              >
-                <LogIn className="w-3.5 h-3.5" />
-                Sign In
-              </a>
+              <div className="flex items-center gap-2">
+                <a
+                  href="/register"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold text-xs transition-all hover:opacity-90 border border-[#189aa1] text-[#189aa1] bg-transparent"
+                >
+                  Register
+                </a>
+                <a
+                  href="/login"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold text-xs text-white transition-all hover:opacity-90"
+                  style={{ background: "linear-gradient(135deg, #189aa1 0%, #4ad9e0 100%)" }}
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  Sign In
+                </a>
+              </div>
             )}
           </div>
         </header>
