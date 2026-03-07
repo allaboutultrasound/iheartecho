@@ -106,16 +106,16 @@
      All rem-based Tailwind utilities scale proportionally with this.
   */
   html {
-    font-size: 16px;           /* mobile: 320–767px */
+    font-size: 18px;           /* mobile: 320–767px — larger for readability */
   }
   @media (min-width: 768px) {
     html {
-      font-size: 17px;         /* tablet: 768–1023px */
+      font-size: 19px;         /* tablet: 768–1023px */
     }
   }
   @media (min-width: 1024px) {
     html {
-      font-size: 18px;         /* desktop: 1024px+ */
+      font-size: 20px;         /* desktop: 1024px+ */
     }
   }
 
