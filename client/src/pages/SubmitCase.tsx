@@ -1,5 +1,9 @@
-/**
- * SubmitCase.tsx — Submit an Echo Case to the Library
+/*
+ * SubmitCase.tsx — Submit or Edit/Resubmit an Echo Case
+ *
+ * Modes:
+ *  - New submission: /case-library/submit
+ *  - Edit/Resubmit:  /case-library/edit/:id  (only for rejected cases owned by the user)
  *
  * Multi-step form: HIPAA acknowledgement → case details → media upload → questions → review & submit.
  * User-submitted cases go into "pending" status and require admin approval.
@@ -9,7 +13,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useLocation } from "wouter";
+import { useLocation, useParams } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import Layout from "@/components/Layout";
@@ -48,6 +52,7 @@ import {
   HelpCircle,
   Save,
   RotateCcw,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -91,6 +96,10 @@ type Step = typeof STEPS[number];
 
 export default function SubmitCase() {
   const [, navigate] = useLocation();
+  const params = useParams<{ id?: string }>();
+  const editCaseId = params.id ? parseInt(params.id, 10) : null;
+  const isEditMode = editCaseId !== null && !isNaN(editCaseId);
+
   const { user, isAuthenticated } = useAuth();
   const [step, setStep] = useState<Step>("HIPAA");
   const stepIdx = STEPS.indexOf(step);
@@ -115,13 +124,64 @@ export default function SubmitCase() {
   // Questions
   const [questions, setQuestions] = useState<QuestionItem[]>([]);
 
-  // Draft state
+  // Draft state (only used in new submission mode)
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
   const [hasDraft, setHasDraft] = useState(false);
 
-  // ── Draft: load on mount ──────────────────────────────────────────────────
+  // ── Edit mode: load existing case ────────────────────────────────────────────
+
+  const { data: existingCase, isLoading: caseLoading, error: caseError } =
+    trpc.caseLibrary.getMyCase.useQuery(
+      { id: editCaseId! },
+      {
+        enabled: isEditMode && isAuthenticated,
+        retry: false,
+      }
+    );
+
+  // Populate form when existing case loads
+  useEffect(() => {
+    if (!existingCase) return;
+    setTitle(existingCase.title ?? "");
+    setSummary(existingCase.summary ?? "");
+    setClinicalHistory(existingCase.clinicalHistory ?? "");
+    setDiagnosis(existingCase.diagnosis ?? "");
+    setModality((existingCase.modality as typeof MODALITIES[number]) ?? "TTE");
+    setDifficulty((existingCase.difficulty as typeof DIFFICULTIES[number]) ?? "intermediate");
+    const tags = Array.isArray(existingCase.tags) ? existingCase.tags : [];
+    setTagsInput(tags.join(", "));
+    const tp = Array.isArray(existingCase.teachingPoints) ? existingCase.teachingPoints : [];
+    setTeachingPointsInput(tp.join("\n"));
+    // Pre-populate media from S3 URLs (no re-upload needed for existing files)
+    setMedia(
+      (existingCase.media ?? []).map((m: any) => ({
+        type: m.type as "image" | "video",
+        url: m.url,
+        fileKey: m.fileKey,
+        caption: m.caption ?? "",
+        sortOrder: m.sortOrder ?? 0,
+        localPreview: m.type === "image" ? m.url : undefined,
+        uploading: false,
+      }))
+    );
+    setQuestions(
+      (existingCase.questions ?? []).map((q: any) => ({
+        question: q.question,
+        options: Array.isArray(q.options) ? q.options : JSON.parse(q.options ?? "[]"),
+        correctAnswer: q.correctAnswer,
+        explanation: q.explanation ?? "",
+        sortOrder: q.sortOrder ?? 0,
+      }))
+    );
+    // Skip HIPAA step — go straight to Details
+    setHipaaAcknowledged(true);
+    setStep("Details");
+  }, [existingCase]);
+
+  // ── Draft: load on mount (new submission mode only) ──────────────────────────
 
   useEffect(() => {
+    if (isEditMode) return;
     try {
       const raw = localStorage.getItem(DRAFT_KEY);
       if (raw) {
@@ -132,7 +192,7 @@ export default function SubmitCase() {
     } catch {
       // ignore
     }
-  }, []);
+  }, [isEditMode]);
 
   const loadDraft = () => {
     try {
@@ -157,6 +217,7 @@ export default function SubmitCase() {
   };
 
   const saveDraft = useCallback(() => {
+    if (isEditMode) return;
     try {
       const draft: DraftState = {
         title,
@@ -177,7 +238,7 @@ export default function SubmitCase() {
     } catch {
       toast.error("Failed to save draft.");
     }
-  }, [title, summary, clinicalHistory, diagnosis, modality, difficulty, tagsInput, teachingPointsInput, questions]);
+  }, [isEditMode, title, summary, clinicalHistory, diagnosis, modality, difficulty, tagsInput, teachingPointsInput, questions]);
 
   const clearDraft = () => {
     localStorage.removeItem(DRAFT_KEY);
@@ -185,8 +246,9 @@ export default function SubmitCase() {
     setDraftSavedAt(null);
   };
 
-  // Auto-save every 60 seconds when on Details/Questions steps
+  // Auto-save every 60 seconds when on Details/Questions steps (new submission only)
   useEffect(() => {
+    if (isEditMode) return;
     if (step !== "Details" && step !== "Questions") return;
     const timer = setInterval(() => {
       if (title.trim().length >= 5) {
@@ -194,7 +256,9 @@ export default function SubmitCase() {
       }
     }, 60_000);
     return () => clearInterval(timer);
-  }, [step, saveDraft, title]);
+  }, [isEditMode, step, saveDraft, title]);
+
+  // ── Mutations ────────────────────────────────────────────────────────────────
 
   const submitMutation = trpc.caseLibrary.submitCase.useMutation({
     onSuccess: (data) => {
@@ -205,6 +269,16 @@ export default function SubmitCase() {
     onError: (err) => toast.error(err.message || "Failed to submit case."),
   });
 
+  const updateMutation = trpc.caseLibrary.updateCase.useMutation({
+    onSuccess: () => {
+      toast.success("Case resubmitted for review. You'll be notified once it's approved.");
+      navigate(`/case-library`);
+    },
+    onError: (err) => toast.error(err.message || "Failed to resubmit case."),
+  });
+
+  // ── Auth guard ───────────────────────────────────────────────────────────────
+
   if (!isAuthenticated) {
     return (
       <Layout>
@@ -213,6 +287,52 @@ export default function SubmitCase() {
           <p className="text-gray-500 mb-4">Please sign in to submit a case.</p>
           <Button style={{ background: "#189aa1" }} className="text-white" onClick={() => navigate("/login")}>
             Sign In
+          </Button>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Edit mode: show loading / error states
+  if (isEditMode && caseLoading) {
+    return (
+      <Layout>
+        <div className="container py-16 text-center">
+          <div className="w-8 h-8 rounded-full border-2 border-[#189aa1] border-t-transparent animate-spin mx-auto mb-4" />
+          <p className="text-gray-500 text-sm">Loading case…</p>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (isEditMode && caseError) {
+    return (
+      <Layout>
+        <div className="container py-16 text-center">
+          <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-red-300" />
+          <p className="text-gray-500 mb-4">
+            {caseError.message === "Case not found"
+              ? "Case not found or you don't have permission to edit it."
+              : "Failed to load case."}
+          </p>
+          <Button variant="outline" onClick={() => navigate("/case-library")}>
+            Back to Case Library
+          </Button>
+        </div>
+      </Layout>
+    );
+  }
+
+  // In edit mode, only rejected cases can be resubmitted
+  if (isEditMode && existingCase && existingCase.status !== "rejected") {
+    return (
+      <Layout>
+        <div className="container py-16 text-center">
+          <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-amber-300" />
+          <p className="text-gray-500 mb-2">Only rejected cases can be edited and resubmitted.</p>
+          <p className="text-xs text-gray-400 mb-4">Current status: <strong>{existingCase.status}</strong></p>
+          <Button variant="outline" onClick={() => navigate("/case-library")}>
+            Back to Case Library
           </Button>
         </div>
       </Layout>
@@ -355,37 +475,45 @@ export default function SubmitCase() {
     return true;
   };
 
+  const buildPayload = () => ({
+    title: title.trim(),
+    summary: summary.trim(),
+    clinicalHistory: clinicalHistory.trim() || undefined,
+    diagnosis: diagnosis.trim() || undefined,
+    teachingPoints: parseTeachingPoints().length ? parseTeachingPoints() : undefined,
+    modality,
+    difficulty,
+    tags: parseTags(),
+    hipaaAcknowledged: true,
+    media: media
+      .filter((m) => m.url && m.fileKey)
+      .map((m, i) => ({
+        type: m.type,
+        url: m.url,
+        fileKey: m.fileKey,
+        caption: m.caption || undefined,
+        sortOrder: i,
+      })),
+    questions: questions
+      .filter((q) => q.question.trim() && q.options.filter((o) => o.trim()).length >= 2)
+      .map((q, i) => ({
+        question: q.question.trim(),
+        options: q.options.filter((o) => o.trim()),
+        correctAnswer: q.correctAnswer,
+        explanation: q.explanation.trim() || undefined,
+        sortOrder: i,
+      })),
+  });
+
   const handleSubmit = () => {
-    submitMutation.mutate({
-      title: title.trim(),
-      summary: summary.trim(),
-      clinicalHistory: clinicalHistory.trim() || undefined,
-      diagnosis: diagnosis.trim() || undefined,
-      teachingPoints: parseTeachingPoints().length ? parseTeachingPoints() : undefined,
-      modality,
-      difficulty,
-      tags: parseTags(),
-      hipaaAcknowledged: true,
-      media: media
-        .filter((m) => m.url && m.fileKey)
-        .map((m, i) => ({
-          type: m.type,
-          url: m.url,
-          fileKey: m.fileKey,
-          caption: m.caption || undefined,
-          sortOrder: i,
-        })),
-      questions: questions
-        .filter((q) => q.question.trim() && q.options.filter((o) => o.trim()).length >= 2)
-        .map((q, i) => ({
-          question: q.question.trim(),
-          options: q.options.filter((o) => o.trim()),
-          correctAnswer: q.correctAnswer,
-          explanation: q.explanation.trim() || undefined,
-          sortOrder: i,
-        })),
-    });
+    if (isEditMode && editCaseId) {
+      updateMutation.mutate({ id: editCaseId, ...buildPayload() });
+    } else {
+      submitMutation.mutate(buildPayload());
+    }
   };
+
+  const isPending = submitMutation.isPending || updateMutation.isPending;
 
   // ── Step Progress ─────────────────────────────────────────────────────────────
 
@@ -425,11 +553,11 @@ export default function SubmitCase() {
               <ChevronLeft className="w-5 h-5" />
             </button>
             <h1 className="text-xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-              Submit an Echo Case
+              {isEditMode ? "Edit & Resubmit Case" : "Submit an Echo Case"}
             </h1>
           </div>
-          {/* Draft controls */}
-          {step !== "HIPAA" && step !== "Review" && (
+          {/* Draft controls (new submission only) */}
+          {!isEditMode && step !== "HIPAA" && step !== "Review" && (
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
@@ -449,8 +577,20 @@ export default function SubmitCase() {
           )}
         </div>
 
-        {/* Draft restore banner */}
-        {hasDraft && step === "HIPAA" && (
+        {/* Edit mode: rejection reason banner */}
+        {isEditMode && existingCase?.rejectionReason && (
+          <div className="mb-4 flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-800">
+            <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold mb-1">Rejection Reason from Reviewer:</p>
+              <p className="text-xs leading-relaxed">{existingCase.rejectionReason}</p>
+              <p className="text-xs text-red-600 mt-2">Please address the feedback above before resubmitting.</p>
+            </div>
+          </div>
+        )}
+
+        {/* Draft restore banner (new submission only) */}
+        {!isEditMode && hasDraft && step === "HIPAA" && (
           <div className="mb-4 flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-800">
             <RotateCcw className="w-4 h-4 flex-shrink-0" />
             <span className="flex-1">
@@ -681,6 +821,17 @@ export default function SubmitCase() {
                 </span>
               </div>
 
+              {/* Edit mode: note about existing media */}
+              {isEditMode && media.length > 0 && (
+                <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-800">
+                  <RefreshCw className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span>
+                    Your previously uploaded files are shown below. You can remove them and upload replacements,
+                    or keep them as-is.
+                  </span>
+                </div>
+              )}
+
               {/* Upload area */}
               <div
                 className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center cursor-pointer hover:border-[#189aa1]/50 transition-colors"
@@ -864,10 +1015,20 @@ export default function SubmitCase() {
           <Card className="border-0 shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base text-gray-700">
-                <BookOpen className="w-4 h-4 text-[#189aa1]" /> Review & Submit
+                <BookOpen className="w-4 h-4 text-[#189aa1]" />
+                {isEditMode ? "Review & Resubmit" : "Review & Submit"}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-sm">
+              {/* Rejection reason reminder in review step */}
+              {isEditMode && existingCase?.rejectionReason && (
+                <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+                  <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span>
+                    <strong>Reviewer feedback:</strong> {existingCase.rejectionReason}
+                  </span>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-gray-50 rounded-lg p-3">
                   <p className="text-xs text-gray-400 mb-0.5">Title</p>
@@ -890,7 +1051,15 @@ export default function SubmitCase() {
                 <p className="text-xs text-gray-400 mb-0.5">Summary</p>
                 <p className="text-xs text-gray-700 leading-relaxed">{summary}</p>
               </div>
-              {user?.role === "admin" ? (
+              {isEditMode ? (
+                <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-800">
+                  <RefreshCw className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span>
+                    Your case will be resubmitted for admin review. You'll receive an email notification
+                    once it's approved or if further changes are required.
+                  </span>
+                </div>
+              ) : user?.role === "admin" ? (
                 <div className="flex items-start gap-2 p-3 bg-green-50 border border-green-200 rounded-lg text-xs text-green-800">
                   <CheckCircle2 className="w-4 h-4 flex-shrink-0 mt-0.5" />
                   <span>
@@ -925,10 +1094,12 @@ export default function SubmitCase() {
               style={{ background: "#189aa1" }}
               className="text-white gap-2"
               onClick={handleSubmit}
-              disabled={submitMutation.isPending}
+              disabled={isPending}
             >
-              {submitMutation.isPending ? "Submitting…" : "Submit Case"}
-              <CheckCircle2 className="w-4 h-4" />
+              {isPending
+                ? isEditMode ? "Resubmitting…" : "Submitting…"
+                : isEditMode ? "Resubmit Case" : "Submit Case"}
+              {isEditMode ? <RefreshCw className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
             </Button>
           ) : (
             <Button

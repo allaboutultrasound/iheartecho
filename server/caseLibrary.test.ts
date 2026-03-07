@@ -238,3 +238,123 @@ describe("caseLibrary.getPendingCount", () => {
     await expect(caller.caseLibrary.getPendingCount()).rejects.toThrow();
   });
 });
+
+// ─── getMyCase ────────────────────────────────────────────────────────────────
+describe("caseLibrary.getMyCase", () => {
+  it("throws UNAUTHORIZED when called without authentication", async () => {
+    const caller = appRouter.createCaller(makeCtx(null));
+    await expect(caller.caseLibrary.getMyCase({ id: 1 })).rejects.toThrow();
+  });
+  it("throws when DB unavailable (authenticated user)", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeUser()));
+    await expect(caller.caseLibrary.getMyCase({ id: 1 })).rejects.toThrow();
+  });
+  it("rejects invalid id (zero)", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeUser()));
+    await expect(caller.caseLibrary.getMyCase({ id: 0 })).rejects.toThrow();
+  });
+  it("rejects invalid id (negative)", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeUser()));
+    await expect(caller.caseLibrary.getMyCase({ id: -5 })).rejects.toThrow();
+  });
+});
+
+// ─── updateCase (resubmission) ────────────────────────────────────────────────
+describe("caseLibrary.updateCase", () => {
+  it("throws UNAUTHORIZED when called without authentication", async () => {
+    const caller = appRouter.createCaller(makeCtx(null));
+    await expect(
+      caller.caseLibrary.updateCase({
+        id: 1,
+        title: "Updated Case Title Here",
+        summary: "Updated summary with enough detail",
+        modality: "TTE",
+        difficulty: "intermediate",
+        tags: [],
+        hipaaAcknowledged: true,
+        media: [],
+        questions: [],
+      })
+    ).rejects.toThrow();
+  });
+  it("throws BAD_REQUEST when HIPAA is not acknowledged", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeUser()));
+    await expect(
+      caller.caseLibrary.updateCase({
+        id: 1,
+        title: "Updated Case Title Here",
+        summary: "Updated summary with enough detail",
+        modality: "TTE",
+        difficulty: "intermediate",
+        tags: [],
+        hipaaAcknowledged: false,
+        media: [],
+        questions: [],
+      })
+    ).rejects.toThrow();
+  });
+  it("throws when DB unavailable (authenticated user, HIPAA acknowledged)", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeUser()));
+    await expect(
+      caller.caseLibrary.updateCase({
+        id: 1,
+        title: "Updated Case Title Here",
+        summary: "Updated summary with enough detail",
+        modality: "TTE",
+        difficulty: "intermediate",
+        tags: [],
+        hipaaAcknowledged: true,
+        media: [],
+        questions: [],
+      })
+    ).rejects.toThrow();
+  });
+  it("rejects updateCase with title too short", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeUser()));
+    await expect(
+      caller.caseLibrary.updateCase({
+        id: 1,
+        title: "Hi",
+        summary: "Updated summary with enough detail",
+        modality: "TTE",
+        difficulty: "intermediate",
+        tags: [],
+        hipaaAcknowledged: true,
+        media: [],
+        questions: [],
+      })
+    ).rejects.toThrow();
+  });
+  it("rejects updateCase with summary too short", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeUser()));
+    await expect(
+      caller.caseLibrary.updateCase({
+        id: 1,
+        title: "Updated Case Title Here",
+        summary: "Too short",
+        modality: "TTE",
+        difficulty: "intermediate",
+        tags: [],
+        hipaaAcknowledged: true,
+        media: [],
+        questions: [],
+      })
+    ).rejects.toThrow();
+  });
+  it("rejects invalid case id (zero)", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeUser()));
+    await expect(
+      caller.caseLibrary.updateCase({
+        id: 0,
+        title: "Updated Case Title Here",
+        summary: "Updated summary with enough detail",
+        modality: "TTE",
+        difficulty: "intermediate",
+        tags: [],
+        hipaaAcknowledged: true,
+        media: [],
+        questions: [],
+      })
+    ).rejects.toThrow();
+  });
+});

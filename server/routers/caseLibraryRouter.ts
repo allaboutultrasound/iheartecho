@@ -462,8 +462,150 @@ export const caseLibraryRouter = router({
     }));
   }),
 
-  // ─── Admin procedures ─────────────────────────────────────────────────────
+   /** Fetch a user's own case with media and questions (for edit/resubmit) */
+  getMyCase: protectedProcedure
+    .input(z.object({ id: z.number().int().positive() }))
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const [caseRow] = await db
+        .select()
+        .from(echoLibraryCases)
+        .where(
+          and(
+            eq(echoLibraryCases.id, input.id),
+            eq(echoLibraryCases.submittedByUserId, ctx.user.id)
+          )
+        )
+        .limit(1);
+      if (!caseRow) throw new TRPCError({ code: "NOT_FOUND", message: "Case not found" });
+      const [media, questions] = await Promise.all([
+        db
+          .select()
+          .from(echoLibraryCaseMedia)
+          .where(eq(echoLibraryCaseMedia.caseId, input.id))
+          .orderBy(echoLibraryCaseMedia.sortOrder),
+        db
+          .select()
+          .from(echoLibraryCaseQuestions)
+          .where(eq(echoLibraryCaseQuestions.caseId, input.id))
+          .orderBy(echoLibraryCaseQuestions.sortOrder),
+      ]);
+      return {
+        ...caseRow,
+        tags: caseRow.tags ? JSON.parse(caseRow.tags) : [],
+        teachingPoints: caseRow.teachingPoints ? JSON.parse(caseRow.teachingPoints) : [],
+        media,
+        questions: questions.map((q) => ({
+          ...q,
+          options: JSON.parse(q.options) as string[],
+        })),
+      };
+    }),
 
+  /** Update a rejected case and reset its status to pending (resubmission) */
+  updateCase: protectedProcedure
+    .input(caseInputSchema.extend({ id: z.number().int().positive() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      if (!input.hipaaAcknowledged) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "You must acknowledge the HIPAA/PHI policy before resubmitting",
+        });
+      }
+      // Verify ownership and that the case is in rejected status
+      const [existing] = await db
+        .select()
+        .from(echoLibraryCases)
+        .where(
+          and(
+            eq(echoLibraryCases.id, input.id),
+            eq(echoLibraryCases.submittedByUserId, ctx.user.id)
+          )
+        )
+        .limit(1);
+      if (!existing) throw new TRPCError({ code: "NOT_FOUND", message: "Case not found" });
+      if (existing.status !== "rejected") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Only rejected cases can be resubmitted",
+        });
+      }
+      // Update the case fields and reset to pending
+      await db
+        .update(echoLibraryCases)
+        .set({
+          title: input.title,
+          summary: input.summary,
+          clinicalHistory: input.clinicalHistory ?? null,
+          diagnosis: input.diagnosis ?? null,
+          teachingPoints: input.teachingPoints ? JSON.stringify(input.teachingPoints) : null,
+          modality: input.modality,
+          difficulty: input.difficulty,
+          tags: JSON.stringify(input.tags),
+          status: "pending",
+          rejectionReason: null,
+          hipaaAcknowledged: input.hipaaAcknowledged,
+          updatedAt: new Date(),
+        })
+        .where(eq(echoLibraryCases.id, input.id));
+      // Replace media: delete old, insert new
+      await db.delete(echoLibraryCaseMedia).where(eq(echoLibraryCaseMedia.caseId, input.id));
+      if (input.media.length > 0) {
+        await db.insert(echoLibraryCaseMedia).values(
+          input.media.map((m) => ({
+            caseId: input.id,
+            type: m.type,
+            url: m.url,
+            fileKey: m.fileKey,
+            caption: m.caption ?? null,
+            sortOrder: m.sortOrder,
+          }))
+        );
+      }
+      // Replace questions: delete old, insert new
+      await db.delete(echoLibraryCaseQuestions).where(eq(echoLibraryCaseQuestions.caseId, input.id));
+      if (input.questions.length > 0) {
+        await db.insert(echoLibraryCaseQuestions).values(
+          input.questions.map((q) => ({
+            caseId: input.id,
+            question: q.question,
+            options: JSON.stringify(q.options),
+            correctAnswer: q.correctAnswer,
+            explanation: q.explanation ?? null,
+            sortOrder: q.sortOrder,
+          }))
+        );
+      }
+      // Notify admin of resubmission
+      const submitterName = ctx.user.displayName || ctx.user.name || "A user";
+      const appUrl = process.env.VITE_APP_URL ?? "https://app.iheartecho.com";
+      notifyOwner({
+        title: "Case Resubmitted for Review",
+        content: `${submitterName} resubmitted a case: "${input.title}" (${input.modality}). Visit Case Management to review it.`,
+      }).catch((err) => console.error("[caseLibrary] Failed to send resubmission notification:", err));
+      const adminEmail = process.env.SENDGRID_FROM_EMAIL;
+      if (adminEmail) {
+        const { subject, htmlBody, previewText } = buildNewCaseSubmissionAdminEmail({
+          submitterName,
+          caseTitle: input.title,
+          modality: input.modality,
+          difficulty: input.difficulty,
+          adminUrl: `${appUrl}/admin/cases`,
+        });
+        sendEmail({
+          to: { name: "iHeartEcho Admin", email: adminEmail },
+          subject: `[Resubmission] ${subject}`,
+          htmlBody,
+          previewText,
+        }).catch((err) => console.error("[caseLibrary] Failed to send resubmission email:", err));
+      }
+      return { caseId: input.id, status: "pending" as const };
+    }),
+
+  // ─── Admin procedures ─────────────────────────────────────────────────────
   /** Returns the count of cases awaiting admin review (admin only) */
   getPendingCount: adminProcedure.query(async () => {
     const db = await getDb();

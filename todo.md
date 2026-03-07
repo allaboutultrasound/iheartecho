@@ -947,3 +947,11 @@
 ## Sidebar Pending Case Count Badge
 - [x] caseLibrary.getPendingCount — admin-only tRPC query returning count of pending cases
 - [x] Layout.tsx — fetch getPendingCount for admin users, show teal badge on Echo Case Library nav item
+
+## Resubmission Flow
+- [ ] caseLibrary.getMyCase — protected procedure to fetch a user's own case with media and questions
+- [ ] caseLibrary.updateCase — protected procedure to update a rejected case and reset status to pending
+- [ ] SubmitCase.tsx — edit/resubmit mode: pre-populate form from existing case, update on submit
+- [ ] CaseLibrary.tsx My Submissions tab — "Edit & Resubmit" button for rejected cases
+- [ ] App.tsx — add /case-library/edit/:id route
+- [ ] vitest tests for getMyCase and updateCase

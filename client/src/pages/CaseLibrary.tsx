@@ -34,6 +34,7 @@ import {
   CheckCircle2,
   XCircle,
   FileText,
+  RefreshCw,
 } from "lucide-react";
 import { getLoginUrl } from "@/const";
 import { formatDistanceToNow } from "date-fns";
@@ -407,6 +408,13 @@ export default function CaseLibrary() {
                             <div className="mt-2 text-xs text-red-600 bg-red-50 rounded px-2 py-1.5 border border-red-100">
                               <span className="font-semibold">Rejection reason: </span>{c.rejectionReason}
                             </div>
+                          )}
+                          {c.status === "rejected" && (
+                            <Link href={`/case-library/edit/${c.id}`}>
+                              <button className="mt-2 text-xs font-semibold flex items-center gap-1 hover:underline" style={{ color: "#189aa1" }}>
+                                <RefreshCw className="w-3 h-3" /> Edit &amp; Resubmit
+                              </button>
+                            </Link>
                           )}
                           {c.status === "approved" && (
                             <Link href={`/case-library/${c.id}`}>

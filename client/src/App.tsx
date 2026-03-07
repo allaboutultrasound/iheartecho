@@ -129,6 +129,7 @@ function Router() {
       <Route path="/quickfire" component={QuickFire} />
       <Route path="/case-library" component={CaseLibrary} />
       <Route path="/case-library/submit" component={SubmitCase} />
+      <Route path="/case-library/edit/:id" component={SubmitCase} />
       <Route path="/case-library/:id" component={CaseDetail} />
       <Route path="/admin/cases" component={AdminCaseManagement} />
       <Route path="/admin/quickfire" component={QuickFireAdmin} />
