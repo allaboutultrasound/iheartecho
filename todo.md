@@ -1114,3 +1114,7 @@
 ## Bug Fixes
 - [x] Fix ScanCoach image editor — uploaded images not displaying (listOverrides changed from protectedProcedure+admin check to publicProcedure)
 - [x] Fix QuickFire AI question generator — JSON parse error (changed model from gemini-2.5-flash to gpt-4o for reliable generateObject structured output)
+
+## HOCM Color Fix
+- [x] Replace purple banner and accents in HOCMNavigator.tsx with brand teal/dark navy
+- [x] Replace purple banner and accents in HOCMScanCoach.tsx with brand teal/dark navy

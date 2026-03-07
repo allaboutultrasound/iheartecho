@@ -404,7 +404,7 @@ export default function HOCMScanCoach() {
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <div
         className="relative overflow-hidden"
-        style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #1a0a2e 60%, #4a1d96 100%)" }}
+        style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}
       >
         <div className="relative container py-8 md:py-10">
           <div className="max-w-2xl">
@@ -924,7 +924,7 @@ export default function HOCMScanCoach() {
 
           {/* Navigator CTA */}
           <div className="mt-5 p-5 rounded-xl flex flex-col sm:flex-row items-start sm:items-center gap-4"
-            style={{ background: "linear-gradient(135deg, #0e1e2e, #1a0a2e)" }}>
+            style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}>
             <div className="flex-1">
               <p className="text-xs font-semibold text-[#4ad9e0] uppercase tracking-wider mb-0.5">Protocol Reference</p>
               <p className="text-white text-sm font-bold">HOCM EchoNavigator™</p>

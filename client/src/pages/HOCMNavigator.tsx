@@ -424,7 +424,7 @@ export default function HOCMNavigator() {
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <div
         className="relative overflow-hidden"
-        style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #1a0a2e 60%, #4a1d96 100%)" }}
+        style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}
       >
         <div className="relative container py-10 md:py-12">
           <div className="max-w-2xl">
@@ -688,7 +688,7 @@ export default function HOCMNavigator() {
           </div>
 
           {/* Key formula */}
-          <div className="p-4 rounded-xl mb-5" style={{ background: "linear-gradient(135deg, #0e1e2e, #1a0a2e)" }}>
+          <div className="p-4 rounded-xl mb-5" style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}>
             <div className="text-xs font-bold text-[#4ad9e0] uppercase tracking-wider mb-1">Modified Bernoulli Equation</div>
             <div className="text-white font-black text-xl mb-1">ΔP = 4 × V²</div>
             <div className="text-white/60 text-xs">Peak instantaneous gradient (mmHg) = 4 × (peak velocity in m/s)²</div>
@@ -989,7 +989,7 @@ export default function HOCMNavigator() {
 
           {/* ScanCoach CTA */}
           <div className="mt-6 p-5 rounded-xl flex flex-col sm:flex-row items-start sm:items-center gap-4"
-            style={{ background: "linear-gradient(135deg, #0e1e2e, #1a0a2e)" }}>
+            style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}>
             <div className="flex-1">
               <p className="text-xs font-semibold text-[#4ad9e0] uppercase tracking-wider mb-0.5">Acquisition Guide</p>
               <p className="text-white text-sm font-bold">HOCM ScanCoach™</p>
