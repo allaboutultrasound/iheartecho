@@ -1082,3 +1082,10 @@
 - [x] Fix UEAScanCoach.tsx — no placeholder boxes found, no change needed
 - [x] Fix HOCMScanCoach.tsx — no placeholder boxes found, no change needed
 - [x] Fix StrainScanCoach.tsx — no placeholder boxes found, no change needed
+
+## UEA ScanCoach PEG Allergy + Sidebar Cleanup
+- [ ] Add PEG allergy section to UEAScanCoach (contraindications, cross-reactivity, alternatives, management)
+- [ ] Remove UEA Navigator sidebar link from Layout.tsx (accessible via EchoNavigator hub only)
+- [ ] Remove UEA ScanCoach sidebar link from Layout.tsx (accessible via ScanCoach hub only)
+- [ ] Remove HOCM Navigator sidebar link from Layout.tsx (accessible via EchoNavigator hub only)
+- [ ] Remove HOCM ScanCoach sidebar link from Layout.tsx (accessible via ScanCoach hub only)
