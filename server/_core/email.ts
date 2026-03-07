@@ -257,6 +257,84 @@ export function buildMagicLinkEmail(opts: {
   return { subject, htmlBody, previewText };
 }
 
+export function buildCaseApprovedEmail(opts: {
+  firstName: string;
+  caseTitle: string;
+  caseUrl: string;
+}): { subject: string; htmlBody: string; previewText: string } {
+  const subject = `Your echo case has been approved — "${opts.caseTitle}"`;
+  const previewText = "Great news! Your submitted echo case has been approved and is now live in the Echo Case Library.";
+  const htmlBody = emailWrapper(`
+    <h2 style="margin:0 0 8px;font-size:20px;color:${brandDark};font-family:Georgia,serif;">
+      Your Case Has Been Approved! 🎉
+    </h2>
+    <p style="margin:0 0 16px;font-size:15px;color:#475569;line-height:1.6;">
+      Hi ${opts.firstName}, great news — your submitted echo case has been reviewed and <strong style="color:#16a34a;">approved</strong>.
+      It is now live in the iHeartEcho Echo Case Library and available to the community.
+    </p>
+    <div style="background:#f0fbfc;border-left:3px solid ${brandColor};padding:12px 16px;border-radius:0 8px 8px 0;margin:0 0 20px;">
+      <p style="margin:0;font-size:14px;font-weight:700;color:${brandDark};">${opts.caseTitle}</p>
+      <p style="margin:4px 0 0;font-size:13px;color:#64748b;">Now live in the Echo Case Library</p>
+    </div>
+    <p style="margin:0 0 20px;font-size:15px;color:#475569;line-height:1.6;">
+      Thank you for contributing to the iHeartEcho learning community. Your case will help sonographers and cardiologists sharpen their echo interpretation skills.
+    </p>
+    <div style="text-align:center;margin:28px 0;">
+      <a href="${opts.caseUrl}"
+        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;">
+        View Your Case
+      </a>
+    </div>
+    <p style="margin:0;font-size:13px;color:#94a3b8;line-height:1.5;">
+      Keep contributing — every case helps the community grow.
+    </p>
+  `);
+  return { subject, htmlBody, previewText };
+}
+
+export function buildCaseRejectedEmail(opts: {
+  firstName: string;
+  caseTitle: string;
+  reason: string;
+  submitUrl: string;
+}): { subject: string; htmlBody: string; previewText: string } {
+  const subject = `Update on your submitted echo case — "${opts.caseTitle}"`;
+  const previewText = "Your submitted echo case requires some changes before it can be published.";
+  const htmlBody = emailWrapper(`
+    <h2 style="margin:0 0 8px;font-size:20px;color:${brandDark};font-family:Georgia,serif;">
+      Case Submission Update
+    </h2>
+    <p style="margin:0 0 16px;font-size:15px;color:#475569;line-height:1.6;">
+      Hi ${opts.firstName}, thank you for submitting a case to the iHeartEcho Echo Case Library.
+      After review, our team was unable to approve the following submission at this time:
+    </p>
+    <div style="background:#fef2f2;border-left:3px solid #ef4444;padding:12px 16px;border-radius:0 8px 8px 0;margin:0 0 20px;">
+      <p style="margin:0;font-size:14px;font-weight:700;color:${brandDark};">${opts.caseTitle}</p>
+      <p style="margin:8px 0 0;font-size:13px;color:#64748b;font-weight:600;">Reviewer feedback:</p>
+      <p style="margin:4px 0 0;font-size:14px;color:#475569;line-height:1.5;">${opts.reason}</p>
+    </div>
+    <p style="margin:0 0 20px;font-size:15px;color:#475569;line-height:1.6;">
+      We encourage you to address the feedback above and resubmit. Please ensure all submitted cases:
+    </p>
+    <ul style="margin:0 0 20px;padding-left:20px;font-size:14px;color:#475569;line-height:1.8;">
+      <li>Contain <strong>no patient-identifiable information (HIPAA/PHI)</strong></li>
+      <li>Include a clear clinical history, diagnosis, and teaching points</li>
+      <li>Have high-quality images or video clips that illustrate the case</li>
+    </ul>
+    <div style="text-align:center;margin:28px 0;">
+      <a href="${opts.submitUrl}"
+        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;">
+        Submit a Revised Case
+      </a>
+    </div>
+    <p style="margin:0;font-size:13px;color:#94a3b8;line-height:1.5;">
+      If you have questions about this decision, please contact us at
+      <a href="mailto:support@iheartecho.com" style="color:${brandColor};">support@iheartecho.com</a>.
+    </p>
+  `);
+  return { subject, htmlBody, previewText };
+}
+
 export function buildWelcomeEmail(opts: {
   firstName: string;
   loginUrl: string;

@@ -35,6 +35,7 @@ import {
 } from "../../drizzle/schema";
 import { eq, and, desc, sql, count, like, or } from "drizzle-orm";
 import { storagePut } from "../storage";
+import { sendEmail, buildCaseApprovedEmail, buildCaseRejectedEmail } from "../_core/email";
 
 // ─── Admin guard ─────────────────────────────────────────────────────────────
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -468,6 +469,18 @@ export const caseLibraryRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
 
+      // Fetch case + submitter info before updating (needed for email)
+      const [caseRow] = await db
+        .select({
+          id: echoLibraryCases.id,
+          title: echoLibraryCases.title,
+          submittedByUserId: echoLibraryCases.submittedByUserId,
+          isAdminSubmission: echoLibraryCases.isAdminSubmission,
+        })
+        .from(echoLibraryCases)
+        .where(eq(echoLibraryCases.id, input.id))
+        .limit(1);
+
       await db
         .update(echoLibraryCases)
         .set({
@@ -477,6 +490,28 @@ export const caseLibraryRouter = router({
           rejectionReason: null,
         })
         .where(eq(echoLibraryCases.id, input.id));
+
+      // Send approval email to submitter (skip for admin-created cases)
+      if (caseRow && !caseRow.isAdminSubmission && caseRow.submittedByUserId) {
+        const [submitter] = await db
+          .select({ email: users.email, displayName: users.displayName, name: users.name })
+          .from(users)
+          .where(eq(users.id, caseRow.submittedByUserId))
+          .limit(1);
+        if (submitter?.email) {
+          const appUrl = process.env.VITE_APP_URL ?? "https://app.iheartecho.com";
+          const firstName = (submitter.displayName || submitter.name || "there").split(" ")[0];
+          const { subject, htmlBody, previewText } = buildCaseApprovedEmail({
+            firstName,
+            caseTitle: caseRow.title,
+            caseUrl: `${appUrl}/case-library/${caseRow.id}`,
+          });
+          // Fire-and-forget — don't block the mutation on email delivery
+          sendEmail({ to: { name: firstName, email: submitter.email }, subject, htmlBody, previewText }).catch(
+            (err) => console.error("[caseLibrary] Failed to send approval email:", err)
+          );
+        }
+      }
 
       return { success: true };
     }),
@@ -492,6 +527,18 @@ export const caseLibraryRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
 
+      // Fetch case + submitter info before updating (needed for email)
+      const [caseRow] = await db
+        .select({
+          id: echoLibraryCases.id,
+          title: echoLibraryCases.title,
+          submittedByUserId: echoLibraryCases.submittedByUserId,
+          isAdminSubmission: echoLibraryCases.isAdminSubmission,
+        })
+        .from(echoLibraryCases)
+        .where(eq(echoLibraryCases.id, input.id))
+        .limit(1);
+
       await db
         .update(echoLibraryCases)
         .set({
@@ -501,6 +548,29 @@ export const caseLibraryRouter = router({
           rejectionReason: input.reason,
         })
         .where(eq(echoLibraryCases.id, input.id));
+
+      // Send rejection email to submitter (skip for admin-created cases)
+      if (caseRow && !caseRow.isAdminSubmission && caseRow.submittedByUserId) {
+        const [submitter] = await db
+          .select({ email: users.email, displayName: users.displayName, name: users.name })
+          .from(users)
+          .where(eq(users.id, caseRow.submittedByUserId))
+          .limit(1);
+        if (submitter?.email) {
+          const appUrl = process.env.VITE_APP_URL ?? "https://app.iheartecho.com";
+          const firstName = (submitter.displayName || submitter.name || "there").split(" ")[0];
+          const { subject, htmlBody, previewText } = buildCaseRejectedEmail({
+            firstName,
+            caseTitle: caseRow.title,
+            reason: input.reason,
+            submitUrl: `${appUrl}/case-library/submit`,
+          });
+          // Fire-and-forget — don't block the mutation on email delivery
+          sendEmail({ to: { name: firstName, email: submitter.email }, subject, htmlBody, previewText }).catch(
+            (err) => console.error("[caseLibrary] Failed to send rejection email:", err)
+          );
+        }
+      }
 
       return { success: true };
     }),

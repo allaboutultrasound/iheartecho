@@ -930,3 +930,11 @@
 - [x] CaseLibrary My Submissions tab — shows user's own cases with status badges
 - [x] SubmitCase draft auto-save — localStorage save/restore with clear-on-submit
 - [x] AdminCaseManagement expanded modal — full media preview (image carousel + video), MCQ display, inline approve/reject
+
+## Case Submission Email Notifications
+- [x] buildCaseApprovedEmail template — branded HTML email with case title, CTA link to live case, community message
+- [x] buildCaseRejectedEmail template — branded HTML email with case title, reviewer feedback, HIPAA reminder, resubmit CTA
+- [x] approveCase procedure — fetches submitter, sends approval email (fire-and-forget, skips admin-created cases)
+- [x] rejectCase procedure — fetches submitter, sends rejection email with reason (fire-and-forget, skips admin-created cases)
+- [x] caseNotifications.test.ts — 18 vitest tests for both email templates (subject, body, branding, HIPAA, URLs)
+- [x] All 536 tests passing
