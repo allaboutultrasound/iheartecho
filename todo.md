@@ -811,3 +811,15 @@
 - [x] Update sidebar nav link for Community Hub to open external URL in new tab (with ExternalLink icon)
 - [x] Update Home page module card for Hub to open external URL in new tab ("Visit Community" CTA)
 - [x] Ensure no broken internal /hub references remain in nav or cards
+
+## Hub Cleanup — Remove Unused Internal Hub
+- [x] Audit all Hub-related files, tRPC procedures, DB helpers, and schema tables
+- [x] Remove hub tRPC router block (hub: router({...})) from routers.ts
+- [x] Remove hub-related imports from routers.ts (acceptHubTerms, createPost, getAllCommunities, etc.)
+- [x] Remove hub DB helpers from server/db.ts (getAllCommunities, ensureDefaultCommunities, getPostsByCommunity, createPost, deletePost, toggleReaction, getUserReactions, getCommentsByPost, createComment, getOrCreateConversation, getConversationsForUser, getMessages, sendMessage, moderateContent, logModeration, acceptHubTerms, updateHubProfile)
+- [x] Delete Hub.tsx frontend page and hub.test.ts test file
+- [x] Remove hub schema tables from drizzle/schema.ts (communities, posts, postReactions, comments, conversations, messages, boosts, moderationLogs, communityMembers)
+- [x] Remove hubAccepted column from users table in schema.ts
+- [x] Run pnpm db:push — migration 0031 applied, 15 tables remain (no hub tables)
+- [x] Verified no remaining Hub references in routers.ts, App.tsx, or other pages
+- [x] Full test suite: 480 tests passing across 24 test files

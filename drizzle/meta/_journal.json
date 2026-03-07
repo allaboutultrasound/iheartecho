@@ -218,6 +218,13 @@
       "when": 1772850017254,
       "tag": "0030_unusual_firebrand",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "5",
+      "when": 1772851821024,
+      "tag": "0031_flaky_wrecker",
+      "breakpoints": true
     }
   ]
 }
