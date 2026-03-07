@@ -1156,3 +1156,6 @@
 ## HOCMScanCoach — Myosin Inhibitor & Valsalva Physiology
 - [x] Add Myosin Inhibitor tab to HOCMScanCoach (mavacamten/aficamten mechanism, titration protocol, echo monitoring endpoints, LVEF safety threshold)
 - [x] Expand Valsalva physiology content with four-phase haemodynamic explanation and SV/CO effects in both Instructed and Goal-Directed pathways
+
+## QuickFire AI Generator — JSON Error Fix
+- [x] Fix Invalid JSON response error in QuickFire AI question generator (replaced generateObject with generateText + manual JSON parsing to avoid Forge API integer schema rejection)

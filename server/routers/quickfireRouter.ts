@@ -21,7 +21,7 @@ import { z } from "zod";
 import { router, publicProcedure, protectedProcedure } from "../_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { getDb } from "../db";
-import { generateObject } from "ai";
+import { generateText } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createPatchedFetch } from "../_core/patchedFetch";
 import {
@@ -470,27 +470,18 @@ export const quickfireRouter = router({
       });
       const model = openai.chat("gpt-4o");
 
-      const questionSchema = z.object({
-        questions: z.array(
-          z.object({
-            question: z.string().describe("The question text"),
-            options: z.array(z.string()).length(4).optional().describe("Exactly 4 answer options for scenario/image type"),
-            correctAnswer: z.number().int().min(0).max(3).optional().describe("0-indexed correct answer index"),
-            explanation: z.string().optional().describe("Explanation of the correct answer"),
-            reviewAnswer: z.string().optional().describe("The answer/fact for quickReview flashcard type"),
-            tags: z.array(z.string()).describe("2-4 relevant clinical tags"),
-          })
-        ),
-      });
-
       const typeInstructions =
         input.type === "quickReview"
           ? `Each item is a flashcard: a short clinical question or fact prompt in 'question', and the concise answer in 'reviewAnswer'. Do NOT include options or correctAnswer.`
-          : `Each item is a multiple-choice question with exactly 4 options in 'options', a 0-indexed correctAnswer (0-3), and a clear explanation. Do NOT include reviewAnswer.`;
+          : `Each item is a multiple-choice question with exactly 4 options in 'options', a 0-indexed correctAnswer as a number (0, 1, 2, or 3), and a clear explanation. Do NOT include reviewAnswer.`;
 
-      const { object } = await generateObject({
+      const jsonFormatInstructions =
+        input.type === "quickReview"
+          ? `{"questions":[{"question":"...","reviewAnswer":"...","tags":["...","..."]}]}`
+          : `{"questions":[{"question":"...","options":["A","B","C","D"],"correctAnswer":0,"explanation":"...","tags":["...","..."]}]}`;
+
+      const { text } = await generateText({
         model,
-        schema: questionSchema,
         prompt: `You are an expert echocardiography educator creating ${input.count} ${input.difficulty} ${input.type} questions about: "${input.topic}".
 
 ${typeInstructions}
@@ -502,8 +493,36 @@ Guidelines:
 - Tags: 2-4 specific clinical terms (e.g. "aortic stenosis", "ASE 2021", "Doppler")
 - Difficulty: ${input.difficulty} (beginner=basic concepts, intermediate=clinical application, advanced=complex interpretation)
 
-Return exactly ${input.count} questions.`,
+Return exactly ${input.count} questions as a valid JSON object matching this format:
+${jsonFormatInstructions}
+
+Return ONLY the JSON object, no markdown, no explanation, no code fences.`,
       });
+
+      // Parse the JSON response
+      let parsedResult: { questions: Array<{
+        question: string;
+        options?: string[];
+        correctAnswer?: number;
+        explanation?: string;
+        reviewAnswer?: string;
+        tags: string[];
+      }> };
+      try {
+        // Strip any accidental markdown code fences
+        const cleaned = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+        parsedResult = JSON.parse(cleaned);
+        if (!Array.isArray(parsedResult.questions)) {
+          throw new Error("Response missing questions array");
+        }
+      } catch (parseErr) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `AI returned invalid JSON: ${parseErr instanceof Error ? parseErr.message : String(parseErr)}`,
+        });
+      }
+
+      const object = parsedResult;
 
       // If insertImmediately is true, bulk-insert the generated questions
       const insertedIds: number[] = [];
