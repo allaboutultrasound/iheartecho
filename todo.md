@@ -1128,8 +1128,8 @@
 - [x] Rewrite goal-directed Valsalva in HOCMScanCoach — same correction with sonographer setup steps
 
 ## Split Valsalva Protocols
-- [ ] Split HOCMNavigator Valsalva section into two separate step-by-step protocol cards (Instructed + Goal-Directed)
-- [ ] Split HOCMScanCoach Valsalva section into two separate step-by-step protocol cards (Instructed + Goal-Directed)
+- [x] Split HOCMNavigator Valsalva section into two separate step-by-step protocol cards (Instructed + Goal-Directed)
+- [x] Split HOCMScanCoach Valsalva section into two separate step-by-step protocol cards (Instructed + Goal-Directed)
 
 ## HOCMScanCoach Doppler Tab Color Fix
 - [x] Update Doppler Evaluation tab color to brand teal in HOCMScanCoach
@@ -1137,3 +1137,6 @@
 
 ## HOCMScanCoach Valsalva Pathway Redesign
 - [x] Redesign Valsalva tab with two clickable pathway cards (Instructed + Goal-Directed) each showing dedicated content panel
+
+## HOCMNavigator Valsalva Pathway Redesign
+- [x] Apply two-pathway clickable card design (Instructed + Goal-Directed) to HOCMNavigator Valsalva tab
