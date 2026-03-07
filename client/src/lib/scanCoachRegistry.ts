@@ -5,7 +5,7 @@
  * to know which fields are editable per module.
  */
 
-export type ScanCoachModule = "tte" | "tee" | "ice" | "uea" | "strain";
+export type ScanCoachModule = "tte" | "tee" | "ice" | "uea" | "strain" | "hocm";
 
 export interface ScanCoachViewMeta {
   id: string;
@@ -95,6 +95,27 @@ export const SCANCOACH_MODULES: ScanCoachModuleMeta[] = [
       { id: "a4c",      name: "Apical 4-Chamber (A4C)",                     group: "Acquisition" },
       { id: "a2c",      name: "Apical 2-Chamber (A2C)",                     group: "Acquisition" },
       { id: "a3c",      name: "Apical 3-Chamber (APLAX)",                   group: "Acquisition" },
+    ],
+  },
+  {
+    key: "hocm",
+    label: "HOCM ScanCoach™",
+    path: "/hocm-scan-coach",
+    views: [
+      { id: "plax",          name: "Parasternal Long Axis (PLAX)",          group: "2D Assessment" },
+      { id: "psax_mv",       name: "PSAX — Mitral Valve Level",             group: "2D Assessment" },
+      { id: "psax_pap",      name: "PSAX — Papillary Muscle Level",         group: "2D Assessment" },
+      { id: "a4c",           name: "Apical 4-Chamber (A4C)",                group: "2D Assessment" },
+      { id: "a5c",           name: "Apical 5-Chamber (A5C) — LVOT CW",     group: "Doppler / LVOT" },
+      { id: "a3c",           name: "Apical 3-Chamber (APLAX) — LVOT CW",   group: "Doppler / LVOT" },
+      { id: "a2c",           name: "Apical 2-Chamber (A2C)",                group: "2D Assessment" },
+      { id: "subcostal",     name: "Subcostal 4-Chamber",                   group: "2D Assessment" },
+      { id: "valsalva_pos",  name: "Valsalva — Patient Positioning",        group: "Provocation" },
+      { id: "cw_lvot",       name: "CW Doppler — LVOT Dagger Waveform",    group: "Doppler / LVOT" },
+      { id: "pw_lvot",       name: "PW Doppler — LVOT Sample Site",        group: "Doppler / LVOT" },
+      { id: "mr_jet",        name: "MR Jet — CW Doppler",                  group: "Doppler / LVOT" },
+      { id: "sam_plax",      name: "SAM — PLAX M-Mode",                    group: "SAM Assessment" },
+      { id: "sam_zoom",      name: "SAM — Zoomed PLAX",                    group: "SAM Assessment" },
     ],
   },
 ];

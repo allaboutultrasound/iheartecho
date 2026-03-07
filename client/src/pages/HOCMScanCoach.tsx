@@ -5,8 +5,9 @@
   Fonts: Merriweather headings, Open Sans body
 */
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Layout from "@/components/Layout";
+import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 import {
   Activity,
   AlertTriangle,
@@ -399,7 +400,11 @@ export default function HOCMScanCoach() {
   const [expandedSection, setExpandedSection] = useState<string | null>("howToGet");
   const [activeTab, setActiveTab] = useState<"views" | "doppler" | "valsalva" | "settings">("views");
   const [valsalvaPath, setValsalvaPath] = useState<"instructed" | "goal-directed" | null>(null);
-
+  const { mergeView: mergeHOCMView } = useScanCoachOverrides("hocm");
+  const currentView = useMemo(
+    () => mergeHOCMView(selectedView as any),
+    [selectedView, mergeHOCMView]
+  );
   return (
     <Layout>
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
@@ -523,6 +528,29 @@ export default function HOCMScanCoach() {
                     </div>
                   ))}
                 </div>
+                {/* Override images from ScanCoach Editor */}
+                {(currentView?.echoImageUrl || currentView?.transducerImageUrl || currentView?.anatomyImageUrl) && (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
+                    {currentView.echoImageUrl && (
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Echo Image</p>
+                        <img src={currentView.echoImageUrl} alt="Echo reference" className="w-full rounded-lg border border-gray-100 object-cover" style={{ maxHeight: 160 }} />
+                      </div>
+                    )}
+                    {currentView.transducerImageUrl && (
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Probe Position</p>
+                        <img src={currentView.transducerImageUrl} alt="Transducer position" className="w-full rounded-lg border border-gray-100 object-cover" style={{ maxHeight: 160 }} />
+                      </div>
+                    )}
+                    {currentView.anatomyImageUrl && (
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Anatomy Reference</p>
+                        <img src={currentView.anatomyImageUrl} alt="Anatomy diagram" className="w-full rounded-lg border border-gray-100 object-cover" style={{ maxHeight: 160 }} />
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Expandable sections */}

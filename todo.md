@@ -1140,3 +1140,7 @@
 
 ## HOCMNavigator Valsalva Pathway Redesign
 - [x] Apply two-pathway clickable card design (Instructed + Goal-Directed) to HOCMNavigator Valsalva tab
+
+## ScanCoach Editor — HOCM Module Registry
+- [x] Add HOCM module with all views to scanCoachRegistry.ts
+- [x] Verify HOCM appears as a selectable module in the ScanCoach Editor admin UI
