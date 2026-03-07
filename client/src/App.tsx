@@ -46,11 +46,13 @@ import ICEScanCoach from "./pages/ICEScanCoach";
 import CmeHub from "./pages/CmeHub";
 import RegistryReviewHub from "./pages/RegistryReviewHub";
 import Profile from "./pages/Profile";
+import Login from "./pages/Login";
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/login" component={Login} />
       <Route path="/calculator" component={EchoCalculator} />
       <Route path="/fetal" component={FetalNavigator} />
       <Route path="/pediatric" component={PediatricNavigator} />

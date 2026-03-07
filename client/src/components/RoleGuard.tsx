@@ -71,7 +71,7 @@ export function RoleGuard({ roles, allowAdmin = true, children }: RoleGuardProps
   // Redirect unauthenticated users to login
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      window.location.href = getLoginUrl();
+      window.location.href = "/login";
     }
   }, [loading, isAuthenticated]);
 

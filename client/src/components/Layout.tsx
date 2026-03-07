@@ -330,7 +330,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </div>
             ) : (
               <a
-                href={getLoginUrl()}
+                href="/login"
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold text-xs text-white transition-all hover:opacity-90"
                 style={{ background: "linear-gradient(135deg, #189aa1 0%, #4ad9e0 100%)" }}
               >

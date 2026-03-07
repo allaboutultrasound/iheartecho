@@ -1332,7 +1332,7 @@ export default function AccreditationTool() {
           <Shield className="w-12 h-12 mx-auto mb-4" style={{ color: BRAND }} />
           <h2 className="text-xl font-bold text-gray-800 mb-2" style={{ fontFamily: "Merriweather, serif" }}>Sign In Required</h2>
           <p className="text-gray-500 text-sm mb-4">Please sign in to access the DIY Accreditation Tool™.</p>
-          <a href={getLoginUrl()} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white" style={{ background: BRAND }}>
+          <a href="/login" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white" style={{ background: BRAND }}>
             Sign In
           </a>
         </div>

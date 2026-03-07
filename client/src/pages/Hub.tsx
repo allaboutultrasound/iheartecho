@@ -345,7 +345,7 @@ function CommentThread({ post, onClose }: { post: Post; onClose: () => void }) {
           </div>
         ) : (
           <div className="px-4 py-3 border-t border-gray-100 text-center">
-            <a href={getLoginUrl()} className="text-sm font-semibold" style={{ color: "#189aa1" }}>
+            <a href="/login" className="text-sm font-semibold" style={{ color: "#189aa1" }}>
               Sign in to comment
             </a>
           </div>
@@ -501,7 +501,7 @@ function DMPanel({ onClose }: { onClose: () => void }) {
           <Lock className="w-10 h-10 mx-auto mb-3" style={{ color: "#189aa1" }} />
           <h3 className="font-bold text-gray-900 mb-2">Sign in Required</h3>
           <p className="text-sm text-gray-500 mb-4">Sign in to access Direct Messages.</p>
-          <a href={getLoginUrl()} className="block w-full py-2 rounded-lg text-white text-sm font-semibold" style={{ background: "#189aa1" }}>
+          <a href="/login" className="block w-full py-2 rounded-lg text-white text-sm font-semibold" style={{ background: "#189aa1" }}>
             Sign In
           </a>
           <button onClick={onClose} className="mt-2 text-sm text-gray-400 hover:text-gray-600">Cancel</button>
@@ -726,7 +726,7 @@ export default function Hub() {
               </button>
             )}
             {!isAuthenticated && (
-              <a href={getLoginUrl()}
+              <a href="/login"
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-colors"
                 style={{ background: "#189aa1" }}>
                 <UserCircle className="w-3.5 h-3.5" />
@@ -808,7 +808,7 @@ export default function Hub() {
             <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 text-center">
               <UserCircle className="w-8 h-8 mx-auto mb-2 text-gray-300" />
               <p className="text-sm text-gray-600 mb-2">Sign in to post, comment, and connect with the community.</p>
-              <a href={getLoginUrl()} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white" style={{ background: "#189aa1" }}>
+              <a href="/login" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white" style={{ background: "#189aa1" }}>
                 <UserCircle className="w-4 h-4" /> Sign In to Join
               </a>
             </div>

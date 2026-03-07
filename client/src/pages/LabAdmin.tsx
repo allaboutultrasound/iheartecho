@@ -1399,7 +1399,7 @@ export default function LabAdmin() {
         <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
           <Building2 className="w-10 h-10 text-gray-300" />
           <p className="text-gray-500 text-sm">Sign in to access the Lab Admin Portal.</p>
-          <Button className="text-white" style={{ background: BRAND }} onClick={() => window.location.href = getLoginUrl()}>
+          <Button className="text-white" style={{ background: BRAND }} onClick={() => window.location.href = "/login"}>
             Sign In
           </Button>
         </div>

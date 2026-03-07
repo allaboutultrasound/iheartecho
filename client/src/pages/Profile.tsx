@@ -105,7 +105,7 @@ export default function Profile() {
 
   // Redirect to login if not authenticated
   if (!loading && !isAuthenticated) {
-    window.location.href = getLoginUrl();
+    window.location.href = "/login";
     return null;
   }
 

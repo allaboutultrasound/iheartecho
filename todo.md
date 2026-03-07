@@ -703,3 +703,19 @@
 - [x] Registry Review Hub: same enrolled status treatment — "Continue Learning" (green) vs "Enroll" (teal)
 - [x] Home page: added Registry Review Hub card to module grid
 - [x] Vitest: updated adminRouter.test.ts — assignRoleByEmailLogic and bulkAssignRoleLogic now test pre-registration; 386 tests passing
+
+## White-Label Login Page (Session Mar 6)
+- [x] Built custom branded /login page (Login.tsx) — iHeartEcho logo, teal/navy gradient, feature highlights, "Sign In" and "Create Account" buttons
+- [x] /login page auto-redirects authenticated users to home
+- [x] /login page shows spinner while redirecting to OAuth provider
+- [x] Wired /login route in App.tsx
+- [x] Updated all getLoginUrl() redirects to use /login first: Layout.tsx, DashboardLayout.tsx, RoleGuard.tsx, main.tsx, Hub.tsx, AccreditationTool.tsx, LabAdmin.tsx, Profile.tsx, useAuth.ts
+- [x] No Manus/Meta branding visible to users — all sign-in flows go through branded /login page first
+
+## White-Label Login Page (Session Mar 6)
+- [x] Built custom branded /login page (Login.tsx) — iHeartEcho logo, teal/navy gradient, feature highlights
+- [x] /login page auto-redirects authenticated users to home
+- [x] /login page shows spinner while redirecting to OAuth provider
+- [x] Wired /login route in App.tsx
+- [x] Updated all getLoginUrl() redirects to use /login: Layout, DashboardLayout, RoleGuard, main.tsx, Hub, AccreditationTool, LabAdmin, Profile, useAuth
+- [x] No Manus/Meta branding visible — all sign-in flows go through branded /login page first
