@@ -31,6 +31,7 @@ import {
   users,
 } from "../../drizzle/schema";
 import { eq, and, desc, sql, gte, count } from "drizzle-orm";
+import { sendStreakReminders } from "../streakReminders";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -596,5 +597,60 @@ Return exactly ${input.count} questions.`,
       const set = await ensureTodaySet(db, date);
       const ids: number[] = JSON.parse(set.questionIds || "[]");
       return { date, questionCount: ids.length };
+    }),
+
+  // ─── Streak Reminders ────────────────────────────────────────────────────────
+
+  /** Admin: trigger streak reminder emails to all users who haven't completed today's set */
+  triggerStreakReminders: adminProcedure
+    .input(z.object({ appUrl: z.string().url().optional() }))
+    .mutation(async ({ input }) => {
+      const appUrl = input.appUrl ?? process.env.VITE_APP_URL ?? "https://app.iheartecho.com";
+      const summary = await sendStreakReminders(appUrl);
+      return summary;
+    }),
+
+  // ─── Notification Preferences ────────────────────────────────────────────────
+
+  /** Get the current user's notification preferences */
+  getNotificationPrefs: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+    const [row] = await db
+      .select({ notificationPrefs: users.notificationPrefs })
+      .from(users)
+      .where(eq(users.id, ctx.user.id))
+      .limit(1);
+    if (!row) throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+    try {
+      const prefs = row.notificationPrefs ? JSON.parse(row.notificationPrefs) : {};
+      return {
+        quickfireReminder: prefs.quickfireReminder !== false,
+        reminderTime: typeof prefs.reminderTime === "string" ? prefs.reminderTime : "18:00",
+      };
+    } catch {
+      return { quickfireReminder: true, reminderTime: "18:00" };
+    }
+  }),
+
+  /** Update the current user's notification preferences */
+  updateNotificationPrefs: protectedProcedure
+    .input(
+      z.object({
+        quickfireReminder: z.boolean(),
+        reminderTime: z
+          .string()
+          .regex(/^\d{2}:\d{2}$/, "Must be HH:MM format")
+          .default("18:00"),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      await db
+        .update(users)
+        .set({ notificationPrefs: JSON.stringify(input) })
+        .where(eq(users.id, ctx.user.id));
+      return { success: true };
     }),
 });

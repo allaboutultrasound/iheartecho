@@ -53,6 +53,8 @@ export const users = mysqlTable("users", {
   // Magic link login (passwordless)
   magicLinkToken: varchar("magicLinkToken", { length: 128 }),
   magicLinkExpiry: timestamp("magicLinkExpiry"),
+  // Notification preferences (JSON: { quickfireReminder: boolean, reminderTime: "HH:MM" })
+  notificationPrefs: text("notificationPrefs"),
 });
 
 export type User = typeof users.$inferSelect;

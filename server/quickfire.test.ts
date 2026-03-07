@@ -191,3 +191,62 @@ describe("quickfire.aiGenerateQuestions", () => {
     ).rejects.toThrow();
   });
 });
+
+// ── Notification Preferences ──────────────────────────────────────────────────
+
+describe("quickfire.getNotificationPrefs", () => {
+  it("throws UNAUTHORIZED when called without authentication", async () => {
+    const caller = appRouter.createCaller(makeCtx(null));
+    await expect(caller.quickfire.getNotificationPrefs()).rejects.toThrow();
+  });
+
+  it("throws INTERNAL_SERVER_ERROR when DB unavailable (authenticated)", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeUser()));
+    await expect(caller.quickfire.getNotificationPrefs()).rejects.toThrow("DB unavailable");
+  });
+});
+
+describe("quickfire.updateNotificationPrefs", () => {
+  it("throws UNAUTHORIZED when called without authentication", async () => {
+    const caller = appRouter.createCaller(makeCtx(null));
+    await expect(
+      caller.quickfire.updateNotificationPrefs({ quickfireReminder: false, reminderTime: "09:00" })
+    ).rejects.toThrow();
+  });
+
+  it("rejects invalid reminderTime format", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeUser()));
+    await expect(
+      caller.quickfire.updateNotificationPrefs({ quickfireReminder: true, reminderTime: "9am" })
+    ).rejects.toThrow();
+  });
+
+  it("throws INTERNAL_SERVER_ERROR when DB unavailable (authenticated, valid input)", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeUser()));
+    await expect(
+      caller.quickfire.updateNotificationPrefs({ quickfireReminder: true, reminderTime: "18:00" })
+    ).rejects.toThrow("DB unavailable");
+  });
+});
+
+describe("quickfire.triggerStreakReminders", () => {
+  it("throws UNAUTHORIZED when called without authentication", async () => {
+    const caller = appRouter.createCaller(makeCtx(null));
+    await expect(caller.quickfire.triggerStreakReminders({})).rejects.toThrow();
+  });
+
+  it("throws FORBIDDEN for non-admin users", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeUser()));
+    await expect(caller.quickfire.triggerStreakReminders({})).rejects.toThrow();
+  });
+
+  it("returns zero counts when DB unavailable (graceful degradation)", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeAdminUser()));
+    const result = await caller.quickfire.triggerStreakReminders({});
+    expect(result).toHaveProperty("sent");
+    expect(result).toHaveProperty("skipped");
+    expect(result).toHaveProperty("total");
+    expect(typeof result.sent).toBe("number");
+    expect(typeof result.total).toBe("number");
+  });
+});

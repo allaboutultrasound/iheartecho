@@ -126,6 +126,52 @@ function emailWrapper(content: string): string {
 </html>`;
 }
 
+export function buildStreakReminderEmail(opts: {
+  firstName: string;
+  currentStreak: number;
+  loginUrl: string;
+  unsubscribeUrl: string;
+}): { subject: string; htmlBody: string; previewText: string } {
+  const streakMsg =
+    opts.currentStreak > 0
+      ? `Your current streak is <strong style="color:${brandColor};">${opts.currentStreak} day${opts.currentStreak === 1 ? "" : "s"}</strong>. Keep it going!`
+      : `Start your streak today &mdash; every session builds your clinical knowledge.`;
+  const subject =
+    opts.currentStreak > 0
+      ? `\u26a1 Don't break your ${opts.currentStreak}-day streak \u2014 QuickFire is waiting!`
+      : `\u26a1 Your Daily QuickFire is ready \u2014 jump in!`;
+  const previewText =
+    opts.currentStreak > 0
+      ? `You haven't completed today's QuickFire yet. Keep your ${opts.currentStreak}-day streak alive!`
+      : `Today's Daily QuickFire is ready. Start your streak now!`;
+  const htmlBody = emailWrapper(`
+    <h2 style="margin:0 0 8px;font-size:20px;color:${brandDark};font-family:Georgia,serif;">
+      Hi ${opts.firstName}, your Daily QuickFire is waiting!
+    </h2>
+    <p style="margin:0 0 16px;font-size:15px;color:#475569;line-height:1.6;">
+      ${streakMsg}
+    </p>
+    <div style="background:#f0fbfc;border-left:3px solid ${brandColor};padding:14px 16px;border-radius:0 8px 8px 0;margin:0 0 24px;">
+      <p style="margin:0;font-size:14px;color:#0e4a50;font-weight:600;">Today's session includes:</p>
+      <ul style="margin:8px 0 0;padding-left:20px;font-size:14px;color:#475569;">
+        <li style="margin:4px 0;">Scenario-based clinical questions</li>
+        <li style="margin:4px 0;">Image interpretation challenges</li>
+        <li style="margin:4px 0;">Quick-review flashcards</li>
+      </ul>
+    </div>
+    <div style="text-align:center;margin:28px 0;">
+      <a href="${opts.loginUrl}"
+        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;">
+        \u26a1 Complete Today's QuickFire
+      </a>
+    </div>
+    <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;line-height:1.5;">
+      <a href="${opts.unsubscribeUrl}" style="color:#94a3b8;">Unsubscribe from QuickFire reminders</a>
+    </p>
+  `);
+  return { subject, htmlBody, previewText };
+}
+
 export function buildVerificationEmail(opts: {
   firstName: string;
   verificationUrl: string;

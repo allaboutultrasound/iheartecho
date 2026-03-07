@@ -972,3 +972,13 @@
 - [ ] Add bulkImportQuestions tRPC procedure to quickfireRouter
 - [ ] Build CSV import UI in QuickFireAdmin.tsx (template download, drag-and-drop, parse, validate, preview, bulk insert)
 - [x] Write vitest tests for bulkImportQuestions
+
+## QuickFire Streak Notifications
+- [ ] Add streak reminder email template to email.ts
+- [ ] Add sendStreakReminders utility (query users who haven't completed today, send email + in-app notification)
+- [x] Add triggerStreakReminders admin tRPC procedure
+- [ ] Add updateNotificationPreferences and getNotificationPreferences user tRPC procedures
+- [ ] Add notificationPreferences column to users table (or separate table) and push migration
+- [ ] Build Notification Preferences UI component (opt-in/out, reminder time)
+- [ ] Add Trigger Reminders control in QuickFireAdmin
+- [x] Write vitest tests for streak notification procedures

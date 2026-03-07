@@ -8,7 +8,7 @@ import { useState, useEffect, useRef } from "react";
 import {
   User, Mail, Edit3, Save, X, CheckCircle, ExternalLink, Award, Shield, Star,
   ClipboardList, Camera, Lock, MapPin, Globe, Briefcase, FileText, Eye, EyeOff,
-  Clock, AlertCircle, RefreshCw,
+  Clock, AlertCircle, RefreshCw, Bell,
 } from "lucide-react";
 import Layout from "@/components/Layout";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -77,7 +77,25 @@ export default function Profile() {
   const utils = trpc.useUtils();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [activeSection, setActiveSection] = useState<"info" | "password">("info");
+  const [activeSection, setActiveSection] = useState<"info" | "password" | "notifications">("info");
+
+  // Notification preferences
+  const { data: notifPrefs, isLoading: notifLoading } = trpc.quickfire.getNotificationPrefs.useQuery(
+    undefined,
+    { enabled: !!user }
+  );
+  const [notifEnabled, setNotifEnabled] = useState(true);
+  const [notifTime, setNotifTime] = useState("18:00");
+  useEffect(() => {
+    if (notifPrefs) {
+      setNotifEnabled(notifPrefs.quickfireReminder);
+      setNotifTime(notifPrefs.reminderTime);
+    }
+  }, [notifPrefs]);
+  const updateNotifPrefsMutation = trpc.quickfire.updateNotificationPrefs.useMutation({
+    onSuccess: () => toast.success("Notification preferences saved"),
+    onError: () => toast.error("Failed to save preferences"),
+  });
   const [editMode, setEditMode] = useState(false);
 
   const [displayName, setDisplayName] = useState("");
@@ -497,6 +515,13 @@ export default function Profile() {
                 <Lock className="w-3.5 h-3.5" />
                 Password
               </button>
+              <button
+                onClick={() => setActiveSection("notifications")}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-semibold transition-all ${activeSection === "notifications" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+              >
+                <Bell className="w-3.5 h-3.5" />
+                Notifications
+              </button>
             </div>
 
             {/* Personal Info Section */}
@@ -880,6 +905,94 @@ export default function Profile() {
                       </a>
                     </p>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Notifications Section */}
+            {activeSection === "notifications" && (
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm"
+                style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                <div className="px-6 py-4 border-b border-gray-100">
+                  <h2 className="text-sm font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
+                    Notification Preferences
+                  </h2>
+                  <p className="text-xs text-gray-500 mt-0.5">Control when iHeartEcho sends you email reminders.</p>
+                </div>
+                <div className="p-6 space-y-6">
+                  {notifLoading ? (
+                    <div className="flex items-center gap-2 text-sm text-gray-400">
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      Loading preferences...
+                    </div>
+                  ) : (
+                    <>
+                      {/* QuickFire Reminder Toggle */}
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Bell className="w-4 h-4" style={{ color: "#189aa1" }} />
+                            <span className="text-sm font-semibold text-gray-800">Daily QuickFire Reminder</span>
+                          </div>
+                          <p className="text-xs text-gray-500 leading-relaxed">
+                            Receive a daily email reminder if you haven't completed your QuickFire session.
+                            Includes your current streak so you never lose momentum.
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => setNotifEnabled((v) => !v)}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 mt-0.5 ${
+                            notifEnabled ? "bg-[#189aa1]" : "bg-gray-200"
+                          }`}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                              notifEnabled ? "translate-x-6" : "translate-x-1"
+                            }`}
+                          />
+                        </button>
+                      </div>
+
+                      {/* Reminder Time */}
+                      {notifEnabled && (
+                        <div className="flex items-center gap-4 pl-6">
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-gray-400" />
+                            <span className="text-xs font-medium text-gray-700">Preferred reminder time</span>
+                          </div>
+                          <input
+                            type="time"
+                            value={notifTime}
+                            onChange={(e) => setNotifTime(e.target.value)}
+                            className="text-xs border border-gray-200 rounded-md px-2 py-1.5 text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#189aa1]"
+                          />
+                          <span className="text-xs text-gray-400">(your local time)</span>
+                        </div>
+                      )}
+
+                      {/* Save Button */}
+                      <div className="pt-2 border-t border-gray-100 flex justify-end">
+                        <button
+                          onClick={() =>
+                            updateNotifPrefsMutation.mutate({
+                              quickfireReminder: notifEnabled,
+                              reminderTime: notifTime,
+                            })
+                          }
+                          disabled={updateNotifPrefsMutation.isPending}
+                          className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50"
+                          style={{ background: "#189aa1" }}
+                        >
+                          {updateNotifPrefsMutation.isPending ? (
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Save className="w-3.5 h-3.5" />
+                          )}
+                          Save Preferences
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             )}
