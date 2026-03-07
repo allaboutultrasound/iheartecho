@@ -881,10 +881,11 @@ export default function HOCMScanCoach() {
 
             <div className="p-3 rounded-xl bg-[#f0fbfc] border border-[#189aa1]/20 mb-4">
               <p className="text-xs text-[#0e4a50] leading-relaxed">
-                <strong>Key finding:</strong> Goal-directed Valsalva (targeting ≥40% LV cavity reduction confirmed on 2D imaging) produces higher provoked gradients and fewer false-negative studies than standard instructed Valsalva. Use it when split-screen imaging is available.
+                <strong>Key finding:</strong> Goal-directed Valsalva uses a sphygmomanometer circuit to standardise the strain effort. The patient blows into a syringe connected via oxygen tubing until the manometer reads <strong>≥40 mmHg</strong>, then holds that pressure for <strong>10 seconds</strong>. This objective pressure target produces significantly higher and more reproducible provoked LVOT gradients compared to standard instructed Valsalva.
               </p>
             </div>
 
+            {/* Side-by-side comparison */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <div className="rounded-xl border border-gray-200 p-4">
                 <div className="flex items-center gap-2 mb-3">
@@ -895,10 +896,10 @@ export default function HOCMScanCoach() {
                 <div className="space-y-1.5">
                   {[
                     { label: "Coaching", text: "\"Bear down hard for 10–15 seconds\"" },
-                    { label: "Endpoint", text: "Fixed duration; patient effort only" },
-                    { label: "Feedback", text: "None — no real-time cavity monitoring" },
-                    { label: "Limitation", text: "Variable effort → inconsistent preload reduction" },
-                    { label: "False-negative risk", text: "Higher — up to 30–40% inadequate maneuvers" },
+                    { label: "Endpoint", text: "Fixed duration; patient effort only — no pressure measurement" },
+                    { label: "Equipment", text: "None beyond the echo machine" },
+                    { label: "Limitation", text: "Variable intrathoracic pressure → inconsistent preload reduction → false-negatives" },
+                    { label: "False-negative risk", text: "Higher — up to 30–40% of maneuvers are subtherapeutic" },
                   ].map(({ label, text }) => (
                     <div key={label}>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{label}: </span>
@@ -916,11 +917,11 @@ export default function HOCMScanCoach() {
                 </div>
                 <div className="space-y-1.5">
                   {[
-                    { label: "Coaching", text: "\"Bear down until the heart looks smaller on screen\"" },
-                    { label: "Endpoint", text: "≥40% LV cavity reduction confirmed on 2D" },
-                    { label: "Feedback", text: "Real-time 2D (A4C or PSAX) + simultaneous CW Doppler" },
-                    { label: "Advantage", text: "Objective endpoint → reproducible preload reduction" },
-                    { label: "False-negative risk", text: "Lower — adequacy confirmed echocardiographically" },
+                    { label: "Coaching", text: "\"Blow into the tube until the gauge reads 40 — then hold it for 10 seconds\"" },
+                    { label: "Endpoint", text: "Sphygmomanometer ≥40 mmHg sustained for 10 seconds" },
+                    { label: "Equipment", text: "Sphygmomanometer + O₂ tubing + 20 mL syringe + optional respiratory filter" },
+                    { label: "Advantage", text: "Objective pressure target → reproducible preload reduction → fewer false-negatives" },
+                    { label: "False-negative risk", text: "Lower — pressure confirmed on manometer gauge" },
                   ].map(({ label, text }) => (
                     <div key={label}>
                       <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{label}: </span>
@@ -931,17 +932,16 @@ export default function HOCMScanCoach() {
               </div>
             </div>
 
+            {/* Circuit assembly */}
             <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 mb-4">
-              <h4 className="text-xs font-bold text-gray-700 mb-2">Sonographer Setup for Goal-Directed Valsalva</h4>
+              <h4 className="text-xs font-bold text-gray-700 mb-3">Assembling the Circuit — Sonographer Steps</h4>
               <div className="space-y-2">
                 {[
-                  { step: 1, text: "Enable split-screen or biplane mode: 2D (A4C or PSAX) on one half, CW Doppler on the other" },
-                  { step: 2, text: "Freeze a reference frame showing baseline LV cavity size at end-diastole" },
-                  { step: 3, text: "Coach patient: \"Bear down hard — watch the screen — keep going until the heart looks noticeably smaller\"" },
-                  { step: 4, text: "Monitor 2D live: target ≥40% reduction in LV cavity diameter or area during strain" },
-                  { step: 5, text: "If cavity is not shrinking within 5–8 seconds, prompt: \"Harder! Keep going!\"" },
-                  { step: 6, text: "Continue CW recording through release — peak gradient occurs 1–5 beats after release" },
-                  { step: 7, text: "If ≥40% reduction not achieved after two attempts, document inadequate and consider exercise stress echo" },
+                  { step: 1, text: "Gather: aneroid sphygmomanometer, ~30 cm oxygen tubing, 20 mL syringe, and (optional) disposable respiratory filter" },
+                  { step: 2, text: "Connect one end of the O₂ tubing to the sphygmomanometer inflation port (where the hand bulb normally attaches)" },
+                  { step: 3, text: "Attach the 20 mL syringe to the other end of the tubing — this is the patient's mouthpiece. Insert the respiratory filter between syringe and tubing if using one" },
+                  { step: 4, text: "Pre-inflate the cuff to ~40 mmHg and close the valve — this pre-loads the system so the patient's blow immediately registers on the gauge" },
+                  { step: 5, text: "Practice once before imaging: patient blows into the syringe until the gauge reaches 40 mmHg and holds. Confirm they can sustain it for 10 seconds" },
                 ].map(({ step, text }) => (
                   <div key={step} className="flex items-start gap-2">
                     <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0" style={{ background: BRAND }}>{step}</div>
@@ -951,23 +951,47 @@ export default function HOCMScanCoach() {
               </div>
             </div>
 
+            {/* Acquisition protocol */}
+            <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 mb-4">
+              <h4 className="text-xs font-bold text-gray-700 mb-3">Acquisition Protocol</h4>
+              <div className="space-y-2">
+                {[
+                  { step: 1, text: "Obtain resting LVOT gradient from A5C/A3C. Confirm dagger-shaped CW signal. Switch sweep speed to 50 mm/s." },
+                  { step: 2, text: "Start CW Doppler recording 3–5 beats before cueing the patient" },
+                  { step: 3, text: "Cue patient to blow into the circuit. Watch the manometer — confirm gauge reaches ≥40 mmHg" },
+                  { step: 4, text: "Patient holds ≥40 mmHg for 10 seconds. Keep CW beam on LVOT — do NOT move the probe" },
+                  { step: 5, text: "Cue patient to release. CRITICAL: Continue recording 5–10 beats AFTER release — peak gradient occurs during the rebound phase" },
+                  { step: 6, text: "Measure peak velocity at the dagger tip during the release phase. Calculate ΔP = 4V². Report as 'Provoked LVOT gradient (goal-directed Valsalva): __ mmHg'" },
+                  { step: 7, text: "If patient cannot reach ≥40 mmHg after two attempts, document as inadequate and consider exercise stress echo" },
+                ].map(({ step, text }) => (
+                  <div key={step} className="flex items-start gap-2">
+                    <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0" style={{ background: BRAND }}>{step}</div>
+                    <p className="text-xs text-gray-700 leading-relaxed pt-0.5">{text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Equipment checklist */}
             <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
               <div className="flex items-center gap-2 mb-2">
                 <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-                <span className="text-xs font-bold text-amber-700">Equipment & Setup Requirements</span>
+                <span className="text-xs font-bold text-amber-700">Equipment Checklist — Goal-Directed Valsalva</span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {[
-                  "Split-screen or biplane imaging (2D + CW simultaneously)",
-                  "Operator familiar with real-time cavity size estimation",
-                  "Patient able to follow real-time coaching",
-                  "Manometer (target ≥40 mmHg) if available for objective strain confirmation",
-                  "If split-screen unavailable: use instructed Valsalva + HR monitoring as adequacy surrogate",
-                  "Always document adequacy method used in the report",
-                ].map(item => (
+                  { item: "Aneroid sphygmomanometer", required: true },
+                  { item: "Oxygen tubing (~30 cm)", required: true },
+                  { item: "20 mL syringe (mouthpiece)", required: true },
+                  { item: "Disposable respiratory filter (infection control)", required: false },
+                  { item: "Cuff pre-inflated to ~40 mmHg before patient blows", required: true },
+                  { item: "If equipment unavailable: use instructed Valsalva + HR ≥10 bpm as adequacy surrogate", required: false },
+                ].map(({ item, required }) => (
                   <div key={item} className="flex items-start gap-1.5">
-                    <Info className="w-3 h-3 text-amber-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-xs text-amber-800">{item}</span>
+                    <Info className={`w-3 h-3 flex-shrink-0 mt-0.5 ${required ? "text-amber-600" : "text-amber-400"}`} />
+                    <span className={`text-xs ${required ? "text-amber-800 font-medium" : "text-amber-700"}`}>
+                      {required ? "[Required] " : "[Optional] "}{item}
+                    </span>
                   </div>
                 ))}
               </div>

@@ -1122,3 +1122,7 @@
 ## Valsalva Comparison — HOCM
 - [x] Add goal-directed vs instructed Valsalva comparison section to HOCMNavigator.tsx
 - [x] Add goal-directed vs instructed Valsalva comparison section to HOCMScanCoach.tsx
+
+## Goal-Directed Valsalva Correction
+- [x] Rewrite goal-directed Valsalva in HOCMNavigator — manometer circuit (syringe + O2 tubing + optional respiratory filter), blow to ≥40 mmHg, hold 10 seconds
+- [x] Rewrite goal-directed Valsalva in HOCMScanCoach — same correction with sonographer setup steps
