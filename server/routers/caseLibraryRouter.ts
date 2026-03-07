@@ -35,7 +35,8 @@ import {
 } from "../../drizzle/schema";
 import { eq, and, desc, sql, count, like, or } from "drizzle-orm";
 import { storagePut } from "../storage";
-import { sendEmail, buildCaseApprovedEmail, buildCaseRejectedEmail } from "../_core/email";
+import { sendEmail, buildCaseApprovedEmail, buildCaseRejectedEmail, buildNewCaseSubmissionAdminEmail } from "../_core/email";
+import { notifyOwner } from "../_core/notification";
 
 // ─── Admin guard ─────────────────────────────────────────────────────────────
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -317,6 +318,37 @@ export const caseLibraryRouter = router({
         );
       }
 
+      // Notify admin when a regular user submits a case for review
+      if (!isAdmin) {
+        const submitterName = ctx.user.displayName || ctx.user.name || "A user";
+        const appUrl = process.env.VITE_APP_URL ?? "https://app.iheartecho.com";
+        const adminUrl = `${appUrl}/admin/cases`;
+
+        // In-app notification to the platform owner
+        notifyOwner({
+          title: "New Echo Case Submission",
+          content: `${submitterName} submitted a new case for review: "${input.title}" (${input.modality}, ${input.difficulty}). Visit Case Management to approve or reject it.`,
+        }).catch((err) => console.error("[caseLibrary] Failed to send in-app notification:", err));
+
+        // Email notification to the admin inbox (SENDGRID_FROM_EMAIL)
+        const adminEmail = process.env.SENDGRID_FROM_EMAIL;
+        if (adminEmail) {
+          const { subject, htmlBody, previewText } = buildNewCaseSubmissionAdminEmail({
+            submitterName,
+            caseTitle: input.title,
+            modality: input.modality,
+            difficulty: input.difficulty,
+            adminUrl,
+          });
+          sendEmail({
+            to: { name: "iHeartEcho Admin", email: adminEmail },
+            subject,
+            htmlBody,
+            previewText,
+          }).catch((err) => console.error("[caseLibrary] Failed to send admin notification email:", err));
+        }
+      }
+
       return {
         caseId,
         status: isAdmin ? "approved" : "pending",
@@ -325,7 +357,6 @@ export const caseLibraryRouter = router({
           : "Case submitted for review. It will appear in the library once approved.",
       };
     }),
-
   /** Get a presigned S3 upload URL for case media */
   getUploadUrl: protectedProcedure
     .input(

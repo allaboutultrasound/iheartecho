@@ -4,7 +4,7 @@
  * correct subjects, preview text, and HTML content without making real API calls.
  */
 import { describe, it, expect } from "vitest";
-import { buildCaseApprovedEmail, buildCaseRejectedEmail } from "./_core/email";
+import { buildCaseApprovedEmail, buildCaseRejectedEmail, buildNewCaseSubmissionAdminEmail } from "./_core/email";
 
 describe("buildCaseApprovedEmail", () => {
   const opts = {
@@ -110,5 +110,71 @@ describe("buildCaseRejectedEmail", () => {
   it("should include a support contact email", () => {
     const { htmlBody } = buildCaseRejectedEmail(opts);
     expect(htmlBody).toContain("support@iheartecho.com");
+  });
+});
+
+describe("buildNewCaseSubmissionAdminEmail", () => {
+  const opts = {
+    submitterName: "Dr. Emily Chen",
+    caseTitle: "Hypertrophic Cardiomyopathy with LVOTO",
+    modality: "TTE",
+    difficulty: "advanced",
+    adminUrl: "https://app.iheartecho.com/admin/cases",
+  };
+
+  it("should return a subject containing the case title", () => {
+    const { subject } = buildNewCaseSubmissionAdminEmail(opts);
+    expect(subject).toContain(opts.caseTitle);
+  });
+
+  it("should indicate the case is pending review in the subject", () => {
+    const { subject } = buildNewCaseSubmissionAdminEmail(opts);
+    expect(subject.toLowerCase()).toContain("pending review");
+  });
+
+  it("should include the submitter name in the HTML body", () => {
+    const { htmlBody } = buildNewCaseSubmissionAdminEmail(opts);
+    expect(htmlBody).toContain(opts.submitterName);
+  });
+
+  it("should include the case title in the HTML body", () => {
+    const { htmlBody } = buildNewCaseSubmissionAdminEmail(opts);
+    expect(htmlBody).toContain(opts.caseTitle);
+  });
+
+  it("should include the modality in the HTML body", () => {
+    const { htmlBody } = buildNewCaseSubmissionAdminEmail(opts);
+    expect(htmlBody).toContain(opts.modality);
+  });
+
+  it("should include the difficulty label in the HTML body", () => {
+    const { htmlBody } = buildNewCaseSubmissionAdminEmail(opts);
+    expect(htmlBody).toContain("Advanced");
+  });
+
+  it("should include a link to the admin case management URL", () => {
+    const { htmlBody } = buildNewCaseSubmissionAdminEmail(opts);
+    expect(htmlBody).toContain(opts.adminUrl);
+  });
+
+  it("should include a non-empty previewText with the submitter name", () => {
+    const { previewText } = buildNewCaseSubmissionAdminEmail(opts);
+    expect(previewText).toContain(opts.submitterName);
+    expect(previewText.length).toBeGreaterThan(10);
+  });
+
+  it("should produce valid HTML with doctype", () => {
+    const { htmlBody } = buildNewCaseSubmissionAdminEmail(opts);
+    expect(htmlBody.trim().toLowerCase()).toMatch(/^<!doctype html>/);
+  });
+
+  it("should mention HIPAA acknowledgement in the HTML body", () => {
+    const { htmlBody } = buildNewCaseSubmissionAdminEmail(opts);
+    expect(htmlBody.toLowerCase()).toContain("hipaa");
+  });
+
+  it("should include iHeartEcho branding", () => {
+    const { htmlBody } = buildNewCaseSubmissionAdminEmail(opts);
+    expect(htmlBody).toContain("iHeartEcho");
   });
 });

@@ -257,6 +257,61 @@ export function buildMagicLinkEmail(opts: {
   return { subject, htmlBody, previewText };
 }
 
+export function buildNewCaseSubmissionAdminEmail(opts: {
+  submitterName: string;
+  caseTitle: string;
+  modality: string;
+  difficulty: string;
+  adminUrl: string;
+}): { subject: string; htmlBody: string; previewText: string } {
+  const subject = `New case submission pending review — "${opts.caseTitle}"`;
+  const previewText = `${opts.submitterName} submitted a new echo case for your review: "${opts.caseTitle}"`;
+  const difficultyLabel: Record<string, string> = {
+    beginner: "Beginner",
+    intermediate: "Intermediate",
+    advanced: "Advanced",
+  };
+  const htmlBody = emailWrapper(`
+    <h2 style="margin:0 0 8px;font-size:20px;color:${brandDark};font-family:Georgia,serif;">
+      New Case Submission Awaiting Review
+    </h2>
+    <p style="margin:0 0 16px;font-size:15px;color:#475569;line-height:1.6;">
+      A user has submitted a new echo case to the iHeartEcho Echo Case Library.
+      Please review it and approve or reject it from the Case Management panel.
+    </p>
+    <div style="background:#f0fbfc;border-left:3px solid ${brandColor};padding:16px;border-radius:0 8px 8px 0;margin:0 0 24px;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td style="padding:4px 0;font-size:13px;color:#64748b;width:120px;">Submitted by</td>
+          <td style="padding:4px 0;font-size:14px;font-weight:700;color:${brandDark};">${opts.submitterName}</td>
+        </tr>
+        <tr>
+          <td style="padding:4px 0;font-size:13px;color:#64748b;">Case title</td>
+          <td style="padding:4px 0;font-size:14px;font-weight:700;color:${brandDark};">${opts.caseTitle}</td>
+        </tr>
+        <tr>
+          <td style="padding:4px 0;font-size:13px;color:#64748b;">Modality</td>
+          <td style="padding:4px 0;font-size:14px;color:#475569;">${opts.modality}</td>
+        </tr>
+        <tr>
+          <td style="padding:4px 0;font-size:13px;color:#64748b;">Difficulty</td>
+          <td style="padding:4px 0;font-size:14px;color:#475569;">${difficultyLabel[opts.difficulty] ?? opts.difficulty}</td>
+        </tr>
+      </table>
+    </div>
+    <div style="text-align:center;margin:28px 0;">
+      <a href="${opts.adminUrl}"
+        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;">
+        Review in Case Management
+      </a>
+    </div>
+    <p style="margin:0;font-size:13px;color:#94a3b8;line-height:1.5;">
+      This is an automated notification from iHeartEcho. The submitter has acknowledged the HIPAA/PHI policy.
+    </p>
+  `);
+  return { subject, htmlBody, previewText };
+}
+
 export function buildCaseApprovedEmail(opts: {
   firstName: string;
   caseTitle: string;

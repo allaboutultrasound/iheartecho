@@ -938,3 +938,8 @@
 - [x] rejectCase procedure — fetches submitter, sends rejection email with reason (fire-and-forget, skips admin-created cases)
 - [x] caseNotifications.test.ts — 18 vitest tests for both email templates (subject, body, branding, HIPAA, URLs)
 - [x] All 536 tests passing
+
+## Admin Notification — New Case Submission
+- [x] buildNewCaseSubmissionAdminEmail template — branded email to admin with submitter name, case title, modality, difficulty, and link to admin case management
+- [x] submitCase procedure — fire-and-forget email to SENDGRID_FROM_EMAIL (admin inbox) + notifyOwner in-app alert on new user submissions
+- [x] caseNotifications.test.ts — add tests for the new admin email template
