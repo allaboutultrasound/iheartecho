@@ -805,3 +805,9 @@
 - [x] App.tsx — /magic-link and /auth/magic routes registered
 - [x] Login.tsx — "Sign in with a magic link" button added below register CTA
 - [x] Vitest — 22 new tests (input validation, token generation, expiry, URL construction, enumeration protection, one-time use) — 496 tests total passing
+
+## Community Hub — External Thinkific Link
+- [x] Replace /hub route with external redirect to https://member.allaboutultrasound.com/products/communities/allaboutultrasound-community
+- [x] Update sidebar nav link for Community Hub to open external URL in new tab (with ExternalLink icon)
+- [x] Update Home page module card for Hub to open external URL in new tab ("Visit Community" CTA)
+- [x] Ensure no broken internal /hub references remain in nav or cards

@@ -13,7 +13,7 @@ import {
 
 const BRAND = "#189aa1";
 
-type Module = { path: string; icon: any; title: string; description: string; badge: string; color: string; premium?: boolean };
+type Module = { path: string; icon: any; title: string; description: string; badge: string; color: string; premium?: boolean; external?: boolean };
 const modules: Module[] = [
   {
     path: "/echo-navigators",
@@ -81,12 +81,13 @@ const modules: Module[] = [
     premium: true,
   },
   {
-    path: "/hub",
+    path: "https://member.allaboutultrasound.com/products/communities/allaboutultrasound-community",
     icon: MessageCircle,
-    title: "iHeartEcho Hub™",
-    description: "Professional echo community — 5 specialty hubs, case discussions, DMs, and peer learning for echo professionals.",
+    title: "iHeartEcho Community",
+    description: "Join the All About Ultrasound | iHeartEcho community on Thinkific — case discussions, peer learning, and specialty hubs for echo professionals.",
     badge: "Community",
     color: BRAND,
+    external: true,
   },
   {
     path: "/cme",
@@ -205,8 +206,8 @@ export default function Home() {
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {modules.map(({ path, icon: Icon, title, description, badge, color, premium }) => (
-            <Link key={path} href={path}>
+          {modules.map(({ path, icon: Icon, title, description, badge, color, premium, external }) => {
+            const cardContent = (
               <div className="module-card bg-white rounded-xl p-5 cursor-pointer group h-full relative overflow-hidden">
                 {premium && (
                   <div className="absolute top-0 right-0">
@@ -230,11 +231,24 @@ export default function Home() {
                 </h3>
                 <p className="text-xs text-gray-500 leading-relaxed mb-3">{description}</p>
                 <div className="flex items-center gap-1 text-xs font-semibold group-hover:gap-2 transition-all" style={{ color }}>
-                  Open Module <ArrowRight className="w-3 h-3" />
+                  {external ? (
+                    <>Visit Community <ExternalLink className="w-3 h-3" /></>
+                  ) : (
+                    <>Open Module <ArrowRight className="w-3 h-3" /></>
+                  )}
                 </div>
               </div>
-            </Link>
-          ))}
+            );
+            return external ? (
+              <a key={path} href={path} target="_blank" rel="noopener noreferrer">
+                {cardContent}
+              </a>
+            ) : (
+              <Link key={path} href={path}>
+                {cardContent}
+              </Link>
+            );
+          })}
         </div>
 
         {/* Premium CTA */}

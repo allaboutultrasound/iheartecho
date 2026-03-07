@@ -25,7 +25,6 @@ import DeviceNavigator from "./pages/DeviceNavigator";
 import ACHDNavigator from "./pages/ACHDNavigator";
 import StressNavigator from "./pages/StressNavigator";
 import EchoAssist from "./pages/EchoAssist";
-import Hub from "./pages/Hub";
 import CardiacPOCUS from "./pages/CardiacPOCUS";
 import LungPOCUS from "./pages/LungPOCUS";
 import EfastPOCUS from "./pages/EfastPOCUS";
@@ -82,7 +81,7 @@ function Router() {
       <Route path="/cme" component={CmeHub} />
       <Route path="/registry-review" component={RegistryReviewHub} />
       <Route path="/echoassist" component={EchoAssist} />
-      <Route path="/hub" component={Hub} />
+      <Route path="/hub">{() => { window.location.replace("https://member.allaboutultrasound.com/products/communities/allaboutultrasound-community"); return null; }}</Route>
       <Route path="/cardiac-pocus" component={CardiacPOCUS} />
       <Route path="/lung-pocus" component={LungPOCUS} />
       <Route path="/efast" component={EfastPOCUS} />

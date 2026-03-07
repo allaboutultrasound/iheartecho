@@ -68,7 +68,7 @@ const navGroups = [
   {
     label: "Community",
     items: [
-      { path: "/hub", label: "iHeartEcho Hub™", icon: MessageCircle },
+      { path: "https://member.allaboutultrasound.com/products/communities/allaboutultrasound-community", label: "iHeartEcho Community", icon: MessageCircle, external: true },
     ],
   },
 ];
@@ -128,22 +128,30 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {navGroups.map(group => (
             <div key={group.label}>
               <div className="text-xs font-semibold text-white/40 uppercase tracking-wider px-3 mb-1">{group.label}</div>
-              {group.items.map(({ path, label, icon: Icon }) => {
-                const active = location === path;
-                return (
+              {group.items.map(({ path, label, icon: Icon, external }) => {
+                const active = !external && location === path;
+                const innerContent = (
+                  <div
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 transition-all duration-150 group
+                      ${active
+                        ? "bg-[#189aa1] text-white"
+                        : "text-white/70 hover:bg-white/10 hover:text-white"
+                      }`}
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <Icon className={`w-4 h-4 flex-shrink-0 ${active ? "text-white" : "text-[#4ad9e0] group-hover:text-white"}`} />
+                    <span className="text-sm font-medium">{label}</span>
+                    {active && <ChevronRight className="w-3 h-3 ml-auto" />}
+                    {external && <ExternalLink className="w-3 h-3 ml-auto text-white/40 group-hover:text-white/70" />}
+                  </div>
+                );
+                return external ? (
+                  <a key={path} href={path} target="_blank" rel="noopener noreferrer">
+                    {innerContent}
+                  </a>
+                ) : (
                   <Link key={path} href={path}>
-                    <div
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 transition-all duration-150 group
-                        ${active
-                          ? "bg-[#189aa1] text-white"
-                          : "text-white/70 hover:bg-white/10 hover:text-white"
-                        }`}
-                      onClick={() => setSidebarOpen(false)}
-                    >
-                      <Icon className={`w-4 h-4 flex-shrink-0 ${active ? "text-white" : "text-[#4ad9e0] group-hover:text-white"}`} />
-                      <span className="text-sm font-medium">{label}</span>
-                      {active && <ChevronRight className="w-3 h-3 ml-auto" />}
-                    </div>
+                    {innerContent}
                   </Link>
                 );
               })}
