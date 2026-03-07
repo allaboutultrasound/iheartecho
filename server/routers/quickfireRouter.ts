@@ -517,7 +517,10 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`,
         });
       }
 
-      // Parse the JSON response
+      // Parse the JSON response — handle multiple formats the model may return:
+      // 1. {"questions":[...]}  (ideal)
+      // 2. [{...},{...}]        (root array — model ignores wrapper instruction)
+      // 3. ```json\n{...}\n```  (markdown fenced)
       let parsedResult: { questions: Array<{
         question: string;
         options?: string[];
@@ -527,16 +530,37 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`,
         tags: string[];
       }> };
       try {
-        // Strip any accidental markdown code fences
-        const cleaned = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
-        parsedResult = JSON.parse(cleaned);
-        if (!Array.isArray(parsedResult.questions)) {
-          throw new Error("Response missing questions array");
+        // Step 1: strip markdown code fences
+        let cleaned = text
+          .replace(/^```(?:json)?\s*/im, "")
+          .replace(/\s*```\s*$/im, "")
+          .trim();
+
+        // Step 2: extract the first JSON value (object or array) from the text
+        // This handles cases where the model adds prose before/after the JSON
+        const jsonMatch = cleaned.match(/([\[\{][\s\S]*[\]\}])/);
+        if (jsonMatch) cleaned = jsonMatch[1].trim();
+
+        const raw = JSON.parse(cleaned);
+
+        // Step 3: normalise — accept both {questions:[]} and a root array
+        if (Array.isArray(raw)) {
+          parsedResult = { questions: raw };
+        } else if (raw && Array.isArray(raw.questions)) {
+          parsedResult = raw;
+        } else {
+          throw new Error("Response is not a questions array or {questions:[]} object");
+        }
+
+        if (parsedResult.questions.length === 0) {
+          throw new Error("AI returned an empty questions array");
         }
       } catch (parseErr) {
+        // Surface the raw text in the error so admins can debug
+        const preview = text?.substring(0, 300) ?? "(empty)";
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: `AI returned invalid JSON: ${parseErr instanceof Error ? parseErr.message : String(parseErr)}`,
+          message: `AI returned invalid JSON: ${parseErr instanceof Error ? parseErr.message : String(parseErr)} | Raw preview: ${preview}`,
         });
       }
 

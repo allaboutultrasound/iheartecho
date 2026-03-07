@@ -15,7 +15,6 @@ import FetalNavigator from "./pages/FetalNavigator";
 import TTENavigatorRedirect from "./pages/TTENavigator";
 import HemodynamicsLab from "./pages/HemodynamicsLab";
 import ScanCoach from "./pages/ScanCoach";
-import CaseLab from "./pages/CaseLab";
 import ReportBuilder from "./pages/ReportBuilder";
 import PediatricNavigator from "./pages/PediatricNavigator";
 import TTENavigator from "./pages/TTENavigator";
@@ -90,7 +89,7 @@ function Router() {
       <Route path="/protocol" component={TTENavigatorRedirect} />
       <Route path="/hemodynamics" component={HemodynamicsLab} />
       <Route path="/scan-coach" component={ScanCoach} />
-      <Route path="/cases" component={CaseLab} />
+      <Route path="/cases">{() => { window.location.replace("/quickfire"); return null; }}</Route>
       <Route path="/report" component={ReportBuilder} />
       <Route path="/cme" component={CmeHub} />
       <Route path="/registry-review" component={RegistryReviewHub} />

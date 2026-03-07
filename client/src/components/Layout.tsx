@@ -70,7 +70,6 @@ const navGroups = [
     items: [
       { path: "/quickfire", label: "Daily QuickFire", icon: Zap },
       { path: "/case-library", label: "Echo Case Library", icon: Library },
-      { path: "/cases", label: "Echo Case Lab", icon: BookOpen },
       { path: "/report", label: "Report Builder", icon: FileText },
       { path: "/cme", label: "CME Hub", icon: GraduationCap },
       { path: "/registry-review", label: "Registry Review Hub", icon: BookMarked },

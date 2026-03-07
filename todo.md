@@ -1181,3 +1181,12 @@
 - [x] Add ACS, Adult Echo, Pediatric Echo, Fetal Echo quick-select chips to AI generator dialog (auto-fills topic textarea)
 - [x] Add category tag filter chips to QuickFire player UI (client-side filter, resets question index on selection)
 - [x] Fix HOCMScanCoach.tsx JSX error — unescaped > in Valsalva advantage note replaced with &times;
+
+## QuickFire AI Generator JSON Fix
+- [x] Fix unexpected token JSON parse errors in QuickFire AI question generator
+
+## QuickFire AI + Case Lab Merge
+- [x] Fix AI generator JSON parser — handle root array response (model returns [...] not {"questions":[...]})
+- [x] Merge Echo Case Lab into QuickFire Challenge — integrate cases, gamification, leaderboard tabs
+- [x] Remove Echo Case Lab as separate navigation item, redirect /cases to /quickfire
+- [x] Rename "Daily Set" to "Daily Challenge" throughout
