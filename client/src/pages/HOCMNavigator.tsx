@@ -918,6 +918,118 @@ export default function HOCMNavigator() {
             </div>
           </div>
 
+          {/* Goal-Directed vs Instructed Valsalva Comparison */}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-4"
+            style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: BRAND }}>Goal-Directed vs. Instructed Valsalva</h3>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded text-white" style={{ background: "#0369a1" }}>PMID 39886312</span>
+            </div>
+            <p className="text-xs text-gray-500 mb-4">Evidence-based comparison of two Valsalva coaching strategies for HOCM provocation (Kim et al., 2025)</p>
+
+            {/* Summary callout */}
+            <div className="p-3 rounded-xl bg-[#f0fbfc] border border-[#189aa1]/20 mb-4">
+              <p className="text-xs text-[#0e4a50] leading-relaxed">
+                <strong>Key finding:</strong> Goal-directed Valsalva (targeting ≥40% LV cavity reduction) achieves significantly higher provoked LVOT gradients than standard instructed Valsalva, with fewer inadequate maneuvers. It is now the preferred technique when equipment and operator experience allow.
+              </p>
+            </div>
+
+            {/* Side-by-side comparison */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+              {/* Instructed Valsalva */}
+              <div className="rounded-xl border border-gray-200 p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-2 h-2 rounded-full bg-amber-400" />
+                  <span className="text-xs font-bold text-gray-800">Instructed Valsalva</span>
+                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">Traditional</span>
+                </div>
+                <div className="space-y-2">
+                  {[
+                    { label: "Instruction", text: "\"Bear down hard for 10–15 seconds\"" },
+                    { label: "Goal", text: "Fixed duration; no real-time feedback" },
+                    { label: "Endpoint", text: "Patient effort for ≥10 seconds" },
+                    { label: "Monitoring", text: "CW Doppler only; no cavity size target" },
+                    { label: "Limitation", text: "Variable effort → inconsistent preload reduction → false-negative results" },
+                    { label: "Adequacy rate", text: "Lower — up to 30–40% inadequate maneuvers" },
+                  ].map(({ label, text }) => (
+                    <div key={label}>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{label}: </span>
+                      <span className="text-xs text-gray-700">{text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Goal-Directed Valsalva */}
+              <div className="rounded-xl border-2 p-4" style={{ borderColor: "#189aa1", background: "#f0fbfc" }}>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-2 h-2 rounded-full" style={{ background: "#189aa1" }} />
+                  <span className="text-xs font-bold text-gray-800">Goal-Directed Valsalva</span>
+                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded text-white" style={{ background: "#189aa1" }}>Preferred</span>
+                </div>
+                <div className="space-y-2">
+                  {[
+                    { label: "Instruction", text: "\"Bear down until the heart looks smaller on screen\"" },
+                    { label: "Goal", text: "≥40% reduction in LV cavity size during strain" },
+                    { label: "Endpoint", text: "Echocardiographic confirmation of adequate preload reduction" },
+                    { label: "Monitoring", text: "Real-time 2D imaging (A4C or PSAX) + simultaneous CW Doppler" },
+                    { label: "Advantage", text: "Objective endpoint → reproducible preload reduction → fewer false-negatives" },
+                    { label: "Adequacy rate", text: "Higher — consistent preload reduction confirmed on imaging" },
+                  ].map(({ label, text }) => (
+                    <div key={label}>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{label}: </span>
+                      <span className="text-xs text-gray-700">{text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* How to perform goal-directed */}
+            <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 mb-4">
+              <h4 className="text-xs font-bold text-gray-700 mb-2">How to Perform Goal-Directed Valsalva</h4>
+              <div className="space-y-2">
+                {[
+                  { step: 1, text: "Set up simultaneous 2D imaging (A4C or PSAX) and CW Doppler on split screen" },
+                  { step: 2, text: "Obtain baseline LV cavity size measurement (LVEDD or visual area estimate)" },
+                  { step: 3, text: "Coach patient: \"Bear down hard — watch the screen — keep going until the heart looks noticeably smaller\"" },
+                  { step: 4, text: "Monitor 2D in real time: target ≥40% reduction in LV cavity diameter or area during strain" },
+                  { step: 5, text: "If cavity does not decrease adequately within 5–8 seconds, prompt patient to strain harder" },
+                  { step: 6, text: "Continue CW recording through release phase — peak gradient occurs 1–5 beats after release" },
+                  { step: 7, text: "If ≥40% reduction not achieved after two attempts, document as inadequate and consider exercise stress echo" },
+                ].map(({ step, text }) => (
+                  <div key={step} className="flex items-start gap-2">
+                    <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0" style={{ background: BRAND }}>{step}</div>
+                    <p className="text-xs text-gray-700 leading-relaxed pt-0.5">{text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Supplies */}
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                <span className="text-xs font-bold text-amber-700">Setup Requirements for Goal-Directed Valsalva</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {[
+                  "Split-screen or biplane imaging capability (2D + CW simultaneously)",
+                  "Operator comfortable with real-time cavity size estimation",
+                  "Patient able to follow real-time coaching during maneuver",
+                  "Consider manometer (target ≥40 mmHg intrathoracic pressure) if available",
+                  "If split-screen unavailable, use instructed Valsalva with HR monitoring as adequacy surrogate",
+                  "Document adequacy method used in the report",
+                ].map(item => (
+                  <div key={item} className="flex items-start gap-1.5">
+                    <Info className="w-3 h-3 text-amber-500 flex-shrink-0 mt-0.5" />
+                    <span className="text-xs text-amber-800">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
           {/* Alternative provocation */}
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
             style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
