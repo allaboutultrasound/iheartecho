@@ -464,6 +464,17 @@ export const caseLibraryRouter = router({
 
   // ─── Admin procedures ─────────────────────────────────────────────────────
 
+  /** Returns the count of cases awaiting admin review (admin only) */
+  getPendingCount: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+    const [result] = await db
+      .select({ count: count(echoLibraryCases.id) })
+      .from(echoLibraryCases)
+      .where(eq(echoLibraryCases.status, "pending"));
+    return { count: result?.count ?? 0 };
+  }),
+
   listPendingCases: adminProcedure.query(async () => {
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });

@@ -223,3 +223,18 @@ describe("caseLibrary input validation", () => {
     ).rejects.toThrow();
   });
 });
+
+// ─── getPendingCount ──────────────────────────────────────────────────────────
+
+describe("caseLibrary.getPendingCount", () => {
+  it("throws FORBIDDEN for non-admin users", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeUser()));
+    await expect(caller.caseLibrary.getPendingCount()).rejects.toThrow();
+  });
+
+  it("throws when DB unavailable for admin users", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeAdminUser()));
+    // DB is mocked to return null, so the procedure should throw INTERNAL_SERVER_ERROR
+    await expect(caller.caseLibrary.getPendingCount()).rejects.toThrow();
+  });
+});

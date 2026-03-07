@@ -18,6 +18,22 @@ import NotificationBell from "@/components/NotificationBell";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 
+/** Badge showing the count of echo cases pending admin review */
+function CasePendingBadge() {
+  const { data } = trpc.caseLibrary.getPendingCount.useQuery(undefined, {
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+    retry: false,
+  });
+  const count = data?.count ?? 0;
+  if (count === 0) return null;
+  return (
+    <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold bg-[#189aa1] text-white">
+      {count > 99 ? "99+" : count}
+    </span>
+  );
+}
+
 /** Small badge showing the count of pre-registered users awaiting first login */
 function PendingBadge() {
   const { data: count } = trpc.platformAdmin.countPending.useQuery(undefined, {
@@ -91,6 +107,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const { isAuthenticated, user, logout } = useAuth();
+  const isAdmin = (user as any)?.role === "admin";
+
   return (
     <div className="flex min-h-screen bg-[#f0fbfc]">
       {/* Mobile overlay */}
@@ -135,6 +153,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <div className="text-xs font-semibold text-white/40 uppercase tracking-wider px-3 mb-1">{group.label}</div>
               {group.items.map(({ path, label, icon: Icon, external }) => {
                 const active = !external && (location === path || (path !== "/" && location.startsWith(path)));
+                const isCaseLibrary = path === "/case-library";
                 const innerContent = (
                   <div
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 transition-all duration-150 group
@@ -146,6 +165,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   >
                     <Icon className={`w-4 h-4 flex-shrink-0 ${active ? "text-white" : "text-[#4ad9e0] group-hover:text-white"}`} />
                     <span className="text-sm font-medium">{label}</span>
+                    {/* Pending badge for Echo Case Library — admin only, not shown when item is active */}
+                    {isCaseLibrary && isAdmin && !active && <CasePendingBadge />}
                     {active && <ChevronRight className="w-3 h-3 ml-auto" />}
                     {external && <ExternalLink className="w-3 h-3 ml-auto text-white/40 group-hover:text-white/70" />}
                   </div>
@@ -243,10 +264,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
                 {/* Dropdown */}
                 {accountOpen && (() => {
-                  const roles = (user as any).appRoles as string[] | undefined ?? [];
+                  const roles: string[] = (user as any).thinkificRoles ?? [];
                   const hasDiyAdmin = roles.includes("diy_admin");
                   const hasPlatformAdmin = roles.includes("platform_admin") || (user as any).role === "admin";
-                  const isAdmin = (user as any).role === "admin";
                   const ROLE_LABELS: Record<string, { label: string; color: string }> = {
                     premium_user:   { label: "Premium",           color: "#189aa1" },
                     diy_user:       { label: "DIY Accreditation", color: "#f59e0b" },
@@ -352,7 +372,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                                 <button onClick={() => setAccountOpen(false)}
                                   className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-all text-left">
                                   <Library className="w-3.5 h-3.5 text-purple-500" />
-                                  Case Management
+                                  <span className="flex-1">Case Management</span>
+                                  <CasePendingBadge />
                                 </button>
                               </WouterLink>
                               <WouterLink href="/admin/quickfire">
@@ -403,7 +424,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1">
           {children}
         </main>
       </div>

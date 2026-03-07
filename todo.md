@@ -943,3 +943,7 @@
 - [x] buildNewCaseSubmissionAdminEmail template — branded email to admin with submitter name, case title, modality, difficulty, and link to admin case management
 - [x] submitCase procedure — fire-and-forget email to SENDGRID_FROM_EMAIL (admin inbox) + notifyOwner in-app alert on new user submissions
 - [x] caseNotifications.test.ts — add tests for the new admin email template
+
+## Sidebar Pending Case Count Badge
+- [x] caseLibrary.getPendingCount — admin-only tRPC query returning count of pending cases
+- [x] Layout.tsx — fetch getPendingCount for admin users, show teal badge on Echo Case Library nav item
