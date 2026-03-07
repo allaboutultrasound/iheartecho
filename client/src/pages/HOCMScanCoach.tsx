@@ -14,6 +14,7 @@ import {
   CheckCircle,
   ChevronDown,
   ChevronRight,
+  Heart,
   Info,
   Layers,
   Ruler,
@@ -556,7 +557,7 @@ const machineSettings = [
 export default function HOCMScanCoach() {
   const [selectedView, setSelectedView] = useState(views[0]);
   const [expandedSection, setExpandedSection] = useState<string | null>("criteria");
-  const [activeTab, setActiveTab] = useState<"views" | "doppler" | "valsalva" | "settings">("views");
+  const [activeTab, setActiveTab] = useState<"views" | "doppler" | "valsalva" | "myosin" | "settings">("views");
   const [valsalvaPath, setValsalvaPath] = useState<"instructed" | "goal-directed" | null>(null);
   const { mergeView: mergeHOCMView } = useScanCoachOverrides("hocm");
   const currentView = useMemo(
@@ -602,6 +603,7 @@ export default function HOCMScanCoach() {
               { id: "views", label: "View-by-View Guide", icon: Layers },
               { id: "doppler", label: "Doppler Differentiation", icon: Activity },
               { id: "valsalva", label: "Valsalva Acquisition", icon: TrendingUp },
+              { id: "myosin", label: "Myosin Inhibitors", icon: Zap },
               { id: "settings", label: "Machine Settings", icon: Ruler },
             ] as const).map(({ id, label, icon: Icon }) => (
               <button
@@ -1041,6 +1043,85 @@ export default function HOCMScanCoach() {
             <p className="text-sm text-gray-500">Choose your Valsalva technique to see the step-by-step protocol</p>
           </div>
 
+          {/* ── Valsalva Physiology — SV/CO effects ── */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-5" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
+            <div className="px-5 py-3 border-b border-gray-50 flex items-center gap-2" style={{ background: "#f0fbfc" }}>
+              <Activity className="w-4 h-4" style={{ color: BRAND }} />
+              <span className="text-sm font-bold" style={{ color: BRAND }}>How Valsalva Affects Stroke Volume and Cardiac Output</span>
+            </div>
+            <div className="px-5 py-4 space-y-3">
+              <p className="text-xs text-gray-700 leading-relaxed">
+                The Valsalva maneuver is a <strong>haemodynamic stress test</strong> that transiently alters preload, afterload, and venous return across four distinct phases. In HOCM, the critical window is the <strong>release phase</strong> — when venous return suddenly surges, the LV cavity is momentarily smallest, and the LVOT gradient peaks. Understanding each phase helps you anticipate the echo findings and time your measurements correctly.
+              </p>
+              <div className="space-y-2">
+                {[
+                  {
+                    phase: "Phase I — Onset of Strain",
+                    duration: "First 1-2 seconds",
+                    color: "#0369a1",
+                    physiology: "Sudden rise in intrathoracic pressure transiently compresses the aorta, briefly increasing aortic pressure and LV afterload.",
+                    sv: "Stroke volume briefly increases (aortic compression augments forward flow).",
+                    hocm: "LVOT gradient may transiently decrease at onset due to increased afterload reducing the pressure gradient across the LVOT.",
+                  },
+                  {
+                    phase: "Phase II — Sustained Strain",
+                    duration: "Seconds 2-15 (the main strain phase)",
+                    color: "#dc2626",
+                    physiology: "Sustained high intrathoracic pressure impedes venous return to the right heart. Right-sided filling falls, leading to reduced LV preload over 5-10 seconds. LV cavity progressively empties and becomes smaller.",
+                    sv: "Stroke volume falls progressively. Cardiac output drops. HR rises reflexively (baroreceptor response) to compensate.",
+                    hocm: "This is the key phase for HOCM. As LV cavity shrinks, the LVOT narrows further, SAM worsens, and the LVOT gradient rises. The dagger-shaped CW signal becomes more prominent and velocity increases.",
+                  },
+                  {
+                    phase: "Phase III — Immediate Release",
+                    duration: "First 1-2 seconds after release",
+                    color: "#d97706",
+                    physiology: "Intrathoracic pressure drops abruptly. The pulmonary venous reservoir empties into the left heart. Venous return surges to the right heart.",
+                    sv: "Stroke volume is still low immediately after release as the right-sided surge has not yet reached the left heart.",
+                    hocm: "Gradient may briefly remain elevated or drop slightly. Do NOT stop recording here — the peak gradient is still coming.",
+                  },
+                  {
+                    phase: "Phase IV — Post-Release Overshoot",
+                    duration: "2-8 seconds after release",
+                    color: BRAND,
+                    physiology: "The surge of venous return reaches the left heart. LV filling increases rapidly, but the LV cavity is still small from the strain phase. This creates a transient state of high preload with a small LV cavity.",
+                    sv: "Stroke volume surges. Cardiac output overshoots above baseline (baroreceptor-mediated reflex bradycardia may occur).",
+                    hocm: "CRITICAL: This is when the LVOT gradient peaks in HOCM. The small LV cavity + high filling velocity = maximum SAM + maximum LVOT obstruction. Measure the peak CW Doppler velocity at the dagger tip during THIS phase.",
+                  },
+                ].map(({ phase, duration, color, physiology, sv, hocm }) => (
+                  <div key={phase} className="rounded-xl border border-gray-100 overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-2.5" style={{ background: color + "15" }}>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color }} />
+                        <span className="text-xs font-bold" style={{ color }}>{phase}</span>
+                      </div>
+                      <span className="text-[10px] text-gray-400 font-medium">{duration}</span>
+                    </div>
+                    <div className="px-4 py-3 space-y-2">
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">Physiology</p>
+                        <p className="text-xs text-gray-700 leading-relaxed">{physiology}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">Stroke Volume / Cardiac Output</p>
+                        <p className="text-xs text-gray-700 leading-relaxed">{sv}</p>
+                      </div>
+                      <div className="p-2 rounded-lg" style={{ background: color + "10", border: `1px solid ${color}30` }}>
+                        <p className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color }}>HOCM Significance</p>
+                        <p className="text-xs leading-relaxed" style={{ color: color === BRAND ? "#0e4a50" : color === "#dc2626" ? "#7f1d1d" : color === "#d97706" ? "#78350f" : "#1e3a5f" }}>{hocm}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-50 border border-amber-200">
+                <Info className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-800 leading-relaxed">
+                  <strong>Goal-Directed Valsalva advantage:</strong> By standardising the strain effort to 40 mmHg or more x 10 seconds, you ensure Phase II is sustained long enough to adequately reduce LV preload and unmask the maximum provoked gradient in Phase IV. Instructed Valsalva often fails to sustain Phase II adequately, leading to false-negative results.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* ── Pathway selector ── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
             {/* Instructed Valsalva card */}
@@ -1205,7 +1286,7 @@ export default function HOCMScanCoach() {
                     "Measure peak velocity at the TIP of the dagger (late systole)",
                     "Calculate gradient: ΔP = 4V²",
                     "Report as: 'Provoked LVOT gradient (Valsalva): __ mmHg'",
-                    "Document adequacy: LV cavity decrease ≥40%, HR increase ≥10 bpm",
+                    "Document adequacy: LV cavity decrease >=40%, HR increase >=10 bpm",
                     "If inadequate, note in report and repeat or use alternative provocation",
                   ],
                 },
@@ -1403,6 +1484,229 @@ export default function HOCMScanCoach() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── Myosin Inhibitor Tab ─────────────────────────────────────────── */}
+      {activeTab === "myosin" && (
+        <div className="container py-6 max-w-3xl">
+          <div className="mb-5">
+            <h2 className="text-lg font-bold text-gray-800 mb-1" style={{ fontFamily: "Merriweather, serif" }}>
+              Myosin Inhibitors in HOCM
+            </h2>
+            <p className="text-sm text-gray-500">Mechanism, echo monitoring protocol, and titration guidance for mavacamten and aficamten</p>
+          </div>
+
+          {/* Mechanism card */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-4" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
+            <div className="px-5 py-3 border-b border-gray-50 flex items-center gap-2" style={{ background: "#f0fbfc" }}>
+              <Zap className="w-4 h-4" style={{ color: BRAND }} />
+              <span className="text-sm font-bold" style={{ color: BRAND }}>Mechanism of Action</span>
+            </div>
+            <div className="px-5 py-4 space-y-3">
+              <p className="text-xs text-gray-700 leading-relaxed">
+                Myosin inhibitors are a class of cardiac-specific drugs that <strong>directly reduce myosin-actin cross-bridge formation</strong>, decreasing the number of force-generating interactions per cardiac cycle. In HOCM, the hypercontractile sarcomere is the primary driver of dynamic LVOT obstruction — myosin inhibitors target this at the molecular level.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {[
+                  {
+                    drug: "Mavacamten (Camzyos)",
+                    badge: "FDA Approved 2022",
+                    badgeColor: "#0369a1",
+                    mechanism: "Allosteric inhibitor of cardiac myosin ATPase. Shifts myosin heads from the disordered-relaxed (DRX) state to the super-relaxed (SRX) state, reducing the number of myosin heads available for actin binding.",
+                    effect: "Reduces LV contractility, decreases LVOT gradient, reduces SAM, and improves diastolic function. Lowers LVEF by 3-5% on average.",
+                    dose: "Starting: 2.5 mg/day orally. Titrate every 12 weeks based on LVEF and LVOT gradient.",
+                    safetyStop: "HOLD if LVEF < 50% on any echo during treatment.",
+                  },
+                  {
+                    drug: "Aficamten (Nuvation)",
+                    badge: "FDA Approved 2025",
+                    badgeColor: "#059669",
+                    mechanism: "Second-generation cardiac myosin inhibitor. Binds to the same myosin ATPase pocket as mavacamten but with faster on/off kinetics, allowing more predictable dose-response and shorter washout period.",
+                    effect: "Similar gradient reduction and SAM abolition. Shorter half-life (~3 days vs ~9 days for mavacamten) allows faster titration and recovery if LVEF drops.",
+                    dose: "Starting: 5 mg/day orally. Titrate every 4 weeks based on LVEF and LVOT gradient.",
+                    safetyStop: "HOLD if LVEF < 50% on any echo during treatment.",
+                  },
+                ].map(({ drug, badge, badgeColor, mechanism, effect, dose, safetyStop }) => (
+                  <div key={drug} className="rounded-xl border border-gray-100 p-4 space-y-2.5" style={{ background: "#fafafa" }}>
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-xs font-bold text-gray-800 leading-snug">{drug}</span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white flex-shrink-0" style={{ background: badgeColor }}>{badge}</span>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">Mechanism</p>
+                      <p className="text-xs text-gray-600 leading-relaxed">{mechanism}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">Echo Effect</p>
+                      <p className="text-xs text-gray-600 leading-relaxed">{effect}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">Dosing</p>
+                      <p className="text-xs text-gray-600 leading-relaxed">{dose}</p>
+                    </div>
+                    <div className="flex items-start gap-1.5 p-2 rounded-lg bg-red-50 border border-red-100">
+                      <AlertTriangle className="w-3 h-3 text-red-500 flex-shrink-0 mt-0.5" />
+                      <p className="text-xs text-red-700 font-semibold">{safetyStop}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Effect on heart and stroke volume */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-4" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
+            <div className="px-5 py-3 border-b border-gray-50 flex items-center gap-2" style={{ background: "#f0fbfc" }}>
+              <Activity className="w-4 h-4" style={{ color: BRAND }} />
+              <span className="text-sm font-bold" style={{ color: BRAND }}>Effect on the Heart and Stroke Volume</span>
+            </div>
+            <div className="px-5 py-4 space-y-3">
+              <p className="text-xs text-gray-700 leading-relaxed">
+                By reducing myosin cross-bridge cycling, myosin inhibitors produce a <strong>controlled reduction in LV contractility</strong>. In obstructive HOCM, this is therapeutically beneficial — the hypercontractile state is the root cause of obstruction. The haemodynamic consequences are predictable and measurable on echo:
+              </p>
+              <div className="space-y-2">
+                {[
+                  { label: "LVOT Gradient", before: "Elevated (>=30 mmHg at rest or >=50 mmHg provoked)", after: "Reduced or abolished — goal: resting <30 mmHg, provoked <50 mmHg", icon: TrendingUp, positive: true },
+                  { label: "SAM", before: "Present (septal contact in severe cases)", after: "Reduced or abolished — SAM abolition correlates with gradient reduction", icon: Activity, positive: true },
+                  { label: "LV Ejection Fraction", before: "Typically hyperdynamic (>70%)", after: "Decreases 3-5% on average. HOLD drug if LVEF <50%", icon: Heart, positive: false },
+                  { label: "Stroke Volume (SV)", before: "May be reduced due to obstruction limiting forward flow", after: "Improves as obstruction resolves and forward flow increases. Measure LVOT VTI x LVOT area", icon: Layers, positive: true },
+                  { label: "Cardiac Output (CO)", before: "Reduced in severe obstruction despite high EF", after: "Improves with gradient reduction. CO = SV x HR. Monitor LVOT VTI trend across visits", icon: TrendingUp, positive: true },
+                  { label: "Diastolic Function", before: "Impaired relaxation (reduced e', elevated E/e')", after: "Improves over weeks-months. e' increases, E/e' decreases, LAVI may reduce", icon: Ruler, positive: true },
+                  { label: "MR (SAM-related)", before: "Posteriorly directed MR from SAM-leaflet contact", after: "Reduces or resolves as SAM abolishes — reassess MR severity at each visit", icon: Activity, positive: true },
+                ].map(({ label, before, after, icon: Icon, positive }) => (
+                  <div key={label} className="rounded-xl border border-gray-100 overflow-hidden">
+                    <div className="flex items-center gap-2 px-4 py-2" style={{ background: "#f0fbfc" }}>
+                      <Icon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: BRAND }} />
+                      <span className="text-xs font-bold text-gray-800">{label}</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
+                      <div className="px-4 py-2.5 bg-red-50">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-red-500 mb-0.5">Before Treatment</p>
+                        <p className="text-xs text-red-800 leading-relaxed">{before}</p>
+                      </div>
+                      <div className={`px-4 py-2.5 ${positive ? "bg-green-50" : "bg-amber-50"}`}>
+                        <p className={`text-[10px] font-bold uppercase tracking-wider mb-0.5 ${positive ? "text-green-600" : "text-amber-600"}`}>After Treatment</p>
+                        <p className={`text-xs leading-relaxed ${positive ? "text-green-800" : "text-amber-800"}`}>{after}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Echo monitoring protocol */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-4" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
+            <div className="px-5 py-3 border-b border-gray-50 flex items-center gap-2" style={{ background: "#f0fbfc" }}>
+              <Target className="w-4 h-4" style={{ color: BRAND }} />
+              <span className="text-sm font-bold" style={{ color: BRAND }}>Echo Monitoring Protocol — Titration Visits</span>
+            </div>
+            <div className="px-5 py-4">
+              <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-50 border border-amber-200 mb-4">
+                <Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-800 leading-relaxed">
+                  <strong>Goal-Directed Valsalva is required at every titration visit.</strong> Resting gradient alone is insufficient — provoked gradient determines whether the dose is therapeutic, sub-therapeutic, or causing excessive EF reduction.
+                </p>
+              </div>
+              <div className="space-y-3">
+                {[
+                  {
+                    visit: "Baseline (Pre-treatment)",
+                    color: "#6b7280",
+                    measurements: [
+                      "LVEF (biplane Simpson's) — document baseline",
+                      "Resting LVOT gradient (A5C + A3C CW Doppler)",
+                      "Provoked LVOT gradient (Goal-Directed Valsalva)",
+                      "LVOT VTI — calculate stroke volume (SV = VTI x LVOT area)",
+                      "SAM assessment (PLAX M-mode + 2D)",
+                      "MR severity and jet direction (A4C color Doppler)",
+                      "Diastolic function: septal e', lateral e', E/e', LAVI",
+                      "LV wall thickness (IVS, LVPW — PLAX M-mode)",
+                    ],
+                  },
+                  {
+                    visit: "Titration Visit (Mavacamten: 4-12 wks | Aficamten: 4 wks)",
+                    color: BRAND,
+                    measurements: [
+                      "LVEF (biplane Simpson's) — HOLD if <50%",
+                      "Resting LVOT gradient — target <30 mmHg",
+                      "Provoked LVOT gradient (Goal-Directed Valsalva) — target <50 mmHg",
+                      "LVOT VTI — compare to baseline (SV trend)",
+                      "SAM — document reduction or abolition",
+                      "MR severity — reassess if SAM has changed",
+                      "Diastolic function parameters — document improvement trend",
+                    ],
+                  },
+                  {
+                    visit: "Safety Hold Criteria — STOP Drug Immediately",
+                    color: "#dc2626",
+                    measurements: [
+                      "LVEF <50% on any echo during treatment",
+                      "Symptomatic hypotension or pre-syncope",
+                      "New LVEF reduction >10% from baseline (even if still >50%)",
+                      "Significant worsening of diastolic function",
+                    ],
+                  },
+                ].map(({ visit, color, measurements }) => (
+                  <div key={visit} className="rounded-xl border border-gray-100 overflow-hidden">
+                    <div className="px-4 py-2.5 flex items-center gap-2" style={{ background: color + "15" }}>
+                      <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color }} />
+                      <span className="text-xs font-bold" style={{ color }}>{visit}</span>
+                    </div>
+                    <div className="px-4 py-3 space-y-1.5">
+                      {measurements.map((m, i) => (
+                        <div key={i} className="flex items-start gap-2">
+                          <div className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5" style={{ background: color }} />
+                          <span className="text-xs text-gray-700 leading-relaxed">{m}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Stroke Volume Assessment */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-4" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
+            <div className="px-5 py-3 border-b border-gray-50 flex items-center gap-2" style={{ background: "#f0fbfc" }}>
+              <Ruler className="w-4 h-4" style={{ color: BRAND }} />
+              <span className="text-sm font-bold" style={{ color: BRAND }}>Stroke Volume Assessment — How to Measure</span>
+            </div>
+            <div className="px-5 py-4 space-y-3">
+              <p className="text-xs text-gray-700 leading-relaxed">
+                Stroke volume is the most sensitive marker of haemodynamic improvement with myosin inhibitors. As LVOT obstruction resolves, forward flow increases and LVOT VTI rises — even before the LVEF visibly changes.
+              </p>
+              <div className="rounded-xl p-4 space-y-3" style={{ background: "#f0fbfc", border: "1px solid #189aa1" + "30" }}>
+                <p className="text-xs font-bold" style={{ color: BRAND }}>Step-by-Step SV Calculation</p>
+                <div className="space-y-2">
+                  {[
+                    { step: "1", label: "LVOT Diameter", detail: "Measure in PLAX at 1 cm below aortic valve, inner edge to inner edge, at end-systole. Typical range: 1.8-2.4 cm." },
+                    { step: "2", label: "LVOT Area", detail: "Area = pi x (diameter/2)^2. Example: 2.0 cm diameter = 3.14 cm^2" },
+                    { step: "3", label: "LVOT VTI", detail: "PW Doppler sample volume 0.5 cm below aortic valve in A5C or A3C. Trace the outer edge of the velocity envelope. Normal: 18-22 cm." },
+                    { step: "4", label: "Stroke Volume", detail: "SV = LVOT Area x LVOT VTI. Example: 3.14 x 20 cm = 62.8 mL. Normal: 60-100 mL." },
+                    { step: "5", label: "Cardiac Output", detail: "CO = SV x HR. Example: 63 mL x 70 bpm = 4.4 L/min. Normal: 4-8 L/min." },
+                    { step: "6", label: "Cardiac Index", detail: "CI = CO / BSA. Normal: 2.2-4.0 L/min/m^2. Use for serial comparison across visits." },
+                  ].map(({ step, label, detail }) => (
+                    <div key={step} className="flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0" style={{ background: BRAND }}>{step}</div>
+                      <div>
+                        <span className="text-xs font-bold text-gray-800">{label}: </span>
+                        <span className="text-xs text-gray-600 leading-relaxed">{detail}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-50 border border-amber-200">
+                <Info className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-800 leading-relaxed">
+                  <strong>Pitfall:</strong> In HOCM, the LVOT VTI may be contaminated by the high-velocity LVOT obstruction signal if the PW sample volume is placed too close to the obstruction site. Always place the PW sample volume <strong>0.5 cm below the AV</strong> and confirm the signal is laminar (narrow spectral envelope) before tracing.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
