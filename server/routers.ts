@@ -284,7 +284,9 @@ export const appRouter = router({
         const user = await getUserByEmail(email);
 
         // Always return success to prevent email enumeration
-        if (!user || !user.passwordHash) {
+        // Send reset email to any registered account (including OAuth-only accounts without a passwordHash)
+        // — this allows OAuth users to set a password for the first time via the reset flow
+        if (!user) {
           return { success: true };
         }
 

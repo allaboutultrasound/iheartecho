@@ -823,3 +823,15 @@
 - [x] Run pnpm db:push — migration 0031 applied, 15 tables remain (no hub tables)
 - [x] Verified no remaining Hub references in routers.ts, App.tsx, or other pages
 - [x] Full test suite: 480 tests passing across 24 test files
+
+## Bug Fixes — Forgot Password & Magic Link Failed Queries
+- [ ] Diagnose failed query in auth.requestPasswordReset procedure
+- [ ] Diagnose failed query in auth.requestMagicLink procedure
+- [ ] Fix root cause (likely getUserByEmail helper or missing column reference)
+- [ ] Verify both flows work end-to-end
+
+## Bug Fixes — Forgot Password & Magic Link
+- [x] Fix requestPasswordReset to send email even when user has no passwordHash (OAuth-only accounts)
+- [x] Fix emailAuthRouter forgotPassword to also send to accounts without passwordHash
+- [x] Verified: VITE_APP_URL=https://app.iheartecho.com — reset/magic links point to production; test on published app not dev preview
+- [x] Confirmed: token is now stored in DB for OAuth-only accounts after the fix (480 tests passing)

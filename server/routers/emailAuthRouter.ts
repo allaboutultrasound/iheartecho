@@ -424,8 +424,10 @@ export const emailAuthRouter = router({
         .limit(1);
 
       // Always return success to avoid email enumeration
+      // Send reset email to any registered account (including OAuth-only accounts without a passwordHash)
+      // — this allows OAuth users to set a password for the first time via the reset flow
       const user = result[0];
-      if (user && user.passwordHash) {
+      if (user) {
         const resetToken = generateToken();
         const resetExpiry = tokenExpiry(1); // 1 hour
         await db
