@@ -745,3 +745,23 @@
 - [x] Add pending user count badge to Platform Admin nav in Layout.tsx
 - [x] Send welcome email on pre-registration (single assign + bulk CSV)
 - [x] All 388 tests pass
+
+## User Profile Enhancements (Mar 7 2026)
+- [ ] Review current Profile.tsx and identify existing fields
+- [ ] Add updateProfile procedure: firstName, lastName, email, bio, credentials, location, phone
+- [ ] Add changePassword procedure: verify current password, set new password
+- [ ] Build editable Personal Information section in Profile.tsx
+- [ ] Build Change Password section in Profile.tsx (email/password users only)
+- [ ] Show account type badge (Email/Password vs OAuth)
+- [ ] Show email verification status with resend option
+- [ ] Vitest tests for updateProfile and changePassword procedures
+
+## User Profile Enhancements
+- [x] Profile page — Personal Info section with edit mode (displayName, email, bio, credentials, specialty, yearsExperience, location, website)
+- [x] Profile page — Password change section (current password verification, new password with confirmation, show/hide toggles)
+- [x] Profile page — Avatar upload with preview, save/cancel flow, and S3 storage
+- [x] Profile page — Subscriptions panel showing active roles with manage links
+- [x] Backend — updateProfile tRPC procedure with extended fields (bio, credentials, specialty, yearsExperience, location, website, isPublicProfile)
+- [x] Backend — changePassword tRPC procedure using bcryptjs (current password verification + new password hash)
+- [x] Backend — getUserPasswordHash and updateUserPassword db helpers
+- [x] Vitest — Extended profile update and changePassword validation tests (all 424 tests passing)

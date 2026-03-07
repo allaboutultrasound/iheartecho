@@ -122,10 +122,35 @@ export async function updateHubProfile(userId: number, data: { displayName?: str
   await db.update(users).set(data).where(eq(users.id, userId));
 }
 
-export async function updateUserProfile(userId: number, data: { email?: string; displayName?: string; name?: string; avatarUrl?: string }) {
+export async function updateUserProfile(userId: number, data: {
+  email?: string;
+  displayName?: string;
+  name?: string;
+  avatarUrl?: string;
+  bio?: string;
+  credentials?: string;
+  specialty?: string;
+  yearsExperience?: number | null;
+  location?: string;
+  website?: string;
+  isPublicProfile?: boolean;
+}) {
   const db = await getDb();
   if (!db) return;
   await db.update(users).set(data).where(eq(users.id, userId));
+}
+
+export async function getUserPasswordHash(userId: number): Promise<string | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select({ passwordHash: users.passwordHash }).from(users).where(eq(users.id, userId)).limit(1);
+  return rows[0]?.passwordHash ?? null;
+}
+
+export async function updateUserPassword(userId: number, newHash: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(users).set({ passwordHash: newHash }).where(eq(users.id, userId));
 }
 
 export async function getAllCommunities() {

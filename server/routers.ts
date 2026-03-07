@@ -140,9 +140,37 @@ export const appRouter = router({
       .input(z.object({
         email: z.string().email().optional(),
         displayName: z.string().min(1).max(100).optional(),
+        bio: z.string().max(1000).optional(),
+        credentials: z.string().max(200).optional(),
+        specialty: z.string().max(100).optional(),
+        yearsExperience: z.number().int().min(0).max(60).nullable().optional(),
+        location: z.string().max(100).optional(),
+        website: z.string().url().max(200).optional().or(z.literal('')),
+        isPublicProfile: z.boolean().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
         await updateUserProfile(ctx.user.id, input);
+        return { success: true };
+      }),
+
+    changePassword: protectedProcedure
+      .input(z.object({
+        currentPassword: z.string().min(1),
+        newPassword: z.string().min(8).max(128),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { getUserPasswordHash, updateUserPassword } = await import('./db');
+        const bcrypt = await import('bcryptjs');
+        const currentHash = await getUserPasswordHash(ctx.user.id);
+        if (!currentHash) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Password change is not available for OAuth-only accounts. Please use the forgot password flow.' });
+        }
+        const isValid = await bcrypt.compare(input.currentPassword, currentHash);
+        if (!isValid) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Current password is incorrect.' });
+        }
+        const newHash = await bcrypt.hash(input.newPassword, 12);
+        await updateUserPassword(ctx.user.id, newHash);
         return { success: true };
       }),
 

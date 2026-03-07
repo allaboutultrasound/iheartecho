@@ -1,14 +1,16 @@
 /*
   Profile Page — iHeartEcho
-  Allows logged-in users to edit their display name, email, and profile photo,
-  and view their active subscriptions with links to manage them.
+  Allows logged-in users to edit their display name, email, bio, credentials,
+  specialty, years of experience, location, website, and change their password.
+  Also shows active subscriptions with links to manage them.
 */
 import { useState, useEffect, useRef } from "react";
-import { useLocation } from "wouter";
-import { User, Mail, Edit3, Save, X, CheckCircle, ExternalLink, Award, Shield, Star, ClipboardList, Camera, Upload } from "lucide-react";
+import {
+  User, Mail, Edit3, Save, X, CheckCircle, ExternalLink, Award, Shield, Star,
+  ClipboardList, Camera, Lock, MapPin, Globe, Briefcase, FileText, Eye, EyeOff,
+} from "lucide-react";
 import Layout from "@/components/Layout";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 
@@ -53,27 +55,62 @@ const ROLE_CONFIG: Record<string, {
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"] as const;
 type AcceptedMime = (typeof ACCEPTED_TYPES)[number];
 
+const SPECIALTY_OPTIONS = [
+  "Adult Echocardiography",
+  "Pediatric Echocardiography",
+  "Fetal Echocardiography",
+  "Congenital Heart Disease",
+  "Structural Heart Disease",
+  "Critical Care Echo",
+  "Point-of-Care Ultrasound",
+  "Vascular Ultrasound",
+  "General Cardiology",
+  "Cardiac Surgery",
+  "Anesthesiology",
+  "Emergency Medicine",
+  "Other",
+];
+
 export default function Profile() {
-  const [, navigate] = useLocation();
   const { user, isAuthenticated, loading } = useAuth();
   const utils = trpc.useUtils();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [activeSection, setActiveSection] = useState<"info" | "password">("info");
   const [editMode, setEditMode] = useState(false);
+
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
+  const [bio, setBio] = useState("");
+  const [credentials, setCredentials] = useState("");
+  const [specialty, setSpecialty] = useState("");
+  const [yearsExperience, setYearsExperience] = useState<string>("");
+  const [location, setLocation] = useState("");
+  const [website, setWebsite] = useState("");
 
-  // Avatar upload state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPw, setShowCurrentPw] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
+  const [showConfirmPw, setShowConfirmPw] = useState(false);
+
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarDataUri, setAvatarDataUri] = useState<string | null>(null);
   const [avatarMime, setAvatarMime] = useState<AcceptedMime | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
 
-  // Populate form when user loads
   useEffect(() => {
     if (user) {
-      setDisplayName(user.displayName || user.name || "");
-      setEmail(user.email || "");
+      const u = user as any;
+      setDisplayName(u.displayName || u.name || "");
+      setEmail(u.email || "");
+      setBio(u.bio || "");
+      setCredentials(u.credentials || "");
+      setSpecialty(u.specialty || "");
+      setYearsExperience(u.yearsExperience != null ? String(u.yearsExperience) : "");
+      setLocation(u.location || "");
+      setWebsite(u.website || "");
     }
   }, [user]);
 
@@ -88,8 +125,20 @@ export default function Profile() {
     },
   });
 
+  const changePassword = trpc.auth.changePassword.useMutation({
+    onSuccess: () => {
+      toast.success("Password changed successfully.");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to change password.");
+    },
+  });
+
   const uploadAvatar = trpc.auth.uploadAvatar.useMutation({
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast.success("Profile photo updated.");
       setAvatarPreview(null);
       setAvatarDataUri(null);
@@ -103,7 +152,6 @@ export default function Profile() {
     },
   });
 
-  // Redirect to login if not authenticated
   if (!loading && !isAuthenticated) {
     window.location.href = "/login";
     return null;
@@ -119,29 +167,60 @@ export default function Profile() {
     );
   }
 
-  const roles = (user as any).appRoles as string[] | undefined ?? [];
-  const activeSubscriptions = roles.filter(r => ROLE_CONFIG[r]);
+  const u = user as any;
+  const roles = (u.appRoles as string[] | undefined) ?? [];
+  const activeSubscriptions = roles.filter((r: string) => ROLE_CONFIG[r]);
 
   const handleSave = () => {
     const trimmedName = displayName.trim();
-    const trimmedEmail = email.trim();
     if (!trimmedName) { toast.error("Display name cannot be empty."); return; }
+
+    const yearsNum = yearsExperience !== "" ? parseInt(yearsExperience, 10) : null;
+    if (yearsExperience !== "" && (isNaN(yearsNum!) || yearsNum! < 0 || yearsNum! > 60)) {
+      toast.error("Years of experience must be a number between 0 and 60.");
+      return;
+    }
+
+    const websiteTrimmed = website.trim();
+    if (websiteTrimmed && !/^https?:\/\/.+/.test(websiteTrimmed)) {
+      toast.error("Website must start with http:// or https://");
+      return;
+    }
+
     updateProfile.mutate({
-      displayName: trimmedName !== (user.displayName || user.name || "") ? trimmedName : undefined,
-      email: trimmedEmail !== (user.email || "") ? trimmedEmail : undefined,
+      displayName: trimmedName !== (u.displayName || u.name || "") ? trimmedName : undefined,
+      email: email.trim() !== (u.email || "") ? email.trim() : undefined,
+      bio: bio.trim() !== (u.bio || "") ? bio.trim() : undefined,
+      credentials: credentials.trim() !== (u.credentials || "") ? credentials.trim() : undefined,
+      specialty: specialty !== (u.specialty || "") ? specialty : undefined,
+      yearsExperience: yearsNum !== (u.yearsExperience ?? null) ? yearsNum : undefined,
+      location: location.trim() !== (u.location || "") ? location.trim() : undefined,
+      website: websiteTrimmed !== (u.website || "") ? websiteTrimmed : undefined,
     });
   };
 
   const handleCancel = () => {
-    setDisplayName(user.displayName || user.name || "");
-    setEmail(user.email || "");
+    setDisplayName(u.displayName || u.name || "");
+    setEmail(u.email || "");
+    setBio(u.bio || "");
+    setCredentials(u.credentials || "");
+    setSpecialty(u.specialty || "");
+    setYearsExperience(u.yearsExperience != null ? String(u.yearsExperience) : "");
+    setLocation(u.location || "");
+    setWebsite(u.website || "");
     setEditMode(false);
+  };
+
+  const handlePasswordChange = () => {
+    if (!currentPassword) { toast.error("Please enter your current password."); return; }
+    if (newPassword.length < 8) { toast.error("New password must be at least 8 characters."); return; }
+    if (newPassword !== confirmPassword) { toast.error("New passwords do not match."); return; }
+    changePassword.mutate({ currentPassword, newPassword });
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     if (!ACCEPTED_TYPES.includes(file.type as AcceptedMime)) {
       toast.error("Please select a JPEG, PNG, WebP, or GIF image.");
       return;
@@ -150,7 +229,6 @@ export default function Profile() {
       toast.error("Image must be under 4 MB.");
       return;
     }
-
     const reader = new FileReader();
     reader.onload = (ev) => {
       const dataUri = ev.target?.result as string;
@@ -159,7 +237,6 @@ export default function Profile() {
       setAvatarMime(file.type as AcceptedMime);
     };
     reader.readAsDataURL(file);
-    // Reset input so the same file can be re-selected
     e.target.value = "";
   };
 
@@ -175,15 +252,17 @@ export default function Profile() {
     setAvatarMime(null);
   };
 
-  // Current avatar: preview (pending upload) > saved avatarUrl > initials fallback
-  const currentAvatarUrl = (user as any).avatarUrl as string | undefined;
+  const currentAvatarUrl = u.avatarUrl as string | undefined;
   const displayAvatar = avatarPreview || currentAvatarUrl;
-  const initials = (user.displayName || user.name || "?").charAt(0).toUpperCase();
+  const initials = (u.displayName || u.name || "?").charAt(0).toUpperCase();
+
+  const inputClass = "w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#189aa1]/30 focus:border-[#189aa1] transition-colors";
+  const readonlyClass = "w-full px-3 py-2 rounded-lg bg-gray-50 text-sm text-gray-600 border border-transparent";
+  const labelClass = "block text-xs font-semibold text-gray-600 mb-1.5";
 
   return (
     <Layout>
-      <div className="container py-8 max-w-2xl mx-auto">
-        {/* Page header */}
+      <div className="container py-8 max-w-5xl mx-auto">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
             My Profile
@@ -191,258 +270,545 @@ export default function Profile() {
           <p className="text-sm text-gray-500 mt-1">Manage your account details and subscriptions.</p>
         </div>
 
-        {/* Profile card */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm mb-6"
-          style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-
-          {/* Avatar section */}
-          <div className="flex flex-col items-center px-6 pt-6 pb-4 border-b border-gray-100">
-            <div className="relative group mb-3">
-              {/* Avatar circle */}
-              <div className="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0 border-2 border-[#189aa1]/30"
-                style={{ background: displayAvatar ? undefined : "linear-gradient(135deg, #189aa1, #4ad9e0)" }}>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left column: avatar + subscriptions */}
+          <div className="lg:col-span-1 space-y-5">
+            {/* Avatar card */}
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex flex-col items-center text-center"
+              style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+              <div className="relative group mb-3">
                 {displayAvatar ? (
-                  <img src={displayAvatar} alt="Profile photo" className="w-full h-full object-cover" />
+                  <img
+                    src={displayAvatar}
+                    alt="Profile photo"
+                    className="w-20 h-20 rounded-full object-cover ring-2 ring-[#189aa1]/20"
+                  />
                 ) : (
-                  <span className="text-2xl font-bold text-white">{initials}</span>
+                  <div className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold text-white"
+                    style={{ background: "linear-gradient(135deg, #189aa1, #4ad9e0)" }}>
+                    {initials}
+                  </div>
+                )}
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  title="Change photo"
+                >
+                  <Camera className="w-5 h-5 text-white" />
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+              </div>
+
+              {avatarPreview ? (
+                <div className="flex gap-2 mt-1">
+                  <button
+                    onClick={handleAvatarUpload}
+                    disabled={avatarUploading}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all hover:opacity-90 disabled:opacity-60"
+                    style={{ background: "#189aa1" }}
+                  >
+                    {avatarUploading ? (
+                      <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Save className="w-3 h-3" />
+                    )}
+                    Save Photo
+                  </button>
+                  <button
+                    onClick={handleAvatarCancel}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-all"
+                  >
+                    <X className="w-3 h-3" />
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="mt-1 text-xs text-[#189aa1] font-medium hover:underline"
+                >
+                  {currentAvatarUrl ? "Change photo" : "Add profile photo"}
+                </button>
+              )}
+
+              <div className="mt-3 w-full">
+                <p className="font-bold text-gray-800 text-sm">{u.displayName || u.name || "—"}</p>
+                {u.credentials && (
+                  <p className="text-xs text-[#189aa1] font-semibold mt-0.5">{u.credentials}</p>
+                )}
+                {u.specialty && (
+                  <p className="text-xs text-gray-500 mt-0.5">{u.specialty}</p>
+                )}
+                {u.yearsExperience != null && (
+                  <p className="text-xs text-gray-400 mt-0.5">{u.yearsExperience} yr{u.yearsExperience !== 1 ? "s" : ""} experience</p>
+                )}
+                {u.location && (
+                  <p className="text-xs text-gray-400 mt-0.5 flex items-center justify-center gap-1">
+                    <MapPin className="w-3 h-3" /> {u.location}
+                  </p>
+                )}
+                {u.website && (
+                  <a href={u.website} target="_blank" rel="noopener noreferrer"
+                    className="text-xs text-[#189aa1] hover:underline mt-0.5 flex items-center justify-center gap-1">
+                    <Globe className="w-3 h-3" /> Website
+                  </a>
                 )}
               </div>
-              {/* Camera overlay button */}
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                title="Change profile photo"
-              >
-                <Camera className="w-6 h-6 text-white" />
-              </button>
-            </div>
 
-            {/* Hidden file input */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              className="hidden"
-              onChange={handleFileChange}
-            />
-
-            {/* Upload / cancel controls — shown only when a new image is selected */}
-            {avatarPreview ? (
-              <div className="flex items-center gap-2 mt-1">
-                <button
-                  onClick={handleAvatarUpload}
-                  disabled={avatarUploading}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all disabled:opacity-60"
-                  style={{ background: "linear-gradient(135deg, #189aa1, #4ad9e0)" }}
-                >
-                  {avatarUploading ? (
-                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <Upload className="w-3.5 h-3.5" />
-                  )}
-                  {avatarUploading ? "Uploading…" : "Save Photo"}
-                </button>
-                <button
-                  onClick={handleAvatarCancel}
-                  disabled={avatarUploading}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-500 border border-gray-200 hover:bg-gray-50 transition-all"
-                >
-                  <X className="w-3.5 h-3.5" />
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="flex items-center gap-1.5 mt-1 text-xs font-semibold text-[#189aa1] hover:underline"
-              >
-                <Camera className="w-3.5 h-3.5" />
-                {currentAvatarUrl ? "Change Photo" : "Add Profile Photo"}
-              </button>
-            )}
-
-            <p className="text-[10px] text-gray-400 mt-1">JPEG, PNG, WebP or GIF · max 4 MB</p>
-          </div>
-
-          {/* Card header — name + edit button */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-            <div>
-              <div className="font-semibold text-gray-800 text-sm">
-                {user.displayName || user.name || "Account"}
-              </div>
-              <div className="text-xs text-gray-400">{user.email}</div>
-            </div>
-            {!editMode ? (
-              <button
-                onClick={() => setEditMode(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#189aa1] border border-[#189aa1]/30 hover:bg-[#f0fbfc] transition-all"
-              >
-                <Edit3 className="w-3.5 h-3.5" />
-                Edit Profile
-              </button>
-            ) : (
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleCancel}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-500 border border-gray-200 hover:bg-gray-50 transition-all"
-                >
-                  <X className="w-3.5 h-3.5" />
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={updateProfile.isPending}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all disabled:opacity-60"
-                  style={{ background: "linear-gradient(135deg, #189aa1, #4ad9e0)" }}
-                >
-                  {updateProfile.isPending ? (
-                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <Save className="w-3.5 h-3.5" />
-                  )}
-                  Save Changes
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Form fields */}
-          <div className="px-6 py-5 space-y-4">
-            {/* Display Name */}
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Display Name</label>
-              {editMode ? (
-                <input
-                  type="text"
-                  value={displayName}
-                  onChange={e => setDisplayName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-[#189aa1]/40 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#189aa1]/30 bg-[#f0fbfc]"
-                  placeholder="Your display name"
-                />
-              ) : (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50 text-sm text-gray-700">
-                  <User className="w-3.5 h-3.5 text-[#189aa1]" />
-                  {user.displayName || user.name || <span className="text-gray-400 italic">Not set</span>}
-                </div>
-              )}
-            </div>
-
-            {/* Email */}
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Email Address</label>
-              {editMode ? (
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-[#189aa1]/40 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#189aa1]/30 bg-[#f0fbfc]"
-                  placeholder="your@email.com"
-                />
-              ) : (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50 text-sm text-gray-700">
-                  <Mail className="w-3.5 h-3.5 text-[#189aa1]" />
-                  {user.email || <span className="text-gray-400 italic">Not set</span>}
-                </div>
-              )}
-              {editMode && (
-                <p className="text-[10px] text-gray-400 mt-1">
-                  Updating your email here changes it in iHeartEcho only. Your Thinkific account email is managed separately on allaboutultrasound.com.
+              {u.bio && (
+                <p className="mt-3 text-xs text-gray-500 leading-relaxed text-left w-full border-t border-gray-100 pt-3">
+                  {u.bio}
                 </p>
               )}
             </div>
 
-            {/* Account ID (read-only) */}
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1.5">Account ID</label>
-              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50 text-sm text-gray-400 font-mono">
-                #{user.id}
+            {/* Subscriptions card */}
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm"
+              style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+              <div className="px-5 py-4 border-b border-gray-100">
+                <h2 className="text-sm font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
+                  My Subscriptions
+                </h2>
+                <p className="text-xs text-gray-400 mt-0.5">Your active access levels and plans.</p>
               </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Subscriptions card */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm"
-          style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-          <div className="px-6 py-4 border-b border-gray-100">
-            <h2 className="text-sm font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-              My Subscriptions
-            </h2>
-            <p className="text-xs text-gray-400 mt-0.5">Your active access levels and plans.</p>
-          </div>
-
-          <div className="px-6 py-5">
-            {activeSubscriptions.length === 0 ? (
-              <div className="text-center py-6">
-                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
-                  <Award className="w-5 h-5 text-gray-400" />
-                </div>
-                <p className="text-sm text-gray-500 mb-1">No active subscriptions</p>
-                <p className="text-xs text-gray-400 mb-4">Unlock premium features and DIY accreditation tools.</p>
-                <a
-                  href="https://member.allaboutultrasound.com/collections/cme"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold text-white transition-all hover:opacity-90"
-                  style={{ background: "linear-gradient(135deg, #189aa1, #4ad9e0)" }}
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                  Browse Plans
-                </a>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {activeSubscriptions.map(roleKey => {
-                  const config = ROLE_CONFIG[roleKey];
-                  const Icon = config.icon;
-                  return (
-                    <div key={roleKey}
-                      className="flex items-start gap-3 p-3 rounded-lg border"
-                      style={{ borderColor: config.color + "30", background: config.color + "08" }}>
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                        style={{ background: config.color + "20" }}>
-                        <Icon className="w-4 h-4" style={{ color: config.color }} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className="text-xs font-bold" style={{ color: config.color }}>{config.label}</span>
-                          <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full">
-                            <CheckCircle className="w-2.5 h-2.5" /> Active
-                          </span>
-                        </div>
-                        <p className="text-xs text-gray-500 leading-relaxed">{config.description}</p>
-                        {config.manageUrl && (
-                          <a
-                            href={config.manageUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 mt-1.5 text-[10px] font-semibold hover:underline"
-                            style={{ color: config.color }}
-                          >
-                            <ExternalLink className="w-2.5 h-2.5" />
-                            {config.manageLabel}
-                          </a>
-                        )}
-                      </div>
+              <div className="px-5 py-4">
+                {activeSubscriptions.length === 0 ? (
+                  <div className="text-center py-4">
+                    <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-2">
+                      <Award className="w-4 h-4 text-gray-400" />
                     </div>
-                  );
-                })}
-
-                {/* Upgrade prompt if no premium */}
-                {!roles.includes("premium_user") && !roles.includes("diy_user") && !roles.includes("diy_admin") && (
-                  <div className="mt-3 pt-3 border-t border-gray-100 text-center">
+                    <p className="text-xs text-gray-500 mb-1">No active subscriptions</p>
+                    <p className="text-xs text-gray-400 mb-3">Unlock premium features and DIY accreditation tools.</p>
                     <a
                       href="https://member.allaboutultrasound.com/collections/cme"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold text-white transition-all hover:opacity-90"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all hover:opacity-90"
                       style={{ background: "linear-gradient(135deg, #189aa1, #4ad9e0)" }}
                     >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                      Explore More Plans
+                      <ExternalLink className="w-3 h-3" />
+                      Browse Plans
                     </a>
                   </div>
+                ) : (
+                  <div className="space-y-2.5">
+                    {activeSubscriptions.map((roleKey: string) => {
+                      const config = ROLE_CONFIG[roleKey];
+                      const Icon = config.icon;
+                      return (
+                        <div key={roleKey}
+                          className="flex items-start gap-2.5 p-2.5 rounded-lg border"
+                          style={{ borderColor: config.color + "30", background: config.color + "08" }}>
+                          <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                            style={{ background: config.color + "20" }}>
+                            <Icon className="w-3.5 h-3.5" style={{ color: config.color }} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              <span className="text-xs font-bold" style={{ color: config.color }}>{config.label}</span>
+                              <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full">
+                                <CheckCircle className="w-2.5 h-2.5" /> Active
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-500 leading-relaxed">{config.description}</p>
+                            {config.manageUrl && (
+                              <a
+                                href={config.manageUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 mt-1 text-[10px] font-semibold hover:underline"
+                                style={{ color: config.color }}
+                              >
+                                <ExternalLink className="w-2.5 h-2.5" />
+                                {config.manageLabel}
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 )}
+              </div>
+            </div>
+          </div>
+
+          {/* Right column: edit form */}
+          <div className="lg:col-span-2 space-y-5">
+            {/* Tab switcher */}
+            <div className="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit">
+              <button
+                onClick={() => setActiveSection("info")}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-semibold transition-all ${activeSection === "info" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+              >
+                <User className="w-3.5 h-3.5" />
+                Personal Info
+              </button>
+              <button
+                onClick={() => setActiveSection("password")}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-xs font-semibold transition-all ${activeSection === "password" ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+              >
+                <Lock className="w-3.5 h-3.5" />
+                Password
+              </button>
+            </div>
+
+            {/* Personal Info Section */}
+            {activeSection === "info" && (
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm"
+                style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                  <div>
+                    <h2 className="text-sm font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
+                      Personal Information
+                    </h2>
+                    <p className="text-xs text-gray-400 mt-0.5">Update your profile details and professional information.</p>
+                  </div>
+                  {!editMode ? (
+                    <button
+                      onClick={() => setEditMode(true)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#189aa1] border border-[#189aa1]/30 hover:bg-[#189aa1]/5 transition-all"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      Edit
+                    </button>
+                  ) : (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleSave}
+                        disabled={updateProfile.isPending}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all hover:opacity-90 disabled:opacity-60"
+                        style={{ background: "#189aa1" }}
+                      >
+                        {updateProfile.isPending ? (
+                          <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Save className="w-3.5 h-3.5" />
+                        )}
+                        Save Changes
+                      </button>
+                      <button
+                        onClick={handleCancel}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-all"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="px-6 py-5 space-y-5">
+                  {/* Name + Email row */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className={labelClass}>
+                        <User className="w-3 h-3 inline mr-1" />
+                        Display Name
+                      </label>
+                      {editMode ? (
+                        <input
+                          type="text"
+                          value={displayName}
+                          onChange={e => setDisplayName(e.target.value)}
+                          className={inputClass}
+                          placeholder="Your display name"
+                          maxLength={100}
+                        />
+                      ) : (
+                        <div className={readonlyClass}>{u.displayName || u.name || "—"}</div>
+                      )}
+                    </div>
+                    <div>
+                      <label className={labelClass}>
+                        <Mail className="w-3 h-3 inline mr-1" />
+                        Email Address
+                      </label>
+                      {editMode ? (
+                        <input
+                          type="email"
+                          value={email}
+                          onChange={e => setEmail(e.target.value)}
+                          className={inputClass}
+                          placeholder="your@email.com"
+                        />
+                      ) : (
+                        <div className={readonlyClass}>{u.email || "—"}</div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Credentials + Specialty row */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className={labelClass}>
+                        <Award className="w-3 h-3 inline mr-1" />
+                        Credentials
+                        <span className="text-gray-400 font-normal ml-1">(e.g. RDCS, FASE)</span>
+                      </label>
+                      {editMode ? (
+                        <input
+                          type="text"
+                          value={credentials}
+                          onChange={e => setCredentials(e.target.value)}
+                          className={inputClass}
+                          placeholder="RDCS, FASE, RVT..."
+                          maxLength={200}
+                        />
+                      ) : (
+                        <div className={readonlyClass}>{u.credentials || "—"}</div>
+                      )}
+                    </div>
+                    <div>
+                      <label className={labelClass}>
+                        <Briefcase className="w-3 h-3 inline mr-1" />
+                        Specialty
+                      </label>
+                      {editMode ? (
+                        <select
+                          value={specialty}
+                          onChange={e => setSpecialty(e.target.value)}
+                          className={inputClass}
+                        >
+                          <option value="">Select specialty...</option>
+                          {SPECIALTY_OPTIONS.map(s => (
+                            <option key={s} value={s}>{s}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <div className={readonlyClass}>{u.specialty || "—"}</div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Years Experience + Location row */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className={labelClass}>
+                        <Briefcase className="w-3 h-3 inline mr-1" />
+                        Years of Experience
+                      </label>
+                      {editMode ? (
+                        <input
+                          type="number"
+                          value={yearsExperience}
+                          onChange={e => setYearsExperience(e.target.value)}
+                          className={inputClass}
+                          placeholder="e.g. 5"
+                          min={0}
+                          max={60}
+                        />
+                      ) : (
+                        <div className={readonlyClass}>
+                          {u.yearsExperience != null ? `${u.yearsExperience} year${u.yearsExperience !== 1 ? "s" : ""}` : "—"}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <label className={labelClass}>
+                        <MapPin className="w-3 h-3 inline mr-1" />
+                        Location
+                      </label>
+                      {editMode ? (
+                        <input
+                          type="text"
+                          value={location}
+                          onChange={e => setLocation(e.target.value)}
+                          className={inputClass}
+                          placeholder="City, State or Country"
+                          maxLength={100}
+                        />
+                      ) : (
+                        <div className={readonlyClass}>{u.location || "—"}</div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Website */}
+                  <div>
+                    <label className={labelClass}>
+                      <Globe className="w-3 h-3 inline mr-1" />
+                      Website
+                    </label>
+                    {editMode ? (
+                      <input
+                        type="url"
+                        value={website}
+                        onChange={e => setWebsite(e.target.value)}
+                        className={inputClass}
+                        placeholder="https://yourwebsite.com"
+                        maxLength={200}
+                      />
+                    ) : (
+                      <div className={readonlyClass}>
+                        {u.website ? (
+                          <a href={u.website} target="_blank" rel="noopener noreferrer"
+                            className="text-[#189aa1] hover:underline flex items-center gap-1">
+                            {u.website}
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        ) : "—"}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Bio */}
+                  <div>
+                    <label className={labelClass}>
+                      <FileText className="w-3 h-3 inline mr-1" />
+                      Bio
+                      <span className="text-gray-400 font-normal ml-1">(max 1000 characters)</span>
+                    </label>
+                    {editMode ? (
+                      <div>
+                        <textarea
+                          value={bio}
+                          onChange={e => setBio(e.target.value)}
+                          className={`${inputClass} resize-none`}
+                          rows={4}
+                          placeholder="Tell others about your background, experience, and interests in echocardiography..."
+                          maxLength={1000}
+                        />
+                        <p className="text-right text-xs text-gray-400 mt-1">{bio.length}/1000</p>
+                      </div>
+                    ) : (
+                      <div className={`${readonlyClass} min-h-[80px] whitespace-pre-wrap`}>
+                        {u.bio || <span className="text-gray-400 italic">No bio added yet.</span>}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Account info (read-only) */}
+                  <div className="pt-4 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className={labelClass}>Account ID</label>
+                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50 text-sm text-gray-400 font-mono">
+                        #{u.id}
+                      </div>
+                    </div>
+                    <div>
+                      <label className={labelClass}>Member Since</label>
+                      <div className="px-3 py-2 rounded-lg bg-gray-50 text-sm text-gray-500">
+                        {u.createdAt ? new Date(u.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "—"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Password Section */}
+            {activeSection === "password" && (
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm"
+                style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                <div className="px-6 py-4 border-b border-gray-100">
+                  <h2 className="text-sm font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
+                    Change Password
+                  </h2>
+                  <p className="text-xs text-gray-400 mt-0.5">Update your account password. Minimum 8 characters.</p>
+                </div>
+
+                <div className="px-6 py-5 space-y-4 max-w-md">
+                  <div>
+                    <label className={labelClass}>Current Password</label>
+                    <div className="relative">
+                      <input
+                        type={showCurrentPw ? "text" : "password"}
+                        value={currentPassword}
+                        onChange={e => setCurrentPassword(e.target.value)}
+                        className={`${inputClass} pr-10`}
+                        placeholder="Enter current password"
+                        autoComplete="current-password"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowCurrentPw(v => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        {showCurrentPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>New Password</label>
+                    <div className="relative">
+                      <input
+                        type={showNewPw ? "text" : "password"}
+                        value={newPassword}
+                        onChange={e => setNewPassword(e.target.value)}
+                        className={`${inputClass} pr-10`}
+                        placeholder="At least 8 characters"
+                        autoComplete="new-password"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPw(v => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        {showNewPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    {newPassword && newPassword.length < 8 && (
+                      <p className="text-xs text-red-500 mt-1">Password must be at least 8 characters.</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className={labelClass}>Confirm New Password</label>
+                    <div className="relative">
+                      <input
+                        type={showConfirmPw ? "text" : "password"}
+                        value={confirmPassword}
+                        onChange={e => setConfirmPassword(e.target.value)}
+                        className={`${inputClass} pr-10`}
+                        placeholder="Repeat new password"
+                        autoComplete="new-password"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPw(v => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        {showConfirmPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    {confirmPassword && newPassword !== confirmPassword && (
+                      <p className="text-xs text-red-500 mt-1">Passwords do not match.</p>
+                    )}
+                  </div>
+
+                  <div className="pt-2">
+                    <button
+                      onClick={handlePasswordChange}
+                      disabled={changePassword.isPending || !currentPassword || !newPassword || !confirmPassword}
+                      className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{ background: "#189aa1" }}
+                    >
+                      {changePassword.isPending ? (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Lock className="w-4 h-4" />
+                      )}
+                      {changePassword.isPending ? "Updating..." : "Update Password"}
+                    </button>
+                  </div>
+
+                  <div className="pt-2 border-t border-gray-100">
+                    <p className="text-xs text-gray-400">
+                      Forgot your current password?{" "}
+                      <a href="/forgot-password" className="text-[#189aa1] hover:underline font-medium">
+                        Reset via email
+                      </a>
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
           </div>
