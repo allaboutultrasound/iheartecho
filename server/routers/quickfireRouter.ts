@@ -341,11 +341,11 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
       .orderBy(desc(sql`SUM(CASE WHEN ${quickfireAttempts.isCorrect} = 1 THEN 1 ELSE 0 END)`))
       .limit(50);
     const userIds = results.map((r) => r.userId);
-    if (userIds.length === 0) return { entries: [], currentUserRank: null, currentUserEntry: null };
-    const userList = await db
+    // NOTE: Do NOT early-return when userIds is empty — virtual entries must still be shown
+    const userList = userIds.length > 0 ? await db
       .select({ id: users.id, displayName: users.displayName, name: users.name, avatarUrl: users.avatarUrl })
       .from(users)
-      .where(inArray(users.id, userIds));
+      .where(inArray(users.id, userIds)) : [];
     const currentUserId = ctx.user.id;
     const allEntries = results.map((r, i) => {
       const u = userList.find((u) => u.id === r.userId);

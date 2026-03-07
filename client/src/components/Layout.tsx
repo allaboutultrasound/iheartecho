@@ -398,7 +398,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                                 <button onClick={() => setAccountOpen(false)}
                                   className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-all text-left">
                                   <Zap className="w-3.5 h-3.5 text-purple-500" />
-                                  QuickFire Admin
+                                  Daily Challenge Admin
                                 </button>
                               </WouterLink>
                               <WouterLink href="/admin/scancoach">

@@ -355,6 +355,9 @@ export default function QuickFire() {
               <p className="text-xs text-gray-400">
                 {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
               </p>
+              <p className="text-xs text-gray-500 mt-0.5 max-w-sm leading-relaxed">
+                One question. One case. One chance today. Answer the challenge, see the explanation. Maintain your streak, earn points and compare with other echo professionals.
+              </p>
             </div>
           </div>
           {/* User stats pills */}
