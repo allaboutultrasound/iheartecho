@@ -69,7 +69,7 @@ async function startServer() {
 
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
-    // Start the QuickFire challenge lifecycle cron (archive expired, publish next)
+    // Start the Daily Challenge lifecycle cron (archive expired, publish next)
     startChallengeCron();
   });
 }

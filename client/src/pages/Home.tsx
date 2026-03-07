@@ -59,9 +59,9 @@ const modules: Module[] = [
   {
     path: "/quickfire",
     icon: BookOpen,
-    title: "Daily QuickFire",
-    description: "Daily echo cases with gamified learning — earn Echo Ninja points, streaks, and leaderboards.",
-    badge: "Gamified",
+    title: "Daily Challenge",
+    description: "One question. One case. One chance today. Answer the challenge, see the explanation. Maintain your streak, earn points and compare with other echo professionals.",
+    badge: "Daily",
     color: BRAND,
   },
   {

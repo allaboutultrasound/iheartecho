@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import RichTextEditor from "@/components/RichTextEditor";
 import {
   Select,
   SelectContent,
@@ -508,12 +509,11 @@ export default function CaseEditorDialog({ caseId, open, onClose, onSaved }: Pro
                     <label className="text-xs font-semibold text-gray-600 mb-1.5 block">
                       Summary <span className="text-red-500">*</span>
                     </label>
-                    <Textarea
+                    <RichTextEditor
                       value={summary}
-                      onChange={(e) => setSummary(e.target.value)}
-                      rows={3}
-                      className="resize-none text-sm"
+                      onChange={setSummary}
                       placeholder="2–3 sentence case overview shown on the library card"
+                      minHeight="130px"
                     />
                   </div>
 

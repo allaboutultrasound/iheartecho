@@ -11,6 +11,7 @@ import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import Layout from "@/components/Layout";
+import { RichTextDisplay } from "@/components/RichTextEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -250,7 +251,7 @@ function CasePreviewModal({
               {/* -- Case Text ------------------------------------------------ */}
               <div>
                 <p className="text-xs font-semibold text-gray-500 mb-1">Summary</p>
-                <p className="text-gray-700 leading-relaxed">{caseData.summary}</p>
+                <RichTextDisplay html={caseData.summary} />
               </div>
 
               {caseData.clinicalHistory && (

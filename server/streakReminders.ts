@@ -1,10 +1,10 @@
 /**
- * QuickFire Streak Reminder Utility
+ * Daily Challenge Streak Reminder Utility
  *
  * Queries all users who:
- *   1. Have opted in to QuickFire reminders (notificationPrefs.quickfireReminder = true)
+ *   1. Have opted in to Daily Challenge reminders (notificationPrefs.quickfireReminder = true)
  *   2. Have a verified email address
- *   3. Have NOT completed today's QuickFire set
+ *   3. Have NOT completed today's Daily Challenge set
  *
  * For each such user, sends:
  *   - A branded SendGrid reminder email

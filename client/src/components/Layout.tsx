@@ -10,7 +10,7 @@ import {
   Scan, BookOpen, FileText, Menu, X, ChevronRight,
   Stethoscope, Zap, ExternalLink, ShoppingBag, FlaskConical, MessageCircle, Award, Shield, GraduationCap,
   BookMarked, Library, Plus, Crown, Droplets,
-  LogIn, LogOut, Settings, ChevronDown
+  LogIn, LogOut, Settings, ChevronDown, Webhook
 } from "lucide-react";
 
 import { trpc } from "@/lib/trpc";
@@ -68,7 +68,7 @@ const navGroups = [
   {
     label: "Learning",
     items: [
-      { path: "/quickfire", label: "Daily QuickFire", icon: Zap },
+      { path: "/quickfire", label: "Daily Challenge", icon: Zap },
       { path: "/case-library", label: "Echo Case Library", icon: Library },
       { path: "/report", label: "Report Builder", icon: FileText },
       { path: "/cme", label: "CME Hub", icon: GraduationCap },
@@ -102,7 +102,8 @@ const hiddenNavItems = [
   { path: "/profile", label: "My Profile" },
   { path: "/case-library/submit", label: "Submit a Case" },
   { path: "/admin/cases", label: "Case Management" },
-  { path: "/admin/quickfire", label: "QuickFire Admin" },
+  { path: "/admin/quickfire", label: "Daily Challenge Admin" },
+  { path: "/admin/thinkific-webhook", label: "Thinkific Webhook" },
 ];
 const navItems = [...navGroups.flatMap(g => g.items), ...hiddenNavItems];
 
@@ -405,6 +406,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                                   className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-all text-left">
                                   <Scan className="w-3.5 h-3.5 text-purple-500" />
                                   ScanCoach Editor
+                                </button>
+                              </WouterLink>
+                              <WouterLink href="/admin/thinkific-webhook">
+                                <button onClick={() => setAccountOpen(false)}
+                                  className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-all text-left">
+                                  <Webhook className="w-3.5 h-3.5 text-purple-500" />
+                                  Thinkific Webhook
                                 </button>
                               </WouterLink>
                             </>

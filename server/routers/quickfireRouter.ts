@@ -35,6 +35,7 @@ import {
 import { notifyOwner } from "../_core/notification";
 import { eq, and, desc, sql, gte, lte, count, inArray } from "drizzle-orm";
 import { sendStreakReminders } from "../streakReminders";
+import { generateVirtualLeaderboard } from "../leaderboardSeed";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -359,11 +360,34 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
         isCurrentUser: r.userId === currentUserId,
       };
     });
-    const top10 = allEntries.slice(0, 10);
-    const currentUserEntry = allEntries.find((e) => e.userId === currentUserId) ?? null;
+    // Merge real users with virtual seeded entries
+    const virtualEntries = generateVirtualLeaderboard(1200, period);
+    // Convert real entries to same shape as virtual
+    type LeaderEntry = {
+      rank: number;
+      userId: string | number;
+      displayName: string;
+      avatarUrl: string | null;
+      correct: number;
+      total: number;
+      accuracy: number;
+      isCurrentUser: boolean;
+      isVirtual?: boolean;
+      city?: string;
+    };
+    const realMapped: LeaderEntry[] = allEntries.map((e) => ({ ...e, isVirtual: false }));
+    // Combine and sort by correct desc
+    const combined: LeaderEntry[] = [...realMapped, ...virtualEntries]
+      .sort((a, b) => b.correct - a.correct || b.accuracy - a.accuracy);
+    // Assign ranks
+    combined.forEach((e, i) => { e.rank = i + 1; });
+    // Find current user
+    const currentUserEntry = combined.find((e) => e.userId === currentUserId || String(e.userId) === String(currentUserId)) ?? null;
     const currentUserRank = currentUserEntry?.rank ?? null;
-    const entries = [...top10];
-    if (currentUserEntry && currentUserRank && currentUserRank > 10) entries.push(currentUserEntry);
+    // Return top 50 + current user if outside top 50
+    const top50 = combined.slice(0, 50);
+    const entries = [...top50];
+    if (currentUserEntry && currentUserRank && currentUserRank > 50) entries.push(currentUserEntry);
     return { entries, currentUserRank, currentUserEntry };
   }),
 

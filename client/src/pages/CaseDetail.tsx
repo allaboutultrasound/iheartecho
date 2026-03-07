@@ -10,6 +10,7 @@ import { useParams, Link } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import Layout from "@/components/Layout";
+import { RichTextDisplay } from "@/components/RichTextEditor";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -273,7 +274,7 @@ export default function CaseDetail() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-700 leading-relaxed">{summary}</p>
+                <RichTextDisplay html={summary} className="text-sm" />
               </CardContent>
             </Card>
 

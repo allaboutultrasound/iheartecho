@@ -184,6 +184,49 @@ export const premiumRouter = router({
     }),
 
   /**
+   * Admin: list recent Thinkific webhook events.
+   */
+  adminGetWebhookEvents: adminProcedure
+    .input(z.object({ limit: z.number().min(1).max(200).default(50) }).optional())
+    .query(async ({ input }) => {
+      const { getDb } = await import("../db");
+      const { webhookEvents } = await import("../../drizzle/schema");
+      const { desc } = await import("drizzle-orm");
+      const db = await getDb();
+      if (!db) return [];
+      return db
+        .select()
+        .from(webhookEvents)
+        .orderBy(desc(webhookEvents.createdAt))
+        .limit(input?.limit ?? 50);
+    }),
+
+  /**
+   * Admin: send a test webhook payload to verify the endpoint is working.
+   */
+  adminTestWebhook: adminProcedure
+    .input(z.object({ email: z.string().email() }))
+    .mutation(async ({ input }) => {
+      const payload = {
+        resource: "order",
+        action: "created",
+        payload: {
+          product_name: "iHeartEcho App - Premium Access",
+          status: "Complete",
+          user_email: input.email,
+          user_name: "Test User (Admin)",
+        },
+      };
+      const res = await fetch("http://localhost:3000/api/webhooks/thinkific", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const result = await res.json() as { ok: boolean; message: string };
+      return { httpStatus: res.status, ...result };
+    }),
+
+  /**
    * Admin: list all users with active premium access.
    */
   adminListPremium: adminProcedure.query(async () => {

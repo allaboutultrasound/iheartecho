@@ -46,8 +46,8 @@ const PREMIUM_FEATURES = [
   },
   {
     icon: Activity,
-    title: "Daily QuickFire",
-    description: "Gamified daily echo challenges with streaks, leaderboards, and Echo Ninja points.",
+    title: "Daily Challenge",
+    description: "One question. One case. One chance today. Answer the challenge, see the explanation. Maintain your streak, earn points and compare with other echo professionals.",
   },
   {
     icon: FileText,
@@ -68,7 +68,7 @@ const PREMIUM_FEATURES = [
 
 const FREE_FEATURES = [
   "Echo Case Library (limited)",
-  "Daily QuickFire (3 questions/day)",
+  "Daily Challenge (3 questions/day)",
   "Basic echo reference values",
   "Community access",
 ];

@@ -1,5 +1,5 @@
 /*
- * QuickFire.tsx — Daily QuickFire Challenge
+ * QuickFire.tsx — Daily Challenge
  *
  * Four tabs:
  *   1. Daily Challenge  — today's question set (scenario / image / quick-review)
@@ -326,7 +326,7 @@ export default function QuickFire() {
             <Lock className="w-8 h-8 text-[#189aa1]" />
           </div>
           <h1 className="text-2xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-            Sign In to Play QuickFire
+            Sign In to Play Daily Challenge
           </h1>
           <p className="text-gray-500 text-sm">
             Daily challenges and the challenge archive are available to registered users. Sign in to test your knowledge.
@@ -350,7 +350,7 @@ export default function QuickFire() {
             </div>
             <div>
               <h1 className="font-bold text-gray-800 text-lg leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
-                QuickFire Challenge
+                Daily Challenge
               </h1>
               <p className="text-xs text-gray-400">
                 {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
@@ -1132,7 +1132,7 @@ export default function QuickFire() {
           <>
             <div className="mb-5">
               <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>My Performance</h2>
-              <p className="text-xs text-gray-500">Your personal QuickFire stats and progress</p>
+              <p className="text-xs text-gray-500">Your personal Daily Challenge stats and progress</p>
             </div>
 
             {perfQuery.isLoading && (
@@ -1329,7 +1329,7 @@ export default function QuickFire() {
                   <div className="px-5 py-4 flex items-center gap-2" style={{ background: "linear-gradient(135deg, #0e4a50, #189aa1)" }}>
                     <Trophy className="w-4 h-4 text-white" />
                     <h3 className="font-bold text-white" style={{ fontFamily: "Merriweather, serif" }}>
-                      Top 10 — {lbPeriod === "7d" ? "Last 7 Days" : lbPeriod === "30d" ? "Last 30 Days" : "All Time"}
+                      Top 50 — {lbPeriod === "7d" ? "Last 7 Days" : lbPeriod === "30d" ? "Last 30 Days" : "All Time"}
                     </h3>
                   </div>
                   <div className="divide-y divide-gray-50">
@@ -1358,7 +1358,12 @@ export default function QuickFire() {
                               <span className="text-xs font-bold px-1.5 py-0.5 rounded text-white flex-shrink-0" style={{ background: "#189aa1" }}>You</span>
                             )}
                           </div>
-                          <div className="text-xs text-gray-400">{entry.accuracy}% accuracy · {entry.total} answered</div>
+                          <div className="text-xs text-gray-400">
+                            {entry.accuracy}% accuracy · {entry.total} answered
+                            {(entry as any).city && (
+                              <span className="ml-1 text-gray-300">· {(entry as any).city}</span>
+                            )}
+                          </div>
                         </div>
                         <div className="text-right flex-shrink-0">
                           <div className="font-bold text-[#189aa1]" style={{ fontFamily: "JetBrains Mono, monospace" }}>

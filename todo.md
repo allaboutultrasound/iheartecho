@@ -1273,3 +1273,17 @@
 - [x] Premium.tsx: checkout now redirects to /upgrade-success instead of /premium?sync=1
 - [x] App.tsx: /upgrade-success route registered
 - [x] DB: difficulty column added to quickfireChallenges table via ALTER TABLE
+
+## Thinkific Webhook Admin Page
+- [ ] DB schema: webhookEvents table (id, resource, action, email, productName, status, message, createdAt)
+- [ ] Webhook handler: log every incoming event to webhookEvents table
+- [ ] tRPC: adminGetWebhookEvents — return last 50 webhook events
+- [ ] tRPC: adminTestWebhook — fire a test order.created payload and return result
+- [ ] AdminThinkificWebhook.tsx page: webhook URL display, copy button, test button, recent events table
+- [ ] Admin sidebar: add "Thinkific Webhook" link under Settings/Admin section
+
+## Daily QuickFire Rename to Daily Challenge
+- [ ] Rename all "QuickFire" / "Daily QuickFire" UI labels to "Daily Challenge"
+- [ ] Update sidebar nav label
+- [ ] Update page title, hero tagline with new copy
+- [ ] Keep /quickfire route URL (no redirect needed)

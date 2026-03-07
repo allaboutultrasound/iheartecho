@@ -957,15 +957,15 @@ export default function Profile() {
                     </div>
                   ) : (
                     <>
-                      {/* QuickFire Reminder Toggle */}
+                      {/* Daily Challenge Reminder Toggle */}
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <Bell className="w-4 h-4" style={{ color: "#189aa1" }} />
-                            <span className="text-sm font-semibold text-gray-800">Daily QuickFire Reminder</span>
+                            <span className="text-sm font-semibold text-gray-800">Daily Challenge Reminder</span>
                           </div>
                           <p className="text-xs text-gray-500 leading-relaxed">
-                            Receive a daily email reminder if you haven't completed your QuickFire session.
+                            Receive a daily email reminder if you haven't completed your Daily Challenge session.
                             Includes your current streak so you never lose momentum.
                           </p>
                         </div>

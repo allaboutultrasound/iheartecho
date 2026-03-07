@@ -138,15 +138,15 @@ export function buildStreakReminderEmail(opts: {
       : `Start your streak today &mdash; every session builds your clinical knowledge.`;
   const subject =
     opts.currentStreak > 0
-      ? `\u26a1 Don't break your ${opts.currentStreak}-day streak \u2014 QuickFire is waiting!`
-      : `\u26a1 Your Daily QuickFire is ready \u2014 jump in!`;
+      ? `\u26a1 Don't break your ${opts.currentStreak}-day streak \u2014 Daily Challenge is waiting!`
+      : `\u26a1 Your Daily Challenge is ready \u2014 jump in!`;
   const previewText =
     opts.currentStreak > 0
-      ? `You haven't completed today's QuickFire yet. Keep your ${opts.currentStreak}-day streak alive!`
-      : `Today's Daily QuickFire is ready. Start your streak now!`;
+      ? `You haven't completed today's Daily Challenge yet. Keep your ${opts.currentStreak}-day streak alive!`
+      : `Today's Daily Challenge is ready. Start your streak now!`;
   const htmlBody = emailWrapper(`
     <h2 style="margin:0 0 8px;font-size:20px;color:${brandDark};font-family:Georgia,serif;">
-      Hi ${opts.firstName}, your Daily QuickFire is waiting!
+      Hi ${opts.firstName}, your Daily Challenge is waiting!
     </h2>
     <p style="margin:0 0 16px;font-size:15px;color:#475569;line-height:1.6;">
       ${streakMsg}
@@ -162,11 +162,11 @@ export function buildStreakReminderEmail(opts: {
     <div style="text-align:center;margin:28px 0;">
       <a href="${opts.loginUrl}"
         style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;">
-        \u26a1 Complete Today's QuickFire
+        26a1 Complete Today's Daily Challenge
       </a>
     </div>
     <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;line-height:1.5;">
-      <a href="${opts.unsubscribeUrl}" style="color:#94a3b8;">Unsubscribe from QuickFire reminders</a>
+      <a href="${opts.unsubscribeUrl}" style="color:#94a3b8;">Unsubscribe from Daily Challenge reminders</a>
     </p>
   `);
   return { subject, htmlBody, previewText };

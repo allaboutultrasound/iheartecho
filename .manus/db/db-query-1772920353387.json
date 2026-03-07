@@ -1,0 +1,21 @@
+{
+  "query": "SELECT id, source, resource, action, email, productName, outcome, message, createdAt FROM webhookEvents ORDER BY createdAt DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mhhtxpXA9Esras.root --database etVPnUidWNWG8W4GHnRqzv --execute SELECT id, source, resource, action, email, productName, outcome, message, createdAt FROM webhookEvents ORDER BY createdAt DESC LIMIT 5;",
+  "rows": [
+    {
+      "id": "1",
+      "source": "thinkific",
+      "resource": "order",
+      "action": "created",
+      "email": "test-webhook-log@example.com",
+      "productName": "iHeartEcho App - Premium Access",
+      "outcome": "pending_created",
+      "message": "pending premium account created for test-webhook-log@example.com",
+      "createdAt": "2026-03-07 21:52:28"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tsource\tresource\taction\temail\tproductName\toutcome\tmessage\tcreatedAt\n1\tthinkific\torder\tcreated\ttest-webhook-log@example.com\tiHeartEcho App - Premium Access\tpending_created\tpending premium account created for test-webhook-log@example.com\t2026-03-07 21:52:28\n",
+  "stderr": "",
+  "execution_time_ms": 405
+}

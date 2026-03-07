@@ -65,6 +65,7 @@ import UEAScanCoach from "./pages/UEAScanCoach";
 import ScanCoachEditor from "./pages/ScanCoachEditor";
 import HOCMNavigator from "./pages/HOCMNavigator";
 import HOCMScanCoach from "./pages/HOCMScanCoach";
+import ThinkificWebhookAdmin from "./pages/ThinkificWebhookAdmin";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -144,6 +145,7 @@ function Router() {
       <Route path="/admin/cases" component={AdminCaseManagement} />
       <Route path="/admin/quickfire" component={QuickFireAdmin} />
       <Route path="/admin/scancoach" component={ScanCoachEditor} />
+      <Route path="/admin/thinkific-webhook" component={ThinkificWebhookAdmin} />
       {/* ── Premium Access ──────────────────────────────────────────────── */}
       <Route path="/premium" component={Premium} />
       <Route path="/upgrade-success" component={UpgradeSuccess} />

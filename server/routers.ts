@@ -1476,7 +1476,7 @@ export const appRouter = router({
   // ─── Email/Password Auth (white-label, no OAuth portal) ──────────────────────
   emailAuth: emailAuthRouter,
 
-  // ─── Daily QuickFire Engine ───────────────────────────────────────────────────
+  // ─── Daily Challenge Engine ───────────────────────────────────────────────────
   quickfire: quickfireRouter,
 
   // ─── Echo Case Library ────────────────────────────────────────────────────────

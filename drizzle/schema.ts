@@ -981,3 +981,29 @@ export const scanCoachOverrides = mysqlTable("scanCoachOverrides", {
 });
 export type ScanCoachOverride = typeof scanCoachOverrides.$inferSelect;
 export type InsertScanCoachOverride = typeof scanCoachOverrides.$inferInsert;
+
+// ─── Webhook Events Log ────────────────────────────────────────────────────────
+export const webhookEvents = mysqlTable("webhookEvents", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Source system — e.g. "thinkific" */
+  source: varchar("source", { length: 64 }).notNull().default("thinkific"),
+  /** Thinkific resource type — e.g. "order", "subscription" */
+  resource: varchar("resource", { length: 64 }).notNull(),
+  /** Thinkific action — e.g. "created", "cancelled" */
+  action: varchar("action", { length: 64 }).notNull(),
+  /** Email extracted from the payload (if available) */
+  email: varchar("email", { length: 255 }),
+  /** Product name from the payload */
+  productName: varchar("productName", { length: 512 }),
+  /** HTTP status code returned to Thinkific */
+  httpStatus: int("httpStatus").notNull().default(200),
+  /** Outcome: "granted" | "revoked" | "pending_created" | "ignored" | "error" */
+  outcome: varchar("outcome", { length: 64 }).notNull().default("ignored"),
+  /** Human-readable result message */
+  message: text("message"),
+  /** Full raw payload stored as JSON text for debugging */
+  rawPayload: text("rawPayload"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type WebhookEvent = typeof webhookEvents.$inferSelect;
+export type InsertWebhookEvent = typeof webhookEvents.$inferInsert;

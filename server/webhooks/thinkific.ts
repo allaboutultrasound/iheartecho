@@ -8,13 +8,16 @@
  *
  * 2. order.created
  *    → Grants iHeartEcho Premium Access when a user purchases the
- *      "iHeartEcho App Premium Access" membership.
+ *      "iHeartEcho App - Premium Access" membership.
  *    → If the user has no iHeartEcho account yet, creates a pending account
  *      with isPremium=true so premium is granted immediately on first login.
  *
  * 3. subscription.cancelled
  *    → Revokes iHeartEcho Premium Access when the user's subscription
  *      is cancelled.
+ *
+ * Every event (including ignored ones) is logged to the webhookEvents table
+ * for visibility in the admin dashboard.
  *
  * Setup in Thinkific:
  *   Admin → Settings → Webhooks → Add Webhook
@@ -23,6 +26,8 @@
  *           order.created, subscription.cancelled
  */
 import { Router, Request, Response } from "express";
+import { getDb } from "../db";
+import { webhookEvents } from "../../drizzle/schema";
 import { syncCatalogToDb } from "../routers/cmeRouter";
 import { getUserByEmail, setPremiumStatus, createPendingUser } from "../db";
 
@@ -34,16 +39,43 @@ import { getUserByEmail, setPremiumStatus, createPendingUser } from "../db";
 function isPremiumProduct(productName: string | null | undefined): boolean {
   if (!productName) return false;
   const lower = productName.toLowerCase();
-  // Match the actual product name: "iHeartEcho App - Premium Access"
-  // Also match legacy/variant names for resilience
   return (
     lower.includes("iheartecho app - premium access") ||
     lower.includes("iheartecho app premium access") ||
     lower.includes("iheartecho-app-premium-access") ||
     lower.includes("iheartecho premium access") ||
-    // Broad fallback: any iHeartEcho + premium combination
     (lower.includes("iheartecho") && lower.includes("premium"))
   );
+}
+
+/** Log a webhook event to the DB (fire-and-forget, never throws) */
+async function logWebhookEvent(params: {
+  resource: string;
+  action: string;
+  email?: string;
+  productName?: string;
+  httpStatus: number;
+  outcome: "granted" | "revoked" | "pending_created" | "ignored" | "error";
+  message: string;
+  rawPayload?: unknown;
+}) {
+  try {
+    const db = await getDb();
+    if (!db) return;
+    await db.insert(webhookEvents).values({
+      source: "thinkific",
+      resource: params.resource,
+      action: params.action,
+      email: params.email ?? null,
+      productName: params.productName ?? null,
+      httpStatus: params.httpStatus,
+      outcome: params.outcome,
+      message: params.message,
+      rawPayload: params.rawPayload ? JSON.stringify(params.rawPayload) : null,
+    });
+  } catch (logErr) {
+    console.error("[Thinkific Webhook] Failed to log event:", logErr);
+  }
 }
 
 export function registerThinkificWebhook(app: Router) {
@@ -56,117 +88,87 @@ export function registerThinkificWebhook(app: Router) {
         payload?: Record<string, unknown>;
       };
 
-      const { resource, action, payload } = body;
+      const { resource = "unknown", action = "unknown", payload } = body;
 
       // ── 1. Product events → CME catalog re-sync ──────────────────────────
       if (resource === "product") {
-        if (!["created", "updated", "deleted"].includes(action ?? "")) {
-          return res.status(200).json({ ok: true, message: `ignored: action=${action}` });
+        if (!["created", "updated", "deleted"].includes(action)) {
+          const msg = `ignored: action=${action}`;
+          await logWebhookEvent({ resource, action, httpStatus: 200, outcome: "ignored", message: msg, rawPayload: payload });
+          return res.status(200).json({ ok: true, message: msg });
         }
         const p = payload as { id?: number; name?: string; status?: string } | undefined;
-        console.log(
-          `[Thinkific Webhook] product.${action} — id=${p?.id} name="${p?.name}" status=${p?.status}`
-        );
+        console.log(`[Thinkific Webhook] product.${action} — id=${p?.id} name="${p?.name}"`);
         syncCatalogToDb()
-          .then((count) => {
-            console.log(`[Thinkific Webhook] Re-sync complete — ${count} products synced`);
-          })
-          .catch((err) => {
-            console.error("[Thinkific Webhook] Re-sync failed:", err);
-          });
-        return res.status(200).json({
-          ok: true,
-          message: `product.${action} received — background sync triggered`,
-          productId: p?.id,
-        });
+          .then((count) => console.log(`[Thinkific Webhook] Re-sync complete — ${count} products`))
+          .catch((err) => console.error("[Thinkific Webhook] Re-sync failed:", err));
+        const msg = `product.${action} received — background sync triggered`;
+        await logWebhookEvent({ resource, action, productName: p?.name, httpStatus: 200, outcome: "ignored", message: msg, rawPayload: payload });
+        return res.status(200).json({ ok: true, message: msg, productId: p?.id });
       }
 
       // ── 2. Order created → grant premium if it's the iHeartEcho membership ─
       if (resource === "order" && action === "created") {
-        // Thinkific order payload structure (confirmed from API):
-        // { product_name, status, user_id, user_email, user_name, ... }
-        // NOTE: user email is at top-level user_email, NOT nested in a user object
         const p = payload as {
           product_name?: string;
           status?: string;
           user_id?: number;
           user_email?: string;
           user_name?: string;
-          // Legacy/alternative nesting (kept for safety)
-          user?: { email?: string; first_name?: string; last_name?: string; id?: number };
+          user?: { email?: string };
         } | undefined;
 
         const productName = p?.product_name ?? "";
-        // Try top-level user_email first (actual Thinkific format), fall back to nested
         const userEmail = ((p?.user_email ?? p?.user?.email) ?? "").toLowerCase().trim();
-        const userName = p?.user_name ?? "";
         const orderStatus = (p?.status ?? "").toLowerCase();
 
         if (!isPremiumProduct(productName)) {
-          return res.status(200).json({
-            ok: true,
-            message: `ignored: order for "${productName}" is not the premium membership`,
-          });
+          const msg = `ignored: order for "${productName}" is not the premium membership`;
+          await logWebhookEvent({ resource, action, email: userEmail || undefined, productName, httpStatus: 200, outcome: "ignored", message: msg, rawPayload: payload });
+          return res.status(200).json({ ok: true, message: msg });
         }
 
         if (orderStatus !== "complete") {
-          return res.status(200).json({
-            ok: true,
-            message: `ignored: order status is "${orderStatus}", not "complete"`,
-          });
+          const msg = `ignored: order status is "${orderStatus}", not "complete"`;
+          await logWebhookEvent({ resource, action, email: userEmail || undefined, productName, httpStatus: 200, outcome: "ignored", message: msg, rawPayload: payload });
+          return res.status(200).json({ ok: true, message: msg });
         }
 
         if (!userEmail) {
+          const msg = "ignored: no user email in payload";
           console.warn("[Thinkific Webhook] order.created: no user email in payload");
-          return res.status(200).json({ ok: true, message: "ignored: no user email" });
+          await logWebhookEvent({ resource, action, productName, httpStatus: 200, outcome: "ignored", message: msg, rawPayload: payload });
+          return res.status(200).json({ ok: true, message: msg });
         }
 
-        console.log(
-          `[Thinkific Webhook] order.created — granting premium to ${userEmail} for "${productName}"`
-        );
+        console.log(`[Thinkific Webhook] order.created — granting premium to ${userEmail} for "${productName}"`);
 
         const user = await getUserByEmail(userEmail);
         if (!user) {
-          // User hasn't created an iHeartEcho account yet.
-          // Create a pending account with isPremium=true so that when they
-          // register or sign in with this email, premium is granted immediately.
-          console.log(
-            `[Thinkific Webhook] order.created: user ${userEmail} not found — creating pending premium account`
-          );
+          console.log(`[Thinkific Webhook] user ${userEmail} not found — creating pending premium account`);
           try {
             const pendingUserId = await createPendingUser(userEmail);
             await setPremiumStatus(pendingUserId, true, "thinkific");
-            console.log(
-              `[Thinkific Webhook] Pending premium account created for ${userEmail} (userId=${pendingUserId})`
-            );
-            return res.status(200).json({
-              ok: true,
-              message: `pending premium account created for ${userEmail}`,
-              userId: pendingUserId,
-            });
+            const msg = `pending premium account created for ${userEmail}`;
+            console.log(`[Thinkific Webhook] ${msg} (userId=${pendingUserId})`);
+            await logWebhookEvent({ resource, action, email: userEmail, productName, httpStatus: 200, outcome: "pending_created", message: msg, rawPayload: payload });
+            return res.status(200).json({ ok: true, message: msg, userId: pendingUserId });
           } catch (createErr) {
-            console.error(
-              `[Thinkific Webhook] Failed to create pending premium account for ${userEmail}:`,
-              createErr
-            );
-            return res.status(200).json({
-              ok: true,
-              message: `user ${userEmail} not found — could not create pending account`,
-            });
+            const msg = `user ${userEmail} not found — could not create pending account`;
+            console.error(`[Thinkific Webhook] Failed to create pending account for ${userEmail}:`, createErr);
+            await logWebhookEvent({ resource, action, email: userEmail, productName, httpStatus: 200, outcome: "error", message: msg, rawPayload: payload });
+            return res.status(200).json({ ok: true, message: msg });
           }
         }
 
         await setPremiumStatus(user.id, true, "thinkific");
-        console.log(`[Thinkific Webhook] Premium granted to userId=${user.id} (${userEmail})`);
-
-        return res.status(200).json({
-          ok: true,
-          message: `premium granted to ${userEmail}`,
-          userId: user.id,
-        });
+        const msg = `premium granted to ${userEmail} (userId=${user.id})`;
+        console.log(`[Thinkific Webhook] ${msg}`);
+        await logWebhookEvent({ resource, action, email: userEmail, productName, httpStatus: 200, outcome: "granted", message: msg, rawPayload: payload });
+        return res.status(200).json({ ok: true, message: msg, userId: user.id });
       }
 
-      // -- 3. Subscription cancelled -- revoke premium --
+      // ── 3. Subscription cancelled → revoke premium ────────────────────────
       if (resource === "subscription" && action === "cancelled") {
         const p = payload as {
           product_name?: string;
@@ -175,48 +177,43 @@ export function registerThinkificWebhook(app: Router) {
         } | undefined;
 
         const productName = p?.product_name ?? "";
-        // Try top-level user_email first (actual Thinkific format), fall back to nested
         const userEmail = ((p?.user_email ?? p?.user?.email) ?? "").toLowerCase().trim();
 
         if (!isPremiumProduct(productName)) {
-          return res.status(200).json({
-            ok: true,
-            message: `ignored: subscription for "${productName}" is not the premium membership`,
-          });
+          const msg = `ignored: subscription for "${productName}" is not the premium membership`;
+          await logWebhookEvent({ resource, action, email: userEmail || undefined, productName, httpStatus: 200, outcome: "ignored", message: msg, rawPayload: payload });
+          return res.status(200).json({ ok: true, message: msg });
         }
 
         if (!userEmail) {
+          const msg = "ignored: no user email in payload";
           console.warn("[Thinkific Webhook] subscription.cancelled: no user email in payload");
-          return res.status(200).json({ ok: true, message: "ignored: no user email" });
+          await logWebhookEvent({ resource, action, productName, httpStatus: 200, outcome: "ignored", message: msg, rawPayload: payload });
+          return res.status(200).json({ ok: true, message: msg });
         }
 
-        console.log(
-          `[Thinkific Webhook] subscription.cancelled — revoking premium from ${userEmail}`
-        );
+        console.log(`[Thinkific Webhook] subscription.cancelled — revoking premium from ${userEmail}`);
 
         const user = await getUserByEmail(userEmail);
         if (!user) {
-          console.warn(
-            `[Thinkific Webhook] subscription.cancelled: user ${userEmail} not found in DB`
-          );
-          return res.status(200).json({ ok: true, message: `user ${userEmail} not found` });
+          const msg = `user ${userEmail} not found — cannot revoke`;
+          console.warn(`[Thinkific Webhook] ${msg}`);
+          await logWebhookEvent({ resource, action, email: userEmail, productName, httpStatus: 200, outcome: "ignored", message: msg, rawPayload: payload });
+          return res.status(200).json({ ok: true, message: msg });
         }
 
         await setPremiumStatus(user.id, false, "thinkific");
-        console.log(`[Thinkific Webhook] Premium revoked from userId=${user.id} (${userEmail})`);
-
-        return res.status(200).json({
-          ok: true,
-          message: `premium revoked from ${userEmail}`,
-          userId: user.id,
-        });
+        const msg = `premium revoked from ${userEmail} (userId=${user.id})`;
+        console.log(`[Thinkific Webhook] ${msg}`);
+        await logWebhookEvent({ resource, action, email: userEmail, productName, httpStatus: 200, outcome: "revoked", message: msg, rawPayload: payload });
+        return res.status(200).json({ ok: true, message: msg, userId: user.id });
       }
 
       // ── 4. All other events → ignore ──────────────────────────────────────
-      return res.status(200).json({
-        ok: true,
-        message: `ignored: resource=${resource} action=${action}`,
-      });
+      const msg = `ignored: resource=${resource} action=${action}`;
+      await logWebhookEvent({ resource, action, httpStatus: 200, outcome: "ignored", message: msg, rawPayload: payload });
+      return res.status(200).json({ ok: true, message: msg });
+
     } catch (err) {
       console.error("[Thinkific Webhook] Error processing webhook:", err);
       return res.status(500).json({ ok: false, message: "internal error" });

@@ -1,5 +1,5 @@
 /**
- * QuickFireAdmin.tsx — Admin Question Builder for Daily QuickFire
+ * QuickFireAdmin.tsx — Admin Question Builder for Daily Challenge
  *
  * Allows admins to:
  *  - Create questions of three types: scenario (MCQ), image-based (image + MCQ), quick-review (flashcard)
@@ -216,7 +216,7 @@ export default function QuickFireAdmin() {
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url; a.download = "quickfire_questions_template.csv"; a.click();
+    a.href = url; a.download = "daily_challenge_questions_template.csv"; a.click();
     URL.revokeObjectURL(url);
   }
 
@@ -419,7 +419,7 @@ export default function QuickFireAdmin() {
           <Shield className="w-12 h-12 mx-auto mb-4 text-gray-300" />
           <p className="text-gray-500 mb-2 font-semibold">Admin Access Required</p>
           <Button variant="outline" className="mt-4" onClick={() => navigate("/quickfire")}>
-            Back to QuickFire
+            Back to Daily Challenge
           </Button>
         </div>
       </Layout>
@@ -535,7 +535,7 @@ export default function QuickFireAdmin() {
             </button>
             <div>
               <h1 className="text-xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-                QuickFire Question Builder
+                Daily Challenge Question Builder
               </h1>
               <p className="text-xs text-gray-400">Create and manage daily challenge questions</p>
             </div>
@@ -804,7 +804,7 @@ export default function QuickFireAdmin() {
           <div className="text-center py-16">
             <Zap className="w-12 h-12 mx-auto mb-3 text-gray-300" />
             <p className="text-gray-500 font-medium">No questions found</p>
-            <p className="text-sm text-gray-400 mt-1">Create your first QuickFire question to get started.</p>
+            <p className="text-sm text-gray-400 mt-1">Create your first Daily Challenge question to get started.</p>
             <Button className="mt-4 text-white" style={{ background: "#189aa1" }} onClick={openCreate}>
               <Plus className="w-4 h-4 mr-2" /> Create Question
             </Button>
@@ -1008,7 +1008,7 @@ export default function QuickFireAdmin() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle style={{ fontFamily: "Merriweather, serif" }}>
-              {editingId !== null ? "Edit Question" : "New QuickFire Question"}
+              {editingId !== null ? "Edit Question" : "New Daily Challenge Question"}
             </DialogTitle>
           </DialogHeader>
 
@@ -1239,7 +1239,7 @@ export default function QuickFireAdmin() {
           </DialogHeader>
           <div className="space-y-4 py-2">
             <p className="text-sm text-gray-500">
-              Describe a clinical topic and the AI will generate ready-to-use QuickFire questions with options, correct answers, and explanations.
+              Describe a clinical topic and the AI will generate ready-to-use Daily Challenge questions with options, correct answers, and explanations.
             </p>
             <div className="space-y-3">
               <div>
@@ -1536,7 +1536,7 @@ export default function QuickFireAdmin() {
           </DialogHeader>
           <div className="space-y-3 py-2">
             <p className="text-sm text-gray-600">
-              This will create (or regenerate) the QuickFire set for the selected date — a balanced mix of scenario, image, and quick-review questions.
+              This will create (or regenerate) the Daily Challenge set for the selected date — a balanced mix of scenario, image, and quick-review questions.
             </p>
             <div>
               <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Date</label>
@@ -1568,14 +1568,14 @@ export default function QuickFireAdmin() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Bell className="w-5 h-5 text-orange-500" />
-              Send QuickFire Reminders
+              Send Daily Challenge Reminders
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             {!reminderResult ? (
               <>
                 <p className="text-sm text-gray-600">
-                  This will send a reminder email to all users who have opted in to QuickFire reminders and have not yet completed today's session. Users who have already completed today's set will be skipped.
+                  This will send a reminder email to all users who have opted in to Daily Challenge reminders and have not yet completed today's session. Users who have already completed today's set will be skipped.
                 </p>
                 <div className="bg-orange-50 border border-orange-200 rounded-lg px-4 py-3">
                   <p className="text-xs text-orange-700 font-medium">Note: This action sends real emails. Use sparingly — once per day is recommended.</p>

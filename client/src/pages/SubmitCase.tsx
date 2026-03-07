@@ -20,6 +20,7 @@ import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import RichTextEditor, { RichTextDisplay } from "@/components/RichTextEditor";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -755,15 +756,12 @@ export default function SubmitCase() {
                 <Label htmlFor="summary" className="text-xs font-semibold text-gray-600 mb-1.5 block">
                   Case Summary <span className="text-red-500">*</span>
                 </Label>
-                <Textarea
-                  id="summary"
+                <RichTextEditor
                   value={summary}
-                  onChange={(e) => setSummary(e.target.value)}
+                  onChange={setSummary}
                   placeholder="Brief overview of the case and key echo findings…"
-                  rows={3}
-                  maxLength={5000}
+                  minHeight="140px"
                 />
-                <p className="text-xs text-gray-400 mt-1">{summary.length}/5000</p>
               </div>
 
               <div>
@@ -1131,7 +1129,7 @@ export default function SubmitCase() {
               </div>
               <div className="bg-gray-50 rounded-lg p-3">
                 <p className="text-xs text-gray-400 mb-0.5">Summary</p>
-                <p className="text-xs text-gray-700 leading-relaxed">{summary}</p>
+                <RichTextDisplay html={summary} className="text-xs" />
               </div>
               {(submitterCreditName.trim() || submitterLinkedIn.trim()) && (
                 <div className="bg-[#189aa1]/5 border border-[#189aa1]/20 rounded-lg p-3">
