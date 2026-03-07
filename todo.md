@@ -1224,3 +1224,9 @@
 - [x] Question builder: add/edit/delete MCQ questions with answer choices and explanations
 - [x] Media upload: POST to /api/upload-case-media (multer + storagePut), save record via adminSaveMedia
 - [x] Fix QuickFireAdmin JSX error at line 767 — replaced mismatched fragment wrapper with proper structure
+
+## QuickFire AI Generator — Definitive Fix
+- [x] Debug AI generator: called Forge API directly — confirmed API works, issue was AI SDK wrapper
+- [x] Rewrite AI generator: replaced generateText (AI SDK) with direct fetch to Forge API /v1/chat/completions
+- [x] JSON parser retained: handles root array, wrapped object, and markdown-fenced responses
+- [ ] Grant test user premium_user role and verify archive gating in QuickFire

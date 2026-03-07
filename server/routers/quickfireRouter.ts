@@ -473,12 +473,8 @@ export const quickfireRouter = router({
         });
       }
 
-      const openai = createOpenAI({
-        apiKey: ENV.forgeApiKey,
-        baseURL: `${ENV.forgeApiUrl}/v1`,
-        fetch: createPatchedFetch(fetch),
-      });
-      const model = openai.chat("gpt-4o");
+      const forgeBaseUrl = (ENV.forgeApiUrl ?? "").replace(/\/+$/, "");
+      const forgeApiKey = ENV.forgeApiKey ?? "";
 
       const typeInstructions =
         input.type === "quickReview"
@@ -490,11 +486,7 @@ export const quickfireRouter = router({
           ? `{"questions":[{"question":"...","reviewAnswer":"...","tags":["...","..."]}]}`
           : `{"questions":[{"question":"...","options":["A","B","C","D"],"correctAnswer":0,"explanation":"...","tags":["...","..."]}]}`;
 
-      let text: string;
-      try {
-        const result = await generateText({
-          model,
-          prompt: `You are an expert echocardiography educator creating ${input.count} ${input.difficulty} ${input.type} questions about: "${input.topic}".
+      const promptText = `You are an expert echocardiography educator creating ${input.count} ${input.difficulty} ${input.type} questions about: "${input.topic}".
 
 ${typeInstructions}
 
@@ -508,9 +500,36 @@ Guidelines:
 Return exactly ${input.count} questions as a valid JSON object matching this format:
 ${jsonFormatInstructions}
 
-Return ONLY the JSON object, no markdown, no explanation, no code fences.`,
+Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
+
+      let text: string;
+      try {
+        const patchedFetch = createPatchedFetch(fetch);
+        const aiResp = await patchedFetch(`${forgeBaseUrl}/v1/chat/completions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${forgeApiKey}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-4o",
+            messages: [{ role: "user", content: promptText }],
+            temperature: 0.7,
+          }),
         });
-        text = result.text;
+        if (!aiResp.ok) {
+          const errBody = await aiResp.text();
+          throw new Error(`Forge API returned ${aiResp.status}: ${errBody.substring(0, 200)}`);
+        }
+        const aiData = await aiResp.json() as {
+          choices?: { message?: { content?: string } }[];
+          error?: { message?: string };
+        };
+        if (aiData.error) {
+          throw new Error(`Forge API error: ${aiData.error.message ?? JSON.stringify(aiData.error)}`);
+        }
+        text = aiData.choices?.[0]?.message?.content ?? "";
+        if (!text) throw new Error("Forge API returned empty content");
       } catch (aiErr) {
         const errMsg = aiErr instanceof Error ? aiErr.message : String(aiErr);
         throw new TRPCError({
