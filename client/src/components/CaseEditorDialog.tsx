@@ -281,6 +281,9 @@ export default function CaseEditorDialog({ caseId, open, onClose, onSaved }: Pro
   const [tags, setTags] = useState<string[]>([]);
   const [modality, setModality] = useState("TTE");
   const [difficulty, setDifficulty] = useState("intermediate");
+  const [submitterCreditName, setSubmitterCreditName] = useState("");
+  const [submitterLinkedIn, setSubmitterLinkedIn] = useState("");
+  const [linkedInError, setLinkedInError] = useState("");
   const [detailsInitialized, setDetailsInitialized] = useState(false);
 
   // Initialize form when data loads
@@ -293,8 +296,19 @@ export default function CaseEditorDialog({ caseId, open, onClose, onSaved }: Pro
     setTags(caseData.tags ?? []);
     setModality(caseData.modality);
     setDifficulty(caseData.difficulty);
+    setSubmitterCreditName((caseData as any).submitterCreditName ?? "");
+    setSubmitterLinkedIn((caseData as any).submitterLinkedIn ?? "");
     setDetailsInitialized(true);
   }
+
+  const validateLinkedIn = (url: string) => {
+    if (!url) return "";
+    const clean = url.trim().toLowerCase();
+    if (!clean.includes("linkedin.com/in/")) {
+      return "Only LinkedIn profile URLs (linkedin.com/in/…) are accepted.";
+    }
+    return "";
+  };
 
   // Reset when dialog closes
   const handleClose = () => {
@@ -318,6 +332,11 @@ export default function CaseEditorDialog({ caseId, open, onClose, onSaved }: Pro
 
   const handleSaveDetails = () => {
     if (!caseId) return;
+    const liErr = validateLinkedIn(submitterLinkedIn);
+    if (liErr) {
+      setLinkedInError(liErr);
+      return;
+    }
     updateCaseMutation.mutate({
       id: caseId,
       title: title.trim(),
@@ -328,6 +347,8 @@ export default function CaseEditorDialog({ caseId, open, onClose, onSaved }: Pro
       tags,
       modality: modality as any,
       difficulty: difficulty as any,
+      submitterCreditName: submitterCreditName.trim() || undefined,
+      submitterLinkedIn: submitterLinkedIn.trim() || undefined,
     });
   };
 
@@ -564,6 +585,45 @@ export default function CaseEditorDialog({ caseId, open, onClose, onSaved }: Pro
                     onChange={setTags}
                     placeholder="Add a tag and press Enter…"
                   />
+
+                  {/* Credit Attribution */}
+                  <div className="border-t pt-4 space-y-3">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">Credit Attribution (Optional)</p>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 mb-1.5 block">
+                        Contributor Name
+                      </label>
+                      <Input
+                        value={submitterCreditName}
+                        onChange={(e) => setSubmitterCreditName(e.target.value)}
+                        maxLength={200}
+                        className="text-sm"
+                        placeholder="e.g. Dr. Jane Smith"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 mb-1.5 block">
+                        LinkedIn Profile URL
+                      </label>
+                      <Input
+                        value={submitterLinkedIn}
+                        onChange={(e) => {
+                          setSubmitterLinkedIn(e.target.value);
+                          setLinkedInError("");
+                        }}
+                        onBlur={(e) => setLinkedInError(validateLinkedIn(e.target.value))}
+                        maxLength={500}
+                        className={`text-sm ${linkedInError ? "border-red-400 focus-visible:ring-red-400" : ""}`}
+                        placeholder="https://www.linkedin.com/in/yourname"
+                      />
+                      {linkedInError && (
+                        <p className="text-xs text-red-500 mt-1">{linkedInError}</p>
+                      )}
+                      {!linkedInError && submitterLinkedIn && (
+                        <p className="text-xs text-green-600 mt-1">✓ Valid LinkedIn URL</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
 

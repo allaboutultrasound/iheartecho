@@ -841,6 +841,16 @@ export const caseLibraryRouter = router({
         difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
         tags: z.array(z.string().max(50)).max(10).optional(),
         status: z.enum(["pending", "approved", "rejected"]).optional(),
+        submitterCreditName: z.string().max(200).optional().nullable(),
+        submitterLinkedIn: z
+          .string()
+          .max(500)
+          .optional()
+          .nullable()
+          .refine(
+            (v) => !v || v.toLowerCase().includes("linkedin.com/in/"),
+            { message: "Only LinkedIn profile URLs are accepted." }
+          ),
       })
     )
     .mutation(async ({ input }) => {

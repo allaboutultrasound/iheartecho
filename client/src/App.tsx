@@ -59,6 +59,7 @@ import SubmitCase from "./pages/SubmitCase";
 import AdminCaseManagement from "./pages/AdminCaseManagement";
 import QuickFireAdmin from "./pages/QuickFireAdmin";
 import Premium from "./pages/Premium";
+import UpgradeSuccess from "./pages/UpgradeSuccess";
 import UEANavigator from "./pages/UEANavigator";
 import UEAScanCoach from "./pages/UEAScanCoach";
 import ScanCoachEditor from "./pages/ScanCoachEditor";
@@ -145,6 +146,7 @@ function Router() {
       <Route path="/admin/scancoach" component={ScanCoachEditor} />
       {/* ── Premium Access ──────────────────────────────────────────────── */}
       <Route path="/premium" component={Premium} />
+      <Route path="/upgrade-success" component={UpgradeSuccess} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

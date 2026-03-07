@@ -7,14 +7,15 @@
  *
  * Procedures:
  *  - premium.getStatus        — returns the current user's premium status
- *  - premium.checkAndSync     — re-checks Thinkific and syncs isPremium in DB
+ *  - premium.checkAndSync     — re-checks Thinkific and syncs isPremium in DB (protected)
+ *  - premium.syncByEmail      — public: check Thinkific by email and sync if user exists in DB
  *  - premium.adminGrant       — admin: manually grant premium to a user by email
  *  - premium.adminRevoke      — admin: manually revoke premium from a user by email
  *  - premium.adminListPremium — admin: list all premium users
  */
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { protectedProcedure, router } from "../_core/trpc";
+import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getUserByEmail, getUserById, setPremiumStatus } from "../db";
 import { getUserByEmail as getThinkificUserByEmail, getEnrollmentsByUserId } from "../thinkific";
 
@@ -74,13 +75,21 @@ export const premiumRouter = router({
 
   /**
    * Re-check Thinkific and sync the user's isPremium flag.
-   * Called when a user returns from the Thinkific checkout page.
+   * Called when a logged-in user returns from the Thinkific checkout page.
    */
   checkAndSync: protectedProcedure.mutation(async ({ ctx }) => {
     const user = await getUserById(ctx.user.id);
     if (!user) throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
     if (!user.email) {
       return { isPremium: false, changed: false, message: "No email on account" };
+    }
+    // First check if the DB already has premium set (e.g. via webhook pending account)
+    if (user.isPremium) {
+      return {
+        isPremium: true,
+        changed: false,
+        message: "Premium access is active",
+      };
     }
     const hasPremium = await checkThinkificPremiumByEmail(user.email);
     const changed = hasPremium !== user.isPremium;
@@ -99,6 +108,54 @@ export const premiumRouter = router({
         : "No active premium membership found",
     };
   }),
+
+  /**
+   * Public: check Thinkific by email and sync premium status if the user exists in DB.
+   * Used on the /upgrade-success page for users who aren't logged in yet.
+   * Returns whether premium was found on Thinkific (does NOT expose user data).
+   */
+  syncByEmail: publicProcedure
+    .input(z.object({ email: z.string().email() }))
+    .mutation(async ({ input }) => {
+      const email = input.email.toLowerCase().trim();
+      // Check if user exists in our DB
+      const user = await getUserByEmail(email);
+      if (!user) {
+        // Check Thinkific anyway — if they have premium there, we'll note it
+        // but can't grant it until they create an account
+        const hasPremiumOnThinkific = await checkThinkificPremiumByEmail(email);
+        return {
+          userExists: false,
+          isPremium: false,
+          premiumOnThinkific: hasPremiumOnThinkific,
+          message: hasPremiumOnThinkific
+            ? "Purchase confirmed on Thinkific. Create your iHeartEcho account with this email to activate premium."
+            : "No premium membership found for this email on Thinkific.",
+        };
+      }
+      // User exists — check if they already have premium in DB
+      if (user.isPremium) {
+        return {
+          userExists: true,
+          isPremium: true,
+          premiumOnThinkific: true,
+          message: "Premium access is already active on your account.",
+        };
+      }
+      // Check Thinkific and sync
+      const hasPremium = await checkThinkificPremiumByEmail(email);
+      if (hasPremium) {
+        await setPremiumStatus(user.id, true, "thinkific");
+      }
+      return {
+        userExists: true,
+        isPremium: hasPremium,
+        premiumOnThinkific: hasPremium,
+        message: hasPremium
+          ? "Premium access granted! Sign in to access all premium features."
+          : "No active premium membership found for this email on Thinkific.",
+      };
+    }),
 
   /**
    * Admin: manually grant premium access to a user by email.

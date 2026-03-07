@@ -1254,3 +1254,22 @@
 ## Credit Attribution — Display
 - [x] Case detail page: show submitter credit name + LinkedIn link in sidebar ("Case Contributor" card)
 - [x] Admin Case Management: show submitter credit name + LinkedIn in review queue cards and preview modal
+
+## Credit Attribution — Admin Editor
+- [ ] CaseEditorDialog: add submitterCreditName and submitterLinkedIn fields to Details tab
+- [ ] CaseEditorDialog: LinkedIn-only URL validation on the LinkedIn field
+- [ ] adminUpdateCase tRPC procedure: already accepts credit fields — verify wiring
+
+## Thinkific Account Creation — Upgrade Sign-up Fix
+- [ ] Investigate Thinkific webhook/API flow for new account creation on upgrade sign-up
+- [ ] Identify and fix issues with new account creation from Thinkific
+
+## Thinkific Upgrade Flow — Account Creation & Premium Sync
+
+- [x] Webhook: when order.created fires for a user not in DB, create pending account with isPremium=true
+- [x] premiumRouter: add public syncByEmail procedure for post-checkout email verification
+- [x] premiumRouter: checkAndSync now checks DB isPremium first (avoids unnecessary Thinkific API call)
+- [x] UpgradeSuccess.tsx: new /upgrade-success page for post-checkout return
+- [x] Premium.tsx: checkout now redirects to /upgrade-success instead of /premium?sync=1
+- [x] App.tsx: /upgrade-success route registered
+- [x] DB: difficulty column added to quickfireChallenges table via ALTER TABLE

@@ -9,6 +9,8 @@
  * 2. order.created
  *    → Grants iHeartEcho Premium Access when a user purchases the
  *      "iHeartEcho App Premium Access" membership.
+ *    → If the user has no iHeartEcho account yet, creates a pending account
+ *      with isPremium=true so premium is granted immediately on first login.
  *
  * 3. subscription.cancelled
  *    → Revokes iHeartEcho Premium Access when the user's subscription
@@ -22,7 +24,7 @@
  */
 import { Router, Request, Response } from "express";
 import { syncCatalogToDb } from "../routers/cmeRouter";
-import { getUserByEmail, setPremiumStatus } from "../db";
+import { getUserByEmail, setPremiumStatus, createPendingUser } from "../db";
 
 /** Returns true if the Thinkific product name matches the iHeartEcho Premium Access membership */
 function isPremiumProduct(productName: string | null | undefined): boolean {
@@ -79,7 +81,7 @@ export function registerThinkificWebhook(app: Router) {
         } | undefined;
 
         const productName = p?.product_name ?? "";
-        const userEmail = p?.user?.email ?? "";
+        const userEmail = (p?.user?.email ?? "").toLowerCase().trim();
         const orderStatus = (p?.status ?? "").toLowerCase();
 
         if (!isPremiumProduct(productName)) {
@@ -107,14 +109,33 @@ export function registerThinkificWebhook(app: Router) {
 
         const user = await getUserByEmail(userEmail);
         if (!user) {
-          console.warn(
-            `[Thinkific Webhook] order.created: user ${userEmail} not found in iHeartEcho DB — ` +
-            `they may not have signed in yet; premium will be synced on next login via checkAndSync`
+          // User hasn't created an iHeartEcho account yet.
+          // Create a pending account with isPremium=true so that when they
+          // register or sign in with this email, premium is granted immediately.
+          console.log(
+            `[Thinkific Webhook] order.created: user ${userEmail} not found — creating pending premium account`
           );
-          return res.status(200).json({
-            ok: true,
-            message: `user ${userEmail} not found — premium pending first login`,
-          });
+          try {
+            const pendingUserId = await createPendingUser(userEmail);
+            await setPremiumStatus(pendingUserId, true, "thinkific");
+            console.log(
+              `[Thinkific Webhook] Pending premium account created for ${userEmail} (userId=${pendingUserId})`
+            );
+            return res.status(200).json({
+              ok: true,
+              message: `pending premium account created for ${userEmail}`,
+              userId: pendingUserId,
+            });
+          } catch (createErr) {
+            console.error(
+              `[Thinkific Webhook] Failed to create pending premium account for ${userEmail}:`,
+              createErr
+            );
+            return res.status(200).json({
+              ok: true,
+              message: `user ${userEmail} not found — could not create pending account`,
+            });
+          }
         }
 
         await setPremiumStatus(user.id, true, "thinkific");
@@ -135,7 +156,7 @@ export function registerThinkificWebhook(app: Router) {
         } | undefined;
 
         const productName = p?.product_name ?? "";
-        const userEmail = p?.user?.email ?? "";
+        const userEmail = (p?.user?.email ?? "").toLowerCase().trim();
 
         if (!isPremiumProduct(productName)) {
           return res.status(200).json({

@@ -109,9 +109,9 @@ export default function Premium() {
   }, [user]);
 
   const handleCheckout = () => {
-    // Open Thinkific checkout in a new tab; user returns to /premium?sync=1
-    const returnUrl = encodeURIComponent(`${window.location.origin}/premium?sync=1`);
-    window.open(`${CHECKOUT_URL}?return_url=${returnUrl}`, "_blank");
+    // Redirect to Thinkific checkout; user returns to /upgrade-success
+    const returnUrl = encodeURIComponent(`${window.location.origin}/upgrade-success`);
+    window.location.href = `${CHECKOUT_URL}?return_url=${returnUrl}`;
   };
 
   const handleManualSync = () => {
