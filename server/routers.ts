@@ -8,6 +8,8 @@ import { storagePut } from "./storage";
 import { platformAdminRouter, labSeatsRouter } from "./routers/adminRouter";
 import { cmeRouter } from "./routers/cmeRouter";
 import { emailAuthRouter } from "./routers/emailAuthRouter";
+import { quickfireRouter } from "./routers/quickfireRouter";
+import { caseLibraryRouter } from "./routers/caseLibraryRouter";
 import {
   getUserById,
   getUsersByIds,
@@ -1471,6 +1473,12 @@ export const appRouter = router({
 
   // ─── Email/Password Auth (white-label, no OAuth portal) ──────────────────────
   emailAuth: emailAuthRouter,
+
+  // ─── Daily QuickFire Engine ───────────────────────────────────────────────────
+  quickfire: quickfireRouter,
+
+  // ─── Echo Case Library ────────────────────────────────────────────────────────
+  caseLibrary: caseLibraryRouter,
 });
 export type AppRouter = typeof appRouter;
 

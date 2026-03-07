@@ -1,0 +1,807 @@
+/**
+ * SubmitCase.tsx — Submit an Echo Case to the Library
+ *
+ * Multi-step form: HIPAA acknowledgement → case details → media upload → questions → review & submit.
+ * User-submitted cases go into "pending" status and require admin approval.
+ * Admin-submitted cases are auto-approved.
+ */
+
+import { useState, useRef } from "react";
+import { useLocation } from "wouter";
+import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
+import Layout from "@/components/Layout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  AlertTriangle,
+  Upload,
+  Plus,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle2,
+  ImageIcon,
+  PlayCircle,
+  X,
+  Shield,
+  FileText,
+  BookOpen,
+  HelpCircle,
+} from "lucide-react";
+import { toast } from "sonner";
+
+const MODALITIES = ["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "Other"] as const;
+const DIFFICULTIES = ["beginner", "intermediate", "advanced"] as const;
+
+type MediaItem = {
+  type: "image" | "video";
+  url: string;
+  fileKey: string;
+  caption: string;
+  sortOrder: number;
+  localPreview?: string;
+  uploading?: boolean;
+};
+
+type QuestionItem = {
+  question: string;
+  options: string[];
+  correctAnswer: number;
+  explanation: string;
+  sortOrder: number;
+};
+
+const STEPS = ["HIPAA", "Details", "Media", "Questions", "Review"] as const;
+type Step = typeof STEPS[number];
+
+export default function SubmitCase() {
+  const [, navigate] = useLocation();
+  const { user, isAuthenticated } = useAuth();
+  const [step, setStep] = useState<Step>("HIPAA");
+  const stepIdx = STEPS.indexOf(step);
+
+  // HIPAA
+  const [hipaaAcknowledged, setHipaaAcknowledged] = useState(false);
+
+  // Case details
+  const [title, setTitle] = useState("");
+  const [summary, setSummary] = useState("");
+  const [clinicalHistory, setClinicalHistory] = useState("");
+  const [diagnosis, setDiagnosis] = useState("");
+  const [modality, setModality] = useState<typeof MODALITIES[number]>("TTE");
+  const [difficulty, setDifficulty] = useState<typeof DIFFICULTIES[number]>("intermediate");
+  const [tagsInput, setTagsInput] = useState("");
+  const [teachingPointsInput, setTeachingPointsInput] = useState("");
+
+  // Media
+  const [media, setMedia] = useState<MediaItem[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Questions
+  const [questions, setQuestions] = useState<QuestionItem[]>([]);
+
+  const submitMutation = trpc.caseLibrary.submitCase.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message);
+      navigate(`/cases`);
+    },
+    onError: (err) => toast.error(err.message || "Failed to submit case."),
+  });
+
+  if (!isAuthenticated) {
+    return (
+      <Layout>
+        <div className="container py-16 text-center">
+          <Shield className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+          <p className="text-gray-500 mb-4">Please sign in to submit a case.</p>
+          <Button style={{ background: "#189aa1" }} className="text-white" onClick={() => navigate("/login")}>
+            Sign In
+          </Button>
+        </div>
+      </Layout>
+    );
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────────────────────
+
+  const parseTags = () =>
+    tagsInput
+      .split(/[,\n]/)
+      .map((t) => t.trim().toLowerCase())
+      .filter(Boolean)
+      .slice(0, 10);
+
+  const parseTeachingPoints = () =>
+    teachingPointsInput
+      .split("\n")
+      .map((t) => t.trim())
+      .filter(Boolean)
+      .slice(0, 10);
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (!files.length) return;
+    if (media.length + files.length > 20) {
+      toast.error("Maximum 20 media files per case.");
+      return;
+    }
+    for (const file of files) {
+      const isVideo = file.type.startsWith("video/");
+      const isImage = file.type.startsWith("image/");
+      if (!isVideo && !isImage) {
+        toast.error(`${file.name} is not a supported image or video file.`);
+        continue;
+      }
+      if (file.size > 100 * 1024 * 1024) {
+        toast.error(`${file.name} exceeds the 100 MB limit.`);
+        continue;
+      }
+      const localPreview = URL.createObjectURL(file);
+      const placeholder: MediaItem = {
+        type: isVideo ? "video" : "image",
+        url: "",
+        fileKey: "",
+        caption: "",
+        sortOrder: media.length,
+        localPreview,
+        uploading: true,
+      };
+      setMedia((prev) => [...prev, placeholder]);
+      // Upload to server
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("mediaType", isVideo ? "video" : "image");
+        const res = await fetch("/api/upload-case-media", {
+          method: "POST",
+          body: formData,
+          credentials: "include",
+        });
+        if (!res.ok) throw new Error("Upload failed");
+        const { url, fileKey } = await res.json();
+        setMedia((prev) =>
+          prev.map((m) =>
+            m.localPreview === localPreview
+              ? { ...m, url, fileKey, uploading: false }
+              : m
+          )
+        );
+      } catch {
+        toast.error(`Failed to upload ${file.name}.`);
+        setMedia((prev) => prev.filter((m) => m.localPreview !== localPreview));
+      }
+    }
+    // Reset input
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const removeMedia = (idx: number) => {
+    setMedia((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const addQuestion = () => {
+    setQuestions((prev) => [
+      ...prev,
+      { question: "", options: ["", "", "", ""], correctAnswer: 0, explanation: "", sortOrder: prev.length },
+    ]);
+  };
+
+  const removeQuestion = (idx: number) => {
+    setQuestions((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const updateQuestion = (idx: number, field: keyof QuestionItem, value: any) => {
+    setQuestions((prev) => prev.map((q, i) => (i === idx ? { ...q, [field]: value } : q)));
+  };
+
+  const updateOption = (qIdx: number, oIdx: number, value: string) => {
+    setQuestions((prev) =>
+      prev.map((q, i) =>
+        i === qIdx ? { ...q, options: q.options.map((o, j) => (j === oIdx ? value : o)) } : q
+      )
+    );
+  };
+
+  const addOption = (qIdx: number) => {
+    setQuestions((prev) =>
+      prev.map((q, i) =>
+        i === qIdx && q.options.length < 6 ? { ...q, options: [...q.options, ""] } : q
+      )
+    );
+  };
+
+  const removeOption = (qIdx: number, oIdx: number) => {
+    setQuestions((prev) =>
+      prev.map((q, i) => {
+        if (i !== qIdx) return q;
+        const newOptions = q.options.filter((_, j) => j !== oIdx);
+        const newCorrect = q.correctAnswer >= oIdx && q.correctAnswer > 0
+          ? q.correctAnswer - 1
+          : q.correctAnswer;
+        return { ...q, options: newOptions, correctAnswer: newCorrect };
+      })
+    );
+  };
+
+  // ── Validation ───────────────────────────────────────────────────────────────
+
+  const canAdvance = () => {
+    if (step === "HIPAA") return hipaaAcknowledged;
+    if (step === "Details") return title.trim().length >= 5 && summary.trim().length >= 10 && modality;
+    if (step === "Media") return !media.some((m) => m.uploading);
+    if (step === "Questions") {
+      return questions.every(
+        (q) =>
+          q.question.trim().length >= 5 &&
+          q.options.filter((o) => o.trim()).length >= 2 &&
+          q.correctAnswer < q.options.length
+      );
+    }
+    return true;
+  };
+
+  const handleSubmit = () => {
+    submitMutation.mutate({
+      title: title.trim(),
+      summary: summary.trim(),
+      clinicalHistory: clinicalHistory.trim() || undefined,
+      diagnosis: diagnosis.trim() || undefined,
+      teachingPoints: parseTeachingPoints().length ? parseTeachingPoints() : undefined,
+      modality,
+      difficulty,
+      tags: parseTags(),
+      hipaaAcknowledged: true,
+      media: media
+        .filter((m) => m.url && m.fileKey)
+        .map((m, i) => ({
+          type: m.type,
+          url: m.url,
+          fileKey: m.fileKey,
+          caption: m.caption || undefined,
+          sortOrder: i,
+        })),
+      questions: questions
+        .filter((q) => q.question.trim() && q.options.filter((o) => o.trim()).length >= 2)
+        .map((q, i) => ({
+          question: q.question.trim(),
+          options: q.options.filter((o) => o.trim()),
+          correctAnswer: q.correctAnswer,
+          explanation: q.explanation.trim() || undefined,
+          sortOrder: i,
+        })),
+    });
+  };
+
+  // ── Step Progress ─────────────────────────────────────────────────────────────
+
+  const StepIndicator = () => (
+    <div className="flex items-center gap-1 mb-8">
+      {STEPS.map((s, i) => (
+        <div key={s} className="flex items-center gap-1">
+          <div
+            className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+              i < stepIdx
+                ? "bg-[#189aa1] text-white"
+                : i === stepIdx
+                ? "bg-[#189aa1] text-white ring-4 ring-[#189aa1]/20"
+                : "bg-gray-100 text-gray-400"
+            }`}
+          >
+            {i < stepIdx ? <CheckCircle2 className="w-4 h-4" /> : i + 1}
+          </div>
+          <span className={`text-xs hidden sm:block ${i === stepIdx ? "text-[#189aa1] font-semibold" : "text-gray-400"}`}>
+            {s}
+          </span>
+          {i < STEPS.length - 1 && <div className={`h-0.5 w-6 ${i < stepIdx ? "bg-[#189aa1]" : "bg-gray-200"}`} />}
+        </div>
+      ))}
+    </div>
+  );
+
+  // ── Render Steps ──────────────────────────────────────────────────────────────
+
+  return (
+    <Layout>
+      <div className="container py-8 max-w-2xl">
+        <div className="flex items-center gap-2 mb-6">
+          <button onClick={() => navigate("/cases")} className="text-gray-400 hover:text-[#189aa1] transition-colors">
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <h1 className="text-xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
+            Submit an Echo Case
+          </h1>
+        </div>
+
+        <StepIndicator />
+
+        {/* ── Step 1: HIPAA ─────────────────────────────────────────────────── */}
+        {step === "HIPAA" && (
+          <Card className="border-0 shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base text-red-600">
+                <AlertTriangle className="w-5 h-5" />
+                HIPAA / PHI Policy — Required Acknowledgement
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-800 leading-relaxed space-y-3">
+                <p className="font-bold text-red-700 text-base">⚠️ No Protected Health Information (PHI) may be submitted.</p>
+                <p>
+                  Under the Health Insurance Portability and Accountability Act (HIPAA), submitting any
+                  patient-identifiable information is a federal violation. Before uploading any case material,
+                  you must ensure that <strong>all of the following have been removed or de-identified</strong>:
+                </p>
+                <ul className="list-disc list-inside space-y-1 text-xs">
+                  <li>Patient name, initials, or any identifier</li>
+                  <li>Date of birth, age (if over 89), or admission/procedure dates</li>
+                  <li>Geographic data smaller than a state (city, ZIP, address)</li>
+                  <li>Phone numbers, fax numbers, email addresses</li>
+                  <li>Social Security, medical record, account, or device numbers</li>
+                  <li>URLs, IP addresses, biometric identifiers, full-face photographs</li>
+                  <li>Any other unique identifying number, characteristic, or code</li>
+                </ul>
+                <p>
+                  By proceeding, you confirm that all submitted images, videos, and text have been
+                  fully de-identified in accordance with HIPAA Safe Harbor (45 CFR §164.514(b)) or
+                  Expert Determination standards.
+                </p>
+                <p className="font-semibold">
+                  Submissions found to contain PHI will be immediately removed and may result in account suspension.
+                </p>
+              </div>
+              <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                <Checkbox
+                  id="hipaa"
+                  checked={hipaaAcknowledged}
+                  onCheckedChange={(v) => setHipaaAcknowledged(!!v)}
+                  className="mt-0.5"
+                />
+                <label htmlFor="hipaa" className="text-sm text-gray-700 leading-relaxed cursor-pointer">
+                  I confirm that all submitted content has been fully de-identified and contains
+                  <strong> no Protected Health Information (PHI)</strong>. I understand that submitting PHI
+                  violates HIPAA and iHeartEcho's terms of service.
+                </label>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ── Step 2: Case Details ──────────────────────────────────────────── */}
+        {step === "Details" && (
+          <Card className="border-0 shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base text-gray-700">
+                <FileText className="w-4 h-4 text-[#189aa1]" /> Case Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="title" className="text-xs font-semibold text-gray-600 mb-1.5 block">
+                  Case Title <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g. Severe Aortic Stenosis with Low-Flow Low-Gradient Pattern"
+                  maxLength={300}
+                />
+                <p className="text-xs text-gray-400 mt-1">{title.length}/300</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs font-semibold text-gray-600 mb-1.5 block">
+                    Modality <span className="text-red-500">*</span>
+                  </Label>
+                  <Select value={modality} onValueChange={(v) => setModality(v as any)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MODALITIES.map((m) => (
+                        <SelectItem key={m} value={m}>{m}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs font-semibold text-gray-600 mb-1.5 block">Difficulty</Label>
+                  <Select value={difficulty} onValueChange={(v) => setDifficulty(v as any)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DIFFICULTIES.map((d) => (
+                        <SelectItem key={d} value={d}>
+                          {d.charAt(0).toUpperCase() + d.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="summary" className="text-xs font-semibold text-gray-600 mb-1.5 block">
+                  Case Summary <span className="text-red-500">*</span>
+                </Label>
+                <Textarea
+                  id="summary"
+                  value={summary}
+                  onChange={(e) => setSummary(e.target.value)}
+                  placeholder="Brief overview of the case and key echo findings…"
+                  rows={3}
+                  maxLength={5000}
+                />
+                <p className="text-xs text-gray-400 mt-1">{summary.length}/5000</p>
+              </div>
+
+              <div>
+                <Label htmlFor="history" className="text-xs font-semibold text-gray-600 mb-1.5 block">
+                  Clinical History <span className="text-gray-400 font-normal">(optional)</span>
+                </Label>
+                <Textarea
+                  id="history"
+                  value={clinicalHistory}
+                  onChange={(e) => setClinicalHistory(e.target.value)}
+                  placeholder="Relevant clinical background, presenting symptoms, prior workup… (no PHI)"
+                  rows={3}
+                  maxLength={5000}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="diagnosis" className="text-xs font-semibold text-gray-600 mb-1.5 block">
+                  Diagnosis / Key Finding <span className="text-gray-400 font-normal">(optional)</span>
+                </Label>
+                <Input
+                  id="diagnosis"
+                  value={diagnosis}
+                  onChange={(e) => setDiagnosis(e.target.value)}
+                  placeholder="e.g. Hypertrophic Obstructive Cardiomyopathy"
+                  maxLength={300}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="teaching" className="text-xs font-semibold text-gray-600 mb-1.5 block">
+                  Teaching Points <span className="text-gray-400 font-normal">(one per line, max 10)</span>
+                </Label>
+                <Textarea
+                  id="teaching"
+                  value={teachingPointsInput}
+                  onChange={(e) => setTeachingPointsInput(e.target.value)}
+                  placeholder={"LVOT obstruction worsens with Valsalva\nSystolic anterior motion of MV leaflet\nDagger-shaped CW Doppler profile"}
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="tags" className="text-xs font-semibold text-gray-600 mb-1.5 block">
+                  Tags <span className="text-gray-400 font-normal">(comma-separated, max 10)</span>
+                </Label>
+                <Input
+                  id="tags"
+                  value={tagsInput}
+                  onChange={(e) => setTagsInput(e.target.value)}
+                  placeholder="e.g. HOCM, SAM, LVOT, obstruction"
+                />
+                {parseTags().length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {parseTags().map((t) => (
+                      <span key={t} className="text-xs bg-[#189aa1]/10 text-[#189aa1] px-2 py-0.5 rounded-full">#{t}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ── Step 3: Media Upload ──────────────────────────────────────────── */}
+        {step === "Media" && (
+          <Card className="border-0 shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base text-gray-700">
+                <ImageIcon className="w-4 h-4 text-[#189aa1]" /> Images & Video Clips
+                <span className="text-xs font-normal text-gray-400 ml-auto">Optional — max 20 files, 100 MB each</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* HIPAA reminder */}
+              <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
+                <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                <span>
+                  <strong>Reminder:</strong> All uploaded images and videos must be fully de-identified.
+                  Remove patient name overlays, institution names, dates, and any other PHI from DICOM exports
+                  before uploading.
+                </span>
+              </div>
+
+              {/* Upload area */}
+              <div
+                className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center cursor-pointer hover:border-[#189aa1]/50 transition-colors"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                <p className="text-sm text-gray-500 font-medium">Click to upload images or video clips</p>
+                <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF, MP4, MOV, AVI — up to 100 MB each</p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*,video/*"
+                  multiple
+                  className="hidden"
+                  onChange={handleFileSelect}
+                />
+              </div>
+
+              {/* Media list */}
+              {media.length > 0 && (
+                <div className="space-y-2">
+                  {media.map((m, i) => (
+                    <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                      {/* Thumbnail */}
+                      <div className="w-14 h-14 rounded overflow-hidden flex-shrink-0 bg-gray-200">
+                        {m.type === "video" ? (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <PlayCircle className="w-6 h-6 text-gray-400" />
+                          </div>
+                        ) : (
+                          <img
+                            src={m.localPreview || m.url}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        {m.uploading ? (
+                          <div className="flex items-center gap-2 text-xs text-gray-400">
+                            <div className="w-3 h-3 rounded-full border-2 border-[#189aa1] border-t-transparent animate-spin" />
+                            Uploading…
+                          </div>
+                        ) : (
+                          <Input
+                            value={m.caption}
+                            onChange={(e) =>
+                              setMedia((prev) =>
+                                prev.map((item, j) => (j === i ? { ...item, caption: e.target.value } : item))
+                              )
+                            }
+                            placeholder="Caption (optional)"
+                            className="text-xs h-8"
+                            maxLength={300}
+                          />
+                        )}
+                      </div>
+                      <button
+                        onClick={() => removeMedia(i)}
+                        className="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ── Step 4: Questions ─────────────────────────────────────────────── */}
+        {step === "Questions" && (
+          <div className="space-y-4">
+            <Card className="border-0 shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base text-gray-700">
+                  <HelpCircle className="w-4 h-4 text-[#189aa1]" /> Self-Assessment Questions
+                  <span className="text-xs font-normal text-gray-400 ml-auto">Optional — max 10</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-xs text-gray-500 mb-4">
+                  Add multiple-choice questions to help learners test their understanding of the case.
+                  Each question needs at least 2 answer options and a correct answer marked.
+                </p>
+                {questions.length === 0 && (
+                  <div className="text-center py-6 text-gray-400">
+                    <HelpCircle className="w-8 h-8 mx-auto mb-2 opacity-40" />
+                    <p className="text-sm">No questions yet. Add one below.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {questions.map((q, qi) => (
+              <Card key={qi} className="border-0 shadow-sm">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm text-gray-700">Question {qi + 1}</CardTitle>
+                    <button
+                      onClick={() => removeQuestion(qi)}
+                      className="text-gray-400 hover:text-red-500 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Textarea
+                    value={q.question}
+                    onChange={(e) => updateQuestion(qi, "question", e.target.value)}
+                    placeholder="Enter your question…"
+                    rows={2}
+                    maxLength={2000}
+                  />
+                  <div className="space-y-2">
+                    <Label className="text-xs text-gray-500">Answer Options (select the correct one)</Label>
+                    {q.options.map((opt, oi) => (
+                      <div key={oi} className="flex items-center gap-2">
+                        <button
+                          onClick={() => updateQuestion(qi, "correctAnswer", oi)}
+                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                            q.correctAnswer === oi
+                              ? "border-green-500 bg-green-500 text-white"
+                              : "border-gray-300 hover:border-green-400"
+                          }`}
+                          title="Mark as correct answer"
+                        >
+                          {q.correctAnswer === oi && <CheckCircle2 className="w-3.5 h-3.5" />}
+                        </button>
+                        <Input
+                          value={opt}
+                          onChange={(e) => updateOption(qi, oi, e.target.value)}
+                          placeholder={`Option ${String.fromCharCode(65 + oi)}`}
+                          className="flex-1 text-sm"
+                          maxLength={500}
+                        />
+                        {q.options.length > 2 && (
+                          <button
+                            onClick={() => removeOption(qi, oi)}
+                            className="text-gray-300 hover:text-red-400 transition-colors"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    {q.options.length < 6 && (
+                      <button
+                        onClick={() => addOption(qi)}
+                        className="text-xs text-[#189aa1] hover:underline flex items-center gap-1 mt-1"
+                      >
+                        <Plus className="w-3 h-3" /> Add option
+                      </button>
+                    )}
+                  </div>
+                  <div>
+                    <Label className="text-xs text-gray-500 mb-1 block">Explanation (optional)</Label>
+                    <Textarea
+                      value={q.explanation}
+                      onChange={(e) => updateQuestion(qi, "explanation", e.target.value)}
+                      placeholder="Explain why the correct answer is correct…"
+                      rows={2}
+                      maxLength={2000}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+
+            {questions.length < 10 && (
+              <Button
+                variant="outline"
+                className="w-full border-dashed border-[#189aa1] text-[#189aa1] gap-2"
+                onClick={addQuestion}
+              >
+                <Plus className="w-4 h-4" /> Add Question
+              </Button>
+            )}
+          </div>
+        )}
+
+        {/* ── Step 5: Review ────────────────────────────────────────────────── */}
+        {step === "Review" && (
+          <Card className="border-0 shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base text-gray-700">
+                <BookOpen className="w-4 h-4 text-[#189aa1]" /> Review & Submit
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <p className="text-xs text-gray-400 mb-0.5">Title</p>
+                  <p className="font-semibold text-gray-800 text-xs leading-snug">{title}</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <p className="text-xs text-gray-400 mb-0.5">Modality / Difficulty</p>
+                  <p className="font-semibold text-gray-800 text-xs">{modality} · {difficulty}</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <p className="text-xs text-gray-400 mb-0.5">Media</p>
+                  <p className="font-semibold text-gray-800 text-xs">{media.filter((m) => m.url).length} file{media.filter((m) => m.url).length !== 1 ? "s" : ""}</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <p className="text-xs text-gray-400 mb-0.5">Questions</p>
+                  <p className="font-semibold text-gray-800 text-xs">{questions.length} question{questions.length !== 1 ? "s" : ""}</p>
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3">
+                <p className="text-xs text-gray-400 mb-0.5">Summary</p>
+                <p className="text-xs text-gray-700 leading-relaxed">{summary}</p>
+              </div>
+              {user?.role === "admin" ? (
+                <div className="flex items-start gap-2 p-3 bg-green-50 border border-green-200 rounded-lg text-xs text-green-800">
+                  <CheckCircle2 className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span>
+                    <strong>Admin submission:</strong> This case will be published immediately without requiring review.
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-800">
+                  <Shield className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span>
+                    Your case will be submitted for admin review. It will appear in the library once approved.
+                    You can track your submissions in your profile.
+                  </span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ── Navigation ───────────────────────────────────────────────────── */}
+        <div className="flex justify-between mt-6">
+          <Button
+            variant="outline"
+            onClick={() => setStep(STEPS[stepIdx - 1])}
+            disabled={stepIdx === 0}
+            className="gap-2"
+          >
+            <ChevronLeft className="w-4 h-4" /> Back
+          </Button>
+          {step === "Review" ? (
+            <Button
+              style={{ background: "#189aa1" }}
+              className="text-white gap-2"
+              onClick={handleSubmit}
+              disabled={submitMutation.isPending}
+            >
+              {submitMutation.isPending ? "Submitting…" : "Submit Case"}
+              <CheckCircle2 className="w-4 h-4" />
+            </Button>
+          ) : (
+            <Button
+              style={{ background: "#189aa1" }}
+              className="text-white gap-2"
+              onClick={() => setStep(STEPS[stepIdx + 1])}
+              disabled={!canAdvance()}
+            >
+              Next <ChevronRight className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+      </div>
+    </Layout>
+  );
+}

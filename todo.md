@@ -856,3 +856,57 @@
 - [x] Added buildWelcomeEmail dispatch (async, non-blocking) after pending account activation in emailAuthRouter.register
 - [x] Upgraded adminRouter sendPreRegistrationWelcome to use buildWelcomeEmail + sendEmail (SendGrid) instead of old TinyEmail inline HTML
 - [x] Vitest — 17 new tests for buildWelcomeEmail template (subject, body content, role labels, logo, branding, HTML structure) — 497 tests total passing
+
+## Case Engines — Daily QuickFire & Case Library
+
+### Phase 1: Database Schema
+- [ ] quickfireQuestions table (id, type: scenario|image|quickReview, question, options JSON, correctAnswer, explanation, imageUrl, difficulty, tags, createdBy, createdAt)
+- [ ] quickfireAttempts table (id, userId, questionId, selectedAnswer, isCorrect, timeMs, createdAt)
+- [ ] quickfireDailySets table (id, date, questionIds JSON, createdAt)
+- [ ] cases table (id, title, summary, details, diagnosis, teachingPoints, modality, difficulty, tags, status: pending|approved|rejected, submittedBy, submittedAt, reviewedBy, reviewedAt, rejectionReason, isAdminSubmission)
+- [ ] caseMedia table (id, caseId, type: image|video, url, fileKey, caption, sortOrder)
+- [ ] caseQuestions table (id, caseId, question, options JSON, correctAnswer, explanation)
+- [ ] caseAttempts table (id, userId, caseId, answers JSON, score, completedAt)
+- [ ] Run pnpm db:push
+
+### Phase 2: Backend tRPC Routers
+- [ ] quickfire router: getTodaySet, getQuestion, submitAnswer, getUserStats, getLeaderboard
+- [ ] cases router (public): listApproved, getCase, submitCase (authenticated), getUserSubmissions
+- [ ] cases router (admin): listPending, approveCase, rejectCase, editCase, deleteCase, createCase (admin direct publish)
+- [ ] S3 upload endpoint for case media (images + video)
+
+### Phase 3: Daily QuickFire UI
+- [ ] QuickFire.tsx — daily set card deck with progress bar
+- [ ] Scenario question card (text-based, multiple choice)
+- [ ] Image question card (image + multiple choice)
+- [ ] Quick review card (flashcard-style flip)
+- [ ] Results screen with score, explanations, streak counter
+- [ ] Stats panel (streak, accuracy, total answered)
+
+### Phase 4: Case Library UI
+- [ ] CaseLibrary.tsx — grid/list browse with filters (modality, difficulty, tags, search)
+- [ ] CaseDetail.tsx — image/video viewer, case summary, teaching points, embedded quiz
+- [ ] SubmitCase.tsx — multi-step form with HIPAA PHI warning banner, media upload
+- [ ] My Submissions page — status tracking (pending/approved/rejected)
+
+### Phase 5: Admin Case Management UI
+- [ ] AdminCases.tsx — pending approval queue with approve/reject actions
+- [ ] Admin case editor — create/edit cases directly (bypasses approval)
+- [ ] Rejection reason modal
+- [ ] Approved/rejected history view
+
+### Phase 6: Routes, Navigation & Tests
+- [ ] Register all new routes in App.tsx
+- [ ] Add QuickFire and Case Library to sidebar navigation
+- [ ] Add Cases to admin navigation
+- [ ] Vitest tests for case submission, approval workflow, and QuickFire scoring
+
+## LMS Engines — Case Review (Completed)
+- [x] Daily QuickFire engine — DB schema (quickfireQuestions, quickfireDailySets, quickfireUserAnswers), tRPC router (getTodaySet, submitAnswer, getUserStats, getLeaderboard, admin CRUD), QuickFire.tsx UI with streak/score/leaderboard
+- [x] Echo Case Library engine — DB schema (echoLibraryCases, echoLibraryCaseMedia, echoLibraryCaseQuestions, echoLibraryCaseAttempts), tRPC router (listCases, getCase, submitCase, submitAttempt, admin approve/reject/list), CaseLibrary.tsx browse UI, CaseDetail.tsx full case view with MCQ
+- [x] SubmitCase.tsx — user form with HIPAA/PHI reminder banner, media upload (images + video clips), MCQ builder, admin-bypass auto-approve
+- [x] AdminCaseManagement.tsx — admin UI with pending/approved/rejected tabs, approve/reject with reason, full case details modal
+- [x] Media upload REST endpoint — /api/upload/case-media (multer + S3 storagePut, auth required)
+- [x] Navigation — Layout.tsx updated with Daily QuickFire + Echo Case Library sidebar links; account dropdown includes Submit a Case + Case Management (admin only)
+- [x] App.tsx routes — /quickfire, /case-library, /case-library/submit, /case-library/:id, /admin/cases
+- [x] Vitest tests — quickfire.test.ts (6 tests), caseLibrary.test.ts (14 tests), all 518 tests passing

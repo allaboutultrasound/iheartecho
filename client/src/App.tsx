@@ -52,6 +52,13 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import MagicLinkRequest from "./pages/MagicLinkRequest";
 import MagicLinkCallback from "./pages/MagicLinkCallback";
+// New LMS engines
+import QuickFire from "./pages/QuickFire";
+import CaseLibrary from "./pages/CaseLibrary";
+import CaseDetail from "./pages/CaseDetail";
+import SubmitCase from "./pages/SubmitCase";
+import AdminCaseManagement from "./pages/AdminCaseManagement";
+
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
@@ -117,6 +124,12 @@ function Router() {
       <Route path="/tee-scan-coach" component={TEEScanCoach} />
       <Route path="/ice-scan-coach" component={ICEScanCoach} />
       <Route path="/echo-assist-hub" component={EchoAssistHub} />
+      {/* ── LMS Engines ──────────────────────────────────────────────────── */}
+      <Route path="/quickfire" component={QuickFire} />
+      <Route path="/case-library" component={CaseLibrary} />
+      <Route path="/case-library/submit" component={SubmitCase} />
+      <Route path="/case-library/:id" component={CaseDetail} />
+      <Route path="/admin/cases" component={AdminCaseManagement} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

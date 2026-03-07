@@ -9,7 +9,7 @@ import {
   Heart, Calculator, ClipboardList, Activity,
   Scan, BookOpen, FileText, Menu, X, ChevronRight,
   Stethoscope, Zap, ExternalLink, ShoppingBag, FlaskConical, MessageCircle, Award, Shield, GraduationCap,
-  BookMarked,
+  BookMarked, Library, Plus,
   LogIn, LogOut, Settings, ChevronDown
 } from "lucide-react";
 
@@ -52,6 +52,8 @@ const navGroups = [
   {
     label: "Learning",
     items: [
+      { path: "/quickfire", label: "Daily QuickFire", icon: Zap },
+      { path: "/case-library", label: "Echo Case Library", icon: Library },
       { path: "/cases", label: "Echo Case Lab", icon: BookOpen },
       { path: "/report", label: "Report Builder", icon: FileText },
       { path: "/cme", label: "CME Hub", icon: GraduationCap },
@@ -77,6 +79,8 @@ const navGroups = [
 const hiddenNavItems = [
   { path: "/image-quality-review", label: "Image Quality Review" },
   { path: "/profile", label: "My Profile" },
+  { path: "/case-library/submit", label: "Submit a Case" },
+  { path: "/admin/cases", label: "Case Management" },
 ];
 const navItems = [...navGroups.flatMap(g => g.items), ...hiddenNavItems];
 
@@ -129,7 +133,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <div key={group.label}>
               <div className="text-xs font-semibold text-white/40 uppercase tracking-wider px-3 mb-1">{group.label}</div>
               {group.items.map(({ path, label, icon: Icon, external }) => {
-                const active = !external && location === path;
+                const active = !external && (location === path || (path !== "/" && location.startsWith(path)));
                 const innerContent = (
                   <div
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 transition-all duration-150 group
@@ -241,11 +245,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   const roles = (user as any).appRoles as string[] | undefined ?? [];
                   const hasDiyAdmin = roles.includes("diy_admin");
                   const hasPlatformAdmin = roles.includes("platform_admin") || (user as any).role === "admin";
+                  const isAdmin = (user as any).role === "admin";
                   const ROLE_LABELS: Record<string, { label: string; color: string }> = {
                     premium_user:   { label: "Premium",           color: "#189aa1" },
                     diy_user:       { label: "DIY Accreditation", color: "#f59e0b" },
                     diy_admin:      { label: "Lab Admin",         color: "#f97316" },
-                    platform_admin: { label: "Platform Admin",   color: "#a78bfa" },
                   };
                   const badges = roles.filter(r => ROLE_LABELS[r]).map(r => ROLE_LABELS[r]);
                   return (
@@ -299,6 +303,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                             Edit Profile &amp; Manage Subscriptions
                           </button>
                         </WouterLink>
+                        <WouterLink href="/case-library/submit">
+                          <button onClick={() => setAccountOpen(false)}
+                            className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-[#f0fbfc] hover:text-[#189aa1] transition-all text-left">
+                            <Plus className="w-3.5 h-3.5 text-[#189aa1]" />
+                            Submit an Echo Case
+                          </button>
+                        </WouterLink>
                       </div>
 
                       {/* Lab Admin section — only for diy_admin */}
@@ -334,6 +345,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                               <PendingBadge />
                             </button>
                           </WouterLink>
+                          {isAdmin && (
+                            <WouterLink href="/admin/cases">
+                              <button onClick={() => setAccountOpen(false)}
+                                className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-all text-left">
+                                <Library className="w-3.5 h-3.5 text-purple-500" />
+                                Case Management
+                              </button>
+                            </WouterLink>
+                          )}
                         </div>
                       )}
 

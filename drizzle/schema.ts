@@ -753,3 +753,147 @@ export const cmeEnrollmentCache = mysqlTable("cmeEnrollmentCache", {
 });
 export type CmeEnrollmentCache = typeof cmeEnrollmentCache.$inferSelect;
 export type InsertCmeEnrollmentCache = typeof cmeEnrollmentCache.$inferInsert;
+
+// ─── Daily QuickFire: Questions ───────────────────────────────────────────────
+// Individual questions for the Daily QuickFire engine.
+// Types: scenario (text-only MCQ), image (image + MCQ), quickReview (flashcard).
+export const quickfireQuestions = mysqlTable("quickfireQuestions", {
+  id: int("id").primaryKey().autoincrement(),
+  type: mysqlEnum("type", ["scenario", "image", "quickReview"]).notNull(),
+  question: text("question").notNull(),
+  // JSON: string[] — answer choices (for scenario/image types)
+  options: text("options"),
+  // Index into options array (0-based) for the correct answer
+  correctAnswer: int("correctAnswer"),
+  // Explanation shown after answering
+  explanation: text("explanation"),
+  // For quickReview: the "back" of the flashcard
+  reviewAnswer: text("reviewAnswer"),
+  // For image type: CDN URL of the echo image
+  imageUrl: text("imageUrl"),
+  difficulty: mysqlEnum("difficulty", ["beginner", "intermediate", "advanced"]).default("intermediate").notNull(),
+  // JSON: string[] — topic tags (e.g. ["AS", "LV function", "TEE"])
+  tags: text("tags"),
+  // Whether this question is active and eligible for daily sets
+  isActive: boolean("isActive").default(true).notNull(),
+  createdByUserId: int("createdByUserId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type QuickfireQuestion = typeof quickfireQuestions.$inferSelect;
+export type InsertQuickfireQuestion = typeof quickfireQuestions.$inferInsert;
+
+// ─── Daily QuickFire: Daily Sets ──────────────────────────────────────────────
+// One row per calendar date — defines the set of questions for that day.
+export const quickfireDailySets = mysqlTable("quickfireDailySets", {
+  id: int("id").primaryKey().autoincrement(),
+  // YYYY-MM-DD date string (UTC)
+  setDate: varchar("setDate", { length: 10 }).notNull().unique(),
+  // JSON: number[] — ordered list of quickfireQuestion IDs
+  questionIds: text("questionIds").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type QuickfireDailySet = typeof quickfireDailySets.$inferSelect;
+export type InsertQuickfireDailySet = typeof quickfireDailySets.$inferInsert;
+
+// ─── Daily QuickFire: User Attempts ──────────────────────────────────────────
+// One row per user per question per day attempt.
+export const quickfireAttempts = mysqlTable("quickfireAttempts", {
+  id: int("id").primaryKey().autoincrement(),
+  userId: int("userId").notNull(),
+  questionId: int("questionId").notNull(),
+  // YYYY-MM-DD of the daily set this attempt belongs to
+  setDate: varchar("setDate", { length: 10 }).notNull(),
+  // For MCQ: index of selected option; for quickReview: null (self-assessed)
+  selectedAnswer: int("selectedAnswer"),
+  // For quickReview: user self-assessed as correct
+  selfMarkedCorrect: boolean("selfMarkedCorrect"),
+  isCorrect: boolean("isCorrect"),
+  // Time taken in milliseconds
+  timeMs: int("timeMs"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type QuickfireAttempt = typeof quickfireAttempts.$inferSelect;
+export type InsertQuickfireAttempt = typeof quickfireAttempts.$inferInsert;
+
+// ─── Case Library: Cases ─────────────────────────────────────────────────────
+// Educational echo cases submitted by users or admins.
+// User-submitted cases require admin approval before appearing in the library.
+export const echoLibraryCases = mysqlTable("echoLibraryCases", {
+  id: int("id").primaryKey().autoincrement(),
+  title: varchar("title", { length: 300 }).notNull(),
+  summary: text("summary").notNull(),
+  // Full clinical details / history
+  clinicalHistory: text("clinicalHistory"),
+  // Final diagnosis / key finding
+  diagnosis: varchar("diagnosis", { length: 300 }),
+  // Teaching points (JSON: string[])
+  teachingPoints: text("teachingPoints"),
+  modality: mysqlEnum("modality", ["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "Other"]).notNull(),
+  difficulty: mysqlEnum("difficulty", ["beginner", "intermediate", "advanced"]).default("intermediate").notNull(),
+  // JSON: string[] — topic tags
+  tags: text("tags"),
+  // Approval workflow
+  status: mysqlEnum("status", ["pending", "approved", "rejected"]).default("pending").notNull(),
+  // Whether submitted directly by an admin (auto-approved)
+  isAdminSubmission: boolean("isAdminSubmission").default(false).notNull(),
+  submittedByUserId: int("submittedByUserId").notNull(),
+  submittedAt: timestamp("submittedAt").defaultNow().notNull(),
+  reviewedByUserId: int("reviewedByUserId"),
+  reviewedAt: timestamp("reviewedAt"),
+  rejectionReason: text("rejectionReason"),
+  // HIPAA acknowledgement: user confirmed no PHI at submission time
+  hipaaAcknowledged: boolean("hipaaAcknowledged").default(false).notNull(),
+  // View / engagement counts
+  viewCount: int("viewCount").default(0).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type EchoLibraryCase = typeof echoLibraryCases.$inferSelect;
+export type InsertEchoLibraryCase = typeof echoLibraryCases.$inferInsert;
+
+// ─── Case Library: Media ─────────────────────────────────────────────────────
+// Images and video clips attached to a case.
+export const echoLibraryCaseMedia = mysqlTable("echoLibraryCaseMedia", {
+  id: int("id").primaryKey().autoincrement(),
+  caseId: int("caseId").notNull(),
+  type: mysqlEnum("type", ["image", "video"]).notNull(),
+  url: text("url").notNull(),
+  fileKey: varchar("fileKey", { length: 500 }).notNull(),
+  caption: varchar("caption", { length: 300 }),
+  // Display order within the case
+  sortOrder: int("sortOrder").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type EchoLibraryCaseMedia = typeof echoLibraryCaseMedia.$inferSelect;
+export type InsertEchoLibraryCaseMedia = typeof echoLibraryCaseMedia.$inferInsert;
+
+// ─── Case Library: Questions ─────────────────────────────────────────────────
+// MCQ questions embedded within a case for self-assessment.
+export const echoLibraryCaseQuestions = mysqlTable("echoLibraryCaseQuestions", {
+  id: int("id").primaryKey().autoincrement(),
+  caseId: int("caseId").notNull(),
+  question: text("question").notNull(),
+  // JSON: string[] — answer choices
+  options: text("options").notNull(),
+  correctAnswer: int("correctAnswer").notNull(),
+  explanation: text("explanation"),
+  sortOrder: int("sortOrder").default(0).notNull(),
+});
+export type EchoLibraryCaseQuestion = typeof echoLibraryCaseQuestions.$inferSelect;
+export type InsertEchoLibraryCaseQuestion = typeof echoLibraryCaseQuestions.$inferInsert;
+
+// ─── Case Library: User Attempts ─────────────────────────────────────────────
+// Tracks whether a user has completed a case and their score.
+export const echoLibraryCaseAttempts = mysqlTable("echoLibraryCaseAttempts", {
+  id: int("id").primaryKey().autoincrement(),
+  userId: int("userId").notNull(),
+  caseId: int("caseId").notNull(),
+  // JSON: { [questionId: number]: number } — selected answer per question
+  answers: text("answers"),
+  // Number of correct answers
+  score: int("score").default(0).notNull(),
+  totalQuestions: int("totalQuestions").default(0).notNull(),
+  completedAt: timestamp("completedAt").defaultNow().notNull(),
+});
+export type EchoLibraryCaseAttempt = typeof echoLibraryCaseAttempts.$inferSelect;
+export type InsertEchoLibraryCaseAttempt = typeof echoLibraryCaseAttempts.$inferInsert;

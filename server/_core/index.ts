@@ -6,6 +6,7 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { registerChatRoutes } from "./chat";
 import { registerThinkificWebhook } from "../webhooks/thinkific";
+import { registerUploadCaseMediaRoute } from "../routes/uploadCaseMedia";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -41,6 +42,8 @@ async function startServer() {
   registerChatRoutes(app);
   // Thinkific webhook for live course sync
   registerThinkificWebhook(app);
+  // Case media upload endpoint (multipart/form-data)
+  registerUploadCaseMediaRoute(app);
   // tRPC API
   app.use(
     "/api/trpc",
