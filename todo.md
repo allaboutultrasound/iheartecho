@@ -1118,3 +1118,7 @@
 ## HOCM Color Fix
 - [x] Replace purple banner and accents in HOCMNavigator.tsx with brand teal/dark navy
 - [x] Replace purple banner and accents in HOCMScanCoach.tsx with brand teal/dark navy
+
+## Valsalva Comparison — HOCM
+- [ ] Add goal-directed vs instructed Valsalva comparison section to HOCMNavigator.tsx
+- [ ] Add goal-directed vs instructed Valsalva comparison section to HOCMScanCoach.tsx
