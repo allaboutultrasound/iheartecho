@@ -774,6 +774,32 @@ export default function QuickFireAdmin() {
                 <label className="text-xs font-semibold text-gray-600 mb-1.5 block">
                   Tags <span className="text-gray-400 font-normal">(comma-separated)</span>
                 </label>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo"].map((cat) => {
+                    const currentTags = form.tags.split(",").map((t) => t.trim()).filter(Boolean);
+                    const isActive = currentTags.includes(cat);
+                    return (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => {
+                          const tags = form.tags.split(",").map((t) => t.trim()).filter(Boolean);
+                          const updated = isActive
+                            ? tags.filter((t) => t !== cat)
+                            : [...tags, cat];
+                          setForm((f) => ({ ...f, tags: updated.join(", ") }));
+                        }}
+                        className={`text-xs px-2.5 py-1 rounded-full border font-medium transition-all ${
+                          isActive
+                            ? "border-[#189aa1] bg-[#189aa1] text-white"
+                            : "border-gray-200 bg-gray-50 text-gray-600 hover:border-[#189aa1] hover:text-[#189aa1]"
+                        }`}
+                      >
+                        {isActive ? "✓ " : ""}{cat}
+                      </button>
+                    );
+                  })}
+                </div>
                 <Input
                   value={form.tags}
                   onChange={(e) => setForm((f) => ({ ...f, tags: e.target.value }))}
@@ -815,6 +841,27 @@ export default function QuickFireAdmin() {
             <div className="space-y-3">
               <div>
                 <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Clinical Topic <span className="text-red-500">*</span></label>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {[
+                    { label: "ACS", topic: "Echocardiographic assessment in Acute Coronary Syndrome (ACS) — RWMA, LV function, complications" },
+                    { label: "Adult Echo", topic: "Adult transthoracic echocardiography — valvular disease, LV/RV function, Doppler assessment" },
+                    { label: "Pediatric Echo", topic: "Pediatric echocardiography — congenital heart disease, Z-scores, shunt assessment, CHD lesions" },
+                    { label: "Fetal Echo", topic: "Fetal echocardiography — fetal cardiac anatomy, CHD screening, biometry, situs, arch patterns" },
+                  ].map(({ label, topic }) => (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => setAiTopic(topic)}
+                      className={`text-xs px-2.5 py-1 rounded-full border font-medium transition-all ${
+                        aiTopic === topic
+                          ? "border-[#189aa1] bg-[#189aa1] text-white"
+                          : "border-gray-200 bg-gray-50 text-gray-600 hover:border-[#189aa1] hover:text-[#189aa1]"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
                 <Textarea
                   placeholder="e.g. Aortic stenosis severity grading by Doppler, diastolic dysfunction assessment, TAPSE and RV function..."
                   value={aiTopic}

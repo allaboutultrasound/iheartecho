@@ -1170,3 +1170,14 @@
 
 ## QuickFire AI Generator — HTML Response Error
 - [x] Fix QuickFire AI generator returning HTML instead of JSON (wrapped generateText in try-catch, added ENV credential check, errors now returned as proper tRPC errors)
+
+## QuickFire Tags
+- [ ] Add ACS, Adult Echo, Pediatric Echo, Fetal Echo as predefined tags in QuickFireAdmin editor
+- [ ] Add the four tags as filter options in QuickFire player UI
+- [ ] Add the four tags as suggested topics in the AI generator
+
+## QuickFire Category Tags
+- [x] Add ACS, Adult Echo, Pediatric Echo, Fetal Echo tag badges to QuickFire admin question form (clickable toggle chips)
+- [x] Add ACS, Adult Echo, Pediatric Echo, Fetal Echo quick-select chips to AI generator dialog (auto-fills topic textarea)
+- [x] Add category tag filter chips to QuickFire player UI (client-side filter, resets question index on selection)
+- [x] Fix HOCMScanCoach.tsx JSX error — unescaped > in Valsalva advantage note replaced with &times;

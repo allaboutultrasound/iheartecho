@@ -59,6 +59,8 @@ type AnswerResult = {
   reviewAnswer: string | null;
 };
 
+const CATEGORY_TAGS = ["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo"] as const;
+
 export default function QuickFire() {
   const { isAuthenticated } = useAuth();
   const today = new Date().toISOString().slice(0, 10);
@@ -76,9 +78,21 @@ export default function QuickFire() {
   const [sessionResults, setSessionResults] = useState<Array<{ correct: boolean | null }>>([]);
   const [showResults, setShowResults] = useState(false);
   const [flipped, setFlipped] = useState(false); // for quickReview flashcard
+  const [activeTagFilter, setActiveTagFilter] = useState<string | null>(null);
 
-  const questions = data?.questions ?? [];
+  const allQuestions = data?.questions ?? [];
   const userAttempts = data?.userAttempts ?? {};
+
+  // Derive which category tags are present in today's set
+  const presentTags = CATEGORY_TAGS.filter((cat) =>
+    allQuestions.some((q) => Array.isArray(q.tags) && q.tags.includes(cat))
+  );
+
+  // Apply tag filter
+  const questions = activeTagFilter
+    ? allQuestions.filter((q) => Array.isArray(q.tags) && q.tags.includes(activeTagFilter))
+    : allQuestions;
+
   const currentQ = questions[currentIndex];
 
   // Detect if already completed today (all questions have attempts)
@@ -157,7 +171,19 @@ export default function QuickFire() {
     setSessionResults([]);
     setShowResults(false);
     setFlipped(false);
+    setActiveTagFilter(null);
     refetch();
+  };
+
+  const handleTagFilter = (tag: string | null) => {
+    setActiveTagFilter(tag);
+    setCurrentIndex(0);
+    setSelectedAnswer(null);
+    setAnswered(false);
+    setAnswerResult(null);
+    setSessionResults([]);
+    setShowResults(false);
+    setFlipped(false);
   };
 
   // ── Not logged in ──────────────────────────────────────────────────────────
@@ -364,6 +390,40 @@ export default function QuickFire() {
         </div>
 
         <Progress value={progress} className="mb-6 h-2" />
+
+        {/* Category tag filters — only shown when today's set has tagged questions */}
+        {presentTags.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            <button
+              onClick={() => handleTagFilter(null)}
+              className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-all ${
+                activeTagFilter === null
+                  ? "border-[#189aa1] bg-[#189aa1] text-white"
+                  : "border-gray-200 bg-white text-gray-500 hover:border-[#189aa1] hover:text-[#189aa1]"
+              }`}
+            >
+              All ({allQuestions.length})
+            </button>
+            {presentTags.map((tag) => {
+              const count = allQuestions.filter(
+                (q) => Array.isArray(q.tags) && q.tags.includes(tag)
+              ).length;
+              return (
+                <button
+                  key={tag}
+                  onClick={() => handleTagFilter(tag)}
+                  className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-all ${
+                    activeTagFilter === tag
+                      ? "border-[#189aa1] bg-[#189aa1] text-white"
+                      : "border-gray-200 bg-white text-gray-500 hover:border-[#189aa1] hover:text-[#189aa1]"
+                  }`}
+                >
+                  {tag} ({count})
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         <Card className="shadow-lg border-0">
           <CardHeader className="pb-3">

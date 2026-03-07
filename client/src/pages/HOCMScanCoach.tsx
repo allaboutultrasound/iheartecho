@@ -1116,7 +1116,7 @@ export default function HOCMScanCoach() {
               <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-50 border border-amber-200">
                 <Info className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
                 <p className="text-xs text-amber-800 leading-relaxed">
-                  <strong>Goal-Directed Valsalva advantage:</strong> By standardizing the strain effort to 40 mmHg or more x 10 seconds, you ensure Phase II is sustained long enough to adequately reduce LV preload and unmask the maximum provoked gradient in Phase IV. Instructed Valsalva often fails to sustain Phase II adequately, leading to false-negative results.
+                  <strong>Goal-Directed Valsalva advantage:</strong> By standardizing the strain effort to 40 mmHg or more &times; 10 seconds, you ensure Phase II is sustained long enough to adequately reduce LV preload and unmask the maximum provoked gradient in Phase IV. Instructed Valsalva often fails to sustain Phase II adequately, leading to false-negative results.
                 </p>
               </div>
             </div>
