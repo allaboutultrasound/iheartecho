@@ -534,6 +534,53 @@ Return exactly ${input.count} questions.`,
       };
     }),
 
+  bulkImportQuestions: adminProcedure
+    .input(
+      z.object({
+        questions: z
+          .array(
+            z.object({
+              type: z.enum(["scenario", "image", "quickReview"]),
+              question: z.string().min(5).max(2000),
+              options: z.array(z.string().min(1)).min(2).max(6).optional(),
+              correctAnswer: z.number().int().min(0).optional(),
+              explanation: z.string().max(2000).optional(),
+              reviewAnswer: z.string().max(2000).optional(),
+              imageUrl: z.string().url().optional(),
+              difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("intermediate"),
+              tags: z.array(z.string()).default([]),
+            })
+          )
+          .min(1)
+          .max(500),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const rows = input.questions.map((q) => ({
+        type: q.type,
+        question: q.question,
+        options: q.options ? JSON.stringify(q.options) : null,
+        correctAnswer: q.correctAnswer ?? null,
+        explanation: q.explanation ?? null,
+        reviewAnswer: q.reviewAnswer ?? null,
+        imageUrl: q.imageUrl ?? null,
+        difficulty: q.difficulty,
+        tags: JSON.stringify(q.tags),
+        isActive: true,
+        createdByUserId: ctx.user.id,
+      }));
+      // Insert in batches of 50 to avoid hitting DB limits
+      const BATCH = 50;
+      let inserted = 0;
+      for (let i = 0; i < rows.length; i += BATCH) {
+        await db.insert(quickfireQuestions).values(rows.slice(i, i + BATCH));
+        inserted += Math.min(BATCH, rows.length - i);
+      }
+      return { inserted };
+    }),
+
   generateDailySet: adminProcedure
     .input(z.object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional() }))
     .mutation(async ({ input }) => {

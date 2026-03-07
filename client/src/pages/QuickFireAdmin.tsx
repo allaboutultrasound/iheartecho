@@ -55,6 +55,9 @@ import {
   Loader2,
   CheckSquare,
   Square,
+  Upload,
+  Download,
+  AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -109,6 +112,104 @@ export default function QuickFireAdmin() {
   // Daily set generator
   const [genDate, setGenDate] = useState(new Date().toISOString().slice(0, 10));
   const [genOpen, setGenOpen] = useState(false);
+  // CSV Import
+  const [csvOpen, setCsvOpen] = useState(false);
+  const [csvRows, setCsvRows] = useState<any[]>([]);
+  const [csvErrors, setCsvErrors] = useState<{ row: number; message: string }[]>([]);
+  const [csvSelected, setCsvSelected] = useState<Set<number>>(new Set());
+  const [csvDragging, setCsvDragging] = useState(false);
+
+  const bulkImportMutation = trpc.quickfire.bulkImportQuestions.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Imported ${data.inserted} question${data.inserted !== 1 ? "s" : ""} successfully`);
+      setCsvOpen(false);
+      setCsvRows([]);
+      setCsvErrors([]);
+      setCsvSelected(new Set());
+      utils.quickfire.listAllQuestions.invalidate();
+    },
+    onError: (err) => toast.error(`Import failed: ${err.message}`),
+  });
+
+  function parseCsv(text: string) {
+    const lines = text.split(/\r?\n/).filter((l) => l.trim());
+    if (lines.length < 2) {
+      setCsvErrors([{ row: 0, message: "File must have a header row and at least one data row." }]);
+      setCsvRows([]);
+      return;
+    }
+    const header = lines[0].split(",").map((h) => h.trim().toLowerCase());
+    const required = ["type", "question", "difficulty"];
+    const missing = required.filter((r) => !header.includes(r));
+    if (missing.length > 0) {
+      setCsvErrors([{ row: 0, message: `Missing required columns: ${missing.join(", ")}` }]);
+      setCsvRows([]);
+      return;
+    }
+    const rows: any[] = [];
+    const errors: { row: number; message: string }[] = [];
+    for (let i = 1; i < lines.length; i++) {
+      const cols: string[] = [];
+      let cur = "";
+      let inQuote = false;
+      for (const ch of lines[i]) {
+        if (ch === '"') { inQuote = !inQuote; }
+        else if (ch === "," && !inQuote) { cols.push(cur.trim()); cur = ""; }
+        else { cur += ch; }
+      }
+      cols.push(cur.trim());
+      const get = (key: string) => cols[header.indexOf(key)] ?? "";
+      const type = get("type").toLowerCase();
+      const question = get("question");
+      const difficulty = get("difficulty").toLowerCase();
+      const rowErrors: string[] = [];
+      if (!["scenario", "image", "quickreview"].includes(type)) rowErrors.push(`type must be scenario, image, or quickReview`);
+      if (question.length < 5) rowErrors.push("question must be at least 5 characters");
+      if (!["beginner", "intermediate", "advanced"].includes(difficulty)) rowErrors.push(`difficulty must be beginner, intermediate, or advanced`);
+      if (rowErrors.length > 0) { errors.push({ row: i, message: rowErrors.join("; ") }); continue; }
+      const optionKeys = ["option_a", "option_b", "option_c", "option_d", "option_e", "option_f"];
+      const options = optionKeys.map((k) => get(k)).filter((v) => v.length > 0);
+      const correctAnswerRaw = get("correct_answer");
+      const correctAnswer = correctAnswerRaw !== "" ? parseInt(correctAnswerRaw, 10) : undefined;
+      const tags = get("tags") ? get("tags").split("|").map((t: string) => t.trim()).filter(Boolean) : [];
+      rows.push({
+        type: type === "quickreview" ? "quickReview" : type,
+        question,
+        options: options.length >= 2 ? options : undefined,
+        correctAnswer: correctAnswer !== undefined && !isNaN(correctAnswer) ? correctAnswer : undefined,
+        explanation: get("explanation") || undefined,
+        reviewAnswer: get("review_answer") || undefined,
+        imageUrl: get("image_url") || undefined,
+        difficulty,
+        tags,
+      });
+    }
+    setCsvRows(rows);
+    setCsvErrors(errors);
+    setCsvSelected(new Set(rows.map((_: any, i: number) => i)));
+  }
+
+  function handleCsvFile(file: File) {
+    if (!file.name.endsWith(".csv") && file.type !== "text/csv") { toast.error("Please upload a .csv file"); return; }
+    const reader = new FileReader();
+    reader.onload = (e) => parseCsv((e.target?.result as string) ?? "");
+    reader.readAsText(file);
+  }
+
+  function downloadTemplate() {
+    const header = "type,question,option_a,option_b,option_c,option_d,correct_answer,explanation,review_answer,image_url,difficulty,tags";
+    const examples = [
+      `scenario,"A 65-year-old presents with exertional dyspnea. Echo shows peak gradient 64 mmHg and AVA 0.8 cm². What is the severity?",Mild AS,Moderate AS,Severe AS,Very Severe AS,2,"AVA <1.0 cm² and mean gradient >40 mmHg meets criteria for severe AS per ASE 2021 guidelines.",,, intermediate,"aortic stenosis|ASE 2021|Doppler"`,
+      `quickReview,"What is the normal range for LVEF by biplane Simpson's method?",,,,,,, "55-70% is considered normal LVEF by biplane Simpson's method.",, beginner,"LVEF|LV function"`,
+    ];
+    const csv = [header, ...examples].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "quickfire_questions_template.csv"; a.click();
+    URL.revokeObjectURL(url);
+  }
+
   // AI generator
   const [aiOpen, setAiOpen] = useState(false);
   const [aiTopic, setAiTopic] = useState("");
@@ -303,6 +404,14 @@ export default function QuickFireAdmin() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 border-green-500 text-green-600"
+              onClick={() => { setCsvRows([]); setCsvErrors([]); setCsvSelected(new Set()); setCsvOpen(true); }}
+            >
+              <Upload className="w-4 h-4" /> CSV Import
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -819,6 +928,129 @@ export default function QuickFireAdmin() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => { setAiOpen(false); setAiPreview([]); setAiTopic(""); }}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── CSV Import Dialog ─────────────────────────────────────────────────── */}
+      <Dialog open={csvOpen} onOpenChange={(open) => { setCsvOpen(open); if (!open) { setCsvRows([]); setCsvErrors([]); setCsvSelected(new Set()); } }}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Upload className="w-5 h-5 text-green-600" /> Bulk Import Questions via CSV
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            {/* Template download */}
+            <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-4 py-3">
+              <div>
+                <p className="text-sm font-semibold text-green-800">Download Template</p>
+                <p className="text-xs text-green-600">Required columns: type, question, difficulty. Optional: option_a–f, correct_answer, explanation, review_answer, image_url, tags (pipe-separated)</p>
+              </div>
+              <Button variant="outline" size="sm" className="gap-1.5 border-green-500 text-green-600 flex-shrink-0" onClick={downloadTemplate}>
+                <Download className="w-4 h-4" /> Template
+              </Button>
+            </div>
+
+            {/* Drag-and-drop upload zone */}
+            <div
+              className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer ${
+                csvDragging ? "border-green-400 bg-green-50" : "border-gray-200 hover:border-green-300"
+              }`}
+              onDragOver={(e) => { e.preventDefault(); setCsvDragging(true); }}
+              onDragLeave={() => setCsvDragging(false)}
+              onDrop={(e) => { e.preventDefault(); setCsvDragging(false); const file = e.dataTransfer.files[0]; if (file) handleCsvFile(file); }}
+              onClick={() => { const input = document.createElement("input"); input.type = "file"; input.accept = ".csv,text/csv"; input.onchange = (e) => { const file = (e.target as HTMLInputElement).files?.[0]; if (file) handleCsvFile(file); }; input.click(); }}
+            >
+              <Upload className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+              <p className="text-sm font-medium text-gray-600">Drop a CSV file here, or click to browse</p>
+              <p className="text-xs text-gray-400 mt-1">Supports .csv files up to 500 rows</p>
+            </div>
+
+            {/* Validation errors */}
+            {csvErrors.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-red-600 flex items-center gap-1"><AlertCircle className="w-3.5 h-3.5" /> {csvErrors.length} row{csvErrors.length !== 1 ? "s" : ""} with errors (skipped)</p>
+                <div className="max-h-32 overflow-y-auto space-y-1">
+                  {csvErrors.map((e) => (
+                    <div key={e.row} className="text-xs bg-red-50 border border-red-100 rounded px-3 py-1.5">
+                      <span className="font-semibold text-red-600">Row {e.row}:</span> {e.message}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Preview table */}
+            {csvRows.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-gray-700">{csvRows.length} valid row{csvRows.length !== 1 ? "s" : ""} ready to import</p>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="sm" className="text-xs" onClick={() => setCsvSelected(new Set(csvRows.map((_: any, i: number) => i)))}>
+                      <CheckSquare className="w-3.5 h-3.5 mr-1" /> Select All
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-xs" onClick={() => setCsvSelected(new Set())}>
+                      <Square className="w-3.5 h-3.5 mr-1" /> Deselect All
+                    </Button>
+                  </div>
+                </div>
+                <div className="max-h-64 overflow-y-auto border rounded-lg divide-y">
+                  {csvRows.map((row: any, i: number) => {
+                    const meta = TYPE_META[row.type as QuestionType] ?? TYPE_META.scenario;
+                    const Icon = meta.icon;
+                    const selected = csvSelected.has(i);
+                    return (
+                      <div
+                        key={i}
+                        className={`flex items-start gap-3 px-3 py-2.5 cursor-pointer transition-colors ${
+                          selected ? "bg-green-50" : "bg-white hover:bg-gray-50"
+                        }`}
+                        onClick={() => {
+                          const next = new Set(csvSelected);
+                          if (next.has(i)) next.delete(i); else next.add(i);
+                          setCsvSelected(next);
+                        }}
+                      >
+                        <div className="mt-0.5">{selected ? <CheckSquare className="w-4 h-4 text-green-500" /> : <Square className="w-4 h-4 text-gray-300" />}</div>
+                        <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${meta.color}`}>
+                          <Icon className="w-3 h-3" />{row.type === "quickReview" ? "QR" : row.type === "image" ? "IMG" : "MCQ"}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-gray-800 line-clamp-2">{row.question}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className={`text-xs px-1 rounded ${
+                              row.difficulty === "beginner" ? "bg-green-50 text-green-600" :
+                              row.difficulty === "advanced" ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-600"
+                            }`}>{row.difficulty}</span>
+                            {row.options && <span className="text-xs text-gray-400">{row.options.length} options</span>}
+                            {(row.tags ?? []).slice(0, 2).map((t: string) => <span key={t} className="text-xs text-gray-400">#{t}</span>)}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-gray-400">{csvSelected.size} of {csvRows.length} selected for import</p>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCsvOpen(false)}>Cancel</Button>
+            <Button
+              className="text-white gap-2"
+              style={{ background: "#189aa1" }}
+              disabled={csvSelected.size === 0 || bulkImportMutation.isPending}
+              onClick={() => {
+                const selectedRows = csvRows.filter((_: any, i: number) => csvSelected.has(i));
+                bulkImportMutation.mutate({ questions: selectedRows });
+              }}
+            >
+              {bulkImportMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+              {bulkImportMutation.isPending ? "Importing…" : `Import ${csvSelected.size} Question${csvSelected.size !== 1 ? "s" : ""}`}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

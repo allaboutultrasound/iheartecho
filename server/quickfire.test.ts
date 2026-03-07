@@ -94,6 +94,65 @@ describe("quickfire.getLeaderboard", () => {
   });
 });
 
+// ── Bulk Import Procedures ──────────────────────────────────────────────────
+
+describe("quickfire.bulkImportQuestions", () => {
+  it("throws UNAUTHORIZED when called without authentication", async () => {
+    const caller = appRouter.createCaller(makeCtx(null));
+    await expect(
+      caller.quickfire.bulkImportQuestions({
+        questions: [
+          { type: "scenario", question: "What is the normal LVEF range?", options: ["40-50%", "55-70%", "70-80%", "30-40%"], correctAnswer: 1, difficulty: "beginner" },
+        ],
+      })
+    ).rejects.toThrow();
+  });
+
+  it("throws FORBIDDEN for non-admin users", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeUser()));
+    await expect(
+      caller.quickfire.bulkImportQuestions({
+        questions: [
+          { type: "scenario", question: "What is the normal LVEF range?", options: ["40-50%", "55-70%", "70-80%", "30-40%"], correctAnswer: 1, difficulty: "beginner" },
+        ],
+      })
+    ).rejects.toThrow();
+  });
+
+  it("rejects empty questions array (min 1)", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeAdminUser()));
+    await expect(
+      caller.quickfire.bulkImportQuestions({ questions: [] })
+    ).rejects.toThrow();
+  });
+
+  it("rejects questions array exceeding 500 items", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeAdminUser()));
+    const questions = Array.from({ length: 501 }, (_, i) => ({
+      type: "scenario" as const,
+      question: `Question ${i + 1} — what is the correct answer for this clinical scenario?`,
+      options: ["Option A", "Option B", "Option C", "Option D"],
+      correctAnswer: 0,
+      difficulty: "beginner" as const,
+    }));
+    await expect(
+      caller.quickfire.bulkImportQuestions({ questions })
+    ).rejects.toThrow();
+  });
+
+  it("throws INTERNAL_SERVER_ERROR when DB unavailable (admin)", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeAdminUser()));
+    await expect(
+      caller.quickfire.bulkImportQuestions({
+        questions: [
+          { type: "scenario", question: "A patient has AVA 0.8 cm² and peak gradient 64 mmHg. What severity?", options: ["Mild AS", "Moderate AS", "Severe AS", "Critical AS"], correctAnswer: 2, difficulty: "intermediate" },
+          { type: "quickReview", question: "What is the normal range for LVEF?", reviewAnswer: "55–70% by biplane Simpson's method.", difficulty: "beginner" },
+        ],
+      })
+    ).rejects.toThrow("DB unavailable");
+  });
+});
+
 // ── AI Generator Procedures ──────────────────────────────────────────────────
 
 describe("quickfire.aiGenerateQuestions", () => {

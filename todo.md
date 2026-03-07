@@ -957,9 +957,9 @@
 - [ ] vitest tests for getMyCase and updateCase
 
 ## QuickFire CSV Bulk Import
-- [ ] Add bulkImportQuestions tRPC procedure to quickfire router
-- [ ] Build CSV import UI in QuickFireAdmin.tsx (template download, upload, parse, preview, confirm)
-- [ ] Write vitest tests for bulkImportQuestions
+- [x] Add bulkImportQuestions tRPC procedure to quickfire router
+- [x] Build CSV import UI in QuickFireAdmin.tsx (template download, upload, parse, preview, confirm)
+- [x] Write vitest tests for bulkImportQuestions
 
 ## AI Bulk Content Generator
 - [x] Add quickfire.aiGenerateQuestions tRPC procedure (AI generates N questions for a given topic/type)
@@ -967,3 +967,8 @@
 - [x] Build AI question generator panel in QuickFireAdmin.tsx (topic input, count, type, preview, bulk insert)
 - [x] Build AI case generator panel in AdminCaseManagement.tsx (scenario prompt, preview, save as draft)
 - [x] Write vitest tests for both AI procedures
+
+## QuickFire CSV Bulk Import
+- [ ] Add bulkImportQuestions tRPC procedure to quickfireRouter
+- [ ] Build CSV import UI in QuickFireAdmin.tsx (template download, drag-and-drop, parse, validate, preview, bulk insert)
+- [x] Write vitest tests for bulkImportQuestions
