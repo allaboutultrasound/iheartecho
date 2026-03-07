@@ -81,6 +81,7 @@ const hiddenNavItems = [
   { path: "/profile", label: "My Profile" },
   { path: "/case-library/submit", label: "Submit a Case" },
   { path: "/admin/cases", label: "Case Management" },
+  { path: "/admin/quickfire", label: "QuickFire Admin" },
 ];
 const navItems = [...navGroups.flatMap(g => g.items), ...hiddenNavItems];
 
@@ -346,13 +347,22 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                             </button>
                           </WouterLink>
                           {isAdmin && (
-                            <WouterLink href="/admin/cases">
-                              <button onClick={() => setAccountOpen(false)}
-                                className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-all text-left">
-                                <Library className="w-3.5 h-3.5 text-purple-500" />
-                                Case Management
-                              </button>
-                            </WouterLink>
+                            <>
+                              <WouterLink href="/admin/cases">
+                                <button onClick={() => setAccountOpen(false)}
+                                  className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-all text-left">
+                                  <Library className="w-3.5 h-3.5 text-purple-500" />
+                                  Case Management
+                                </button>
+                              </WouterLink>
+                              <WouterLink href="/admin/quickfire">
+                                <button onClick={() => setAccountOpen(false)}
+                                  className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-all text-left">
+                                  <Zap className="w-3.5 h-3.5 text-purple-500" />
+                                  QuickFire Admin
+                                </button>
+                              </WouterLink>
+                            </>
                           )}
                         </div>
                       )}

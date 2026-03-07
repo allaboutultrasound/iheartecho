@@ -910,3 +910,23 @@
 - [x] Navigation — Layout.tsx updated with Daily QuickFire + Echo Case Library sidebar links; account dropdown includes Submit a Case + Case Management (admin only)
 - [x] App.tsx routes — /quickfire, /case-library, /case-library/submit, /case-library/:id, /admin/cases
 - [x] Vitest tests — quickfire.test.ts (6 tests), caseLibrary.test.ts (14 tests), all 518 tests passing
+
+## LMS Engine Enhancements (In Progress)
+- [ ] QuickFire — image-based question type (imageUrl field, image displayed above question text in player + admin builder)
+- [ ] QuickFire — quick-review item type (flashcard-style: front text, reveal answer, no MCQ options)
+- [ ] QuickFire — question type selector in admin builder (scenario / image-based / quick-review)
+- [ ] QuickFire — player renders correct UI per question type
+- [ ] SubmitCase — draft save (save progress without submitting, resume later)
+- [ ] SubmitCase — My Submissions tab/page showing user's own pending/approved/rejected cases
+- [ ] CaseLibrary — My Submissions tab visible when authenticated
+- [ ] AdminCaseManagement — full media preview (image carousel + video player) inside case detail modal
+- [ ] AdminCaseManagement — inline approve/reject buttons inside the detail modal
+- [ ] AdminCaseManagement — show MCQ questions and correct answers in detail modal
+
+## LMS Engine Enhancements (Iteration 2)
+- [x] QuickFireAdmin page — type-aware question builder (scenario/image/quickReview), daily set generator, question list with filter/pagination
+- [x] QuickFire Admin route /admin/quickfire registered in App.tsx
+- [x] QuickFire Admin link added to Platform Admin dropdown in Layout.tsx
+- [x] CaseLibrary My Submissions tab — shows user's own cases with status badges
+- [x] SubmitCase draft auto-save — localStorage save/restore with clear-on-submit
+- [x] AdminCaseManagement expanded modal — full media preview (image carousel + video), MCQ display, inline approve/reject

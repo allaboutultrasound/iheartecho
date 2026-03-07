@@ -2,7 +2,8 @@
  * AdminCaseManagement.tsx — Admin panel for reviewing and approving/rejecting user-submitted cases.
  *
  * Shows pending submissions by default, with a tab to browse all cases.
- * Admins can preview case details, approve, or reject with a reason.
+ * Admins can preview case details (including media carousel and MCQ questions),
+ * approve, or reject with a reason — all from within the preview modal.
  */
 
 import { useState } from "react";
@@ -13,12 +14,6 @@ import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -34,9 +29,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Badge,
-} from "@/components/ui/badge";
-import {
   CheckCircle2,
   XCircle,
   Eye,
@@ -49,6 +41,10 @@ import {
   Shield,
   AlertTriangle,
   RefreshCw,
+  HelpCircle,
+  Tag,
+  BookOpen,
+  Stethoscope,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -67,6 +63,290 @@ const DIFFICULTY_COLORS: Record<string, string> = {
   advanced: "bg-purple-50 text-purple-600",
 };
 
+const MODALITY_COLORS: Record<string, string> = {
+  TTE: "bg-blue-100 text-blue-700",
+  TEE: "bg-purple-100 text-purple-700",
+  Stress: "bg-orange-100 text-orange-700",
+  Pediatric: "bg-pink-100 text-pink-700",
+  Fetal: "bg-rose-100 text-rose-700",
+  HOCM: "bg-red-100 text-red-700",
+  POCUS: "bg-teal-100 text-teal-700",
+  Other: "bg-gray-100 text-gray-600",
+};
+
+/** Fetch full case detail (with media + questions) for the preview modal */
+function CasePreviewModal({
+  caseId,
+  open,
+  onClose,
+  onApprove,
+  onReject,
+  isApproving,
+}: {
+  caseId: number | null;
+  open: boolean;
+  onClose: () => void;
+  onApprove: (id: number) => void;
+  onReject: (id: number, title: string) => void;
+  isApproving: boolean;
+}) {
+  const [mediaIdx, setMediaIdx] = useState(0);
+
+  const { data: caseData, isLoading } = trpc.caseLibrary.getCase.useQuery(
+    { id: caseId! },
+    { enabled: open && caseId !== null }
+  );
+
+  // Reset media index when case changes
+  const handleClose = () => {
+    setMediaIdx(0);
+    onClose();
+  };
+
+  const media = caseData?.media ?? [];
+  const questions = caseData?.questions ?? [];
+  const teachingPoints: string[] = caseData?.teachingPoints ?? [];
+  const tags: string[] = caseData?.tags ?? [];
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        {isLoading || !caseData ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="w-6 h-6 rounded-full border-2 border-[#189aa1] border-t-transparent animate-spin" />
+          </div>
+        ) : (
+          <>
+            <DialogHeader>
+              <DialogTitle className="text-base leading-snug pr-6" style={{ fontFamily: "Merriweather, serif" }}>
+                {caseData.title}
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-5 text-sm">
+              {/* Status + meta badges */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`text-xs px-2 py-0.5 rounded-full border font-semibold ${STATUS_COLORS[caseData.status] ?? ""}`}>
+                  {caseData.status.charAt(0).toUpperCase() + caseData.status.slice(1)}
+                </span>
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${MODALITY_COLORS[caseData.modality] ?? "bg-gray-100 text-gray-600"}`}>
+                  {caseData.modality}
+                </span>
+                <span className={`text-xs px-2 py-0.5 rounded ${DIFFICULTY_COLORS[caseData.difficulty] ?? ""}`}>
+                  {caseData.difficulty}
+                </span>
+                <span className="text-xs text-gray-400 flex items-center gap-1">
+                  <Stethoscope className="w-3 h-3" /> by {(caseData as any).submitterName ?? "Unknown"}
+                </span>
+                <span className="text-xs text-gray-400">
+                  · {formatDistanceToNow(new Date(caseData.submittedAt), { addSuffix: true })}
+                </span>
+              </div>
+
+              {/* ── Media Carousel ─────────────────────────────────────────── */}
+              {media.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 mb-2 flex items-center gap-1">
+                    <ImageIcon className="w-3.5 h-3.5" /> Media ({media.length} file{media.length !== 1 ? "s" : ""})
+                  </p>
+                  <div className="relative bg-black rounded-xl overflow-hidden" style={{ minHeight: 220 }}>
+                    {media[mediaIdx]?.type === "video" ? (
+                      <video
+                        src={media[mediaIdx].url}
+                        controls
+                        className="w-full max-h-72 object-contain"
+                      />
+                    ) : (
+                      <img
+                        src={media[mediaIdx]?.url}
+                        alt={media[mediaIdx]?.caption || `Media ${mediaIdx + 1}`}
+                        className="w-full max-h-72 object-contain"
+                      />
+                    )}
+                    {/* Nav arrows */}
+                    {media.length > 1 && (
+                      <>
+                        <button
+                          onClick={() => setMediaIdx((i) => Math.max(0, i - 1))}
+                          disabled={mediaIdx === 0}
+                          className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 disabled:opacity-30 transition-all"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => setMediaIdx((i) => Math.min(media.length - 1, i + 1))}
+                          disabled={mediaIdx === media.length - 1}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center hover:bg-black/60 disabled:opacity-30 transition-all"
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                        {/* Dot indicators */}
+                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                          {media.map((_, i) => (
+                            <button
+                              key={i}
+                              onClick={() => setMediaIdx(i)}
+                              className={`w-2 h-2 rounded-full transition-all ${i === mediaIdx ? "bg-white" : "bg-white/40"}`}
+                            />
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  {/* Thumbnail strip */}
+                  {media.length > 1 && (
+                    <div className="flex gap-2 mt-2 overflow-x-auto pb-1">
+                      {media.map((m, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setMediaIdx(i)}
+                          className={`flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all ${
+                            i === mediaIdx ? "border-[#189aa1]" : "border-transparent"
+                          }`}
+                        >
+                          {m.type === "video" ? (
+                            <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                              <PlayCircle className="w-5 h-5 text-white" />
+                            </div>
+                          ) : (
+                            <img src={m.url} alt="" className="w-full h-full object-cover" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {media[mediaIdx]?.caption && (
+                    <p className="text-xs text-gray-500 mt-1 italic">{media[mediaIdx].caption}</p>
+                  )}
+                </div>
+              )}
+
+              {/* ── Case Text ──────────────────────────────────────────────── */}
+              <div>
+                <p className="text-xs font-semibold text-gray-500 mb-1">Summary</p>
+                <p className="text-gray-700 leading-relaxed">{caseData.summary}</p>
+              </div>
+
+              {caseData.clinicalHistory && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 mb-1">Clinical History</p>
+                  <p className="text-gray-700 leading-relaxed">{caseData.clinicalHistory}</p>
+                </div>
+              )}
+
+              {caseData.diagnosis && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 mb-1">Diagnosis</p>
+                  <p className="text-gray-700 font-medium">{caseData.diagnosis}</p>
+                </div>
+              )}
+
+              {teachingPoints.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 mb-1 flex items-center gap-1">
+                    <BookOpen className="w-3.5 h-3.5" /> Teaching Points
+                  </p>
+                  <ul className="list-disc list-inside space-y-0.5">
+                    {teachingPoints.map((pt: string, i: number) => (
+                      <li key={i} className="text-gray-700 text-xs">{pt}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {tags.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  <Tag className="w-3.5 h-3.5 text-gray-400 self-center" />
+                  {tags.map((t: string) => (
+                    <span key={t} className="text-xs bg-[#189aa1]/10 text-[#189aa1] px-2 py-0.5 rounded-full">#{t}</span>
+                  ))}
+                </div>
+              )}
+
+              {/* ── MCQ Questions ──────────────────────────────────────────── */}
+              {questions.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 mb-2 flex items-center gap-1">
+                    <HelpCircle className="w-3.5 h-3.5" /> Self-Assessment Questions ({questions.length})
+                  </p>
+                  <div className="space-y-3">
+                    {questions.map((q: any, qi: number) => (
+                      <div key={q.id} className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                        <p className="text-xs font-semibold text-gray-700 mb-2">Q{qi + 1}. {q.question}</p>
+                        <div className="space-y-1">
+                          {(q.options as string[]).map((opt: string, oi: number) => (
+                            <div
+                              key={oi}
+                              className={`flex items-center gap-2 text-xs px-2 py-1.5 rounded ${
+                                oi === q.correctAnswer
+                                  ? "bg-green-100 text-green-700 font-semibold"
+                                  : "text-gray-600"
+                              }`}
+                            >
+                              <span className={`w-5 h-5 rounded-full border flex items-center justify-center text-xs font-bold flex-shrink-0 ${
+                                oi === q.correctAnswer ? "border-green-500 bg-green-500 text-white" : "border-gray-300"
+                              }`}>
+                                {oi === q.correctAnswer ? "✓" : String.fromCharCode(65 + oi)}
+                              </span>
+                              {opt}
+                            </div>
+                          ))}
+                        </div>
+                        {q.explanation && (
+                          <p className="text-xs text-gray-500 mt-2 italic border-t border-gray-200 pt-2">
+                            {q.explanation}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── Rejection reason (if rejected) ─────────────────────────── */}
+              {caseData.status === "rejected" && caseData.rejectionReason && (
+                <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
+                  <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-semibold mb-0.5">Rejection Reason</p>
+                    <p>{caseData.rejectionReason}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Inline approve/reject (pending only) ───────────────────── */}
+              {caseData.status === "pending" && (
+                <div className="flex gap-2 pt-2 border-t">
+                  <Button
+                    className="flex-1 bg-green-500 hover:bg-green-600 text-white gap-2"
+                    onClick={() => {
+                      onApprove(caseData.id);
+                      handleClose();
+                    }}
+                    disabled={isApproving}
+                  >
+                    <CheckCircle2 className="w-4 h-4" /> Approve & Publish
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1 border-red-200 text-red-600 hover:bg-red-50 gap-2"
+                    onClick={() => {
+                      handleClose();
+                      onReject(caseData.id, caseData.title);
+                    }}
+                  >
+                    <XCircle className="w-4 h-4" /> Reject
+                  </Button>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function AdminCaseManagement() {
   const [, navigate] = useLocation();
   const { user, isAuthenticated } = useAuth();
@@ -79,7 +359,7 @@ export default function AdminCaseManagement() {
   const [searchInput, setSearchInput] = useState("");
 
   // Preview dialog
-  const [previewCase, setPreviewCase] = useState<any>(null);
+  const [previewCaseId, setPreviewCaseId] = useState<number | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
 
   // Reject dialog
@@ -138,7 +418,7 @@ export default function AdminCaseManagement() {
           <Shield className="w-12 h-12 mx-auto mb-4 text-gray-300" />
           <p className="text-gray-500 mb-2 font-semibold">Admin Access Required</p>
           <p className="text-sm text-gray-400">You must be an admin to view this page.</p>
-          <Button className="mt-4" variant="outline" onClick={() => navigate("/cases")}>
+          <Button className="mt-4" variant="outline" onClick={() => navigate("/case-library")}>
             Back to Case Library
           </Button>
         </div>
@@ -191,7 +471,9 @@ export default function AdminCaseManagement() {
               <span className={`text-xs px-2 py-0.5 rounded-full border ${STATUS_COLORS[c.status] ?? ""}`}>
                 {c.status}
               </span>
-              <span className="text-xs text-gray-400">{c.modality}</span>
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${MODALITY_COLORS[c.modality] ?? "bg-gray-100 text-gray-600"}`}>
+                {c.modality}
+              </span>
               <span className={`text-xs px-1.5 py-0.5 rounded ${DIFFICULTY_COLORS[c.difficulty] ?? ""}`}>
                 {c.difficulty}
               </span>
@@ -225,8 +507,8 @@ export default function AdminCaseManagement() {
             size="sm"
             variant="ghost"
             className="h-8 w-8 p-0 text-gray-400 hover:text-[#189aa1]"
-            onClick={() => { setPreviewCase(c); setPreviewOpen(true); }}
-            title="Preview"
+            onClick={() => { setPreviewCaseId(c.id); setPreviewOpen(true); }}
+            title="Preview full case"
           >
             <Eye className="w-4 h-4" />
           </Button>
@@ -276,7 +558,7 @@ export default function AdminCaseManagement() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <button onClick={() => navigate("/cases")} className="text-gray-400 hover:text-[#189aa1] transition-colors">
+            <button onClick={() => navigate("/case-library")} className="text-gray-400 hover:text-[#189aa1] transition-colors">
               <ChevronLeft className="w-5 h-5" />
             </button>
             <div>
@@ -428,104 +710,15 @@ export default function AdminCaseManagement() {
         )}
       </div>
 
-      {/* ── Preview Dialog ─────────────────────────────────────────────────── */}
-      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-base leading-snug pr-6">{previewCase?.title}</DialogTitle>
-          </DialogHeader>
-          {previewCase && (
-            <div className="space-y-4 text-sm">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className={`text-xs px-2 py-0.5 rounded-full border ${STATUS_COLORS[previewCase.status] ?? ""}`}>
-                  {previewCase.status}
-                </span>
-                <span className="text-xs bg-gray-100 px-2 py-0.5 rounded">{previewCase.modality}</span>
-                <span className={`text-xs px-2 py-0.5 rounded ${DIFFICULTY_COLORS[previewCase.difficulty] ?? ""}`}>
-                  {previewCase.difficulty}
-                </span>
-                <span className="text-xs text-gray-400">by {previewCase.submitterName}</span>
-              </div>
-
-              <div>
-                <p className="text-xs font-semibold text-gray-500 mb-1">Summary</p>
-                <p className="text-gray-700 leading-relaxed">{previewCase.summary}</p>
-              </div>
-
-              {previewCase.clinicalHistory && (
-                <div>
-                  <p className="text-xs font-semibold text-gray-500 mb-1">Clinical History</p>
-                  <p className="text-gray-700 leading-relaxed">{previewCase.clinicalHistory}</p>
-                </div>
-              )}
-
-              {previewCase.diagnosis && (
-                <div>
-                  <p className="text-xs font-semibold text-gray-500 mb-1">Diagnosis</p>
-                  <p className="text-gray-700 font-medium">{previewCase.diagnosis}</p>
-                </div>
-              )}
-
-              {previewCase.teachingPoints && (() => {
-                try {
-                  const pts = JSON.parse(previewCase.teachingPoints);
-                  if (pts.length > 0) return (
-                    <div>
-                      <p className="text-xs font-semibold text-gray-500 mb-1">Teaching Points</p>
-                      <ul className="list-disc list-inside space-y-0.5">
-                        {pts.map((pt: string, i: number) => (
-                          <li key={i} className="text-gray-700 text-xs">{pt}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  );
-                } catch {}
-                return null;
-              })()}
-
-              {previewCase.tags && (() => {
-                try {
-                  const tags = JSON.parse(previewCase.tags);
-                  if (tags.length > 0) return (
-                    <div className="flex flex-wrap gap-1">
-                      {tags.map((t: string) => (
-                        <span key={t} className="text-xs bg-[#189aa1]/10 text-[#189aa1] px-2 py-0.5 rounded-full">#{t}</span>
-                      ))}
-                    </div>
-                  );
-                } catch {}
-                return null;
-              })()}
-
-              {previewCase.status === "pending" && (
-                <div className="flex gap-2 pt-2 border-t">
-                  <Button
-                    className="flex-1 bg-green-500 hover:bg-green-600 text-white gap-2"
-                    onClick={() => {
-                      handleApprove(previewCase.id);
-                      setPreviewOpen(false);
-                    }}
-                    disabled={approveMutation.isPending}
-                  >
-                    <CheckCircle2 className="w-4 h-4" /> Approve Case
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="flex-1 border-red-200 text-red-600 hover:bg-red-50 gap-2"
-                    onClick={() => {
-                      setPreviewOpen(false);
-                      setRejectTarget({ id: previewCase.id, title: previewCase.title });
-                      setRejectReason("");
-                    }}
-                  >
-                    <XCircle className="w-4 h-4" /> Reject
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* ── Full Case Preview Modal ──────────────────────────────────────────── */}
+      <CasePreviewModal
+        caseId={previewCaseId}
+        open={previewOpen}
+        onClose={() => { setPreviewOpen(false); setPreviewCaseId(null); }}
+        onApprove={handleApprove}
+        onReject={(id, title) => { setRejectTarget({ id, title }); setRejectReason(""); }}
+        isApproving={approveMutation.isPending}
+      />
 
       {/* ── Reject Dialog ──────────────────────────────────────────────────── */}
       <Dialog open={!!rejectTarget} onOpenChange={(open) => !open && setRejectTarget(null)}>

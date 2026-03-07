@@ -4,9 +4,11 @@
  * Multi-step form: HIPAA acknowledgement → case details → media upload → questions → review & submit.
  * User-submitted cases go into "pending" status and require admin approval.
  * Admin-submitted cases are auto-approved.
+ *
+ * Draft auto-save: form state is persisted to localStorage so users can resume later.
  */
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -44,11 +46,14 @@ import {
   FileText,
   BookOpen,
   HelpCircle,
+  Save,
+  RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
 
 const MODALITIES = ["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "Other"] as const;
 const DIFFICULTIES = ["beginner", "intermediate", "advanced"] as const;
+const DRAFT_KEY = "ihe_submit_case_draft";
 
 type MediaItem = {
   type: "image" | "video";
@@ -66,6 +71,19 @@ type QuestionItem = {
   correctAnswer: number;
   explanation: string;
   sortOrder: number;
+};
+
+type DraftState = {
+  title: string;
+  summary: string;
+  clinicalHistory: string;
+  diagnosis: string;
+  modality: typeof MODALITIES[number];
+  difficulty: typeof DIFFICULTIES[number];
+  tagsInput: string;
+  teachingPointsInput: string;
+  questions: QuestionItem[];
+  savedAt: string;
 };
 
 const STEPS = ["HIPAA", "Details", "Media", "Questions", "Review"] as const;
@@ -90,17 +108,99 @@ export default function SubmitCase() {
   const [tagsInput, setTagsInput] = useState("");
   const [teachingPointsInput, setTeachingPointsInput] = useState("");
 
-  // Media
+  // Media (not persisted to localStorage — files must be re-uploaded)
   const [media, setMedia] = useState<MediaItem[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Questions
   const [questions, setQuestions] = useState<QuestionItem[]>([]);
 
+  // Draft state
+  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
+  const [hasDraft, setHasDraft] = useState(false);
+
+  // ── Draft: load on mount ──────────────────────────────────────────────────
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (raw) {
+        const draft: DraftState = JSON.parse(raw);
+        setHasDraft(true);
+        setDraftSavedAt(draft.savedAt);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const loadDraft = () => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+      const draft: DraftState = JSON.parse(raw);
+      setTitle(draft.title ?? "");
+      setSummary(draft.summary ?? "");
+      setClinicalHistory(draft.clinicalHistory ?? "");
+      setDiagnosis(draft.diagnosis ?? "");
+      setModality(draft.modality ?? "TTE");
+      setDifficulty(draft.difficulty ?? "intermediate");
+      setTagsInput(draft.tagsInput ?? "");
+      setTeachingPointsInput(draft.teachingPointsInput ?? "");
+      setQuestions(draft.questions ?? []);
+      setStep("Details");
+      setHipaaAcknowledged(true);
+      toast.success("Draft restored. Please re-upload any media files.");
+    } catch {
+      toast.error("Failed to restore draft.");
+    }
+  };
+
+  const saveDraft = useCallback(() => {
+    try {
+      const draft: DraftState = {
+        title,
+        summary,
+        clinicalHistory,
+        diagnosis,
+        modality,
+        difficulty,
+        tagsInput,
+        teachingPointsInput,
+        questions,
+        savedAt: new Date().toISOString(),
+      };
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+      setDraftSavedAt(draft.savedAt);
+      setHasDraft(true);
+      toast.success("Draft saved.");
+    } catch {
+      toast.error("Failed to save draft.");
+    }
+  }, [title, summary, clinicalHistory, diagnosis, modality, difficulty, tagsInput, teachingPointsInput, questions]);
+
+  const clearDraft = () => {
+    localStorage.removeItem(DRAFT_KEY);
+    setHasDraft(false);
+    setDraftSavedAt(null);
+  };
+
+  // Auto-save every 60 seconds when on Details/Questions steps
+  useEffect(() => {
+    if (step !== "Details" && step !== "Questions") return;
+    const timer = setInterval(() => {
+      if (title.trim().length >= 5) {
+        saveDraft();
+      }
+    }, 60_000);
+    return () => clearInterval(timer);
+  }, [step, saveDraft, title]);
+
   const submitMutation = trpc.caseLibrary.submitCase.useMutation({
     onSuccess: (data) => {
+      clearDraft();
       toast.success(data.message);
-      navigate(`/cases`);
+      navigate(`/case-library`);
     },
     onError: (err) => toast.error(err.message || "Failed to submit case."),
   });
@@ -164,7 +264,6 @@ export default function SubmitCase() {
         uploading: true,
       };
       setMedia((prev) => [...prev, placeholder]);
-      // Upload to server
       try {
         const formData = new FormData();
         formData.append("file", file);
@@ -188,7 +287,6 @@ export default function SubmitCase() {
         setMedia((prev) => prev.filter((m) => m.localPreview !== localPreview));
       }
     }
-    // Reset input
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -320,14 +418,61 @@ export default function SubmitCase() {
   return (
     <Layout>
       <div className="container py-8 max-w-2xl">
-        <div className="flex items-center gap-2 mb-6">
-          <button onClick={() => navigate("/cases")} className="text-gray-400 hover:text-[#189aa1] transition-colors">
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <h1 className="text-xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-            Submit an Echo Case
-          </h1>
+        {/* Header */}
+        <div className="flex items-center justify-between gap-2 mb-6">
+          <div className="flex items-center gap-2">
+            <button onClick={() => navigate("/case-library")} className="text-gray-400 hover:text-[#189aa1] transition-colors">
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <h1 className="text-xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
+              Submit an Echo Case
+            </h1>
+          </div>
+          {/* Draft controls */}
+          {step !== "HIPAA" && step !== "Review" && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-gray-400 gap-1.5 hover:text-[#189aa1]"
+                onClick={saveDraft}
+              >
+                <Save className="w-3.5 h-3.5" />
+                Save Draft
+              </Button>
+              {draftSavedAt && (
+                <span className="text-xs text-gray-400 hidden sm:block">
+                  Saved {new Date(draftSavedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </span>
+              )}
+            </div>
+          )}
         </div>
+
+        {/* Draft restore banner */}
+        {hasDraft && step === "HIPAA" && (
+          <div className="mb-4 flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-800">
+            <RotateCcw className="w-4 h-4 flex-shrink-0" />
+            <span className="flex-1">
+              You have a saved draft from {draftSavedAt ? new Date(draftSavedAt).toLocaleDateString() : "earlier"}.
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-xs border-blue-300 text-blue-700 hover:bg-blue-100 gap-1"
+              onClick={loadDraft}
+            >
+              <RotateCcw className="w-3 h-3" /> Restore Draft
+            </Button>
+            <button
+              className="text-blue-400 hover:text-blue-600"
+              onClick={() => { clearDraft(); setHasDraft(false); }}
+              title="Discard draft"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
 
         <StepIndicator />
 
@@ -456,7 +601,7 @@ export default function SubmitCase() {
 
               <div>
                 <Label htmlFor="history" className="text-xs font-semibold text-gray-600 mb-1.5 block">
-                  Clinical History <span className="text-gray-400 font-normal">(optional)</span>
+                  Clinical History <span className="text-gray-400 font-normal">(optional — no PHI)</span>
                 </Label>
                 <Textarea
                   id="history"
@@ -522,7 +667,7 @@ export default function SubmitCase() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base text-gray-700">
                 <ImageIcon className="w-4 h-4 text-[#189aa1]" /> Images & Video Clips
-                <span className="text-xs font-normal text-gray-400 ml-auto">Optional — max 20 files, 100 MB each</span>
+                <span className="text-xs font-normal text-gray-400 ml-auto">Optional — max 20 files</span>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -559,18 +704,13 @@ export default function SubmitCase() {
                 <div className="space-y-2">
                   {media.map((m, i) => (
                     <div key={i} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
-                      {/* Thumbnail */}
                       <div className="w-14 h-14 rounded overflow-hidden flex-shrink-0 bg-gray-200">
                         {m.type === "video" ? (
                           <div className="w-full h-full flex items-center justify-center">
                             <PlayCircle className="w-6 h-6 text-gray-400" />
                           </div>
                         ) : (
-                          <img
-                            src={m.localPreview || m.url}
-                            alt=""
-                            className="w-full h-full object-cover"
-                          />
+                          <img src={m.localPreview || m.url} alt="" className="w-full h-full object-cover" />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -762,7 +902,7 @@ export default function SubmitCase() {
                   <Shield className="w-4 h-4 flex-shrink-0 mt-0.5" />
                   <span>
                     Your case will be submitted for admin review. It will appear in the library once approved.
-                    You can track your submissions in your profile.
+                    You can track your submissions in the <strong>My Submissions</strong> tab of the Case Library.
                   </span>
                 </div>
               )}
