@@ -3,7 +3,7 @@
  *
  * Handles premium membership status for the iHeartEcho App Premium Access
  * membership ($9/month) sold via Thinkific at:
- * https://member.allaboutultrasound.com/memberships/iheartecho-app-premium-access
+ * https://member.allaboutultrasound.com/order?ct=d0290929-3906-48ab-8c3a-ff71e2748af0
  *
  * Procedures:
  *  - premium.getStatus        — returns the current user's premium status
@@ -67,7 +67,7 @@ export const premiumRouter = router({
       isPremium: user.isPremium,
       premiumGrantedAt: user.premiumGrantedAt ?? null,
       premiumSource: user.premiumSource ?? null,
-      checkoutUrl: `https://member.allaboutultrasound.com/memberships/${PREMIUM_MEMBERSHIP_SLUG}`,
+      checkoutUrl: "https://member.allaboutultrasound.com/order?ct=d0290929-3906-48ab-8c3a-ff71e2748af0",
       manageUrl: `https://member.allaboutultrasound.com/users/sign_in`,
     };
   }),

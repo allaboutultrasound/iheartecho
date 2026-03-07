@@ -97,7 +97,7 @@ function UpgradePrompt({
   featureName?: string;
   checkoutUrl?: string;
 }) {
-  const url = checkoutUrl ?? "https://member.allaboutultrasound.com/memberships/iheartecho-app-premium-access";
+  const url = checkoutUrl ?? "https://member.allaboutultrasound.com/order?ct=d0290929-3906-48ab-8c3a-ff71e2748af0";
 
   if (compact) {
     return (
