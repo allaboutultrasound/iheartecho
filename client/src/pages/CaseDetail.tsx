@@ -34,6 +34,8 @@ import {
   Calendar,
   Tag,
   AlertTriangle,
+  UserCheck,
+  Link2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -108,7 +110,8 @@ export default function CaseDetail() {
     title, summary, clinicalHistory, diagnosis, teachingPoints,
     modality, difficulty, tags, media, questions, submitterName,
     submittedAt, viewCount, userAttempt,
-  } = caseData;
+    submitterCreditName, submitterLinkedIn,
+  } = caseData as any;
 
   const images = media.filter((m: any) => m.type === "image");
   const videos = media.filter((m: any) => m.type === "video");
@@ -440,6 +443,33 @@ export default function CaseDetail() {
                       </span>
                     ))}
                   </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Case Contributor credit */}
+            {(submitterCreditName || submitterLinkedIn) && (
+              <Card className="border-0 shadow-sm">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                    <UserCheck className="w-4 h-4" style={{ color: "#189aa1" }} /> Case Contributor
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-1.5">
+                  {submitterCreditName && (
+                    <p className="text-sm font-medium text-gray-800">{submitterCreditName}</p>
+                  )}
+                  {submitterLinkedIn && (
+                    <a
+                      href={submitterLinkedIn}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs font-medium hover:underline"
+                      style={{ color: "#189aa1" }}
+                    >
+                      <Link2 className="w-3.5 h-3.5" /> View LinkedIn Profile
+                    </a>
+                  )}
                 </CardContent>
               </Card>
             )}

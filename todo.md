@@ -1250,3 +1250,7 @@
 - [x] Submission form: credit fields included in saveDraft, loadDraft, and existingCase populate
 - [x] My Submissions view: read-only list of user's submitted cases with status badge (pending/approved/rejected)
 - [x] My Submissions: credit name + LinkedIn link displayed on each submission card when present
+
+## Credit Attribution — Display
+- [x] Case detail page: show submitter credit name + LinkedIn link in sidebar ("Case Contributor" card)
+- [x] Admin Case Management: show submitter credit name + LinkedIn in review queue cards and preview modal

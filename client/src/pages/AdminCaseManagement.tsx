@@ -48,6 +48,8 @@ import {
   Sparkles,
   Loader2,
   Pencil,
+  UserCheck,
+  Link2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -145,6 +147,26 @@ function CasePreviewModal({
                 <span className="text-xs text-gray-400">
                   · {formatDistanceToNow(new Date(caseData.submittedAt), { addSuffix: true })}
                 </span>
+                {/* Credit attribution in preview modal */}
+                {((caseData as any).submitterCreditName || (caseData as any).submitterLinkedIn) && (
+                  <span className="flex items-center gap-1.5 text-xs">
+                    <UserCheck className="w-3.5 h-3.5" style={{ color: "#189aa1" }} />
+                    {(caseData as any).submitterCreditName && (
+                      <span className="text-gray-700 font-medium">{(caseData as any).submitterCreditName}</span>
+                    )}
+                    {(caseData as any).submitterLinkedIn && (
+                      <a
+                        href={(caseData as any).submitterLinkedIn}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-0.5 hover:underline"
+                        style={{ color: "#189aa1" }}
+                      >
+                        <Link2 className="w-3 h-3" /> LinkedIn
+                      </a>
+                    )}
+                  </span>
+                )}
               </div>
 
               {/* -- Media Carousel ------------------------------------------- */}
@@ -527,6 +549,27 @@ export default function AdminCaseManagement() {
             </>
           )}
         </div>
+        {/* Credit attribution */}
+        {(c.submitterCreditName || c.submitterLinkedIn) && (
+          <div className="mt-1.5 flex items-center gap-2 flex-wrap">
+            <UserCheck className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "#189aa1" }} />
+            {c.submitterCreditName && (
+              <span className="text-xs text-gray-600 font-medium">{c.submitterCreditName}</span>
+            )}
+            {c.submitterLinkedIn && (
+              <a
+                href={c.submitterLinkedIn}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs hover:underline flex items-center gap-0.5"
+                style={{ color: "#189aa1" }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Link2 className="w-3 h-3" /> LinkedIn
+              </a>
+            )}
+          </div>
+        )}
         {c.rejectionReason && (
           <div className="mt-2 text-xs text-red-600 bg-red-50 rounded px-2 py-1">
             Rejection reason: {c.rejectionReason}
