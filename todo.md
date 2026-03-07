@@ -1230,3 +1230,11 @@
 - [x] Rewrite AI generator: replaced generateText (AI SDK) with direct fetch to Forge API /v1/chat/completions
 - [x] JSON parser retained: handles root array, wrapped object, and markdown-fenced responses
 - [ ] Grant test user premium_user role and verify archive gating in QuickFire
+
+## QuickFire Performance & Leaderboard
+- [x] tRPC: getMyStats procedure — total attempts, avg score, best streak, accuracy by category, recent history
+- [x] tRPC: getLeaderboard procedure — ranked list with user rank, score, streak, avatar initials (period filter: 7d/30d/all-time)
+- [x] tRPC: getChallengeArchive — add category/difficulty/dateRange filter params
+- [x] QuickFire: add "My Performance" tab — stat cards, category breakdown bars, 14-day activity chart
+- [x] QuickFire: archive filter panel — category chips, difficulty chips, date range pickers
+- [x] Leaderboard: period filter (7d/30d/all-time), current user rank highlighted, rank banner if outside top 10

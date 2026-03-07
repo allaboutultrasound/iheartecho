@@ -260,6 +260,13 @@
       "when": 1772910496715,
       "tag": "0036_nice_red_hulk",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "5",
+      "when": 1772913702624,
+      "tag": "0037_sturdy_hydra",
+      "breakpoints": true
     }
   ]
 }

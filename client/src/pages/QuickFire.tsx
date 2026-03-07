@@ -1,13 +1,14 @@
 /*
  * QuickFire.tsx — Daily QuickFire Challenge
  *
- * Three tabs:
+ * Four tabs:
  *   1. Daily Challenge  — today's question set (scenario / image / quick-review)
- *   2. Challenge Archive — past daily challenges (free: 7 days, premium: unlimited)
- *   3. Leaderboard      — top 10 users by correct answers (last 30 days)
+ *   2. Challenge Archive — past daily challenges (free: 7 days, premium: unlimited) with filters
+ *   3. My Performance   — personal stats, per-category breakdown, 14-day activity chart
+ *   4. Leaderboard      — ranked leaderboard with period filter and current user rank
  */
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import Layout from "@/components/Layout";
@@ -38,6 +39,11 @@ import {
   Tag,
   Clock,
   Crown,
+  BarChart3,
+  Target,
+  TrendingUp,
+  Filter,
+  ChevronDown,
 } from "lucide-react";
 import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
@@ -51,7 +57,10 @@ type AnswerResult = {
   reviewAnswer: string | null;
 };
 
+type LeaderboardPeriod = "7d" | "30d" | "allTime";
+
 const CATEGORY_TAGS = ["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo"] as const;
+const DIFFICULTY_OPTIONS = ["beginner", "intermediate", "advanced"] as const;
 
 const TYPE_LABELS: Record<string, { label: string; color: string; icon: React.ComponentType<{ className?: string }> }> = {
   scenario: { label: "Scenario", color: "bg-blue-100 text-blue-700", icon: ({ className }) => <span className={className}>📋</span> },
@@ -65,6 +74,36 @@ const DIFFICULTY_COLORS: Record<string, string> = {
   advanced: "bg-red-100 text-red-700",
 };
 
+const CATEGORY_COLORS: Record<string, string> = {
+  ACS: "bg-red-100 text-red-700",
+  "Adult Echo": "bg-[#189aa1]/10 text-[#189aa1]",
+  "Pediatric Echo": "bg-purple-100 text-purple-700",
+  "Fetal Echo": "bg-pink-100 text-pink-700",
+};
+
+// ─── Mini bar chart ───────────────────────────────────────────────────────────
+
+function ActivityBar({ date, correct, total }: { date: string; correct: number; total: number }) {
+  const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
+  const height = Math.max(4, Math.round((pct / 100) * 48));
+  const label = new Date(date + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return (
+    <div className="flex flex-col items-center gap-1 group relative">
+      <div className="w-6 bg-gray-100 rounded-sm flex items-end" style={{ height: 48 }}>
+        <div
+          className="w-full rounded-sm transition-all"
+          style={{ height, background: pct >= 80 ? "#189aa1" : pct >= 60 ? "#4ad9e0" : "#f59e0b" }}
+        />
+      </div>
+      <span className="text-[9px] text-gray-400 rotate-45 origin-left translate-x-1">{label}</span>
+      {/* Tooltip */}
+      <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-10">
+        {correct}/{total} correct ({pct}%)
+      </div>
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function QuickFire() {
@@ -72,7 +111,7 @@ export default function QuickFire() {
   const isPremium = (user as any)?.role === "admin" || (user as any)?.isPremium === true;
 
   // Top-level tab
-  const [activeTab, setActiveTab] = useState<"challenge" | "archive" | "leaderboard">("challenge");
+  const [activeTab, setActiveTab] = useState<"challenge" | "archive" | "performance" | "leaderboard">("challenge");
 
   // ── Daily Challenge state ──────────────────────────────────────────────────
   const { data, isLoading, error, refetch } = trpc.quickfire.getTodaySet.useQuery(undefined, {
@@ -117,8 +156,22 @@ export default function QuickFire() {
   const [archiveSessionResults, setArchiveSessionResults] = useState<Array<{ correct: boolean | null }>>([]);
   const [archiveShowResults, setArchiveShowResults] = useState(false);
 
+  // Archive filters
+  const [archiveCategoryFilter, setArchiveCategoryFilter] = useState<string | undefined>(undefined);
+  const [archiveDifficultyFilter, setArchiveDifficultyFilter] = useState<"beginner" | "intermediate" | "advanced" | undefined>(undefined);
+  const [archiveDateFrom, setArchiveDateFrom] = useState<string | undefined>(undefined);
+  const [archiveDateTo, setArchiveDateTo] = useState<string | undefined>(undefined);
+  const [showArchiveFilters, setShowArchiveFilters] = useState(false);
+
   const archiveListQuery = trpc.quickfire.getChallengeArchive.useQuery(
-    { page: 1, limit: 20 },
+    {
+      page: 1,
+      limit: 20,
+      category: archiveCategoryFilter,
+      difficulty: archiveDifficultyFilter,
+      dateFrom: archiveDateFrom,
+      dateTo: archiveDateTo,
+    },
     { enabled: activeTab === "archive" && isAuthenticated }
   );
 
@@ -130,10 +183,17 @@ export default function QuickFire() {
   const archiveQuestions = archiveDetailQuery.data?.questions ?? [];
   const archiveCurrentQ = archiveQuestions[archiveQIndex];
 
-  // ── Leaderboard ────────────────────────────────────────────────────────────
-  const leaderboardQuery = trpc.quickfire.getLeaderboard.useQuery(undefined, {
-    enabled: activeTab === "leaderboard",
+  // ── Performance state ──────────────────────────────────────────────────────
+  const perfQuery = trpc.quickfire.getUserStats.useQuery(undefined, {
+    enabled: activeTab === "performance" && isAuthenticated,
   });
+
+  // ── Leaderboard ────────────────────────────────────────────────────────────
+  const [lbPeriod, setLbPeriod] = useState<LeaderboardPeriod>("30d");
+  const leaderboardQuery = trpc.quickfire.getLeaderboard.useQuery(
+    { period: lbPeriod },
+    { enabled: activeTab === "leaderboard" }
+  );
 
   // ── Handlers: Daily Challenge ──────────────────────────────────────────────
   const handleSelectAnswer = async (idx: number) => {
@@ -248,6 +308,15 @@ export default function QuickFire() {
     }
   };
 
+  const clearArchiveFilters = () => {
+    setArchiveCategoryFilter(undefined);
+    setArchiveDifficultyFilter(undefined);
+    setArchiveDateFrom(undefined);
+    setArchiveDateTo(undefined);
+  };
+
+  const hasArchiveFilters = !!(archiveCategoryFilter || archiveDifficultyFilter || archiveDateFrom || archiveDateTo);
+
   // ── Not logged in ──────────────────────────────────────────────────────────
   if (!isAuthenticated) {
     return (
@@ -304,10 +373,11 @@ export default function QuickFire() {
         </div>
 
         {/* Tab bar */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex gap-2 mb-6 flex-wrap">
           {([
             { id: "challenge" as const, label: "Daily Challenge", icon: Zap },
-            { id: "archive" as const, label: "Challenge Archive", icon: Archive },
+            { id: "archive" as const, label: "Archive", icon: Archive },
+            { id: "performance" as const, label: "My Performance", icon: BarChart3 },
             { id: "leaderboard" as const, label: "Leaderboard", icon: Trophy },
           ] as const).map(({ id, label, icon: Icon }) => (
             <button
@@ -378,17 +448,32 @@ export default function QuickFire() {
                   {Math.round((questions.filter((q) => userAttempts[q.id]?.isCorrect === true).length / questions.length) * 100)}% correct
                 </p>
                 <div className="flex flex-wrap gap-3 justify-center">
-                  <Button onClick={handleRestart} className="text-white" style={{ background: "#189aa1" }}>
-                    <RefreshCw className="w-4 h-4 mr-2" /> Practice Again
+                  <Button
+                    className="text-white"
+                    style={{ background: "#189aa1" }}
+                    onClick={() => setActiveTab("performance")}
+                  >
+                    <BarChart3 className="w-4 h-4 mr-2" /> View My Stats
                   </Button>
-                  <Button variant="outline" className="border-white/30 text-white hover:bg-white/10" onClick={() => setActiveTab("archive")}>
-                    <Archive className="w-4 h-4 mr-2" /> Challenge Archive
+                  <Button
+                    variant="outline"
+                    className="border-white/30 text-white hover:bg-white/10"
+                    onClick={() => setActiveTab("leaderboard")}
+                  >
+                    <Trophy className="w-4 h-4 mr-2" /> Leaderboard
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="border-white/30 text-white hover:bg-white/10"
+                    onClick={handleRestart}
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" /> Review
                   </Button>
                 </div>
               </div>
             )}
 
-            {/* Results screen */}
+            {/* Session results */}
             {showResults && (() => {
               const correctCount = sessionResults.filter((r) => r.correct === true).length;
               const pct = Math.round((correctCount / questions.length) * 100);
@@ -407,149 +492,148 @@ export default function QuickFire() {
                     {correctCount}/{questions.length}
                   </div>
                   <p className="text-white/50 text-sm mb-6">{pct}% correct</p>
-                  <div className="grid grid-cols-5 gap-2 mb-8">
-                    {sessionResults.map((r, i) => (
-                      <div key={i} className={`rounded-lg p-2 flex flex-col items-center gap-1 ${r.correct === true ? "bg-green-500/20" : r.correct === false ? "bg-red-500/20" : "bg-white/10"}`}>
-                        <span className="text-xs text-white/60">Q{i + 1}</span>
-                        {r.correct === true ? <CheckCircle2 className="w-5 h-5 text-green-400" /> :
-                         r.correct === false ? <XCircle className="w-5 h-5 text-red-400" /> :
-                         <div className="w-5 h-5 rounded-full bg-white/20" />}
-                      </div>
-                    ))}
-                  </div>
                   <div className="flex flex-wrap gap-3 justify-center">
-                    <Button onClick={handleRestart} className="text-white" style={{ background: "#189aa1" }}>
-                      <RefreshCw className="w-4 h-4 mr-2" /> Practice Again
+                    <Button className="text-white" style={{ background: "#189aa1" }} onClick={() => setActiveTab("performance")}>
+                      <BarChart3 className="w-4 h-4 mr-2" /> My Stats
                     </Button>
                     <Button variant="outline" className="border-white/30 text-white hover:bg-white/10" onClick={() => setActiveTab("leaderboard")}>
                       <Trophy className="w-4 h-4 mr-2" /> Leaderboard
+                    </Button>
+                    <Button variant="outline" className="border-white/30 text-white hover:bg-white/10" onClick={handleRestart}>
+                      <RefreshCw className="w-4 h-4 mr-2" /> Retry
                     </Button>
                   </div>
                 </div>
               );
             })()}
 
-            {/* Active question card */}
-            {!isLoading && !error && currentQ && !showResults && !(alreadyCompleted && sessionResults.length === 0) && (() => {
+            {/* Question card */}
+            {!isLoading && !error && currentQ && !showResults && (() => {
               const typeInfo = TYPE_LABELS[currentQ.type] ?? TYPE_LABELS.scenario;
               const TypeIcon = typeInfo.icon;
               const options: string[] = Array.isArray(currentQ.options) ? currentQ.options : [];
-              const progress = (currentIndex / questions.length) * 100;
+              const progress = ((currentIndex) / questions.length) * 100;
               const isQuickReview = currentQ.type === "quickReview";
-              const revealedCorrect = answerResult?.correctAnswer ?? (userAttempts[currentQ.id]?.selectedAnswer ?? null);
-              const revealedExplanation = answerResult?.explanation ?? currentQ.explanation;
-              const revealedReviewAnswer = answerResult?.reviewAnswer ?? currentQ.reviewAnswer;
 
               return (
                 <>
-                  <div className="flex items-center justify-between mb-2">
-                    <Flame className="w-4 h-4 text-orange-400" />
-                    <span className="text-sm font-semibold text-gray-600">{currentIndex + 1} / {questions.length}</span>
-                  </div>
-
-                  <Progress value={progress} className="mb-4 h-2" />
-
-                  {/* Category tag filters */}
+                  {/* Category filter chips */}
                   {presentTags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-4">
+                    <div className="flex gap-2 flex-wrap mb-4">
                       <button
                         onClick={() => handleTagFilter(null)}
-                        className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-all ${
+                        className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
                           activeTagFilter === null
-                            ? "border-[#189aa1] bg-[#189aa1] text-white"
-                            : "border-gray-200 bg-white text-gray-500 hover:border-[#189aa1] hover:text-[#189aa1]"
+                            ? "text-white border-transparent"
+                            : "bg-white text-gray-600 border-gray-200 hover:border-[#189aa1]"
                         }`}
+                        style={activeTagFilter === null ? { background: "#189aa1" } : {}}
                       >
-                        All ({allQuestions.length})
+                        All
                       </button>
-                      {presentTags.map((tag) => {
-                        const count = allQuestions.filter((q) => Array.isArray(q.tags) && q.tags.includes(tag)).length;
-                        return (
-                          <button
-                            key={tag}
-                            onClick={() => handleTagFilter(tag)}
-                            className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-all ${
-                              activeTagFilter === tag
-                                ? "border-[#189aa1] bg-[#189aa1] text-white"
-                                : "border-gray-200 bg-white text-gray-500 hover:border-[#189aa1] hover:text-[#189aa1]"
-                            }`}
-                          >
-                            {tag} ({count})
-                          </button>
-                        );
-                      })}
+                      {presentTags.map((tag) => (
+                        <button
+                          key={tag}
+                          onClick={() => handleTagFilter(tag)}
+                          className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
+                            activeTagFilter === tag
+                              ? "text-white border-transparent"
+                              : "bg-white text-gray-600 border-gray-200 hover:border-[#189aa1]"
+                          }`}
+                          style={activeTagFilter === tag ? { background: "#189aa1" } : {}}
+                        >
+                          {tag}
+                        </button>
+                      ))}
                     </div>
                   )}
 
-                  <Card className="shadow-lg border-0">
+                  {/* Progress bar */}
+                  <div className="mb-4">
+                    <div className="flex justify-between text-xs text-gray-400 mb-1">
+                      <span>Question {currentIndex + 1} of {questions.length}</span>
+                      <span>{Math.round(progress)}% complete</span>
+                    </div>
+                    <Progress value={progress} className="h-1.5" />
+                  </div>
+
+                  <Card className="shadow-sm border-gray-100">
                     <CardHeader className="pb-3">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${typeInfo.color}`}>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className={`flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${typeInfo.color}`}>
                           <TypeIcon className="w-3 h-3" />
                           {typeInfo.label}
                         </span>
-                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${DIFFICULTY_COLORS[currentQ.difficulty] ?? ""}`}>
-                          {currentQ.difficulty}
-                        </span>
+                        {currentQ.difficulty && (
+                          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${DIFFICULTY_COLORS[currentQ.difficulty] ?? "bg-gray-100 text-gray-600"}`}>
+                            {currentQ.difficulty}
+                          </span>
+                        )}
+                        {Array.isArray(currentQ.tags) && currentQ.tags.map((tag: string) => (
+                          <span key={tag} className={`text-xs font-semibold px-2 py-0.5 rounded-full ${CATEGORY_COLORS[tag] ?? "bg-gray-100 text-gray-600"}`}>
+                            {tag}
+                          </span>
+                        ))}
                       </div>
-                      <CardTitle className="text-base leading-snug text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
+                      <CardTitle className="text-base font-semibold text-gray-800 leading-snug mt-2">
                         {currentQ.question}
                       </CardTitle>
                     </CardHeader>
 
-                    <CardContent className="space-y-3">
+                    <CardContent className="space-y-2 pb-3">
                       {currentQ.imageUrl && (
-                        <div className="rounded-lg overflow-hidden mb-4 bg-gray-100">
-                          <img src={currentQ.imageUrl} alt="Echo image" className="w-full max-h-72 object-contain" />
-                        </div>
+                        <img
+                          src={currentQ.imageUrl}
+                          alt="Question image"
+                          className="w-full rounded-lg object-cover max-h-64 mb-3"
+                        />
                       )}
 
                       {isQuickReview ? (
-                        <div>
+                        <>
                           {!flipped ? (
-                            <div className="rounded-lg border-2 border-dashed border-[#189aa1]/30 p-6 text-center bg-[#189aa1]/5">
-                              <p className="text-sm text-gray-500 mb-4">Think of your answer, then reveal.</p>
-                              <Button variant="outline" onClick={() => setFlipped(true)} className="border-[#189aa1] text-[#189aa1]">
+                            <div className="text-center py-6">
+                              <p className="text-sm text-gray-500 mb-4">Think about your answer, then reveal the explanation.</p>
+                              <Button
+                                className="text-white"
+                                style={{ background: "#189aa1" }}
+                                onClick={() => setFlipped(true)}
+                              >
                                 Reveal Answer
                               </Button>
                             </div>
                           ) : (
-                            <div className="space-y-3">
-                              <div className="rounded-lg border border-[#189aa1]/30 p-4 bg-[#189aa1]/5">
+                            <>
+                              <div className="p-4 rounded-lg bg-[#189aa1]/8 border border-[#189aa1]/20 mb-3">
                                 <p className="text-xs font-semibold text-[#189aa1] mb-1">Answer</p>
-                                <p className="text-sm text-gray-800 leading-relaxed">{revealedReviewAnswer ?? currentQ.reviewAnswer ?? "—"}</p>
+                                <p className="text-sm text-gray-700 leading-relaxed">{currentQ.reviewAnswer}</p>
                               </div>
                               {!answered && (
-                                <div>
-                                  <p className="text-xs text-gray-500 mb-2 text-center">Did you get it right?</p>
-                                  <div className="flex gap-3 justify-center">
-                                    <Button onClick={() => handleSelfMark(true)} className="bg-green-500 hover:bg-green-600 text-white gap-2">
-                                      <ThumbsUp className="w-4 h-4" /> Got it
-                                    </Button>
-                                    <Button onClick={() => handleSelfMark(false)} variant="outline" className="border-red-300 text-red-600 hover:bg-red-50 gap-2">
-                                      <ThumbsDown className="w-4 h-4" /> Missed it
-                                    </Button>
-                                  </div>
+                                <div className="flex gap-3">
+                                  <Button
+                                    className="flex-1 bg-green-500 hover:bg-green-600 text-white"
+                                    onClick={() => handleSelfMark(true)}
+                                  >
+                                    <ThumbsUp className="w-4 h-4 mr-2" /> Got it
+                                  </Button>
+                                  <Button
+                                    className="flex-1 bg-red-400 hover:bg-red-500 text-white"
+                                    onClick={() => handleSelfMark(false)}
+                                  >
+                                    <ThumbsDown className="w-4 h-4 mr-2" /> Missed it
+                                  </Button>
                                 </div>
                               )}
-                              {answered && answerResult && (
-                                <div className={`rounded-lg p-3 flex items-center gap-2 ${answerResult.isCorrect ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"}`}>
-                                  {answerResult.isCorrect ? <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" /> : <XCircle className="w-5 h-5 text-red-400 flex-shrink-0" />}
-                                  <span className={`text-sm font-medium ${answerResult.isCorrect ? "text-green-700" : "text-red-600"}`}>
-                                    {answerResult.isCorrect ? "Marked as correct" : "Marked as missed"}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
+                            </>
                           )}
-                        </div>
+                        </>
                       ) : (
                         options.map((opt, idx) => {
                           const isSelected = selectedAnswer === idx;
-                          const isCorrect = idx === revealedCorrect;
-                          let btnClass = "w-full text-left px-4 py-3 rounded-lg border text-sm transition-all font-medium ";
+                          const isCorrect = answerResult?.correctAnswer === idx;
+                          let btnClass = "w-full text-left p-3 rounded-lg border-2 text-sm transition-all ";
                           if (!answered) {
-                            btnClass += "border-gray-200 hover:border-[#189aa1] hover:bg-[#189aa1]/5 text-gray-700";
+                            btnClass += "border-gray-100 bg-white hover:border-[#189aa1] hover:bg-[#189aa1]/5 cursor-pointer";
                           } else if (isCorrect) {
                             btnClass += "border-green-500 bg-green-50 text-green-800";
                           } else if (isSelected && !isCorrect) {
@@ -558,7 +642,7 @@ export default function QuickFire() {
                             btnClass += "border-gray-100 bg-gray-50 text-gray-400";
                           }
                           return (
-                            <button key={idx} className={btnClass} onClick={() => handleSelectAnswer(idx)} disabled={answered || submitMutation.isPending}>
+                            <button key={idx} className={btnClass} onClick={() => handleSelectAnswer(idx)} disabled={answered}>
                               <span className="flex items-center gap-3">
                                 <span
                                   className="w-6 h-6 rounded-full border flex items-center justify-center text-xs font-bold flex-shrink-0"
@@ -579,10 +663,10 @@ export default function QuickFire() {
                         })
                       )}
 
-                      {answered && revealedExplanation && (
+                      {answered && answerResult?.explanation && (
                         <div className="mt-2 p-4 rounded-lg bg-[#189aa1]/8 border border-[#189aa1]/20">
                           <p className="text-xs font-semibold text-[#189aa1] mb-1">Explanation</p>
-                          <p className="text-sm text-gray-700 leading-relaxed">{revealedExplanation}</p>
+                          <p className="text-sm text-gray-700 leading-relaxed">{answerResult.explanation}</p>
                         </div>
                       )}
                     </CardContent>
@@ -618,7 +702,7 @@ export default function QuickFire() {
             {/* Archive list view */}
             {selectedArchiveId === null && (
               <>
-                <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center justify-between mb-4">
                   <div>
                     <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Challenge Archive</h2>
                     <p className="text-xs text-gray-500 mt-0.5">
@@ -627,13 +711,109 @@ export default function QuickFire() {
                         : "Free access — last 7 days. Upgrade for unlimited history."}
                     </p>
                   </div>
-                  {!isPremium && (
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200">
-                      <Crown className="w-3.5 h-3.5 text-amber-500" />
-                      <span className="text-xs font-bold text-amber-700">Free: 7 days</span>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {!isPremium && (
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200">
+                        <Crown className="w-3.5 h-3.5 text-amber-500" />
+                        <span className="text-xs font-bold text-amber-700">Free: 7 days</span>
+                      </div>
+                    )}
+                    <button
+                      onClick={() => setShowArchiveFilters(!showArchiveFilters)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                        hasArchiveFilters
+                          ? "text-white border-transparent"
+                          : "bg-white text-gray-600 border-gray-200 hover:border-[#189aa1]"
+                      }`}
+                      style={hasArchiveFilters ? { background: "#189aa1" } : {}}
+                    >
+                      <Filter className="w-3.5 h-3.5" />
+                      Filters {hasArchiveFilters && "(active)"}
+                      <ChevronDown className={`w-3 h-3 transition-transform ${showArchiveFilters ? "rotate-180" : ""}`} />
+                    </button>
+                  </div>
                 </div>
+
+                {/* Filter panel */}
+                {showArchiveFilters && (
+                  <div className="bg-white border border-gray-100 rounded-xl p-4 mb-4 space-y-4">
+                    {/* Category filter */}
+                    <div>
+                      <p className="text-xs font-semibold text-gray-500 mb-2">Category</p>
+                      <div className="flex gap-2 flex-wrap">
+                        <button
+                          onClick={() => setArchiveCategoryFilter(undefined)}
+                          className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
+                            !archiveCategoryFilter ? "text-white border-transparent" : "bg-white text-gray-600 border-gray-200"
+                          }`}
+                          style={!archiveCategoryFilter ? { background: "#189aa1" } : {}}
+                        >All</button>
+                        {CATEGORY_TAGS.map((cat) => (
+                          <button
+                            key={cat}
+                            onClick={() => setArchiveCategoryFilter(archiveCategoryFilter === cat ? undefined : cat)}
+                            className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
+                              archiveCategoryFilter === cat ? "text-white border-transparent" : "bg-white text-gray-600 border-gray-200"
+                            }`}
+                            style={archiveCategoryFilter === cat ? { background: "#189aa1" } : {}}
+                          >{cat}</button>
+                        ))}
+                      </div>
+                    </div>
+                    {/* Difficulty filter */}
+                    <div>
+                      <p className="text-xs font-semibold text-gray-500 mb-2">Difficulty</p>
+                      <div className="flex gap-2 flex-wrap">
+                        <button
+                          onClick={() => setArchiveDifficultyFilter(undefined)}
+                          className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
+                            !archiveDifficultyFilter ? "text-white border-transparent" : "bg-white text-gray-600 border-gray-200"
+                          }`}
+                          style={!archiveDifficultyFilter ? { background: "#189aa1" } : {}}
+                        >All</button>
+                        {DIFFICULTY_OPTIONS.map((d) => (
+                          <button
+                            key={d}
+                            onClick={() => setArchiveDifficultyFilter(archiveDifficultyFilter === d ? undefined : d)}
+                            className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
+                              archiveDifficultyFilter === d ? "text-white border-transparent" : `bg-white border-gray-200 ${DIFFICULTY_COLORS[d]}`
+                            }`}
+                            style={archiveDifficultyFilter === d ? { background: "#189aa1", color: "white" } : {}}
+                          >{d.charAt(0).toUpperCase() + d.slice(1)}</button>
+                        ))}
+                      </div>
+                    </div>
+                    {/* Date range */}
+                    <div>
+                      <p className="text-xs font-semibold text-gray-500 mb-2">Date Range</p>
+                      <div className="flex gap-3 items-center flex-wrap">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-400">From</span>
+                          <input
+                            type="date"
+                            value={archiveDateFrom ?? ""}
+                            onChange={(e) => setArchiveDateFrom(e.target.value || undefined)}
+                            className="text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:border-[#189aa1]"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-400">To</span>
+                          <input
+                            type="date"
+                            value={archiveDateTo ?? ""}
+                            onChange={(e) => setArchiveDateTo(e.target.value || undefined)}
+                            className="text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:border-[#189aa1]"
+                          />
+                        </div>
+                        {hasArchiveFilters && (
+                          <button onClick={clearArchiveFilters} className="text-xs text-red-500 hover:underline">
+                            Clear all
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {archiveListQuery.isLoading && (
                   <div className="space-y-3">
@@ -644,8 +824,19 @@ export default function QuickFire() {
                 {archiveListQuery.data && archiveListQuery.data.challenges.length === 0 && (
                   <div className="text-center py-16">
                     <Archive className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                    <p className="text-gray-500 font-medium">No archived challenges yet</p>
-                    <p className="text-sm text-gray-400 mt-1">Completed daily challenges will appear here after their 24-hour window closes.</p>
+                    <p className="text-gray-500 font-medium">
+                      {hasArchiveFilters ? "No challenges match your filters" : "No archived challenges yet"}
+                    </p>
+                    <p className="text-sm text-gray-400 mt-1">
+                      {hasArchiveFilters
+                        ? "Try adjusting or clearing your filters."
+                        : "Completed daily challenges will appear here after their 24-hour window closes."}
+                    </p>
+                    {hasArchiveFilters && (
+                      <button onClick={clearArchiveFilters} className="mt-3 text-sm text-[#189aa1] hover:underline">
+                        Clear filters
+                      </button>
+                    )}
                   </div>
                 )}
 
@@ -673,8 +864,13 @@ export default function QuickFire() {
                             <div className="font-semibold text-sm text-gray-800 truncate">{challenge.title}</div>
                             <div className="flex items-center gap-3 mt-0.5 flex-wrap">
                               {challenge.category && (
-                                <span className="flex items-center gap-1 text-xs text-gray-400">
+                                <span className={`flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${CATEGORY_COLORS[challenge.category] ?? "bg-gray-100 text-gray-600"}`}>
                                   <Tag className="w-3 h-3" />{challenge.category}
+                                </span>
+                              )}
+                              {challenge.difficulty && (
+                                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${DIFFICULTY_COLORS[challenge.difficulty] ?? "bg-gray-100 text-gray-600"}`}>
+                                  {challenge.difficulty}
                                 </span>
                               )}
                               <span className="flex items-center gap-1 text-xs text-gray-400">
@@ -801,73 +997,72 @@ export default function QuickFire() {
 
                   return (
                     <>
-                      <div className="flex items-center justify-between mb-2">
-                        <Flame className="w-4 h-4 text-orange-400" />
-                        <span className="text-sm font-semibold text-gray-600">{archiveQIndex + 1} / {archiveQuestions.length}</span>
+                      <div className="mb-4">
+                        <div className="flex justify-between text-xs text-gray-400 mb-1">
+                          <span>Question {archiveQIndex + 1} of {archiveQuestions.length}</span>
+                          <span>{Math.round(progress)}% complete</span>
+                        </div>
+                        <Progress value={progress} className="h-1.5" />
                       </div>
-                      <Progress value={progress} className="mb-4 h-2" />
 
-                      <Card className="shadow-lg border-0">
+                      <Card className="shadow-sm border-gray-100">
                         <CardHeader className="pb-3">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${typeInfo.color}`}>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${typeInfo.color}`}>
                               <TypeIcon className="w-3 h-3" />
                               {typeInfo.label}
                             </span>
-                            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${DIFFICULTY_COLORS[archiveCurrentQ.difficulty] ?? ""}`}>
-                              {archiveCurrentQ.difficulty}
-                            </span>
+                            {archiveCurrentQ.difficulty && (
+                              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${DIFFICULTY_COLORS[archiveCurrentQ.difficulty] ?? "bg-gray-100 text-gray-600"}`}>
+                                {archiveCurrentQ.difficulty}
+                              </span>
+                            )}
                           </div>
-                          <CardTitle className="text-base leading-snug text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
+                          <CardTitle className="text-base font-semibold text-gray-800 leading-snug mt-2">
                             {archiveCurrentQ.question}
                           </CardTitle>
                         </CardHeader>
 
-                        <CardContent className="space-y-3">
+                        <CardContent className="space-y-2 pb-3">
                           {archiveCurrentQ.imageUrl && (
-                            <div className="rounded-lg overflow-hidden mb-4 bg-gray-100">
-                              <img src={archiveCurrentQ.imageUrl} alt="Echo image" className="w-full max-h-72 object-contain" />
-                            </div>
+                            <img src={archiveCurrentQ.imageUrl} alt="Question" className="w-full rounded-lg object-cover max-h-64 mb-3" />
                           )}
 
                           {isQuickReview ? (
-                            <div>
+                            <>
                               {!archiveFlipped ? (
-                                <div className="rounded-lg border-2 border-dashed border-[#189aa1]/30 p-6 text-center bg-[#189aa1]/5">
-                                  <p className="text-sm text-gray-500 mb-4">Think of your answer, then reveal.</p>
-                                  <Button variant="outline" onClick={() => setArchiveFlipped(true)} className="border-[#189aa1] text-[#189aa1]">
+                                <div className="text-center py-6">
+                                  <p className="text-sm text-gray-500 mb-4">Think about your answer, then reveal the explanation.</p>
+                                  <Button className="text-white" style={{ background: "#189aa1" }} onClick={() => setArchiveFlipped(true)}>
                                     Reveal Answer
                                   </Button>
                                 </div>
                               ) : (
-                                <div className="space-y-3">
-                                  <div className="rounded-lg border border-[#189aa1]/30 p-4 bg-[#189aa1]/5">
+                                <>
+                                  <div className="p-4 rounded-lg bg-[#189aa1]/8 border border-[#189aa1]/20 mb-3">
                                     <p className="text-xs font-semibold text-[#189aa1] mb-1">Answer</p>
-                                    <p className="text-sm text-gray-800 leading-relaxed">{archiveCurrentQ.reviewAnswer ?? "—"}</p>
+                                    <p className="text-sm text-gray-700 leading-relaxed">{archiveCurrentQ.reviewAnswer}</p>
                                   </div>
                                   {!archiveAnswered && (
-                                    <div>
-                                      <p className="text-xs text-gray-500 mb-2 text-center">Did you get it right?</p>
-                                      <div className="flex gap-3 justify-center">
-                                        <Button onClick={() => handleArchiveSelfMark(true)} className="bg-green-500 hover:bg-green-600 text-white gap-2">
-                                          <ThumbsUp className="w-4 h-4" /> Got it
-                                        </Button>
-                                        <Button onClick={() => handleArchiveSelfMark(false)} variant="outline" className="border-red-300 text-red-600 hover:bg-red-50 gap-2">
-                                          <ThumbsDown className="w-4 h-4" /> Missed it
-                                        </Button>
-                                      </div>
+                                    <div className="flex gap-3">
+                                      <Button className="flex-1 bg-green-500 hover:bg-green-600 text-white" onClick={() => handleArchiveSelfMark(true)}>
+                                        <ThumbsUp className="w-4 h-4 mr-2" /> Got it
+                                      </Button>
+                                      <Button className="flex-1 bg-red-400 hover:bg-red-500 text-white" onClick={() => handleArchiveSelfMark(false)}>
+                                        <ThumbsDown className="w-4 h-4 mr-2" /> Missed it
+                                      </Button>
                                     </div>
                                   )}
-                                </div>
+                                </>
                               )}
-                            </div>
+                            </>
                           ) : (
                             options.map((opt, idx) => {
                               const isSelected = archiveSelected === idx;
-                              const isCorrect = idx === archiveCurrentQ.correctAnswer;
-                              let btnClass = "w-full text-left px-4 py-3 rounded-lg border text-sm transition-all font-medium ";
+                              const isCorrect = archiveCurrentQ.correctAnswer === idx;
+                              let btnClass = "w-full text-left p-3 rounded-lg border-2 text-sm transition-all ";
                               if (!archiveAnswered) {
-                                btnClass += "border-gray-200 hover:border-[#189aa1] hover:bg-[#189aa1]/5 text-gray-700";
+                                btnClass += "border-gray-100 bg-white hover:border-[#189aa1] hover:bg-[#189aa1]/5 cursor-pointer";
                               } else if (isCorrect) {
                                 btnClass += "border-green-500 bg-green-50 text-green-800";
                               } else if (isSelected && !isCorrect) {
@@ -932,12 +1127,167 @@ export default function QuickFire() {
           </>
         )}
 
+        {/* ── TAB: My Performance ──────────────────────────────────────────── */}
+        {activeTab === "performance" && (
+          <>
+            <div className="mb-5">
+              <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>My Performance</h2>
+              <p className="text-xs text-gray-500">Your personal QuickFire stats and progress</p>
+            </div>
+
+            {perfQuery.isLoading && (
+              <div className="flex justify-center py-12">
+                <div className="w-10 h-10 rounded-full border-4 border-[#189aa1] border-t-transparent animate-spin" />
+              </div>
+            )}
+
+            {perfQuery.data && (() => {
+              const stats = perfQuery.data;
+              return (
+                <div className="space-y-5">
+                  {/* Stat cards row */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {[
+                      { label: "Total Answered", value: stats.total, icon: Target, color: "#189aa1" },
+                      { label: "Correct", value: stats.correct, icon: CheckCircle2, color: "#16a34a" },
+                      { label: "Accuracy", value: `${stats.accuracy}%`, icon: TrendingUp, color: "#7c3aed" },
+                      { label: "Current Streak", value: `${stats.streak}d`, icon: Flame, color: "#f59e0b" },
+                    ].map(({ label, value, icon: Icon, color }) => (
+                      <div key={label} className="bg-white rounded-xl border border-gray-100 p-4 flex flex-col gap-2">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: color + "15" }}>
+                          <Icon className="w-4 h-4" style={{ color }} />
+                        </div>
+                        <div className="text-2xl font-black" style={{ fontFamily: "JetBrains Mono, monospace", color }}>
+                          {value}
+                        </div>
+                        <div className="text-xs text-gray-500">{label}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Best streak */}
+                  {stats.bestStreak > 0 && (
+                    <div className="bg-white rounded-xl border border-gray-100 p-4 flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
+                        <Star className="w-5 h-5 text-amber-500" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold text-gray-800">Best Streak</div>
+                        <div className="text-xs text-gray-400">Your longest consecutive daily challenge streak</div>
+                      </div>
+                      <div className="ml-auto text-2xl font-black text-amber-500" style={{ fontFamily: "JetBrains Mono, monospace" }}>
+                        {stats.bestStreak}d
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Per-category breakdown */}
+                  {Object.keys(stats.categoryStats).length > 0 && (
+                    <div className="bg-white rounded-xl border border-gray-100 p-4">
+                      <h3 className="text-sm font-bold text-gray-800 mb-4" style={{ fontFamily: "Merriweather, serif" }}>
+                        Performance by Category
+                      </h3>
+                      <div className="space-y-3">
+                        {Object.entries(stats.categoryStats)
+                          .sort(([, a], [, b]) => b.total - a.total)
+                          .map(([cat, s]) => {
+                            const pct = s.total > 0 ? Math.round((s.correct / s.total) * 100) : 0;
+                            const barColor = pct >= 80 ? "#189aa1" : pct >= 60 ? "#4ad9e0" : "#f59e0b";
+                            return (
+                              <div key={cat}>
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${CATEGORY_COLORS[cat] ?? "bg-gray-100 text-gray-600"}`}>
+                                    {cat}
+                                  </span>
+                                  <span className="text-xs text-gray-500">{s.correct}/{s.total} correct · <span className="font-bold" style={{ color: barColor }}>{pct}%</span></span>
+                                </div>
+                                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                  <div
+                                    className="h-full rounded-full transition-all"
+                                    style={{ width: `${pct}%`, background: barColor }}
+                                  />
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 14-day activity chart */}
+                  {stats.recentHistory.length > 0 && (
+                    <div className="bg-white rounded-xl border border-gray-100 p-4">
+                      <h3 className="text-sm font-bold text-gray-800 mb-4" style={{ fontFamily: "Merriweather, serif" }}>
+                        14-Day Activity
+                      </h3>
+                      <div className="flex items-end gap-1 overflow-x-auto pb-6">
+                        {stats.recentHistory.map((day) => (
+                          <ActivityBar key={day.date} date={day.date} correct={day.correct} total={day.total} />
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-4 mt-2 flex-wrap">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-3 h-3 rounded-sm" style={{ background: "#189aa1" }} />
+                          <span className="text-xs text-gray-400">≥80% accuracy</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-3 h-3 rounded-sm" style={{ background: "#4ad9e0" }} />
+                          <span className="text-xs text-gray-400">60–79%</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-3 h-3 rounded-sm" style={{ background: "#f59e0b" }} />
+                          <span className="text-xs text-gray-400">&lt;60%</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Empty state */}
+                  {stats.total === 0 && (
+                    <div className="text-center py-12">
+                      <BarChart3 className="w-12 h-12 mx-auto mb-3 text-gray-200" />
+                      <p className="text-gray-500 font-medium">No data yet</p>
+                      <p className="text-sm text-gray-400 mt-1">Complete your first daily challenge to see your stats here.</p>
+                      <Button className="mt-4 text-white" style={{ background: "#189aa1" }} onClick={() => setActiveTab("challenge")}>
+                        <Zap className="w-4 h-4 mr-2" /> Start Today's Challenge
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+          </>
+        )}
+
         {/* ── TAB: Leaderboard ─────────────────────────────────────────────── */}
         {activeTab === "leaderboard" && (
           <>
-            <div className="mb-5">
-              <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Echo Ninja Leaderboard</h2>
-              <p className="text-xs text-gray-500">Top performers — last 30 days</p>
+            <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+              <div>
+                <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Echo Ninja Leaderboard</h2>
+                <p className="text-xs text-gray-500">Top performers by correct answers</p>
+              </div>
+              {/* Period filter */}
+              <div className="flex gap-1.5">
+                {([
+                  { id: "7d" as const, label: "7 Days" },
+                  { id: "30d" as const, label: "30 Days" },
+                  { id: "allTime" as const, label: "All Time" },
+                ] as const).map(({ id, label }) => (
+                  <button
+                    key={id}
+                    onClick={() => setLbPeriod(id)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                      lbPeriod === id
+                        ? "text-white border-transparent"
+                        : "bg-white text-gray-600 border-gray-200 hover:border-[#189aa1]"
+                    }`}
+                    style={lbPeriod === id ? { background: "#189aa1" } : {}}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {leaderboardQuery.isLoading && (
@@ -946,42 +1296,79 @@ export default function QuickFire() {
               </div>
             )}
 
-            {leaderboardQuery.data && leaderboardQuery.data.length === 0 && (
+            {leaderboardQuery.data && leaderboardQuery.data.entries.length === 0 && (
               <div className="text-center py-12 text-gray-400">
                 <Trophy className="w-10 h-10 mx-auto mb-3 opacity-30" />
                 <p className="text-sm">No entries yet — be the first to complete a challenge!</p>
               </div>
             )}
 
-            {leaderboardQuery.data && leaderboardQuery.data.length > 0 && (
-              <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="px-5 py-4 flex items-center gap-2" style={{ background: "linear-gradient(135deg, #0e4a50, #189aa1)" }}>
-                  <Trophy className="w-4 h-4 text-white" />
-                  <h3 className="font-bold text-white" style={{ fontFamily: "Merriweather, serif" }}>Top 10 — Last 30 Days</h3>
-                </div>
-                <div className="divide-y divide-gray-50">
-                  {leaderboardQuery.data.map((entry) => (
-                    <div key={entry.userId} className="flex items-center gap-4 px-5 py-4">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${
-                        entry.rank === 1 ? "bg-amber-400 text-white" :
-                        entry.rank === 2 ? "bg-gray-300 text-gray-700" :
-                        entry.rank === 3 ? "bg-amber-700 text-white" :
-                        "bg-gray-100 text-gray-500"
-                      }`}>
-                        {entry.rank === 1 ? <Medal className="w-4 h-4" /> : entry.rank}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-sm text-gray-800 truncate">{entry.displayName}</div>
-                        <div className="text-xs text-gray-400">{entry.accuracy}% accuracy · {entry.total} answered</div>
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <div className="font-bold text-[#189aa1]" style={{ fontFamily: "JetBrains Mono, monospace" }}>
-                          {entry.correct}
-                        </div>
-                        <div className="text-xs text-gray-400">correct</div>
+            {leaderboardQuery.data && leaderboardQuery.data.entries.length > 0 && (
+              <div className="space-y-3">
+                {/* Current user rank banner (if outside top 10) */}
+                {leaderboardQuery.data.currentUserRank && leaderboardQuery.data.currentUserRank > 10 && (
+                  <div className="rounded-xl p-4 flex items-center gap-4 border-2" style={{ borderColor: "#189aa1", background: "#f0fbfc" }}>
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0" style={{ background: "#189aa1" }}>
+                      #{leaderboardQuery.data.currentUserRank}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-semibold text-sm text-gray-800">Your Rank</div>
+                      <div className="text-xs text-gray-500">
+                        {leaderboardQuery.data.currentUserEntry?.correct ?? 0} correct · {leaderboardQuery.data.currentUserEntry?.accuracy ?? 0}% accuracy
                       </div>
                     </div>
-                  ))}
+                    <div className="text-xs text-[#189aa1] font-semibold">
+                      {10 - (leaderboardQuery.data.currentUserRank ?? 0) < 0
+                        ? `${leaderboardQuery.data.currentUserRank - 10} spots from top 10`
+                        : ""}
+                    </div>
+                  </div>
+                )}
+
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                  <div className="px-5 py-4 flex items-center gap-2" style={{ background: "linear-gradient(135deg, #0e4a50, #189aa1)" }}>
+                    <Trophy className="w-4 h-4 text-white" />
+                    <h3 className="font-bold text-white" style={{ fontFamily: "Merriweather, serif" }}>
+                      Top 10 — {lbPeriod === "7d" ? "Last 7 Days" : lbPeriod === "30d" ? "Last 30 Days" : "All Time"}
+                    </h3>
+                  </div>
+                  <div className="divide-y divide-gray-50">
+                    {leaderboardQuery.data.entries.map((entry) => (
+                      <div
+                        key={entry.userId}
+                        className={`flex items-center gap-4 px-5 py-4 transition-colors ${
+                          entry.isCurrentUser ? "bg-[#f0fbfc]" : ""
+                        }`}
+                      >
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${
+                          entry.rank === 1 ? "bg-amber-400 text-white" :
+                          entry.rank === 2 ? "bg-gray-300 text-gray-700" :
+                          entry.rank === 3 ? "bg-amber-700 text-white" :
+                          entry.isCurrentUser ? "text-white" :
+                          "bg-gray-100 text-gray-500"
+                        }`}
+                        style={entry.isCurrentUser && entry.rank > 3 ? { background: "#189aa1" } : {}}
+                        >
+                          {entry.rank === 1 ? <Medal className="w-4 h-4" /> : entry.rank}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-sm text-gray-800 truncate">{entry.displayName}</span>
+                            {entry.isCurrentUser && (
+                              <span className="text-xs font-bold px-1.5 py-0.5 rounded text-white flex-shrink-0" style={{ background: "#189aa1" }}>You</span>
+                            )}
+                          </div>
+                          <div className="text-xs text-gray-400">{entry.accuracy}% accuracy · {entry.total} answered</div>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <div className="font-bold text-[#189aa1]" style={{ fontFamily: "JetBrains Mono, monospace" }}>
+                            {entry.correct}
+                          </div>
+                          <div className="text-xs text-gray-400">correct</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}

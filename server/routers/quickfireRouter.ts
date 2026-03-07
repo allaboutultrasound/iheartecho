@@ -33,7 +33,7 @@ import {
   users,
 } from "../../drizzle/schema";
 import { notifyOwner } from "../_core/notification";
-import { eq, and, desc, sql, gte, count } from "drizzle-orm";
+import { eq, and, desc, sql, gte, lte, count, inArray } from "drizzle-orm";
 import { sendStreakReminders } from "../streakReminders";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -246,47 +246,88 @@ export const quickfireRouter = router({
     }),
 
   /** Get the current user's QuickFire stats */
-  getUserStats: protectedProcedure.query(async ({ ctx }) => {
+getUserStats: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
     const userId = ctx.user.id;
-
     const allAttempts = await db
       .select()
       .from(quickfireAttempts)
       .where(eq(quickfireAttempts.userId, userId))
       .orderBy(desc(quickfireAttempts.setDate));
-
     const total = allAttempts.length;
     const correct = allAttempts.filter((a) => a.isCorrect === true).length;
     const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
-
-    // Calculate current streak (consecutive days with at least one attempt)
+    // Calculate current streak
     const dates = Array.from(new Set(allAttempts.map((a) => a.setDate))).sort().reverse();
     let streak = 0;
+    let bestStreak = 0;
+    let tempStreak = 0;
     const today = todayDateStr();
     for (let i = 0; i < dates.length; i++) {
       const expected = new Date(today);
       expected.setDate(expected.getDate() - i);
       const expectedStr = expected.toISOString().slice(0, 10);
-      if (dates[i] === expectedStr) {
-        streak++;
-      } else {
-        break;
+      if (dates[i] === expectedStr) { streak++; } else { break; }
+    }
+    // Best streak
+    const sortedDates = [...dates].sort();
+    for (let i = 0; i < sortedDates.length; i++) {
+      if (i === 0) { tempStreak = 1; }
+      else {
+        const prev = new Date(sortedDates[i - 1]);
+        prev.setDate(prev.getDate() + 1);
+        if (prev.toISOString().slice(0, 10) === sortedDates[i]) { tempStreak++; }
+        else { tempStreak = 1; }
+      }
+      if (tempStreak > bestStreak) bestStreak = tempStreak;
+    }
+    // Per-category accuracy
+    const questionIds = Array.from(new Set(allAttempts.map((a) => a.questionId)));
+    const categoryStats: Record<string, { correct: number; total: number }> = {};
+    if (questionIds.length > 0) {
+      const questions = await db
+        .select({ id: quickfireQuestions.id, tags: quickfireQuestions.tags })
+        .from(quickfireQuestions)
+        .where(inArray(quickfireQuestions.id, questionIds));
+      const tagMap = new Map(questions.map((q) => [q.id, q.tags ? JSON.parse(q.tags) as string[] : []]));
+      for (const attempt of allAttempts) {
+        const tags = tagMap.get(attempt.questionId) ?? [];
+        for (const tag of tags) {
+          if (!categoryStats[tag]) categoryStats[tag] = { correct: 0, total: 0 };
+          categoryStats[tag].total++;
+          if (attempt.isCorrect) categoryStats[tag].correct++;
+        }
       }
     }
-
-    return { total, correct, accuracy, streak };
+    // Recent 14-day history
+    const fourteenDaysAgo = new Date();
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 13);
+    const cutoff14 = fourteenDaysAgo.toISOString().slice(0, 10);
+    const recentAttempts = allAttempts.filter((a) => a.setDate >= cutoff14);
+    const byDate: Record<string, { correct: number; total: number }> = {};
+    for (const a of recentAttempts) {
+      if (!byDate[a.setDate]) byDate[a.setDate] = { correct: 0, total: 0 };
+      byDate[a.setDate].total++;
+      if (a.isCorrect) byDate[a.setDate].correct++;
+    }
+    const recentHistory = Object.entries(byDate)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, s]) => ({ date, correct: s.correct, total: s.total, accuracy: Math.round((s.correct / s.total) * 100) }));
+    return { total, correct, accuracy, streak, bestStreak, categoryStats, recentHistory };
   }),
 
-  /** Top 10 users by correct answers in the last 30 days */
-  getLeaderboard: publicProcedure.query(async () => {
+  /** Leaderboard with period filter and current user rank */
+  getLeaderboard: protectedProcedure
+    .input(z.object({ period: z.enum(["7d", "30d", "allTime"]).default("30d") }).optional())
+    .query(async ({ ctx, input }) => {
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const cutoff = thirtyDaysAgo.toISOString().slice(0, 10);
-
+    const period = input?.period ?? "30d";
+    let cutoff: string | null = null;
+    if (period === "7d") { const d = new Date(); d.setDate(d.getDate() - 7); cutoff = d.toISOString().slice(0, 10); }
+    else if (period === "30d") { const d = new Date(); d.setDate(d.getDate() - 30); cutoff = d.toISOString().slice(0, 10); }
+    const whereClause = cutoff ? gte(quickfireAttempts.setDate, cutoff) : undefined;
     const results = await db
       .select({
         userId: quickfireAttempts.userId,
@@ -294,21 +335,18 @@ export const quickfireRouter = router({
         total: count(quickfireAttempts.id),
       })
       .from(quickfireAttempts)
-      .where(gte(quickfireAttempts.setDate, cutoff))
+      .where(whereClause)
       .groupBy(quickfireAttempts.userId)
       .orderBy(desc(sql`SUM(CASE WHEN ${quickfireAttempts.isCorrect} = 1 THEN 1 ELSE 0 END)`))
-      .limit(10);
-
-    // Fetch display names
+      .limit(50);
     const userIds = results.map((r) => r.userId);
-    if (userIds.length === 0) return [];
-
+    if (userIds.length === 0) return { entries: [], currentUserRank: null, currentUserEntry: null };
     const userList = await db
       .select({ id: users.id, displayName: users.displayName, name: users.name, avatarUrl: users.avatarUrl })
       .from(users)
-      .where(sql`${users.id} IN (${userIds.join(",")})`);
-
-    return results.map((r, i) => {
+      .where(inArray(users.id, userIds));
+    const currentUserId = ctx.user.id;
+    const allEntries = results.map((r, i) => {
       const u = userList.find((u) => u.id === r.userId);
       return {
         rank: i + 1,
@@ -318,11 +356,18 @@ export const quickfireRouter = router({
         correct: Number(r.correct),
         total: Number(r.total),
         accuracy: r.total > 0 ? Math.round((Number(r.correct) / Number(r.total)) * 100) : 0,
+        isCurrentUser: r.userId === currentUserId,
       };
     });
+    const top10 = allEntries.slice(0, 10);
+    const currentUserEntry = allEntries.find((e) => e.userId === currentUserId) ?? null;
+    const currentUserRank = currentUserEntry?.rank ?? null;
+    const entries = [...top10];
+    if (currentUserEntry && currentUserRank && currentUserRank > 10) entries.push(currentUserEntry);
+    return { entries, currentUserRank, currentUserEntry };
   }),
 
-  // ─── Admin procedures ───────────────────────────────────────────────────────
+    // ─── Admin procedures ───────────────────────────────────────────────────────
 
   createQuestion: adminProcedure
     .input(
@@ -792,33 +837,52 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
 
   /** Get the challenge archive — free users: last 7 days; premium: all */
   getChallengeArchive: publicProcedure
-    .input(z.object({ page: z.number().int().min(1).default(1), limit: z.number().int().min(1).max(20).default(10) }))
+    .input(z.object({
+      page: z.number().int().min(1).default(1),
+      limit: z.number().int().min(1).max(20).default(10),
+      category: z.string().optional(),
+      difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
+      dateFrom: z.string().optional(), // YYYY-MM-DD
+      dateTo: z.string().optional(),   // YYYY-MM-DD
+    }))
     .query(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
-
       const isPremium = (ctx.user as any)?.isPremium === true || (ctx.user as any)?.role === "admin";
       const offset = (input.page - 1) * input.limit;
-
+      const conditions: any[] = [eq(quickfireChallenges.status, "archived")];
       // Free users: only last 7 days
-      let conditions = [eq(quickfireChallenges.status, "archived")];
       if (!isPremium) {
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
         const cutoff = sevenDaysAgo.toISOString().slice(0, 10);
-        conditions.push(sql`${quickfireChallenges.publishDate} >= ${cutoff}` as any);
+        conditions.push(gte(quickfireChallenges.publishDate, cutoff));
       }
-
+      // Category filter
+      if (input.category) {
+        conditions.push(eq(quickfireChallenges.category, input.category));
+      }
+      // Difficulty filter
+      if (input.difficulty) {
+        conditions.push(eq(quickfireChallenges.difficulty, input.difficulty));
+      }
+      // Date range filters
+      if (input.dateFrom) {
+        conditions.push(gte(quickfireChallenges.publishDate, input.dateFrom));
+      }
+      if (input.dateTo) {
+        conditions.push(lte(quickfireChallenges.publishDate, input.dateTo));
+      }
       const [rows, totalResult] = await Promise.all([
         db.select({ id: quickfireChallenges.id, title: quickfireChallenges.title, description: quickfireChallenges.description,
-          category: quickfireChallenges.category, publishDate: quickfireChallenges.publishDate,
+          category: quickfireChallenges.category, difficulty: quickfireChallenges.difficulty,
+          publishDate: quickfireChallenges.publishDate,
           publishedAt: quickfireChallenges.publishedAt, archivedAt: quickfireChallenges.archivedAt,
           questionIds: quickfireChallenges.questionIds })
           .from(quickfireChallenges).where(and(...conditions))
           .orderBy(desc(quickfireChallenges.publishedAt)).limit(input.limit).offset(offset),
         db.select({ count: count(quickfireChallenges.id) }).from(quickfireChallenges).where(and(...conditions)),
       ]);
-
       return { challenges: rows, total: totalResult[0]?.count ?? 0, isPremium, page: input.page, limit: input.limit };
     }),
 

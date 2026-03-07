@@ -918,6 +918,8 @@ export const quickfireChallenges = mysqlTable("quickfireChallenges", {
   priority: int("priority").default(100).notNull(),
   // Category tag for filtering (ACS | Adult Echo | Pediatric Echo | Fetal Echo | General)
   category: varchar("category", { length: 64 }),
+  // Difficulty level for filtering
+  difficulty: mysqlEnum("difficulty", ["beginner", "intermediate", "advanced"]).default("intermediate"),
   // Lifecycle status
   status: mysqlEnum("status", ["draft", "scheduled", "live", "archived"]).default("draft").notNull(),
   // UTC date this challenge went (or is scheduled to go) live — YYYY-MM-DD
