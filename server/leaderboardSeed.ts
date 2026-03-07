@@ -134,7 +134,7 @@ export interface VirtualEntry {
   accuracy: number;
   isCurrentUser: false;
   city: string;
-  credentials: string;
+  credentials: string | null; // null = uncredentialed learner
   isVirtual: true;
 }
 
@@ -163,8 +163,11 @@ export function generateVirtualLeaderboard(
   for (let i = 0; i < count; i++) {
     const firstName = pick(FIRST_NAMES, rand);
     const lastName = pick(LAST_NAMES, rand);
-    const cred = pick(CREDENTIALS, rand);
     const city = pick(CITIES, rand);
+
+    // ~28% of entries are uncredentialed learners (students, residents, enthusiasts)
+    const isLearner = rand() < 0.28;
+    const cred = isLearner ? null : pick(CREDENTIALS, rand);
 
     // Correct answers: exponential-ish distribution — most users cluster in the middle
     const u = rand();
@@ -179,7 +182,8 @@ export function generateVirtualLeaderboard(
     entries.push({
       rank: 0, // will be set after merge + sort
       userId: `v_${i}_${seed}`,
-      displayName: `${firstName} ${lastName}, ${cred}`,
+      // Credentialed: "Sarah Mitchell, RDCS"  |  Learner: "Sarah Mitchell"
+      displayName: cred ? `${firstName} ${lastName}, ${cred}` : `${firstName} ${lastName}`,
       avatarUrl: null,
       correct,
       total,
