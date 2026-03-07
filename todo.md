@@ -1052,3 +1052,33 @@
 - [ ] UEANavigator: add PLSVC section — diagnostic criteria, coronary sinus dilation, differential diagnosis, clinical implications
 - [ ] UEAScanCoach: expand Lumason injection technique card with machine settings and timing
 - [ ] UEAScanCoach: add Agitated Saline / Bubble Study tab — preparation steps, injection technique, views (A4C, subcostal, PLAX), Valsalva coaching, grading, PLSVC pattern recognition
+
+## HOCM Navigator & ScanCoach
+
+- [ ] Build HOCMNavigator.tsx — full HOCM echo protocol with SAM grading, LVOT gradient thresholds, Valsalva provocation, MR assessment, and ASE/AHA reporting guidance
+- [ ] Build HOCMScanCoach.tsx — view-by-view acquisition guide with imaging techniques, CW Doppler positioning, provocation protocol, and pitfalls
+- [ ] Register /hocm-navigator and /hocm-scan-coach routes in App.tsx
+- [ ] Add HOCM Navigator to EchoNavigatorHub.tsx (HCM badge)
+- [ ] Add HOCM ScanCoach to ScanCoachHub.tsx (HCM badge)
+- [ ] Add HOCM Navigator and ScanCoach to Layout.tsx sidebar
+- [ ] Add HOCM Navigator and ScanCoach cards to Home dashboard module grid
+- [ ] Vitest: no new server procedures needed (static content pages)
+
+## HOCM ScanCoach + UEA Vendor Tab
+
+- [ ] Build HOCMScanCoach.tsx with view-by-view acquisition guide, CW Doppler positioning, Valsalva acquisition, and Doppler Differentiation tab (HOCM LVOT vs. MR Doppler comparison)
+- [ ] Add Vendor Reference tab to UEAScanCoach — Definity, Lumason, Optison (dosing, administration, chemical makeup, MI settings)
+- [ ] Register /hocm-scan-coach route in App.tsx
+- [ ] Add HOCM ScanCoach to ScanCoachHub.tsx
+- [ ] Add HOCM Navigator and ScanCoach to Layout sidebar
+- [ ] Add HOCM Navigator and ScanCoach to EchoNavigatorHub and Home dashboard
+- [ ] Vitest: no new server procedures needed
+
+## Hide Blank ScanCoach Image Slots
+- [x] Audit all ScanCoach pages for blank image rendering patterns
+- [x] Fix ScanCoach.tsx — already uses conditional rendering, no change needed
+- [x] Fix TEEScanCoach.tsx — removed ImagePlaceholder component and its two unconditional usages
+- [x] Fix ICEScanCoach.tsx — removed ImagePlaceholder component and its two unconditional usages
+- [x] Fix UEAScanCoach.tsx — no placeholder boxes found, no change needed
+- [x] Fix HOCMScanCoach.tsx — no placeholder boxes found, no change needed
+- [x] Fix StrainScanCoach.tsx — no placeholder boxes found, no change needed

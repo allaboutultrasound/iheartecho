@@ -9,7 +9,7 @@ import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import {
   Microscope, ChevronRight, ChevronDown, ChevronUp,
-  Stethoscope, Zap, Image, Video, Info, AlertTriangle,
+  Stethoscope, Zap, Info, AlertTriangle,
   CheckCircle, Target, RotateCcw, ArrowRight, BookOpen
 } from "lucide-react";
 
@@ -500,23 +500,6 @@ const GROUPS = [
   { key: "Upper Esophageal", color: "#0f766e", label: "Upper Esophageal (UE)", count: 2 },
 ];
 
-// ─── IMAGE PLACEHOLDER ────────────────────────────────────────────────────────
-function ImagePlaceholder({ label, type }: { label: string; type: "image" | "clip" }) {
-  return (
-    <div
-      className="rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 py-8 px-4 text-center"
-      style={{ borderColor: BRAND + "40", background: BRAND + "05" }}
-    >
-      {type === "image"
-        ? <Image className="w-8 h-8" style={{ color: BRAND + "60" }} />
-        : <Video className="w-8 h-8" style={{ color: BRAND + "60" }} />
-      }
-      <p className="text-xs font-semibold" style={{ color: BRAND + "80" }}>{label}</p>
-      <p className="text-[10px] text-gray-400">Placeholder — upload image to replace</p>
-    </div>
-  );
-}
-
 // ─── VIEW DETAIL PANEL ────────────────────────────────────────────────────────
 function ViewDetail({ view }: { view: typeof TEE_VIEWS[0] }) {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
@@ -558,12 +541,6 @@ function ViewDetail({ view }: { view: typeof TEE_VIEWS[0] }) {
             <div className="text-xs text-white font-semibold mt-0.5 leading-snug">{view.patientPosition}</div>
           </div>
         </div>
-      </div>
-
-      {/* Image & Clip Placeholders */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <ImagePlaceholder label={`${view.name} — Reference Image`} type="image" />
-        <ImagePlaceholder label={`${view.name} — Video Clip`} type="clip" />
       </div>
 
       {/* How to Get This View */}

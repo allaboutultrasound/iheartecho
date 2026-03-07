@@ -1,0 +1,930 @@
+/*
+  HOCM ScanCoach™
+  Hypertrophic Obstructive Cardiomyopathy — Acquisition Guide
+  Brand: Teal #189aa1, Aqua #4ad9e0 / HOCM accent: Purple #7c3aed
+  Fonts: Merriweather headings, Open Sans body
+*/
+
+import { useState } from "react";
+import Layout from "@/components/Layout";
+import {
+  Activity,
+  AlertTriangle,
+  CheckCircle,
+  ChevronDown,
+  ChevronRight,
+  Info,
+  Layers,
+  Ruler,
+  Target,
+  TrendingUp,
+  Zap,
+} from "lucide-react";
+import { Link } from "wouter";
+
+const BRAND = "#189aa1";
+const PURPLE = "#7c3aed";
+
+// ─── SVG WAVEFORM COMPONENTS ─────────────────────────────────────────────────
+
+/** HOCM LVOT — dagger-shaped, late-peaking CW Doppler signal */
+function HOCMDopplerWaveform() {
+  // Represents ~3 cardiac cycles of a dagger-shaped LVOT signal (below baseline = away from probe in A5C)
+  const w = 480;
+  const h = 160;
+  const baseline = 40; // top section is small LVOT forward flow, main signal is below
+
+  // Build a dagger path: slow rise, late steep peak, rapid fall — repeated 3 times
+  const cycle = (xOffset: number) => {
+    const x0 = xOffset;
+    const peakX = xOffset + 90;
+    const endX = xOffset + 130;
+    // Dagger: starts at baseline, slow early rise, then steep late acceleration to peak, rapid descent
+    return `M ${x0},${baseline}
+      C ${x0 + 20},${baseline} ${x0 + 30},${baseline + 5} ${x0 + 35},${baseline + 10}
+      C ${x0 + 40},${baseline + 15} ${x0 + 45},${baseline + 20} ${x0 + 50},${baseline + 28}
+      C ${x0 + 60},${baseline + 50} ${x0 + 70},${baseline + 75} ${x0 + 78},${baseline + 88}
+      C ${x0 + 83},${baseline + 95} ${x0 + 87},${baseline + 100} ${peakX},${baseline + 108}
+      C ${x0 + 95},${baseline + 100} ${x0 + 100},${baseline + 85} ${x0 + 105},${baseline + 60}
+      C ${x0 + 110},${baseline + 35} ${x0 + 115},${baseline + 15} ${x0 + 120},${baseline + 5}
+      L ${endX},${baseline}`;
+  };
+
+  return (
+    <div className="rounded-xl overflow-hidden border border-gray-800" style={{ background: "#0a0a0a" }}>
+      {/* Label bar */}
+      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+          <span className="text-xs font-bold text-amber-400">HOCM LVOT — CW Doppler (A5C)</span>
+        </div>
+        <span className="text-[10px] text-gray-500">Dagger-shaped · Late-peaking · High velocity</span>
+      </div>
+      <svg viewBox={`0 0 ${w} ${h + 20}`} className="w-full" style={{ maxHeight: 180 }}>
+        {/* Grid lines */}
+        {[0.25, 0.5, 0.75, 1.0].map(f => (
+          <line key={f} x1={0} y1={baseline + f * 110} x2={w} y2={baseline + f * 110}
+            stroke="#1f2937" strokeWidth={0.5} strokeDasharray="4,4" />
+        ))}
+        {/* Baseline */}
+        <line x1={0} y1={baseline} x2={w} y2={baseline} stroke="#374151" strokeWidth={1} />
+        {/* Velocity labels */}
+        <text x={8} y={baseline + 55} fill="#6b7280" fontSize={9}>1 m/s</text>
+        <text x={8} y={baseline + 110} fill="#6b7280" fontSize={9}>2 m/s</text>
+        <text x={8} y={baseline + 148} fill="#ef4444" fontSize={9} fontWeight="bold">4+ m/s</text>
+
+        {/* Dagger waveforms — 3 cycles */}
+        {[20, 160, 300].map(x => (
+          <path key={x} d={cycle(x)} fill="rgba(251,191,36,0.15)" stroke="#fbbf24" strokeWidth={2} />
+        ))}
+
+        {/* Peak annotation */}
+        <line x1={110} y1={baseline + 108} x2={145} y2={baseline + 108} stroke="#ef4444" strokeWidth={1} strokeDasharray="3,2" />
+        <text x={148} y={baseline + 112} fill="#ef4444" fontSize={9} fontWeight="bold">Peak (late systole)</text>
+
+        {/* Dagger label */}
+        <text x={85} y={baseline + 135} fill="#fbbf24" fontSize={9} textAnchor="middle">▲ Dagger tip</text>
+      </svg>
+      <div className="px-4 py-2 border-t border-gray-800">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          <span className="text-amber-400 font-bold">Key features:</span> Slow early rise → steep late acceleration → sharp peak in late systole → rapid fall. Peak velocity typically 3–6 m/s. Measure at the very tip of the dagger.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/** MR — holosystolic, broad, high-velocity CW Doppler signal */
+function MRDopplerWaveform() {
+  const w = 480;
+  const h = 160;
+  const baseline = 40;
+
+  // MR: starts immediately at onset of systole, broad plateau, high velocity, ends at end-systole
+  const mrCycle = (xOffset: number) => {
+    const endX = xOffset + 130;
+    return `M ${xOffset},${baseline}
+      C ${xOffset + 5},${baseline} ${xOffset + 10},${baseline + 30} ${xOffset + 18},${baseline + 85}
+      C ${xOffset + 22},${baseline + 100} ${xOffset + 28},${baseline + 108} ${xOffset + 35},${baseline + 112}
+      C ${xOffset + 50},${baseline + 118} ${xOffset + 70},${baseline + 118} ${xOffset + 90},${baseline + 115}
+      C ${xOffset + 100},${baseline + 112} ${xOffset + 108},${baseline + 105} ${xOffset + 115},${baseline + 90}
+      C ${xOffset + 120},${baseline + 70} ${xOffset + 125},${baseline + 35} ${xOffset + 128},${baseline + 8}
+      L ${endX},${baseline}`;
+  };
+
+  return (
+    <div className="rounded-xl overflow-hidden border border-gray-800" style={{ background: "#0a0a0a" }}>
+      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800">
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
+          <span className="text-xs font-bold text-red-400">MR — CW Doppler (A4C / A2C)</span>
+        </div>
+        <span className="text-[10px] text-gray-500">Holosystolic · Broad · Uniform velocity</span>
+      </div>
+      <svg viewBox={`0 0 ${w} ${h + 20}`} className="w-full" style={{ maxHeight: 180 }}>
+        {/* Grid lines */}
+        {[0.25, 0.5, 0.75, 1.0].map(f => (
+          <line key={f} x1={0} y1={baseline + f * 110} x2={w} y2={baseline + f * 110}
+            stroke="#1f2937" strokeWidth={0.5} strokeDasharray="4,4" />
+        ))}
+        <line x1={0} y1={baseline} x2={w} y2={baseline} stroke="#374151" strokeWidth={1} />
+        <text x={8} y={baseline + 55} fill="#6b7280" fontSize={9}>1 m/s</text>
+        <text x={8} y={baseline + 110} fill="#6b7280" fontSize={9}>2 m/s</text>
+        <text x={8} y={baseline + 148} fill="#ef4444" fontSize={9} fontWeight="bold">4–5 m/s</text>
+
+        {/* MR waveforms — 3 cycles */}
+        {[20, 165, 310].map(x => (
+          <path key={x} d={mrCycle(x)} fill="rgba(239,68,68,0.15)" stroke="#ef4444" strokeWidth={2} />
+        ))}
+
+        {/* Plateau annotation */}
+        <line x1={55} y1={baseline + 118} x2={105} y2={baseline + 118} stroke="#f97316" strokeWidth={1.5} />
+        <text x={80} y={baseline + 132} fill="#f97316" fontSize={9} textAnchor="middle">Broad plateau</text>
+
+        {/* Holosystolic label */}
+        <line x1={20} y1={baseline + 145} x2={148} y2={baseline + 145} stroke="#ef4444" strokeWidth={1} strokeDasharray="3,2" />
+        <text x={84} y={baseline + 158} fill="#ef4444" fontSize={9} textAnchor="middle">← Holosystolic →</text>
+      </svg>
+      <div className="px-4 py-2 border-t border-gray-800">
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          <span className="text-red-400 font-bold">Key features:</span> Starts at onset of systole (with QRS), broad uniform plateau, high velocity (4–5 m/s), ends at end-systole (with S2). Dense spectral envelope. No late-peaking dagger shape.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ─── VIEW DATA ────────────────────────────────────────────────────────────────
+
+const views = [
+  {
+    id: "plax",
+    label: "PLAX",
+    fullName: "Parasternal Long Axis",
+    color: BRAND,
+    badge: "Key View",
+    patientPosition: "Left lateral decubitus (30–45°), left arm raised",
+    probePosition: "Left parasternal border, 3rd–4th ICS, indicator toward right shoulder (2–3 o'clock)",
+    depth: "14–16 cm",
+    focus: "MV, IVS, LVOT",
+    description: "The PLAX is the primary view for identifying SAM, measuring wall thickness, and assessing LVOT morphology. M-mode through the MV shows classic SAM pattern.",
+    howToGet: [
+      "Position probe at 3rd–4th left ICS, indicator toward right shoulder",
+      "Tilt probe slightly inferiorly to open up the LVOT",
+      "Optimize depth to include aortic root and descending aorta",
+      "Use zoom mode on MV to assess SAM and leaflet morphology",
+    ],
+    tips: [
+      { label: "SAM identification", text: "Look for anterior motion of MV leaflet toward IVS in systole. Use M-mode through MV for timing and duration of SAM-septal contact." },
+      { label: "Wall thickness", text: "Measure IVS at end-diastole, perpendicular to septum, at the level of MV chordae. Measure at multiple levels if asymmetric hypertrophy." },
+      { label: "LVOT diameter", text: "Measure LVOT diameter 1 cm below AV at end-systole, inner edge to inner edge. Required for stroke volume calculation." },
+      { label: "Midsystolic AV closure", text: "M-mode through aortic valve: midsystolic notch or partial closure of AV leaflets confirms dynamic LVOT obstruction." },
+    ],
+    pitfalls: [
+      "Foreshortening of LVOT — ensure beam is truly parallel to septum",
+      "Measuring IVS at incorrect level — measure at MV chordae level, not basal",
+      "Missing posterior leaflet SAM — check both leaflets",
+    ],
+    structures: ["IVS (basal, mid)", "LVPW", "LVOT", "Anterior MV leaflet", "Aortic root", "LA"],
+    measurements: ["IVS thickness (mm)", "LVPW thickness (mm)", "LVEDD / LVESD (mm)", "LVOT diameter (mm)", "Aortic root (mm)"],
+  },
+  {
+    id: "psax-mv",
+    label: "PSAX MV",
+    fullName: "Parasternal Short Axis — Mitral Valve Level",
+    color: BRAND,
+    badge: "SAM Assessment",
+    patientPosition: "Left lateral decubitus (30–45°)",
+    probePosition: "Left parasternal border, 3rd–4th ICS, indicator toward left shoulder (10–11 o'clock)",
+    depth: "12–14 cm",
+    focus: "MV morphology, SAM pattern",
+    description: "PSAX at MV level shows the classic fish-mouth MV opening and allows assessment of MV leaflet morphology, elongation, and coaptation. Useful for identifying anomalous papillary muscle insertion.",
+    howToGet: [
+      "From PLAX, rotate probe 90° clockwise (indicator toward left shoulder)",
+      "Tilt to MV level — fish-mouth appearance of MV",
+      "Assess leaflet length, redundancy, and coaptation",
+    ],
+    tips: [
+      { label: "Leaflet elongation", text: "Elongated anterior leaflet (>3 cm) predisposes to SAM. Assess in PSAX and PLAX." },
+      { label: "Papillary muscles", text: "Assess PM morphology — bifid, hypertrophied, or anteriorly displaced PMs contribute to obstruction." },
+      { label: "Mid-ventricular obstruction", text: "PSAX at PM level: hypertrophied PMs may cause mid-ventricular obstruction. Use PW Doppler to localize." },
+    ],
+    pitfalls: [
+      "Confusing MV coaptation gap with MR — use color Doppler to confirm",
+      "Missing anomalous PM insertion — look for direct PM-to-MV leaflet attachment",
+    ],
+    structures: ["Anterior MV leaflet", "Posterior MV leaflet", "Papillary muscles", "LV cavity"],
+    measurements: ["MV leaflet length (mm)", "PM diameter (mm)"],
+  },
+  {
+    id: "a4c",
+    label: "A4C",
+    fullName: "Apical 4-Chamber",
+    color: "#0e7490",
+    badge: "MR Assessment",
+    patientPosition: "Steep left lateral decubitus (60–90°), left arm raised and back",
+    probePosition: "Cardiac apex (PMI), indicator toward left (3 o'clock). Palpate apex first.",
+    depth: "16–18 cm",
+    focus: "MR jet direction, LA size, RV",
+    description: "A4C is essential for assessing MR jet direction (posterior = SAM-related vs. central/anterior = primary MV disease), LA volume, and RV function. Color Doppler MR assessment is performed here.",
+    howToGet: [
+      "Palpate the point of maximal impulse (PMI) — this is the true apex",
+      "Position probe at PMI, indicator toward patient's left (3 o'clock)",
+      "Tilt probe slightly toward sternum to open the LVOT for A5C",
+      "Steep left lateral decubitus is critical — do not scan supine",
+    ],
+    tips: [
+      { label: "MR jet direction", text: "SAM-related MR: posteriorly directed jet (anterior leaflet tethered toward septum). Primary MV disease: central or anteriorly directed jet. This distinction is critical for management." },
+      { label: "LA volume", text: "Trace LA at end-systole in A4C and A2C for biplane LAVI. LA dilation (>34 mL/m²) reflects chronic elevated filling pressure." },
+      { label: "Tissue Doppler", text: "Sample at septal and lateral mitral annulus for e' and E/e' ratio. HOCM: e' typically reduced despite hyperdynamic systolic function." },
+    ],
+    pitfalls: [
+      "Foreshortened A4C — move probe laterally and inferiorly to true apex",
+      "Missing posteriorly directed MR jet — angle color Doppler sector to include full LA",
+      "Confusing LVOT flow with MR on color Doppler — use PW to localize",
+    ],
+    structures: ["LV (all walls)", "MV", "LA", "RV", "TV", "RA"],
+    measurements: ["LAVI (mL/m²)", "Septal e' (cm/s)", "Lateral e' (cm/s)", "E/e' ratio", "RV basal diameter (mm)", "TAPSE (mm)"],
+  },
+  {
+    id: "a5c",
+    label: "A5C",
+    fullName: "Apical 5-Chamber (LVOT View)",
+    color: PURPLE,
+    badge: "CW Gradient — Primary",
+    patientPosition: "Steep left lateral decubitus (60–90°), left arm raised and back",
+    probePosition: "Same as A4C — tilt probe anteriorly (toward sternum) to bring LVOT into view",
+    depth: "16–18 cm",
+    focus: "CW Doppler LVOT gradient — primary view",
+    description: "The A5C is the primary view for CW Doppler alignment with LVOT flow. Tilting anteriorly from A4C brings the LVOT and aortic valve into the imaging plane. This is the most important view for measuring resting and provoked LVOT gradients.",
+    howToGet: [
+      "From A4C, tilt probe anteriorly (toward sternum) until LVOT and AV appear",
+      "Optimize to show LVOT, AV, and proximal ascending aorta in the same plane",
+      "Switch to CW Doppler — align beam parallel to LVOT flow",
+      "Look for dagger-shaped signal: slow rise, late steep peak, rapid fall",
+    ],
+    tips: [
+      { label: "CW beam alignment", text: "Minimize angle between CW beam and LVOT flow (<20°). Rotate probe slightly to optimize alignment. Small angle errors significantly underestimate gradient." },
+      { label: "Dagger shape", text: "HOCM LVOT: dagger-shaped (late-peaking). Measure peak velocity at the TIP of the dagger — not the early systolic shoulder. AS: rounded, mid-peaking." },
+      { label: "Valsalva from A5C", text: "Keep CW beam on LVOT during Valsalva. Start recording 3–5 beats before maneuver. Continue 5–10 beats after release to capture peak provoked gradient." },
+      { label: "Sweep speed", text: "Use 100 mm/s sweep speed for gradient measurement. Use 50 mm/s for Valsalva to capture multiple beats on one sweep." },
+    ],
+    pitfalls: [
+      "Measuring early systolic shoulder instead of late dagger peak — underestimates gradient",
+      "Stopping recording at end of Valsalva strain — misses peak provoked gradient on release",
+      "Beam not parallel to LVOT — always check 2D alignment before switching to CW",
+    ],
+    structures: ["LVOT", "Aortic valve", "Proximal ascending aorta"],
+    measurements: ["Resting LVOT gradient (mmHg)", "Provoked LVOT gradient — Valsalva (mmHg)", "Peak CW velocity (m/s)"],
+  },
+  {
+    id: "a3c",
+    label: "A3C",
+    fullName: "Apical 3-Chamber (Apical Long Axis)",
+    color: PURPLE,
+    badge: "CW Gradient — Alternative",
+    patientPosition: "Steep left lateral decubitus (60–90°)",
+    probePosition: "From A4C, rotate probe ~60° counter-clockwise (indicator toward right shoulder, ~10 o'clock)",
+    depth: "16–18 cm",
+    focus: "Alternative CW Doppler view for LVOT gradient",
+    description: "The A3C (apical long axis) provides an alternative CW Doppler window for LVOT gradient measurement when A5C alignment is suboptimal. Often provides better beam-to-flow alignment in patients with horizontal hearts.",
+    howToGet: [
+      "From A4C, rotate probe ~60° counter-clockwise",
+      "Indicator points toward right shoulder (~10 o'clock)",
+      "LVOT, AV, and descending aorta visible in same plane",
+      "Align CW beam parallel to LVOT flow",
+    ],
+    tips: [
+      { label: "When to use A3C", text: "Use A3C when A5C CW signal is suboptimal or beam alignment is poor. Some patients have better LVOT windows from A3C." },
+      { label: "Comparison", text: "Always measure gradient from BOTH A5C and A3C — report the HIGHEST gradient obtained. Underestimation is more common than overestimation." },
+    ],
+    pitfalls: [
+      "Using only one apical view — always try both A5C and A3C",
+      "Confusing A3C with PLAX — confirm by checking probe position and image orientation",
+    ],
+    structures: ["LVOT", "Aortic valve", "Posterior wall", "Descending aorta"],
+    measurements: ["LVOT gradient (mmHg) — compare with A5C", "Peak CW velocity (m/s)"],
+  },
+  {
+    id: "a2c",
+    label: "A2C",
+    fullName: "Apical 2-Chamber",
+    color: "#0e7490",
+    badge: "LA & LV Function",
+    patientPosition: "Steep left lateral decubitus (60–90°)",
+    probePosition: "From A4C, rotate probe ~60° counter-clockwise (indicator toward 12 o'clock)",
+    depth: "16–18 cm",
+    focus: "LA volume (biplane), inferior and anterior wall",
+    description: "A2C provides the second plane for biplane LA volume measurement and LV EF (Simpson's). Also shows inferior and anterior wall thickness for apical HCM assessment.",
+    howToGet: [
+      "From A4C, rotate probe ~60° counter-clockwise",
+      "Only LV and LA visible — no RV",
+      "Optimize to show true apex without foreshortening",
+    ],
+    tips: [
+      { label: "Biplane LA volume", text: "Trace LA at end-systole in A4C and A2C. Use biplane area-length or Simpson's method for LAVI." },
+      { label: "Apical HCM", text: "Assess apical wall thickness in A2C — apical HCM may be most visible here. Use contrast if apical walls are not clearly seen." },
+    ],
+    pitfalls: [
+      "Foreshortened apex — move probe to true apex for accurate wall thickness",
+    ],
+    structures: ["LV (inferior, anterior walls)", "LA", "MV"],
+    measurements: ["LA volume (biplane, mL)", "LV EF — biplane Simpson's (%)"],
+  },
+  {
+    id: "subcostal",
+    label: "Subcostal",
+    fullName: "Subcostal",
+    color: "#0f766e",
+    badge: "IVS & RV",
+    patientPosition: "Supine, knees bent, patient relaxed",
+    probePosition: "Subxiphoid, indicator toward patient's left (3 o'clock), angled toward left shoulder",
+    depth: "18–20 cm",
+    focus: "IVS thickness, RV, IVC",
+    description: "Subcostal view provides an alternative window for IVS thickness measurement and RV assessment. Particularly useful when parasternal windows are poor. IVC assessment for RAP estimation.",
+    howToGet: [
+      "Position probe subxiphoid, indicator toward left, angled toward left shoulder",
+      "Ask patient to take a deep breath and hold to bring heart closer",
+      "Optimize to show all four chambers",
+    ],
+    tips: [
+      { label: "IVS measurement", text: "Subcostal view may give better perpendicular measurement of IVS than PLAX in some patients. Compare with PLAX measurement." },
+      { label: "IVC", text: "Rotate probe to sagittal plane (indicator toward head) to assess IVC diameter and collapsibility for RAP estimation." },
+    ],
+    pitfalls: [
+      "Oblique cut through IVS — ensure beam is perpendicular to septum",
+    ],
+    structures: ["IVS", "RV", "LV", "IVC", "Hepatic veins"],
+    measurements: ["IVS thickness (subcostal, mm)", "IVC diameter (mm)", "IVC collapsibility (%)"],
+  },
+];
+
+// ─── DOPPLER DIFFERENTIATION DATA ────────────────────────────────────────────
+
+const dopplerComparison = [
+  { feature: "Signal shape", hocm: "Dagger-shaped (concave upstroke)", mr: "Broad, rounded, uniform envelope" },
+  { feature: "Timing of peak", hocm: "Late systole (late-peaking)", mr: "Mid-systole (holosystolic plateau)" },
+  { feature: "Onset", hocm: "Delayed — starts after isovolumic contraction", mr: "Immediate — starts with QRS (isovolumic contraction)" },
+  { feature: "Duration", hocm: "Systole only (ends before S2)", mr: "Holosystolic — extends to S2 or beyond" },
+  { feature: "Peak velocity", hocm: "3–6 m/s (gradient 36–144 mmHg)", mr: "4–5 m/s (gradient 64–100 mmHg)" },
+  { feature: "Direction (A5C)", hocm: "Away from probe (below baseline)", mr: "Away from probe (below baseline) — SAME direction, different shape" },
+  { feature: "Effect of Valsalva", hocm: "Gradient INCREASES (↓ preload → ↑ obstruction)", mr: "Gradient UNCHANGED or slightly decreases" },
+  { feature: "Effect of amyl nitrite", hocm: "Gradient INCREASES", mr: "Gradient INCREASES (↓ afterload → ↑ MR)" },
+  { feature: "Effect of squatting", hocm: "Gradient DECREASES (↑ preload → ↓ obstruction)", mr: "Gradient UNCHANGED" },
+  { feature: "Best view", hocm: "A5C or A3C (LVOT alignment)", mr: "A4C or A2C (MR jet alignment)" },
+  { feature: "Color Doppler", hocm: "LVOT turbulence; posteriorly directed MR jet from SAM", mr: "MR jet in LA — direction varies by etiology" },
+  { feature: "PW localization", hocm: "Gradient increases as sample moves from LVOT toward AV", mr: "No gradient increase in LVOT on PW" },
+];
+
+// ─── MACHINE SETTINGS ────────────────────────────────────────────────────────
+
+const machineSettings = [
+  { setting: "Probe", value: "Phased array (1–5 MHz)", note: "Standard cardiac probe" },
+  { setting: "2D Gain", value: "Optimize for endocardial definition", note: "Reduce gain if IVS appears bright/overexposed" },
+  { setting: "Harmonic Imaging", value: "ON", note: "Improves endocardial definition, reduces artifact" },
+  { setting: "CW Doppler Scale", value: "6–8 m/s", note: "Set scale to capture full dagger peak without aliasing" },
+  { setting: "CW Sweep Speed", value: "100 mm/s (resting); 50 mm/s (Valsalva)", note: "50 mm/s captures multiple beats during provocation" },
+  { setting: "PW Sample Volume", value: "2–5 mm", note: "Smaller sample volume for precise localization" },
+  { setting: "Color Doppler Scale", value: "50–60 cm/s (Nyquist)", note: "Lower scale to detect low-velocity MR jets" },
+  { setting: "Color Sector Width", value: "Narrow — focus on LVOT and MV", note: "Narrow sector improves frame rate" },
+  { setting: "Zoom / Focus", value: "Use zoom on MV in PLAX for SAM assessment", note: "Zoom improves temporal resolution for SAM timing" },
+  { setting: "M-mode", value: "Through MV (PLAX) and AV (PLAX)", note: "Classic SAM pattern and midsystolic AV closure" },
+];
+
+// ─── COMPONENT ────────────────────────────────────────────────────────────────
+
+export default function HOCMScanCoach() {
+  const [selectedView, setSelectedView] = useState(views[0]);
+  const [expandedSection, setExpandedSection] = useState<string | null>("howToGet");
+  const [activeTab, setActiveTab] = useState<"views" | "doppler" | "valsalva" | "settings">("views");
+
+  return (
+    <Layout>
+      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      <div
+        className="relative overflow-hidden"
+        style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #1a0a2e 60%, #4a1d96 100%)" }}
+      >
+        <div className="relative container py-8 md:py-10">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-3">
+              <div className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+              <span className="text-xs text-white/80 font-medium">HOCM Acquisition Guide</span>
+            </div>
+            <h1 className="text-2xl md:text-3xl font-black text-white mb-1" style={{ fontFamily: "Merriweather, serif" }}>
+              HOCM ScanCoach™
+            </h1>
+            <p className="text-purple-200 font-semibold text-sm mb-3">Hypertrophic Obstructive Cardiomyopathy</p>
+            <p className="text-white/70 text-sm leading-relaxed mb-4 max-w-lg">
+              View-by-view acquisition guide for HOCM echo — probe positioning, CW Doppler technique, Valsalva acquisition, and Doppler differentiation (HOCM LVOT vs. MR).
+            </p>
+            <Link href="/hocm-navigator">
+              <button className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
+                style={{ background: PURPLE }}>
+                <Target className="w-4 h-4" />
+                Open HOCM Navigator™
+              </button>
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Tab Bar ──────────────────────────────────────────────────────── */}
+      <div className="border-b border-gray-200 bg-white sticky top-0 z-10">
+        <div className="container">
+          <div className="flex gap-1 overflow-x-auto py-2">
+            {([
+              { id: "views", label: "View-by-View Guide", icon: Layers },
+              { id: "doppler", label: "Doppler Differentiation", icon: Activity },
+              { id: "valsalva", label: "Valsalva Acquisition", icon: TrendingUp },
+              { id: "settings", label: "Machine Settings", icon: Ruler },
+            ] as const).map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => setActiveTab(id)}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+                  activeTab === id ? "text-white" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                }`}
+                style={activeTab === id ? { background: id === "doppler" ? "#dc2626" : PURPLE } : {}}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── View-by-View Tab ─────────────────────────────────────────────── */}
+      {activeTab === "views" && (
+        <div className="container py-6">
+          <div className="flex flex-col lg:flex-row gap-5">
+            {/* View selector */}
+            <div className="lg:w-52 flex-shrink-0">
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
+                style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                <div className="px-3 py-2.5 border-b border-gray-50">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Select View</p>
+                </div>
+                <div className="divide-y divide-gray-50">
+                  {views.map(v => (
+                    <button
+                      key={v.id}
+                      onClick={() => { setSelectedView(v); setExpandedSection("howToGet"); }}
+                      className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-left transition-colors ${
+                        selectedView.id === v.id ? "bg-gray-50" : "hover:bg-gray-50/50"
+                      }`}
+                    >
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-black text-white flex-shrink-0"
+                        style={{ background: selectedView.id === v.id ? v.color : "#e5e7eb", color: selectedView.id === v.id ? "white" : "#6b7280" }}>
+                        {v.label.substring(0, 4)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-bold text-gray-800 truncate">{v.label}</div>
+                        <div className="text-[10px] text-gray-400 truncate">{v.badge}</div>
+                      </div>
+                      {selectedView.id === v.id && <ChevronRight className="w-3 h-3 flex-shrink-0" style={{ color: v.color }} />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* View detail */}
+            <div className="flex-1 min-w-0">
+              {/* Header */}
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-4"
+                style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h2 className="text-base font-black text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
+                        {selectedView.fullName}
+                      </h2>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white"
+                        style={{ background: selectedView.color }}>{selectedView.badge}</span>
+                    </div>
+                    <p className="text-xs text-gray-500 leading-relaxed">{selectedView.description}</p>
+                  </div>
+                </div>
+                {/* Quick reference grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { label: "Patient Position", value: selectedView.patientPosition },
+                    { label: "Probe Position", value: selectedView.probePosition },
+                    { label: "Depth", value: selectedView.depth },
+                    { label: "Focus", value: selectedView.focus },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="p-2.5 rounded-lg bg-gray-50">
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">{label}</div>
+                      <div className="text-xs text-gray-700 leading-snug">{value}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Expandable sections */}
+              {[
+                {
+                  id: "howToGet",
+                  title: "How to Get the View",
+                  icon: Target,
+                  content: (
+                    <ol className="space-y-2">
+                      {selectedView.howToGet.map((step, i) => (
+                        <li key={i} className="flex items-start gap-3">
+                          <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0"
+                            style={{ background: selectedView.color }}>{i + 1}</div>
+                          <p className="text-xs text-gray-700 leading-relaxed pt-0.5">{step}</p>
+                        </li>
+                      ))}
+                    </ol>
+                  ),
+                },
+                {
+                  id: "tips",
+                  title: "Clinical Tips",
+                  icon: Zap,
+                  content: (
+                    <div className="space-y-2">
+                      {selectedView.tips.map(tip => (
+                        <div key={tip.label} className="flex items-start gap-2 p-3 rounded-lg bg-gray-50">
+                          <Zap className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: selectedView.color }} />
+                          <div>
+                            <span className="text-xs font-bold text-gray-800">{tip.label}: </span>
+                            <span className="text-xs text-gray-600">{tip.text}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ),
+                },
+                {
+                  id: "pitfalls",
+                  title: "Pitfalls",
+                  icon: AlertTriangle,
+                  content: (
+                    <div className="space-y-2">
+                      {selectedView.pitfalls.map(p => (
+                        <div key={p} className="flex items-start gap-2 p-3 rounded-lg bg-red-50 border border-red-100">
+                          <AlertTriangle className="w-3.5 h-3.5 text-red-500 flex-shrink-0 mt-0.5" />
+                          <p className="text-xs text-red-800">{p}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ),
+                },
+                {
+                  id: "structures",
+                  title: "Structures & Measurements",
+                  icon: Ruler,
+                  content: (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">Structures to Assess</p>
+                        <div className="space-y-1">
+                          {selectedView.structures.map(s => (
+                            <div key={s} className="flex items-center gap-2">
+                              <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: selectedView.color }} />
+                              <span className="text-xs text-gray-700">{s}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">Measurements</p>
+                        <div className="space-y-1">
+                          {selectedView.measurements.map(m => (
+                            <div key={m} className="flex items-center gap-2">
+                              <Ruler className="w-3 h-3 flex-shrink-0 text-gray-400" />
+                              <span className="text-xs text-gray-700">{m}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ),
+                },
+              ].map(({ id, title, icon: Icon, content }) => (
+                <div key={id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-3"
+                  style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                  <button
+                    onClick={() => setExpandedSection(expandedSection === id ? null : id)}
+                    className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-gray-50 transition-colors"
+                  >
+                    <Icon className="w-4 h-4 flex-shrink-0" style={{ color: selectedView.color }} />
+                    <span className="text-sm font-bold text-gray-800 flex-1">{title}</span>
+                    {expandedSection === id
+                      ? <ChevronDown className="w-4 h-4 text-gray-400" />
+                      : <ChevronRight className="w-4 h-4 text-gray-400" />}
+                  </button>
+                  {expandedSection === id && (
+                    <div className="border-t border-gray-50 px-5 py-4">{content}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Doppler Differentiation Tab ──────────────────────────────────── */}
+      {activeTab === "doppler" && (
+        <div className="container py-6 max-w-3xl">
+          <div className="mb-5">
+            <h2 className="text-lg font-bold text-gray-800 mb-1" style={{ fontFamily: "Merriweather, serif" }}>
+              Doppler Differentiation
+            </h2>
+            <p className="text-sm text-gray-500">How to distinguish HOCM LVOT obstruction from mitral regurgitation on CW Doppler</p>
+          </div>
+
+          {/* Key concept */}
+          <div className="flex items-start gap-2 p-4 rounded-xl bg-amber-50 border border-amber-200 mb-6">
+            <Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div className="text-xs text-amber-800 leading-relaxed">
+              <strong>Why this matters:</strong> Both HOCM LVOT obstruction and MR produce high-velocity, away-from-probe signals in the apical views. Confusing them leads to incorrect gradient measurement and misclassification of obstruction severity. The key differentiator is <strong>signal shape and timing</strong> — not velocity alone.
+            </div>
+          </div>
+
+          {/* Waveform illustrations */}
+          <div className="grid grid-cols-1 gap-4 mb-6">
+            <HOCMDopplerWaveform />
+            <MRDopplerWaveform />
+          </div>
+
+          {/* Comparison table */}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-5"
+            style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <div className="grid grid-cols-3 bg-gray-50 border-b border-gray-100">
+              <div className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500">Feature</div>
+              <div className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-amber-600">HOCM LVOT</div>
+              <div className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-red-600">MR</div>
+            </div>
+            <div className="divide-y divide-gray-50">
+              {dopplerComparison.map(({ feature, hocm, mr }) => (
+                <div key={feature} className="grid grid-cols-3">
+                  <div className="px-4 py-3 text-xs font-semibold text-gray-700 bg-gray-50/50">{feature}</div>
+                  <div className="px-4 py-3 text-xs text-amber-800 bg-amber-50/30">{hocm}</div>
+                  <div className="px-4 py-3 text-xs text-red-800 bg-red-50/30">{mr}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Step-by-step differentiation protocol */}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-4"
+            style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <h3 className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: BRAND }}>Step-by-Step Differentiation Protocol</h3>
+            <div className="space-y-3">
+              {[
+                {
+                  step: 1,
+                  title: "Look at the shape",
+                  detail: "HOCM LVOT: dagger-shaped (concave upstroke, late peak). MR: broad, rounded, uniform plateau. This is the single most reliable differentiator.",
+                  critical: true,
+                },
+                {
+                  step: 2,
+                  title: "Check the timing of onset",
+                  detail: "MR starts with the QRS (isovolumic contraction — before aortic valve opens). HOCM LVOT starts after isovolumic contraction (when AV opens). Use ECG gating.",
+                  critical: true,
+                },
+                {
+                  step: 3,
+                  title: "Use PW Doppler to localize",
+                  detail: "Sample at LVOT level (1 cm below AV) — if gradient is present here, it is LVOT obstruction. If no gradient at LVOT but high velocity in LA, it is MR.",
+                  critical: false,
+                },
+                {
+                  step: 4,
+                  title: "Perform Valsalva",
+                  detail: "HOCM LVOT gradient INCREASES with Valsalva (↓ preload → ↑ obstruction). MR signal is unchanged or slightly decreases. This is a definitive differentiator.",
+                  critical: true,
+                },
+                {
+                  step: 5,
+                  title: "Use color Doppler",
+                  detail: "HOCM: turbulence in LVOT + posteriorly directed MR jet from SAM. Primary MR: central or anteriorly directed jet. Absence of LVOT turbulence suggests MR rather than LVOT obstruction.",
+                  critical: false,
+                },
+                {
+                  step: 6,
+                  title: "Check the 2D image",
+                  detail: "Confirm SAM on 2D (PLAX). If no SAM is visible, reconsider LVOT obstruction diagnosis. SAM-related MR always coexists with SAM.",
+                  critical: false,
+                },
+              ].map(({ step, title, detail, critical }) => (
+                <div key={step} className={`flex items-start gap-3 p-3 rounded-lg ${critical ? "bg-purple-50 border border-purple-100" : "bg-gray-50"}`}>
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white flex-shrink-0"
+                    style={{ background: critical ? PURPLE : BRAND }}>{step}</div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="text-xs font-bold text-gray-800">{title}</span>
+                      {critical && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded text-white" style={{ background: PURPLE }}>KEY</span>}
+                    </div>
+                    <p className="text-xs text-gray-600 leading-relaxed">{detail}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Pitfalls */}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
+            style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <h3 className="text-xs font-bold uppercase tracking-wider mb-3 text-red-600">Common Confounders</h3>
+            <div className="space-y-2">
+              {[
+                {
+                  pitfall: "Both signals present simultaneously",
+                  fix: "In HOCM with SAM-related MR, BOTH signals are present. The LVOT dagger and MR holosystolic signal overlap. Use PW to separate them by sampling at different levels.",
+                },
+                {
+                  pitfall: "Measuring MR velocity instead of LVOT velocity",
+                  fix: "If the CW signal is broad and holosystolic, you are measuring MR — not LVOT gradient. Reposition beam more anteriorly toward LVOT.",
+                },
+                {
+                  pitfall: "Underestimating LVOT gradient due to poor beam alignment",
+                  fix: "Always try both A5C and A3C. Report the highest gradient obtained. Small alignment errors cause significant underestimation.",
+                },
+                {
+                  pitfall: "Confusing dynamic LVOT obstruction with fixed AS",
+                  fix: "AS: rounded, mid-peaking signal. HOCM: dagger-shaped, late-peaking. Use PW to confirm LVOT location of obstruction. Check AV morphology on 2D.",
+                },
+              ].map(({ pitfall, fix }) => (
+                <div key={pitfall} className="rounded-lg bg-red-50 border border-red-100 p-3">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="w-3.5 h-3.5 text-red-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-bold text-red-700">{pitfall}</p>
+                      <p className="text-xs text-gray-600 mt-0.5">{fix}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Valsalva Acquisition Tab ─────────────────────────────────────── */}
+      {activeTab === "valsalva" && (
+        <div className="container py-6 max-w-3xl">
+          <div className="mb-5">
+            <h2 className="text-lg font-bold text-gray-800 mb-1" style={{ fontFamily: "Merriweather, serif" }}>
+              Valsalva Acquisition Protocol
+            </h2>
+            <p className="text-sm text-gray-500">Sonographer's step-by-step guide for acquiring provoked LVOT gradients</p>
+          </div>
+
+          <div className="flex items-start gap-2 p-4 rounded-xl bg-purple-50 border border-purple-200 mb-5">
+            <Info className="w-4 h-4 text-purple-600 flex-shrink-0 mt-0.5" />
+            <div className="text-xs text-purple-800 leading-relaxed">
+              <strong>Goal:</strong> Capture the peak provoked LVOT gradient during the <strong>release phase</strong> of Valsalva. The most common error is stopping the recording at the end of the strain phase — the peak gradient occurs AFTER release.
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {[
+              {
+                phase: "Setup",
+                color: BRAND,
+                steps: [
+                  "Obtain and document resting LVOT gradient from A5C or A3C (100 mm/s sweep speed)",
+                  "Confirm dagger-shaped CW signal and optimal beam alignment",
+                  "Switch sweep speed to 50 mm/s to capture multiple beats on one sweep",
+                  "Position patient in steep left lateral decubitus (60–90°)",
+                  "Explain the maneuver to the patient — demonstrate if needed",
+                ],
+              },
+              {
+                phase: "Coaching the Patient",
+                color: PURPLE,
+                steps: [
+                  "Instruct: 'Take a normal breath, then bear down hard as if straining for a bowel movement'",
+                  "Instruct: 'Hold for 10–15 seconds — do NOT let any air out'",
+                  "Instruct: 'When I say release, let go completely and breathe normally'",
+                  "Practice once without imaging to confirm patient understands",
+                  "Confirm HR increases during strain (≥10 bpm) — indicates adequate effort",
+                ],
+              },
+              {
+                phase: "Recording",
+                color: "#dc2626",
+                steps: [
+                  "Start CW Doppler recording 3–5 beats BEFORE the maneuver",
+                  "Cue patient: 'OK, bear down now'",
+                  "Observe: LV cavity should visibly decrease during strain",
+                  "Maintain CW beam position — do NOT move probe during maneuver",
+                  "At 10–15 seconds: cue patient 'Release now'",
+                  "CRITICAL: Continue recording for 5–10 beats AFTER release — peak gradient occurs here",
+                  "Allow 2–3 minutes recovery before repeating if needed",
+                ],
+              },
+              {
+                phase: "Measurement",
+                color: "#0e7490",
+                steps: [
+                  "Identify the beat with the highest peak velocity during the release phase",
+                  "Measure peak velocity at the TIP of the dagger (late systole)",
+                  "Calculate gradient: ΔP = 4V²",
+                  "Report as: 'Provoked LVOT gradient (Valsalva): __ mmHg'",
+                  "Document whether Valsalva was adequate (LV cavity decrease ≥40%, HR increase ≥10 bpm)",
+                  "If Valsalva was inadequate, note this in the report and repeat or use alternative provocation",
+                ],
+              },
+            ].map(({ phase, color, steps }) => (
+              <div key={phase} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
+                style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                <div className="px-5 py-3 border-b border-gray-50 flex items-center gap-2"
+                  style={{ background: color + "10" }}>
+                  <div className="w-2 h-2 rounded-full" style={{ background: color }} />
+                  <span className="text-xs font-bold" style={{ color }}>{phase}</span>
+                </div>
+                <div className="px-5 py-4">
+                  <ol className="space-y-2">
+                    {steps.map((step, i) => (
+                      <li key={i} className="flex items-start gap-3">
+                        <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0 mt-0.5"
+                          style={{ background: color }}>{i + 1}</div>
+                        <p className="text-xs text-gray-700 leading-relaxed">{step}</p>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Adequacy checklist */}
+          <div className="mt-4 bg-white rounded-xl border border-gray-100 shadow-sm p-5"
+            style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <h3 className="text-xs font-bold uppercase tracking-wider mb-3 text-amber-600">Adequacy Checklist</h3>
+            <div className="space-y-2">
+              {[
+                { check: "LV cavity decreases ≥40% during strain phase", critical: true },
+                { check: "Heart rate increases ≥10 bpm during strain", critical: true },
+                { check: "Patient maintained effort for ≥10 seconds", critical: false },
+                { check: "Recording continued ≥5 beats after release", critical: true },
+                { check: "CW beam maintained on LVOT throughout", critical: false },
+                { check: "Peak gradient measured at dagger tip (late systole)", critical: false },
+              ].map(({ check, critical }) => (
+                <div key={check} className={`flex items-center gap-2 p-2.5 rounded-lg ${critical ? "bg-purple-50 border border-purple-100" : "bg-gray-50"}`}>
+                  <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: critical ? PURPLE : BRAND }} />
+                  <span className="text-xs text-gray-700">{check}</span>
+                  {critical && <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded text-white flex-shrink-0" style={{ background: PURPLE }}>REQUIRED</span>}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Machine Settings Tab ─────────────────────────────────────────── */}
+      {activeTab === "settings" && (
+        <div className="container py-6 max-w-3xl">
+          <div className="mb-5">
+            <h2 className="text-lg font-bold text-gray-800 mb-1" style={{ fontFamily: "Merriweather, serif" }}>
+              Machine Settings — HOCM
+            </h2>
+            <p className="text-sm text-gray-500">Recommended ultrasound machine settings for HOCM assessment</p>
+          </div>
+
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
+            style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <div className="grid grid-cols-3 bg-gray-50 border-b border-gray-100">
+              <div className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500">Setting</div>
+              <div className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500">Recommended Value</div>
+              <div className="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-500">Note</div>
+            </div>
+            <div className="divide-y divide-gray-50">
+              {machineSettings.map(({ setting, value, note }) => (
+                <div key={setting} className="grid grid-cols-3">
+                  <div className="px-4 py-3 text-xs font-semibold text-gray-700">{setting}</div>
+                  <div className="px-4 py-3 text-xs font-bold" style={{ color: BRAND }}>{value}</div>
+                  <div className="px-4 py-3 text-xs text-gray-500">{note}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Navigator CTA */}
+          <div className="mt-5 p-5 rounded-xl flex flex-col sm:flex-row items-start sm:items-center gap-4"
+            style={{ background: "linear-gradient(135deg, #0e1e2e, #1a0a2e)" }}>
+            <div className="flex-1">
+              <p className="text-xs font-semibold text-purple-300 uppercase tracking-wider mb-0.5">Protocol Reference</p>
+              <p className="text-white text-sm font-bold">HOCM EchoNavigator™</p>
+              <p className="text-white/60 text-xs">SAM grading, gradient thresholds, Valsalva protocol, and reporting guide</p>
+            </div>
+            <Link href="/hocm-navigator">
+              <button className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90 flex-shrink-0"
+                style={{ background: PURPLE }}>
+                Open Navigator™
+              </button>
+            </Link>
+          </div>
+        </div>
+      )}
+    </Layout>
+  );
+}

@@ -68,6 +68,13 @@ const coaches = [
     description: "Contrast echo acquisition guide: probe positioning, machine optimization (MI, gain, depth), injection technique, flash replenishment, artifact recognition, and view-by-view clinical pearls.",
     badge: "Contrast Echo",
   },
+  {
+    path: "/hocm-scan-coach",
+    icon: Activity,
+    title: "HOCM ScanCoach™",
+    description: "HOCM acquisition guide: LVOT CW Doppler positioning, Valsalva protocol, SAM assessment, MR Doppler vs. HOCM Doppler differentiation with sample waveforms, and view-by-view tips.",
+    badge: "Cardiomyopathy",
+  },
 ];
 
 const badgeColors: Record<string, string> = {
@@ -76,6 +83,7 @@ const badgeColors: Record<string, string> = {
   "TEE": "#0e7490",
   "ICE": "#0f766e",
   "Contrast Echo": "#0e7490",
+  "Cardiomyopathy": "#b45309",
 };
 
 export default function ScanCoachHub() {

@@ -445,7 +445,7 @@ const artifactGuide = [
 
 export default function UEAScanCoach() {
   const [selectedView, setSelectedView] = useState<string | null>("a4c");
-  const [activeTab, setActiveTab] = useState<"views" | "injection" | "bubble" | "artifacts" | "tips">("views");
+  const [activeTab, setActiveTab] = useState<"views" | "injection" | "bubble" | "artifacts" | "tips" | "vendors">("views");
 
   const _currentViewRaw = UEA_VIEWS.find(v => v.id === selectedView);
   const { mergeView: mergeUEAView } = useScanCoachOverrides("uea");
@@ -502,7 +502,7 @@ export default function UEAScanCoach() {
       <div className="border-b border-gray-200 bg-white sticky top-0 z-10">
         <div className="container">
           <div className="flex gap-1 overflow-x-auto py-2">
-            {(["views", "injection", "bubble", "artifacts", "tips"] as const).map(tab => (
+            {(["views", "injection", "bubble", "artifacts", "tips", "vendors"] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -518,11 +518,13 @@ export default function UEAScanCoach() {
                 {tab === "bubble" && <Activity className="w-3.5 h-3.5" />}
                 {tab === "artifacts" && <AlertTriangle className="w-3.5 h-3.5" />}
                 {tab === "tips" && <Zap className="w-3.5 h-3.5" />}
+                {tab === "vendors" && <Shield className="w-3.5 h-3.5" />}
                 {tab === "views" && "View Guide"}
                 {tab === "injection" && "Injection Technique"}
                 {tab === "bubble" && "Bubble Study"}
                 {tab === "artifacts" && "Artifact Guide"}
                 {tab === "tips" && "Quick Tips"}
+                {tab === "vendors" && "Agent Reference"}
               </button>
             ))}
           </div>
@@ -1165,6 +1167,272 @@ export default function UEAScanCoach() {
           </Link>
         </div>
       </div>
+
+      {/* ── Agent Reference Tab ───────────────────────────────────────────── */}
+      {activeTab === "vendors" && (
+        <div className="container py-6 max-w-4xl">
+          <div className="mb-5">
+            <h2 className="text-lg font-bold text-gray-800 mb-1" style={{ fontFamily: "Merriweather, serif" }}>
+              UEA Agent Reference
+            </h2>
+            <p className="text-sm text-gray-500">Definity, Lumason, and Optison — dosing, administration, chemical makeup, and vendor-specific MI settings</p>
+          </div>
+
+          <div className="flex items-start gap-2 p-4 rounded-xl bg-teal-50 border border-teal-200 mb-6">
+            <Shield className="w-4 h-4 text-teal-600 flex-shrink-0 mt-0.5" />
+            <div className="text-xs text-teal-800 leading-relaxed">
+              <strong>FDA Black Box Warning (all agents):</strong> Serious cardiopulmonary reactions, including fatalities, have occurred during or following perflutren-containing microsphere administration. Assess all patients for conditions that preclude use. Monitor patients for at least 30 minutes following administration.
+            </div>
+          </div>
+
+          {/* Agent cards */}
+          <div className="grid grid-cols-1 gap-6">
+
+            {/* ── DEFINITY ── */}
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+              <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3" style={{ background: "linear-gradient(135deg, #0e4a50, #189aa1)" }}>
+                <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
+                  <Droplets className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-white font-black text-base" style={{ fontFamily: "Merriweather, serif" }}>Definity® (Perflutren Lipid Microsphere)</h3>
+                  <p className="text-teal-200 text-xs">Lantheus Medical Imaging · FDA approved 2001</p>
+                </div>
+              </div>
+              <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">Chemical Makeup</p>
+                  <div className="space-y-1.5 text-xs text-gray-700">
+                    <div className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-teal-500 flex-shrink-0 mt-1.5" /><span><strong>Shell:</strong> Phospholipid monolayer (DPPA, DPPC, MPEG5000 DPPE)</span></div>
+                    <div className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-teal-500 flex-shrink-0 mt-1.5" /><span><strong>Gas core:</strong> Octafluoropropane (C₃F₈) — perfluorocarbon</span></div>
+                    <div className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-teal-500 flex-shrink-0 mt-1.5" /><span><strong>Microsphere size:</strong> Mean diameter 1.1–3.3 μm (smaller than RBC)</span></div>
+                    <div className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-teal-500 flex-shrink-0 mt-1.5" /><span><strong>Concentration:</strong> ~1.2 × 10¹⁰ microspheres/mL (after activation)</span></div>
+                    <div className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-teal-500 flex-shrink-0 mt-1.5" /><span><strong>Appearance:</strong> White to off-white homogeneous suspension after activation</span></div>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">Preparation</p>
+                  <div className="space-y-1.5 text-xs text-gray-700">
+                    <div className="flex items-start gap-2"><div className="w-5 h-5 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-[10px] font-black flex-shrink-0">1</div><span>Remove vial from refrigerator — allow to reach room temperature (5 min)</span></div>
+                    <div className="flex items-start gap-2"><div className="w-5 h-5 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-[10px] font-black flex-shrink-0">2</div><span>Activate using VialMix® device for 45 seconds (or manual agitation 45 sec)</span></div>
+                    <div className="flex items-start gap-2"><div className="w-5 h-5 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-[10px] font-black flex-shrink-0">3</div><span>Inspect: uniform milky-white suspension — no large bubbles or clumping</span></div>
+                    <div className="flex items-start gap-2"><div className="w-5 h-5 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-[10px] font-black flex-shrink-0">4</div><span>Draw up dose immediately after activation — use within 5 minutes</span></div>
+                    <div className="flex items-start gap-2"><div className="w-5 h-5 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-[10px] font-black flex-shrink-0">5</div><span>Store at 2–8°C; do not freeze; protect from light</span></div>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">Dosing — LVO (Bolus)</p>
+                  <div className="space-y-1.5 text-xs text-gray-700">
+                    <div className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-teal-500 flex-shrink-0 mt-1.5" /><span><strong>Standard dose:</strong> 10 μL/kg IV bolus (max 10 mL per injection)</span></div>
+                    <div className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-teal-500 flex-shrink-0 mt-1.5" /><span><strong>Typical adult dose:</strong> 0.2–1.0 mL IV bolus</span></div>
+                    <div className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-teal-500 flex-shrink-0 mt-1.5" /><span><strong>Flush:</strong> 10 mL normal saline immediately after bolus</span></div>
+                    <div className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-teal-500 flex-shrink-0 mt-1.5" /><span><strong>Repeat dosing:</strong> May repeat up to 2 additional doses (max 3 total)</span></div>
+                    <div className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-teal-500 flex-shrink-0 mt-1.5" /><span><strong>Infusion option:</strong> 1.3 mL in 50 mL NS, infuse at 4 mL/min; titrate to effect</span></div>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">Mechanical Index (MI) Settings</p>
+                  <div className="space-y-2">
+                    {[
+                      { mode: "LVO — Real-time", mi: "0.1–0.2", note: "Low MI harmonic imaging; contrast-specific mode" },
+                      { mode: "LVO — Flash replenishment", mi: "High MI flash (1.0–1.9) then 0.1–0.2", note: "Brief high-MI pulse destroys bubbles; watch replenishment" },
+                      { mode: "Myocardial perfusion", mi: "0.05–0.1", note: "Ultra-low MI to avoid premature destruction" },
+                      { mode: "Stress echo with contrast", mi: "0.1–0.2", note: "Maintain low MI throughout stress protocol" },
+                    ].map(({ mode, mi, note }) => (
+                      <div key={mode} className="p-2.5 rounded-lg bg-teal-50 border border-teal-100">
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="text-xs font-semibold text-gray-700">{mode}</span>
+                          <span className="text-xs font-black" style={{ color: BRAND }}>MI {mi}</span>
+                        </div>
+                        <p className="text-[10px] text-gray-500">{note}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── LUMASON ── */}
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+              <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3" style={{ background: "linear-gradient(135deg, #1e3a5f, #2563eb)" }}>
+                <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
+                  <Droplets className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-white font-black text-base" style={{ fontFamily: "Merriweather, serif" }}>Lumason® (Sulfur Hexafluoride Lipid-type A Microspheres)</h3>
+                  <p className="text-blue-200 text-xs">Bracco Diagnostics · FDA approved 2014 (cardiac) · Also approved for liver imaging</p>
+                </div>
+              </div>
+              <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">Chemical Makeup</p>
+                  <div className="space-y-1.5 text-xs text-gray-700">
+                    <div className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0 mt-1.5" /><span><strong>Shell:</strong> Phospholipid monolayer (DSPC, DPPG-Na, DSPE-PEG2000)</span></div>
+                    <div className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0 mt-1.5" /><span><strong>Gas core:</strong> Sulfur hexafluoride (SF₆) — inorganic gas, not a perfluorocarbon</span></div>
+                    <div className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0 mt-1.5" /><span><strong>Microsphere size:</strong> Mean diameter 1.5–2.5 μm</span></div>
+                    <div className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0 mt-1.5" /><span><strong>Concentration:</strong> ~200 × 10⁶ microspheres/mL (post-reconstitution)</span></div>
+                    <div className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0 mt-1.5" /><span><strong>Key difference:</strong> SF₆ gas (not C₃F₈) — different acoustic properties; slightly less persistent than Definity</span></div>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">Preparation (Lyophilized Powder)</p>
+                  <div className="space-y-1.5 text-xs text-gray-700">
+                    <div className="flex items-start gap-2"><div className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-black flex-shrink-0">1</div><span>Vial contains lyophilized powder + SF₆ headspace — no refrigeration required (store at room temperature)</span></div>
+                    <div className="flex items-start gap-2"><div className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-black flex-shrink-0">2</div><span>Inject 5 mL sterile water for injection into vial using provided diluent</span></div>
+                    <div className="flex items-start gap-2"><div className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-black flex-shrink-0">3</div><span>Gently swirl (do NOT shake vigorously) until powder is fully dissolved — milky-white suspension</span></div>
+                    <div className="flex items-start gap-2"><div className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-black flex-shrink-0">4</div><span>Use within 6 hours of reconstitution; store at room temperature</span></div>
+                    <div className="flex items-start gap-2"><div className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-black flex-shrink-0">5</div><span>Gently invert vial 10× before each withdrawal to resuspend microspheres</span></div>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">Dosing — LVO (Bolus)</p>
+                  <div className="space-y-1.5 text-xs text-gray-700">
+                    <div className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0 mt-1.5" /><span><strong>Standard dose:</strong> 2.0 mL IV bolus</span></div>
+                    <div className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0 mt-1.5" /><span><strong>Flush:</strong> 5 mL normal saline immediately after bolus</span></div>
+                    <div className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0 mt-1.5" /><span><strong>Repeat dosing:</strong> May repeat at 25–30 min intervals if needed</span></div>
+                    <div className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0 mt-1.5" /><span><strong>Infusion option:</strong> 4.8 mL in 50 mL NS, infuse at 1–2 mL/min; titrate to effect</span></div>
+                    <div className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0 mt-1.5" /><span><strong>Liver imaging dose:</strong> 2.4 mL IV bolus (different indication)</span></div>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">Mechanical Index (MI) Settings</p>
+                  <div className="space-y-2">
+                    {[
+                      { mode: "LVO — Real-time", mi: "0.1–0.2", note: "Low MI harmonic imaging; Lumason is slightly more robust at MI 0.2" },
+                      { mode: "LVO — Flash replenishment", mi: "High MI flash then 0.1–0.2", note: "SF₆ bubbles may be slightly less persistent post-flash than C₃F₈" },
+                      { mode: "Myocardial perfusion", mi: "0.05–0.1", note: "Ultra-low MI; Lumason performs well at very low MI" },
+                      { mode: "Liver CEUS", mi: "0.05–0.08", note: "Very low MI required for liver CEUS protocol" },
+                    ].map(({ mode, mi, note }) => (
+                      <div key={mode} className="p-2.5 rounded-lg bg-blue-50 border border-blue-100">
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="text-xs font-semibold text-gray-700">{mode}</span>
+                          <span className="text-xs font-black text-blue-600">MI {mi}</span>
+                        </div>
+                        <p className="text-[10px] text-gray-500">{note}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ── OPTISON ── */}
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+              <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-3" style={{ background: "linear-gradient(135deg, #4a1d96, #7c3aed)" }}>
+                <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
+                  <Droplets className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-white font-black text-base" style={{ fontFamily: "Merriweather, serif" }}>Optison™ (Perflutren Protein-Type A Microspheres)</h3>
+                  <p className="text-purple-200 text-xs">GE HealthCare · FDA approved 1997 · Oldest commercially available UEA</p>
+                </div>
+              </div>
+              <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">Chemical Makeup</p>
+                  <div className="space-y-1.5 text-xs text-gray-700">
+                    <div className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-purple-500 flex-shrink-0 mt-1.5" /><span><strong>Shell:</strong> Human albumin (5%) — protein shell, NOT a phospholipid</span></div>
+                    <div className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-purple-500 flex-shrink-0 mt-1.5" /><span><strong>Gas core:</strong> Octafluoropropane (C₃F₈) — same gas as Definity</span></div>
+                    <div className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-purple-500 flex-shrink-0 mt-1.5" /><span><strong>Microsphere size:</strong> Mean diameter 3.0–4.5 μm (larger than Definity/Lumason)</span></div>
+                    <div className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-purple-500 flex-shrink-0 mt-1.5" /><span><strong>Concentration:</strong> 5–8 × 10⁸ microspheres/mL</span></div>
+                    <div className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-purple-500 flex-shrink-0 mt-1.5" /><span><strong>Key difference:</strong> Albumin shell — CONTRAINDICATED in patients with known albumin or blood product hypersensitivity</span></div>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">Preparation</p>
+                  <div className="space-y-1.5 text-xs text-gray-700">
+                    <div className="flex items-start gap-2"><div className="w-5 h-5 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-[10px] font-black flex-shrink-0">1</div><span>Store at 2–8°C; do not freeze; protect from light</span></div>
+                    <div className="flex items-start gap-2"><div className="w-5 h-5 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-[10px] font-black flex-shrink-0">2</div><span>Allow to reach room temperature before use (5–10 min)</span></div>
+                    <div className="flex items-start gap-2"><div className="w-5 h-5 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-[10px] font-black flex-shrink-0">3</div><span>Gently roll vial between palms to resuspend — do NOT shake</span></div>
+                    <div className="flex items-start gap-2"><div className="w-5 h-5 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-[10px] font-black flex-shrink-0">4</div><span>Inspect: white to off-white suspension — discard if particulate matter or discoloration present</span></div>
+                    <div className="flex items-start gap-2"><div className="w-5 h-5 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-[10px] font-black flex-shrink-0">5</div><span>Use within 30 minutes of opening; discard unused portion</span></div>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">Dosing — LVO (Bolus)</p>
+                  <div className="space-y-1.5 text-xs text-gray-700">
+                    <div className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-purple-500 flex-shrink-0 mt-1.5" /><span><strong>Standard dose:</strong> 0.5 mL IV bolus (range 0.5–5.0 mL)</span></div>
+                    <div className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-purple-500 flex-shrink-0 mt-1.5" /><span><strong>Flush:</strong> 10 mL normal saline immediately after bolus</span></div>
+                    <div className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-purple-500 flex-shrink-0 mt-1.5" /><span><strong>Repeat dosing:</strong> May repeat up to 2 additional boluses (max 5 mL total per injection)</span></div>
+                    <div className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-purple-500 flex-shrink-0 mt-1.5" /><span><strong>Infusion option:</strong> Not typically used as continuous infusion — bolus preferred</span></div>
+                    <div className="flex items-start gap-2"><div className="w-1.5 h-1.5 rounded-full bg-purple-500 flex-shrink-0 mt-1.5" /><span><strong>Note:</strong> Larger microsphere size may cause more attenuation artifact at higher doses</span></div>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">Mechanical Index (MI) Settings</p>
+                  <div className="space-y-2">
+                    {[
+                      { mode: "LVO — Real-time", mi: "0.1–0.2", note: "Larger microspheres more susceptible to destruction — use lower end of MI range" },
+                      { mode: "LVO — Flash replenishment", mi: "High MI flash then 0.1", note: "Use MI 0.1 post-flash — larger bubbles destroy more readily; watch for attenuation" },
+                      { mode: "Myocardial perfusion", mi: "0.05–0.08", note: "Very low MI essential — Optison microspheres are more fragile at higher MI" },
+                      { mode: "General note", mi: "Keep MI ≤ 0.2", note: "Optison is more sensitive to mechanical destruction than Definity or Lumason" },
+                    ].map(({ mode, mi, note }) => (
+                      <div key={mode} className="p-2.5 rounded-lg bg-purple-50 border border-purple-100">
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="text-xs font-semibold text-gray-700">{mode}</span>
+                          <span className="text-xs font-black text-purple-600">MI {mi}</span>
+                        </div>
+                        <p className="text-[10px] text-gray-500">{note}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              {/* Albumin warning */}
+              <div className="mx-5 mb-5 flex items-start gap-2 p-3 rounded-lg bg-red-50 border border-red-200">
+                <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                <div className="text-xs text-red-800">
+                  <strong>Albumin Contraindication:</strong> Optison is contraindicated in patients with known hypersensitivity to albumin, blood, or blood products. Screen all patients before use. Definity or Lumason should be used as alternatives in these patients.
+                </div>
+              </div>
+            </div>
+
+            {/* ── Comparison Table ── */}
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+              <div className="px-5 py-3 border-b border-gray-100 bg-gray-50">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500">Agent Comparison Summary</h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b border-gray-100">
+                      <th className="px-4 py-3 text-left font-bold text-gray-500 bg-gray-50">Feature</th>
+                      <th className="px-4 py-3 text-left font-bold text-teal-600">Definity®</th>
+                      <th className="px-4 py-3 text-left font-bold text-blue-600">Lumason®</th>
+                      <th className="px-4 py-3 text-left font-bold text-purple-600">Optison™</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {[
+                      { feature: "Shell", definity: "Phospholipid", lumason: "Phospholipid", optison: "Human albumin" },
+                      { feature: "Gas", definity: "C₃F₈ (octafluoropropane)", lumason: "SF₆ (sulfur hexafluoride)", optison: "C₃F₈ (octafluoropropane)" },
+                      { feature: "Size (mean)", definity: "1.1–3.3 μm", lumason: "1.5–2.5 μm", optison: "3.0–4.5 μm (largest)" },
+                      { feature: "Preparation", definity: "Activation (VialMix 45 sec)", lumason: "Reconstitution (add water)", optison: "Ready to use (gentle roll)" },
+                      { feature: "Storage", definity: "Refrigerated (2–8°C)", lumason: "Room temperature", optison: "Refrigerated (2–8°C)" },
+                      { feature: "LVO bolus dose", definity: "0.2–1.0 mL", lumason: "2.0 mL", optison: "0.5 mL" },
+                      { feature: "Saline flush", definity: "10 mL NS", lumason: "5 mL NS", optison: "10 mL NS" },
+                      { feature: "Recommended MI (LVO)", definity: "0.1–0.2", lumason: "0.1–0.2", optison: "0.1 (more fragile)" },
+                      { feature: "Albumin contraindication", definity: "No", lumason: "No", optison: "YES — contraindicated" },
+                      { feature: "Liver CEUS approved", definity: "No", lumason: "Yes (FDA approved)", optison: "No" },
+                      { feature: "Infusion use", definity: "Yes (common)", lumason: "Yes", optison: "Not typical" },
+                      { feature: "Persistence", definity: "High (C₃F₈)", lumason: "Moderate (SF₆)", optison: "Moderate (larger, more fragile)" },
+                    ].map(({ feature, definity, lumason, optison }) => (
+                      <tr key={feature}>
+                        <td className="px-4 py-2.5 font-semibold text-gray-700 bg-gray-50/50">{feature}</td>
+                        <td className="px-4 py-2.5 text-gray-700">{definity}</td>
+                        <td className="px-4 py-2.5 text-gray-700">{lumason}</td>
+                        <td className={`px-4 py-2.5 ${feature === "Albumin contraindication" ? "text-red-600 font-bold" : "text-gray-700"}`}>{optison}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </Layout>
   );
 }

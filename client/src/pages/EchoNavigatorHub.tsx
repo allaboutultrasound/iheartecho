@@ -10,7 +10,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { hasPremiumAccess } from "@/lib/roles";
 import {
   Stethoscope, Microscope, Zap, Users, Baby, Heart,
-  Cpu, FlaskConical, BarChart3, ArrowRight, Scan, Lock, Droplets
+  Cpu, FlaskConical, BarChart3, ArrowRight, Scan, Lock, Droplets, Activity
 } from "lucide-react";
 
 const BRAND = "#189aa1";
@@ -93,6 +93,14 @@ const navigators = [
     badge: "Contrast Echo",
     premium: true,
   },
+  {
+    path: "/hocm-navigator",
+    icon: Activity,
+    title: "HOCM EchoNavigator™",
+    description: "Comprehensive HOCM protocol: morphology assessment, SAM grading, resting and provoked LVOT gradients, goal-directed Valsalva, MR evaluation, and ASE/AHA reporting thresholds.",
+    badge: "Cardiomyopathy",
+    premium: true,
+  },
 ];
 
 const badgeColors: Record<string, string> = {
@@ -101,6 +109,7 @@ const badgeColors: Record<string, string> = {
   "Stress Echo": "#0f766e",
   "Congenital Heart": "#0369a1",
   "Contrast Echo": "#0e7490",
+  "Cardiomyopathy": "#b45309",
 };
 
 export default function EchoNavigatorHub() {

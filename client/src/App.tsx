@@ -63,6 +63,8 @@ import Premium from "./pages/Premium";
 import UEANavigator from "./pages/UEANavigator";
 import UEAScanCoach from "./pages/UEAScanCoach";
 import ScanCoachEditor from "./pages/ScanCoachEditor";
+import HOCMNavigator from "./pages/HOCMNavigator";
+import HOCMScanCoach from "./pages/HOCMScanCoach";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -130,6 +132,8 @@ function Router() {
       <Route path="/ice-scan-coach" component={ICEScanCoach} />
       <Route path="/uea-navigator" component={UEANavigator} />
       <Route path="/uea-scan-coach" component={UEAScanCoach} />
+      <Route path="/hocm-navigator" component={HOCMNavigator} />
+      <Route path="/hocm-scan-coach" component={HOCMScanCoach} />
       <Route path="/echo-assist-hub" component={EchoAssistHub} />
       {/* ── LMS Engines ──────────────────────────────────────────────────── */}
       <Route path="/quickfire" component={QuickFire} />
