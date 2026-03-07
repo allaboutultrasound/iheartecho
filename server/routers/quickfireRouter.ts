@@ -29,8 +29,10 @@ import {
   quickfireQuestions,
   quickfireDailySets,
   quickfireAttempts,
+  quickfireChallenges,
   users,
 } from "../../drizzle/schema";
+import { notifyOwner } from "../_core/notification";
 import { eq, and, desc, sql, gte, count } from "drizzle-orm";
 import { sendStreakReminders } from "../streakReminders";
 
@@ -712,6 +714,281 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`,
         .update(users)
         .set({ notificationPrefs: JSON.stringify(input) })
         .where(eq(users.id, ctx.user.id));
+      return { success: true };
+    }),
+
+  // ─── Challenge Queue ─────────────────────────────────────────────────────────
+
+  /** Get the currently live challenge (status = 'live') with full question data */
+  getLiveChallenge: publicProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+
+    const [challenge] = await db
+      .select()
+      .from(quickfireChallenges)
+      .where(eq(quickfireChallenges.status, "live"))
+      .orderBy(desc(quickfireChallenges.publishedAt))
+      .limit(1);
+
+    if (!challenge) return null;
+
+    const ids: number[] = JSON.parse(challenge.questionIds || "[]");
+    if (ids.length === 0) return { ...challenge, questions: [], userAttempts: {} };
+
+    const allQ = await db.select().from(quickfireQuestions).where(eq(quickfireQuestions.isActive, true));
+    const orderedQuestions = ids.map((id) => allQ.find((q) => q.id === id)).filter(Boolean) as typeof allQ;
+
+    let userAttempts: Record<number, { selectedAnswer: number | null; selfMarkedCorrect: boolean | null; isCorrect: boolean | null }> = {};
+    const setDate = challenge.publishDate ?? challenge.publishedAt?.toISOString().slice(0, 10) ?? "";
+    if (ctx.user && setDate) {
+      const attempts = await db
+        .select()
+        .from(quickfireAttempts)
+        .where(and(eq(quickfireAttempts.userId, ctx.user.id), eq(quickfireAttempts.setDate, setDate)));
+      for (const a of attempts) {
+        userAttempts[a.questionId] = { selectedAnswer: a.selectedAnswer, selfMarkedCorrect: a.selfMarkedCorrect, isCorrect: a.isCorrect };
+      }
+    }
+
+    const sanitized = orderedQuestions.map((q) => {
+      const attempted = userAttempts[q.id];
+      return {
+        ...q,
+        options: q.options ? JSON.parse(q.options) : null,
+        tags: q.tags ? JSON.parse(q.tags) : [],
+        correctAnswer: attempted ? q.correctAnswer : null,
+        explanation: attempted ? q.explanation : null,
+        reviewAnswer: attempted ? q.reviewAnswer : null,
+      };
+    });
+
+    // Compute time remaining (24h window from publishedAt)
+    const publishedAt = challenge.publishedAt ? new Date(challenge.publishedAt).getTime() : null;
+    const expiresAt = publishedAt ? publishedAt + 24 * 60 * 60 * 1000 : null;
+    const msRemaining = expiresAt ? Math.max(0, expiresAt - Date.now()) : null;
+
+    return { ...challenge, questions: sanitized, userAttempts, setDate, msRemaining };
+  }),
+
+  /** Get the challenge archive — free users: last 7 days; premium: all */
+  getChallengeArchive: publicProcedure
+    .input(z.object({ page: z.number().int().min(1).default(1), limit: z.number().int().min(1).max(20).default(10) }))
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+
+      const isPremium = (ctx.user as any)?.isPremium === true || (ctx.user as any)?.role === "admin";
+      const offset = (input.page - 1) * input.limit;
+
+      // Free users: only last 7 days
+      let conditions = [eq(quickfireChallenges.status, "archived")];
+      if (!isPremium) {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const cutoff = sevenDaysAgo.toISOString().slice(0, 10);
+        conditions.push(sql`${quickfireChallenges.publishDate} >= ${cutoff}` as any);
+      }
+
+      const [rows, totalResult] = await Promise.all([
+        db.select({ id: quickfireChallenges.id, title: quickfireChallenges.title, description: quickfireChallenges.description,
+          category: quickfireChallenges.category, publishDate: quickfireChallenges.publishDate,
+          publishedAt: quickfireChallenges.publishedAt, archivedAt: quickfireChallenges.archivedAt,
+          questionIds: quickfireChallenges.questionIds })
+          .from(quickfireChallenges).where(and(...conditions))
+          .orderBy(desc(quickfireChallenges.publishedAt)).limit(input.limit).offset(offset),
+        db.select({ count: count(quickfireChallenges.id) }).from(quickfireChallenges).where(and(...conditions)),
+      ]);
+
+      return { challenges: rows, total: totalResult[0]?.count ?? 0, isPremium, page: input.page, limit: input.limit };
+    }),
+
+  /** Get a single archived challenge with full questions (for replay) */
+  getArchivedChallenge: publicProcedure
+    .input(z.object({ id: z.number().int().positive() }))
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+
+      const [challenge] = await db.select().from(quickfireChallenges)
+        .where(and(eq(quickfireChallenges.id, input.id), eq(quickfireChallenges.status, "archived"))).limit(1);
+      if (!challenge) throw new TRPCError({ code: "NOT_FOUND", message: "Challenge not found" });
+
+      // Access gate: free users only see last 7 days
+      const isPremium = (ctx.user as any)?.isPremium === true || (ctx.user as any)?.role === "admin";
+      if (!isPremium && challenge.publishDate) {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        if (challenge.publishDate < sevenDaysAgo.toISOString().slice(0, 10)) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Premium access required for older challenges" });
+        }
+      }
+
+      const ids: number[] = JSON.parse(challenge.questionIds || "[]");
+      const allQ = await db.select().from(quickfireQuestions).where(eq(quickfireQuestions.isActive, true));
+      const questions = ids.map((id) => allQ.find((q) => q.id === id)).filter(Boolean) as typeof allQ;
+
+      // For archived challenges, always reveal answers
+      const withAnswers = questions.map((q) => ({
+        ...q,
+        options: q.options ? JSON.parse(q.options) : null,
+        tags: q.tags ? JSON.parse(q.tags) : [],
+      }));
+
+      return { ...challenge, questions: withAnswers };
+    }),
+
+  // ─── Admin: Challenge Queue Management ──────────────────────────────────────
+
+  /** List all challenges in the queue (draft + scheduled + live) */
+  adminListChallenges: adminProcedure
+    .input(z.object({ includeArchived: z.boolean().default(false) }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+
+      const statuses = input.includeArchived
+        ? ["draft", "scheduled", "live", "archived"]
+        : ["draft", "scheduled", "live"];
+
+      const rows = await db.select().from(quickfireChallenges)
+        .where(sql`${quickfireChallenges.status} IN (${statuses.map(() => "?").join(",")})` as any)
+        .orderBy(quickfireChallenges.priority, desc(quickfireChallenges.createdAt));
+
+      return rows.map((r) => ({ ...r, questionIds: JSON.parse(r.questionIds || "[]") as number[] }));
+    }),
+
+  /** Create a new challenge in the queue */
+  adminCreateChallenge: adminProcedure
+    .input(z.object({
+      title: z.string().min(3).max(300),
+      description: z.string().max(2000).optional(),
+      questionIds: z.array(z.number().int().positive()).min(1),
+      priority: z.number().int().min(1).default(100),
+      category: z.string().max(64).optional(),
+      publishDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const [result] = await db.insert(quickfireChallenges).values({
+        title: input.title,
+        description: input.description ?? null,
+        questionIds: JSON.stringify(input.questionIds),
+        priority: input.priority,
+        category: input.category ?? null,
+        status: input.publishDate ? "scheduled" : "draft",
+        publishDate: input.publishDate ?? null,
+        createdByUserId: ctx.user.id,
+      });
+      return { id: (result as any).insertId };
+    }),
+
+  /** Update a challenge (title, description, questions, priority, category, publishDate) */
+  adminUpdateChallenge: adminProcedure
+    .input(z.object({
+      id: z.number().int().positive(),
+      title: z.string().min(3).max(300).optional(),
+      description: z.string().max(2000).optional().nullable(),
+      questionIds: z.array(z.number().int().positive()).min(1).optional(),
+      priority: z.number().int().min(1).optional(),
+      category: z.string().max(64).optional().nullable(),
+      publishDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const { id, questionIds, ...rest } = input;
+      await db.update(quickfireChallenges).set({
+        ...rest,
+        ...(questionIds !== undefined ? { questionIds: JSON.stringify(questionIds) } : {}),
+        ...(rest.publishDate !== undefined ? { status: rest.publishDate ? "scheduled" : "draft" } : {}),
+      }).where(eq(quickfireChallenges.id, id));
+      return { success: true };
+    }),
+
+  /** Delete a draft challenge */
+  adminDeleteChallenge: adminProcedure
+    .input(z.object({ id: z.number().int().positive() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      // Only allow deleting drafts/scheduled — never live/archived
+      const [ch] = await db.select({ status: quickfireChallenges.status }).from(quickfireChallenges)
+        .where(eq(quickfireChallenges.id, input.id)).limit(1);
+      if (!ch) throw new TRPCError({ code: "NOT_FOUND" });
+      if (ch.status === "live" || ch.status === "archived") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Cannot delete a live or archived challenge" });
+      }
+      await db.delete(quickfireChallenges).where(eq(quickfireChallenges.id, input.id));
+      return { success: true };
+    }),
+
+  /** Reorder challenge priorities — accepts an ordered array of IDs */
+  adminReorderChallenges: adminProcedure
+    .input(z.object({ orderedIds: z.array(z.number().int().positive()) }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      for (let i = 0; i < input.orderedIds.length; i++) {
+        await db.update(quickfireChallenges).set({ priority: i + 1 }).where(eq(quickfireChallenges.id, input.orderedIds[i]));
+      }
+      return { success: true };
+    }),
+
+  /**
+   * Publish the next scheduled/draft challenge immediately (or auto-publish on cron).
+   * Picks the highest-priority draft/scheduled challenge and makes it live.
+   * Archives any currently live challenge first.
+   */
+  adminPublishNextChallenge: adminProcedure
+    .input(z.object({ sendNotification: z.boolean().default(true) }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+
+      // 1. Archive any currently live challenge
+      const now = new Date();
+      await db.update(quickfireChallenges).set({ status: "archived", archivedAt: now })
+        .where(eq(quickfireChallenges.status, "live"));
+
+      // 2. Pick next: prefer scheduled (has a publishDate), then draft, ordered by priority
+      const today = now.toISOString().slice(0, 10);
+      const candidates = await db.select().from(quickfireChallenges)
+        .where(sql`${quickfireChallenges.status} IN ('draft', 'scheduled')` as any)
+        .orderBy(quickfireChallenges.priority, quickfireChallenges.createdAt)
+        .limit(10);
+
+      // Prefer a challenge whose publishDate <= today, else take the first draft
+      const next = candidates.find((c) => !c.publishDate || c.publishDate <= today) ?? candidates[0];
+      if (!next) return { published: false, message: "No challenges in queue" };
+
+      await db.update(quickfireChallenges).set({
+        status: "live",
+        publishDate: next.publishDate ?? today,
+        publishedAt: now,
+        archivedAt: null,
+      }).where(eq(quickfireChallenges.id, next.id));
+
+      // 3. Send owner notification
+      if (input.sendNotification) {
+        await notifyOwner({
+          title: `🔥 New QuickFire Challenge Live: ${next.title}`,
+          content: `Challenge "${next.title}" is now live for 24 hours. Users have been notified.`,
+        }).catch(() => {});
+      }
+
+      return { published: true, challengeId: next.id, title: next.title, publishDate: next.publishDate ?? today };
+    }),
+
+  /** Manually archive the currently live challenge */
+  adminArchiveChallenge: adminProcedure
+    .input(z.object({ id: z.number().int().positive() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      await db.update(quickfireChallenges).set({ status: "archived", archivedAt: new Date() })
+        .where(and(eq(quickfireChallenges.id, input.id), eq(quickfireChallenges.status, "live")));
       return { success: true };
     }),
 });

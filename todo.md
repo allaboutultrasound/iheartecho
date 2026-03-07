@@ -1193,3 +1193,20 @@
 
 ## Dashboard CTA Fix
 - [x] Update 'Daily Case' CTA button on Dashboard to link to /quickfire
+
+## QuickFire — Remove Extra Tabs
+- [x] Remove Echo Cases tab from QuickFire — replaced with Challenge Archive tab; Leaderboard tab retained
+
+## QuickFire Challenge Archive System
+- [x] DB schema: add quickfireChallenges table (priority queue, publishDate, archivedAt, status: draft/scheduled/live/archived)
+- [x] DB schema: quickfireAttempts linked to challenge via setDate field (existing)
+- [x] Server: getLiveChallenge procedure with 24-hour window and msRemaining countdown
+- [x] Server: adminPublishChallenge procedure sends owner notification on publish
+- [x] Server: getChallengeArchive procedure returns archived challenges
+- [x] Server: archive access gating — free users 7 days, premium/admin unlimited
+- [x] Admin: Challenge Queue tab in QuickFireAdmin — create/edit/reorder/publish challenges
+- [x] Admin: 6 Echo Case Lab questions seeded into QuickFire question bank (inactive, admin-only)
+- [x] QuickFire player: removed Echo Cases tab, restored Daily Challenge as primary flow
+- [x] QuickFire player: Challenge Archive tab with free (7 days) / premium (unlimited) access gating
+- [x] QuickFire player: 24-hour countdown timer shown on live challenge header
+- [x] QuickFire player: Leaderboard tab retained alongside Daily Challenge and Archive tabs

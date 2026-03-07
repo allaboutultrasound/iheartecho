@@ -253,6 +253,13 @@
       "when": 1772868146949,
       "tag": "0035_melodic_serpent_society",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "5",
+      "when": 1772910496715,
+      "tag": "0036_nice_red_hulk",
+      "breakpoints": true
     }
   ]
 }

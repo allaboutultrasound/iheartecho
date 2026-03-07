@@ -60,6 +60,14 @@ import {
   AlertCircle,
   Bell,
   Send,
+  ListOrdered,
+  PlayCircle,
+  Archive,
+  GripVertical,
+  ChevronUp,
+  ChevronDown,
+  Clock,
+  Tag,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -210,6 +218,122 @@ export default function QuickFireAdmin() {
     const a = document.createElement("a");
     a.href = url; a.download = "quickfire_questions_template.csv"; a.click();
     URL.revokeObjectURL(url);
+  }
+
+  // ── Challenge Queue state ────────────────────────────────────────────────
+  const [activeAdminTab, setActiveAdminTab] = useState<"questions" | "challenges">("questions");
+  const [challengeFormOpen, setChallengeFormOpen] = useState(false);
+  const [editingChallengeId, setEditingChallengeId] = useState<number | null>(null);
+  const [challengeForm, setChallengeForm] = useState({
+    title: "",
+    description: "",
+    category: "Adult Echo",
+    publishDate: "",
+    priority: 100,
+    selectedQuestionIds: [] as number[],
+  });
+
+  const challengeListQuery = trpc.quickfire.adminListChallenges.useQuery({ includeArchived: false });
+  const challenges = challengeListQuery.data ?? [];
+
+  const createChallengeMutation = trpc.quickfire.adminCreateChallenge.useMutation({
+    onSuccess: () => {
+      toast.success("Challenge created and added to queue.");
+      challengeListQuery.refetch();
+      setChallengeFormOpen(false);
+      setChallengeForm({ title: "", description: "", category: "Adult Echo", publishDate: "", priority: 100, selectedQuestionIds: [] });
+    },
+    onError: (err) => toast.error(err.message || "Failed to create challenge."),
+  });
+
+  const updateChallengeMutation = trpc.quickfire.adminUpdateChallenge.useMutation({
+    onSuccess: () => {
+      toast.success("Challenge updated.");
+      challengeListQuery.refetch();
+      setChallengeFormOpen(false);
+      setEditingChallengeId(null);
+    },
+    onError: (err) => toast.error(err.message || "Failed to update challenge."),
+  });
+
+  const deleteChallengeMutation = trpc.quickfire.adminDeleteChallenge.useMutation({
+    onSuccess: () => { toast.success("Challenge removed from queue."); challengeListQuery.refetch(); },
+    onError: (err) => toast.error(err.message || "Failed to delete challenge."),
+  });
+
+  const publishNextMutation = trpc.quickfire.adminPublishNextChallenge.useMutation({
+    onSuccess: (data) => {
+      if (data.published) toast.success(`Challenge "${data.title}" is now live!`);
+      else toast.info(data.message ?? "No challenges to publish.");
+      challengeListQuery.refetch();
+    },
+    onError: (err) => toast.error(err.message || "Failed to publish challenge."),
+  });
+
+  const reorderMutation = trpc.quickfire.adminReorderChallenges.useMutation({
+    onError: (err) => toast.error(err.message || "Failed to reorder."),
+  });
+
+  function moveChallengeUp(idx: number) {
+    if (idx === 0) return;
+    const draft = [...challenges.filter((c) => c.status !== "live")];
+    const live = challenges.filter((c) => c.status === "live");
+    const item = draft[idx - live.length];
+    if (!item) return;
+    const draftIdx = idx - live.length;
+    if (draftIdx <= 0) return;
+    const reordered = [...draft];
+    [reordered[draftIdx - 1], reordered[draftIdx]] = [reordered[draftIdx], reordered[draftIdx - 1]];
+    reorderMutation.mutate({ orderedIds: reordered.map((c) => c.id) });
+    challengeListQuery.refetch();
+  }
+
+  function moveChallengeDown(idx: number) {
+    const draft = [...challenges.filter((c) => c.status !== "live")];
+    const live = challenges.filter((c) => c.status === "live");
+    const draftIdx = idx - live.length;
+    if (draftIdx < 0 || draftIdx >= draft.length - 1) return;
+    const reordered = [...draft];
+    [reordered[draftIdx], reordered[draftIdx + 1]] = [reordered[draftIdx + 1], reordered[draftIdx]];
+    reorderMutation.mutate({ orderedIds: reordered.map((c) => c.id) });
+    challengeListQuery.refetch();
+  }
+
+  function openCreateChallenge() {
+    setEditingChallengeId(null);
+    setChallengeForm({ title: "", description: "", category: "Adult Echo", publishDate: "", priority: 100, selectedQuestionIds: [] });
+    setChallengeFormOpen(true);
+  }
+
+  function openEditChallenge(c: any) {
+    setEditingChallengeId(c.id);
+    setChallengeForm({
+      title: c.title,
+      description: c.description ?? "",
+      category: c.category ?? "Adult Echo",
+      publishDate: c.publishDate ?? "",
+      priority: c.priority ?? 100,
+      selectedQuestionIds: Array.isArray(c.questionIds) ? c.questionIds : [],
+    });
+    setChallengeFormOpen(true);
+  }
+
+  function handleSubmitChallenge() {
+    if (!challengeForm.title.trim()) { toast.error("Challenge title is required."); return; }
+    if (challengeForm.selectedQuestionIds.length === 0) { toast.error("Select at least one question."); return; }
+    const payload = {
+      title: challengeForm.title.trim(),
+      description: challengeForm.description.trim() || undefined,
+      questionIds: challengeForm.selectedQuestionIds,
+      priority: challengeForm.priority,
+      category: challengeForm.category || undefined,
+      publishDate: challengeForm.publishDate || undefined,
+    };
+    if (editingChallengeId !== null) {
+      updateChallengeMutation.mutate({ id: editingChallengeId, ...payload });
+    } else {
+      createChallengeMutation.mutate(payload as any);
+    }
   }
 
   // Streak Reminders
@@ -460,6 +584,170 @@ export default function QuickFireAdmin() {
           </div>
         </div>
 
+        {/* Tab Switcher */}
+        <div className="flex gap-1 mb-6 bg-gray-100 rounded-lg p-1 w-fit">
+          <button
+            onClick={() => setActiveAdminTab("questions")}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+              activeAdminTab === "questions" ? "bg-white text-[#189aa1] shadow-sm" : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            <Zap className="w-4 h-4" /> Question Bank
+          </button>
+          <button
+            onClick={() => setActiveAdminTab("challenges")}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+              activeAdminTab === "challenges" ? "bg-white text-[#189aa1] shadow-sm" : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            <ListOrdered className="w-4 h-4" /> Challenge Queue
+            {challenges.filter((c) => c.status === "live").length > 0 && (
+              <span className="ml-1 bg-green-500 text-white text-xs rounded-full px-1.5 py-0.5">LIVE</span>
+            )}
+          </button>
+        </div>
+
+        {/* ── CHALLENGE QUEUE TAB ──────────────────────────────────────────── */}
+        {activeAdminTab === "challenges" && (
+          <div className="space-y-4">
+            {/* Queue header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Challenge Queue</h2>
+                <p className="text-xs text-gray-400 mt-0.5">Build challenges from your question bank and schedule them for daily auto-publish.</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 border-green-500 text-green-600"
+                  onClick={() => publishNextMutation.mutate({ sendNotification: true })}
+                  disabled={publishNextMutation.isPending || challenges.filter((c) => c.status !== "live").length === 0}
+                >
+                  {publishNextMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <PlayCircle className="w-4 h-4" />}
+                  Publish Next Now
+                </Button>
+                <Button
+                  size="sm"
+                  className="gap-1.5 text-white"
+                  style={{ background: "#189aa1" }}
+                  onClick={openCreateChallenge}
+                >
+                  <Plus className="w-4 h-4" /> New Challenge
+                </Button>
+              </div>
+            </div>
+
+            {/* Info banner */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-xs text-blue-700">
+              <strong>Auto-publish workflow:</strong> The system publishes one challenge per day. Each challenge is live for 24 hours, then archived automatically. Free users can access 7 days of archive history; Premium users have unlimited access.
+            </div>
+
+            {/* Challenge list */}
+            {challengeListQuery.isLoading ? (
+              <div className="space-y-3">{[1,2,3].map((i) => <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />)}</div>
+            ) : challenges.length === 0 ? (
+              <div className="text-center py-16">
+                <ListOrdered className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <p className="text-gray-500 font-medium">No challenges in queue</p>
+                <p className="text-sm text-gray-400 mt-1">Create your first challenge to get started.</p>
+                <Button className="mt-4 text-white" style={{ background: "#189aa1" }} onClick={openCreateChallenge}>
+                  <Plus className="w-4 h-4 mr-2" /> Create Challenge
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {challenges.map((c: any, idx: number) => {
+                  const isLive = c.status === "live";
+                  const isScheduled = c.status === "scheduled";
+                  const isDraft = c.status === "draft";
+                  const qCount = Array.isArray(c.questionIds) ? c.questionIds.length : 0;
+                  return (
+                    <div
+                      key={c.id}
+                      className={`flex items-start gap-3 p-4 bg-white rounded-xl border transition-all ${
+                        isLive ? "border-green-300 bg-green-50" :
+                        isScheduled ? "border-blue-200" :
+                        "border-gray-100 hover:border-[#189aa1]/30"
+                      }`}
+                    >
+                      {/* Reorder buttons (draft/scheduled only) */}
+                      <div className="flex flex-col gap-0.5 flex-shrink-0 mt-1">
+                        {!isLive && (
+                          <>
+                            <button onClick={() => moveChallengeUp(idx)} className="text-gray-300 hover:text-[#189aa1] transition-colors" title="Move up">
+                              <ChevronUp className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => moveChallengeDown(idx)} className="text-gray-300 hover:text-[#189aa1] transition-colors" title="Move down">
+                              <ChevronDown className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
+                        {isLive && <PlayCircle className="w-4 h-4 text-green-500" />}
+                      </div>
+
+                      {/* Priority badge */}
+                      <div className="flex-shrink-0 w-8 text-center">
+                        <span className="text-xs font-bold text-gray-300">#{idx + 1}</span>
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-semibold text-sm text-gray-800">{c.title}</span>
+                          {isLive && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-green-500 text-white">LIVE</span>}
+                          {isScheduled && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">SCHEDULED</span>}
+                          {isDraft && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">DRAFT</span>}
+                        </div>
+                        <div className="flex items-center gap-3 mt-1 flex-wrap">
+                          {c.category && (
+                            <span className="flex items-center gap-1 text-xs text-gray-400">
+                              <Tag className="w-3 h-3" />{c.category}
+                            </span>
+                          )}
+                          <span className="text-xs text-gray-400">{qCount} question{qCount !== 1 ? "s" : ""}</span>
+                          {c.publishDate && (
+                            <span className="flex items-center gap-1 text-xs text-gray-400">
+                              <Clock className="w-3 h-3" />Scheduled: {c.publishDate}
+                            </span>
+                          )}
+                          {isLive && c.publishedAt && (
+                            <span className="flex items-center gap-1 text-xs text-green-600">
+                              <Clock className="w-3 h-3" />Live since {new Date(c.publishedAt).toLocaleString()}
+                            </span>
+                          )}
+                        </div>
+                        {c.description && <p className="text-xs text-gray-400 mt-1 line-clamp-1">{c.description}</p>}
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        {!isLive && (
+                          <>
+                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-gray-400 hover:text-[#189aa1]" onClick={() => openEditChallenge(c)}>
+                              <Pencil className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button
+                              size="sm" variant="ghost" className="h-8 w-8 p-0 text-gray-400 hover:text-red-500"
+                              onClick={() => { if (confirm("Remove this challenge from the queue?")) deleteChallengeMutation.mutate({ id: c.id }); }}
+                              disabled={deleteChallengeMutation.isPending}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── QUESTION BANK TAB (existing content below) ─────────────────── */}
+        {activeAdminTab === "questions" && (
+          <>
         {/* Stats bar */}
         <div className="grid grid-cols-3 gap-3 mb-6">
           {(["scenario", "image", "quickReview"] as QuestionType[]).map((t) => {
@@ -598,7 +886,122 @@ export default function QuickFireAdmin() {
             )}
           </>
         )}
+           </>
+        )}
       </div>
+      {/* ── Challenge Form Dialog ────────────────────────────────────────────── */}
+      <Dialog open={challengeFormOpen} onOpenChange={(open) => { if (!open) { setChallengeFormOpen(false); setEditingChallengeId(null); } }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle style={{ fontFamily: "Merriweather, serif" }}>
+              {editingChallengeId !== null ? "Edit Challenge" : "New Challenge"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Challenge Title <span className="text-red-500">*</span></label>
+              <Input
+                value={challengeForm.title}
+                onChange={(e) => setChallengeForm((f) => ({ ...f, title: e.target.value }))}
+                placeholder="e.g. ACS Echo Essentials — Week 1"
+                maxLength={300}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Description <span className="text-gray-400 font-normal">(optional)</span></label>
+              <Textarea
+                value={challengeForm.description}
+                onChange={(e) => setChallengeForm((f) => ({ ...f, description: e.target.value }))}
+                placeholder="Brief description shown to users before they start…"
+                rows={2}
+                maxLength={2000}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Category</label>
+                <Select value={challengeForm.category} onValueChange={(v) => setChallengeForm((f) => ({ ...f, category: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ACS">ACS</SelectItem>
+                    <SelectItem value="Adult Echo">Adult Echo</SelectItem>
+                    <SelectItem value="Pediatric Echo">Pediatric Echo</SelectItem>
+                    <SelectItem value="Fetal Echo">Fetal Echo</SelectItem>
+                    <SelectItem value="Mixed">Mixed</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Scheduled Publish Date <span className="text-gray-400 font-normal">(optional)</span></label>
+                <Input
+                  type="date"
+                  value={challengeForm.publishDate}
+                  onChange={(e) => setChallengeForm((f) => ({ ...f, publishDate: e.target.value }))}
+                />
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Select Questions <span className="text-red-500">*</span></label>
+              <p className="text-xs text-gray-400 mb-2">Pick questions from your bank to include in this challenge.</p>
+              {listQuery.isLoading ? (
+                <div className="h-32 bg-gray-100 rounded-lg animate-pulse" />
+              ) : (
+                <div className="max-h-64 overflow-y-auto border rounded-lg divide-y">
+                  {(listQuery.data?.questions ?? []).map((q: any) => {
+                    const selected = challengeForm.selectedQuestionIds.includes(q.id);
+                    const meta = TYPE_META[q.type as QuestionType] ?? TYPE_META.scenario;
+                    const Icon = meta.icon;
+                    return (
+                      <div
+                        key={q.id}
+                        className={`flex items-start gap-3 px-3 py-2.5 cursor-pointer transition-colors ${
+                          selected ? "bg-teal-50" : "bg-white hover:bg-gray-50"
+                        }`}
+                        onClick={() => {
+                          setChallengeForm((f) => ({
+                            ...f,
+                            selectedQuestionIds: selected
+                              ? f.selectedQuestionIds.filter((id) => id !== q.id)
+                              : [...f.selectedQuestionIds, q.id],
+                          }));
+                        }}
+                      >
+                        <div className="mt-0.5">{selected ? <CheckSquare className="w-4 h-4 text-[#189aa1]" /> : <Square className="w-4 h-4 text-gray-300" />}</div>
+                        <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${meta.color}`}>
+                          <Icon className="w-3 h-3" />{q.type === "quickReview" ? "QR" : q.type === "image" ? "IMG" : "MCQ"}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-gray-800 line-clamp-2">{q.question}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className={`text-xs px-1 rounded ${
+                              q.difficulty === "beginner" ? "bg-green-50 text-green-600" :
+                              q.difficulty === "advanced" ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-600"
+                            }`}>{q.difficulty}</span>
+                            {(q.tags ?? []).slice(0, 2).map((t: string) => <span key={t} className="text-xs text-gray-400">#{t}</span>)}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              <p className="text-xs text-gray-400 mt-1">{challengeForm.selectedQuestionIds.length} question{challengeForm.selectedQuestionIds.length !== 1 ? "s" : ""} selected</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setChallengeFormOpen(false); setEditingChallengeId(null); }}>Cancel</Button>
+            <Button
+              className="text-white gap-2"
+              style={{ background: "#189aa1" }}
+              onClick={handleSubmitChallenge}
+              disabled={createChallengeMutation.isPending || updateChallengeMutation.isPending}
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              {editingChallengeId !== null ? "Save Changes" : "Create Challenge"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* ── Question Form Dialog ─────────────────────────────────────────────── */}
       <Dialog open={formOpen} onOpenChange={(open) => { if (!open) { setFormOpen(false); setEditingId(null); setForm(EMPTY_FORM); } }}>

@@ -902,6 +902,37 @@ export const echoLibraryCaseAttempts = mysqlTable("echoLibraryCaseAttempts", {
 export type EchoLibraryCaseAttempt = typeof echoLibraryCaseAttempts.$inferSelect;
 export type InsertEchoLibraryCaseAttempt = typeof echoLibraryCaseAttempts.$inferInsert;
 
+// ─── Daily QuickFire: Challenge Queue ───────────────────────────────────────
+// A "challenge" is a named, curated set of questions that gets published on a
+// specific date and archived after 24 hours. Admins build a priority queue of
+// draft challenges; the scheduler picks the next one each midnight UTC.
+export const quickfireChallenges = mysqlTable("quickfireChallenges", {
+  id: int("id").primaryKey().autoincrement(),
+  // Human-readable title shown to users (e.g. "HOCM Special — March 8")
+  title: varchar("title", { length: 300 }).notNull(),
+  // Optional description / teaser shown before the challenge starts
+  description: text("description"),
+  // JSON: number[] — ordered list of quickfireQuestion IDs in this challenge
+  questionIds: text("questionIds").notNull(),
+  // Admin-assigned priority — lower number = published first (1 = highest)
+  priority: int("priority").default(100).notNull(),
+  // Category tag for filtering (ACS | Adult Echo | Pediatric Echo | Fetal Echo | General)
+  category: varchar("category", { length: 64 }),
+  // Lifecycle status
+  status: mysqlEnum("status", ["draft", "scheduled", "live", "archived"]).default("draft").notNull(),
+  // UTC date this challenge went (or is scheduled to go) live — YYYY-MM-DD
+  publishDate: varchar("publishDate", { length: 10 }),
+  // Exact UTC timestamp when the challenge became live
+  publishedAt: timestamp("publishedAt"),
+  // Exact UTC timestamp when the challenge was archived (24 h after publishedAt)
+  archivedAt: timestamp("archivedAt"),
+  createdByUserId: int("createdByUserId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type QuickfireChallenge = typeof quickfireChallenges.$inferSelect;
+export type InsertQuickfireChallenge = typeof quickfireChallenges.$inferInsert;
+
 // ─── ScanCoach WYSIWYG Overrides ──────────────────────────────────────────────
 // Stores per-view content overrides set by platform admins via the WYSIWYG editor.
 // Each row overrides one or more fields for a specific view within a ScanCoach module.
