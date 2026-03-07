@@ -286,6 +286,70 @@ export const appRouter = router({
         await clearPendingEmail(ctx.user.id);
         return { success: true };
       }),
+
+    // ─── Forgot / Reset Password ──────────────────────────────────────────────
+
+    requestPasswordReset: publicProcedure
+      .input(z.object({
+        email: z.string().email().max(320),
+      }))
+      .mutation(async ({ input }) => {
+        const { getUserByEmail, setPasswordResetToken } = await import('./db');
+        const { sendEmail, buildPasswordResetEmail } = await import('./_core/email');
+        const crypto = await import('crypto');
+
+        const email = input.email.trim().toLowerCase();
+        const user = await getUserByEmail(email);
+
+        // Always return success to prevent email enumeration
+        if (!user || !user.passwordHash) {
+          return { success: true };
+        }
+
+        const token = crypto.randomBytes(48).toString('hex');
+        const expiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+        await setPasswordResetToken(user.id, token, expiry);
+
+        const appUrl = process.env.VITE_APP_URL || 'https://app.iheartecho.com';
+        const resetUrl = `${appUrl}/reset-password?token=${token}`;
+
+        const firstName = (user.displayName || user.name || 'there').split(' ')[0];
+        const emailPayload = buildPasswordResetEmail({ firstName, resetUrl });
+
+        await sendEmail({
+          to: { name: firstName, email: user.email! },
+          subject: emailPayload.subject,
+          htmlBody: emailPayload.htmlBody,
+          previewText: emailPayload.previewText,
+        });
+
+        return { success: true };
+      }),
+
+    resetPassword: publicProcedure
+      .input(z.object({
+        token: z.string().min(1).max(200),
+        newPassword: z.string().min(8).max(128),
+      }))
+      .mutation(async ({ input }) => {
+        const { getUserByPasswordResetToken, updateUserPassword, clearPasswordResetToken } = await import('./db');
+        const bcrypt = await import('bcryptjs');
+
+        const user = await getUserByPasswordResetToken(input.token);
+        if (!user) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Reset link is invalid or has already been used.' });
+        }
+        if (!user.passwordResetExpiry || new Date() > user.passwordResetExpiry) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'This reset link has expired. Please request a new one.' });
+        }
+
+        const newHash = await bcrypt.hash(input.newPassword, 12);
+        await updateUserPassword(user.id, newHash);
+        await clearPasswordResetToken(user.id);
+
+        return { success: true };
+      }),
   }),
 
   // ─── Hub Communities ──────────────────────────────────────────────────────

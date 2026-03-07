@@ -779,3 +779,16 @@
 - [x] VerifyEmail.tsx — updated to handle both email-change (type=change) and account activation flows
 - [x] App.tsx — /verify-email route already registered
 - [x] Vitest — 21 new email verification tests (input validation, expiry logic, same-email guard, URL construction) — 445 tests total passing
+
+## Forgot Password Flow
+- [x] DB schema — passwordResetToken and passwordResetExpiry already present in schema
+- [x] DB migration — no migration needed (columns already existed)
+- [x] DB helpers — getUserByEmail, setPasswordResetToken, getUserByPasswordResetToken, clearPasswordResetToken added to db.ts
+- [x] Email template — buildPasswordResetEmail already present in server/_core/email.ts
+- [x] tRPC — auth.requestPasswordReset: generate token, send reset email (no error if email not found)
+- [x] tRPC — auth.resetPassword: validate token, hash new password, clear token
+- [x] ForgotPassword.tsx — email input page at /forgot-password (updated to use auth.requestPasswordReset)
+- [x] ResetPassword.tsx — new password form at /reset-password?token=... (updated to use auth.resetPassword)
+- [x] App.tsx — /forgot-password and /reset-password routes already registered
+- [x] Profile.tsx — "Reset via email" link already wired to /forgot-password
+- [x] Vitest — 29 new tests (input validation, expiry logic, URL construction, email enumeration protection) — 474 tests total passing

@@ -21,7 +21,7 @@ export default function ResetPassword() {
   const [showPassword, setShowPassword] = useState(false);
   const [done, setDone] = useState(false);
 
-  const resetMutation = trpc.emailAuth.resetPassword.useMutation({
+  const resetMutation = trpc.auth.resetPassword.useMutation({
     onSuccess: () => {
       setDone(true);
       setTimeout(() => { window.location.href = "/login"; }, 3000);

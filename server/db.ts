@@ -201,6 +201,46 @@ export async function clearPendingEmail(userId: number): Promise<void> {
     .where(eq(users.id, userId));
 }
 
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  return rows[0];
+}
+
+export async function setPasswordResetToken(
+  userId: number,
+  token: string,
+  expiry: Date,
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(users)
+    .set({ passwordResetToken: token, passwordResetExpiry: expiry })
+    .where(eq(users.id, userId));
+}
+
+export async function getUserByPasswordResetToken(token: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db
+    .select()
+    .from(users)
+    .where(eq(users.passwordResetToken, token))
+    .limit(1);
+  return rows[0];
+}
+
+export async function clearPasswordResetToken(userId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(users)
+    .set({ passwordResetToken: null, passwordResetExpiry: null })
+    .where(eq(users.id, userId));
+}
+
 export async function getAllCommunities() {
   const db = await getDb();
   if (!db) return [];

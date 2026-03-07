@@ -16,7 +16,7 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
 
-  const forgotMutation = trpc.emailAuth.forgotPassword.useMutation({
+  const forgotMutation = trpc.auth.requestPasswordReset.useMutation({
     onSuccess: () => {
       setSent(true);
     },
@@ -28,7 +28,7 @@ export default function ForgotPassword() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    forgotMutation.mutate({ email });
+    forgotMutation.mutate({ email: email.trim().toLowerCase() });
   };
 
   return (
