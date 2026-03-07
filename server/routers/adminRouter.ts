@@ -115,7 +115,7 @@ export const platformAdminRouter = router({
    */
   findUserByEmail: protectedProcedure
     .input(z.object({ email: z.string().email("Please enter a valid email address") }))
-    .query(async ({ ctx, input }) => {
+    .mutation(async ({ ctx, input }) => {
       const myRoles = await getUserRoles(ctx.user.id);
       if (ctx.user.role !== "admin" && !myRoles.includes("platform_admin")) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Platform admin access required" });

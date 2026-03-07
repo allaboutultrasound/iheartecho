@@ -122,30 +122,47 @@ type UserWithRoles = {
 };
 
 // ─── Add User by Email Panel ─────────────────────────────────────────────────
+// Uses a mutation-based state machine for reliable on-demand lookup.
+// States: idle → searching → found | notFound | error
+type SearchState =
+  | { status: "idle" }
+  | { status: "searching" }
+  | { status: "found"; user: { id: number; name: string | null; email: string | null; displayName: string | null; role: string; roles: AppRole[]; isPending: boolean; createdAt: Date; lastSignedIn: Date } }
+  | { status: "notFound"; email: string }
+  | { status: "error"; message: string };
 
 function AddUserByEmailPanel({ onSuccess }: { onSuccess: () => void }) {
   const [email, setEmail] = useState("");
-  const [submittedEmail, setSubmittedEmail] = useState("");
   const [selectedRole, setSelectedRole] = useState<AppRole>("premium_user");
+  const [searchState, setSearchState] = useState<SearchState>({ status: "idle" });
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { data: foundUser, isFetching, error: findError, refetch } = trpc.platformAdmin.findUserByEmail.useQuery(
-    { email: submittedEmail },
-    {
-      enabled: !!submittedEmail,
-      retry: false,
+  // Use a mutation for on-demand lookup (not useQuery, which fires automatically)
+  const findUserMutation = trpc.platformAdmin.findUserByEmail.useMutation({
+    onSuccess: (data) => {
+      if (data === null || data === undefined) {
+        setSearchState({ status: "notFound", email: email.trim() });
+      } else {
+        setSearchState({ status: "found", user: data as any });
+      }
     },
-  );
+    onError: (err) => {
+      setSearchState({ status: "error", message: err.message });
+    },
+  });
 
   const assignRoleByEmail = trpc.platformAdmin.assignRoleByEmail.useMutation({
     onSuccess: (data) => {
+      const emailUsed = searchState.status === "found"
+        ? (searchState.user.email ?? email.trim())
+        : searchState.status === "notFound" ? searchState.email : email.trim();
       if (data.wasPreRegistered) {
-        toast.success(`Pre-registered ${data.displayName ?? submittedEmail} with role "${ROLE_META[selectedRole]?.label}" — role will activate on first login.`);
+        toast.success(`Pre-registered ${data.displayName ?? emailUsed} with role "${ROLE_META[selectedRole]?.label}" — role will activate on first login.`);
       } else {
-        toast.success(`Role "${ROLE_META[selectedRole]?.label}" assigned to ${data.displayName ?? submittedEmail}.`);
+        toast.success(`Role "${ROLE_META[selectedRole]?.label}" assigned to ${data.displayName ?? emailUsed}.`);
       }
       setEmail("");
-      setSubmittedEmail("");
+      setSearchState({ status: "idle" });
       onSuccess();
     },
     onError: (err) => {
@@ -159,21 +176,23 @@ function AddUserByEmailPanel({ onSuccess }: { onSuccess: () => void }) {
       toast.error("Please enter a valid email address.");
       return;
     }
-    setSubmittedEmail(trimmed);
-  };
-
-  const handleAssign = () => {
-    if (!submittedEmail || !foundUser) return;
-    assignRoleByEmail.mutate({ email: submittedEmail, role: selectedRole });
+    setSearchState({ status: "searching" });
+    findUserMutation.mutate({ email: trimmed });
   };
 
   const handleClear = () => {
     setEmail("");
-    setSubmittedEmail("");
+    setSearchState({ status: "idle" });
     inputRef.current?.focus();
   };
 
-  const alreadyHasRole = foundUser && foundUser.roles.includes(selectedRole);
+  const isFetching = searchState.status === "searching";
+  const foundUser = searchState.status === "found" ? searchState.user : null;
+  const isNotFound = searchState.status === "notFound";
+  const findError = searchState.status === "error" ? { message: searchState.message } : null;
+  const notFoundEmail = searchState.status === "notFound" ? searchState.email : email.trim();
+  const alreadyHasRole = foundUser ? foundUser.roles.includes(selectedRole) : false;
+  const hasResult = searchState.status === "found" || searchState.status === "notFound" || searchState.status === "error";
 
   return (
     <Card className="border-0 shadow-sm mb-6">
@@ -196,7 +215,11 @@ function AddUserByEmailPanel({ onSuccess }: { onSuccess: () => void }) {
               type="email"
               placeholder="user@example.com"
               value={email}
-              onChange={e => setEmail(e.target.value)}
+              onChange={e => {
+                setEmail(e.target.value);
+                // Reset result when user edits the email
+                if (hasResult) setSearchState({ status: "idle" });
+              }}
               onKeyDown={e => e.key === "Enter" && handleSearch()}
               className="pl-9 pr-8"
             />
@@ -221,21 +244,21 @@ function AddUserByEmailPanel({ onSuccess }: { onSuccess: () => void }) {
         </div>
 
         {/* Result panel */}
-        {submittedEmail && !isFetching && (
+        {hasResult && (
           <>
             {findError ? (
               <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 border border-red-100 text-sm text-red-700">
                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
                 {findError.message}
               </div>
-            ) : foundUser === null ? (
+            ) : isNotFound ? (
               <div className="p-4 rounded-xl border border-violet-200 bg-violet-50 space-y-3">
                 <div className="flex items-start gap-3">
                   <UserPlus className="w-4 h-4 text-violet-500 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-violet-800">No existing account — pre-register?</p>
                     <p className="text-xs text-violet-600 mt-0.5">
-                      <strong>{submittedEmail}</strong> has not signed in yet. Select a role below and pre-register them — the role will be applied automatically on their first login.
+                      <strong>{notFoundEmail}</strong> has not signed in yet. Select a role below and pre-register them — the role will be applied automatically on their first login.
                     </p>
                   </div>
                 </div>
@@ -262,7 +285,7 @@ function AddUserByEmailPanel({ onSuccess }: { onSuccess: () => void }) {
                     )}
                   </div>
                   <Button
-                    onClick={() => assignRoleByEmail.mutate({ email: submittedEmail, role: selectedRole })}
+                    onClick={() => assignRoleByEmail.mutate({ email: notFoundEmail, role: selectedRole })}
                     disabled={assignRoleByEmail.isPending}
                     className="flex-shrink-0 gap-2 text-white"
                     style={{ background: "#7c3aed" }}
@@ -276,12 +299,12 @@ function AddUserByEmailPanel({ onSuccess }: { onSuccess: () => void }) {
                 </div>
               </div>
             ) : foundUser ? (
-              <div className={`p-4 rounded-xl border space-y-3 ${'isPending' in foundUser && foundUser.isPending ? 'border-orange-200 bg-orange-50' : 'border-[#189aa1]/20 bg-[#189aa1]/08'}`}>
+              <div className={`p-4 rounded-xl border space-y-3 ${foundUser.isPending ? 'border-orange-200 bg-orange-50' : 'border-[#189aa1]/20 bg-teal-50/30'}`}>
                 {/* User preview */}
                 <div className="flex items-center gap-3">
                   <div
                     className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
-                    style={{ background: 'isPending' in foundUser && foundUser.isPending ? '#f97316' : '#189aa1' }}
+                    style={{ background: foundUser.isPending ? '#f97316' : '#189aa1' }}
                   >
                     {(foundUser.displayName ?? foundUser.name ?? "?")[0]?.toUpperCase()}
                   </div>
@@ -290,7 +313,7 @@ function AddUserByEmailPanel({ onSuccess }: { onSuccess: () => void }) {
                       <div className="font-semibold text-sm text-gray-900">
                         {foundUser.displayName ?? foundUser.name ?? foundUser.email ?? "Unknown User"}
                       </div>
-                      {'isPending' in foundUser && foundUser.isPending && (
+                      {foundUser.isPending && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
                           <Clock className="w-3 h-3" />
                           Pending Sign-In
@@ -305,7 +328,7 @@ function AddUserByEmailPanel({ onSuccess }: { onSuccess: () => void }) {
                       }
                     </div>
                   </div>
-                  {'isPending' in foundUser && foundUser.isPending
+                  {foundUser.isPending
                     ? <Clock className="w-5 h-5 text-orange-400 flex-shrink-0" />
                     : <CheckCircle2 className="w-5 h-5 text-[#189aa1] flex-shrink-0" />}
                 </div>
@@ -334,8 +357,8 @@ function AddUserByEmailPanel({ onSuccess }: { onSuccess: () => void }) {
                     )}
                   </div>
                   <Button
-                    onClick={handleAssign}
-                    disabled={assignRoleByEmail.isPending || !!alreadyHasRole}
+                    onClick={() => assignRoleByEmail.mutate({ email: foundUser.email ?? email.trim(), role: selectedRole })}
+                    disabled={assignRoleByEmail.isPending || alreadyHasRole}
                     style={{ background: alreadyHasRole ? undefined : "#189aa1" }}
                     variant={alreadyHasRole ? "outline" : "default"}
                     className={`flex-shrink-0 gap-2 ${!alreadyHasRole ? "text-white" : ""}`}

@@ -1,6 +1,6 @@
 /**
  * Tests for Platform Admin router procedures:
- *   - findUserByEmail (query)
+ *   - findUserByEmail (mutation — converted from query for reliable on-demand lookup)
  *   - assignRoleByEmail (mutation)
  *
  * All DB calls are mocked so no real database connection is needed.

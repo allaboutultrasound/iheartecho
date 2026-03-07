@@ -719,3 +719,9 @@
 - [x] Wired /login route in App.tsx
 - [x] Updated all getLoginUrl() redirects to use /login: Layout, DashboardLayout, RoleGuard, main.tsx, Hub, AccreditationTool, LabAdmin, Profile, useAuth
 - [x] No Manus/Meta branding visible — all sign-in flows go through branded /login page first
+
+## Bug: Admin Dashboard — Add User by Email / Pre-register New User
+- [ ] Fix: "Add User by Email" panel — cannot find existing users or register new users
+- [ ] Fix: Pre-register new user flow — role selector + submit button must work end-to-end
+- [ ] Fix: assignRoleByEmail backend procedure — ensure createPendingUser is called when user not found
+- [ ] Fix: findUserByEmail backend procedure — ensure it returns correct data
