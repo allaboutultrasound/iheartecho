@@ -1159,3 +1159,14 @@
 
 ## QuickFire AI Generator — JSON Error Fix
 - [x] Fix Invalid JSON response error in QuickFire AI question generator (replaced generateObject with generateText + manual JSON parsing to avoid Forge API integer schema rejection)
+
+## Echo Case Lab → QuickFire Challenge Merge
+- [ ] Merge CaseLab sample cases and gamification into QuickFire.tsx as a Cases tab
+- [ ] Remove /cases route from App.tsx
+- [ ] Remove Echo Case Lab from sidebar navigation
+- [ ] Remove Echo Case Lab card from Home dashboard
+- [ ] Redirect /cases to /quickfire
+- [ ] Rename all "Echo Case Lab" labels to "QuickFire Challenge" in navigation and Home
+
+## QuickFire AI Generator — HTML Response Error
+- [x] Fix QuickFire AI generator returning HTML instead of JSON (wrapped generateText in try-catch, added ENV credential check, errors now returned as proper tRPC errors)

@@ -24,6 +24,7 @@ import { getDb } from "../db";
 import { generateText } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createPatchedFetch } from "../_core/patchedFetch";
+import { ENV } from "../_core/env";
 import {
   quickfireQuestions,
   quickfireDailySets,
@@ -463,9 +464,16 @@ export const quickfireRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      if (!ENV.forgeApiKey || !ENV.forgeApiUrl) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "AI service not configured. Missing Forge API credentials.",
+        });
+      }
+
       const openai = createOpenAI({
-        apiKey: process.env.BUILT_IN_FORGE_API_KEY,
-        baseURL: `${process.env.BUILT_IN_FORGE_API_URL}/v1`,
+        apiKey: ENV.forgeApiKey,
+        baseURL: `${ENV.forgeApiUrl}/v1`,
         fetch: createPatchedFetch(fetch),
       });
       const model = openai.chat("gpt-4o");
@@ -480,9 +488,11 @@ export const quickfireRouter = router({
           ? `{"questions":[{"question":"...","reviewAnswer":"...","tags":["...","..."]}]}`
           : `{"questions":[{"question":"...","options":["A","B","C","D"],"correctAnswer":0,"explanation":"...","tags":["...","..."]}]}`;
 
-      const { text } = await generateText({
-        model,
-        prompt: `You are an expert echocardiography educator creating ${input.count} ${input.difficulty} ${input.type} questions about: "${input.topic}".
+      let text: string;
+      try {
+        const result = await generateText({
+          model,
+          prompt: `You are an expert echocardiography educator creating ${input.count} ${input.difficulty} ${input.type} questions about: "${input.topic}".
 
 ${typeInstructions}
 
@@ -497,7 +507,15 @@ Return exactly ${input.count} questions as a valid JSON object matching this for
 ${jsonFormatInstructions}
 
 Return ONLY the JSON object, no markdown, no explanation, no code fences.`,
-      });
+        });
+        text = result.text;
+      } catch (aiErr) {
+        const errMsg = aiErr instanceof Error ? aiErr.message : String(aiErr);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `AI generation failed: ${errMsg.substring(0, 300)}`,
+        });
+      }
 
       // Parse the JSON response
       let parsedResult: { questions: Array<{
