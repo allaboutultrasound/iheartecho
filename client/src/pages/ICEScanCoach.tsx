@@ -54,7 +54,7 @@ const ICE_VIEWS = [
     ],
     pitfalls: [
       "If the TV is not visible, the catheter may be too high (SVC) or too low (IVC) — adjust depth",
-      "Eustachian valve near IVC can be mistaken for a mass — use colour Doppler",
+      "Eustachian valve near IVC can be mistaken for a mass — use color Doppler",
     ],
     measurements: ["TV annulus diameter (baseline)", "IAS thickness", "RA size (qualitative)"],
     criticalFindings: ["Unexpected mass in RA", "Severe baseline TR", "Large pericardial effusion"],
@@ -72,7 +72,7 @@ const ICE_VIEWS = [
       "From home view, apply gentle clockwise rotation",
       "The aortic valve will come into view — typically after 30–45° of rotation",
       "The LVOT should be visible below the AV",
-      "Apply slight anterior flexion to optimise AV visualisation",
+      "Apply slight anterior flexion to optimize AV visualisation",
       "Confirm all three cusps are visible if possible",
     ],
     structures: [
@@ -88,8 +88,8 @@ const ICE_VIEWS = [
       { label: "AR CW Doppler", detail: "AR PHT and pressure half-time for severity grading" },
     ],
     tips: [
-      "Post-TAVR: assess for peridevice AR — colour Doppler around the device frame",
-      "LVOT obstruction: accelerated colour Doppler signal in LVOT",
+      "Post-TAVR: assess for peridevice AR — color Doppler around the device frame",
+      "LVOT obstruction: accelerated color Doppler signal in LVOT",
       "The right coronary cusp is most anterior — closest to the ICE catheter",
     ],
     pitfalls: [
@@ -113,7 +113,7 @@ const ICE_VIEWS = [
       "The mitral valve will come into view — A2/P2 segments typically visible",
       "For improved LA visualisation, advance catheter to the RV",
       "From RV: slight posterior flexion brings the LA and MV into view",
-      "Optimise to show the full MV coaptation line",
+      "Optimize to show the full MV coaptation line",
     ],
     structures: [
       "Mitral valve (A2/P2 segments primarily)",
@@ -151,7 +151,7 @@ const ICE_VIEWS = [
     howToGet: [
       "From home view, apply posterior flexion (posterior tilt)",
       "The fossa ovalis will appear as a thin, mobile membrane in the IAS",
-      "Apply slight clockwise rotation to centre the fossa ovalis",
+      "Apply slight clockwise rotation to center the fossa ovalis",
       "Confirm the tenting point is in the posterior-superior fossa for AF ablation",
       "Confirm inferior-posterior tenting for MitraClip access",
     ],
@@ -163,7 +163,7 @@ const ICE_VIEWS = [
       "IAS superior and inferior margins",
     ],
     doppler: [
-      { label: "IAS Color Doppler", detail: "Confirm transseptal crossing — LA colour signal confirms successful puncture" },
+      { label: "IAS Color Doppler", detail: "Confirm transseptal crossing — LA color signal confirms successful puncture" },
       { label: "Post-puncture shunt", detail: "Small L→R shunt through transseptal site is normal" },
     ],
     tips: [
@@ -175,7 +175,7 @@ const ICE_VIEWS = [
     pitfalls: [
       "Aortic tenting = dangerous — the needle is too anterior; reposition immediately",
       "Lipomatous hypertrophy of IAS can make transseptal puncture difficult — plan accordingly",
-      "Always confirm LA position with colour Doppler or pressure after puncture",
+      "Always confirm LA position with color Doppler or pressure after puncture",
     ],
     measurements: ["Transseptal height (for MitraClip: 3.5–4.5 cm)", "Fossa ovalis dimensions", "Tenting point location"],
     criticalFindings: ["Aortic tenting (anterior puncture risk)", "Posterior LA wall puncture", "Pericardial effusion post-puncture"],
@@ -188,7 +188,7 @@ const ICE_VIEWS = [
     catheterPosition: "Right atrium, posterior tilt + slight clockwise rotation",
     rotation: "Slight clockwise from transseptal view with posterior flexion maintained",
     patientPosition: "Supine; same RA position as transseptal view",
-    description: "Optimised view of the left atrial appendage for thrombus exclusion and LAA occlusion device sizing (WATCHMAN, Amulet). The most critical pre-procedural view before LAA occlusion. Requires multi-angle assessment to fully characterise LAA anatomy.",
+    description: "Optimized view of the left atrial appendage for thrombus exclusion and LAA occlusion device sizing (WATCHMAN, Amulet). The most critical pre-procedural view before LAA occlusion. Requires multi-angle assessment to fully characterize LAA anatomy.",
     howToGet: [
       "From transseptal view, apply slight clockwise rotation",
       "The LAA will appear as a finger-like projection from the LA",
@@ -204,9 +204,9 @@ const ICE_VIEWS = [
       "Circumflex artery (posterior to LAA)",
     ],
     doppler: [
-      { label: "LAA Color Doppler", detail: "Confirm absence of thrombus — colour flow throughout LAA" },
+      { label: "LAA Color Doppler", detail: "Confirm absence of thrombus — color flow throughout LAA" },
       { label: "LAA PW Doppler", detail: "LAA emptying velocity. <20 cm/s = high thrombus risk. Normal >40 cm/s" },
-      { label: "Peridevice leak", detail: "Post-WATCHMAN: colour Doppler around device. <5 mm acceptable; ≥5 mm = recapture" },
+      { label: "Peridevice leak", detail: "Post-WATCHMAN: color Doppler around device. <5 mm acceptable; ≥5 mm = recapture" },
     ],
     tips: [
       "Measure LAA ostium at multiple planes — report the largest diameter for device sizing",
@@ -215,9 +215,9 @@ const ICE_VIEWS = [
       "Circumflex artery runs posterior to LAA — avoid compression with device",
     ],
     pitfalls: [
-      "LAA lobes can mimic thrombus — use colour Doppler and multiple planes",
+      "LAA lobes can mimic thrombus — use color Doppler and multiple planes",
       "Single-plane measurement underestimates true LAA ostium — always use multiple planes",
-      "LUPV can be mistaken for LAA — confirm with colour Doppler (PV flow vs. LAA flow)",
+      "LUPV can be mistaken for LAA — confirm with color Doppler (PV flow vs. LAA flow)",
     ],
     measurements: [
       "LAA ostium diameter (max, at multiple planes)",
@@ -240,7 +240,7 @@ const ICE_VIEWS = [
       "From transseptal view, apply counterclockwise rotation",
       "The left superior PV (LSPV) will appear first — it enters the LA at the upper left",
       "Continue CCW rotation to visualise LIPV, then RSPV, RIPV",
-      "Use colour Doppler to confirm PV flow direction (into LA)",
+      "Use color Doppler to confirm PV flow direction (into LA)",
       "Measure PV ostium diameter at baseline for post-ablation comparison",
     ],
     structures: [
@@ -279,7 +279,7 @@ const ICE_VIEWS = [
       "Advance ICE catheter from RA through tricuspid valve into RV",
       "Apply posterior flexion to direct the beam toward the pericardial space",
       "The LV posterior wall and pericardium should be visible",
-      "Optimise gain to detect small effusions",
+      "Optimize gain to detect small effusions",
       "Maintain this view throughout high-risk procedural steps",
     ],
     structures: [
@@ -290,7 +290,7 @@ const ICE_VIEWS = [
       "Pleural space (distinguish from pericardial)",
     ],
     doppler: [
-      { label: "Pericardial Color Doppler", detail: "Confirm echo-free space is not vascular — no colour signal in true effusion" },
+      { label: "Pericardial Color Doppler", detail: "Confirm echo-free space is not vascular — no color signal in true effusion" },
     ],
     tips: [
       "Monitor continuously during transseptal puncture, LAA occlusion, and ablation",

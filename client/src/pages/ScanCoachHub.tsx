@@ -65,7 +65,7 @@ const coaches = [
     path: "/uea-scan-coach",
     icon: Droplets,
     title: "UEA ScanCoach™",
-    description: "Contrast echo acquisition guide: probe positioning, machine optimisation (MI, gain, depth), injection technique, flash replenishment, artefact recognition, and view-by-view clinical pearls.",
+    description: "Contrast echo acquisition guide: probe positioning, machine optimization (MI, gain, depth), injection technique, flash replenishment, artifact recognition, and view-by-view clinical pearls.",
     badge: "Contrast Echo",
   },
 ];

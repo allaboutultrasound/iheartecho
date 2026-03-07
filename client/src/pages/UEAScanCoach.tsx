@@ -1,8 +1,8 @@
 /*
   UEA ScanCoach™ — iHeartEcho
   Ultrasound Enhancing Agents — Contrast Echo Acquisition Guide
-  View-by-view probe guidance, machine optimisation, injection technique,
-  artefact recognition, and pitfall avoidance.
+  View-by-view probe guidance, machine optimization, injection technique,
+  artifact recognition, and pitfall avoidance.
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
 import { useState, useMemo } from "react";
@@ -37,7 +37,7 @@ const UEA_VIEWS = [
       "Activate contrast-specific imaging mode (low MI 0.1–0.2)",
       "Reduce gain 30–50% from standard settings",
       "Adjust depth to include full LV — contrast fills apex last",
-      "Optimise to show IVS and posterior wall parallel to screen",
+      "Optimize to show IVS and posterior wall parallel to screen",
     ],
     structures: [
       "LV anterior septum and posterior wall",
@@ -54,15 +54,15 @@ const UEA_VIEWS = [
       "Avascular thrombus appears as a filling defect — most commonly at apex but can extend into mid-cavity",
     ],
     pitfalls: [
-      "Near-field artefact from high gain — reduce gain until LV cavity appears uniformly dark before contrast arrives",
-      "Blooming artefact — over-gain causes contrast to appear to extend beyond endocardial border",
+      "Near-field artifact from high gain — reduce gain until LV cavity appears uniformly dark before contrast arrives",
+      "Blooming artifact — over-gain causes contrast to appear to extend beyond endocardial border",
       "Shadowing from calcified MV or AV — reposition probe to avoid acoustic shadow",
       "Foreshortening — ensure IVS and posterior wall are truly parallel; oblique cuts underestimate LV size",
     ],
-    artefacts: [
-      { name: "Attenuation artefact", description: "Contrast in near field attenuates signal to far field — appears as acoustic shadow. Reduce gain or use harmonic imaging." },
-      { name: "Blooming artefact", description: "Over-gain causes contrast to appear to spill beyond endocardial border. Reduce gain." },
-      { name: "Reverb artefact", description: "Reverberation from high-MI imaging — reduce MI or use pulse inversion harmonic mode." },
+    artifacts: [
+      { name: "Attenuation artifact", description: "Contrast in near field attenuates signal to far field — appears as acoustic shadow. Reduce gain or use harmonic imaging." },
+      { name: "Blooming artifact", description: "Over-gain causes contrast to appear to spill beyond endocardial border. Reduce gain." },
+      { name: "Reverb artifact", description: "Reverberation from high-MI imaging — reduce MI or use pulse inversion harmonic mode." },
     ],
     clinicalPearls: [
       "PLAX is the first view to obtain after contrast injection — confirms adequate LV opacification",
@@ -103,9 +103,9 @@ const UEA_VIEWS = [
       "Too high (AV level) or too low (papillary level) — confirm 'fish-mouth' MV to ensure correct level",
       "Papillary muscles can mimic filling defects — confirm by moving to papillary level where they are more prominent",
     ],
-    artefacts: [
+    artifacts: [
       { name: "Lateral dropout", description: "Signal dropout at lateral walls due to probe angle — tilt probe to improve contact." },
-      { name: "Near-field clutter", description: "RV anterior wall creates near-field artefact — reduce gain in near field." },
+      { name: "Near-field clutter", description: "RV anterior wall creates near-field artifact — reduce gain in near field." },
     ],
     clinicalPearls: [
       "Basal PSAX is the best view for identifying basal wall motion abnormalities",
@@ -140,7 +140,7 @@ const UEA_VIEWS = [
       "Flash replenishment: normal = uniform rapid replenishment within 4 cardiac cycles",
       "Delayed replenishment (4–8 cycles) = ischaemia or microvascular disease",
       "Absent replenishment = infarct (scar) — no viable myocardium",
-      "Patchy or heterogeneous replenishment = microvascular disease or artefact",
+      "Patchy or heterogeneous replenishment = microvascular disease or artifact",
       "Papillary muscles replenish more slowly than myocardium — do not misinterpret as perfusion defect",
     ],
     pitfalls: [
@@ -149,10 +149,10 @@ const UEA_VIEWS = [
       "Inadequate contrast dose — insufficient bubble concentration prevents accurate perfusion assessment",
       "Patient movement during flash replenishment invalidates the replenishment curve",
     ],
-    artefacts: [
-      { name: "Flash artefact", description: "Bright flash from high-MI pulse is normal — do not confuse with pathology. Observe subsequent replenishment." },
+    artifacts: [
+      { name: "Flash artifact", description: "Bright flash from high-MI pulse is normal — do not confuse with pathology. Observe subsequent replenishment." },
       { name: "Shadowing from papillary muscles", description: "Papillary muscles can shadow the far wall — reposition probe slightly." },
-      { name: "Rib shadow", description: "Rib shadow creates a fixed linear artefact — reposition probe to avoid." },
+      { name: "Rib shadow", description: "Rib shadow creates a fixed linear artifact — reposition probe to avoid." },
     ],
     clinicalPearls: [
       "Mid-papillary PSAX is the gold standard view for myocardial perfusion imaging",
@@ -198,14 +198,14 @@ const UEA_VIEWS = [
     ],
     pitfalls: [
       "Foreshortening — most common error. Ensure apex is at top of screen; move probe laterally if needed",
-      "Near-field artefact — high gain causes bright artefact near probe; reduce gain to avoid pseudo-thrombus",
+      "Near-field artifact — high gain causes bright artifact near probe; reduce gain to avoid pseudo-thrombus",
       "Apical dropout — signal dropout at apex can mimic thrombus; use contrast to confirm",
       "Inadequate left lateral positioning — supine position causes LV to fall away from chest wall",
     ],
-    artefacts: [
-      { name: "Near-field clutter", description: "Bright artefact near probe tip mimics thrombus. Reduce gain — true thrombus persists; artefact disappears." },
-      { name: "Apical dropout", description: "Signal dropout at apex due to beam angle. Contrast fills the cavity and eliminates this artefact." },
-      { name: "Side-lobe artefact", description: "Side lobes from strong reflectors (MV annulus) project into LV cavity. Contrast confirms true cavity filling." },
+    artifacts: [
+      { name: "Near-field clutter", description: "Bright artifact near probe tip mimics thrombus. Reduce gain — true thrombus persists; artifact disappears." },
+      { name: "Apical dropout", description: "Signal dropout at apex due to beam angle. Contrast fills the cavity and eliminates this artifact." },
+      { name: "Side-lobe artifact", description: "Side lobes from strong reflectors (MV annulus) project into LV cavity. Contrast confirms true cavity filling." },
     ],
     clinicalPearls: [
       "Contrast increases sensitivity for apical thrombus detection from ~33% to >90%",
@@ -229,7 +229,7 @@ const UEA_VIEWS = [
       "Confirm only LV is visible — no RV should be seen",
       "Anterior wall (LAD territory) on right side of screen",
       "Inferior wall (RCA territory) on left side of screen",
-      "Optimise contrast gain to delineate anterior and inferior walls",
+      "Optimize contrast gain to delineate anterior and inferior walls",
       "Acquire cine loop for biplane EF (A4C + A2C)",
     ],
     structures: [
@@ -250,7 +250,7 @@ const UEA_VIEWS = [
       "Foreshortening — same risk as A4C; ensure apex is at top of screen",
       "Anterior wall dropout — common in obese patients; contrast resolves this",
     ],
-    artefacts: [
+    artifacts: [
       { name: "Anterior wall dropout", description: "Anterior wall is furthest from probe in A2C — prone to dropout. Contrast fills cavity and improves border definition." },
     ],
     clinicalPearls: [
@@ -272,7 +272,7 @@ const UEA_VIEWS = [
       "From A2C, rotate probe further counterclockwise 30–60° (indicator toward 11 o'clock)",
       "LVOT and aortic valve should come into view",
       "Anteroseptal wall on right, inferolateral wall on left",
-      "Optimise contrast to delineate anteroseptal and inferolateral walls",
+      "Optimize contrast to delineate anteroseptal and inferolateral walls",
       "Acquire cine loop for triplane EF if platform supports it",
     ],
     structures: [
@@ -291,8 +291,8 @@ const UEA_VIEWS = [
       "Over-rotation — if LVOT is not visible, rotate back toward A2C",
       "Confusing A3C with A2C — confirm LVOT and AV are visible in A3C",
     ],
-    artefacts: [
-      { name: "LVOT artefact", description: "Contrast in LVOT can create bright signal near AV — reduce gain in near field." },
+    artifacts: [
+      { name: "LVOT artifact", description: "Contrast in LVOT can create bright signal near AV — reduce gain in near field." },
     ],
     clinicalPearls: [
       "A3C is essential for HOCM assessment — SAM of MV and LVOT obstruction are best seen here",
@@ -333,12 +333,12 @@ const UEA_VIEWS = [
     pitfalls: [
       "Inadequate pressure — subcostal window requires firm pressure; use patient's exhale",
       "Liver interposition — reposition probe laterally if liver is in the way",
-      "RV near-field artefact — high gain causes bright artefact in RV; reduce gain",
+      "RV near-field artifact — high gain causes bright artifact in RV; reduce gain",
       "Contrast attenuation — RV contrast can attenuate signal to LV far field; reduce gain",
     ],
-    artefacts: [
-      { name: "Near-field RV artefact", description: "RV is in near field — contrast causes bright near-field signal. Reduce gain." },
-      { name: "Attenuation artefact", description: "RV contrast attenuates signal to LV far field. Reduce gain and use harmonic imaging." },
+    artifacts: [
+      { name: "Near-field RV artifact", description: "RV is in near field — contrast causes bright near-field signal. Reduce gain." },
+      { name: "Attenuation artifact", description: "RV contrast attenuates signal to LV far field. Reduce gain and use harmonic imaging." },
     ],
     clinicalPearls: [
       "Subcostal is the best window in post-cardiac surgery patients (sternal wound prevents parasternal access)",
@@ -355,12 +355,12 @@ const injectionSteps = [
   {
     step: 1,
     title: "IV Access Preparation",
-    detail: "Use 18–20G IV catheter in antecubital fossa. Flush with 5 mL normal saline to confirm patency. Avoid hand/wrist veins — higher haemolysis risk with agitated saline or UEA.",
+    detail: "Use 18–20G IV catheter in antecubital fossa. Flush with 5 mL normal saline to confirm patency. Avoid hand/wrist veins — higher hemolysis risk with agitated saline or UEA.",
   },
   {
     step: 2,
     title: "Agent Preparation",
-    detail: "Prepare agent per manufacturer instructions (see UEA Navigator for agent-specific prep). Definity: activate with Vialmix™ for 45 sec. Lumason: reconstitute per kit. Optison: gently invert 10 times.",
+    detail: "Definity: activate with Vialmix™ for 45 seconds, then withdraw 10 µL/kg (max 720 µL) into syringe. Lumason: attach transfer system, inject 5 mL NS into vial, shake 20 seconds until milky-white, withdraw 2.0 mL; may re-agitate if >5 min has elapsed. Optison: gently invert 10 times, withdraw 0.5 mL. See UEA Navigator for full agent-specific prep and dosing.",
   },
   {
     step: 3,
@@ -396,7 +396,7 @@ const injectionSteps = [
 
 // ─── ARTEFACT GUIDE ───────────────────────────────────────────────────────────
 
-const artefactGuide = [
+const artifactGuide = [
   {
     name: "Attenuation / Shadowing",
     cause: "Excessive contrast concentration in near field absorbs ultrasound energy, preventing penetration to far field",
@@ -405,7 +405,7 @@ const artefactGuide = [
     mimic: "Posterior wall dropout, pericardial effusion",
   },
   {
-    name: "Blooming Artefact",
+    name: "Blooming Artifact",
     cause: "Over-gain causes contrast signal to appear to extend beyond true endocardial border",
     appearance: "Endocardial border appears thicker or irregular; LV cavity appears smaller than true size",
     solution: "Reduce gain until endocardial border is sharply defined",
@@ -413,20 +413,20 @@ const artefactGuide = [
   },
   {
     name: "Near-Field Clutter",
-    cause: "High-amplitude echoes from structures near probe (chest wall, RV anterior wall) create reverberation artefacts",
+    cause: "High-amplitude echoes from structures near probe (chest wall, RV anterior wall) create reverberation artifacts",
     appearance: "Bright horizontal bands or haze in near field of LV cavity",
     solution: "Reduce gain; use harmonic imaging; reposition probe",
     mimic: "Apical thrombus (near-field clutter can mimic filling defect)",
   },
   {
-    name: "Side-Lobe Artefact",
+    name: "Side-Lobe Artifact",
     cause: "Off-axis ultrasound beams (side lobes) reflect from strong reflectors (MV annulus, ribs) into LV cavity",
     appearance: "Curvilinear echoes within LV cavity, often parallel to MV annulus",
-    solution: "Contrast fills cavity and eliminates most side-lobe artefacts; reposition probe",
+    solution: "Contrast fills cavity and eliminates most side-lobe artifacts; reposition probe",
     mimic: "Intracardiac mass, thrombus, vegetation",
   },
   {
-    name: "Flash Artefact (MPI)",
+    name: "Flash Artifact (MPI)",
     cause: "High-MI pulse used for flash replenishment creates a bright flash frame",
     appearance: "1–2 bright frames immediately after flash pulse — expected finding",
     solution: "Normal finding — observe subsequent replenishment pattern",
@@ -445,7 +445,7 @@ const artefactGuide = [
 
 export default function UEAScanCoach() {
   const [selectedView, setSelectedView] = useState<string | null>("a4c");
-  const [activeTab, setActiveTab] = useState<"views" | "injection" | "artefacts" | "tips">("views");
+  const [activeTab, setActiveTab] = useState<"views" | "injection" | "bubble" | "artifacts" | "tips">("views");
 
   const _currentViewRaw = UEA_VIEWS.find(v => v.id === selectedView);
   const { mergeView: mergeUEAView } = useScanCoachOverrides("uea");
@@ -483,7 +483,7 @@ export default function UEAScanCoach() {
             </div>
             <p className="text-white/70 text-sm leading-relaxed mb-5 max-w-2xl">
               View-by-view probe guidance for contrast echocardiography. Covers patient positioning,
-              machine optimisation, injection technique, artefact recognition, and clinical pearls
+              machine optimization, injection technique, artifact recognition, and clinical pearls
               for LV opacification and myocardial perfusion imaging.
             </p>
             <div className="flex flex-wrap gap-3">
@@ -502,7 +502,7 @@ export default function UEAScanCoach() {
       <div className="border-b border-gray-200 bg-white sticky top-0 z-10">
         <div className="container">
           <div className="flex gap-1 overflow-x-auto py-2">
-            {(["views", "injection", "artefacts", "tips"] as const).map(tab => (
+            {(["views", "injection", "bubble", "artifacts", "tips"] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -515,11 +515,13 @@ export default function UEAScanCoach() {
               >
                 {tab === "views" && <Eye className="w-3.5 h-3.5" />}
                 {tab === "injection" && <Droplets className="w-3.5 h-3.5" />}
-                {tab === "artefacts" && <AlertTriangle className="w-3.5 h-3.5" />}
+                {tab === "bubble" && <Activity className="w-3.5 h-3.5" />}
+                {tab === "artifacts" && <AlertTriangle className="w-3.5 h-3.5" />}
                 {tab === "tips" && <Zap className="w-3.5 h-3.5" />}
                 {tab === "views" && "View Guide"}
                 {tab === "injection" && "Injection Technique"}
-                {tab === "artefacts" && "Artefact Guide"}
+                {tab === "bubble" && "Bubble Study"}
+                {tab === "artifacts" && "Artifact Guide"}
                 {tab === "tips" && "Quick Tips"}
               </button>
             ))}
@@ -690,15 +692,15 @@ export default function UEAScanCoach() {
                     </div>
                   </div>
 
-                  {/* View-specific artefacts */}
-                  {(currentView as any).artefacts.length > 0 && (
+                  {/* View-specific artifacts */}
+                  {(currentView as any).artifacts.length > 0 && (
                     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
                       style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
                       <h3 className="text-xs font-bold uppercase tracking-wider mb-3 text-red-700">
-                        Artefacts at This View
+                        Artifacts at This View
                       </h3>
                       <div className="space-y-2.5">
-                        {(currentView as any).artefacts.map((art: any, i: number) => (
+                        {(currentView as any).artifacts.map((art: any, i: number) => (
                           <div key={i} className="p-3 rounded-lg border border-red-100 bg-red-50">
                             <div className="text-xs font-bold text-red-700 mb-1">{art.name}</div>
                             <p className="text-xs text-red-600 leading-relaxed">{art.description}</p>
@@ -795,19 +797,213 @@ export default function UEAScanCoach() {
             ))}
           </div>
         </div>
-      )}
-
-      {/* ── Artefact Guide Tab ────────────────────────────────────────────── */}
-      {activeTab === "artefacts" && (
+      )}      {/* ── Bubble Study Tab ─────────────────────────────────────────────────── */}
+      {activeTab === "bubble" && (
         <div className="container py-6 max-w-3xl">
           <div className="mb-5">
             <h2 className="text-lg font-bold text-gray-800 mb-1" style={{ fontFamily: "Merriweather, serif" }}>
-              Contrast Artefact Recognition Guide
+              Agitated Saline Bubble Study — Acquisition Guide
             </h2>
-            <p className="text-sm text-gray-500">Identify, understand, and resolve common contrast echocardiography artefacts</p>
+            <p className="text-sm text-gray-500">Step-by-step scanning guide for PFO/ASD detection, intrapulmonary shunt, and PLSVC evaluation</p>
+          </div>
+
+          {/* Info banner */}
+          <div className="flex items-start gap-2 p-4 rounded-xl bg-sky-50 border border-sky-200 mb-5">
+            <Info className="w-4 h-4 text-sky-600 flex-shrink-0 mt-0.5" />
+            <div className="text-xs text-sky-800 leading-relaxed">
+              <strong>Key principle:</strong> Agitated saline microbubbles (50–200 µm) are too large to cross normal pulmonary capillaries. Appearance in the left heart ≤3 cardiac cycles after RV opacification = intracardiac R-to-L shunt (PFO/ASD). Appearance after 3–5 cycles = intrapulmonary shunt. Early coronary sinus opacification on left arm injection = PLSVC.
+            </div>
+          </div>
+
+          {/* Preparation */}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-4" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <h3 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: BRAND }}>Equipment & Preparation</h3>
+            <div className="space-y-2">
+              {[
+                { step: 1, text: "Two 10 mL syringes + 3-way stopcock + 18G or larger peripheral IV in antecubital fossa" },
+                { step: 2, text: "Fill one syringe with 9 mL normal saline + 1 mL room air (10:1 ratio)" },
+                { step: 3, text: "Optional: add 0.1–0.5 mL of patient’s own blood to improve bubble stability" },
+                { step: 4, text: "Agitate vigorously by rapidly transferring between syringes 10–15 times" },
+                { step: 5, text: "Administer immediately after agitation (within 5 seconds) — bubbles dissolve rapidly" },
+              ].map(({ step, text }) => (
+                <div key={step} className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0 mt-0.5"
+                    style={{ background: BRAND }}>{step}</div>
+                  <p className="text-xs text-gray-700 leading-relaxed pt-0.5">{text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Machine settings for bubble study */}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-4" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <h3 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: BRAND }}>Machine Settings</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {[
+                { label: "Mode", value: "2D (standard)" },
+                { label: "MI", value: "Standard (0.8–1.2)" },
+                { label: "Gain", value: "Standard settings" },
+                { label: "View", value: "A4C or subcostal 4C" },
+                { label: "Frame rate", value: ">25 fps" },
+                { label: "Harmonic", value: "ON (preferred)" },
+              ].map(({ label, value }) => (
+                <div key={label} className="p-2.5 rounded-lg bg-gray-50 border border-gray-100">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">{label}</div>
+                  <div className="text-xs font-semibold text-gray-800">{value}</div>
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500 mt-3 leading-relaxed">
+              <strong>Note:</strong> Bubble studies use standard 2D imaging — do NOT activate low-MI contrast mode. Bubbles are large enough to visualize with standard harmonic imaging. Low MI would not destroy them, but standard MI provides better visualization of the rapid transit.
+            </p>
+          </div>
+
+          {/* Injection protocol */}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-4" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <h3 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: BRAND }}>Injection Protocol</h3>
+            <div className="space-y-3">
+              {[
+                {
+                  label: "Baseline injection (no Valsalva)",
+                  detail: "Inject 10 mL agitated saline as a rapid IV bolus. Confirm RV opacification (confirms IV placement). Observe for immediate LV opacification (large shunt).",
+                  badge: "Step 1", badgeColor: "#0369a1"
+                },
+                {
+                  label: "Valsalva injection",
+                  detail: "Patient bears down hard for 5 seconds (Valsalva). Release Valsalva just before injection. Inject 10 mL agitated saline. The Valsalva RELEASE is when shunting occurs — time injection so bubbles arrive during release phase.",
+                  badge: "Step 2 — Critical", badgeColor: "#dc2626"
+                },
+                {
+                  label: "Repeat as needed",
+                  detail: "Typically 2–3 injections per study. Re-agitate saline immediately before each injection. Allow 1–2 minutes between injections for bubbles to clear.",
+                  badge: "Step 3", badgeColor: "#16a34a"
+                },
+              ].map(({ label, detail, badge, badgeColor }) => (
+                <div key={label} className="rounded-lg border border-gray-100 p-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white" style={{ background: badgeColor }}>{badge}</span>
+                    <span className="text-xs font-bold text-gray-800">{label}</span>
+                  </div>
+                  <p className="text-xs text-gray-600 leading-relaxed">{detail}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Interpretation */}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-4" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <h3 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: BRAND }}>Interpretation — Timing & Grading</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+              <div className="p-3 rounded-lg bg-green-50 border border-green-200">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-green-700 mb-1">No Bubbles in LV</div>
+                <div className="text-xs font-bold text-green-800 mb-1">Negative Study</div>
+                <div className="text-xs text-green-700">No R-to-L shunt detected at rest or with Valsalva</div>
+              </div>
+              <div className="p-3 rounded-lg bg-amber-50 border border-amber-200">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-amber-700 mb-1">≤3 Cardiac Cycles</div>
+                <div className="text-xs font-bold text-amber-800 mb-1">Intracardiac Shunt</div>
+                <div className="text-xs text-amber-700">PFO, ASD, or other intracardiac R-to-L communication</div>
+              </div>
+              <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-blue-700 mb-1">3–5 Cardiac Cycles</div>
+                <div className="text-xs font-bold text-blue-800 mb-1">Intrapulmonary Shunt</div>
+                <div className="text-xs text-blue-700">HHT, hepatopulmonary syndrome, pulmonary AVMs, cirrhosis</div>
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-gray-100">
+                    <th className="text-left py-2 pr-4 font-bold text-gray-600">Grade</th>
+                    <th className="text-left py-2 pr-4 font-bold text-gray-600">Bubbles in LV</th>
+                    <th className="text-left py-2 font-bold text-gray-600">Interpretation</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { grade: "Grade 0", bubbles: "No bubbles", interp: "No shunt", color: "#16a34a" },
+                    { grade: "Grade 1+", bubbles: "1–10 bubbles", interp: "Small shunt — PFO likely", color: "#d97706" },
+                    { grade: "Grade 2+", bubbles: "11–30 bubbles", interp: "Moderate shunt — PFO or small ASD", color: "#ea580c" },
+                    { grade: "Grade 3+", bubbles: ">30 bubbles or complete LV opacification", interp: "Large shunt — large ASD or significant PFO", color: "#dc2626" },
+                  ].map((row, i) => (
+                    <tr key={i} className={`border-b border-gray-50 ${i % 2 === 0 ? "" : "bg-gray-50/50"}`}>
+                      <td className="py-2 pr-4 font-bold" style={{ color: row.color }}>{row.grade}</td>
+                      <td className="py-2 pr-4 text-gray-700">{row.bubbles}</td>
+                      <td className="py-2 text-gray-600">{row.interp}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* PLSVC section */}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-4" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <div className="flex items-start gap-3 mb-3">
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "#fdf4ff" }}>
+                <Activity className="w-4 h-4 text-purple-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>PLSVC Evaluation Protocol</h3>
+                <p className="text-xs text-gray-500">Persistent Left Superior Vena Cava — bubble study from left arm</p>
+              </div>
+            </div>
+            <div className="p-3 rounded-lg bg-purple-50 border border-purple-200 mb-3">
+              <p className="text-xs text-purple-800 leading-relaxed">
+                <strong>Key concept:</strong> In PLSVC, the left SVC drains into the right atrium via a dilated coronary sinus. Injecting agitated saline from the LEFT arm opacifies the coronary sinus BEFORE the RA/RV — this is pathognomonic for PLSVC.
+              </p>
+            </div>
+            <div className="space-y-2">
+              {[
+                { step: 1, text: "Screen for PLSVC: measure coronary sinus diameter in PLAX (normal <10 mm; dilated ≥10 mm = suspect PLSVC)", critical: true },
+                { step: 2, text: "Obtain A4C view. Optimize to show both atria and coronary sinus ostium clearly" },
+                { step: 3, text: "Inject agitated saline from LEFT antecubital vein as rapid bolus", critical: true },
+                { step: 4, text: "PLSVC positive: coronary sinus opacifies BEFORE RA/RV (pathognomonic)", critical: true },
+                { step: 5, text: "Repeat injection from RIGHT antecubital vein — normal RA → RV sequence confirms isolated PLSVC" },
+                { step: 6, text: "Also obtain PLAX view to directly visualize coronary sinus opacification" },
+                { step: 7, text: "Assess for associated defects: ASD, VSD, bicuspid aortic valve" },
+                { step: 8, text: "If LA opacifies before RA on left arm injection — suspect unroofed coronary sinus (rare, causes cyanosis)", critical: true },
+              ].map(({ step, text, critical }) => (
+                <div key={step} className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0 mt-0.5"
+                    style={{ background: critical ? "#dc2626" : BRAND }}>{step}</div>
+                  <div className="flex-1">
+                    <p className="text-xs text-gray-700 leading-relaxed pt-0.5">{text}</p>
+                    {critical && <span className="text-[10px] font-bold text-red-600">CRITICAL STEP</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Link to Navigator */}
+          <div className="p-4 rounded-xl flex items-center gap-4" style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}>
+            <div className="flex-1">
+              <p className="text-xs font-semibold text-[#4ad9e0] uppercase tracking-wider mb-0.5">Full Protocol Reference</p>
+              <p className="text-white text-sm font-bold">UEA Navigator™ — Bubble Study & PLSVC</p>
+              <p className="text-white/60 text-xs">Full checklist, shunt grading, PLSVC echo findings, and clinical implications</p>
+            </div>
+            <Link href="/uea-navigator">
+              <button className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90 flex-shrink-0"
+                style={{ background: BRAND }}>
+                <ArrowRight className="w-4 h-4" />
+                Open Navigator
+              </button>
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* ── Artifact Guide Tab ─────────────────────────────────────────────────── */}
+      {activeTab === "artifacts" && (      <div className="container py-6 max-w-3xl">
+          <div className="mb-5">
+            <h2 className="text-lg font-bold text-gray-800 mb-1" style={{ fontFamily: "Merriweather, serif" }}>
+              Contrast Artifact Recognition Guide
+            </h2>
+            <p className="text-sm text-gray-500">Identify, understand, and resolve common contrast echocardiography artifacts</p>
           </div>
           <div className="space-y-4">
-            {artefactGuide.map(art => (
+            {artifactGuide.map(art => (
               <div key={art.name} className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
                 style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
                 <div className="flex items-start gap-3 mb-3">

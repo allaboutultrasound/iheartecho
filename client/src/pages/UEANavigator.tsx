@@ -100,7 +100,7 @@ const indications = [
     color: "#16a34a",
     items: [
       "LV opacification (LVO) when ≥2 contiguous LV segments are not visualised on unenhanced TTE",
-      "Suspected apical thrombus or mass — differentiate thrombus from artefact",
+      "Suspected apical thrombus or mass — differentiate thrombus from artifact",
       "Suspected apical hypertrophic cardiomyopathy (apical HCM)",
       "Suspected non-compaction cardiomyopathy (LVNC)",
       "Stress echo — inadequate baseline image quality",
@@ -157,16 +157,38 @@ const agents = [
     shell: "Phospholipid shell",
     gas: "Sulfur hexafluoride (SF6)",
     size: "Mean diameter 2.5 µm",
-    approved: "LVO (FDA); cardiac and liver (EMA)",
+    approved: "LVO (FDA 2014); liver lesion characterization (FDA 2016); cardiac and liver (EMA)",
     preparation: [
-      "Reconstitute by attaching transfer system and shaking gently",
-      "Withdraw 2.0 mL for IV bolus injection",
-      "Administer immediately after reconstitution",
-      "Discard unused portion after 6 hours",
+      "Remove vial from refrigerator and allow to reach room temperature (5 min)",
+      "Attach the transfer system (blue cap + white needle) to the vial",
+      "Inject 5 mL of 0.9% NaCl from the pre-filled syringe into the vial",
+      "Gently shake the vial for 20 seconds until a uniform milky-white suspension forms",
+      "Invert the vial and withdraw the required dose into the syringe",
+      "Administer within 6 hours of reconstitution; gently re-agitate if >5 min has elapsed",
+      "Discard any unused portion after 6 hours",
     ],
-    dosing: "Bolus: 2.0 mL IV followed by 5 mL NS flush; may repeat once if needed",
-    storage: "Store at room temperature (15–30°C)",
-    notes: "No FDA black box warning. Considered safer profile than Definity for patients with cardiopulmonary instability.",
+    dosing: "Bolus: 2.0 mL IV followed by 5 mL NS flush; may repeat once (total max 4.0 mL per study). Infusion: 4.0 mL diluted in 50 mL NS at 1–2 mL/min (titrate to image quality)",
+    storage: "Refrigerate at 2–8°C before reconstitution; store reconstituted suspension at room temperature (≤30°C)",
+    notes: "No FDA black box warning — preferred agent for patients with cardiopulmonary instability, worsening heart failure, or severe pulmonary hypertension. Contraindicated in known/suspected R-to-L shunt. Sulfur hexafluoride gas is biologically inert and eliminated via respiration within minutes.",
+  },
+  {
+    name: "Agitated Saline (Bubble Study)",
+    manufacturer: "No manufacturer — prepared bedside",
+    shell: "Air microbubbles in saline",
+    gas: "Room air",
+    size: "Variable (50–200 µm) — too large to cross pulmonary capillaries normally",
+    approved: "Not FDA-approved as a contrast agent; used off-label for shunt detection and PLSVC",
+    preparation: [
+      "Prepare two 10 mL syringes connected by a 3-way stopcock",
+      "Fill one syringe with 9 mL normal saline (NS) + 1 mL room air (10:1 ratio)",
+      "Agitate vigorously by rapidly transferring between syringes 10–15 times",
+      "Administer immediately after agitation (within 5 seconds) — bubbles dissolve rapidly",
+      "Optional: add 0.1–0.5 mL of patient’s own blood to improve bubble stability",
+      "Repeat injections as needed (typically 2–3 injections per study)",
+    ],
+    dosing: "Inject 10 mL agitated saline IV as a rapid bolus; repeat with Valsalva maneuver (bear down for 5 seconds, release just before injection)",
+    storage: "Prepared immediately before use; cannot be stored",
+    notes: "Bubbles are too large to cross normal pulmonary capillaries. Appearance in left heart within 3 cardiac cycles = intracardiac R-to-L shunt (PFO/ASD). Appearance after 3–5 cycles = intrapulmonary shunt (HHT, hepatopulmonary syndrome). Early coronary sinus opacification = PLSVC. No adverse reactions reported with agitated saline.",
   },
   {
     name: "Optison® (Perflutren Protein-Type A Microspheres)",
@@ -184,6 +206,38 @@ const agents = [
     storage: "Refrigerate at 2–8°C; do not freeze",
     notes: "Albumin shell — caution in patients with albumin allergy. Largest microsphere size — may not pass pulmonary capillaries in severe PHT.",
   },
+];
+
+// ─── BUBBLE STUDY PROTOCOL ───────────────────────────────────────────────────
+
+const bubbleStudyChecklist: CheckItem[] = [
+  { id: "bs1", label: "Confirm indication: PFO/ASD screening, intrapulmonary shunt, or PLSVC evaluation", detail: "Bubble study is the gold standard for detecting intracardiac R-to-L shunts. Also used to confirm PLSVC when coronary sinus is dilated.", critical: true },
+  { id: "bs2", label: "Obtain large-bore peripheral IV access (18G or larger) in antecubital fossa", detail: "Antecubital or basilic vein preferred. Avoid hand/wrist veins — poor bubble delivery. For PLSVC evaluation, inject from LEFT arm to opacify coronary sinus first.", critical: true },
+  { id: "bs3", label: "Prepare agitated saline: 9 mL NS + 1 mL air in two 10 mL syringes via 3-way stopcock", detail: "Agitate vigorously 10–15 times. Administer within 5 seconds of preparation. Optional: add 0.1–0.5 mL blood to improve bubble stability." },
+  { id: "bs4", label: "Obtain A4C view — optimize for RV and LV visualization before injection", detail: "A4C is the primary view. Subcostal 4-chamber is an excellent alternative. Ensure both atria are clearly visible.", critical: true },
+  { id: "bs5", label: "Baseline injection (no Valsalva) — inject 10 mL agitated saline as rapid IV bolus", detail: "Confirm RV opacification to verify IV placement and adequate bubble delivery. Observe for any immediate LV opacification (large shunt)." },
+  { id: "bs6", label: "Valsalva injection — patient bears down for 5 seconds, release just before injection", detail: "Valsalva increases RA pressure transiently, forcing open a PFO. The Valsalva release (not the strain) is when shunting occurs — time injection so bubbles arrive during release.", critical: true },
+  { id: "bs7", label: "Count cardiac cycles from RV opacification to first LV bubble appearance", detail: "≤3 cycles = intracardiac shunt (PFO/ASD). 3–5 cycles = intrapulmonary shunt (HHT, hepatopulmonary syndrome, cirrhosis).", critical: true },
+  { id: "bs8", label: "Grade shunt severity (0–3+) based on number of bubbles in LV", detail: "Grade 0: no bubbles. Grade 1+: 1–10 bubbles. Grade 2+: 11–30 bubbles. Grade 3+: >30 bubbles or complete LV opacification." },
+  { id: "bs9", label: "For PLSVC evaluation: inject from LEFT arm and observe coronary sinus in PLAX/A4C", detail: "In PLSVC, the left arm injection opacifies the coronary sinus BEFORE the RA/RV. Dilated coronary sinus (>10 mm) + early opacification = PLSVC confirmed.", critical: true },
+  { id: "bs10", label: "Repeat injection from RIGHT arm for comparison (PLSVC evaluation)", detail: "Right arm injection opacifies RA/RV first (normal pattern). Comparing left vs. right arm injections confirms PLSVC diagnosis." },
+  { id: "bs11", label: "Document findings: timing, grade, and injection site", detail: "Report: 'Bubble study positive/negative for R-to-L shunt. Grade X+. Timing: X cardiac cycles after RV opacification. Injection site: left/right antecubital.'" },
+];
+
+const bubbleGrading = [
+  { grade: "Grade 0", bubbles: "No bubbles in LV", interpretation: "No shunt detected", color: "#16a34a" },
+  { grade: "Grade 1+", bubbles: "1–10 bubbles", interpretation: "Small shunt — PFO likely", color: "#d97706" },
+  { grade: "Grade 2+", bubbles: "11–30 bubbles", interpretation: "Moderate shunt — PFO or small ASD", color: "#ea580c" },
+  { grade: "Grade 3+", bubbles: ">30 bubbles or complete LV opacification", interpretation: "Large shunt — large ASD or significant PFO", color: "#dc2626" },
+];
+
+const plsvcFindings = [
+  { finding: "Dilated coronary sinus", detail: "CS diameter >10 mm (normal <10 mm). Measured in PLAX at the level of the posterior mitral annulus. Sensitivity ~90% for PLSVC.", significance: "Key screening finding" },
+  { finding: "Early CS opacification on left arm bubble study", detail: "Bubbles appear in coronary sinus before RA/RV when injected from LEFT arm. Pathognomonic for PLSVC draining into CS.", significance: "Diagnostic" },
+  { finding: "Normal right arm bubble study", detail: "Right arm injection shows normal RA → RV opacification sequence. Confirms PLSVC is an additional vessel, not replacing the RSVC.", significance: "Confirms isolated PLSVC" },
+  { finding: "Absent or small RSVC", detail: "In ~20% of PLSVC cases, the RSVC is absent or hypoplastic. Assess SVC size in suprasternal or right parasternal views.", significance: "Surgical planning" },
+  { finding: "Associated CHD", detail: "PLSVC is associated with ASD (10–15%), VSD, bicuspid aortic valve, and other congenital anomalies. Complete structural assessment required.", significance: "Screen for associated lesions" },
+  { finding: "CS-to-LA communication (unroofed CS)", detail: "Rare variant: PLSVC drains into LA via unroofed CS. Presents as cyanosis. Bubble study from left arm shows LA opacification before RA.", significance: "Critical — causes cyanosis" },
 ];
 
 // ─── VIEW-BY-VIEW PROTOCOL ────────────────────────────────────────────────────
@@ -210,11 +264,11 @@ const viewProtocol: ViewSection[] = [
     ],
     tips: [
       "Reduce MI to 0.1–0.2 for contrast imaging — high MI destroys microbubbles",
-      "Reduce gain by 30–50% from standard settings to avoid blooming artefact",
+      "Reduce gain by 30–50% from standard settings to avoid blooming artifact",
       "Increase depth to include full LV — contrast fills apex last",
     ],
     normalFindings: ["Uniform LV cavity opacification", "No filling defects", "Clear delineation of all wall segments"],
-    abnormalFindings: ["Filling defect at apex — thrombus vs. artefact", "Non-uniform enhancement — wall motion abnormality", "Enhancing mass — consider myxoma or metastasis"],
+    abnormalFindings: ["Filling defect at apex — thrombus vs. artifact", "Non-uniform enhancement — wall motion abnormality", "Enhancing mass — consider myxoma or metastasis"],
   },
   {
     view: "Parasternal Short Axis (PSAX) — Mitral Level",
@@ -379,6 +433,7 @@ export default function UEANavigator() {
 
   const safetyComplete = safetyChecklist.filter(i => checkedItems.has(i.id)).length;
   const reportComplete = reportingItems.filter(i => checkedItems.has(i.id)).length;
+  const bubbleComplete = bubbleStudyChecklist.filter(i => checkedItems.has(i.id)).length;
 
   return (
     <Layout>
@@ -575,7 +630,7 @@ export default function UEANavigator() {
                 <h2 className="text-sm font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
                   UEA Agents — Preparation & Dosing
                 </h2>
-                <p className="text-xs text-gray-400">Definity, Lumason, Optison</p>
+                <p className="text-xs text-gray-400">Definity, Lumason, Optison, Agitated Saline</p>
               </div>
             </div>
             {expandedSection === "agents" ? (
@@ -670,7 +725,7 @@ export default function UEANavigator() {
               </div>
               <div>
                 <h2 className="text-sm font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-                  Machine Optimisation for Contrast Imaging
+                  Machine Optimization for Contrast Imaging
                 </h2>
                 <p className="text-xs text-gray-400">MI, gain, depth, and harmonic settings</p>
               </div>
@@ -688,7 +743,7 @@ export default function UEANavigator() {
                 {[
                   { label: "Mechanical Index (MI)", value: "0.1–0.2", detail: "Low MI preserves microbubbles. High MI (>0.5) destroys contrast — use only for flash replenishment." },
                   { label: "Imaging Mode", value: "Contrast Harmonic Imaging", detail: "Activate contrast-specific mode (e.g., CPS, Power Modulation, Pulse Inversion Harmonic). Do NOT use standard B-mode." },
-                  { label: "Gain", value: "Reduce 30–50% from standard", detail: "Over-gain causes blooming artefact. Start low and increase until endocardial border is clearly defined." },
+                  { label: "Gain", value: "Reduce 30–50% from standard", detail: "Over-gain causes blooming artifact. Start low and increase until endocardial border is clearly defined." },
                   { label: "Depth", value: "Minimum to include full LV", detail: "Shallower depth improves frame rate and contrast resolution. Exclude structures not needed." },
                   { label: "Focus", value: "Single focus at mid-LV level", detail: "Multiple foci reduce frame rate. Single focus at mid-ventricle is optimal." },
                   { label: "Frame Rate", value: ">25 fps (ideally >50 fps)", detail: "Higher frame rate improves detection of wall motion abnormalities and perfusion dynamics." },
@@ -705,9 +760,203 @@ export default function UEANavigator() {
             </div>
           )}
         </div>
-
-        {/* ── View-by-View Protocol ─────────────────────────────────────────── */}
+        {/* ── Bubble Study Protocol ───────────────────────────────────────────────── */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
+          style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <button
+            className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50 transition-colors"
+            onClick={() => toggleSection("bubble")}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: "#e0f2fe" }}>
+                <Droplets className="w-4 h-4 text-sky-600" />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
+                  Agitated Saline Bubble Study Protocol
+                </h2>
+                <p className="text-xs text-gray-400">
+                  {bubbleComplete}/{bubbleStudyChecklist.length} steps checked · PFO/ASD · Intrapulmonary shunt · PLSVC
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              {bubbleComplete === bubbleStudyChecklist.length && (
+                <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-200">Complete</span>
+              )}
+              {expandedSection === "bubble" ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+            </div>
+          </button>
+
+          {expandedSection === "bubble" && (
+            <div className="px-5 pb-5 border-t border-gray-100">
+              {/* Info banner */}
+              <div className="mt-4 mb-4 flex items-start gap-2 p-3 rounded-lg bg-sky-50 border border-sky-200">
+                <Info className="w-4 h-4 text-sky-600 flex-shrink-0 mt-0.5" />
+                <div className="text-xs text-sky-800 leading-relaxed">
+                  <strong>Agitated saline bubbles are too large to cross normal pulmonary capillaries.</strong> Appearance in the left heart ≤3 cardiac cycles after RV opacification = intracardiac R-to-L shunt. Appearance after 3–5 cycles = intrapulmonary shunt. Early coronary sinus opacification (left arm injection) = PLSVC.
+                </div>
+              </div>
+
+              {/* Checklist */}
+              <div className="space-y-1.5 mb-5">
+                {bubbleStudyChecklist.map(item => (
+                  <button
+                    key={item.id}
+                    className="w-full flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 transition-colors text-left group"
+                    onClick={() => toggle(item.id)}
+                  >
+                    <div className="flex-shrink-0 mt-0.5">
+                      {checkedItems.has(item.id) ? (
+                        <CheckCircle2 className="w-4 h-4" style={{ color: BRAND }} />
+                      ) : (
+                        <Circle className="w-4 h-4 text-gray-300 group-hover:text-gray-400" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className={`text-sm font-medium ${checkedItems.has(item.id) ? "line-through text-gray-400" : "text-gray-800"}`}>
+                          {item.label}
+                        </span>
+                        {item.critical && (
+                          <span className="text-[10px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded-full border border-red-200">CRITICAL</span>
+                        )}
+                      </div>
+                      {item.detail && (
+                        <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{item.detail}</p>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* Shunt Grading Table */}
+              <div className="mb-5">
+                <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: BRAND }}>Shunt Grading (Spencer Scale)</div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-gray-100">
+                        <th className="text-left py-2 pr-4 font-bold text-gray-600">Grade</th>
+                        <th className="text-left py-2 pr-4 font-bold text-gray-600">Bubbles in LV</th>
+                        <th className="text-left py-2 font-bold text-gray-600">Interpretation</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {bubbleGrading.map((row, i) => (
+                        <tr key={i} className={`border-b border-gray-50 ${i % 2 === 0 ? "" : "bg-gray-50/50"}`}>
+                          <td className="py-2 pr-4 font-bold" style={{ color: row.color }}>{row.grade}</td>
+                          <td className="py-2 pr-4 text-gray-700">{row.bubbles}</td>
+                          <td className="py-2 text-gray-600">{row.interpretation}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Timing interpretation */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="p-3 rounded-lg bg-green-50 border border-green-200">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-green-700 mb-1">No Bubbles in LV</div>
+                  <div className="text-xs text-green-800 font-semibold mb-1">Negative Study</div>
+                  <div className="text-xs text-green-700">No R-to-L shunt detected at rest or with Valsalva</div>
+                </div>
+                <div className="p-3 rounded-lg bg-amber-50 border border-amber-200">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-amber-700 mb-1">≤3 Cardiac Cycles</div>
+                  <div className="text-xs text-amber-800 font-semibold mb-1">Intracardiac Shunt</div>
+                  <div className="text-xs text-amber-700">PFO, ASD, or other intracardiac R-to-L communication</div>
+                </div>
+                <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-blue-700 mb-1">3–5 Cardiac Cycles</div>
+                  <div className="text-xs text-blue-800 font-semibold mb-1">Intrapulmonary Shunt</div>
+                  <div className="text-xs text-blue-700">HHT, hepatopulmonary syndrome, pulmonary AVMs, cirrhosis</div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── PLSVC Section ──────────────────────────────────────────────────── */}
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
+          style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <button
+            className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50 transition-colors"
+            onClick={() => toggleSection("plsvc")}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: "#fdf4ff" }}>
+                <Activity className="w-4 h-4 text-purple-600" />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
+                  PLSVC — Persistent Left Superior Vena Cava
+                </h2>
+                <p className="text-xs text-gray-400">Echo findings · Bubble study diagnosis · Clinical implications</p>
+              </div>
+            </div>
+            {expandedSection === "plsvc" ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+          </button>
+
+          {expandedSection === "plsvc" && (
+            <div className="px-5 pb-5 border-t border-gray-100">
+              {/* Overview */}
+              <div className="mt-4 mb-4 p-4 rounded-lg bg-purple-50 border border-purple-200">
+                <h3 className="text-xs font-bold text-purple-800 mb-2">What is PLSVC?</h3>
+                <p className="text-xs text-purple-700 leading-relaxed">
+                  Persistent Left Superior Vena Cava (PLSVC) is the most common congenital thoracic venous anomaly, occurring in 0.3–0.5% of the general population and 4–8% of patients with congenital heart disease. The left SVC persists from embryonic development and typically drains into the right atrium via a dilated coronary sinus. It is usually an incidental finding but has important implications for pacemaker implantation, central line placement, and cardiac surgery.
+                </p>
+              </div>
+
+              {/* Echo Findings Table */}
+              <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: BRAND }}>Echo Findings & Diagnostic Criteria</div>
+              <div className="space-y-3 mb-5">
+                {plsvcFindings.map((item, i) => (
+                  <div key={i} className="rounded-lg border border-gray-100 p-3">
+                    <div className="flex items-start justify-between gap-3 mb-1">
+                      <div className="text-sm font-bold text-gray-800">{item.finding}</div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0"
+                        style={{
+                          background: item.significance === "Diagnostic" ? "#f0fdf4" : item.significance === "Critical — causes cyanosis" ? "#fef2f2" : "#f0f9ff",
+                          color: item.significance === "Diagnostic" ? "#16a34a" : item.significance === "Critical — causes cyanosis" ? "#dc2626" : "#0369a1",
+                          border: `1px solid ${item.significance === "Diagnostic" ? "#bbf7d0" : item.significance === "Critical — causes cyanosis" ? "#fecaca" : "#bae6fd"}`
+                        }}>
+                        {item.significance}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500 leading-relaxed">{item.detail}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Bubble Study Protocol for PLSVC */}
+              <div className="p-4 rounded-lg bg-amber-50 border border-amber-200">
+                <div className="flex items-start gap-2 mb-2">
+                  <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <div className="text-xs font-bold text-amber-800">Bubble Study Protocol for PLSVC Confirmation</div>
+                </div>
+                <ol className="space-y-1.5">
+                  {[
+                    "Inject agitated saline from LEFT antecubital vein — observe coronary sinus in PLAX view",
+                    "PLSVC: coronary sinus opacifies BEFORE RA/RV (pathognomonic finding)",
+                    "Repeat injection from RIGHT antecubital vein — normal RA → RV sequence confirms isolated PLSVC",
+                    "Measure coronary sinus diameter in PLAX (normal <10 mm; dilated >10 mm suggests PLSVC)",
+                    "Assess for associated defects: ASD, VSD, bicuspid aortic valve",
+                    "If LA opacifies before RA on left arm injection — consider unroofed coronary sinus (rare, causes cyanosis)",
+                  ].map((step, i) => (
+                    <li key={i} className="flex items-start gap-2 text-xs text-amber-700">
+                      <span className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0 mt-0.5"
+                        style={{ background: "#d97706" }}>{i + 1}</span>
+                      {step}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── View-by-View Protocol ─────────────────────────────────────────────────── */}  <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
           style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
           <button
             className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50 transition-colors"
@@ -1008,7 +1257,7 @@ export default function UEANavigator() {
               Need acquisition guidance?
             </h3>
             <p className="text-white/60 text-xs">
-              Step-by-step probe placement, machine optimisation tips, injection technique, and contrast artefact recognition.
+              Step-by-step probe placement, machine optimization tips, injection technique, and contrast artifact recognition.
             </p>
           </div>
           <Link href="/uea-scan-coach">

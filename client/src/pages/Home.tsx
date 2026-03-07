@@ -44,7 +44,7 @@ const modules: Module[] = [
     path: "/uea-scan-coach",
     icon: Droplets,
     title: "UEA ScanCoach™",
-    description: "Contrast echo acquisition guide: probe positioning, machine optimisation (MI, gain, depth), injection technique, flash replenishment, and artefact recognition.",
+    description: "Contrast echo acquisition guide: probe positioning, machine optimization (MI, gain, depth), injection technique, flash replenishment, and artifact recognition.",
     badge: "Contrast Echo",
     color: BRAND,
     premium: true,

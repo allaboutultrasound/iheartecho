@@ -598,8 +598,8 @@ const achdLesions = [
     label: "ASD / PFO",
     color: "#189aa1",
     views: [
-      { name: "Subcostal 4-Chamber", tip: "Best window for ASD. Align beam perpendicular to the IAS. Use colour Doppler to detect L→R shunt. Measure defect diameter at widest point.", pearls: ["Rotate probe to subcostal coronal for sinus venosus ASD", "Assess IVC/SVC drainage to confirm sinus venosus type", "Check for associated partial anomalous pulmonary venous return (PAPVR)"] },
-      { name: "Parasternal Short Axis", tip: "Identify ASD location relative to AV and MV. Ostium secundum sits mid-IAS; primum is inferior near AV valves.", pearls: ["Primum ASD: look for cleft anterior MV leaflet", "Colour Doppler at 0–30° to detect sinus venosus shunt near SVC"] },
+      { name: "Subcostal 4-Chamber", tip: "Best window for ASD. Align beam perpendicular to the IAS. Use color Doppler to detect L→R shunt. Measure defect diameter at widest point.", pearls: ["Rotate probe to subcostal coronal for sinus venosus ASD", "Assess IVC/SVC drainage to confirm sinus venosus type", "Check for associated partial anomalous pulmonary venous return (PAPVR)"] },
+      { name: "Parasternal Short Axis", tip: "Identify ASD location relative to AV and MV. Ostium secundum sits mid-IAS; primum is inferior near AV valves.", pearls: ["Primum ASD: look for cleft anterior MV leaflet", "Color Doppler at 0–30° to detect sinus venosus shunt near SVC"] },
       { name: "Apical 4-Chamber", tip: "Measure RA/RV dimensions. RV enlargement (RVD1 >4.2 cm) suggests significant shunt. Assess TR for RVSP estimation.", pearls: ["RV:LV ratio >1 indicates significant volume overload", "Assess for paradoxical septal motion (D-shaped LV in PSAX)"] },
       { name: "Bicaval TEE View (if applicable)", tip: "Gold standard for sinus venosus ASD. Rotate to ~100–110° to see SVC–RA junction and defect rim.", pearls: ["Confirm adequate rims for device closure (>5 mm all rims)", "3D TEE for accurate sizing before device closure"] },
     ]
@@ -609,10 +609,10 @@ const achdLesions = [
     label: "VSD",
     color: "#189aa1",
     views: [
-      { name: "Parasternal Long Axis", tip: "Perimembranous VSD visible just below the AV. Align colour box at the LVOT/IVS junction. Measure peak CW velocity to estimate RV pressure (modified Bernoulli).", pearls: ["RV systolic pressure = SBP − 4V²", "Aneurysm of the membranous septum may partially restrict the defect"] },
-      { name: "Parasternal Short Axis", tip: "Rotate through IVS to characterise VSD type: perimembranous (12 o'clock), inlet (7–8 o'clock), muscular (central), outlet/subarterial (10–11 o'clock).", pearls: ["Subarterial VSD: check for AR due to leaflet prolapse", "Multiple muscular VSDs: 'Swiss cheese' — use colour Doppler sweep"] },
+      { name: "Parasternal Long Axis", tip: "Perimembranous VSD visible just below the AV. Align color box at the LVOT/IVS junction. Measure peak CW velocity to estimate RV pressure (modified Bernoulli).", pearls: ["RV systolic pressure = SBP − 4V²", "Aneurysm of the membranous septum may partially restrict the defect"] },
+      { name: "Parasternal Short Axis", tip: "Rotate through IVS to characterize VSD type: perimembranous (12 o'clock), inlet (7–8 o'clock), muscular (central), outlet/subarterial (10–11 o'clock).", pearls: ["Subarterial VSD: check for AR due to leaflet prolapse", "Multiple muscular VSDs: 'Swiss cheese' — use color Doppler sweep"] },
       { name: "Apical 4-Chamber", tip: "Inlet VSD best seen here. Assess AV valve attachments — inlet VSD may have common AV valve in AVSD.", pearls: ["Measure Qp/Qs if shunt fraction needed (LVOT VTI × LVOT area vs RVOT VTI × RVOT area)"] },
-      { name: "Subcostal", tip: "Useful for muscular VSDs in children. Sweep through the IVS in multiple planes with colour Doppler.", pearls: ["High-velocity L→R jet confirms restrictive VSD and normal RV pressure", "Low-velocity or bidirectional flow suggests elevated RV pressure"] },
+      { name: "Subcostal", tip: "Useful for muscular VSDs in children. Sweep through the IVS in multiple planes with color Doppler.", pearls: ["High-velocity L→R jet confirms restrictive VSD and normal RV pressure", "Low-velocity or bidirectional flow suggests elevated RV pressure"] },
     ]
   },
   {
@@ -621,7 +621,7 @@ const achdLesions = [
     color: "#189aa1",
     views: [
       { name: "Parasternal Long Axis", tip: "Assess LVOT for residual obstruction. Measure LV dimensions and function. Check for neo-aortic root dilation (>4.5 cm warrants surveillance).", pearls: ["Aortic root dilation is common in ToF — measure at annulus, sinuses, STJ, and ascending aorta", "LV dysfunction may develop late due to chronic RV-LV interaction"] },
-      { name: "Parasternal Short Axis — RVOT", tip: "Key view for RVOT assessment. Measure RVOT diameter and assess PR by colour and CW Doppler. PR fraction >40% is severe.", pearls: ["Pressure half-time <100 ms indicates severe PR", "Assess for residual RVOT obstruction: peak gradient >40 mmHg warrants intervention", "Look for patch dehiscence or aneurysmal RVOT"] },
+      { name: "Parasternal Short Axis — RVOT", tip: "Key view for RVOT assessment. Measure RVOT diameter and assess PR by color and CW Doppler. PR fraction >40% is severe.", pearls: ["Pressure half-time <100 ms indicates severe PR", "Assess for residual RVOT obstruction: peak gradient >40 mmHg warrants intervention", "Look for patch dehiscence or aneurysmal RVOT"] },
       { name: "Apical 4-Chamber", tip: "Quantify RV size (RVD1, RVD2, RVEDA) and function (FAC, TAPSE, S'). RV dilation is the primary indication for PVR.", pearls: ["RVEDVI >160 mL/m² or RVESVI >80 mL/m² are thresholds for PVR consideration", "Assess TR severity — often worsens with RV dilation"] },
       { name: "Subcostal IVC", tip: "Assess IVC size and collapsibility for RA pressure. Hepatic vein flow reversal suggests severe TR or elevated RA pressure.", pearls: ["Dilated IVC (>2.1 cm, <50% collapse) = RA pressure ≥15 mmHg"] },
     ]
@@ -643,8 +643,8 @@ const achdLesions = [
     color: "#189aa1",
     views: [
       { name: "Apical 4-Chamber", tip: "Identify systemic RV (anterior, trabeculated, moderator band). Assess systemic RV function: FAC <35%, TAPSE <1.6 cm, or S' <10 cm/s indicates dysfunction.", pearls: ["Systemic RV failure is the leading cause of late morbidity in Mustard/Senning", "TR severity directly reflects systemic RV function — quantify with EROA and regurgitant volume"] },
-      { name: "Parasternal Short Axis", tip: "Assess baffle anatomy. Look for baffle obstruction (turbulent flow by colour Doppler) or baffle leak (colour Doppler across baffle).", pearls: ["SVC baffle obstruction: peak velocity >1.5 m/s or gradient >9 mmHg", "IVC baffle obstruction may present with hepatomegaly and ascites"] },
-      { name: "Subcostal", tip: "Best view for baffle assessment. Align colour Doppler across the atrial baffles. Assess IVC and SVC baffle flow direction and velocity.", pearls: ["Baffle leak: colour jet crossing from systemic to pulmonary venous atrium", "Contrast echo (agitated saline) can confirm baffle leak direction"] },
+      { name: "Parasternal Short Axis", tip: "Assess baffle anatomy. Look for baffle obstruction (turbulent flow by color Doppler) or baffle leak (color Doppler across baffle).", pearls: ["SVC baffle obstruction: peak velocity >1.5 m/s or gradient >9 mmHg", "IVC baffle obstruction may present with hepatomegaly and ascites"] },
+      { name: "Subcostal", tip: "Best view for baffle assessment. Align color Doppler across the atrial baffles. Assess IVC and SVC baffle flow direction and velocity.", pearls: ["Baffle leak: color jet crossing from systemic to pulmonary venous atrium", "Contrast echo (agitated saline) can confirm baffle leak direction"] },
       { name: "RVOT / Pulmonary Artery", tip: "The subpulmonary LV (posterior, smooth-walled) ejects into the PA. Measure LV systolic pressure via TR jet (if present) or PA pressure.", pearls: ["LV systolic pressure <50% systemic pressure = 'unprepared' LV — important if arterial switch conversion considered"] },
     ]
   },

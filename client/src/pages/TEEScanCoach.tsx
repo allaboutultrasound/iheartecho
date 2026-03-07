@@ -34,8 +34,8 @@ const TEE_VIEWS = [
       "Advance probe to mid-esophagus (30–35 cm from incisors)",
       "Set multiplane angle to 0°",
       "Apply gentle anteflexion to bring all four chambers into view",
-      "Optimise depth to include the apex — avoid foreshortening",
-      "Rotate slightly left/right to centre the IVS vertically",
+      "Optimize depth to include the apex — avoid foreshortening",
+      "Rotate slightly left/right to center the IVS vertically",
     ],
     structures: [
       "LV (all walls, apex)", "RV", "LA", "RA",
@@ -55,7 +55,7 @@ const TEE_VIEWS = [
     ],
     pitfalls: [
       "Foreshortening of LV apex underestimates LV size and EF",
-      "IAS dropout is common at 0° — use colour Doppler to confirm ASD",
+      "IAS dropout is common at 0° — use color Doppler to confirm ASD",
     ],
     measurements: ["LV biplane volumes/EF", "LA area", "MV E/A/DT", "TR Vmax/RVSP"],
     criticalFindings: ["New LV wall motion abnormality (ischaemia)", "Severe MR or TR", "Large pericardial effusion"],
@@ -73,7 +73,7 @@ const TEE_VIEWS = [
     howToGet: [
       "From ME 4-chamber, rotate multiplane angle to 90°",
       "Do not advance or withdraw the probe",
-      "Optimise to show LV anterior and inferior walls in full length",
+      "Optimize to show LV anterior and inferior walls in full length",
       "Tilt slightly to open the LAA — it opens to the left of the screen",
     ],
     structures: [
@@ -91,7 +91,7 @@ const TEE_VIEWS = [
       "Anterior wall WMA = LAD territory ischaemia — critical intraoperatively",
     ],
     pitfalls: [
-      "LAA lobes can mimic thrombus — use colour Doppler and multiple planes",
+      "LAA lobes can mimic thrombus — use color Doppler and multiple planes",
       "Pectinate muscles in LAA are normal — do not confuse with thrombus",
     ],
     measurements: ["LAA emptying velocity", "LAA ostium diameter (for LAA occlusion sizing)"],
@@ -111,7 +111,7 @@ const TEE_VIEWS = [
       "From ME 2-chamber (90°), continue rotating to 120–135°",
       "The LVOT, AV, and aortic root should come into view",
       "Adjust depth and gain to visualise the proximal ascending aorta",
-      "Optimise to make the IVS and posterior wall parallel",
+      "Optimize to make the IVS and posterior wall parallel",
     ],
     structures: [
       "Aortic valve (all three cusps in LAX)", "LVOT",
@@ -130,7 +130,7 @@ const TEE_VIEWS = [
     ],
     pitfalls: [
       "Oblique cut through LVOT overestimates diameter — ensure parallel walls",
-      "Aortic root can be foreshortened — adjust angle 5–10° to maximise diameter",
+      "Aortic root can be foreshortened — adjust angle 5–10° to maximize diameter",
     ],
     measurements: ["LVOT diameter", "Aortic root (sinus, STJ, ascending)", "AR jet width/LVOT ratio"],
     criticalFindings: ["Aortic dissection (intimal flap in ascending aorta)", "Severe AR", "LVOT obstruction"],
@@ -148,7 +148,7 @@ const TEE_VIEWS = [
     howToGet: [
       "From ME 4-chamber (0°), rotate to 30–60°",
       "Withdraw probe slightly (1–2 cm) until AV comes into view",
-      "Optimise to show all three cusps symmetrically — 'Mercedes-Benz' sign",
+      "Optimize to show all three cusps symmetrically — 'Mercedes-Benz' sign",
       "Identify RVOT/PV anteriorly and RA/TV to the right",
     ],
     structures: [
@@ -163,11 +163,11 @@ const TEE_VIEWS = [
     tips: [
       "Bicuspid AV: look for raphe, commissural fusion, and 'fish-mouth' opening",
       "LMCA ostium is at ~4 o'clock from the left cusp — critical for TAVR planning",
-      "Rotate 5–10° to optimise — perfect trisection is the goal",
+      "Rotate 5–10° to optimize — perfect trisection is the goal",
     ],
     pitfalls: [
       "Oblique cut creates pseudo-bicuspid appearance — ensure true SAX",
-      "Coronary ostia can be missed — use colour Doppler to confirm flow",
+      "Coronary ostia can be missed — use color Doppler to confirm flow",
     ],
     measurements: ["AV planimetry (AVA)", "Coronary ostia height (for TAVR)"],
     criticalFindings: ["Bicuspid AV with severe stenosis", "Coronary ostial involvement in dissection", "Aortic abscess"],
@@ -184,9 +184,9 @@ const TEE_VIEWS = [
     description: "The definitive view for interatrial septum assessment. Shows the full length of the IAS from SVC to IVC. Essential for ASD sizing, PFO identification, transseptal puncture guidance, and sinus venosus ASD.",
     howToGet: [
       "From ME AV SAX, rotate to 90–110°",
-      "The IAS should run vertically in the centre of the screen",
+      "The IAS should run vertically in the center of the screen",
       "SVC enters RA at the top, IVC at the bottom",
-      "Adjust angle 5–10° to maximise IAS length",
+      "Adjust angle 5–10° to maximize IAS length",
     ],
     structures: [
       "Interatrial septum (full length)", "Fossa ovalis",
@@ -239,7 +239,7 @@ const TEE_VIEWS = [
     tips: [
       "TV septal leaflet is adjacent to IVS — tethering here = functional TR",
       "Carcinoid: thickened, retracted TV leaflets with fixed open position",
-      "RVOT obstruction: accelerated colour Doppler signal in RVOT",
+      "RVOT obstruction: accelerated color Doppler signal in RVOT",
     ],
     pitfalls: [
       "TV leaflets can be confused with each other — use 3D to clarify anatomy",
@@ -298,7 +298,7 @@ const TEE_VIEWS = [
       "Advance probe into the stomach (40–45 cm from incisors)",
       "Apply anteflexion to bring the probe tip against the gastric wall",
       "Set angle to 0°",
-      "Optimise to show a circular LV cross-section with both papillary muscles",
+      "Optimize to show a circular LV cross-section with both papillary muscles",
       "Adjust depth so LV fills ~60% of the image",
     ],
     structures: [
@@ -333,7 +333,7 @@ const TEE_VIEWS = [
     howToGet: [
       "From TG Mid SAX (0°), rotate to 90°",
       "LV anterior and inferior walls should appear in long axis",
-      "Optimise to show the full LV from base to apex",
+      "Optimize to show the full LV from base to apex",
     ],
     structures: [
       "LV anterior wall", "LV inferior wall",

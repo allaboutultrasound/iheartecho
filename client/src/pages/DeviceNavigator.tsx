@@ -27,8 +27,8 @@ const DEVICES = [
     ],
     postAssessment: [
       { item: "Prosthetic valve function", detail: "Peak and mean gradient; DVI ≥0.25 normal; <0.25 suggests obstruction" },
-      { item: "Paravalvular leak (PVL) assessment", detail: "Colour Doppler circumferential extent: mild <10%, moderate 10–29%, severe ≥30%" },
-      { item: "Central AR assessment", detail: "Colour Doppler and CW; PHT <200 ms suggests significant AR" },
+      { item: "Paravalvular leak (PVL) assessment", detail: "Color Doppler circumferential extent: mild <10%, moderate 10–29%, severe ≥30%" },
+      { item: "Central AR assessment", detail: "Color Doppler and CW; PHT <200 ms suggests significant AR" },
       { item: "LVOT obstruction", detail: "LVOT gradient >20 mmHg post-TAVR may indicate subvalvular obstruction" },
       { item: "LV systolic function", detail: "EF and wall motion; improvement expected in severe AS with preserved flow" },
       { item: "Pericardial effusion", detail: "New effusion post-TAVR requires urgent assessment" },
@@ -86,10 +86,10 @@ const DEVICES = [
       { item: "Pericardial effusion baseline", detail: "Document any pre-existing effusion" },
     ],
     postAssessment: [
-      { item: "Device position (PASS criteria)", detail: "Position at/just distal to ostium; Anchor (tug test); Size 80–92% compressed; Seal (colour Doppler)" },
-      { item: "Peridevice leak", detail: "Colour Doppler: <5 mm acceptable; ≥5 mm consider recapture" },
+      { item: "Device position (PASS criteria)", detail: "Position at/just distal to ostium; Anchor (tug test); Size 80–92% compressed; Seal (color Doppler)" },
+      { item: "Peridevice leak", detail: "Color Doppler: <5 mm acceptable; ≥5 mm consider recapture" },
       { item: "Device compression", detail: "80–92% of original device size confirms appropriate sizing" },
-      { item: "Pericardial effusion", detail: "Any new effusion requires immediate assessment; tamponade is a recognised complication" },
+      { item: "Pericardial effusion", detail: "Any new effusion requires immediate assessment; tamponade is a recognized complication" },
       { item: "Mitral valve", detail: "Confirm no device impingement on mitral valve or pulmonary veins" },
       { item: "45-day follow-up echo", detail: "Confirm device endothelialisation; assess for device-related thrombus (DRT)" },
     ],
@@ -116,7 +116,7 @@ const DEVICES = [
     ],
     postAssessment: [
       { item: "Device position", detail: "Left disc fully in LA; right disc fully in RA; no impingement on AV valve or SVC" },
-      { item: "Residual shunt", detail: "Colour Doppler and agitated saline: no significant residual shunt" },
+      { item: "Residual shunt", detail: "Color Doppler and agitated saline: no significant residual shunt" },
       { item: "AV valve function", detail: "Confirm no mitral or tricuspid valve impingement" },
       { item: "SVC/IVC patency", detail: "Confirm no device impingement on venous structures" },
       { item: "Pericardial effusion", detail: "Confirm no new effusion post-device release" },

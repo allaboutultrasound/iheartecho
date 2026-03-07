@@ -30,8 +30,8 @@ const ACHD_LESIONS = [
       { label: "Aortic rim", threshold: "<5 mm: deficient rim; not contraindication for Amplatzer" },
     ],
     checklist: [
-      { item: "Characterise ASD type and location", detail: "Secundum (fossa ovalis), primum (AV canal), sinus venosus (SVC/IVC junction), coronary sinus" },
-      { item: "Measure defect diameter in multiple planes", detail: "Largest diameter guides device sizing; use 2D and colour Doppler" },
+      { item: "Characterize ASD type and location", detail: "Secundum (fossa ovalis), primum (AV canal), sinus venosus (SVC/IVC junction), coronary sinus" },
+      { item: "Measure defect diameter in multiple planes", detail: "Largest diameter guides device sizing; use 2D and color Doppler" },
       { item: "Assess all rims", detail: "Aortic, SVC, IVC, posterior, AV valve rims; deficient rim <5 mm" },
       { item: "Quantify RV size and function", detail: "Basal RV diameter, TAPSE, FAC; dilatation confirms haemodynamic significance" },
       { item: "Estimate Qp:Qs", detail: "RVOT VTI × RVOT area / LVOT VTI × LVOT area" },
@@ -45,7 +45,7 @@ const ACHD_LESIONS = [
     subtitle: "Perimembranous, Muscular, Outlet (Supracristal), Inlet",
     views: [
       "Parasternal long axis — perimembranous and outlet VSDs",
-      "Parasternal short axis — all VSD types; colour Doppler jet direction",
+      "Parasternal short axis — all VSD types; color Doppler jet direction",
       "Apical 4-chamber — inlet and muscular VSDs",
       "Apical 5-chamber — perimembranous and outlet VSDs",
       "Subcostal — muscular VSDs; multiple defects",
@@ -88,10 +88,10 @@ const ACHD_LESIONS = [
     ],
     checklist: [
       { item: "Assess RV size and function", detail: "RV dilatation from chronic PR is the primary driver for reintervention; FAC, TAPSE, RV S'" },
-      { item: "Quantify pulmonary regurgitation", detail: "Colour Doppler, PHT, diastolic flow reversal in branch PAs; CMR for accurate PR fraction" },
+      { item: "Quantify pulmonary regurgitation", detail: "Color Doppler, PHT, diastolic flow reversal in branch PAs; CMR for accurate PR fraction" },
       { item: "Assess RVOT and pulmonary valve", detail: "Native valve, homograft, or bioprosthesis; peak gradient and regurgitation" },
       { item: "Assess branch pulmonary artery stenosis", detail: "Suprasternal and parasternal views; peak velocity >2 m/s suggests stenosis" },
-      { item: "Assess residual VSD", detail: "Colour Doppler at patch site; any residual shunt" },
+      { item: "Assess residual VSD", detail: "Color Doppler at patch site; any residual shunt" },
       { item: "Assess aortic root dilatation", detail: "Aortic root dilation common in repaired ToF; measure at annulus, sinuses, STJ, ascending" },
       { item: "Assess for aortic regurgitation", detail: "Secondary to aortic root dilatation; document severity" },
       { item: "Assess tricuspid valve", detail: "TR severity; annular dilatation from RV enlargement" },
@@ -121,7 +121,7 @@ const ACHD_LESIONS = [
       { item: "Assess aortic root and ascending aorta", detail: "Dilatation common; measure at annulus, sinuses, STJ, ascending aorta" },
       { item: "Assess LV hypertrophy and function", detail: "LVH from chronic pressure overload; assess EF, wall thickness, diastolic function" },
       { item: "Assess for re-coarctation or aneurysm", detail: "Post-surgical aneurysm at repair site; post-stent: stent position and integrity" },
-      { item: "Assess collateral vessels", detail: "Intercostal collaterals may be visible; continuous flow on colour Doppler" },
+      { item: "Assess collateral vessels", detail: "Intercostal collaterals may be visible; continuous flow on color Doppler" },
     ],
   },
   {
@@ -146,7 +146,7 @@ const ACHD_LESIONS = [
       { item: "Assess tricuspid valve (systemic AV valve)", detail: "TR severity is a key prognostic marker; annular dilatation from RV enlargement" },
       { item: "Assess baffle anatomy and patency", detail: "SVC and IVC limbs of systemic venous baffle; pulmonary venous baffle" },
       { item: "Detect baffle obstruction", detail: "CW/PW Doppler across baffle; >2 m/s suggests obstruction; continuous flow pattern" },
-      { item: "Detect baffle leak", detail: "Colour Doppler; agitated saline contrast for small leaks" },
+      { item: "Detect baffle leak", detail: "Color Doppler; agitated saline contrast for small leaks" },
       { item: "Assess sub-pulmonary LV", detail: "LV is the sub-pulmonary ventricle; assess for LV training (pre-switch candidacy)" },
       { item: "Assess great artery relationships", detail: "Aorta anterior and rightward; pulmonary artery posterior and leftward in D-TGA" },
     ],
@@ -178,7 +178,7 @@ const ACHD_LESIONS = [
       { item: "Assess for Fontan-associated liver disease (FALD)", detail: "Hepatic vein congestion pattern; refer for hepatic assessment if abnormal" },
       { item: "Assess for thrombus", detail: "Fontan circuit, atria, and appendages; contrast echo if poor windows" },
       { item: "Assess branch pulmonary arteries", detail: "Suprasternal view; stenosis or distortion" },
-      { item: "Assess for aortopulmonary collaterals", detail: "Colour Doppler; continuous flow in pulmonary vasculature" },
+      { item: "Assess for aortopulmonary collaterals", detail: "Color Doppler; continuous flow in pulmonary vasculature" },
     ],
   },
 ];
@@ -324,7 +324,7 @@ export default function ACHDNavigator() {
         <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-5 py-3 mb-5">
           <Heart className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
           <p className="text-xs text-amber-800">
-            <strong>ACHD Complexity Classification.</strong> Adults with CHD are classified as Simple, Moderate, or Complex (ACC/AHA 2018). Complex lesions (single ventricle, TGA, Fontan) should be managed at ACHD centres of excellence. Echo findings should be interpreted in the context of prior surgical history and haemodynamic status.
+            <strong>ACHD Complexity Classification.</strong> Adults with CHD are classified as Simple, Moderate, or Complex (ACC/AHA 2018). Complex lesions (single ventricle, TGA, Fontan) should be managed at ACHD centers of excellence. Echo findings should be interpreted in the context of prior surgical history and haemodynamic status.
           </p>
         </div>
 

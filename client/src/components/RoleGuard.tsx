@@ -6,7 +6,7 @@
  *     <AccreditationTool />
  *   </RoleGuard>
  *
- * Behaviour:
+ * Behavior:
  *  - While auth is loading: shows a full-page spinner (no flash)
  *  - If unauthenticated: redirects to login
  *  - If authenticated but missing required role: shows "Access Required" page

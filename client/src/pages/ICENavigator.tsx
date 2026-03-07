@@ -43,7 +43,7 @@ const ICE_VIEWS = [
   {
     name: "Left Atrial Appendage View",
     position: "RA, posterior + slight CW",
-    description: "Optimised view of the LAA for thrombus exclusion and WATCHMAN/Amulet sizing.",
+    description: "Optimized view of the LAA for thrombus exclusion and WATCHMAN/Amulet sizing.",
     structures: ["LAA ostium", "LAA lobes", "Left upper pulmonary vein (landmark)", "Circumflex artery (posterior)"],
     tip: "Measure LAA ostium at 0°, 45°, 90°, 135° equivalent planes. Landing zone depth ≥10 mm required for most devices.",
   },
@@ -52,14 +52,14 @@ const ICE_VIEWS = [
     position: "RA, posterior tilt + CCW rotation",
     description: "Visualises pulmonary vein ostia for ablation guidance and post-procedure assessment.",
     structures: ["Left superior PV", "Left inferior PV", "Right superior PV", "Right inferior PV"],
-    tip: "Use colour Doppler to confirm PV flow. Post-ablation: assess for PV stenosis (velocity >1.2 m/s suggests stenosis).",
+    tip: "Use color Doppler to confirm PV flow. Post-ablation: assess for PV stenosis (velocity >1.2 m/s suggests stenosis).",
   },
   {
     name: "Coronary Sinus View",
     position: "RA, inferior tilt",
     description: "Visualises coronary sinus for CRT lead placement guidance and CS anatomy.",
     structures: ["Coronary sinus ostium", "Proximal CS", "Thebesian valve", "Posterior AV groove"],
-    tip: "CS ostium is typically 2–3 cm from the tricuspid annulus. Use colour Doppler to confirm flow direction.",
+    tip: "CS ostium is typically 2–3 cm from the tricuspid annulus. Use color Doppler to confirm flow direction.",
   },
   {
     name: "Pericardial View",
@@ -82,8 +82,8 @@ const PROCEDURE_CHECKLISTS: Record<string, { item: string; detail: string }[]> =
     { item: "Exclude LAA thrombus", detail: "Assess all lobes; if thrombus present, abort procedure" },
     { item: "Measure LAA ostium diameter", detail: "Measure at 0°, 45°, 90°, 135° planes; use largest diameter for sizing" },
     { item: "Measure landing zone depth", detail: "Depth ≥10 mm required; measure from ostium to first lobe bifurcation" },
-    { item: "Confirm device position (PASS criteria)", detail: "Position at/just distal to ostium, Anchor (tug test), Size 80–92% compressed, Seal (colour Doppler)" },
-    { item: "Post-deployment leak assessment", detail: "Colour Doppler: peridevice leak <5 mm acceptable; >5 mm consider recapture" },
+    { item: "Confirm device position (PASS criteria)", detail: "Position at/just distal to ostium, Anchor (tug test), Size 80–92% compressed, Seal (color Doppler)" },
+    { item: "Post-deployment leak assessment", detail: "Color Doppler: peridevice leak <5 mm acceptable; >5 mm consider recapture" },
     { item: "Pericardial effusion check", detail: "Confirm no new pericardial effusion after device deployment" },
   ],
   "MitraClip / TEER": [
@@ -91,16 +91,16 @@ const PROCEDURE_CHECKLISTS: Record<string, { item: string; detail: string }[]> =
     { item: "Identify target leaflet segments", detail: "Confirm A2/P2 (or A3/P3 for commissural) as target; assess coaptation gap" },
     { item: "Guide clip to target", detail: "Align clip perpendicular to coaptation line; confirm biplane imaging" },
     { item: "Confirm leaflet insertion", detail: "Both leaflets captured; assess clip arms on 3D or biplane" },
-    { item: "Post-clip MR assessment", detail: "Colour Doppler: residual MR grade; accept if ≤ mild-moderate" },
+    { item: "Post-clip MR assessment", detail: "Color Doppler: residual MR grade; accept if ≤ mild-moderate" },
     { item: "Assess mitral gradient", detail: "Mean gradient <5 mmHg acceptable; >5 mmHg consider iatrogenic MS" },
     { item: "Pericardial effusion check", detail: "Confirm no new pericardial effusion after clip deployment" },
   ],
   "ASD / PFO Closure": [
-    { item: "Characterise defect", detail: "Measure defect diameter; assess rims (aortic, SVC, IVC, posterior, AV)" },
+    { item: "Characterize defect", detail: "Measure defect diameter; assess rims (aortic, SVC, IVC, posterior, AV)" },
     { item: "Balloon sizing (ASD)", detail: "Stop-flow technique; size device to stretch diameter + 2 mm" },
     { item: "Confirm device position", detail: "Left disc fully in LA; right disc fully in RA; no impingement on AV or SVC" },
     { item: "Tug test", detail: "Gentle traction confirms stable device position before release" },
-    { item: "Residual shunt assessment", detail: "Colour Doppler and agitated saline: confirm no significant residual shunt" },
+    { item: "Residual shunt assessment", detail: "Color Doppler and agitated saline: confirm no significant residual shunt" },
     { item: "Pericardial effusion check", detail: "Confirm no new pericardial effusion after device release" },
   ],
 };
@@ -112,7 +112,7 @@ const KEY_MEASUREMENTS = [
   { label: "Transseptal Height (MitraClip)", normal: "3.5–4.5 cm", threshold: "<3.5 cm: steep angle; >4.5 cm: difficult reach", unit: "cm" },
   { label: "Mitral Coaptation Gap", normal: "<2 mm", threshold: "≥2 mm: significant gap; guides clip strategy", unit: "mm" },
   { label: "Post-Clip Mean MV Gradient", normal: "<3 mmHg", threshold: ">5 mmHg: consider iatrogenic MS", unit: "mmHg" },
-  { label: "Peridevice Leak (LAA)", normal: "None", threshold: "<5 mm: acceptable; ≥5 mm: consider recapture", unit: "colour Doppler" },
+  { label: "Peridevice Leak (LAA)", normal: "None", threshold: "<5 mm: acceptable; ≥5 mm: consider recapture", unit: "color Doppler" },
   { label: "Pericardial Effusion", normal: "None", threshold: "Any new effusion: alert proceduralist immediately", unit: "mm" },
 ];
 

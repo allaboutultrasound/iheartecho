@@ -1029,3 +1029,26 @@
 - [x] Preview mode: show amber banner + empty state when no overrides exist yet
 - [x] Edit mode: restore the existing edit form layout; quick Preview shortcut in text editor footer
 - [x] Vitest: no new server procedures needed (pure UI change) — 598 tests pass
+
+## US English & Lumason Updates (Session Mar 7)
+- [ ] Replace all British English spellings with US English across all .tsx, .ts, .md files (colour→color, optimisation→optimization, recognise→recognize, etc.)
+- [ ] Add Lumason (sulfur hexafluoride lipid-type A microspheres) to UEANavigator agent preparation section
+- [ ] Add Lumason dosing, reconstitution, and activation instructions to UEANavigator
+- [ ] Add Lumason-specific clinical notes and contraindications to UEANavigator
+- [ ] Add Lumason to UEAScanCoach agent preparation card with activation/injection technique
+- [ ] Add Lumason machine settings guidance to UEAScanCoach
+
+## Lumason + Saline Contrast (Bubble Study) — UEA Navigator & ScanCoach (Session Mar 7)
+- [ ] UEANavigator: expand Lumason agent card with full reconstitution steps, activation, dosing table, and clinical notes
+- [ ] UEANavigator: add Agitated Saline (Bubble Study) as a 4th agent with preparation, indications, protocol, and interpretation
+- [ ] UEANavigator: add Bubble Study protocol section (indications, Valsalva technique, grading, interpretation)
+- [ ] UEAScanCoach: expand Lumason injection technique card with machine settings and timing guidance
+- [ ] UEAScanCoach: add Agitated Saline (Bubble Study) tab/section with preparation, injection, views, and grading
+
+## Lumason + Saline Contrast (Bubble Study) + PLSVC — UEA Navigator & ScanCoach (Session Mar 7)
+- [ ] UEANavigator: expand Lumason agent card with full reconstitution, activation, dosing, and clinical notes (no black box warning, safer in cardiopulmonary instability)
+- [ ] UEANavigator: add Agitated Saline as 4th agent (preparation, indications, protocol, grading)
+- [ ] UEANavigator: add Bubble Study protocol section — PFO/ASD detection (Valsalva technique, timing, grading 0–3+), intrapulmonary shunt (delayed opacification), PLSVC (coronary sinus opacification pattern)
+- [ ] UEANavigator: add PLSVC section — diagnostic criteria, coronary sinus dilation, differential diagnosis, clinical implications
+- [ ] UEAScanCoach: expand Lumason injection technique card with machine settings and timing
+- [ ] UEAScanCoach: add Agitated Saline / Bubble Study tab — preparation steps, injection technique, views (A4C, subcostal, PLAX), Valsalva coaching, grading, PLSVC pattern recognition
