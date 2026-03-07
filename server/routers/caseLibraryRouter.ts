@@ -998,4 +998,141 @@ Guidelines:
         difficulty: input.difficulty,
       };
     }),
+
+  // ── Admin: Media Management ──────────────────────────────────────────────────
+
+  /** Save a media item to a case (after S3 upload via existing uploadMedia procedure). */
+  adminSaveMedia: adminProcedure
+    .input(
+      z.object({
+        caseId: z.number().int().positive(),
+        type: z.enum(["image", "video"]),
+        url: z.string().url(),
+        fileKey: z.string().max(500),
+        caption: z.string().max(300).optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const existing = await db
+        .select({ sortOrder: echoLibraryCaseMedia.sortOrder })
+        .from(echoLibraryCaseMedia)
+        .where(eq(echoLibraryCaseMedia.caseId, input.caseId))
+        .orderBy(desc(echoLibraryCaseMedia.sortOrder))
+        .limit(1);
+      const nextOrder = (existing[0]?.sortOrder ?? -1) + 1;
+      const [row] = await db
+        .insert(echoLibraryCaseMedia)
+        .values({
+          caseId: input.caseId,
+          type: input.type,
+          url: input.url,
+          fileKey: input.fileKey,
+          caption: input.caption ?? null,
+          sortOrder: nextOrder,
+        })
+        .$returningId();
+      return { id: row.id, sortOrder: nextOrder };
+    }),
+
+  /** Update a media item's caption or sort order. */
+  adminUpdateMedia: adminProcedure
+    .input(
+      z.object({
+        id: z.number().int().positive(),
+        caption: z.string().max(300).optional().nullable(),
+        sortOrder: z.number().int().min(0).optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const { id, ...rest } = input;
+      await db.update(echoLibraryCaseMedia).set(rest).where(eq(echoLibraryCaseMedia.id, id));
+      return { success: true };
+    }),
+
+  /** Delete a media item from a case. */
+  adminDeleteMedia: adminProcedure
+    .input(z.object({ id: z.number().int().positive() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      await db.delete(echoLibraryCaseMedia).where(eq(echoLibraryCaseMedia.id, input.id));
+      return { success: true };
+    }),
+
+  // ── Admin: Question Management ───────────────────────────────────────────────
+
+  /** Add a new MCQ question to a case. */
+  adminAddQuestion: adminProcedure
+    .input(
+      z.object({
+        caseId: z.number().int().positive(),
+        question: z.string().min(5).max(2000),
+        options: z.array(z.string().min(1).max(500)).length(4),
+        correctAnswer: z.number().int().min(0).max(3),
+        explanation: z.string().max(3000).optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const existing = await db
+        .select({ sortOrder: echoLibraryCaseQuestions.sortOrder })
+        .from(echoLibraryCaseQuestions)
+        .where(eq(echoLibraryCaseQuestions.caseId, input.caseId))
+        .orderBy(desc(echoLibraryCaseQuestions.sortOrder))
+        .limit(1);
+      const nextOrder = (existing[0]?.sortOrder ?? -1) + 1;
+      const [row] = await db
+        .insert(echoLibraryCaseQuestions)
+        .values({
+          caseId: input.caseId,
+          question: input.question,
+          options: JSON.stringify(input.options),
+          correctAnswer: input.correctAnswer,
+          explanation: input.explanation ?? null,
+          sortOrder: nextOrder,
+        })
+        .$returningId();
+      return { id: row.id, sortOrder: nextOrder };
+    }),
+
+  /** Update an existing MCQ question. */
+  adminUpdateQuestion: adminProcedure
+    .input(
+      z.object({
+        id: z.number().int().positive(),
+        question: z.string().min(5).max(2000).optional(),
+        options: z.array(z.string().min(1).max(500)).length(4).optional(),
+        correctAnswer: z.number().int().min(0).max(3).optional(),
+        explanation: z.string().max(3000).optional().nullable(),
+        sortOrder: z.number().int().min(0).optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const { id, options, ...rest } = input;
+      await db
+        .update(echoLibraryCaseQuestions)
+        .set({
+          ...rest,
+          ...(options !== undefined ? { options: JSON.stringify(options) } : {}),
+        })
+        .where(eq(echoLibraryCaseQuestions.id, id));
+      return { success: true };
+    }),
+
+  /** Delete a question from a case. */
+  adminDeleteQuestion: adminProcedure
+    .input(z.object({ id: z.number().int().positive() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      await db.delete(echoLibraryCaseQuestions).where(eq(echoLibraryCaseQuestions.id, input.id));
+      return { success: true };
+    }),
 });

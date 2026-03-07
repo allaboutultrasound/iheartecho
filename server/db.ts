@@ -1698,6 +1698,10 @@ export async function assignRole(
     assignedByUserId,
     grantedByLabId: grantedByLabId ?? null,
   });
+  // Sync isPremium flag when premium_user role is granted
+  if (role === "premium_user") {
+    await setPremiumStatus(userId, true, "admin");
+  }
 }
 
 /** Remove a role from a user */
@@ -1706,6 +1710,10 @@ export async function removeRole(userId: number, role: AppRole): Promise<void> {
   if (!db) return;
   await db.delete(userRoles)
     .where(and(eq(userRoles.userId, userId), eq(userRoles.role, role)));
+  // Sync isPremium flag when premium_user role is revoked
+  if (role === "premium_user") {
+    await setPremiumStatus(userId, false, "admin");
+  }
 }
 
 /** Ensure a user has the base "user" role (called on every login) */

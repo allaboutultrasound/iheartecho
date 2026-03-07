@@ -47,9 +47,11 @@ import {
   Stethoscope,
   Sparkles,
   Loader2,
+  Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import CaseEditorDialog from "@/components/CaseEditorDialog";
 
 type TabType = "pending" | "all";
 
@@ -364,6 +366,10 @@ export default function AdminCaseManagement() {
   const [previewCaseId, setPreviewCaseId] = useState<number | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
 
+  // Editor dialog
+  const [editorCaseId, setEditorCaseId] = useState<number | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+
   // Reject dialog
   const [rejectTarget, setRejectTarget] = useState<{ id: number; title: string } | null>(null);
   const [rejectReason, setRejectReason] = useState("");
@@ -538,6 +544,15 @@ export default function AdminCaseManagement() {
             title="Preview full case"
           >
             <Eye className="w-4 h-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-8 w-8 p-0 text-gray-400 hover:text-purple-600"
+            onClick={() => { setEditorCaseId(c.id); setEditorOpen(true); }}
+            title="Edit case"
+          >
+            <Pencil className="w-4 h-4" />
           </Button>
           {c.status === "pending" && (
             <>
@@ -923,6 +938,17 @@ export default function AdminCaseManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* -- Case Editor Dialog ------------------------------------------- */}
+      <CaseEditorDialog
+        caseId={editorCaseId}
+        open={editorOpen}
+        onClose={() => { setEditorOpen(false); setEditorCaseId(null); }}
+        onSaved={() => {
+          utils.caseLibrary.listAllCases.invalidate();
+          utils.caseLibrary.listPendingCases.invalidate();
+        }}
+      />
 
       {/* -- Reject Dialog ------------------------------------------------ */}
       <Dialog open={!!rejectTarget} onOpenChange={(open) => !open && setRejectTarget(null)}>

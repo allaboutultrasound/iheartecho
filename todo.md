@@ -1210,3 +1210,17 @@
 - [x] QuickFire player: Challenge Archive tab with free (7 days) / premium (unlimited) access gating
 - [x] QuickFire player: 24-hour countdown timer shown on live challenge header
 - [x] QuickFire player: Leaderboard tab retained alongside Daily Challenge and Archive tabs
+
+## QuickFire Challenge — Full Functional Implementation
+- [x] Add isPremium field to users table + db:push migration (field already existed in schema)
+- [x] Add auto-archive cron job (server-side: archive challenges >24h, auto-publish next queued) — server/jobs/challengeCron.ts
+- [x] Add user-facing notifications when new challenge goes live — notifyOwner called on publish (user email via SendGrid in challengeCron)
+- [x] Expose isPremium toggle — synced via assignRole/removeRole when premium_user role is granted/revoked
+- [x] Wire premium gating end-to-end — ctx.user.isPremium read from full DB user row in getChallengeArchive
+
+## Admin Case Editor
+- [x] tRPC procedures: adminUpdateCase, adminSaveMedia, adminUpdateMedia, adminDeleteMedia, adminAddQuestion, adminUpdateQuestion, adminDeleteQuestion
+- [x] Case editor UI: CaseEditorDialog component with Details/Media/Questions tabs — wired into AdminCaseManagement
+- [x] Question builder: add/edit/delete MCQ questions with answer choices and explanations
+- [x] Media upload: POST to /api/upload-case-media (multer + storagePut), save record via adminSaveMedia
+- [x] Fix QuickFireAdmin JSX error at line 767 — replaced mismatched fragment wrapper with proper structure

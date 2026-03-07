@@ -747,7 +747,7 @@ export default function QuickFireAdmin() {
 
         {/* ── QUESTION BANK TAB (existing content below) ─────────────────── */}
         {activeAdminTab === "questions" && (
-          <>
+        <div>
         {/* Stats bar */}
         <div className="grid grid-cols-3 gap-3 mb-6">
           {(["scenario", "image", "quickReview"] as QuestionType[]).map((t) => {
@@ -886,7 +886,7 @@ export default function QuickFireAdmin() {
             )}
           </>
         )}
-           </>
+        </div>
         )}
       </div>
       {/* ── Challenge Form Dialog ────────────────────────────────────────────── */}
