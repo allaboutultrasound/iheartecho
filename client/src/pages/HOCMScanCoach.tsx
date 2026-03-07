@@ -188,6 +188,40 @@ const views = [
     ],
     structures: ["IVS (basal, mid)", "LVPW", "LVOT", "Anterior MV leaflet", "Aortic root", "LA"],
     measurements: ["IVS thickness (mm)", "LVPW thickness (mm)", "LVEDD / LVESD (mm)", "LVOT diameter (mm)", "Aortic root (mm)"],
+    criteria: [
+      {
+        parameter: "IVS Thickness (at MV chordae level)",
+        normal: "< 1.2 cm (men), < 1.1 cm (women)",
+        borderline: "1.2–1.4 cm (no FHx) · 1.0–1.2 cm (FHx)",
+        abnormal: "≥ 1.5 cm (no FHx) · ≥ 1.3 cm (FHx of HCM)",
+        provocationTrigger: true,
+        note: "Wall thickness ≥1.3 cm with family history of HCM, or ≥1.5 cm without, meets diagnostic threshold. Measure at end-diastole, perpendicular to septum.",
+      },
+      {
+        parameter: "LVPW Thickness",
+        normal: "< 1.1 cm",
+        borderline: "1.1–1.3 cm",
+        abnormal: "≥ 1.4 cm (asymmetric if IVS:LVPW ratio > 1.3)",
+        provocationTrigger: false,
+        note: "Asymmetric septal hypertrophy (IVS:LVPW ratio > 1.3) is the classic HOCM pattern.",
+      },
+      {
+        parameter: "SAM (Systolic Anterior Motion)",
+        normal: "Absent",
+        borderline: "Mild SAM — no septal contact",
+        abnormal: "SAM with septal contact (confirms obstruction)",
+        provocationTrigger: true,
+        note: "Any SAM with septal contact is significant. Duration of contact correlates with gradient severity.",
+      },
+      {
+        parameter: "LVOT Diameter",
+        normal: "≥ 2.0 cm",
+        borderline: "1.7–1.9 cm",
+        abnormal: "< 1.7 cm (narrowed LVOT — increases obstruction risk)",
+        provocationTrigger: false,
+        note: "Measure 1 cm below AV at end-systole, inner edge to inner edge. Required for VTI-based stroke volume.",
+      },
+    ],
   },
   {
     id: "psax-mv",
@@ -216,6 +250,24 @@ const views = [
     ],
     structures: ["Anterior MV leaflet", "Posterior MV leaflet", "Papillary muscles", "LV cavity"],
     measurements: ["MV leaflet length (mm)", "PM diameter (mm)"],
+    criteria: [
+      {
+        parameter: "Anterior MV Leaflet Length",
+        normal: "< 2.5 cm",
+        borderline: "2.5–3.0 cm",
+        abnormal: "≥ 3.0 cm (elongated — high SAM risk)",
+        provocationTrigger: true,
+        note: "Elongated anterior leaflet is an independent predictor of SAM. Assess in both PSAX and PLAX.",
+      },
+      {
+        parameter: "Papillary Muscle Morphology",
+        normal: "Normal size, posterior position",
+        borderline: "Mildly hypertrophied or anteriorly positioned",
+        abnormal: "Bifid, hypertrophied, or direct PM-to-MV insertion",
+        provocationTrigger: true,
+        note: "Anomalous PM insertion (direct PM-to-leaflet) causes obstruction independent of SAM. Assess at PM level in PSAX.",
+      },
+    ],
   },
   {
     id: "a4c",
@@ -246,6 +298,40 @@ const views = [
     ],
     structures: ["LV (all walls)", "MV", "LA", "RV", "TV", "RA"],
     measurements: ["LAVI (mL/m²)", "Septal e' (cm/s)", "Lateral e' (cm/s)", "E/e' ratio", "RV basal diameter (mm)", "TAPSE (mm)"],
+    criteria: [
+      {
+        parameter: "MR Jet Direction",
+        normal: "Absent or trivial",
+        borderline: "Mild posterior jet (SAM-related)",
+        abnormal: "Moderate–severe posteriorly directed MR (SAM-related) or central/anterior jet (primary MV disease)",
+        provocationTrigger: true,
+        note: "SAM-related MR: posteriorly directed. Primary MV disease: central or anteriorly directed. Distinction is critical — SAM-related MR resolves with LVOT obstruction relief.",
+      },
+      {
+        parameter: "LA Volume Index (LAVI)",
+        normal: "≤ 34 mL/m²",
+        borderline: "34–40 mL/m²",
+        abnormal: "≥ 40 mL/m² (dilated — reflects chronic elevated filling pressure)",
+        provocationTrigger: false,
+        note: "LA dilation in HOCM reflects chronically elevated LV filling pressures. Correlates with AF risk and symptom burden.",
+      },
+      {
+        parameter: "Septal e' (Tissue Doppler)",
+        normal: "≥ 8 cm/s",
+        borderline: "6–7 cm/s",
+        abnormal: "< 6 cm/s (impaired relaxation despite hyperdynamic systole)",
+        provocationTrigger: false,
+        note: "HOCM characteristically shows reduced e' despite preserved or hyperdynamic EF — a hallmark of diastolic dysfunction.",
+      },
+      {
+        parameter: "E/e' Ratio",
+        normal: "< 8",
+        borderline: "8–14",
+        abnormal: "≥ 15 (elevated filling pressure)",
+        provocationTrigger: false,
+        note: "Use average of septal and lateral e'. Elevated E/e' in HOCM indicates diastolic dysfunction and elevated LV filling pressures.",
+      },
+    ],
   },
   {
     id: "a5c",
@@ -278,6 +364,32 @@ const views = [
     ],
     structures: ["LVOT", "Aortic valve", "Proximal ascending aorta"],
     measurements: ["Resting LVOT gradient (mmHg)", "Provoked LVOT gradient — Valsalva (mmHg)", "Peak CW velocity (m/s)"],
+    criteria: [
+      {
+        parameter: "Resting LVOT Gradient (CW Doppler)",
+        normal: "< 30 mmHg",
+        borderline: "20–29 mmHg (non-obstructive at rest — may be provokable)",
+        abnormal: "≥ 30 mmHg (resting obstruction — Goal-Directed Valsalva indicated)",
+        provocationTrigger: true,
+        note: "Resting gradient ≥30 mmHg confirms obstructive HOCM. Measure peak gradient using modified Bernoulli equation (4v²). Always measure from the TIP of the dagger — not the early systolic shoulder.",
+      },
+      {
+        parameter: "Provoked LVOT Gradient (Valsalva)",
+        normal: "< 30 mmHg",
+        borderline: "30–49 mmHg (labile obstruction)",
+        abnormal: "≥ 50 mmHg (significant provokable obstruction — guides therapy)",
+        provocationTrigger: false,
+        note: "Perform Goal-Directed Valsalva if resting gradient < 30 mmHg. Measure peak gradient on the FIRST beat after Valsalva release — this is typically the highest provoked gradient.",
+      },
+      {
+        parameter: "Peak CW Velocity",
+        normal: "< 2.7 m/s (< 30 mmHg)",
+        borderline: "2.7–3.5 m/s (30–49 mmHg)",
+        abnormal: "≥ 3.5 m/s (≥ 50 mmHg — significant obstruction)",
+        provocationTrigger: true,
+        note: "Velocity ≥ 3.5 m/s = gradient ≥ 50 mmHg by modified Bernoulli (4v²). This threshold guides septal reduction therapy decisions.",
+      },
+    ],
   },
   {
     id: "a3c",
@@ -306,6 +418,16 @@ const views = [
     ],
     structures: ["LVOT", "Aortic valve", "Posterior wall", "Descending aorta"],
     measurements: ["LVOT gradient (mmHg) — compare with A5C", "Peak CW velocity (m/s)"],
+    criteria: [
+      {
+        parameter: "LVOT Gradient (A3C — compare with A5C)",
+        normal: "< 30 mmHg",
+        borderline: "20–29 mmHg",
+        abnormal: "≥ 30 mmHg — report the HIGHEST gradient from A5C or A3C",
+        provocationTrigger: true,
+        note: "Always measure from both A5C and A3C. Report the highest gradient obtained. Underestimation from poor beam alignment is more common than overestimation.",
+      },
+    ],
   },
   {
     id: "a2c",
@@ -332,6 +454,24 @@ const views = [
     ],
     structures: ["LV (inferior, anterior walls)", "LA", "MV"],
     measurements: ["LA volume (biplane, mL)", "LV EF — biplane Simpson's (%)"],
+    criteria: [
+      {
+        parameter: "Apical Wall Thickness (A2C)",
+        normal: "< 1.2 cm",
+        borderline: "1.2–1.4 cm",
+        abnormal: "≥ 1.5 cm (apical HCM — consider contrast echo for confirmation)",
+        provocationTrigger: false,
+        note: "Apical HCM may be missed without contrast. If apical walls are not clearly seen, use ultrasound enhancing agent (UEA) to delineate true apical thickness.",
+      },
+      {
+        parameter: "LV Ejection Fraction (Biplane Simpson's)",
+        normal: "55–75%",
+        borderline: "50–54% (mildly reduced)",
+        abnormal: "< 50% (end-stage HOCM — 'burnt-out' phase with LV dilation)",
+        provocationTrigger: false,
+        note: "HOCM typically shows hyperdynamic EF (>70%). Reduced EF in HOCM suggests end-stage disease — a significant prognostic finding.",
+      },
+    ],
   },
   {
     id: "subcostal",
@@ -358,6 +498,24 @@ const views = [
     ],
     structures: ["IVS", "RV", "LV", "IVC", "Hepatic veins"],
     measurements: ["IVS thickness (subcostal, mm)", "IVC diameter (mm)", "IVC collapsibility (%)"],
+    criteria: [
+      {
+        parameter: "IVS Thickness (Subcostal — confirm PLAX measurement)",
+        normal: "< 1.2 cm",
+        borderline: "1.2–1.4 cm (no FHx) · 1.0–1.2 cm (FHx)",
+        abnormal: "≥ 1.5 cm (no FHx) · ≥ 1.3 cm (FHx of HCM)",
+        provocationTrigger: true,
+        note: "Use subcostal to confirm PLAX IVS measurement when parasternal windows are poor. Ensure beam is perpendicular to septum.",
+      },
+      {
+        parameter: "IVC Diameter (Expiratory)",
+        normal: "≤ 2.1 cm with > 50% collapse",
+        borderline: "2.1–2.5 cm or 21–50% collapse",
+        abnormal: "> 2.5 cm with < 21% collapse (elevated RAP ≥ 15 mmHg)",
+        provocationTrigger: false,
+        note: "Elevated RAP in HOCM suggests significant diastolic dysfunction or coexisting RV involvement.",
+      },
+    ],
   },
 ];
 
@@ -397,7 +555,7 @@ const machineSettings = [
 
 export default function HOCMScanCoach() {
   const [selectedView, setSelectedView] = useState(views[0]);
-  const [expandedSection, setExpandedSection] = useState<string | null>("howToGet");
+  const [expandedSection, setExpandedSection] = useState<string | null>("criteria");
   const [activeTab, setActiveTab] = useState<"views" | "doppler" | "valsalva" | "settings">("views");
   const [valsalvaPath, setValsalvaPath] = useState<"instructed" | "goal-directed" | null>(null);
   const { mergeView: mergeHOCMView } = useScanCoachOverrides("hocm");
@@ -555,6 +713,69 @@ export default function HOCMScanCoach() {
 
               {/* Expandable sections */}
               {[
+                {
+                  id: "criteria",
+                  title: "Diagnostic Criteria & Provocation Triggers",
+                  icon: Activity,
+                  content: (
+                    <div className="space-y-3">
+                      {/* Provocation trigger legend */}
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold px-2 py-1 rounded-full bg-green-50 text-green-700 border border-green-200">● Normal</div>
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold px-2 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">● Borderline</div>
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold px-2 py-1 rounded-full bg-red-50 text-red-700 border border-red-200">● Abnormal</div>
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold px-2 py-1 rounded-full text-white" style={{ background: "#189aa1" }}>⚡ Provocation Trigger</div>
+                      </div>
+                      {(selectedView as any).criteria?.map((c: any) => (
+                        <div key={c.parameter} className="rounded-xl border border-gray-100 overflow-hidden" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+                          {/* Header */}
+                          <div className="flex items-center justify-between px-4 py-2.5" style={{ background: "#f0fbfc" }}>
+                            <span className="text-xs font-bold text-gray-800">{c.parameter}</span>
+                            {c.provocationTrigger && (
+                              <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full text-white" style={{ background: "#189aa1" }}>
+                                <Zap className="w-2.5 h-2.5" /> Goal-Directed Valsalva
+                              </span>
+                            )}
+                          </div>
+                          {/* Threshold rows */}
+                          <div className="divide-y divide-gray-50">
+                            <div className="flex items-start gap-3 px-4 py-2 bg-green-50">
+                              <div className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0 mt-1" />
+                              <div>
+                                <span className="text-[10px] font-bold text-green-700 uppercase tracking-wider">Normal </span>
+                                <span className="text-xs text-green-800">{c.normal}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-start gap-3 px-4 py-2 bg-amber-50">
+                              <div className="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0 mt-1" />
+                              <div>
+                                <span className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Borderline </span>
+                                <span className="text-xs text-amber-800">{c.borderline}</span>
+                              </div>
+                            </div>
+                            <div className="flex items-start gap-3 px-4 py-2 bg-red-50">
+                              <div className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0 mt-1" />
+                              <div>
+                                <span className="text-[10px] font-bold text-red-700 uppercase tracking-wider">Abnormal </span>
+                                <span className="text-xs text-red-800">{c.abnormal}</span>
+                              </div>
+                            </div>
+                          </div>
+                          {/* Clinical note */}
+                          {c.note && (
+                            <div className="flex items-start gap-2 px-4 py-2.5 border-t border-gray-100 bg-white">
+                              <Info className="w-3 h-3 flex-shrink-0 mt-0.5" style={{ color: "#189aa1" }} />
+                              <p className="text-[11px] text-gray-600 leading-relaxed">{c.note}</p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                      {!(selectedView as any).criteria?.length && (
+                        <p className="text-xs text-gray-400 italic">No specific diagnostic criteria for this view.</p>
+                      )}
+                    </div>
+                  ),
+                },
                 {
                   id: "howToGet",
                   title: "How to Get the View",

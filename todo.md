@@ -1144,3 +1144,15 @@
 ## ScanCoach Editor — HOCM Module Registry
 - [x] Add HOCM module with all views to scanCoachRegistry.ts
 - [x] Verify HOCM appears as a selectable module in the ScanCoach Editor admin UI
+
+## HOCMScanCoach — Diagnostic Criteria & Provocation Triggers
+- [ ] Add wall thickness thresholds (1.3 cm FHx, 1.5 cm no FHx), LVOT gradient criteria, and provocation triggers to HOCMScanCoach view data
+- [ ] Add dedicated Diagnostic Criteria expandable section to HOCMScanCoach view detail panel
+
+## HOCMScanCoach — Diagnostic Criteria & Provocation Triggers
+- [x] Add wall thickness thresholds (≥1.3 cm with FHx, ≥1.5 cm without FHx), resting LVOT gradient ≥30 mmHg trigger, and provocation criteria to HOCMScanCoach view data
+- [x] Add dedicated Diagnostic Criteria expandable section to HOCMScanCoach view detail panel with borderline/abnormal colour-coded thresholds
+
+## HOCMScanCoach — Myosin Inhibitor & Valsalva Physiology
+- [ ] Add Myosin Inhibitor tab to HOCMScanCoach (mavacamten/aficamten mechanism, titration protocol, echo monitoring endpoints, LVEF safety threshold)
+- [ ] Expand Valsalva physiology content with four-phase haemodynamic explanation and SV/CO effects in both Instructed and Goal-Directed pathways
