@@ -473,7 +473,7 @@ export default function Profile() {
                           </div>
                           <p className="text-xs text-gray-500 leading-relaxed">Full access to all iHeartEcho premium features — $9/month.</p>
                           <a
-                            href="https://member.allaboutultrasound.com/order?ct=d0290929-3906-48ab-8c3a-ff71e2748af0"
+                            href="https://member.allaboutultrasound.com/enroll/3703267?price_id=4651832"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 mt-1 text-[10px] font-semibold hover:underline"

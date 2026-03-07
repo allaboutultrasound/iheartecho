@@ -16,7 +16,7 @@ import { getLoginUrl } from "@/const";
 import Layout from "@/components/Layout";
 
 const CHECKOUT_URL =
-  "https://member.allaboutultrasound.com/order?ct=d0290929-3906-48ab-8c3a-ff71e2748af0";
+  "https://member.allaboutultrasound.com/enroll/3703267?price_id=4651832";
 
 const PREMIUM_FEATURES = [
   {

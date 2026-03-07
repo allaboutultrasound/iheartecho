@@ -1098,3 +1098,6 @@
 - [ ] Change Report Builder output/preview font to Gill Sans / Arial
 - [ ] Fix HOCM ScanCoach SVG waveform colors to match brand teal/aqua palette (#189aa1 / #4ad9e0)
 - [ ] Add CW Doppler LA avoidance tip to HOCM ScanCoach (Doppler Differentiation section and A5C view tips)
+
+## Premium Checkout URL Update
+- [x] Replace all premium checkout links with https://member.allaboutultrasound.com/enroll/3703267?price_id=4651832 (updated in PremiumGate.tsx, Premium.tsx, Profile.tsx, Home.tsx, premiumRouter.ts)

@@ -309,7 +309,7 @@ export default function Home() {
                 UEA Navigator, HOCM Navigator, full interpretation engine, 500+ cases, and all premium modules — $9/month.
               </p>
             </div>
-            <a href="https://member.allaboutultrasound.com/order?ct=d0290929-3906-48ab-8c3a-ff71e2748af0" target="_blank" rel="noopener noreferrer"
+            <a href="https://member.allaboutultrasound.com/enroll/3703267?price_id=4651832" target="_blank" rel="noopener noreferrer"
               className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
               style={{ background: "#189aa1" }}>
               <ExternalLink className="w-4 h-4" />
