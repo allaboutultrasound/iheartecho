@@ -60,6 +60,16 @@ const caseInputSchema = z.object({
   difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("intermediate"),
   tags: z.array(z.string().max(50)).max(10).default([]),
   hipaaAcknowledged: z.boolean(),
+  // Optional credit attribution
+  submitterCreditName: z.string().max(200).optional(),
+  submitterLinkedIn: z
+    .string()
+    .max(500)
+    .optional()
+    .refine(
+      (val) => !val || /^https:\/\/(www\.)?linkedin\.com\/in\/[\w\-%.]+\/?$/i.test(val),
+      { message: "Must be a valid LinkedIn profile URL (e.g. https://www.linkedin.com/in/yourname)" }
+    ),
   // Embedded media (already uploaded to S3)
   media: z
     .array(
@@ -289,6 +299,8 @@ export const caseLibraryRouter = router({
         isAdminSubmission: isAdmin,
         submittedByUserId: ctx.user.id,
         hipaaAcknowledged: input.hipaaAcknowledged,
+        submitterCreditName: input.submitterCreditName?.trim() || null,
+        submitterLinkedIn: input.submitterLinkedIn?.trim() || null,
       });
 
       const caseId = (result as any).insertId as number;
@@ -551,6 +563,8 @@ export const caseLibraryRouter = router({
           status: "pending",
           rejectionReason: null,
           hipaaAcknowledged: input.hipaaAcknowledged,
+          submitterCreditName: input.submitterCreditName?.trim() || null,
+          submitterLinkedIn: input.submitterLinkedIn?.trim() || null,
           updatedAt: new Date(),
         })
         .where(eq(echoLibraryCases.id, input.id));
@@ -778,13 +792,13 @@ export const caseLibraryRouter = router({
         difficulty: input.difficulty,
         tags: JSON.stringify(input.tags),
         status: "approved",
-        isAdminSubmission: true,
+          isAdminSubmission: true,
         submittedByUserId: ctx.user.id,
         hipaaAcknowledged: true,
+        submitterCreditName: input.submitterCreditName?.trim() || null,
+        submitterLinkedIn: input.submitterLinkedIn?.trim() || null,
       });
-
       const caseId = (result as any).insertId as number;
-
       if (input.media.length > 0) {
         await db.insert(echoLibraryCaseMedia).values(
           input.media.map((m) => ({

@@ -35,6 +35,8 @@ import {
   XCircle,
   FileText,
   RefreshCw,
+  UserCheck,
+  Link2,
 } from "lucide-react";
 import { getLoginUrl } from "@/const";
 import { formatDistanceToNow } from "date-fns";
@@ -404,6 +406,26 @@ export default function CaseLibrary() {
                               <span key={t} className="text-gray-400">#{t}</span>
                             ))}
                           </div>
+                          {/* Credit attribution display */}
+                          {(c.submitterCreditName || c.submitterLinkedIn) && (
+                            <div className="mt-2 flex items-center gap-2 flex-wrap">
+                              <UserCheck className="w-3.5 h-3.5 text-[#189aa1] flex-shrink-0" />
+                              {c.submitterCreditName && (
+                                <span className="text-xs text-gray-600 font-medium">{c.submitterCreditName}</span>
+                              )}
+                              {c.submitterLinkedIn && (
+                                <a
+                                  href={c.submitterLinkedIn}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs text-[#189aa1] hover:underline flex items-center gap-0.5"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <Link2 className="w-3 h-3" /> LinkedIn
+                                </a>
+                              )}
+                            </div>
+                          )}
                           {c.status === "rejected" && c.rejectionReason && (
                             <div className="mt-2 text-xs text-red-600 bg-red-50 rounded px-2 py-1.5 border border-red-100">
                               <span className="font-semibold">Rejection reason: </span>{c.rejectionReason}

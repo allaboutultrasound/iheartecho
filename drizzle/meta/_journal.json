@@ -267,6 +267,13 @@
       "when": 1772913702624,
       "tag": "0037_sturdy_hydra",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "5",
+      "when": 1772915409266,
+      "tag": "0038_legal_white_queen",
+      "breakpoints": true
     }
   ]
 }

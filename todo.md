@@ -1238,3 +1238,15 @@
 - [x] QuickFire: add "My Performance" tab — stat cards, category breakdown bars, 14-day activity chart
 - [x] QuickFire: archive filter panel — category chips, difficulty chips, date range pickers
 - [x] Leaderboard: period filter (7d/30d/all-time), current user rank highlighted, rank banner if outside top 10
+
+## Case Submission — Credit & My Submissions
+- [x] DB schema: add submitterCreditName (varchar 200) and submitterLinkedIn (varchar 500) to echoLibraryCases table
+- [x] DB push: migrate schema to production database
+- [x] tRPC: update submitCase, updateCase, adminCreateCase to accept optional submitterCreditName and submitterLinkedIn
+- [x] tRPC: getUserSubmissions already returns all columns via .select() — credit fields included
+- [x] Submission form: add optional "Credit Attribution" section with name field and LinkedIn URL field
+- [x] Submission form: LinkedIn URL validation — only linkedin.com/in/ URLs accepted (regex), validated on blur and on submit
+- [x] Submission form: Review step shows credit attribution preview card
+- [x] Submission form: credit fields included in saveDraft, loadDraft, and existingCase populate
+- [x] My Submissions view: read-only list of user's submitted cases with status badge (pending/approved/rejected)
+- [x] My Submissions: credit name + LinkedIn link displayed on each submission card when present

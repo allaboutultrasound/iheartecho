@@ -53,6 +53,8 @@ import {
   Save,
   RotateCcw,
   RefreshCw,
+  UserCheck,
+  Link2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -88,6 +90,8 @@ type DraftState = {
   tagsInput: string;
   teachingPointsInput: string;
   questions: QuestionItem[];
+  submitterCreditName: string;
+  submitterLinkedIn: string;
   savedAt: string;
 };
 
@@ -116,6 +120,11 @@ export default function SubmitCase() {
   const [difficulty, setDifficulty] = useState<typeof DIFFICULTIES[number]>("intermediate");
   const [tagsInput, setTagsInput] = useState("");
   const [teachingPointsInput, setTeachingPointsInput] = useState("");
+
+  // Optional credit attribution
+  const [submitterCreditName, setSubmitterCreditName] = useState("");
+  const [submitterLinkedIn, setSubmitterLinkedIn] = useState("");
+  const [linkedInError, setLinkedInError] = useState("");
 
   // Media (not persisted to localStorage — files must be re-uploaded)
   const [media, setMedia] = useState<MediaItem[]>([]);
@@ -173,6 +182,9 @@ export default function SubmitCase() {
         sortOrder: q.sortOrder ?? 0,
       }))
     );
+    // Populate credit fields from existing case
+    setSubmitterCreditName((existingCase as any).submitterCreditName ?? "");
+    setSubmitterLinkedIn((existingCase as any).submitterLinkedIn ?? "");
     // Skip HIPAA step — go straight to Details
     setHipaaAcknowledged(true);
     setStep("Details");
@@ -208,6 +220,8 @@ export default function SubmitCase() {
       setTagsInput(draft.tagsInput ?? "");
       setTeachingPointsInput(draft.teachingPointsInput ?? "");
       setQuestions(draft.questions ?? []);
+      setSubmitterCreditName(draft.submitterCreditName ?? "");
+      setSubmitterLinkedIn(draft.submitterLinkedIn ?? "");
       setStep("Details");
       setHipaaAcknowledged(true);
       toast.success("Draft restored. Please re-upload any media files.");
@@ -229,6 +243,8 @@ export default function SubmitCase() {
         tagsInput,
         teachingPointsInput,
         questions,
+        submitterCreditName,
+        submitterLinkedIn,
         savedAt: new Date().toISOString(),
       };
       localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
@@ -238,7 +254,7 @@ export default function SubmitCase() {
     } catch {
       toast.error("Failed to save draft.");
     }
-  }, [isEditMode, title, summary, clinicalHistory, diagnosis, modality, difficulty, tagsInput, teachingPointsInput, questions]);
+  }, [isEditMode, title, summary, clinicalHistory, diagnosis, modality, difficulty, tagsInput, teachingPointsInput, questions, submitterCreditName, submitterLinkedIn]);
 
   const clearDraft = () => {
     localStorage.removeItem(DRAFT_KEY);
@@ -475,6 +491,8 @@ export default function SubmitCase() {
     return true;
   };
 
+  const LINKEDIN_REGEX = /^https:\/\/(www\.)?linkedin\.com\/in\/[\w\-%.]+\/?$/i;
+
   const buildPayload = () => ({
     title: title.trim(),
     summary: summary.trim(),
@@ -485,6 +503,8 @@ export default function SubmitCase() {
     difficulty,
     tags: parseTags(),
     hipaaAcknowledged: true,
+    submitterCreditName: submitterCreditName.trim() || undefined,
+    submitterLinkedIn: submitterLinkedIn.trim() || undefined,
     media: media
       .filter((m) => m.url && m.fileKey)
       .map((m, i) => ({
@@ -506,6 +526,13 @@ export default function SubmitCase() {
   });
 
   const handleSubmit = () => {
+    // Validate LinkedIn URL before submitting
+    if (submitterLinkedIn.trim() && !LINKEDIN_REGEX.test(submitterLinkedIn.trim())) {
+      setLinkedInError("Please enter a valid LinkedIn profile URL (e.g. https://www.linkedin.com/in/yourname)");
+      setStep("Details");
+      return;
+    }
+    setLinkedInError("");
     if (isEditMode && editCaseId) {
       updateMutation.mutate({ id: editCaseId, ...buildPayload() });
     } else {
@@ -797,6 +824,61 @@ export default function SubmitCase() {
                   </div>
                 )}
               </div>
+
+              {/* ── Credit Attribution ───────────────────────────────────── */}
+              <div className="border-t border-gray-100 pt-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <UserCheck className="w-4 h-4 text-[#189aa1]" />
+                  <span className="text-xs font-semibold text-gray-600">Credit Attribution</span>
+                  <span className="text-xs text-gray-400 font-normal">(optional)</span>
+                </div>
+                <p className="text-xs text-gray-500 mb-3 leading-relaxed">
+                  Would you like credit for this submission? Your name and LinkedIn profile will be displayed on the published case.
+                </p>
+                <div className="space-y-3">
+                  <div>
+                    <Label htmlFor="creditName" className="text-xs font-semibold text-gray-600 mb-1.5 block">
+                      Your Name
+                    </Label>
+                    <Input
+                      id="creditName"
+                      value={submitterCreditName}
+                      onChange={(e) => setSubmitterCreditName(e.target.value)}
+                      placeholder="e.g. Jane Smith, RDCS"
+                      maxLength={200}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="linkedIn" className="text-xs font-semibold text-gray-600 mb-1.5 flex items-center gap-1.5">
+                      <Link2 className="w-3.5 h-3.5" /> LinkedIn Profile URL
+                    </Label>
+                    <Input
+                      id="linkedIn"
+                      value={submitterLinkedIn}
+                      onChange={(e) => {
+                        setSubmitterLinkedIn(e.target.value);
+                        if (linkedInError) setLinkedInError("");
+                      }}
+                      onBlur={() => {
+                        if (submitterLinkedIn.trim() && !LINKEDIN_REGEX.test(submitterLinkedIn.trim())) {
+                          setLinkedInError("Must be a valid LinkedIn profile URL (e.g. https://www.linkedin.com/in/yourname)");
+                        } else {
+                          setLinkedInError("");
+                        }
+                      }}
+                      placeholder="https://www.linkedin.com/in/yourname"
+                      maxLength={500}
+                      className={linkedInError ? "border-red-400 focus-visible:ring-red-400" : ""}
+                    />
+                    {linkedInError && (
+                      <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3" /> {linkedInError}
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-400 mt-1">LinkedIn profiles only. No other social media or website links.</p>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         )}
@@ -1051,6 +1133,28 @@ export default function SubmitCase() {
                 <p className="text-xs text-gray-400 mb-0.5">Summary</p>
                 <p className="text-xs text-gray-700 leading-relaxed">{summary}</p>
               </div>
+              {(submitterCreditName.trim() || submitterLinkedIn.trim()) && (
+                <div className="bg-[#189aa1]/5 border border-[#189aa1]/20 rounded-lg p-3">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <UserCheck className="w-3.5 h-3.5 text-[#189aa1]" />
+                    <p className="text-xs font-semibold text-[#189aa1]">Credit Attribution</p>
+                  </div>
+                  {submitterCreditName.trim() && (
+                    <p className="text-xs text-gray-700">{submitterCreditName.trim()}</p>
+                  )}
+                  {submitterLinkedIn.trim() && (
+                    <a
+                      href={submitterLinkedIn.trim()}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-[#189aa1] hover:underline flex items-center gap-1 mt-0.5"
+                    >
+                      <Link2 className="w-3 h-3" />
+                      {submitterLinkedIn.trim()}
+                    </a>
+                  )}
+                </div>
+              )}
               {isEditMode ? (
                 <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-800">
                   <RefreshCw className="w-4 h-4 flex-shrink-0 mt-0.5" />

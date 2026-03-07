@@ -848,6 +848,9 @@ export const echoLibraryCases = mysqlTable("echoLibraryCases", {
   rejectionReason: text("rejectionReason"),
   // HIPAA acknowledgement: user confirmed no PHI at submission time
   hipaaAcknowledged: boolean("hipaaAcknowledged").default(false).notNull(),
+  // Optional credit fields — submitter can request attribution shown on the case
+  submitterCreditName: varchar("submitterCreditName", { length: 200 }),
+  submitterLinkedIn: varchar("submitterLinkedIn", { length: 500 }),
   // View / engagement counts
   viewCount: int("viewCount").default(0).notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
