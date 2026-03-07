@@ -468,7 +468,7 @@ export const quickfireRouter = router({
         baseURL: `${process.env.BUILT_IN_FORGE_API_URL}/v1`,
         fetch: createPatchedFetch(fetch),
       });
-      const model = openai.chat("gemini-2.5-flash");
+      const model = openai.chat("gpt-4o");
 
       const questionSchema = z.object({
         questions: z.array(

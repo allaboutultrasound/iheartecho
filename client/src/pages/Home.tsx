@@ -9,7 +9,7 @@ import Layout from "@/components/Layout";
 import { trpc } from "@/lib/trpc";
 import {
   Calculator, ClipboardList, Activity, Scan, BookOpen, FileText,
-  ArrowRight, Users, Award, Zap, Stethoscope, ExternalLink, MessageCircle, GraduationCap, Droplets, Crown
+  ArrowRight, Users, Award, Zap, Stethoscope, ExternalLink, MessageCircle, GraduationCap, Crown
 } from "lucide-react";
 
 const BRAND = "#189aa1";
@@ -31,42 +31,6 @@ const modules: Module[] = [
     description: "Visual probe guidance with anatomy overlays, Doppler positioning, and orientation tips for Adult TTE, Fetal, Pediatric CHD, ACHD, and Strain.",
     badge: "5 Modules",
     color: BRAND,
-  },
-  {
-    path: "/uea-navigator",
-    icon: Droplets,
-    title: "UEA EchoNavigator™",
-    description: "Contrast echo protocol: safety screening, agent preparation, view-by-view LVO and myocardial perfusion assessment, and reporting guidance. ASE 2018 guidelines.",
-    badge: "Contrast Echo",
-    color: BRAND,
-    premium: true,
-  },
-  {
-    path: "/uea-scan-coach",
-    icon: Droplets,
-    title: "UEA ScanCoach™",
-    description: "Contrast echo acquisition guide: probe positioning, machine optimization (MI, gain, depth), injection technique, flash replenishment, and artifact recognition.",
-    badge: "Contrast Echo",
-    color: BRAND,
-    premium: true,
-  },
-  {
-    path: "/hocm-navigator",
-    icon: Activity,
-    title: "HOCM EchoNavigator™",
-    description: "HOCM protocol: morphology assessment, SAM grading, resting and provoked LVOT gradients, goal-directed Valsalva, MR evaluation, and ASE/AHA reporting thresholds.",
-    badge: "Cardiomyopathy",
-    color: "#b45309",
-    premium: true,
-  },
-  {
-    path: "/hocm-scan-coach",
-    icon: Activity,
-    title: "HOCM ScanCoach™",
-    description: "HOCM acquisition guide: LVOT CW Doppler positioning, Valsalva protocol, SAM assessment, and HOCM vs. MR Doppler differentiation with sample waveforms.",
-    badge: "Cardiomyopathy",
-    color: "#b45309",
-    premium: true,
   },
   {
     path: "/echo-assist-hub",

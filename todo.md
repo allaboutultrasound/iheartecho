@@ -1101,3 +1101,16 @@
 
 ## Premium Checkout URL Update
 - [x] Replace all premium checkout links with https://member.allaboutultrasound.com/enroll/3703267?price_id=4651832 (updated in PremiumGate.tsx, Premium.tsx, Profile.tsx, Home.tsx, premiumRouter.ts)
+
+## Lumason Reconstitution Guide — UEA ScanCoach
+- [x] Add step-by-step Lumason reconstitution guide to UEA ScanCoach Injection tab
+
+## Dashboard Card Reorganization
+- [ ] Remove UEA Navigator and HOCM Navigator cards from Home dashboard
+- [ ] Remove UEA ScanCoach and HOCM ScanCoach cards from Home dashboard
+- [ ] Add UEA Navigator and HOCM Navigator cards to EchoNavigator hub page
+- [ ] Add UEA ScanCoach and HOCM ScanCoach cards to ScanCoach hub page
+
+## Bug Fixes
+- [x] Fix ScanCoach image editor — uploaded images not displaying (listOverrides changed from protectedProcedure+admin check to publicProcedure)
+- [x] Fix QuickFire AI question generator — JSON parse error (changed model from gemini-2.5-flash to gpt-4o for reliable generateObject structured output)

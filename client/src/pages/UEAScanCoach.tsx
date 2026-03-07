@@ -783,6 +783,170 @@ export default function UEAScanCoach() {
             </h2>
             <p className="text-sm text-gray-500">Step-by-step protocol for safe and effective contrast administration</p>
           </div>
+
+          {/* ── Lumason Reconstitution Guide ─────────────────────────────────── */}
+          <div className="bg-white rounded-xl border border-blue-100 shadow-sm mb-6 overflow-hidden"
+            style={{ boxShadow: "0 1px 6px rgba(0,0,0,0.07)" }}>
+            {/* Header */}
+            <div className="flex items-center gap-3 px-5 py-4"
+              style={{ background: "linear-gradient(135deg, #1e3a5f 0%, #1e4d8c 100%)" }}>
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ background: "rgba(255,255,255,0.15)" }}>
+                <Droplets className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-white font-black text-sm" style={{ fontFamily: "Merriweather, serif" }}>
+                  Lumason® Reconstitution — Step-by-Step
+                </h3>
+                <p className="text-blue-200 text-xs">Sulfur hexafluoride lipid-type A microspheres · Bracco Diagnostics</p>
+              </div>
+              <span className="ml-auto text-[10px] font-bold px-2 py-1 rounded-full text-white"
+                style={{ background: "rgba(255,255,255,0.2)" }}>Lyophilized Powder</span>
+            </div>
+
+            <div className="p-5">
+              {/* What's in the kit */}
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-blue-50 border border-blue-100 mb-4">
+                <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-blue-800 leading-relaxed">
+                  <strong>Kit contents:</strong> One vial of lyophilized SF₆ powder, one pre-filled syringe of sterile water for injection (5 mL), and a vial adapter/transfer device. No refrigeration required — store at room temperature (20–25 °C / 68–77 °F). Do not use after expiry date.
+                </p>
+              </div>
+
+              {/* Numbered steps */}
+              <div className="space-y-3 mb-4">
+                {[
+                  {
+                    step: 1,
+                    title: "Inspect the vial",
+                    detail: "Check expiry date on the vial label. The vial should contain a white to off-white lyophilized powder with a blue SF₆ gas headspace. Discard if powder is discolored, clumped, or the seal is broken.",
+                    timing: null,
+                    warning: null,
+                  },
+                  {
+                    step: 2,
+                    title: "Attach the vial adapter",
+                    detail: "Remove the flip-off cap from the vial. Wipe the rubber stopper with an alcohol swab and allow to dry. Firmly press the vial adapter (transfer device) onto the vial stopper until it snaps into place.",
+                    timing: null,
+                    warning: null,
+                  },
+                  {
+                    step: 3,
+                    title: "Inject sterile water for injection",
+                    detail: "Connect the pre-filled syringe of sterile water for injection (5 mL) to the vial adapter. Slowly inject all 5 mL into the vial. Do NOT use bacteriostatic water, saline, or dextrose — sterile water only.",
+                    timing: null,
+                    warning: "Use sterile water for injection ONLY. Saline or dextrose will cause microsphere aggregation.",
+                  },
+                  {
+                    step: 4,
+                    title: "Gently swirl — do NOT shake",
+                    detail: "Gently swirl the vial in a circular motion for 10–15 seconds until the powder is completely dissolved. The suspension should appear uniformly milky-white and opaque. Do NOT shake vigorously — this destroys microspheres before use.",
+                    timing: "~15 seconds",
+                    warning: "Do NOT shake. Vigorous shaking destroys microspheres and reduces efficacy.",
+                  },
+                  {
+                    step: 5,
+                    title: "Inspect the reconstituted suspension",
+                    detail: "Hold the vial up to light and inspect. The suspension should be uniformly milky-white with no visible clumps or undissolved particles. If clumps are visible, gently swirl again for 5 seconds. Discard if suspension is not uniform after a second attempt.",
+                    timing: null,
+                    warning: null,
+                  },
+                  {
+                    step: 6,
+                    title: "Withdraw the dose",
+                    detail: "Gently invert the vial 10 times immediately before each withdrawal to resuspend microspheres (they settle quickly). Attach a new syringe to the adapter. Withdraw 2.0 mL for a standard LVO bolus dose. For infusion: withdraw 4.8 mL and dilute in 50 mL normal saline.",
+                    timing: null,
+                    warning: null,
+                  },
+                  {
+                    step: 7,
+                    title: "Administer and flush",
+                    detail: "Inject 2.0 mL as a slow IV bolus over 2–3 seconds via antecubital IV. Immediately follow with a 5 mL normal saline flush. LV opacification should appear within 3–5 cardiac cycles.",
+                    timing: "Bolus over 2–3 sec",
+                    warning: null,
+                  },
+                  {
+                    step: 8,
+                    title: "Repeat dosing and storage",
+                    detail: "Invert the vial 10 times before each subsequent withdrawal. May repeat bolus at 25–30 minute intervals if needed. The reconstituted suspension is stable for 6 hours at room temperature — do NOT refrigerate after reconstitution.",
+                    timing: "Stable 6 hours post-reconstitution",
+                    warning: null,
+                  },
+                ].map(({ step, title, detail, timing, warning }) => (
+                  <div key={step} className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black text-white flex-shrink-0 mt-0.5"
+                      style={{ background: "linear-gradient(135deg, #1e4d8c, #2563eb)" }}>
+                      {step}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                        <span className="text-xs font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>{title}</span>
+                        {timing && (
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">{timing}</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-600 leading-relaxed">{detail}</p>
+                      {warning && (
+                        <div className="flex items-start gap-1.5 mt-1.5 p-2 rounded-lg bg-amber-50 border border-amber-200">
+                          <AlertTriangle className="w-3 h-3 text-amber-600 flex-shrink-0 mt-0.5" />
+                          <p className="text-[10px] text-amber-800 leading-relaxed">{warning}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Quick-reference dosing table */}
+              <div className="rounded-lg border border-blue-100 overflow-hidden mb-4">
+                <div className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-50">
+                  Quick-Reference Dosing
+                </div>
+                <div className="divide-y divide-gray-100">
+                  {[
+                    { indication: "LVO — Bolus", dose: "2.0 mL IV bolus", flush: "5 mL NS", repeat: "q 25–30 min" },
+                    { indication: "LVO — Infusion", dose: "4.8 mL in 50 mL NS", flush: "—", repeat: "Titrate 1–2 mL/min" },
+                    { indication: "Liver CEUS", dose: "2.4 mL IV bolus", flush: "5 mL NS", repeat: "Once" },
+                  ].map(({ indication, dose, flush, repeat }) => (
+                    <div key={indication} className="grid grid-cols-4 gap-2 px-3 py-2 text-xs">
+                      <span className="font-semibold text-gray-700">{indication}</span>
+                      <span className="text-blue-700 font-bold">{dose}</span>
+                      <span className="text-gray-500">{flush}</span>
+                      <span className="text-gray-500">{repeat}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Clinical tips */}
+              <div className="rounded-lg bg-teal-50 border border-teal-100 p-3">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <CheckCircle className="w-3.5 h-3.5 text-teal-600" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-teal-700">Clinical Tips</span>
+                </div>
+                <ul className="space-y-1.5">
+                  {[
+                    "Lumason does not require activation with a Vialmix™ — gentle swirling only. No mechanical activator needed.",
+                    "SF₆ microspheres settle quickly — always invert 10× immediately before each withdrawal, even from the same vial.",
+                    "Lumason is approved for both cardiac LVO and liver CEUS — the only FDA-approved agent for both indications.",
+                    "Lumason has a favorable safety profile in patients with pulmonary hypertension — SF₆ gas is inert and rapidly exhaled.",
+                    "If >5 minutes has elapsed since reconstitution, gently invert 10× to resuspend before withdrawing the next dose.",
+                    "Reconstituted Lumason does NOT need to be refrigerated — store at room temperature and use within 6 hours.",
+                  ].map((tip, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-teal-500 flex-shrink-0 mt-1.5" />
+                      <span className="text-xs text-teal-800 leading-relaxed">{tip}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* ── General Injection Steps ───────────────────────────────────────── */}
+          <div className="mb-4">
+            <h3 className="text-sm font-bold text-gray-700 mb-3" style={{ fontFamily: "Merriweather, serif" }}>General UEA Injection Protocol</h3>
+          </div>
           <div className="space-y-3">
             {injectionSteps.map(step => (
               <div key={step.step} className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex items-start gap-4"

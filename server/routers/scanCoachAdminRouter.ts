@@ -13,7 +13,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { eq, and } from "drizzle-orm";
-import { protectedProcedure, router } from "../_core/trpc";
+import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb, getUserRoles } from "../db";
 import { scanCoachOverrides } from "../../drizzle/schema";
 import { storagePut } from "../storage";
@@ -71,10 +71,9 @@ export const scanCoachAdminRouter = router({
    * List all overrides, optionally filtered by module.
    * Returns an array of ScanCoachOverride rows.
    */
-  listOverrides: protectedProcedure
+  listOverrides: publicProcedure
     .input(z.object({ module: z.enum(MODULE_VALUES).optional() }).optional())
-    .query(async ({ ctx, input }) => {
-      await assertPlatformAdmin(ctx);
+    .query(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
       const rows = await db.select().from(scanCoachOverrides);
