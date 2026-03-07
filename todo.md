@@ -835,3 +835,12 @@
 - [x] Fix emailAuthRouter forgotPassword to also send to accounts without passwordHash
 - [x] Verified: VITE_APP_URL=https://app.iheartecho.com — reset/magic links point to production; test on published app not dev preview
 - [x] Confirmed: token is now stored in DB for OAuth-only accounts after the fix (480 tests passing)
+
+## Auth Pages Logo Fix
+- [x] Upload SONORing_Echo2.12.png to CDN as static asset
+- [x] Replace fallback Heart icon with iHeartEcho logo on Login.tsx (both left panel and mobile header)
+- [x] Replace fallback Heart icon with iHeartEcho logo on ForgotPassword.tsx
+- [x] Replace fallback Heart icon with iHeartEcho logo on ResetPassword.tsx
+- [x] Replace fallback Heart icon with iHeartEcho logo on MagicLinkRequest.tsx
+- [x] Replace fallback Heart icon with iHeartEcho logo on MagicLinkCallback.tsx
+- [x] Replace fallback Heart icon with iHeartEcho logo on VerifyEmail.tsx
