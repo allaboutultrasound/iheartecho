@@ -293,20 +293,20 @@ export default function Home() {
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
               <Award className="w-4 h-4 text-[#4ad9e0]" />
-              <span className="text-xs font-semibold text-[#4ad9e0] uppercase tracking-wider">Full Platform</span>
+              <span className="text-xs font-semibold text-[#4ad9e0] uppercase tracking-wider">Premium Access</span>
             </div>
             <h3 className="text-white font-bold text-base mb-1" style={{ fontFamily: "Merriweather, serif" }}>
               Unlock Full Clinical Suite
             </h3>
             <p className="text-white/60 text-xs">
-              Full interpretation engine, fetal navigator, 500+ cases, ACS learning tools — visit iheartecho.com
+              UEA Navigator, HOCM Navigator, full interpretation engine, 500+ cases, and all premium modules — $9/month.
             </p>
           </div>
-          <a href="https://www.iheartecho.com" target="_blank" rel="noopener noreferrer"
+          <a href="https://member.allaboutultrasound.com/order?ct=d0290929-3906-48ab-8c3a-ff71e2748af0" target="_blank" rel="noopener noreferrer"
             className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
             style={{ background: "#189aa1" }}>
             <ExternalLink className="w-4 h-4" />
-            Visit iheartecho.com
+            Upgrade
           </a>
         </div>
       </div>
