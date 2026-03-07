@@ -1021,3 +1021,11 @@
 - [x] Client: register /admin/scancoach route in App.tsx
 - [x] Client: add ScanCoach Editor link to Platform Admin sidebar/nav
 - [x] Vitest: scanCoachAdmin router unit tests (15 tests, all passing)
+
+## ScanCoach Editor — Preview as User Toggle (Session Mar 7)
+- [x] Build ScanCoachViewPreview component — renders a view card exactly as end-users see it (with overrides applied)
+- [x] Add Preview toggle button to ScanCoachEditor toolbar (Edit / Preview modes)
+- [x] Preview mode: full-panel render of the selected view with all override fields merged
+- [x] Preview mode: show amber banner + empty state when no overrides exist yet
+- [x] Edit mode: restore the existing edit form layout; quick Preview shortcut in text editor footer
+- [x] Vitest: no new server procedures needed (pure UI change) — 598 tests pass

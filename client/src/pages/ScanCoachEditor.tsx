@@ -5,6 +5,7 @@
     • Browse all views in a sidebar list
     • Upload / replace / remove images (echo, anatomy, transducer) via drag-and-drop or file picker
     • Edit text fields (description, howToGet, tips, pitfalls, structures, measurements, criticalFindings)
+    • Toggle "Preview as User" to see exactly how the view looks to end-users (with overrides applied)
     • Save changes — persisted to DB and reflected live in the ScanCoach pages
   Access: platform_admin or owner role only.
 */
@@ -17,7 +18,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import {
   SCANCOACH_MODULES,
   IMAGE_SLOTS,
@@ -28,7 +28,8 @@ import {
 import {
   Upload, Trash2, Save, ChevronLeft, ChevronRight,
   Image as ImageIcon, Edit3, Eye, Loader2, CheckCircle2,
-  AlertCircle, RefreshCw, ExternalLink, Layers
+  AlertCircle, ExternalLink, Layers, AlertTriangle,
+  Stethoscope, Ruler, Lightbulb,
 } from "lucide-react";
 
 const BRAND = "#189aa1";
@@ -63,7 +64,7 @@ type DraftState = {
   criticalFindings: string;
 };
 
-// ─── Helper: parse JSON array field ──────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function parseArrayField(value: string | null): string {
   if (!value) return "";
@@ -79,6 +80,279 @@ function parseArrayField(value: string | null): string {
 function toJsonArray(value: string): string {
   const lines = value.split("\n").map((l) => l.trim()).filter(Boolean);
   return JSON.stringify(lines);
+}
+
+/** Parse a JSON-array field back to string[] */
+function parseToStringArray(value: string | null): string[] {
+  if (!value) return [];
+  try {
+    const arr = JSON.parse(value);
+    if (Array.isArray(arr)) return arr as string[];
+  } catch {
+    return value.split("\n").map((l) => l.trim()).filter(Boolean);
+  }
+  return [];
+}
+
+// ─── Preview as User ─────────────────────────────────────────────────────────
+// Renders the selected view exactly as end-users see it in the ScanCoach pages.
+
+function ScanCoachViewPreview({
+  viewId,
+  viewName,
+  override,
+}: {
+  viewId: string;
+  viewName: string;
+  override: Override | undefined;
+}) {
+  // Build a merged "view" object from override fields (falling back to empty defaults)
+  const abbr = viewId.toUpperCase().slice(0, 4);
+  const echoImageUrl = override?.echoImageUrl ?? null;
+  const anatomyImageUrl = override?.anatomyImageUrl ?? null;
+  const transducerImageUrl = override?.transducerImageUrl ?? null;
+  const description = override?.description ?? null;
+  const structures = parseToStringArray(override?.structures ?? null);
+  const measurements = parseToStringArray(override?.measurements ?? null);
+  const howToGet = parseToStringArray(override?.howToGet ?? null);
+  const tips = parseToStringArray(override?.tips ?? null);
+  const pitfalls = parseToStringArray(override?.pitfalls ?? null);
+  const criticalFindings = parseToStringArray(override?.criticalFindings ?? null);
+
+  const hasAnyContent = echoImageUrl || anatomyImageUrl || transducerImageUrl
+    || description || structures.length || measurements.length
+    || howToGet.length || tips.length || pitfalls.length || criticalFindings.length;
+
+  if (!hasAnyContent) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-xl border border-dashed border-gray-200">
+        <Eye className="w-10 h-10 text-gray-200 mb-3" />
+        <h3 className="font-bold text-gray-400 mb-1">No overrides yet</h3>
+        <p className="text-sm text-gray-400 max-w-xs">
+          Switch to <strong>Edit</strong> mode to upload images and add content. The preview will update as you save changes.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Preview banner */}
+      <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-amber-50 border border-amber-200">
+        <Eye className="w-4 h-4 text-amber-500 flex-shrink-0" />
+        <p className="text-xs text-amber-700 font-medium">
+          <strong>Preview as User</strong> — this is exactly what end-users see for this view, with all saved overrides applied.
+          Unsaved draft changes are not reflected here.
+        </p>
+      </div>
+
+      {/* View header */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b" style={{ borderColor: BRAND + "30", background: BRAND + "08" }}>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white text-xs font-bold"
+              style={{ background: BRAND }}>
+              {abbr}
+            </div>
+            <div>
+              <h2 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>{viewName}</h2>
+              {description && <p className="text-xs text-gray-500 mt-0.5">{description}</p>}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Three-column: transducer | structures | measurements */}
+      {(transducerImageUrl || structures.length > 0 || measurements.length > 0 || howToGet.length > 0) && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Transducer / How to Get */}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+            <h3 className="font-bold text-sm text-gray-700 mb-3 flex items-center gap-2" style={{ fontFamily: "Merriweather, serif" }}>
+              <Stethoscope className="w-4 h-4" style={{ color: BRAND }} />
+              Transducer Positioning
+            </h3>
+            {transducerImageUrl ? (
+              <img
+                src={transducerImageUrl}
+                alt={`${viewName} transducer position`}
+                className="w-full rounded-lg object-contain mb-3"
+                style={{ maxHeight: "220px" }}
+              />
+            ) : (
+              <div className="w-full h-24 rounded-lg bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center mb-3">
+                <span className="text-xs text-gray-400">No transducer image</span>
+              </div>
+            )}
+            {howToGet.length > 0 && (
+              <ul className="space-y-1.5 mt-2">
+                {howToGet.map((step, i) => (
+                  <li key={i} className="flex items-start gap-2 text-xs text-gray-600">
+                    <span className="w-4 h-4 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 mt-0.5"
+                      style={{ background: BRAND }}>
+                      {i + 1}
+                    </span>
+                    {step}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {/* Structures */}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+            <h3 className="font-bold text-sm text-gray-700 mb-3 flex items-center gap-2" style={{ fontFamily: "Merriweather, serif" }}>
+              <Eye className="w-4 h-4" style={{ color: BRAND }} />
+              Structures
+            </h3>
+            {structures.length > 0 ? (
+              <ul className="space-y-1.5">
+                {structures.map((s, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                    <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: BRAND }} />
+                    {s}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-xs text-gray-400 italic">No structures defined</p>
+            )}
+          </div>
+
+          {/* Measurements */}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+            <h3 className="font-bold text-sm text-gray-700 mb-3 flex items-center gap-2" style={{ fontFamily: "Merriweather, serif" }}>
+              <Ruler className="w-4 h-4" style={{ color: BRAND }} />
+              Key Measurements
+            </h3>
+            {measurements.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {measurements.map((m, i) => (
+                  <span key={i} className="px-2 py-1 rounded text-xs font-mono text-white"
+                    style={{ background: BRAND }}>
+                    {m}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-gray-400 italic">No measurements defined</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Echo Image + Anatomy */}
+      {(echoImageUrl || anatomyImageUrl) && (
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
+            <ImageIcon className="w-4 h-4" style={{ color: BRAND }} />
+            <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>View Reference Images</h3>
+          </div>
+          <div className={`bg-gray-950 grid gap-2 p-4 ${echoImageUrl && anatomyImageUrl ? "grid-cols-2" : "grid-cols-1"}`}>
+            {echoImageUrl && (
+              <div className="flex flex-col items-center gap-1">
+                <p className="text-xs text-gray-400">Clinical Echo</p>
+                <img
+                  src={echoImageUrl}
+                  alt={`${viewName} clinical echo`}
+                  className="max-h-64 object-contain rounded w-full"
+                  style={{ background: "#030712" }}
+                />
+              </div>
+            )}
+            {anatomyImageUrl && (
+              <div className="flex flex-col items-center gap-1">
+                <p className="text-xs text-gray-400">Anatomy Reference</p>
+                <img
+                  src={anatomyImageUrl}
+                  alt={`${viewName} anatomy`}
+                  className="max-h-64 object-contain rounded w-full"
+                  style={{ background: "#030712" }}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Tips & Pitfalls */}
+      {(tips.length > 0 || pitfalls.length > 0) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {tips.length > 0 && (
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+              <h3 className="font-bold text-sm text-gray-700 mb-3 flex items-center gap-2" style={{ fontFamily: "Merriweather, serif" }}>
+                <Lightbulb className="w-4 h-4 text-green-500" />
+                Scanning Tips
+              </h3>
+              <ul className="space-y-2">
+                {tips.map((tip, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                    <span className="text-green-500 font-bold mt-0.5">+</span>
+                    {tip}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {pitfalls.length > 0 && (
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+              <h3 className="font-bold text-sm text-gray-700 mb-3 flex items-center gap-2" style={{ fontFamily: "Merriweather, serif" }}>
+                <AlertTriangle className="w-4 h-4 text-amber-500" />
+                Common Pitfalls
+              </h3>
+              <ul className="space-y-2">
+                {pitfalls.map((p, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
+                    {p}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Critical Findings */}
+      {criticalFindings.length > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+          <h3 className="font-bold text-sm text-red-700 mb-3 flex items-center gap-2" style={{ fontFamily: "Merriweather, serif" }}>
+            <AlertCircle className="w-4 h-4 text-red-500" />
+            Critical Findings
+          </h3>
+          <ul className="space-y-1.5">
+            {criticalFindings.map((f, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm text-red-700">
+                <span className="text-red-500 font-bold mt-0.5">!</span>
+                {f}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Override summary footer */}
+      <div className="bg-[#189aa1]/5 border border-[#189aa1]/20 rounded-xl p-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs font-semibold text-[#189aa1]">Active overrides:</span>
+          {echoImageUrl && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Echo Image</Badge>}
+          {anatomyImageUrl && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Anatomy Image</Badge>}
+          {transducerImageUrl && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Transducer Image</Badge>}
+          {description && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Description</Badge>}
+          {structures.length > 0 && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Structures ({structures.length})</Badge>}
+          {measurements.length > 0 && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Measurements ({measurements.length})</Badge>}
+          {howToGet.length > 0 && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>How To Get ({howToGet.length} steps)</Badge>}
+          {tips.length > 0 && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Tips ({tips.length})</Badge>}
+          {pitfalls.length > 0 && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Pitfalls ({pitfalls.length})</Badge>}
+          {criticalFindings.length > 0 && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Critical Findings ({criticalFindings.length})</Badge>}
+        </div>
+        {override && (
+          <p className="text-[10px] text-gray-400 mt-1.5">
+            Last saved: {new Date(override.updatedAt).toLocaleString()}
+          </p>
+        )}
+      </div>
+    </div>
+  );
 }
 
 // ─── Image Upload Zone ────────────────────────────────────────────────────────
@@ -117,13 +391,11 @@ function ImageUploadZone({
         const base64 = await new Promise<string>((resolve, reject) => {
           reader.onload = () => {
             const result = reader.result as string;
-            // Strip data:image/...;base64, prefix
             resolve(result.split(",")[1]);
           };
           reader.onerror = reject;
           reader.readAsDataURL(file);
         });
-        // We call the mutation from the parent — pass data up via callback
         onUploaded(base64 + "|" + file.type + "|" + file.name);
       } catch {
         toast.error("Failed to read image file");
@@ -148,7 +420,6 @@ function ImageUploadZone({
       </div>
       <p className="text-xs text-gray-400">{slot.hint}</p>
 
-      {/* Current image preview */}
       {currentUrl && (
         <div className="relative rounded-lg overflow-hidden bg-gray-950 border border-gray-200" style={{ minHeight: 120 }}>
           <img
@@ -167,7 +438,6 @@ function ImageUploadZone({
         </div>
       )}
 
-      {/* Drop zone */}
       <div
         className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${
           dragOver ? "border-[#189aa1] bg-[#189aa1]/5" : "border-gray-200 hover:border-[#189aa1]/50"
@@ -219,16 +489,15 @@ export default function ScanCoachEditor() {
   const [draft, setDraft] = useState<DraftState | null>(null);
   const [uploadingSlot, setUploadingSlot] = useState<ImageSlotKey | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [previewMode, setPreviewMode] = useState(false);
 
   const utils = trpc.useUtils();
 
-  // Fetch all overrides for the selected module
   const { data: overrides = [], isLoading: loadingOverrides } = trpc.scanCoachAdmin.listOverrides.useQuery(
     { module: selectedModule },
     { staleTime: 10_000 }
   );
 
-  // Check admin access
   const { data: isAdmin, isLoading: checkingAdmin } = trpc.platformAdmin.isAdmin.useQuery();
 
   const upsertMutation = trpc.scanCoachAdmin.upsertOverride.useMutation({
@@ -273,9 +542,9 @@ export default function ScanCoachEditor() {
     (o: Override) => o.viewId === selectedViewId
   );
 
-  // When a view is selected, populate the draft from the existing override (or empty)
   const handleSelectView = (viewId: string) => {
     setSelectedViewId(viewId);
+    setPreviewMode(false); // reset to edit mode on new view selection
     const ov = overrides.find((o: Override) => o.viewId === viewId);
     setDraft({
       description: ov?.description ?? "",
@@ -356,6 +625,8 @@ export default function ScanCoachEditor() {
     );
   }
 
+  const selectedViewName = moduleMeta.views.find((v) => v.id === selectedViewId)?.name ?? "";
+
   return (
     <Layout>
       {/* Page header */}
@@ -399,6 +670,7 @@ export default function ScanCoachEditor() {
                     setSelectedModule(mod.key);
                     setSelectedViewId(null);
                     setDraft(null);
+                    setPreviewMode(false);
                   }}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all ${
                     selectedModule === mod.key
@@ -424,7 +696,7 @@ export default function ScanCoachEditor() {
         </div>
       </div>
 
-      {/* Main layout: sidebar + editor */}
+      {/* Main layout: sidebar + editor/preview */}
       <div className="container py-6">
         <div className="flex gap-6 min-h-[70vh]">
           {/* View list sidebar */}
@@ -476,7 +748,7 @@ export default function ScanCoachEditor() {
             </div>
           </div>
 
-          {/* Editor panel */}
+          {/* Editor / Preview panel */}
           <div className="flex-1 min-w-0">
             {!selectedViewId ? (
               <div className="flex flex-col items-center justify-center h-full text-center py-20 bg-white rounded-xl border border-gray-100 shadow-sm">
@@ -492,7 +764,7 @@ export default function ScanCoachEditor() {
               </div>
             ) : (
               <div className="space-y-6">
-                {/* View header */}
+                {/* View header with Edit / Preview toggle */}
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
                   <div className="flex items-start justify-between gap-4">
                     <div>
@@ -507,18 +779,46 @@ export default function ScanCoachEditor() {
                         )}
                       </div>
                       <h2 className="text-lg font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-                        {moduleMeta.views.find((v) => v.id === selectedViewId)?.name}
+                        {selectedViewName}
                       </h2>
                       <p className="text-xs text-gray-400 mt-0.5">View ID: <code className="font-mono">{selectedViewId}</code></p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
+                      {/* Edit / Preview toggle */}
+                      <div className="flex items-center rounded-lg border border-gray-200 overflow-hidden">
+                        <button
+                          onClick={() => setPreviewMode(false)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-colors ${
+                            !previewMode
+                              ? "text-white"
+                              : "text-gray-500 hover:text-gray-700 bg-white"
+                          }`}
+                          style={!previewMode ? { background: BRAND } : {}}
+                        >
+                          <Edit3 className="w-3 h-3" />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => setPreviewMode(true)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-colors ${
+                            previewMode
+                              ? "text-white"
+                              : "text-gray-500 hover:text-gray-700 bg-white"
+                          }`}
+                          style={previewMode ? { background: "#f59e0b" } : {}}
+                        >
+                          <Eye className="w-3 h-3" />
+                          Preview as User
+                        </button>
+                      </div>
+
                       <a
                         href={moduleMeta.path}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-[#189aa1] hover:underline flex items-center gap-1"
+                        className="text-xs text-[#189aa1] hover:underline flex items-center gap-1 px-2 py-1.5"
                       >
-                        <Eye className="w-3 h-3" /> Preview
+                        <ExternalLink className="w-3 h-3" /> Live Page
                       </a>
                       {currentOverride && (
                         <Button
@@ -534,134 +834,155 @@ export default function ScanCoachEditor() {
                   </div>
                 </div>
 
-                {/* Image uploads */}
-                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-                  <div className="flex items-center gap-2 mb-4">
-                    <ImageIcon className="w-4 h-4" style={{ color: BRAND }} />
-                    <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>
-                      Reference Images
-                    </h3>
-                    <span className="text-xs text-gray-400">Upload images to override the static defaults</span>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {IMAGE_SLOTS.map((slot) => (
-                      <ImageUploadZone
-                        key={slot.key}
-                        slot={slot}
-                        currentUrl={currentOverride?.[slot.key]}
-                        isUploading={uploadingSlot === slot.key}
-                        setIsUploading={(v) => setIsUploading(v ? slot.key : null)}
-                        onUploaded={(rawData) => handleImageUploaded(slot.key, rawData)}
-                        onCleared={() => handleClearImage(slot.key)}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Text content editor */}
-                {draft && (
-                  <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <Edit3 className="w-4 h-4" style={{ color: BRAND }} />
+                {/* ── PREVIEW MODE ── */}
+                {previewMode ? (
+                  <ScanCoachViewPreview
+                    viewId={selectedViewId}
+                    viewName={selectedViewName}
+                    override={currentOverride}
+                  />
+                ) : (
+                  <>
+                    {/* Image uploads */}
+                    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+                      <div className="flex items-center gap-2 mb-4">
+                        <ImageIcon className="w-4 h-4" style={{ color: BRAND }} />
                         <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>
-                          Text Content
+                          Reference Images
                         </h3>
+                        <span className="text-xs text-gray-400">Upload images to override the static defaults</span>
                       </div>
-                      <Button
-                        size="sm"
-                        onClick={handleSaveText}
-                        disabled={upsertMutation.isPending}
-                        style={{ background: BRAND }}
-                        className="text-white hover:opacity-90"
-                      >
-                        {upsertMutation.isPending ? (
-                          <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Saving…</>
-                        ) : (
-                          <><Save className="w-3 h-3 mr-1" /> Save Changes</>
-                        )}
-                      </Button>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {IMAGE_SLOTS.map((slot) => (
+                          <ImageUploadZone
+                            key={slot.key}
+                            slot={slot}
+                            currentUrl={currentOverride?.[slot.key]}
+                            isUploading={uploadingSlot === slot.key}
+                            setIsUploading={(v) => setIsUploading(v ? slot.key : null)}
+                            onUploaded={(rawData) => handleImageUploaded(slot.key, rawData)}
+                            onCleared={() => handleClearImage(slot.key)}
+                          />
+                        ))}
+                      </div>
                     </div>
 
-                    <div className="space-y-5">
-                      {TEXT_FIELDS.map((field) => {
-                        const value = draft[field.key as keyof DraftState];
-                        return (
-                          <div key={field.key}>
-                            <div className="flex items-center justify-between mb-1.5">
-                              <label className="text-xs font-semibold text-gray-600">{field.label}</label>
-                              {field.isArray && (
-                                <span className="text-[10px] text-gray-400">One item per line</span>
-                              )}
-                            </div>
-                            <Textarea
-                              value={value}
-                              onChange={(e) =>
-                                setDraft((d) => d ? { ...d, [field.key]: e.target.value } : d)
-                              }
-                              placeholder={
-                                field.isArray
-                                  ? `Enter each ${field.label.toLowerCase()} item on a new line…`
-                                  : `Enter ${field.label.toLowerCase()}…`
-                              }
-                              rows={field.isArray ? 4 : 3}
-                              className="text-sm font-mono resize-y"
-                            />
+                    {/* Text content editor */}
+                    {draft && (
+                      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-2">
+                            <Edit3 className="w-4 h-4" style={{ color: BRAND }} />
+                            <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>
+                              Text Content
+                            </h3>
                           </div>
-                        );
-                      })}
-                    </div>
+                          <Button
+                            size="sm"
+                            onClick={handleSaveText}
+                            disabled={upsertMutation.isPending}
+                            style={{ background: BRAND }}
+                            className="text-white hover:opacity-90"
+                          >
+                            {upsertMutation.isPending ? (
+                              <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Saving…</>
+                            ) : (
+                              <><Save className="w-3 h-3 mr-1" /> Save Changes</>
+                            )}
+                          </Button>
+                        </div>
 
-                    <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
-                      <p className="text-xs text-gray-400">
-                        Leave a field blank to use the static default from the component.
-                        {currentOverride && (
-                          <span className="ml-1">
-                            Last updated: {new Date(currentOverride.updatedAt).toLocaleString()}
-                          </span>
-                        )}
-                      </p>
-                      <Button
-                        size="sm"
-                        onClick={handleSaveText}
-                        disabled={upsertMutation.isPending}
-                        style={{ background: BRAND }}
-                        className="text-white hover:opacity-90"
-                      >
-                        {upsertMutation.isPending ? (
-                          <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Saving…</>
-                        ) : (
-                          <><Save className="w-3 h-3 mr-1" /> Save Changes</>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                        <div className="space-y-5">
+                          {TEXT_FIELDS.map((field) => {
+                            const value = draft[field.key as keyof DraftState];
+                            return (
+                              <div key={field.key}>
+                                <div className="flex items-center justify-between mb-1.5">
+                                  <label className="text-xs font-semibold text-gray-600">{field.label}</label>
+                                  {field.isArray && (
+                                    <span className="text-[10px] text-gray-400">One item per line</span>
+                                  )}
+                                </div>
+                                <Textarea
+                                  value={value}
+                                  onChange={(e) =>
+                                    setDraft((d) => d ? { ...d, [field.key]: e.target.value } : d)
+                                  }
+                                  placeholder={
+                                    field.isArray
+                                      ? `Enter each ${field.label.toLowerCase()} item on a new line…`
+                                      : `Enter ${field.label.toLowerCase()}…`
+                                  }
+                                  rows={field.isArray ? 4 : 3}
+                                  className="text-sm font-mono resize-y"
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
 
-                {/* Override summary */}
-                {currentOverride && (
-                  <div className="bg-[#189aa1]/5 border border-[#189aa1]/20 rounded-xl p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <CheckCircle2 className="w-4 h-4 text-[#189aa1]" />
-                      <span className="text-sm font-semibold text-[#189aa1]">Active Overrides</span>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {IMAGE_SLOTS.map((slot) =>
-                        currentOverride[slot.key] ? (
-                          <Badge key={slot.key} variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>
-                            {slot.label}
-                          </Badge>
-                        ) : null
-                      )}
-                      {TEXT_FIELDS.map((field) =>
-                        currentOverride[field.key as keyof Override] ? (
-                          <Badge key={field.key} variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>
-                            {field.label}
-                          </Badge>
-                        ) : null
-                      )}
-                    </div>
-                  </div>
+                        <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
+                          <p className="text-xs text-gray-400">
+                            Leave a field blank to use the static default from the component.
+                            {currentOverride && (
+                              <span className="ml-1">
+                                Last updated: {new Date(currentOverride.updatedAt).toLocaleString()}
+                              </span>
+                            )}
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setPreviewMode(true)}
+                              className="text-amber-600 border-amber-200 hover:bg-amber-50 text-xs"
+                            >
+                              <Eye className="w-3 h-3 mr-1" /> Preview
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={handleSaveText}
+                              disabled={upsertMutation.isPending}
+                              style={{ background: BRAND }}
+                              className="text-white hover:opacity-90"
+                            >
+                              {upsertMutation.isPending ? (
+                                <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Saving…</>
+                              ) : (
+                                <><Save className="w-3 h-3 mr-1" /> Save Changes</>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Override summary */}
+                    {currentOverride && (
+                      <div className="bg-[#189aa1]/5 border border-[#189aa1]/20 rounded-xl p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <CheckCircle2 className="w-4 h-4 text-[#189aa1]" />
+                          <span className="text-sm font-semibold text-[#189aa1]">Active Overrides</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {IMAGE_SLOTS.map((slot) =>
+                            currentOverride[slot.key] ? (
+                              <Badge key={slot.key} variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>
+                                {slot.label}
+                              </Badge>
+                            ) : null
+                          )}
+                          {TEXT_FIELDS.map((field) =>
+                            currentOverride[field.key as keyof Override] ? (
+                              <Badge key={field.key} variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>
+                                {field.label}
+                              </Badge>
+                            ) : null
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}
