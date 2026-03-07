@@ -73,6 +73,7 @@ const navGroups = [
       { path: "/report", label: "Report Builder", icon: FileText },
       { path: "/cme", label: "CME Hub", icon: GraduationCap },
       { path: "/registry-review", label: "Registry Review Hub", icon: BookMarked },
+      { path: "https://www.allaboutultrasound.net/acs-preview-pass-access", label: "ACS Mastery", icon: Award, external: true },
     ],
   },
   {
