@@ -66,7 +66,7 @@ const LAST_NAMES = [
 ];
 
 const CREDENTIALS = [
-  "RDCS","RDCS (AE)","RDCS (PE)","RDCS (FE)","RDCS (HE)","RDCS (AE)(PE)",
+  "RDCS","RDCS (AE)","RDCS (PE)","RDCS (FE)","RDCS (AE)(PE)",
   "RCS","RCCS","RCES","CCI","FASE","FACC","MD FASE","MD","DO",
   "RDCS FASE","RDCS CCI","RVT RDCS","BS RDCS","MS RDCS","PhD RDCS",
   "ACS","RDCS (AE) ACS","RDCS (PE) ACS","RN RDCS","RT RDCS",
