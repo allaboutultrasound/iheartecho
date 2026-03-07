@@ -141,10 +141,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             className="w-12 h-12 object-contain flex-shrink-0"
           />
           <div className="flex-1 min-w-0">
-            <div className="font-bold text-white text-sm leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
+            <div className="font-bold text-white text-base leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
               iHeartEcho™
             </div>
-            <div className="text-xs text-[#4ad9e0] leading-tight">Echocardiography Clinical Companion</div>
+            <div className="text-xs md:text-sm text-[#4ad9e0] leading-tight">Echocardiography Clinical Companion</div>
           </div>
           <button
             className="ml-auto lg:hidden text-white/60 hover:text-white flex-shrink-0"
@@ -172,7 +172,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     onClick={() => setSidebarOpen(false)}
                   >
                     <Icon className={`w-4 h-4 flex-shrink-0 ${active ? "text-white" : "text-[#4ad9e0] group-hover:text-white"}`} />
-                    <span className="text-sm font-medium">{label}</span>
+                    <span className="text-sm md:text-base font-medium">{label}</span>
                     {/* Pending badge for Echo Case Library — admin only, not shown when item is active */}
                     {isCaseLibrary && isAdmin && !active && <CasePendingBadge />}
                     {active && <ChevronRight className="w-3 h-3 ml-auto" />}
@@ -304,7 +304,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm font-semibold text-gray-800 truncate flex items-center gap-1.5">
+                          <div className="text-sm md:text-base font-semibold text-gray-800 truncate flex items-center gap-1.5">
                             {user.displayName || user.name || "Account"}
                             {isPremiumUser && (
                               <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold"
@@ -314,7 +314,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                               </span>
                             )}
                           </div>
-                          <div className="text-xs text-gray-400 truncate">{user.email}</div>
+                          <div className="text-xs md:text-sm text-gray-400 truncate">{user.email}</div>
                         </div>
                       </div>
 
@@ -339,14 +339,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider px-2 mb-1">Profile</div>
                         <WouterLink href="/profile">
                           <button onClick={() => setAccountOpen(false)}
-                            className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-[#f0fbfc] hover:text-[#189aa1] transition-all text-left">
+                            className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs md:text-sm text-gray-700 hover:bg-[#f0fbfc] hover:text-[#189aa1] transition-all text-left">
                             <Settings className="w-3.5 h-3.5 text-[#189aa1]" />
                             Edit Profile &amp; Manage Subscriptions
                           </button>
                         </WouterLink>
                         <WouterLink href="/case-library/submit">
                           <button onClick={() => setAccountOpen(false)}
-                            className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-[#f0fbfc] hover:text-[#189aa1] transition-all text-left">
+                            className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs md:text-sm text-gray-700 hover:bg-[#f0fbfc] hover:text-[#189aa1] transition-all text-left">
                             <Plus className="w-3.5 h-3.5 text-[#189aa1]" />
                             Submit an Echo Case
                           </button>

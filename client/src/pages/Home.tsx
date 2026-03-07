@@ -141,7 +141,7 @@ export default function Home() {
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-4">
               <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
-              <span className="text-xs text-white/80 font-medium">Real-time Clinical Decision Support</span>
+              <span className="text-sm text-white/80 font-medium">Real-time Clinical Decision Support</span>
             </div>
             <div className="flex items-center gap-4 mb-3">
               <img
@@ -156,7 +156,7 @@ export default function Home() {
                 <p className="text-lg text-[#4ad9e0] font-semibold">Echocardiography Clinical Companion</p>
               </div>
             </div>
-            <p className="text-white/70 text-sm leading-relaxed mb-6 max-w-lg">
+            <p className="text-white/70 text-sm md:text-base leading-relaxed mb-6 max-w-lg">
               A real-time echo interpretation and measurement assistant for sonographers, cardiologists, and ACS professionals. Guideline-based, fast, and built for the clinical environment.
             </p>
             <div className="flex flex-wrap gap-3">
@@ -193,8 +193,8 @@ export default function Home() {
                   <Icon className="w-4 h-4" style={{ color: "#189aa1" }} />
                 </div>
                 <div>
-                  <div className="text-xl font-bold" style={{ fontFamily: "JetBrains Mono, monospace", color: "#189aa1" }}>{value}</div>
-                  <div className="text-xs text-gray-500">{label}</div>
+                  <div className="text-xl md:text-2xl font-bold" style={{ fontFamily: "JetBrains Mono, monospace", color: "#189aa1" }}>{value}</div>
+                  <div className="text-xs md:text-sm text-gray-500">{label}</div>
                 </div>
               </div>
             ))}
@@ -205,8 +205,8 @@ export default function Home() {
       {/* Modules Grid */}
       <div className="container py-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Clinical Modules</h2>
-          <div className="flex items-center gap-1.5 text-xs text-[#189aa1] font-medium">
+          <h2 className="text-xl md:text-2xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Clinical Modules</h2>
+          <div className="flex items-center gap-1.5 text-xs md:text-sm text-[#189aa1] font-medium">
             <Zap className="w-3.5 h-3.5" />
             {modules.length} Modules Available
           </div>
@@ -232,11 +232,11 @@ export default function Home() {
                     </span>
                   )}
                 </div>
-                <h3 className="font-bold text-gray-800 mb-1.5 text-sm leading-snug" style={{ fontFamily: "Merriweather, serif" }}>
+                <h3 className="font-bold text-gray-800 mb-1.5 text-sm md:text-base leading-snug" style={{ fontFamily: "Merriweather, serif" }}>
                   {title}
                 </h3>
-                <p className="text-xs text-gray-500 leading-relaxed mb-3">{description}</p>
-                <div className="flex items-center gap-1 text-xs font-semibold group-hover:gap-2 transition-all" style={{ color }}>
+                <p className="text-xs md:text-sm text-gray-500 leading-relaxed mb-3">{description}</p>
+                <div className="flex items-center gap-1 text-xs md:text-sm font-semibold group-hover:gap-2 transition-all" style={{ color }}>
                   {external ? (
                     <>Visit Community <ExternalLink className="w-3 h-3" /></>
                   ) : (
@@ -264,12 +264,12 @@ export default function Home() {
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
                 <Award className="w-4 h-4 text-[#4ad9e0]" />
-                <span className="text-xs font-semibold text-[#4ad9e0] uppercase tracking-wider">Premium Access</span>
+                <span className="text-xs md:text-sm font-semibold text-[#4ad9e0] uppercase tracking-wider">Premium Access</span>
               </div>
-              <h3 className="text-white font-bold text-base mb-1" style={{ fontFamily: "Merriweather, serif" }}>
+              <h3 className="text-white font-bold text-base md:text-lg mb-1" style={{ fontFamily: "Merriweather, serif" }}>
                 Unlock Full Clinical Suite
               </h3>
-              <p className="text-white/60 text-xs">
+              <p className="text-white/60 text-xs md:text-sm">
                 UEA Navigator, HOCM Navigator, full interpretation engine, 500+ cases, and all premium modules — $9/month.
               </p>
             </div>
@@ -289,9 +289,9 @@ export default function Home() {
             </div>
             <div>
               <div className="flex items-center gap-2 mb-0.5">
-                <span className="text-xs font-semibold text-[#4ad9e0] uppercase tracking-wider">Premium Active</span>
+                <span className="text-xs md:text-sm font-semibold text-[#4ad9e0] uppercase tracking-wider">Premium Active</span>
               </div>
-              <p className="text-white font-semibold text-sm">You have full Premium Access — all modules are unlocked.</p>
+              <p className="text-white font-semibold text-sm md:text-base">You have full Premium Access — all modules are unlocked.</p>
             </div>
           </div>
         )}

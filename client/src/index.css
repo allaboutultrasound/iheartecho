@@ -100,12 +100,39 @@
   * {
     @apply border-border outline-ring/50;
   }
+
+  /* ── Responsive base font size ──────────────────────────────────────────────
+     Mobile-first: 16px base → scales up to 17px on tablet, 18px on desktop.
+     All rem-based Tailwind utilities scale proportionally with this.
+  */
+  html {
+    font-size: 16px;           /* mobile: 320–767px */
+  }
+  @media (min-width: 768px) {
+    html {
+      font-size: 17px;         /* tablet: 768–1023px */
+    }
+  }
+  @media (min-width: 1024px) {
+    html {
+      font-size: 18px;         /* desktop: 1024px+ */
+    }
+  }
+
   body {
     @apply bg-background text-foreground;
     font-family: 'Open Sans', sans-serif;
+    line-height: 1.65;         /* comfortable reading line-height */
   }
   h1, h2, h3 {
     font-family: 'Merriweather', serif;
+    line-height: 1.3;
+  }
+  h4, h5, h6 {
+    line-height: 1.4;
+  }
+  p {
+    line-height: 1.7;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
