@@ -57,9 +57,9 @@ const modules: Module[] = [
     color: BRAND,
   },
   {
-    path: "/cases",
+    path: "/quickfire",
     icon: BookOpen,
-    title: "Echo Case Lab",
+    title: "Daily QuickFire",
     description: "Daily echo cases with gamified learning — earn Echo Ninja points, streaks, and leaderboards.",
     badge: "Gamified",
     color: BRAND,
@@ -167,7 +167,7 @@ export default function Home() {
                   EchoNavigator™
                 </button>
               </Link>
-              <Link href="/cases">
+              <Link href="/quickfire">
                 <button className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all">
                   <BookOpen className="w-4 h-4" />
                   Daily Case

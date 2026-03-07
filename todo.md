@@ -1190,3 +1190,6 @@
 - [x] Merge Echo Case Lab into QuickFire Challenge — integrate cases, gamification, leaderboard tabs
 - [x] Remove Echo Case Lab as separate navigation item, redirect /cases to /quickfire
 - [x] Rename "Daily Set" to "Daily Challenge" throughout
+
+## Dashboard CTA Fix
+- [x] Update 'Daily Case' CTA button on Dashboard to link to /quickfire
