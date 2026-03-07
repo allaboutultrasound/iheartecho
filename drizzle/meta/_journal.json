@@ -190,6 +190,13 @@
       "when": 1772839629875,
       "tag": "0026_crazy_talisman",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "5",
+      "when": 1772841309719,
+      "tag": "0027_mean_old_lace",
+      "breakpoints": true
     }
   ]
 }

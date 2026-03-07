@@ -662,3 +662,44 @@
 - [x] Added Registry Review Hub to Learning sidebar nav group (BookMarked icon)
 - [x] Registered /registry-review route in App.tsx
 - [x] Vitest: 17 Registry Review collection filter + category derivation tests, 385 total passing
+
+## Enrolled Status on Course Hubs + Registry Dashboard Card + Sync Registry Button
+- [ ] Research Thinkific Enrollments API — fetch user enrollments by email
+- [ ] Add getUserEnrollmentsByEmail helper to server/thinkific.ts
+- [ ] tRPC: cmeCatalog.getMyEnrollments — fetch logged-in user's enrolled Thinkific course IDs (protected)
+- [ ] CME Hub: show "Continue Learning" button for enrolled courses, "Enroll" for unenrolled
+- [ ] Registry Review Hub: same enrolled status treatment
+- [ ] Add Registry Review Hub card to Home dashboard module grid
+- [ ] Platform Admin: add "Sync Registry Courses" button alongside existing CME sync
+- [ ] tRPC: platformAdmin.syncRegistryCourses — trigger sync for collection 131826
+- [ ] Vitest: getMyEnrollments and syncRegistryCourses procedure tests
+
+## Registry Review Hub Color Fix
+- [ ] Restyle RegistryReviewHub.tsx to use brand teal #189aa1 / #4ad9e0 (not indigo/purple)
+- [ ] Fix Registry Review Hub enrollment links (wrong URL format)
+- [ ] Remove all Thinkific mentions from CME Hub and Registry Review Hub UI
+- [ ] Fix enrollment/course URLs to use member.allaboutultrasound.com custom domain
+- [ ] Remove "live data auto-refreshes" UI message from both CME Hub and Registry Review Hub
+
+## Pre-Registration: Allow Role Assignment for New Users
+- [ ] DB schema: add isPending + pendingCreatedAt columns to users table, run pnpm db:push
+- [ ] DB helper: createPendingUser(email) — create stub user with isPending=true
+- [ ] Update assignRoleByEmail — if user not found, create pending stub then assign role; return wasPreRegistered flag
+- [ ] Update bulkAssignRole — if user not found, create pending stub then assign role; status = "pre_registered"
+- [ ] Update bulkAssignSeat (Lab Admin) — same pre-registration logic; status = "pre_registered"
+- [ ] PlatformAdmin UI: show "Pre-registered" badge (not error) when user was newly created via assignRoleByEmail
+- [ ] BulkCsvUploadPanel: show "Pre-registered" row status in results table with distinct color
+- [ ] When pre-registered user first signs in via OAuth, merge their pending account (match by email) and clear isPending
+- [ ] Vitest: pre-registration flow tests for assignRoleByEmail and bulkAssignRole
+
+## Pre-Registration Flow Fix + Enrolled Status + Registry Dashboard Card (Session Mar 6)
+- [x] Fixed OAuth callback: activatePendingUser now runs BEFORE upsertUser to prevent unique constraint violation on openId
+- [x] Individual role assign panel: shows pre-register UI (violet) when user not found, with role selector + "Pre-register & Assign" button
+- [x] Individual role assign panel: shows "Pending Sign-In" badge (orange) when a pre-registered user is found in search
+- [x] Individual role assign panel: updated description text to explain pre-registration
+- [x] findUserByEmail procedure: now returns isPending field
+- [x] assignRoleByEmail onSuccess toast: differentiates between normal assign and pre-registration
+- [x] CME Hub: added thinkificCourseId to CmeCourse interface, wired getMyEnrollments query, shows "Continue Learning" for enrolled courses
+- [x] Registry Review Hub: same enrolled status treatment — "Continue Learning" (green) vs "Enroll" (teal)
+- [x] Home page: added Registry Review Hub card to module grid
+- [x] Vitest: updated adminRouter.test.ts — assignRoleByEmailLogic and bulkAssignRoleLogic now test pre-registration; 386 tests passing

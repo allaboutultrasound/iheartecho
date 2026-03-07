@@ -10,7 +10,7 @@ import React, { useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import Layout from "@/components/Layout";
 import { trpc } from "@/lib/trpc";
-import { GraduationCap, ExternalLink, Star, BookOpen, Clock, Info, RefreshCw } from "lucide-react";
+import { GraduationCap, ExternalLink, Star, BookOpen, Clock, Info } from "lucide-react";
 import { parseCreditHoursFromName } from "@/lib/cmeUtils";
 
 const BRAND = "#189aa1";
@@ -33,6 +33,8 @@ interface CmeCourse {
   isFeatured?: boolean;
   isBundle?: boolean;
   isFree?: boolean;
+  /** Thinkific course ID — used to match enrollment records */
+  thinkificCourseId?: number | null;
 }
 
 const STATIC_CME_COURSES: CmeCourse[] = [
@@ -185,9 +187,10 @@ function buildCheckoutUrl(enrollUrl: string, email?: string | null): string {
   return `${enrollUrl}${separator}prefill_email=${encodeURIComponent(email)}`;
 }
 
-/** Map a live Thinkific catalog course to the local CmeCourse shape */
+/** Map a live catalog course to the local CmeCourse shape */
 function mapLiveCourse(c: {
   thinkificProductId: number;
+  thinkificCourseId?: number | null;
   name: string;
   description: string | null;
   price: string;
@@ -226,6 +229,7 @@ function mapLiveCourse(c: {
     isFeatured: isBundle,
     isBundle,
     isFree,
+    thinkificCourseId: c.thinkificCourseId,
   };
 }
 
@@ -235,18 +239,24 @@ export default function CmeHub() {
   const { user } = useAuth();
   const [category, setCategory] = useState("All");
 
-  // Fetch live courses from Thinkific (via DB cache, refreshed every 6h)
+  // Fetch live courses (via DB cache)
   const { data: liveCatalog, isLoading, isError } = trpc.cmeCatalog.getCatalog.useQuery(undefined, {
     staleTime: 5 * 60 * 1000, // treat as fresh for 5 min client-side
     retry: 1,
   });
 
+  // Fetch enrollment status for logged-in users (course IDs from Thinkific)
+  const { data: enrolledCourseIds } = trpc.cmeCatalog.getMyEnrollments.useQuery(undefined, {
+    enabled: !!user,
+    staleTime: 2 * 60 * 1000,
+    retry: 1,
+  });
+  const enrolledSet = new Set(enrolledCourseIds ?? []);
+
   // Use live data when available, fall back to static
   const allCourses: CmeCourse[] = (liveCatalog && liveCatalog.length > 0)
     ? liveCatalog.map(mapLiveCourse)
     : STATIC_CME_COURSES;
-
-  const isLiveData = liveCatalog && liveCatalog.length > 0;
 
   const filtered = category === "All"
     ? allCourses
@@ -287,17 +297,10 @@ export default function CmeHub() {
 
       <div className="container py-8">
 
-        {/* Live data indicator */}
-        {isLiveData && (
-          <div className="flex items-center gap-1.5 text-xs text-[#189aa1] mb-4">
-            <RefreshCw className="w-3 h-3" />
-            <span>Live course data from Thinkific — auto-refreshes every 6 hours</span>
-          </div>
-        )}
         {isError && (
           <div className="flex items-center gap-1.5 text-xs text-amber-600 mb-4 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
             <Info className="w-3.5 h-3.5 flex-shrink-0" />
-            <span>Could not reach Thinkific — showing cached course list. Refresh to retry.</span>
+            <span>Some courses may be temporarily unavailable. Please refresh to retry.</span>
           </div>
         )}
 
@@ -375,9 +378,11 @@ export default function CmeHub() {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90"
-                      style={{ background: BRAND }}
+                      style={{ background: featured.thinkificCourseId && enrolledSet.has(featured.thinkificCourseId) ? "#059669" : BRAND }}
                     >
-                      Enroll Now <ExternalLink className="w-3.5 h-3.5" />
+                      {featured.thinkificCourseId && enrolledSet.has(featured.thinkificCourseId)
+                        ? "Continue Learning"
+                        : <>Enroll Now <ExternalLink className="w-3.5 h-3.5" /></>}
                     </a>
                   </div>
                 </div>
@@ -440,7 +445,7 @@ export default function CmeHub() {
                         </span>
                       </div>
                       <div className="flex gap-2">
-                        {/* Learn More — links to Thinkific product page */}
+                        {/* Learn More */}
                         <a
                           href={course.courseUrl}
                           target="_blank"
@@ -451,16 +456,18 @@ export default function CmeHub() {
                         >
                           Learn More <Info className="w-3 h-3" />
                         </a>
-                        {/* Enroll — links to Thinkific checkout */}
+                        {/* Enroll / Continue Learning */}
                         <a
                           href={buildCheckoutUrl(course.enrollUrl, user?.email)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex-1 flex items-center justify-center gap-1 text-xs font-semibold py-1.5 px-2 rounded-lg text-white transition-all hover:opacity-90"
-                          style={{ background: BRAND }}
+                          style={{ background: course.thinkificCourseId && enrolledSet.has(course.thinkificCourseId) ? "#059669" : BRAND }}
                           onClick={e => e.stopPropagation()}
                         >
-                          Enroll <ExternalLink className="w-3 h-3" />
+                          {course.thinkificCourseId && enrolledSet.has(course.thinkificCourseId)
+                            ? "Continue Learning"
+                            : <>Enroll <ExternalLink className="w-3 h-3" /></>}
                         </a>
                       </div>
                     </div>
@@ -483,7 +490,7 @@ export default function CmeHub() {
         <div className="mt-10 p-4 rounded-xl bg-[#f0fbfc] border border-[#189aa1]/20 flex flex-col sm:flex-row items-start sm:items-center gap-3">
           <Clock className="w-4 h-4 text-[#189aa1] flex-shrink-0 mt-0.5 sm:mt-0" />
           <p className="text-xs text-gray-600 leading-relaxed">
-            All courses are hosted on <strong>All About Ultrasound</strong> via Thinkific. "Learn More" opens the course details page; "Enroll" opens the checkout page
+            All courses are from <strong>All About Ultrasound</strong>. "Learn More" opens the course details page; "Enroll" opens the checkout page
             {user?.email ? ` with your email (${user.email}) pre-filled` : " — log in to iHeartEcho to have your email pre-filled automatically"}.
             SDMS CME credits are awarded upon course completion and post-test.
           </p>

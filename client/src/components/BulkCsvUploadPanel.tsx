@@ -25,7 +25,7 @@ import { toast } from "sonner";
 export type BulkRowStatus =
   | "success"
   | "already_assigned"
-  | "not_found"
+  | "pre_registered"
   | "seat_limit_reached"
   | "error";
 
@@ -40,7 +40,7 @@ export interface BulkResult {
   total: number;
   succeeded: number;
   alreadyAssigned: number;
-  notFound: number;
+  preRegistered: number;
   seatLimitReached?: number;
   errors: number;
   rows: BulkResultRow[];
@@ -69,11 +69,11 @@ interface BulkCsvUploadPanelProps {
 // ─── Status chip ──────────────────────────────────────────────────────────────
 
 const STATUS_META: Record<BulkRowStatus, { label: string; color: string; bg: string; Icon: React.ElementType }> = {
-  success:          { label: "Assigned",        color: "#16a34a", bg: "#dcfce7", Icon: CheckCircle2 },
-  already_assigned: { label: "Already had role", color: "#2563eb", bg: "#dbeafe", Icon: CheckCircle2 },
-  not_found:        { label: "Not found",        color: "#d97706", bg: "#fef3c7", Icon: AlertCircle },
-  seat_limit_reached:{ label: "Seat limit",      color: "#dc2626", bg: "#fee2e2", Icon: AlertCircle },
-  error:            { label: "Error",            color: "#dc2626", bg: "#fee2e2", Icon: AlertCircle },
+  success:          { label: "Assigned",         color: "#16a34a", bg: "#dcfce7", Icon: CheckCircle2 },
+  already_assigned: { label: "Already had role",  color: "#2563eb", bg: "#dbeafe", Icon: CheckCircle2 },
+  pre_registered:   { label: "Pre-registered",    color: "#7c3aed", bg: "#ede9fe", Icon: CheckCircle2 },
+  seat_limit_reached:{ label: "Seat limit",       color: "#dc2626", bg: "#fee2e2", Icon: AlertCircle },
+  error:            { label: "Error",             color: "#dc2626", bg: "#fee2e2", Icon: AlertCircle },
 };
 
 function StatusChip({ status, message }: { status: BulkRowStatus; message?: string }) {
@@ -204,8 +204,8 @@ export default function BulkCsvUploadPanel({
         toast.success(`${res.succeeded} user${res.succeeded !== 1 ? "s" : ""} assigned successfully`);
       } else if (res.alreadyAssigned === res.total) {
         toast.info("All users already had this role");
-      } else if (res.notFound > 0 && res.succeeded === 0) {
-        toast.warning("No users were found — they may need to sign in first");
+      } else if (res.preRegistered > 0 && res.succeeded === 0) {
+        toast.success(`${res.preRegistered} user${res.preRegistered !== 1 ? "s" : ""} pre-registered and role assigned`);
       }
     } catch (err: any) {
       toast.error(err?.message ?? "Bulk assignment failed");
@@ -407,7 +407,9 @@ export default function BulkCsvUploadPanel({
               {[
                 { label: "Assigned", value: result.succeeded, color: "#16a34a", bg: "#dcfce7" },
                 { label: "Already had role", value: result.alreadyAssigned, color: "#2563eb", bg: "#dbeafe" },
-                { label: "Not found", value: result.notFound, color: "#d97706", bg: "#fef3c7" },
+                ...(result.preRegistered > 0
+                  ? [{ label: "Pre-registered", value: result.preRegistered, color: "#7c3aed", bg: "#ede9fe" }]
+                  : []),
                 ...(result.seatLimitReached != null && result.seatLimitReached > 0
                   ? [{ label: "Seat limit", value: result.seatLimitReached, color: "#dc2626", bg: "#fee2e2" }]
                   : []),

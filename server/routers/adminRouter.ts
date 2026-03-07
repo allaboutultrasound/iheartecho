@@ -10,6 +10,7 @@ import {
   getDiyUsersForLab,
   getLabByAdmin,
   findUserByEmailWithRoles,
+  createPendingUser,
   type AppRole,
 } from "../db";
 import { syncCatalogToDb } from "./cmeRouter";
@@ -130,6 +131,7 @@ export const platformAdminRouter = router({
         roles: found.roles,
         createdAt: found.createdAt,
         lastSignedIn: found.lastSignedIn,
+        isPending: found.isPending,
       };
     }),
 
@@ -156,7 +158,7 @@ export const platformAdminRouter = router({
 
       const results: Array<{
         email: string;
-        status: "success" | "already_assigned" | "not_found" | "error";
+        status: "success" | "already_assigned" | "pre_registered" | "error";
         displayName?: string;
         message?: string;
       }> = [];
@@ -165,7 +167,10 @@ export const platformAdminRouter = router({
         try {
           const found = await findUserByEmailWithRoles(email);
           if (!found) {
-            results.push({ email, status: "not_found", message: "No account — user must sign in first" });
+            // Pre-register: create stub account and assign role immediately
+            const newId = await createPendingUser(email);
+            await assignRole(newId, input.role as AppRole, ctx.user.id);
+            results.push({ email, status: "pre_registered" as const, displayName: email });
             continue;
           }
           if (found.roles.includes(input.role)) {
@@ -183,7 +188,7 @@ export const platformAdminRouter = router({
         total: results.length,
         succeeded: results.filter(r => r.status === "success").length,
         alreadyAssigned: results.filter(r => r.status === "already_assigned").length,
-        notFound: results.filter(r => r.status === "not_found").length,
+        preRegistered: results.filter(r => r.status === "pre_registered").length,
         errors: results.filter(r => r.status === "error").length,
         rows: results,
       };
@@ -208,15 +213,17 @@ export const platformAdminRouter = router({
       if (input.role === "platform_admin" && !isOwner) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Only the owner can assign platform_admin" });
       }
-      const found = await findUserByEmailWithRoles(input.email);
+      let found = await findUserByEmailWithRoles(input.email);
+      let wasPreRegistered = false;
       if (!found) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: `No account found for ${input.email}. The user must sign in at least once before roles can be assigned.`,
-        });
+        // Pre-register: create a stub account and assign the role immediately
+        const newId = await createPendingUser(input.email);
+        await assignRole(newId, input.role as AppRole, ctx.user.id);
+        wasPreRegistered = true;
+        return { success: true, userId: newId, displayName: input.email, wasPreRegistered };
       }
       await assignRole(found.id, input.role as AppRole, ctx.user.id);
-      return { success: true, userId: found.id, displayName: found.displayName ?? found.name };
+      return { success: true, userId: found.id, displayName: found.displayName ?? found.name, wasPreRegistered: false };
     }),
 
   /**
@@ -226,6 +233,21 @@ export const platformAdminRouter = router({
    * Returns the number of courses synced and the timestamp.
    */
   syncThinkificCourses: protectedProcedure.mutation(async ({ ctx }) => {
+    const myRoles = await getUserRoles(ctx.user.id);
+    const isOwner = ctx.user.role === "admin";
+    const isPlatformAdmin = myRoles.includes("platform_admin");
+    if (!isOwner && !isPlatformAdmin) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "Platform admin access required" });
+    }
+    const count = await syncCatalogToDb();
+    return { count, syncedAt: new Date() };
+  }),
+
+  /**
+   * Manually trigger a Thinkific catalog re-sync for the Registry Review collection.
+   * Same underlying sync as syncThinkificCourses — both collections share the same cache table.
+   */
+  syncRegistryCourses: protectedProcedure.mutation(async ({ ctx }) => {
     const myRoles = await getUserRoles(ctx.user.id);
     const isOwner = ctx.user.role === "admin";
     const isPlatformAdmin = myRoles.includes("platform_admin");
@@ -309,7 +331,7 @@ export const labSeatsRouter = router({
 
       const results: Array<{
         email: string;
-        status: "success" | "already_assigned" | "not_found" | "seat_limit_reached" | "error";
+        status: "success" | "already_assigned" | "pre_registered" | "seat_limit_reached" | "error";
         displayName?: string;
         message?: string;
       }> = [];
@@ -323,7 +345,11 @@ export const labSeatsRouter = router({
         try {
           const found = await findUserByEmailWithRoles(email);
           if (!found) {
-            results.push({ email, status: "not_found", message: "No account — user must sign in first" });
+            // Pre-register: create stub account and assign diy_user seat immediately
+            const newId = await createPendingUser(email);
+            await assignRole(newId, "diy_user", ctx.user.id, lab.id);
+            currentSeats = [...currentSeats, { id: newId, email } as any];
+            results.push({ email, status: "pre_registered" as const, displayName: email });
             continue;
           }
           if (found.roles.includes("diy_user")) {
@@ -343,7 +369,7 @@ export const labSeatsRouter = router({
         total: results.length,
         succeeded: results.filter(r => r.status === "success").length,
         alreadyAssigned: results.filter(r => r.status === "already_assigned").length,
-        notFound: results.filter(r => r.status === "not_found").length,
+        preRegistered: results.filter(r => r.status === "pre_registered").length,
         seatLimitReached: results.filter(r => r.status === "seat_limit_reached").length,
         errors: results.filter(r => r.status === "error").length,
         rows: results,

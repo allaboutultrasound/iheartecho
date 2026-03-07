@@ -49,6 +49,7 @@ import {
   CheckCircle2,
   AlertCircle,
   X,
+  Clock,
 } from "lucide-react";
 import { Link } from "wouter";
 import BulkCsvUploadPanel, { type BulkResult } from "@/components/BulkCsvUploadPanel";
@@ -116,6 +117,7 @@ type UserWithRoles = {
   role: string;
   createdAt: Date;
   lastSignedIn: Date;
+  isPending: boolean;
   roles: AppRole[];
 };
 
@@ -137,7 +139,11 @@ function AddUserByEmailPanel({ onSuccess }: { onSuccess: () => void }) {
 
   const assignRoleByEmail = trpc.platformAdmin.assignRoleByEmail.useMutation({
     onSuccess: (data) => {
-      toast.success(`Role "${ROLE_META[selectedRole]?.label}" assigned to ${data.displayName ?? submittedEmail}.`);
+      if (data.wasPreRegistered) {
+        toast.success(`Pre-registered ${data.displayName ?? submittedEmail} with role "${ROLE_META[selectedRole]?.label}" — role will activate on first login.`);
+      } else {
+        toast.success(`Role "${ROLE_META[selectedRole]?.label}" assigned to ${data.displayName ?? submittedEmail}.`);
+      }
       setEmail("");
       setSubmittedEmail("");
       onSuccess();
@@ -177,7 +183,7 @@ function AddUserByEmailPanel({ onSuccess }: { onSuccess: () => void }) {
           Add User by Email
         </CardTitle>
         <p className="text-xs text-gray-500 mt-0.5">
-          Search for a registered user by their email address, then assign a role. The user must have signed in at least once.
+          Search for a user by email and assign a role. If the user has not yet signed in, they will be pre-registered — their role will be applied automatically when they first log in.
         </p>
       </CardHeader>
       <CardContent className="pt-0 space-y-4">
@@ -223,28 +229,73 @@ function AddUserByEmailPanel({ onSuccess }: { onSuccess: () => void }) {
                 {findError.message}
               </div>
             ) : foundUser === null ? (
-              <div className="flex items-start gap-3 p-4 rounded-lg bg-amber-50 border border-amber-100">
-                <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-amber-800">No account found</p>
-                  <p className="text-xs text-amber-600 mt-0.5">
-                    <strong>{submittedEmail}</strong> has not signed in to iHeartEcho yet. Ask them to log in first, then try again.
-                  </p>
+              <div className="p-4 rounded-xl border border-violet-200 bg-violet-50 space-y-3">
+                <div className="flex items-start gap-3">
+                  <UserPlus className="w-4 h-4 text-violet-500 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-violet-800">No existing account — pre-register?</p>
+                    <p className="text-xs text-violet-600 mt-0.5">
+                      <strong>{submittedEmail}</strong> has not signed in yet. Select a role below and pre-register them — the role will be applied automatically on their first login.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2 items-end">
+                  <div className="flex-1">
+                    <label className="text-xs font-medium text-gray-600 block mb-1">Role to assign on first login</label>
+                    <Select value={selectedRole} onValueChange={v => setSelectedRole(v as AppRole)}>
+                      <SelectTrigger className="h-9 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(Object.entries(ROLE_META) as [AppRole, typeof ROLE_META[AppRole]][]).map(([role, meta]) => (
+                          <SelectItem key={role} value={role}>
+                            <div className="flex items-center gap-2">
+                              <meta.icon className="w-3.5 h-3.5" />
+                              {meta.label}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {ROLE_META[selectedRole] && (
+                      <p className="text-xs text-gray-400 mt-1">{ROLE_META[selectedRole].description}</p>
+                    )}
+                  </div>
+                  <Button
+                    onClick={() => assignRoleByEmail.mutate({ email: submittedEmail, role: selectedRole })}
+                    disabled={assignRoleByEmail.isPending}
+                    className="flex-shrink-0 gap-2 text-white"
+                    style={{ background: "#7c3aed" }}
+                  >
+                    {assignRoleByEmail.isPending ? (
+                      <><RefreshCw className="w-4 h-4 animate-spin" /> Pre-registering…</>
+                    ) : (
+                      <><UserPlus className="w-4 h-4" /> Pre-register &amp; Assign</>
+                    )}
+                  </Button>
                 </div>
               </div>
             ) : foundUser ? (
-              <div className="p-4 rounded-xl border border-[#189aa1]/20 bg-[#189aa1]/08 space-y-3">
+              <div className={`p-4 rounded-xl border space-y-3 ${'isPending' in foundUser && foundUser.isPending ? 'border-orange-200 bg-orange-50' : 'border-[#189aa1]/20 bg-[#189aa1]/08'}`}>
                 {/* User preview */}
                 <div className="flex items-center gap-3">
                   <div
                     className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
-                    style={{ background: "#189aa1" }}
+                    style={{ background: 'isPending' in foundUser && foundUser.isPending ? '#f97316' : '#189aa1' }}
                   >
                     {(foundUser.displayName ?? foundUser.name ?? "?")[0]?.toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-sm text-gray-900">
-                      {foundUser.displayName ?? foundUser.name ?? "Unknown User"}
+                    <div className="flex items-center gap-2">
+                      <div className="font-semibold text-sm text-gray-900">
+                        {foundUser.displayName ?? foundUser.name ?? foundUser.email ?? "Unknown User"}
+                      </div>
+                      {'isPending' in foundUser && foundUser.isPending && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
+                          <Clock className="w-3 h-3" />
+                          Pending Sign-In
+                        </span>
+                      )}
                     </div>
                     <div className="text-xs text-gray-500">{foundUser.email}</div>
                     <div className="flex flex-wrap gap-1 mt-1.5">
@@ -254,7 +305,9 @@ function AddUserByEmailPanel({ onSuccess }: { onSuccess: () => void }) {
                       }
                     </div>
                   </div>
-                  <CheckCircle2 className="w-5 h-5 text-[#189aa1] flex-shrink-0" />
+                  {'isPending' in foundUser && foundUser.isPending
+                    ? <Clock className="w-5 h-5 text-orange-400 flex-shrink-0" />
+                    : <CheckCircle2 className="w-5 h-5 text-[#189aa1] flex-shrink-0" />}
                 </div>
 
                 {/* Role selector + assign */}
@@ -321,12 +374,21 @@ export default function PlatformAdmin() {
   });
 
   const [lastSyncResult, setLastSyncResult] = useState<{ count: number; syncedAt: Date } | null>(null);
+  const [lastRegistrySyncResult, setLastRegistrySyncResult] = useState<{ count: number; syncedAt: Date } | null>(null);
   const syncCoursesMutation = trpc.platformAdmin.syncThinkificCourses.useMutation({
     onSuccess: (data) => {
       setLastSyncResult(data);
       toast.success(`Synced ${data.count} CME course${data.count !== 1 ? "s" : ""} from Thinkific.`);
     },
     onError: (err) => toast.error(`Sync failed: ${err.message}`),
+  });
+
+  const syncRegistryMutation = trpc.platformAdmin.syncRegistryCourses.useMutation({
+    onSuccess: (data) => {
+      setLastRegistrySyncResult(data);
+      toast.success(`Synced ${data.count} Registry Review course${data.count !== 1 ? "s" : ""}.`);
+    },
+    onError: (err) => toast.error(`Registry sync failed: ${err.message}`),
   });
 
   const { data: isAdmin, isLoading: checkingAdmin } = trpc.platformAdmin.isAdmin.useQuery(
@@ -486,12 +548,12 @@ export default function PlatformAdmin() {
           <CardContent className="pt-0">
             <BulkCsvUploadPanel
               title="Upload a CSV of emails to assign a role in bulk"
-              description="Upload a CSV or paste emails — one per line. All emails will receive the selected role. Users must have signed in at least once."
+              description="Upload a CSV or paste emails — one per line. All emails will receive the selected role. New users will be pre-registered automatically."
               submitLabel="Assign Role to All"
               isPending={bulkAssignRoleMutation.isPending}
               onSubmit={async (emails) => {
                 const result = await bulkAssignRoleMutation.mutateAsync({ emails, role: bulkRole });
-                return result as BulkResult;
+                return result as unknown as BulkResult;
               }}
               actionSlot={
                 <div>
@@ -557,6 +619,43 @@ export default function PlatformAdmin() {
           </CardContent>
         </Card>
 
+        {/* Sync Registry Review Courses */}
+        <Card className="mb-6 border-0 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+              <RefreshCw className="w-4 h-4" />
+              Registry Review Course Sync
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className="flex-1">
+                <p className="text-sm text-gray-600 mb-1">
+                  Manually pull the latest course catalog for the Registry Review collection.
+                  The catalog also auto-syncs every 6 hours and on webhook events.
+                </p>
+                {lastRegistrySyncResult ? (
+                  <p className="text-xs text-[#189aa1] font-medium">
+                    Last sync: {lastRegistrySyncResult.count} course{lastRegistrySyncResult.count !== 1 ? "s" : ""} &mdash;{" "}
+                    {new Date(lastRegistrySyncResult.syncedAt).toLocaleString()}
+                  </p>
+                ) : (
+                  <p className="text-xs text-gray-400">No sync performed this session.</p>
+                )}
+              </div>
+              <Button
+                onClick={() => syncRegistryMutation.mutate()}
+                disabled={syncRegistryMutation.isPending}
+                className="flex items-center gap-2 flex-shrink-0"
+                style={{ background: "#189aa1" }}
+              >
+                <RefreshCw className={`w-4 h-4 ${syncRegistryMutation.isPending ? "animate-spin" : ""}`} />
+                {syncRegistryMutation.isPending ? "Syncing…" : "Sync Now"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Role Reference */}
         <Card className="mb-6 border-0 shadow-sm">
           <CardHeader className="pb-3">
@@ -612,9 +711,11 @@ export default function PlatformAdmin() {
                     {/* Avatar */}
                     <div
                       className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-white text-sm font-bold"
-                      style={{ background: "#189aa1" }}
+                      style={{ background: (u as UserWithRoles).isPending ? "#9ca3af" : "#189aa1" }}
                     >
-                      {(u.displayName ?? u.name ?? "?")[0]?.toUpperCase()}
+                      {(u as UserWithRoles).isPending
+                        ? <Clock className="w-4 h-4" />
+                        : (u.displayName ?? u.name ?? "?")[0]?.toUpperCase()}
                     </div>
 
                     {/* Info */}
@@ -627,6 +728,12 @@ export default function PlatformAdmin() {
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
                             <Crown className="w-3 h-3" />
                             Owner
+                          </span>
+                        )}
+                        {(u as UserWithRoles).isPending && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
+                            <Clock className="w-3 h-3" />
+                            Pending Sign-In
                           </span>
                         )}
                       </div>

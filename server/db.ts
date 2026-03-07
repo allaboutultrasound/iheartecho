@@ -1807,6 +1807,59 @@ export async function findUserByEmailWithRoles(email: string) {
   return { ...user, roles };
 }
 
+/**
+ * Create a pending (pre-registered) stub user account for an email address.
+ * Used when an admin assigns a role to a user who has never signed in.
+ * When the user first signs in via OAuth, the pending account is merged
+ * (matched by email) and isPending is cleared.
+ * Returns the new user's id.
+ */
+export async function createPendingUser(email: string): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  const normalised = email.trim().toLowerCase();
+  // Generate a unique synthetic openId so the NOT NULL constraint is satisfied
+  const syntheticOpenId = `pending_${normalised}_${Date.now()}`;
+  await db.insert(users).values({
+    openId: syntheticOpenId,
+    email: normalised,
+    name: normalised,
+    isPending: true,
+    pendingCreatedAt: new Date(),
+    lastSignedIn: new Date(),
+  });
+  // Retrieve the inserted row to get the auto-incremented id
+  const result = await db.select().from(users)
+    .where(sql`LOWER(${users.email}) = ${normalised} AND ${users.isPending} = 1`)
+    .orderBy(desc(users.id))
+    .limit(1);
+  if (!result[0]) throw new Error(`Failed to create pending user for ${email}`);
+  return result[0].id;
+}
+
+/**
+ * Activate a pending user account when they first sign in via OAuth.
+ * Merges the pending stub (matched by email) with the real OAuth identity.
+ * Returns true if a pending account was found and activated.
+ */
+export async function activatePendingUser(email: string, realOpenId: string): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  const normalised = email.trim().toLowerCase();
+  const pending = await db.select().from(users)
+    .where(sql`LOWER(${users.email}) = ${normalised} AND ${users.isPending} = 1`)
+    .limit(1);
+  if (!pending[0]) return false;
+  // Update the pending stub with the real OAuth identity and clear isPending
+  await db.update(users).set({
+    openId: realOpenId,
+    isPending: false,
+    pendingCreatedAt: null,
+    lastSignedIn: new Date(),
+  }).where(eq(users.id, pending[0].id));
+  return true;
+}
+
 /** Get DIY users for a specific lab (seat management) */
 export async function getDiyUsersForLab(labId: number) {
   const db = await getDb();

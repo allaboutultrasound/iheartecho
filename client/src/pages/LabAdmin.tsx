@@ -484,13 +484,13 @@ function StaffTab({ lab, members, onRefresh }: { lab: any; members: any[]; onRef
           <CardContent className="p-4">
             <BulkCsvUploadPanel
               title="Bulk Import Staff by Email"
-              description="Upload a CSV or paste emails — one per line. Each user will be assigned a DIY seat. Users must have signed in at least once."
+              description="Upload a CSV or paste emails — one per line. Each user will be assigned a DIY seat. New users will be pre-registered automatically."
               submitLabel="Assign Seats to All"
               isPending={bulkAssignSeat.isPending}
               seatUsage={{ used: members.length, total: lab.seats ?? 1 }}
               onSubmit={async (emails) => {
                 const result = await bulkAssignSeat.mutateAsync({ emails });
-                return result as BulkResult;
+                return result as unknown as BulkResult;
               }}
             />
           </CardContent>

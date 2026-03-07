@@ -8,11 +8,10 @@
  * The catalog is cached in cmeCoursesCache and refreshed every 6 hours.
  * No enrollment tracking, no transcript, no admin metadata panel.
  */
-
-import { publicProcedure, router } from "../_core/trpc";
+import { publicProcedure, protectedProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { cmeCoursesCache } from "../../drizzle/schema";
-import { getVisibleProducts, buildCourseUrl, buildEnrollUrl } from "../thinkific";
+import { getVisibleProducts, buildCourseUrl, buildEnrollUrl, getUserEnrollmentsByEmail } from "../thinkific";
 
 /** Thinkific collection ID for "E-Learning & CME" on allaboutultrasound */
 const CME_COLLECTION_ID = 131827;
@@ -177,5 +176,21 @@ export const cmeRouter = router({
     // Fall back to all courses if filter returns nothing (e.g. first sync)
     const result = courses.length > 0 ? courses : [];
     return result.map(mapToCatalogCourse);
+  }),
+
+  /**
+   * Protected: returns the list of Thinkific course IDs the current user is enrolled in.
+   * Used by CME Hub and Registry Review Hub to show "Continue Learning" vs "Enroll".
+   * Returns an empty array if the user has no Thinkific account.
+   */
+  getMyEnrollments: protectedProcedure.query(async ({ ctx }): Promise<number[]> => {
+    const email = ctx.user.email;
+    if (!email) return [];
+    try {
+      return await getUserEnrollmentsByEmail(email);
+    } catch (err) {
+      console.error("[CME] Failed to fetch enrollments:", err);
+      return [];
+    }
   }),
 });

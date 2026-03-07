@@ -14,11 +14,13 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const mockFindUserByEmailWithRoles = vi.fn();
 const mockGetUserRoles = vi.fn();
 const mockAssignRole = vi.fn();
+const mockCreatePendingUser = vi.fn();
 
 vi.mock("./db", () => ({
   findUserByEmailWithRoles: (...args: unknown[]) => mockFindUserByEmailWithRoles(...args),
   getUserRoles: (...args: unknown[]) => mockGetUserRoles(...args),
   assignRole: (...args: unknown[]) => mockAssignRole(...args),
+  createPendingUser: (...args: unknown[]) => mockCreatePendingUser(...args),
   removeRole: vi.fn(),
   listUsersWithRoles: vi.fn(),
   countUsers: vi.fn(),
@@ -64,9 +66,16 @@ async function assignRoleByEmailLogic(
   if (!isOwner && !isPlatformAdmin) throw new Error("FORBIDDEN");
   if (role === "platform_admin" && !isOwner) throw new Error("Only the owner can assign platform_admin");
   const found = await mockFindUserByEmailWithRoles(email);
-  if (!found) throw new Error(`No account found for ${email}`);
+  let wasPreRegistered = false;
+  if (!found) {
+    // Pre-register: create a stub account and assign the role immediately
+    const newId = await mockCreatePendingUser(email);
+    await mockAssignRole(newId, role, callerUserId);
+    wasPreRegistered = true;
+    return { success: true, userId: newId, displayName: email, wasPreRegistered };
+  }
   await mockAssignRole(found.id, role, callerUserId);
-  return { success: true, userId: found.id, displayName: found.displayName ?? found.name };
+  return { success: true, userId: found.id, displayName: found.displayName ?? found.name, wasPreRegistered: false };
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
@@ -158,11 +167,25 @@ describe("assignRoleByEmail procedure logic", () => {
     expect(mockAssignRole).toHaveBeenCalledWith(5, "platform_admin", 1);
   });
 
-  it("throws NOT_FOUND when user email does not exist", async () => {
+  it("pre-registers a new user when email does not exist", async () => {
     mockFindUserByEmailWithRoles.mockResolvedValue(null);
-    await expect(
-      assignRoleByEmailLogic("admin", [], 1, "nobody@example.com", "premium_user"),
-    ).rejects.toThrow("No account found for nobody@example.com");
+    mockCreatePendingUser.mockResolvedValue(99);
+    mockAssignRole.mockResolvedValue(undefined);
+    const result = await assignRoleByEmailLogic("admin", [], 1, "nobody@example.com", "premium_user");
+    expect(result.success).toBe(true);
+    expect(result.wasPreRegistered).toBe(true);
+    expect(result.userId).toBe(99);
+    expect(result.displayName).toBe("nobody@example.com");
+    expect(mockCreatePendingUser).toHaveBeenCalledWith("nobody@example.com");
+    expect(mockAssignRole).toHaveBeenCalledWith(99, "premium_user", 1);
+  });
+  it("returns wasPreRegistered=false for existing users", async () => {
+    const mockUser = { id: 10, name: "Bob", displayName: "Bob Smith", email: "bob@example.com", role: "user", roles: ["user"] };
+    mockFindUserByEmailWithRoles.mockResolvedValue(mockUser);
+    mockAssignRole.mockResolvedValue(undefined);
+    const result = await assignRoleByEmailLogic("admin", [], 1, "bob@example.com", "premium_user");
+    expect(result.wasPreRegistered).toBe(false);
+    expect(mockCreatePendingUser).not.toHaveBeenCalled();
   });
 
   it("assigns premium_user role successfully", async () => {
@@ -204,7 +227,7 @@ describe("assignRoleByEmail procedure logic", () => {
 
 // ─── bulkAssignRole logic ─────────────────────────────────────────────────────
 
-type BulkRowStatus = "success" | "already_assigned" | "not_found" | "error";
+type BulkRowStatus = "success" | "already_assigned" | "pre_registered" | "error";
 
 async function bulkAssignRoleLogic(
   callerRole: string,
@@ -224,7 +247,10 @@ async function bulkAssignRoleLogic(
     try {
       const found = await mockFindUserByEmailWithRoles(email);
       if (!found) {
-        results.push({ email, status: "not_found", message: "No account — user must sign in first" });
+        // Pre-register: create stub account and assign role immediately
+        const newId = await mockCreatePendingUser(email);
+        await mockAssignRole(newId, role, callerUserId);
+        results.push({ email, status: "pre_registered", displayName: email });
         continue;
       }
       if (found.roles.includes(role)) {
@@ -242,7 +268,7 @@ async function bulkAssignRoleLogic(
     total: results.length,
     succeeded: results.filter(r => r.status === "success").length,
     alreadyAssigned: results.filter(r => r.status === "already_assigned").length,
-    notFound: results.filter(r => r.status === "not_found").length,
+    preRegistered: results.filter(r => r.status === "pre_registered").length,
     errors: results.filter(r => r.status === "error").length,
     rows: results,
   };
@@ -261,12 +287,16 @@ describe("bulkAssignRole procedure logic", () => {
     ).rejects.toThrow("Only the owner can assign platform_admin");
   });
 
-  it("returns not_found for emails with no account", async () => {
+  it("pre-registers emails with no existing account", async () => {
     mockFindUserByEmailWithRoles.mockResolvedValue(null);
+    mockCreatePendingUser.mockResolvedValue(55);
+    mockAssignRole.mockResolvedValue(undefined);
     const result = await bulkAssignRoleLogic("admin", [], 1, ["nobody@x.com"], "premium_user");
-    expect(result.notFound).toBe(1);
+    expect(result.preRegistered).toBe(1);
     expect(result.succeeded).toBe(0);
-    expect(result.rows[0].status).toBe("not_found");
+    expect(result.rows[0].status).toBe("pre_registered");
+    expect(mockCreatePendingUser).toHaveBeenCalledWith("nobody@x.com");
+    expect(mockAssignRole).toHaveBeenCalledWith(55, "premium_user", 1);
   });
 
   it("returns already_assigned for users who already have the role", async () => {
@@ -291,18 +321,21 @@ describe("bulkAssignRole procedure logic", () => {
     expect(mockAssignRole).toHaveBeenCalledWith(5, "premium_user", 1);
   });
 
-  it("processes multiple emails and returns correct counts", async () => {
+  it("processes multiple emails: assigns, pre-registers, and marks already-assigned", async () => {
     mockFindUserByEmailWithRoles
       .mockResolvedValueOnce({ id: 1, name: "A", displayName: "A", email: "a@x.com", role: "user", roles: ["user"] })
       .mockResolvedValueOnce(null)
       .mockResolvedValueOnce({ id: 3, name: "C", displayName: "C", email: "c@x.com", role: "user", roles: ["user", "premium_user"] });
+    mockCreatePendingUser.mockResolvedValue(88);
     mockAssignRole.mockResolvedValue(undefined);
 
     const result = await bulkAssignRoleLogic("admin", [], 1, ["a@x.com", "b@x.com", "c@x.com"], "premium_user");
     expect(result.total).toBe(3);
     expect(result.succeeded).toBe(1);
-    expect(result.notFound).toBe(1);
+    expect(result.preRegistered).toBe(1);
     expect(result.alreadyAssigned).toBe(1);
+    expect(result.rows[1].status).toBe("pre_registered");
+    expect(mockCreatePendingUser).toHaveBeenCalledWith("b@x.com");
   });
 
   it("captures error rows when assignRole throws", async () => {

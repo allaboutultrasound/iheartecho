@@ -1,19 +1,18 @@
 /*
   iHeartEcho — Registry Review Hub
-  Displays All About Ultrasound Registry Review courses from the Registry Review collection on Thinkific.
-  Course data is fetched live from the Thinkific API via tRPC (cached, refreshed every 6 hours).
+  Displays All About Ultrasound Registry Review courses.
   Checkout links are prefilled with the logged-in user's email for fast checkout.
-  Brand accent: Indigo #4f46e5 / Purple #7c3aed (distinct from CME Hub teal)
+  Brand: Teal #189aa1, Aqua #4ad9e0
 */
 import React, { useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import Layout from "@/components/Layout";
 import { trpc } from "@/lib/trpc";
-import { BookOpen, ExternalLink, Star, Clock, Info, RefreshCw, GraduationCap, Award } from "lucide-react";
+import { BookOpen, ExternalLink, Star, Clock, Info, GraduationCap, Award } from "lucide-react";
 
-const BRAND = "#4f46e5";
-const BRAND_LIGHT = "#eef2ff";
-const BRAND_BORDER = "#c7d2fe";
+const BRAND = "#189aa1";
+const BRAND_LIGHT = "#f0fbfc";
+const BRAND_BORDER = "#b2e8eb";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -29,6 +28,8 @@ interface RegistryCourse {
   isFeatured?: boolean;
   isBundle?: boolean;
   isFree?: boolean;
+  /** Thinkific course ID — used to match enrollment records */
+  thinkificCourseId?: number | null;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -39,9 +40,10 @@ function buildCheckoutUrl(enrollUrl: string, email?: string | null): string {
   return `${enrollUrl}${separator}prefill_email=${encodeURIComponent(email)}`;
 }
 
-/** Map a live Thinkific catalog course to the local RegistryCourse shape */
+/** Map a live catalog course to the local RegistryCourse shape */
 function mapLiveCourse(c: {
   thinkificProductId: number;
+  thinkificCourseId?: number | null;
   name: string;
   description: string | null;
   price: string;
@@ -78,26 +80,32 @@ function mapLiveCourse(c: {
     isFeatured: isBundle,
     isBundle,
     isFree,
+    thinkificCourseId: c.thinkificCourseId,
   };
 }
-
-// ─── Component ────────────────────────────────────────────────────────────────
+// ─── Componentt ────────────────────────────────────────────────────────────────
 
 export default function RegistryReviewHub() {
   const { user } = useAuth();
   const [category, setCategory] = useState("All");
 
-  // Fetch live courses from Thinkific (via DB cache, refreshed every 6h)
+  // Fetch live courses (via DB cache)
   const { data: liveCatalog, isLoading, isError } = trpc.cmeCatalog.getRegistryCatalog.useQuery(undefined, {
     staleTime: 5 * 60 * 1000,
     retry: 1,
   });
 
+  // Fetch enrollment status for logged-in users
+  const { data: enrolledCourseIds } = trpc.cmeCatalog.getMyEnrollments.useQuery(undefined, {
+    enabled: !!user,
+    staleTime: 2 * 60 * 1000,
+    retry: 1,
+  });
+  const enrolledSet = new Set(enrolledCourseIds ?? []);
+
   const allCourses: RegistryCourse[] = liveCatalog && liveCatalog.length > 0
     ? liveCatalog.map(mapLiveCourse)
     : [];
-
-  const isLiveData = liveCatalog && liveCatalog.length > 0;
 
   // Derive available categories from live data
   const availableCategories = ["All", ...Array.from(new Set(allCourses.map(c => c.category))).sort()];
@@ -114,18 +122,18 @@ export default function RegistryReviewHub() {
       {/* Hero */}
       <div
         className="relative overflow-hidden"
-        style={{ background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #4f46e5 100%)" }}
+        style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}
       >
         <div className="relative container py-10 md:py-14">
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-4">
-              <Award className="w-3.5 h-3.5 text-indigo-300" />
+              <Award className="w-3.5 h-3.5 text-[#4ad9e0]" />
               <span className="text-xs text-white/80 font-medium">Registry Exam Preparation</span>
             </div>
             <h1 className="text-3xl md:text-4xl font-black text-white leading-tight mb-2" style={{ fontFamily: "Merriweather, serif" }}>
               Registry Review Hub
             </h1>
-            <p className="text-indigo-300 font-semibold text-base mb-3">All About Ultrasound — Registry Review Courses</p>
+            <p className="text-[#4ad9e0] font-semibold text-base mb-3">All About Ultrasound — Registry Review Courses</p>
             <p className="text-white/70 text-sm leading-relaxed max-w-lg">
               Prepare for your registry exams with comprehensive review courses from All About Ultrasound. Click "Learn More" to view course details or "Enroll" to go directly to checkout — your email is pre-filled.
             </p>
@@ -141,17 +149,10 @@ export default function RegistryReviewHub() {
 
       <div className="container py-8">
 
-        {/* Live data indicator */}
-        {isLiveData && (
-          <div className="flex items-center gap-1.5 text-xs mb-4" style={{ color: BRAND }}>
-            <RefreshCw className="w-3 h-3" />
-            <span>Live course data from Thinkific — auto-refreshes every 6 hours</span>
-          </div>
-        )}
         {isError && (
           <div className="flex items-center gap-1.5 text-xs text-amber-600 mb-4 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
             <Info className="w-3.5 h-3.5 flex-shrink-0" />
-            <span>Could not reach Thinkific — showing cached course list. Refresh to retry.</span>
+            <span>Some courses may be temporarily unavailable. Please refresh to retry.</span>
           </div>
         )}
 
@@ -165,13 +166,9 @@ export default function RegistryReviewHub() {
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
                   category === cat
                     ? "text-white shadow-sm"
-                    : "bg-white border text-indigo-600 hover:bg-indigo-50"
+                    : "bg-white border border-[#189aa1]/20 text-[#189aa1] hover:bg-[#f0fbfc]"
                 }`}
-                style={
-                  category === cat
-                    ? { background: BRAND }
-                    : { borderColor: BRAND_BORDER }
-                }
+                style={category === cat ? { background: BRAND } : {}}
               >
                 {cat}
               </button>
@@ -183,7 +180,7 @@ export default function RegistryReviewHub() {
         {isLoading && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mb-8">
             {[...Array(8)].map((_, i) => (
-              <div key={i} className="bg-white rounded-xl overflow-hidden shadow-sm border border-indigo-100 animate-pulse">
+              <div key={i} className="bg-white rounded-xl overflow-hidden shadow-sm border border-[#189aa1]/10 animate-pulse">
                 <div className="h-40 bg-gray-200" />
                 <div className="p-4 space-y-2">
                   <div className="h-4 bg-gray-200 rounded w-3/4" />
@@ -200,7 +197,7 @@ export default function RegistryReviewHub() {
           <div className="mb-8">
             <div
               className="block rounded-2xl overflow-hidden"
-              style={{ background: "linear-gradient(135deg, #1e1b4b, #312e81)" }}
+              style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}
             >
               <div className="flex flex-col md:flex-row">
                 <div className="md:w-72 h-48 md:h-auto overflow-hidden flex-shrink-0">
@@ -214,7 +211,7 @@ export default function RegistryReviewHub() {
                   <div className="flex items-center gap-2 mb-3">
                     <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
                     <span className="text-xs font-bold text-yellow-400 uppercase tracking-wider">Best Value</span>
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200">Bundle</span>
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#189aa1]/30 text-[#4ad9e0]">Bundle</span>
                   </div>
                   <h2 className="text-xl md:text-2xl font-bold text-white mb-2" style={{ fontFamily: "Merriweather, serif" }}>
                     {featured.title}
@@ -235,9 +232,11 @@ export default function RegistryReviewHub() {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90"
-                      style={{ background: BRAND }}
+                      style={{ background: featured.thinkificCourseId && enrolledSet.has(featured.thinkificCourseId) ? "#059669" : BRAND }}
                     >
-                      Enroll Now <ExternalLink className="w-3.5 h-3.5" />
+                      {featured.thinkificCourseId && enrolledSet.has(featured.thinkificCourseId)
+                        ? "Continue Learning"
+                        : <>Enroll Now <ExternalLink className="w-3.5 h-3.5" /></>}
                     </a>
                   </div>
                 </div>
@@ -256,10 +255,10 @@ export default function RegistryReviewHub() {
               {regular.map(course => (
                 <div
                   key={course.id}
-                  className="bg-white rounded-xl overflow-hidden shadow-sm border border-indigo-100 hover:shadow-md hover:border-indigo-300 transition-all flex flex-col"
+                  className="bg-white rounded-xl overflow-hidden shadow-sm border border-[#189aa1]/10 hover:shadow-md hover:border-[#189aa1]/30 transition-all flex flex-col"
                 >
                   {/* Thumbnail */}
-                  <div className="relative h-40 overflow-hidden bg-[#1e1b4b] flex-shrink-0">
+                  <div className="relative h-40 overflow-hidden bg-[#0e1e2e] flex-shrink-0">
                     <img
                       src={course.image}
                       alt={course.title}
@@ -296,27 +295,29 @@ export default function RegistryReviewHub() {
                         </span>
                       </div>
                       <div className="flex gap-2">
-                        {/* Learn More — links to Thinkific product page */}
+                        {/* Learn More */}
                         <a
                           href={course.courseUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex-1 flex items-center justify-center gap-1 text-xs font-semibold py-1.5 px-2 rounded-lg border transition-all hover:bg-indigo-50"
+                          className="flex-1 flex items-center justify-center gap-1 text-xs font-semibold py-1.5 px-2 rounded-lg border transition-all hover:bg-[#f0fbfc]"
                           style={{ borderColor: BRAND, color: BRAND }}
                           onClick={e => e.stopPropagation()}
                         >
                           Learn More <Info className="w-3 h-3" />
                         </a>
-                        {/* Enroll — links to Thinkific checkout */}
+                        {/* Enroll / Continue Learning */}
                         <a
                           href={buildCheckoutUrl(course.enrollUrl, user?.email)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex-1 flex items-center justify-center gap-1 text-xs font-semibold py-1.5 px-2 rounded-lg text-white transition-all hover:opacity-90"
-                          style={{ background: BRAND }}
+                          style={{ background: course.thinkificCourseId && enrolledSet.has(course.thinkificCourseId) ? "#059669" : BRAND }}
                           onClick={e => e.stopPropagation()}
                         >
-                          Enroll <ExternalLink className="w-3 h-3" />
+                          {course.thinkificCourseId && enrolledSet.has(course.thinkificCourseId)
+                            ? "Continue Learning"
+                            : <>Enroll <ExternalLink className="w-3 h-3" /></>}
                         </a>
                       </div>
                     </div>
@@ -327,7 +328,7 @@ export default function RegistryReviewHub() {
           </>
         )}
 
-        {/* Empty state — shown when no courses loaded yet */}
+        {/* Empty state */}
         {!isLoading && regular.length === 0 && !featured && (
           <div className="text-center py-16 text-gray-400">
             <GraduationCap className="w-12 h-12 mx-auto mb-3 opacity-30" />
@@ -336,18 +337,18 @@ export default function RegistryReviewHub() {
         )}
 
         {/* Footer note */}
-        <div className="mt-10 p-4 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center gap-3" style={{ background: BRAND_LIGHT, borderColor: BRAND_BORDER }}>
-          <Clock className="w-4 h-4 flex-shrink-0 mt-0.5 sm:mt-0" style={{ color: BRAND }} />
+        <div className="mt-10 p-4 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center gap-3"
+          style={{ background: BRAND_LIGHT, borderColor: BRAND_BORDER }}>
+          <Clock className="w-4 h-4 text-[#189aa1] flex-shrink-0 mt-0.5 sm:mt-0" />
           <p className="text-xs text-gray-600 leading-relaxed">
-            All courses are hosted on <strong>All About Ultrasound</strong> via Thinkific. "Learn More" opens the course details page; "Enroll" opens the checkout page
+            All courses are from <strong>All About Ultrasound</strong>. "Learn More" opens the course details page; "Enroll" opens the checkout page
             {user?.email ? ` with your email (${user.email}) pre-filled` : " — log in to iHeartEcho to have your email pre-filled automatically"}.
           </p>
           <a
             href="https://member.allaboutultrasound.com/collections/registry-review"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-shrink-0 flex items-center gap-1.5 text-xs font-semibold hover:underline"
-            style={{ color: BRAND }}
+            className="flex-shrink-0 flex items-center gap-1.5 text-xs font-semibold text-[#189aa1] hover:underline"
           >
             View all on site <ExternalLink className="w-3 h-3" />
           </a>

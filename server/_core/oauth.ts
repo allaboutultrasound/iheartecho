@@ -1,6 +1,7 @@
 import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import type { Express, Request, Response } from "express";
 import * as db from "../db";
+import { activatePendingUser } from "../db";
 import { enrollInFreeMembership } from "../thinkific";
 import { getSessionCookieOptions } from "./cookies";
 import { sdk } from "./sdk";
@@ -29,6 +30,29 @@ export function registerOAuthRoutes(app: Express) {
         return;
       }
 
+      // ── Pre-registration activation (MUST happen before upsertUser) ──────────
+      // If an admin pre-registered this email before the user first signed in,
+      // we update the pending stub in-place (preserving its id and roles) rather
+      // than creating a second row.  We do this FIRST so that the subsequent
+      // upsertUser call hits the now-updated openId and simply refreshes the row.
+      if (userInfo.email) {
+        try {
+          const activated = await activatePendingUser(userInfo.email, userInfo.openId);
+          if (activated) {
+            console.log(`[OAuth] Activated pending account for ${userInfo.email}`);
+          }
+        } catch (err) {
+          // If activation fails (e.g. unique constraint because the user somehow
+          // already has a real account), log and continue — upsertUser below will
+          // handle the normal sign-in path.
+          console.warn("[OAuth] Failed to activate pending user:", err);
+        }
+      }
+
+      // ── Upsert the real user row ──────────────────────────────────────────────
+      // For a first-time sign-in with no pending account this creates a new row.
+      // For a returning user it updates lastSignedIn etc.
+      // For a just-activated pending user it updates the row we already fixed above.
       await db.upsertUser({
         openId: userInfo.openId,
         name: userInfo.name || null,

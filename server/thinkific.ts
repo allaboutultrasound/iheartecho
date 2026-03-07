@@ -178,6 +178,19 @@ export function parseCreditHoursFromName(name: string): {
   return null;
 }
 
+/**
+ * Fetch all enrolled course IDs for a user by email.
+ * Returns an empty array if the user is not found in Thinkific.
+ */
+export async function getUserEnrollmentsByEmail(
+  email: string
+): Promise<number[]> {
+  const user = await getUserByEmail(email);
+  if (!user) return [];
+  const enrollments = await getEnrollmentsByUserId(user.id);
+  return enrollments.map((e) => e.course_id);
+}
+
 // ─── Collections ─────────────────────────────────────────────────────────────
 
 export interface ThinkificCollection {
@@ -196,18 +209,21 @@ export async function getCollections(): Promise<ThinkificCollection[]> {
   return fetchAllPages<ThinkificCollection>("/collections");
 }
 
+/** Custom domain for All About Ultrasound member portal */
+const MEMBER_DOMAIN = "member.allaboutultrasound.com";
+
 /**
- * Build the direct course URL on Thinkific.
+ * Build the direct course URL on the member portal.
  */
 export function buildCourseUrl(slug: string): string {
-  return `https://${ENV.thinkificSubdomain}.thinkific.com/courses/${slug}`;
+  return `https://${MEMBER_DOMAIN}/courses/${slug}`;
 }
 
 /**
- * Build the enrollment/checkout URL for a product.
+ * Build the enrollment/checkout URL on the member portal.
  */
 export function buildEnrollUrl(productSlug: string): string {
-  return `https://${ENV.thinkificSubdomain}.thinkific.com/products/${productSlug}`;
+  return `https://${MEMBER_DOMAIN}/products/${productSlug}`;
 }
 
 // ─── Free Membership Auto-Enrollment ─────────────────────────────────────────

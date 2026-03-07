@@ -37,6 +37,9 @@ export const users = mysqlTable("users", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
   thinkificEnrolledAt: timestamp("thinkificEnrolledAt"),
+  // Pre-registration: admin can create a stub account before the user first signs in
+  isPending: boolean("isPending").default(false).notNull(),
+  pendingCreatedAt: timestamp("pendingCreatedAt"),
 });
 
 export type User = typeof users.$inferSelect;

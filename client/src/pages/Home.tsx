@@ -96,6 +96,14 @@ const modules: Module[] = [
     badge: "CME",
     color: BRAND,
   },
+  {
+    path: "/registry-review",
+    icon: Award,
+    title: "Registry Review Hub",
+    description: "Prepare for ARDMS, CCI, and other registry exams with comprehensive review courses from All About Ultrasound.",
+    badge: "Registry Prep",
+    color: BRAND,
+  },
 ];
 
 const stats = [
