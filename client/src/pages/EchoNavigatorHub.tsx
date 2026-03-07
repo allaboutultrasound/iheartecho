@@ -10,7 +10,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { hasPremiumAccess } from "@/lib/roles";
 import {
   Stethoscope, Microscope, Zap, Users, Baby, Heart,
-  Cpu, FlaskConical, BarChart3, ArrowRight, Scan, Lock
+  Cpu, FlaskConical, BarChart3, ArrowRight, Scan, Lock, Droplets
 } from "lucide-react";
 
 const BRAND = "#189aa1";
@@ -85,6 +85,14 @@ const navigators = [
     description: "ACHD lesion-specific protocols for ASD, VSD, ToF, CoA, TGA, and Fontan with ASE/AHA thresholds.",
     badge: "Congenital Heart",
   },
+  {
+    path: "/uea-navigator",
+    icon: Droplets,
+    title: "UEA EchoNavigator™",
+    description: "Contrast echo protocol: safety screening, agent preparation, view-by-view LVO and myocardial perfusion assessment, and reporting guidance.",
+    badge: "Contrast Echo",
+    premium: true,
+  },
 ];
 
 const badgeColors: Record<string, string> = {
@@ -92,6 +100,7 @@ const badgeColors: Record<string, string> = {
   "Structural Heart": "#0e7490",
   "Stress Echo": "#0f766e",
   "Congenital Heart": "#0369a1",
+  "Contrast Echo": "#0e7490",
 };
 
 export default function EchoNavigatorHub() {

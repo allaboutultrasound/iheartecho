@@ -6,7 +6,7 @@ import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import {
   Scan, Stethoscope, Baby, Heart, Users, Activity,
-  ArrowRight, Zap, Microscope
+  ArrowRight, Zap, Microscope, Droplets
 } from "lucide-react";
 
 const BRAND = "#189aa1";
@@ -61,6 +61,13 @@ const coaches = [
     description: "Intracardiac echocardiography guide with catheter positioning, rotation technique, procedural Doppler guidance, and reference image placeholders for all 7 standard ICE views.",
     badge: "ICE",
   },
+  {
+    path: "/uea-scan-coach",
+    icon: Droplets,
+    title: "UEA ScanCoach™",
+    description: "Contrast echo acquisition guide: probe positioning, machine optimisation (MI, gain, depth), injection technique, flash replenishment, artefact recognition, and view-by-view clinical pearls.",
+    badge: "Contrast Echo",
+  },
 ];
 
 const badgeColors: Record<string, string> = {
@@ -68,6 +75,7 @@ const badgeColors: Record<string, string> = {
   "Congenital Heart": "#0369a1",
   "TEE": "#0e7490",
   "ICE": "#0f766e",
+  "Contrast Echo": "#0e7490",
 };
 
 export default function ScanCoachHub() {

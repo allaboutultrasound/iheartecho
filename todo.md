@@ -998,3 +998,14 @@
 - [x] Profile.tsx: empty subscriptions state links to /premium upgrade page instead of generic browse link
 - [x] AdminCaseManagement.tsx: fixed JSX error from box-drawing Unicode characters in JSX comments (replaced with plain dashes)
 - [x] 583 tests passing
+
+## UEA Navigator & ScanCoach (Session Mar 7)
+- [x] Build UEANavigator.tsx — contrast echo protocol with safety checklist, indications, view-by-view enhancement assessment, reporting guidance, and ASE/EACVI reference values
+- [x] Build UEAScanCoach.tsx — acquisition guide with agent preparation, injection technique, machine optimisation (MI, gain, depth), view-by-view tips, pitfalls, and safety monitoring
+- [x] Register /uea-navigator and /uea-scan-coach routes in App.tsx
+- [x] Add UEA Navigator to EchoNavigatorHub.tsx (premium, "Contrast Echo" badge)
+- [x] Add UEA ScanCoach to ScanCoachHub.tsx ("Contrast Echo" badge)
+- [x] Add UEA Navigator to Layout.tsx sidebar under Clinical Tools section
+- [x] Add UEA ScanCoach to Layout.tsx sidebar under Clinical Tools section
+- [x] Add UEA Navigator and ScanCoach cards to Home dashboard module grid
+- [x] Vitest: no new server procedures needed (static content pages) — 583 tests pass

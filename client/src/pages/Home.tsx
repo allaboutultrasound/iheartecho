@@ -8,7 +8,7 @@ import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import {
   Calculator, ClipboardList, Activity, Scan, BookOpen, FileText,
-  ArrowRight, Users, Award, Zap, Stethoscope, ExternalLink, MessageCircle, GraduationCap
+  ArrowRight, Users, Award, Zap, Stethoscope, ExternalLink, MessageCircle, GraduationCap, Droplets
 } from "lucide-react";
 
 const BRAND = "#189aa1";
@@ -30,6 +30,24 @@ const modules: Module[] = [
     description: "Visual probe guidance with anatomy overlays, Doppler positioning, and orientation tips for Adult TTE, Fetal, Pediatric CHD, ACHD, and Strain.",
     badge: "5 Modules",
     color: BRAND,
+  },
+  {
+    path: "/uea-navigator",
+    icon: Droplets,
+    title: "UEA EchoNavigator™",
+    description: "Contrast echo protocol: safety screening, agent preparation, view-by-view LVO and myocardial perfusion assessment, and reporting guidance. ASE 2018 guidelines.",
+    badge: "Contrast Echo",
+    color: BRAND,
+    premium: true,
+  },
+  {
+    path: "/uea-scan-coach",
+    icon: Droplets,
+    title: "UEA ScanCoach™",
+    description: "Contrast echo acquisition guide: probe positioning, machine optimisation (MI, gain, depth), injection technique, flash replenishment, and artefact recognition.",
+    badge: "Contrast Echo",
+    color: BRAND,
+    premium: true,
   },
   {
     path: "/echo-assist-hub",

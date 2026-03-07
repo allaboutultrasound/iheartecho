@@ -60,6 +60,8 @@ import SubmitCase from "./pages/SubmitCase";
 import AdminCaseManagement from "./pages/AdminCaseManagement";
 import QuickFireAdmin from "./pages/QuickFireAdmin";
 import Premium from "./pages/Premium";
+import UEANavigator from "./pages/UEANavigator";
+import UEAScanCoach from "./pages/UEAScanCoach";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -125,6 +127,8 @@ function Router() {
       <Route path="/strain-scan-coach" component={StrainScanCoach} />
       <Route path="/tee-scan-coach" component={TEEScanCoach} />
       <Route path="/ice-scan-coach" component={ICEScanCoach} />
+      <Route path="/uea-navigator" component={UEANavigator} />
+      <Route path="/uea-scan-coach" component={UEAScanCoach} />
       <Route path="/echo-assist-hub" component={EchoAssistHub} />
       {/* ── LMS Engines ──────────────────────────────────────────────────── */}
       <Route path="/quickfire" component={QuickFire} />
