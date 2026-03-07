@@ -1134,3 +1134,6 @@
 ## HOCMScanCoach Doppler Tab Color Fix
 - [x] Update Doppler Evaluation tab color to brand teal in HOCMScanCoach
 - [x] Update modal waveform color to brand teal in HOCMScanCoach
+
+## HOCMScanCoach Valsalva Pathway Redesign
+- [x] Redesign Valsalva tab with two clickable pathway cards (Instructed + Goal-Directed) each showing dedicated content panel

@@ -398,6 +398,7 @@ export default function HOCMScanCoach() {
   const [selectedView, setSelectedView] = useState(views[0]);
   const [expandedSection, setExpandedSection] = useState<string | null>("howToGet");
   const [activeTab, setActiveTab] = useState<"views" | "doppler" | "valsalva" | "settings">("views");
+  const [valsalvaPath, setValsalvaPath] = useState<"instructed" | "goal-directed" | null>(null);
 
   return (
     <Layout>
@@ -786,239 +787,373 @@ export default function HOCMScanCoach() {
         <div className="container py-6 max-w-3xl">
           <div className="mb-5">
             <h2 className="text-lg font-bold text-gray-800 mb-1" style={{ fontFamily: "Merriweather, serif" }}>
-              Valsalva Acquisition Protocol
+              Valsalva Acquisition
             </h2>
-            <p className="text-sm text-gray-500">Sonographer's step-by-step guide for acquiring provoked LVOT gradients</p>
+            <p className="text-sm text-gray-500">Choose your Valsalva technique to see the step-by-step protocol</p>
           </div>
 
-          <div className="flex items-start gap-2 p-4 rounded-xl bg-[#f0fbfc] border border-[#189aa1]/20 mb-5">
-            <Info className="w-4 h-4 text-[#189aa1] flex-shrink-0 mt-0.5" />
-            <div className="text-xs text-[#0e4a50] leading-relaxed">
-              <strong>Goal:</strong> Capture the peak provoked LVOT gradient during the <strong>release phase</strong> of Valsalva. The most common error is stopping the recording at the end of the strain phase — the peak gradient occurs AFTER release.
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            {[
-              {
-                phase: "Setup",
-                color: BRAND,
-                steps: [
-                  "Obtain and document resting LVOT gradient from A5C or A3C (100 mm/s sweep speed)",
-                  "Confirm dagger-shaped CW signal and optimal beam alignment",
-                  "Switch sweep speed to 50 mm/s to capture multiple beats on one sweep",
-                  "Position patient in steep left lateral decubitus (60–90°)",
-                  "Explain the maneuver to the patient — demonstrate if needed",
-                ],
-              },
-              {
-                phase: "Coaching the Patient",
-                color: PURPLE,
-                steps: [
-                  "Instruct: 'Take a normal breath, then bear down hard as if straining for a bowel movement'",
-                  "Instruct: 'Hold for 10–15 seconds — do NOT let any air out'",
-                  "Instruct: 'When I say release, let go completely and breathe normally'",
-                  "Practice once without imaging to confirm patient understands",
-                  "Confirm HR increases during strain (≥10 bpm) — indicates adequate effort",
-                ],
-              },
-              {
-                phase: "Recording",
-                color: "#dc2626",
-                steps: [
-                  "Start CW Doppler recording 3–5 beats BEFORE the maneuver",
-                  "Cue patient: 'OK, bear down now'",
-                  "Observe: LV cavity should visibly decrease during strain",
-                  "Maintain CW beam position — do NOT move probe during maneuver",
-                  "At 10–15 seconds: cue patient 'Release now'",
-                  "CRITICAL: Continue recording for 5–10 beats AFTER release — peak gradient occurs here",
-                  "Allow 2–3 minutes recovery before repeating if needed",
-                ],
-              },
-              {
-                phase: "Measurement",
-                color: "#0e7490",
-                steps: [
-                  "Identify the beat with the highest peak velocity during the release phase",
-                  "Measure peak velocity at the TIP of the dagger (late systole)",
-                  "Calculate gradient: ΔP = 4V²",
-                  "Report as: 'Provoked LVOT gradient (Valsalva): __ mmHg'",
-                  "Document whether Valsalva was adequate (LV cavity decrease ≥40%, HR increase ≥10 bpm)",
-                  "If Valsalva was inadequate, note this in the report and repeat or use alternative provocation",
-                ],
-              },
-            ].map(({ phase, color, steps }) => (
-              <div key={phase} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
-                style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-                <div className="px-5 py-3 border-b border-gray-50 flex items-center gap-2"
-                  style={{ background: color + "10" }}>
-                  <div className="w-2 h-2 rounded-full" style={{ background: color }} />
-                  <span className="text-xs font-bold" style={{ color }}>{phase}</span>
+          {/* ── Pathway selector ── */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+            {/* Instructed Valsalva card */}
+            <button
+              onClick={() => setValsalvaPath(valsalvaPath === "instructed" ? null : "instructed")}
+              className={`text-left rounded-2xl border-2 p-5 transition-all hover:shadow-md ${
+                valsalvaPath === "instructed"
+                  ? "border-amber-400 bg-amber-50 shadow-md"
+                  : "border-gray-200 bg-white hover:border-amber-300"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-amber-100">
+                    <Activity className="w-4 h-4 text-amber-600" />
+                  </div>
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Traditional</span>
                 </div>
-                <div className="px-5 py-4">
-                  <ol className="space-y-2">
-                    {steps.map((step, i) => (
-                      <li key={i} className="flex items-start gap-3">
-                        <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0 mt-0.5"
-                          style={{ background: color }}>{i + 1}</div>
-                        <p className="text-xs text-gray-700 leading-relaxed">{step}</p>
-                      </li>
+                <ChevronDown className={`w-4 h-4 text-amber-500 transition-transform ${valsalvaPath === "instructed" ? "rotate-180" : ""}`} />
+              </div>
+              <h3 className="text-sm font-bold text-gray-800 mb-1" style={{ fontFamily: "Merriweather, serif" }}>Instructed Valsalva</h3>
+              <p className="text-xs text-gray-500 leading-relaxed">Verbal coaching only — patient bears down on command. No equipment required.</p>
+              <div className="mt-3 flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                <span className="text-[10px] text-amber-700 font-semibold">No equipment needed · Higher false-negative risk</span>
+              </div>
+            </button>
+
+            {/* Goal-Directed Valsalva card */}
+            <button
+              onClick={() => setValsalvaPath(valsalvaPath === "goal-directed" ? null : "goal-directed")}
+              className={`text-left rounded-2xl border-2 p-5 transition-all hover:shadow-md ${
+                valsalvaPath === "goal-directed"
+                  ? "shadow-md"
+                  : "border-gray-200 bg-white"
+              }`}
+              style={valsalvaPath === "goal-directed" ? { borderColor: BRAND, background: "#f0fbfc" } : {}}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "#d0f5f6" }}>
+                    <Target className="w-4 h-4" style={{ color: BRAND }} />
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white" style={{ background: BRAND }}>Preferred</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded text-white" style={{ background: "#0369a1" }}>PMID 39886312</span>
+                </div>
+                <ChevronDown className={`w-4 h-4 transition-transform`} style={{ color: BRAND, transform: valsalvaPath === "goal-directed" ? "rotate(180deg)" : "" }} />
+              </div>
+              <h3 className="text-sm font-bold text-gray-800 mb-1" style={{ fontFamily: "Merriweather, serif" }}>Goal-Directed Valsalva</h3>
+              <p className="text-xs text-gray-500 leading-relaxed">Manometer circuit — patient blows to ≥40 mmHg and holds 10 seconds. Objective, reproducible.</p>
+              <div className="mt-3 flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full" style={{ background: BRAND }} />
+                <span className="text-[10px] font-semibold" style={{ color: BRAND }}>Sphygmomanometer + syringe + O₂ tubing · Fewer false-negatives</span>
+              </div>
+            </button>
+          </div>
+
+          {/* ── No path selected: show comparison ── */}
+          {!valsalvaPath && (
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-4"
+              style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: BRAND }}>Why Goal-Directed is Preferred</h3>
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded text-white" style={{ background: "#0369a1" }}>PMID 39886312</span>
+              </div>
+              <p className="text-xs text-gray-500 mb-4">Kim et al., 2025 — select a pathway above to see the full protocol</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="rounded-xl border border-gray-200 p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-2 h-2 rounded-full bg-amber-400" />
+                    <span className="text-xs font-bold text-gray-800">Instructed Valsalva</span>
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">Traditional</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {[
+                      { label: "Coaching", text: "\"Bear down hard for 10–15 seconds\"" },
+                      { label: "Endpoint", text: "Fixed duration; patient effort only" },
+                      { label: "Equipment", text: "None" },
+                      { label: "False-negative risk", text: "Higher — up to 30–40% subtherapeutic" },
+                    ].map(({ label, text }) => (
+                      <div key={label}>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{label}: </span>
+                        <span className="text-xs text-gray-700">{text}</span>
+                      </div>
                     ))}
-                  </ol>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Goal-Directed vs Instructed Valsalva */}
-          <div className="mt-4 bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-4"
-            style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: BRAND }}>Goal-Directed vs. Instructed Valsalva</h3>
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded text-white" style={{ background: "#0369a1" }}>PMID 39886312</span>
-            </div>
-            <p className="text-xs text-gray-500 mb-4">Evidence-based comparison — Kim et al., 2025</p>
-
-            <div className="p-3 rounded-xl bg-[#f0fbfc] border border-[#189aa1]/20 mb-4">
-              <p className="text-xs text-[#0e4a50] leading-relaxed">
-                <strong>Key finding:</strong> Goal-directed Valsalva uses a sphygmomanometer circuit to standardise the strain effort. The patient blows into a syringe connected via oxygen tubing until the manometer reads <strong>≥40 mmHg</strong>, then holds that pressure for <strong>10 seconds</strong>. This objective pressure target produces significantly higher and more reproducible provoked LVOT gradients compared to standard instructed Valsalva.
-              </p>
-            </div>
-
-            {/* Side-by-side comparison */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-              <div className="rounded-xl border border-gray-200 p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-2 h-2 rounded-full bg-amber-400" />
-                  <span className="text-xs font-bold text-gray-800">Instructed Valsalva</span>
-                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">Traditional</span>
-                </div>
-                <div className="space-y-1.5">
-                  {[
-                    { label: "Coaching", text: "\"Bear down hard for 10–15 seconds\"" },
-                    { label: "Endpoint", text: "Fixed duration; patient effort only — no pressure measurement" },
-                    { label: "Equipment", text: "None beyond the echo machine" },
-                    { label: "Limitation", text: "Variable intrathoracic pressure → inconsistent preload reduction → false-negatives" },
-                    { label: "False-negative risk", text: "Higher — up to 30–40% of maneuvers are subtherapeutic" },
-                  ].map(({ label, text }) => (
-                    <div key={label}>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{label}: </span>
-                      <span className="text-xs text-gray-700">{text}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="rounded-xl border-2 p-4" style={{ borderColor: "#189aa1", background: "#f0fbfc" }}>
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-2 h-2 rounded-full" style={{ background: "#189aa1" }} />
-                  <span className="text-xs font-bold text-gray-800">Goal-Directed Valsalva</span>
-                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded text-white" style={{ background: "#189aa1" }}>Preferred</span>
-                </div>
-                <div className="space-y-1.5">
-                  {[
-                    { label: "Coaching", text: "\"Blow into the tube until the gauge reads 40 — then hold it for 10 seconds\"" },
-                    { label: "Endpoint", text: "Sphygmomanometer ≥40 mmHg sustained for 10 seconds" },
-                    { label: "Equipment", text: "Sphygmomanometer + O₂ tubing + 20 mL syringe + optional respiratory filter" },
-                    { label: "Advantage", text: "Objective pressure target → reproducible preload reduction → fewer false-negatives" },
-                    { label: "False-negative risk", text: "Lower — pressure confirmed on manometer gauge" },
-                  ].map(({ label, text }) => (
-                    <div key={label}>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{label}: </span>
-                      <span className="text-xs text-gray-700">{text}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Circuit assembly */}
-            <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 mb-4">
-              <h4 className="text-xs font-bold text-gray-700 mb-3">Assembling the Circuit — Sonographer Steps</h4>
-              <div className="space-y-2">
-                {[
-                  { step: 1, text: "Gather: aneroid sphygmomanometer, ~30 cm oxygen tubing, 20 mL syringe, and (optional) disposable respiratory filter" },
-                  { step: 2, text: "Connect one end of the O₂ tubing to the sphygmomanometer inflation port (where the hand bulb normally attaches)" },
-                  { step: 3, text: "Attach the 20 mL syringe to the other end of the tubing — this is the patient's mouthpiece. Insert the respiratory filter between syringe and tubing if using one" },
-                  { step: 4, text: "Pre-inflate the cuff to ~40 mmHg and close the valve — this pre-loads the system so the patient's blow immediately registers on the gauge" },
-                  { step: 5, text: "Practice once before imaging: patient blows into the syringe until the gauge reaches 40 mmHg and holds. Confirm they can sustain it for 10 seconds" },
-                ].map(({ step, text }) => (
-                  <div key={step} className="flex items-start gap-2">
-                    <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0" style={{ background: BRAND }}>{step}</div>
-                    <p className="text-xs text-gray-700 leading-relaxed pt-0.5">{text}</p>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Acquisition protocol */}
-            <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 mb-4">
-              <h4 className="text-xs font-bold text-gray-700 mb-3">Acquisition Protocol</h4>
-              <div className="space-y-2">
-                {[
-                  { step: 1, text: "Obtain resting LVOT gradient from A5C/A3C. Confirm dagger-shaped CW signal. Switch sweep speed to 50 mm/s." },
-                  { step: 2, text: "Start CW Doppler recording 3–5 beats before cueing the patient" },
-                  { step: 3, text: "Cue patient to blow into the circuit. Watch the manometer — confirm gauge reaches ≥40 mmHg" },
-                  { step: 4, text: "Patient holds ≥40 mmHg for 10 seconds. Keep CW beam on LVOT — do NOT move the probe" },
-                  { step: 5, text: "Cue patient to release. CRITICAL: Continue recording 5–10 beats AFTER release — peak gradient occurs during the rebound phase" },
-                  { step: 6, text: "Measure peak velocity at the dagger tip during the release phase. Calculate ΔP = 4V². Report as 'Provoked LVOT gradient (goal-directed Valsalva): __ mmHg'" },
-                  { step: 7, text: "If patient cannot reach ≥40 mmHg after two attempts, document as inadequate and consider exercise stress echo" },
-                ].map(({ step, text }) => (
-                  <div key={step} className="flex items-start gap-2">
-                    <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0" style={{ background: BRAND }}>{step}</div>
-                    <p className="text-xs text-gray-700 leading-relaxed pt-0.5">{text}</p>
+                </div>
+                <div className="rounded-xl border-2 p-4" style={{ borderColor: BRAND, background: "#f0fbfc" }}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-2 h-2 rounded-full" style={{ background: BRAND }} />
+                    <span className="text-xs font-bold text-gray-800">Goal-Directed Valsalva</span>
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded text-white" style={{ background: BRAND }}>Preferred</span>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Equipment checklist */}
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-                <span className="text-xs font-bold text-amber-700">Equipment Checklist — Goal-Directed Valsalva</span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {[
-                  { item: "Aneroid sphygmomanometer", required: true },
-                  { item: "Oxygen tubing (~30 cm)", required: true },
-                  { item: "20 mL syringe (mouthpiece)", required: true },
-                  { item: "Disposable respiratory filter (infection control)", required: false },
-                  { item: "Cuff pre-inflated to ~40 mmHg before patient blows", required: true },
-                  { item: "If equipment unavailable: use instructed Valsalva + HR ≥10 bpm as adequacy surrogate", required: false },
-                ].map(({ item, required }) => (
-                  <div key={item} className="flex items-start gap-1.5">
-                    <Info className={`w-3 h-3 flex-shrink-0 mt-0.5 ${required ? "text-amber-600" : "text-amber-400"}`} />
-                    <span className={`text-xs ${required ? "text-amber-800 font-medium" : "text-amber-700"}`}>
-                      {required ? "[Required] " : "[Optional] "}{item}
-                    </span>
+                  <div className="space-y-1.5">
+                    {[
+                      { label: "Coaching", text: "\"Blow to 40 mmHg on the gauge — hold 10 seconds\"" },
+                      { label: "Endpoint", text: "Sphygmomanometer ≥40 mmHg × 10 seconds" },
+                      { label: "Equipment", text: "Sphygmomanometer + O₂ tubing + 20 mL syringe" },
+                      { label: "False-negative risk", text: "Lower — pressure confirmed on gauge" },
+                    ].map(({ label, text }) => (
+                      <div key={label}>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{label}: </span>
+                        <span className="text-xs text-gray-700">{text}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Adequacy checklist */}
-          <div className="mt-4 bg-white rounded-xl border border-gray-100 shadow-sm p-5"
-            style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
-            <h3 className="text-xs font-bold uppercase tracking-wider mb-3 text-amber-600">Adequacy Checklist</h3>
-            <div className="space-y-2">
+          {/* ── INSTRUCTED VALSALVA PROTOCOL ── */}
+          {valsalvaPath === "instructed" && (
+            <div className="space-y-4">
+              <div className="flex items-start gap-2 p-4 rounded-xl bg-amber-50 border border-amber-200 mb-2">
+                <Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="text-xs text-amber-800 leading-relaxed">
+                  <strong>Goal:</strong> Capture the peak provoked LVOT gradient during the <strong>release phase</strong>. The most common error is stopping the recording at the end of strain — the peak gradient occurs AFTER release.
+                </div>
+              </div>
               {[
-                { check: "LV cavity decreases ≥40% during strain phase", critical: true },
-                { check: "Heart rate increases ≥10 bpm during strain", critical: true },
-                { check: "Patient maintained effort for ≥10 seconds", critical: false },
-                { check: "Recording continued ≥5 beats after release", critical: true },
-                { check: "CW beam maintained on LVOT throughout", critical: false },
-                { check: "Peak gradient measured at dagger tip (late systole)", critical: false },
-              ].map(({ check, critical }) => (
-                <div key={check} className={`flex items-center gap-2 p-2.5 rounded-lg ${critical ? "bg-[#f0fbfc] border border-[#189aa1]/20" : "bg-gray-50"}`}>
-                  <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: critical ? PURPLE : BRAND }} />
-                  <span className="text-xs text-gray-700">{check}</span>
-                  {critical && <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded text-white flex-shrink-0" style={{ background: PURPLE }}>REQUIRED</span>}
+                {
+                  phase: "Setup",
+                  color: BRAND,
+                  steps: [
+                    "Obtain and document resting LVOT gradient from A5C or A3C (100 mm/s sweep speed)",
+                    "Confirm dagger-shaped CW signal and optimal beam alignment",
+                    "Switch sweep speed to 50 mm/s to capture multiple beats on one sweep",
+                    "Position patient in steep left lateral decubitus (60–90°)",
+                    "Explain the maneuver — demonstrate if needed",
+                  ],
+                },
+                {
+                  phase: "Coaching the Patient",
+                  color: "#d97706",
+                  steps: [
+                    "Instruct: 'Take a normal breath, then bear down hard as if straining for a bowel movement'",
+                    "Instruct: 'Hold for 10–15 seconds — do NOT let any air out'",
+                    "Instruct: 'When I say release, let go completely and breathe normally'",
+                    "Practice once without imaging to confirm patient understands",
+                    "Confirm HR increases during strain (≥10 bpm) — indicates adequate effort",
+                  ],
+                },
+                {
+                  phase: "Recording",
+                  color: "#dc2626",
+                  steps: [
+                    "Start CW Doppler recording 3–5 beats BEFORE the maneuver",
+                    "Cue patient: 'OK, bear down now'",
+                    "Observe: LV cavity should visibly decrease during strain",
+                    "Maintain CW beam position — do NOT move probe during maneuver",
+                    "At 10–15 seconds: cue patient 'Release now'",
+                    "CRITICAL: Continue recording for 5–10 beats AFTER release — peak gradient occurs here",
+                    "Allow 2–3 minutes recovery before repeating if needed",
+                  ],
+                },
+                {
+                  phase: "Measurement",
+                  color: "#0e7490",
+                  steps: [
+                    "Identify the beat with the highest peak velocity during the release phase",
+                    "Measure peak velocity at the TIP of the dagger (late systole)",
+                    "Calculate gradient: ΔP = 4V²",
+                    "Report as: 'Provoked LVOT gradient (Valsalva): __ mmHg'",
+                    "Document adequacy: LV cavity decrease ≥40%, HR increase ≥10 bpm",
+                    "If inadequate, note in report and repeat or use alternative provocation",
+                  ],
+                },
+              ].map(({ phase, color, steps }) => (
+                <div key={phase} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
+                  style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                  <div className="px-5 py-3 border-b border-gray-50 flex items-center gap-2"
+                    style={{ background: color + "10" }}>
+                    <div className="w-2 h-2 rounded-full" style={{ background: color }} />
+                    <span className="text-xs font-bold" style={{ color }}>{phase}</span>
+                  </div>
+                  <div className="px-5 py-4">
+                    <ol className="space-y-2">
+                      {steps.map((step, i) => (
+                        <li key={i} className="flex items-start gap-3">
+                          <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0 mt-0.5"
+                            style={{ background: color }}>{i + 1}</div>
+                          <p className="text-xs text-gray-700 leading-relaxed">{step}</p>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
                 </div>
               ))}
+              {/* Adequacy checklist */}
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
+                style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                <h3 className="text-xs font-bold uppercase tracking-wider mb-3 text-amber-600">Adequacy Checklist</h3>
+                <div className="space-y-2">
+                  {[
+                    { check: "LV cavity decreases ≥40% during strain phase", critical: true },
+                    { check: "Heart rate increases ≥10 bpm during strain", critical: true },
+                    { check: "Patient maintained effort for ≥10 seconds", critical: false },
+                    { check: "Recording continued ≥5 beats after release", critical: true },
+                    { check: "CW beam maintained on LVOT throughout", critical: false },
+                    { check: "Peak gradient measured at dagger tip (late systole)", critical: false },
+                  ].map(({ check, critical }) => (
+                    <div key={check} className={`flex items-center gap-2 p-2.5 rounded-lg ${critical ? "bg-amber-50 border border-amber-200" : "bg-gray-50"}`}>
+                      <CheckCircle className={`w-4 h-4 flex-shrink-0 ${critical ? "text-amber-600" : "text-gray-400"}`} />
+                      <span className="text-xs text-gray-700">{check}</span>
+                      {critical && <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-600 text-white flex-shrink-0">REQUIRED</span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* ── GOAL-DIRECTED VALSALVA PROTOCOL ── */}
+          {valsalvaPath === "goal-directed" && (
+            <div className="space-y-4">
+              <div className="flex items-start gap-2 p-4 rounded-xl bg-[#f0fbfc] border border-[#189aa1]/20 mb-2">
+                <Info className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: BRAND }} />
+                <div className="text-xs text-[#0e4a50] leading-relaxed">
+                  <strong>Goal:</strong> The patient blows into the manometer circuit until the gauge reads <strong>≥40 mmHg</strong>, then holds for <strong>10 seconds</strong>. This standardises intrathoracic pressure and produces significantly higher, more reproducible provoked gradients than instructed Valsalva (Kim et al., PMID 39886312).
+                </div>
+              </div>
+
+              {/* Circuit assembly */}
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
+                style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                <div className="px-5 py-3 border-b flex items-center gap-2" style={{ background: BRAND + "10" }}>
+                  <div className="w-2 h-2 rounded-full" style={{ background: BRAND }} />
+                  <span className="text-xs font-bold" style={{ color: BRAND }}>Circuit Assembly</span>
+                </div>
+                <div className="px-5 py-4 space-y-2">
+                  {[
+                    "Gather: aneroid sphygmomanometer, ~30 cm oxygen tubing, 20 mL syringe, and (optional) disposable respiratory filter",
+                    "Connect one end of the O₂ tubing to the sphygmomanometer inflation port (where the hand bulb normally attaches)",
+                    "Attach the 20 mL syringe to the other end of the tubing — this is the patient's mouthpiece. Insert the respiratory filter between syringe and tubing if using one",
+                    "Pre-inflate the cuff to ~40 mmHg and close the valve — this pre-loads the system so the patient's blow immediately registers on the gauge",
+                    "Practice once before imaging: patient blows into the syringe until the gauge reaches 40 mmHg and holds. Confirm they can sustain it for 10 seconds",
+                  ].map((text, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0" style={{ background: BRAND }}>{i + 1}</div>
+                      <p className="text-xs text-gray-700 leading-relaxed pt-0.5">{text}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Coaching */}
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
+                style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                <div className="px-5 py-3 border-b flex items-center gap-2" style={{ background: "#0e7490" + "10" }}>
+                  <div className="w-2 h-2 rounded-full" style={{ background: "#0e7490" }} />
+                  <span className="text-xs font-bold" style={{ color: "#0e7490" }}>Coaching the Patient</span>
+                </div>
+                <div className="px-5 py-4 space-y-2">
+                  {[
+                    "Instruct: 'Blow into the tube until the gauge reads 40 — then hold it there'",
+                    "Instruct: 'Keep blowing steadily — don't let the needle drop below 40'",
+                    "Instruct: 'When I say release, stop blowing and breathe normally'",
+                    "Practice once without imaging to confirm patient can reach and hold ≥40 mmHg",
+                  ].map((text, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0" style={{ background: "#0e7490" }}>{i + 1}</div>
+                      <p className="text-xs text-gray-700 leading-relaxed pt-0.5">{text}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Recording */}
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
+                style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                <div className="px-5 py-3 border-b flex items-center gap-2" style={{ background: "#dc2626" + "10" }}>
+                  <div className="w-2 h-2 rounded-full bg-red-600" />
+                  <span className="text-xs font-bold text-red-600">Recording</span>
+                </div>
+                <div className="px-5 py-4 space-y-2">
+                  {[
+                    "Start CW Doppler recording 3–5 beats BEFORE cueing the patient",
+                    "Cue patient to blow into the circuit. Watch the manometer — confirm gauge reaches ≥40 mmHg",
+                    "Patient holds ≥40 mmHg for 10 seconds. Keep CW beam on LVOT — do NOT move the probe",
+                    "Cue patient to release. CRITICAL: Continue recording 5–10 beats AFTER release — peak gradient occurs during the rebound phase",
+                    "Allow 2–3 minutes recovery before repeating if needed",
+                  ].map((text, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0 bg-red-600">{i + 1}</div>
+                      <p className={`text-xs leading-relaxed pt-0.5 ${i === 3 ? "text-red-700 font-semibold" : "text-gray-700"}`}>{text}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Measurement */}
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
+                style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                <div className="px-5 py-3 border-b flex items-center gap-2" style={{ background: "#0e4a50" + "15" }}>
+                  <div className="w-2 h-2 rounded-full" style={{ background: "#0e4a50" }} />
+                  <span className="text-xs font-bold" style={{ color: "#0e4a50" }}>Measurement</span>
+                </div>
+                <div className="px-5 py-4 space-y-2">
+                  {[
+                    "Identify the beat with the highest peak velocity during the release phase",
+                    "Measure peak velocity at the TIP of the dagger (late systole)",
+                    "Calculate gradient: ΔP = 4V²",
+                    "Report as: 'Provoked LVOT gradient (goal-directed Valsalva): __ mmHg'",
+                    "If patient cannot reach ≥40 mmHg after two attempts, document as inadequate and consider exercise stress echo",
+                  ].map((text, i) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0" style={{ background: "#0e4a50" }}>{i + 1}</div>
+                      <p className="text-xs text-gray-700 leading-relaxed pt-0.5">{text}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Equipment checklist */}
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                  <span className="text-xs font-bold text-amber-700">Equipment Checklist</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {[
+                    { item: "Aneroid sphygmomanometer", required: true },
+                    { item: "Oxygen tubing (~30 cm)", required: true },
+                    { item: "20 mL syringe (mouthpiece)", required: true },
+                    { item: "Disposable respiratory filter (infection control)", required: false },
+                    { item: "Cuff pre-inflated to ~40 mmHg before patient blows", required: true },
+                    { item: "No equipment? Use instructed Valsalva + HR ≥10 bpm as adequacy surrogate", required: false },
+                  ].map(({ item, required }) => (
+                    <div key={item} className="flex items-start gap-1.5">
+                      <Info className={`w-3 h-3 flex-shrink-0 mt-0.5 ${required ? "text-amber-600" : "text-amber-400"}`} />
+                      <span className={`text-xs ${required ? "text-amber-800 font-medium" : "text-amber-700"}`}>
+                        {required ? "[Required] " : "[Optional] "}{item}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Adequacy checklist */}
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
+                style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                <h3 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: BRAND }}>Adequacy Checklist</h3>
+                <div className="space-y-2">
+                  {[
+                    { check: "Manometer gauge reached ≥40 mmHg", critical: true },
+                    { check: "Patient held ≥40 mmHg for 10 seconds", critical: true },
+                    { check: "Recording continued ≥5 beats after release", critical: true },
+                    { check: "CW beam maintained on LVOT throughout", critical: false },
+                    { check: "Peak gradient measured at dagger tip (late systole)", critical: false },
+                    { check: "LV cavity decrease visible during strain phase", critical: false },
+                  ].map(({ check, critical }) => (
+                    <div key={check} className={`flex items-center gap-2 p-2.5 rounded-lg ${critical ? "bg-[#f0fbfc] border border-[#189aa1]/20" : "bg-gray-50"}`}>
+                      <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: critical ? BRAND : "#9ca3af" }} />
+                      <span className="text-xs text-gray-700">{check}</span>
+                      {critical && <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded text-white flex-shrink-0" style={{ background: BRAND }}>REQUIRED</span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
