@@ -153,6 +153,54 @@ export async function updateUserPassword(userId: number, newHash: string): Promi
   await db.update(users).set({ passwordHash: newHash }).where(eq(users.id, userId));
 }
 
+export async function setPendingEmail(
+  userId: number,
+  pendingEmail: string,
+  token: string,
+  expiry: Date,
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(users)
+    .set({ pendingEmail, pendingEmailToken: token, pendingEmailExpiry: expiry })
+    .where(eq(users.id, userId));
+}
+
+export async function getUserByPendingEmailToken(token: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db
+    .select()
+    .from(users)
+    .where(eq(users.pendingEmailToken, token))
+    .limit(1);
+  return rows[0];
+}
+
+export async function confirmPendingEmail(userId: number, newEmail: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(users)
+    .set({
+      email: newEmail,
+      pendingEmail: null,
+      pendingEmailToken: null,
+      pendingEmailExpiry: null,
+    })
+    .where(eq(users.id, userId));
+}
+
+export async function clearPendingEmail(userId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(users)
+    .set({ pendingEmail: null, pendingEmailToken: null, pendingEmailExpiry: null })
+    .where(eq(users.id, userId));
+}
+
 export async function getAllCommunities() {
   const db = await getDb();
   if (!db) return [];

@@ -47,6 +47,10 @@ export const users = mysqlTable("users", {
   emailVerificationExpiry: timestamp("emailVerificationExpiry"),
   passwordResetToken: varchar("passwordResetToken", { length: 128 }),
   passwordResetExpiry: timestamp("passwordResetExpiry"),
+  // Email change verification
+  pendingEmail: varchar("pendingEmail", { length: 320 }),
+  pendingEmailToken: varchar("pendingEmailToken", { length: 128 }),
+  pendingEmailExpiry: timestamp("pendingEmailExpiry"),
 });
 
 export type User = typeof users.$inferSelect;

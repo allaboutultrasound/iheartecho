@@ -187,6 +187,43 @@ export function buildPasswordResetEmail(opts: {
   return { subject, htmlBody, previewText };
 }
 
+export function buildEmailChangeVerificationEmail(opts: {
+  firstName: string;
+  newEmail: string;
+  verificationUrl: string;
+}): { subject: string; htmlBody: string; previewText: string } {
+  const subject = "Confirm your new email address — iHeartEcho";
+  const previewText = "Click to confirm your new email address for iHeartEcho";
+  const htmlBody = emailWrapper(`
+    <h2 style="margin:0 0 8px;font-size:20px;color:${brandDark};font-family:Georgia,serif;">
+      Confirm Your New Email Address
+    </h2>
+    <p style="margin:0 0 16px;font-size:15px;color:#475569;line-height:1.6;">
+      Hi ${opts.firstName}, you recently requested to change your iHeartEcho email address to:
+    </p>
+    <div style="background:#f0fbfc;border-left:3px solid ${brandColor};padding:12px 16px;border-radius:0 8px 8px 0;margin:0 0 20px;">
+      <p style="margin:0;font-size:15px;font-weight:700;color:${brandColor};">${opts.newEmail}</p>
+    </div>
+    <p style="margin:0 0 20px;font-size:15px;color:#475569;line-height:1.6;">
+      Click the button below to confirm this change. Your current email address will remain active until you confirm.
+    </p>
+    <div style="text-align:center;margin:28px 0;">
+      <a href="${opts.verificationUrl}"
+        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;">
+        Confirm New Email Address
+      </a>
+    </div>
+    <p style="margin:0;font-size:13px;color:#94a3b8;line-height:1.5;">
+      This link expires in 24 hours. If you did not request this change, you can safely ignore this email — your current email address will not change.
+    </p>
+    <p style="margin:12px 0 0;font-size:13px;color:#94a3b8;">
+      Or copy and paste this URL into your browser:<br/>
+      <a href="${opts.verificationUrl}" style="color:${brandColor};word-break:break-all;">${opts.verificationUrl}</a>
+    </p>
+  `);
+  return { subject, htmlBody, previewText };
+}
+
 export function buildWelcomeEmail(opts: {
   firstName: string;
   loginUrl: string;

@@ -8,6 +8,7 @@ import { useState, useEffect, useRef } from "react";
 import {
   User, Mail, Edit3, Save, X, CheckCircle, ExternalLink, Award, Shield, Star,
   ClipboardList, Camera, Lock, MapPin, Globe, Briefcase, FileText, Eye, EyeOff,
+  Clock, AlertCircle, RefreshCw,
 } from "lucide-react";
 import Layout from "@/components/Layout";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -95,6 +96,9 @@ export default function Profile() {
   const [showNewPw, setShowNewPw] = useState(false);
   const [showConfirmPw, setShowConfirmPw] = useState(false);
 
+  // Email change verification state
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarDataUri, setAvatarDataUri] = useState<string | null>(null);
   const [avatarMime, setAvatarMime] = useState<AcceptedMime | null>(null);
@@ -111,8 +115,34 @@ export default function Profile() {
       setYearsExperience(u.yearsExperience != null ? String(u.yearsExperience) : "");
       setLocation(u.location || "");
       setWebsite(u.website || "");
+      setPendingEmail((u as any).pendingEmail ?? null);
     }
   }, [user]);
+
+  const requestEmailChange = trpc.auth.requestEmailChange.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Verification email sent to ${data.pendingEmail}. Check your inbox and click the link to confirm.`);
+      setPendingEmail(data.pendingEmail);
+      utils.auth.me.invalidate();
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to send verification email.");
+    },
+  });
+
+  const cancelEmailChange = trpc.auth.cancelEmailChange.useMutation({
+    onSuccess: () => {
+      toast.success("Email change cancelled.");
+      setPendingEmail(null);
+      // Reset email field back to current email
+      const u = user as any;
+      setEmail(u.email || "");
+      utils.auth.me.invalidate();
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to cancel email change.");
+    },
+  });
 
   const updateProfile = trpc.auth.updateProfile.useMutation({
     onSuccess: () => {
@@ -187,9 +217,14 @@ export default function Profile() {
       return;
     }
 
+    // If email changed, trigger verification flow instead of direct update
+    const emailTrimmed = email.trim().toLowerCase();
+    const currentEmail = (u.email || "").toLowerCase();
+    const emailChanged = emailTrimmed !== currentEmail && emailTrimmed !== "";
+
+    // Update all non-email fields immediately
     updateProfile.mutate({
       displayName: trimmedName !== (u.displayName || u.name || "") ? trimmedName : undefined,
-      email: email.trim() !== (u.email || "") ? email.trim() : undefined,
       bio: bio.trim() !== (u.bio || "") ? bio.trim() : undefined,
       credentials: credentials.trim() !== (u.credentials || "") ? credentials.trim() : undefined,
       specialty: specialty !== (u.specialty || "") ? specialty : undefined,
@@ -197,6 +232,11 @@ export default function Profile() {
       location: location.trim() !== (u.location || "") ? location.trim() : undefined,
       website: websiteTrimmed !== (u.website || "") ? websiteTrimmed : undefined,
     });
+
+    // If email changed, separately trigger the verification email
+    if (emailChanged) {
+      requestEmailChange.mutate({ newEmail: emailTrimmed });
+    }
   };
 
   const handleCancel = () => {
@@ -530,7 +570,7 @@ export default function Profile() {
                         <Mail className="w-3 h-3 inline mr-1" />
                         Email Address
                       </label>
-                      {editMode ? (
+                      {editMode && !pendingEmail ? (
                         <input
                           type="email"
                           value={email}
@@ -540,6 +580,38 @@ export default function Profile() {
                         />
                       ) : (
                         <div className={readonlyClass}>{u.email || "—"}</div>
+                      )}
+                      {/* Pending email verification banner */}
+                      {pendingEmail && (
+                        <div className="mt-2 p-2.5 rounded-lg border border-amber-200 bg-amber-50 flex items-start gap-2">
+                          <Clock className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-semibold text-amber-700">Verification pending</p>
+                            <p className="text-xs text-amber-600 mt-0.5 break-all">
+                              A confirmation link was sent to <span className="font-medium">{pendingEmail}</span>.
+                              Your email will not change until you click the link.
+                            </p>
+                            <div className="flex items-center gap-2 mt-1.5">
+                              <button
+                                onClick={() => requestEmailChange.mutate({ newEmail: pendingEmail })}
+                                disabled={requestEmailChange.isPending}
+                                className="flex items-center gap-1 text-[10px] font-semibold text-amber-700 hover:text-amber-900 disabled:opacity-60"
+                              >
+                                <RefreshCw className="w-2.5 h-2.5" />
+                                Resend
+                              </button>
+                              <span className="text-amber-300">·</span>
+                              <button
+                                onClick={() => cancelEmailChange.mutate()}
+                                disabled={cancelEmailChange.isPending}
+                                className="flex items-center gap-1 text-[10px] font-semibold text-red-500 hover:text-red-700 disabled:opacity-60"
+                              >
+                                <X className="w-2.5 h-2.5" />
+                                Cancel change
+                              </button>
+                            </div>
+                          </div>
+                        </div>
                       )}
                     </div>
                   </div>

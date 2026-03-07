@@ -128,7 +128,13 @@ export const appRouter = router({
     me: publicProcedure.query(async opts => {
       if (!opts.ctx.user) return null;
       const roles = await getUserRoles(opts.ctx.user.id);
-      return { ...opts.ctx.user, appRoles: roles };
+      // Fetch full user row to expose pendingEmail for the profile UI
+      const fullUser = await getUserById(opts.ctx.user.id);
+      return {
+        ...opts.ctx.user,
+        pendingEmail: fullUser?.pendingEmail ?? null,
+        appRoles: roles,
+      };
     }),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
@@ -192,6 +198,93 @@ export const appRouter = router({
         const { url } = await storagePut(fileKey, buffer, input.mimeType);
         await updateUserProfile(ctx.user.id, { avatarUrl: url });
         return { avatarUrl: url };
+      }),
+
+    // ─── Email Change Verification ────────────────────────────────────────────
+
+    requestEmailChange: protectedProcedure
+      .input(z.object({
+        newEmail: z.string().email().max(320),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { setPendingEmail, getUserById } = await import('./db');
+        const { sendEmail, buildEmailChangeVerificationEmail } = await import('./_core/email');
+        const crypto = await import('crypto');
+
+        const newEmail = input.newEmail.trim().toLowerCase();
+
+        // Prevent changing to the same email
+        const currentUser = await getUserById(ctx.user.id);
+        if (!currentUser) throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found.' });
+        if (currentUser.email?.toLowerCase() === newEmail) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'The new email address is the same as your current one.' });
+        }
+
+        // Check if another account already uses this email
+        const { getDb } = await import('./db');
+        const { users: usersTable } = await import('../drizzle/schema');
+        const { eq } = await import('drizzle-orm');
+        const db = await getDb();
+        if (db) {
+          const existing = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.email, newEmail)).limit(1);
+          if (existing.length > 0 && existing[0].id !== ctx.user.id) {
+            throw new TRPCError({ code: 'CONFLICT', message: 'That email address is already in use by another account.' });
+          }
+        }
+
+        // Generate a secure token (48 bytes → 96 hex chars)
+        const token = crypto.randomBytes(48).toString('hex');
+        const expiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+        await setPendingEmail(ctx.user.id, newEmail, token, expiry);
+
+        // Build verification URL
+        const appUrl = process.env.VITE_APP_URL || 'https://app.iheartecho.com';
+        const verificationUrl = `${appUrl}/verify-email?token=${token}&type=change`;
+
+        const firstName = (currentUser.displayName || currentUser.name || 'there').split(' ')[0];
+        const emailPayload = buildEmailChangeVerificationEmail({
+          firstName,
+          newEmail,
+          verificationUrl,
+        });
+
+        await sendEmail({
+          to: { name: firstName, email: newEmail },
+          subject: emailPayload.subject,
+          htmlBody: emailPayload.htmlBody,
+          previewText: emailPayload.previewText,
+        });
+
+        return { success: true, pendingEmail: newEmail };
+      }),
+
+    verifyEmailChange: publicProcedure
+      .input(z.object({
+        token: z.string().min(1).max(200),
+      }))
+      .mutation(async ({ input }) => {
+        const { getUserByPendingEmailToken, confirmPendingEmail } = await import('./db');
+
+        const user = await getUserByPendingEmailToken(input.token);
+        if (!user) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Verification link is invalid or has already been used.' });
+        }
+        if (!user.pendingEmail || !user.pendingEmailExpiry) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'No pending email change found for this token.' });
+        }
+        if (new Date() > user.pendingEmailExpiry) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'This verification link has expired. Please request a new email change.' });
+        }
+        await confirmPendingEmail(user.id, user.pendingEmail);
+        return { success: true, newEmail: user.pendingEmail };
+      }),
+
+    cancelEmailChange: protectedProcedure
+      .mutation(async ({ ctx }) => {
+        const { clearPendingEmail } = await import('./db');
+        await clearPendingEmail(ctx.user.id);
+        return { success: true };
       }),
   }),
 

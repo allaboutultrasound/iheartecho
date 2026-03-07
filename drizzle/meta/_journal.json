@@ -204,6 +204,13 @@
       "when": 1772844171513,
       "tag": "0028_long_pride",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "5",
+      "when": 1772848463797,
+      "tag": "0029_white_wallop",
+      "breakpoints": true
     }
   ]
 }

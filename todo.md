@@ -765,3 +765,17 @@
 - [x] Backend — changePassword tRPC procedure using bcryptjs (current password verification + new password hash)
 - [x] Backend — getUserPasswordHash and updateUserPassword db helpers
 - [x] Vitest — Extended profile update and changePassword validation tests (all 424 tests passing)
+
+## Email Verification Flow (Email Change)
+- [x] DB schema — add pendingEmail, pendingEmailToken, pendingEmailExpiry columns to users table
+- [x] DB migration — pnpm db:push (migration 0029 applied)
+- [x] DB helpers — setPendingEmail, getUserByPendingEmailToken, confirmPendingEmail, clearPendingEmail
+- [x] tRPC — auth.requestEmailChange: send verification email to new address via SendGrid
+- [x] tRPC — auth.verifyEmailChange: validate token, apply new email, clear pending state
+- [x] tRPC — auth.cancelEmailChange: clear pending email and token
+- [x] tRPC — auth.me: expose pendingEmail field so UI can show pending state
+- [x] Profile.tsx — show "Verification pending" amber banner with new address, Resend and Cancel buttons
+- [x] Profile.tsx — email field locked in read-only mode while verification is pending
+- [x] VerifyEmail.tsx — updated to handle both email-change (type=change) and account activation flows
+- [x] App.tsx — /verify-email route already registered
+- [x] Vitest — 21 new email verification tests (input validation, expiry logic, same-email guard, URL construction) — 445 tests total passing

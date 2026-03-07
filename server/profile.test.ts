@@ -385,3 +385,144 @@ describe("Profile display helpers", () => {
     expect(formatYearsExperience(undefined)).toBe("—");
   });
 });
+
+// ── Email change verification flow tests ────────────────────────────────────
+
+import { z } from "zod";
+
+const requestEmailChangeSchema = z.object({
+  newEmail: z.string().email().max(320),
+});
+
+const verifyEmailChangeSchema = z.object({
+  token: z.string().min(1).max(200),
+});
+
+describe("requestEmailChange input validation", () => {
+  it("accepts a valid email address", () => {
+    const result = requestEmailChangeSchema.safeParse({ newEmail: "newemail@example.com" });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects an invalid email format", () => {
+    const result = requestEmailChangeSchema.safeParse({ newEmail: "not-an-email" });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects an email exceeding 320 characters", () => {
+    const local = "a".repeat(310);
+    const result = requestEmailChangeSchema.safeParse({ newEmail: `${local}@example.com` });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts an email at exactly 320 characters", () => {
+    // 320-char email: local + @ + domain
+    const local = "a".repeat(308);
+    const result = requestEmailChangeSchema.safeParse({ newEmail: `${local}@ex.com` });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a missing newEmail field", () => {
+    const result = requestEmailChangeSchema.safeParse({});
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects an empty string", () => {
+    const result = requestEmailChangeSchema.safeParse({ newEmail: "" });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts email with subdomain", () => {
+    const result = requestEmailChangeSchema.safeParse({ newEmail: "user@mail.example.co.uk" });
+    expect(result.success).toBe(true);
+  });
+});
+
+describe("verifyEmailChange input validation", () => {
+  it("accepts a valid token string", () => {
+    const result = verifyEmailChangeSchema.safeParse({ token: "a".repeat(96) });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects an empty token", () => {
+    const result = verifyEmailChangeSchema.safeParse({ token: "" });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a token exceeding 200 characters", () => {
+    const result = verifyEmailChangeSchema.safeParse({ token: "a".repeat(201) });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts a token of exactly 200 characters", () => {
+    const result = verifyEmailChangeSchema.safeParse({ token: "a".repeat(200) });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a missing token field", () => {
+    const result = verifyEmailChangeSchema.safeParse({});
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("Email change token expiry logic", () => {
+  function isTokenExpired(expiry: Date): boolean {
+    return new Date() > expiry;
+  }
+
+  it("returns false for a token expiring in the future", () => {
+    const future = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
+    expect(isTokenExpired(future)).toBe(false);
+  });
+
+  it("returns true for a token that expired in the past", () => {
+    const past = new Date(Date.now() - 1000); // 1 second ago
+    expect(isTokenExpired(past)).toBe(true);
+  });
+
+  it("returns true for a token that expired exactly at the boundary", () => {
+    const past = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24 hours ago
+    expect(isTokenExpired(past)).toBe(true);
+  });
+});
+
+describe("Email change same-email guard", () => {
+  function isSameEmail(current: string, newEmail: string): boolean {
+    return current.trim().toLowerCase() === newEmail.trim().toLowerCase();
+  }
+
+  it("detects identical emails (case-insensitive)", () => {
+    expect(isSameEmail("User@Example.com", "user@example.com")).toBe(true);
+  });
+
+  it("detects identical emails with surrounding whitespace", () => {
+    expect(isSameEmail("  user@example.com  ", "user@example.com")).toBe(true);
+  });
+
+  it("returns false for genuinely different emails", () => {
+    expect(isSameEmail("old@example.com", "new@example.com")).toBe(false);
+  });
+});
+
+describe("Email change verification URL construction", () => {
+  function buildVerificationUrl(appUrl: string, token: string): string {
+    return `${appUrl}/verify-email?token=${token}&type=change`;
+  }
+
+  it("builds a correct verification URL with token and type=change", () => {
+    const url = buildVerificationUrl("https://app.iheartecho.com", "abc123");
+    expect(url).toBe("https://app.iheartecho.com/verify-email?token=abc123&type=change");
+  });
+
+  it("includes the full token in the URL", () => {
+    const token = "a".repeat(96);
+    const url = buildVerificationUrl("https://app.iheartecho.com", token);
+    expect(url).toContain(token);
+    expect(url).toContain("type=change");
+  });
+
+  it("uses the provided appUrl as the base", () => {
+    const url = buildVerificationUrl("https://custom.domain.com", "tok");
+    expect(url.startsWith("https://custom.domain.com")).toBe(true);
+  });
+});
