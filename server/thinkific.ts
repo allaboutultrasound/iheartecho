@@ -191,6 +191,61 @@ export async function getUserEnrollmentsByEmail(
   return enrollments.map((e) => e.course_id);
 }
 
+// ─── Orders ───────────────────────────────────────────────────────────────────
+
+export interface ThinkificOrder {
+  id: number;
+  product_id: number;
+  product_name: string;
+  status: string; // "Complete" | "Refunded" | "Pending"
+  user_id: number;
+  user_email: string;
+  user_name: string;
+  subscription: boolean;
+  created_at: string;
+}
+
+/**
+ * Fetch orders for a specific Thinkific user ID.
+ * Returns only the first page (most recent 250 orders) to stay within rate limits.
+ */
+export async function getOrdersByUserId(
+  thinkificUserId: number
+): Promise<ThinkificOrder[]> {
+  try {
+    const data = await thinkificFetch<{ items: ThinkificOrder[] }>(
+      `/orders?user_id=${thinkificUserId}&page=1&limit=250`
+    );
+    return data.items ?? [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Fetch orders for a specific email address directly.
+ * More reliable than getUserByEmail + getOrdersByUserId because the
+ * /users?query= endpoint can return Internal Server Error for some emails.
+ */
+export async function getOrdersByEmail(
+  email: string
+): Promise<ThinkificOrder[]> {
+  try {
+    const data = await thinkificFetch<{ items: ThinkificOrder[] }>(
+      `/orders?user_email=${encodeURIComponent(email)}&page=1&limit=250`
+    );
+    return data.items ?? [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * The Thinkific product ID for the iHeartEcho App - Premium Access subscription.
+ * Confirmed from the Thinkific orders API on 2026-03-07.
+ */
+export const IHEARTECHO_PREMIUM_PRODUCT_ID = 3703267;
+
 // ─── Collections ─────────────────────────────────────────────────────────────
 
 export interface ThinkificCollection {

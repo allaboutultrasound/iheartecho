@@ -26,14 +26,23 @@ import { Router, Request, Response } from "express";
 import { syncCatalogToDb } from "../routers/cmeRouter";
 import { getUserByEmail, setPremiumStatus, createPendingUser } from "../db";
 
-/** Returns true if the Thinkific product name matches the iHeartEcho Premium Access membership */
+/**
+ * Returns true if the Thinkific product name matches the iHeartEcho Premium Access membership.
+ * The actual product name in Thinkific is: "iHeartEcho App - Premium Access"
+ * We match broadly on any variant to be resilient to minor name changes.
+ */
 function isPremiumProduct(productName: string | null | undefined): boolean {
   if (!productName) return false;
   const lower = productName.toLowerCase();
+  // Match the actual product name: "iHeartEcho App - Premium Access"
+  // Also match legacy/variant names for resilience
   return (
-    lower.includes("iheartecho-app-premium-access") ||
+    lower.includes("iheartecho app - premium access") ||
     lower.includes("iheartecho app premium access") ||
-    lower.includes("iheartecho premium access")
+    lower.includes("iheartecho-app-premium-access") ||
+    lower.includes("iheartecho premium access") ||
+    // Broad fallback: any iHeartEcho + premium combination
+    (lower.includes("iheartecho") && lower.includes("premium"))
   );
 }
 
@@ -74,14 +83,23 @@ export function registerThinkificWebhook(app: Router) {
 
       // ── 2. Order created → grant premium if it's the iHeartEcho membership ─
       if (resource === "order" && action === "created") {
+        // Thinkific order payload structure (confirmed from API):
+        // { product_name, status, user_id, user_email, user_name, ... }
+        // NOTE: user email is at top-level user_email, NOT nested in a user object
         const p = payload as {
           product_name?: string;
           status?: string;
+          user_id?: number;
+          user_email?: string;
+          user_name?: string;
+          // Legacy/alternative nesting (kept for safety)
           user?: { email?: string; first_name?: string; last_name?: string; id?: number };
         } | undefined;
 
         const productName = p?.product_name ?? "";
-        const userEmail = (p?.user?.email ?? "").toLowerCase().trim();
+        // Try top-level user_email first (actual Thinkific format), fall back to nested
+        const userEmail = ((p?.user_email ?? p?.user?.email) ?? "").toLowerCase().trim();
+        const userName = p?.user_name ?? "";
         const orderStatus = (p?.status ?? "").toLowerCase();
 
         if (!isPremiumProduct(productName)) {
@@ -148,15 +166,17 @@ export function registerThinkificWebhook(app: Router) {
         });
       }
 
-      // ── 3. Subscription cancelled → revoke premium ────────────────────────
+      // -- 3. Subscription cancelled -- revoke premium --
       if (resource === "subscription" && action === "cancelled") {
         const p = payload as {
           product_name?: string;
+          user_email?: string;
           user?: { email?: string };
         } | undefined;
 
         const productName = p?.product_name ?? "";
-        const userEmail = (p?.user?.email ?? "").toLowerCase().trim();
+        // Try top-level user_email first (actual Thinkific format), fall back to nested
+        const userEmail = ((p?.user_email ?? p?.user?.email) ?? "").toLowerCase().trim();
 
         if (!isPremiumProduct(productName)) {
           return res.status(200).json({

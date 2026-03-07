@@ -17,33 +17,35 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getUserByEmail, getUserById, setPremiumStatus } from "../db";
-import { getUserByEmail as getThinkificUserByEmail, getEnrollmentsByUserId } from "../thinkific";
+import {
+  getOrdersByEmail,
+  IHEARTECHO_PREMIUM_PRODUCT_ID,
+} from "../thinkific";
 
 /** The Thinkific membership product slug for iHeartEcho Premium Access */
 export const PREMIUM_MEMBERSHIP_SLUG = "iheartecho-app-premium-access";
 
 /**
- * Check if a Thinkific user is enrolled in the iHeartEcho Premium membership.
- * We look for a membership enrollment by checking the membership_id field.
- * Thinkific membership enrollments appear as enrollments with a membership_id set.
+ * Check if a user has a completed order for the iHeartEcho Premium Access product on Thinkific.
+ *
+ * The premium product is sold as a subscription (product_id=3703267, "iHeartEcho App - Premium Access").
+ * It does NOT appear in the enrollments endpoint — we query the orders endpoint directly by email.
+ *
+ * We query by email directly (not by user lookup) because the /users?query= endpoint
+ * returns Internal Server Error for some emails on the Thinkific API.
+ *
+ * Note: We do not check for subscription cancellation here because the webhook handles revocation.
+ * This function is used as a fallback sync for users who return from checkout.
  */
 export async function checkThinkificPremiumByEmail(email: string): Promise<boolean> {
   try {
-    const thinkificUser = await getThinkificUserByEmail(email);
-    if (!thinkificUser) return false;
-    const enrollments = await getEnrollmentsByUserId(thinkificUser.id);
-    // Check if any enrollment is for the premium membership
-    // Thinkific membership enrollments have a membership_id field
-    return enrollments.some((e) => {
-      // Thinkific membership enrollments may carry extra fields not in the base type
-      const extra = e as unknown as Record<string, unknown>;
-      const slug = (extra.membership_slug as string | undefined) ?? "";
-      const membershipId = extra.membership_id;
-      return (
-        slug === PREMIUM_MEMBERSHIP_SLUG ||
-        (membershipId !== null && membershipId !== undefined)
-      );
-    });
+    const orders = await getOrdersByEmail(email);
+    // A user has premium if they have a Complete order for the premium product
+    return orders.some(
+      (o) =>
+        o.product_id === IHEARTECHO_PREMIUM_PRODUCT_ID &&
+        o.status.toLowerCase() === "complete"
+    );
   } catch (err) {
     console.error("[Premium] Error checking Thinkific premium status:", err);
     return false;
