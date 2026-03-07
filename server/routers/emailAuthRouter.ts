@@ -21,6 +21,7 @@ import { sdk } from "../_core/sdk";
 import { ENV } from "../_core/env";
 import { publicProcedure, router } from "../_core/trpc";
 import { getDb, ensureUserRole, markThinkificEnrolled } from "../db";
+import { sendEmail, buildWelcomeEmail } from "../_core/email";
 import { enrollInFreeMembership } from "../thinkific";
 import { users } from "../../drizzle/schema";
 import { eq, or } from "drizzle-orm";
@@ -216,6 +217,21 @@ export const emailAuthRouter = router({
             })
             .where(eq(users.id, existingUser.id));
           await sendVerificationEmail(email, verificationToken, input.firstName);
+          // Send welcome email asynchronously (don't block activation)
+          const appUrlActivate = process.env.VITE_APP_URL ?? "https://app.iheartecho.com";
+          const welcomeActivate = buildWelcomeEmail({
+            firstName: input.firstName,
+            loginUrl: `${appUrlActivate}/login`,
+            roles: [],
+          });
+          sendEmail({
+            to: { name: fullName, email },
+            subject: welcomeActivate.subject,
+            htmlBody: welcomeActivate.htmlBody,
+            previewText: welcomeActivate.previewText,
+          }).catch((err: unknown) => {
+            console.error(`[EmailAuth] Failed to send welcome email to ${email}:`, err);
+          });
           // Issue session immediately so they can use the app
           await issueSession(ctx.req, ctx.res, openId, fullName);
           return { success: true, emailSent: true, activated: true };
@@ -263,6 +279,22 @@ export const emailAuthRouter = router({
 
       // Send verification email
       await sendVerificationEmail(email, verificationToken, input.firstName);
+
+      // Send welcome email asynchronously (don't block registration)
+      const appUrl = process.env.VITE_APP_URL ?? "https://app.iheartecho.com";
+      const welcomePayload = buildWelcomeEmail({
+        firstName: input.firstName,
+        loginUrl: `${appUrl}/login`,
+        roles: [],
+      });
+      sendEmail({
+        to: { name: fullName, email },
+        subject: welcomePayload.subject,
+        htmlBody: welcomePayload.htmlBody,
+        previewText: welcomePayload.previewText,
+      }).catch((err: unknown) => {
+        console.error(`[EmailAuth] Failed to send welcome email to ${email}:`, err);
+      });
 
       // Issue session immediately — user can use the app while email is unverified
       await issueSession(ctx.req, ctx.res, openId, fullName);

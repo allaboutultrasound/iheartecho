@@ -849,3 +849,10 @@
 - [x] Set VITE_APP_LOGO secret to CDN URL via Management UI Settings → General
 - [x] Increased login left-panel logo from w-12 h-12 (48px) to w-20 h-20 (80px)
 - [x] Updated emailWrapper in email.ts: replaced hero background image with circular logo (80×80, border-radius:50%) — applies to all 5 email templates (verification, password reset, email change, magic link, welcome)
+
+## Welcome Email on Registration
+- [x] Identified all registration entry points: emailAuthRouter.register (new + pending activation), adminRouter.bulkAssignRole, adminRouter.assignRoleByEmail
+- [x] Added buildWelcomeEmail dispatch (async, non-blocking) after successful new user creation in emailAuthRouter.register
+- [x] Added buildWelcomeEmail dispatch (async, non-blocking) after pending account activation in emailAuthRouter.register
+- [x] Upgraded adminRouter sendPreRegistrationWelcome to use buildWelcomeEmail + sendEmail (SendGrid) instead of old TinyEmail inline HTML
+- [x] Vitest — 17 new tests for buildWelcomeEmail template (subject, body content, role labels, logo, branding, HTML structure) — 497 tests total passing
