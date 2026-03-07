@@ -116,8 +116,8 @@ function MRDopplerWaveform() {
     <div className="rounded-xl overflow-hidden border border-gray-800" style={{ background: "#0a0a0a" }}>
       <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800">
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
-          <span className="text-xs font-bold text-orange-400">MR — CW Doppler (A4C / A2C)</span>
+          <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#4ad9e0" }} />
+          <span className="text-xs font-bold" style={{ color: "#4ad9e0" }}>MR — CW Doppler (A4C / A2C)</span>
         </div>
         <span className="text-[10px] text-gray-500">Holosystolic · Broad · Uniform velocity</span>
       </div>
@@ -130,24 +130,24 @@ function MRDopplerWaveform() {
         <line x1={0} y1={baseline} x2={w} y2={baseline} stroke="#374151" strokeWidth={1} />
         <text x={8} y={baseline + 55} fill="#6b7280" fontSize={9}>1 m/s</text>
         <text x={8} y={baseline + 110} fill="#6b7280" fontSize={9}>2 m/s</text>
-        <text x={8} y={baseline + 148} fill="#f97316" fontSize={9} fontWeight="bold">4–5 m/s</text>
+        <text x={8} y={baseline + 148} fill="#4ad9e0" fontSize={9} fontWeight="bold">4–5 m/s</text>
 
         {/* MR waveforms — 3 cycles */}
         {[20, 165, 310].map(x => (
-          <path key={x} d={mrCycle(x)} fill="rgba(249,115,22,0.15)" stroke="#f97316" strokeWidth={2} />
+          <path key={x} d={mrCycle(x)} fill="rgba(74,217,224,0.12)" stroke="#4ad9e0" strokeWidth={2} />
         ))}
 
         {/* Plateau annotation */}
-        <line x1={55} y1={baseline + 118} x2={105} y2={baseline + 118} stroke="#fb923c" strokeWidth={1.5} />
-        <text x={80} y={baseline + 132} fill="#fb923c" fontSize={9} textAnchor="middle">Broad plateau</text>
+        <line x1={55} y1={baseline + 118} x2={105} y2={baseline + 118} stroke="#4ad9e0" strokeWidth={1.5} />
+        <text x={80} y={baseline + 132} fill="#4ad9e0" fontSize={9} textAnchor="middle">Broad plateau</text>
 
         {/* Holosystolic label */}
-        <line x1={20} y1={baseline + 145} x2={148} y2={baseline + 145} stroke="#f97316" strokeWidth={1} strokeDasharray="3,2" />
-        <text x={84} y={baseline + 158} fill="#f97316" fontSize={9} textAnchor="middle">← Holosystolic →</text>
+        <line x1={20} y1={baseline + 145} x2={148} y2={baseline + 145} stroke="#4ad9e0" strokeWidth={1} strokeDasharray="3,2" />
+        <text x={84} y={baseline + 158} fill="#4ad9e0" fontSize={9} textAnchor="middle">← Holosystolic →</text>
       </svg>
       <div className="px-4 py-2 border-t border-gray-800">
         <p className="text-[10px] text-gray-400 leading-relaxed">
-          <span className="text-orange-400 font-bold">Key features:</span> Starts at onset of systole (with QRS), broad uniform plateau, high velocity (4–5 m/s), ends at end-systole (with S2). Dense spectral envelope. No late-peaking dagger shape.
+          <span className="font-bold" style={{ color: "#4ad9e0" }}>Key features:</span> Starts at onset of systole (with QRS), broad uniform plateau, high velocity (4–5 m/s), ends at end-systole (with S2). Dense spectral envelope. No late-peaking dagger shape.
         </p>
       </div>
     </div>
@@ -446,7 +446,7 @@ export default function HOCMScanCoach() {
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
                   activeTab === id ? "text-white" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                 }`}
-                style={activeTab === id ? { background: id === "doppler" ? "#f97316" : PURPLE } : {}}
+                style={activeTab === id ? { background: BRAND } : {}}
               >
                 <Icon className="w-3.5 h-3.5" />
                 {label}

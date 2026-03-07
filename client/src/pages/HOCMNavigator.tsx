@@ -934,96 +934,62 @@ export default function HOCMNavigator() {
               </p>
             </div>
 
-            {/* Side-by-side comparison */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-              {/* Instructed Valsalva */}
-              <div className="rounded-xl border border-gray-200 p-4">
+            {/* Two separate protocol cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+
+              {/* Instructed Valsalva Protocol */}
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-2 h-2 rounded-full bg-amber-400" />
-                  <span className="text-xs font-bold text-gray-800">Instructed Valsalva</span>
-                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">Traditional</span>
+                  <h4 className="text-xs font-bold text-amber-800">Instructed Valsalva — Step-by-Step</h4>
+                  <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-200 text-amber-800">Traditional</span>
                 </div>
                 <div className="space-y-2">
                   {[
-                    { label: "Instruction", text: "\"Bear down hard for 10–15 seconds\"" },
-                    { label: "Endpoint", text: "Fixed duration; patient effort only — no pressure measurement" },
-                    { label: "Equipment", text: "None beyond the echo machine" },
-                    { label: "Limitation", text: "Variable intrathoracic pressure → inconsistent preload reduction → false-negative results" },
-                    { label: "Adequacy surrogate", text: "HR increase ≥10 bpm; LV cavity visual decrease" },
-                    { label: "False-negative risk", text: "Higher — up to 30–40% of maneuvers are subtherapeutic" },
-                  ].map(({ label, text }) => (
-                    <div key={label}>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{label}: </span>
-                      <span className="text-xs text-gray-700">{text}</span>
+                    { step: 1, text: "Obtain resting LVOT gradient from A5C or A3C. Confirm dagger-shaped CW signal. Set sweep speed to 50 mm/s." },
+                    { step: 2, text: "Start CW Doppler recording 3–5 beats before the maneuver" },
+                    { step: 3, text: "Coach patient: \"Take a deep breath in, then bear down hard as if you are straining — hold it for 10–15 seconds\"" },
+                    { step: 4, text: "Maintain CW beam on LVOT throughout — do NOT move the probe" },
+                    { step: 5, text: "Cue patient to release. Continue recording 5–10 beats AFTER release — peak gradient occurs during the rebound phase" },
+                    { step: 6, text: "Adequacy surrogate: HR should increase ≥10 bpm during strain; LV cavity should visibly decrease on 2D" },
+                    { step: 7, text: "Measure peak dagger velocity during release phase. Report as 'Provoked LVOT gradient (instructed Valsalva): __ mmHg'" },
+                    { step: 8, text: "If HR does not rise ≥10 bpm, effort was likely inadequate — repeat or upgrade to goal-directed technique" },
+                  ].map(({ step, text }) => (
+                    <div key={step} className="flex items-start gap-2">
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0" style={{ background: "#d97706" }}>{step}</div>
+                      <p className="text-xs text-amber-900 leading-relaxed pt-0.5">{text}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Goal-Directed Valsalva */}
+              {/* Goal-Directed Valsalva Protocol */}
               <div className="rounded-xl border-2 p-4" style={{ borderColor: "#189aa1", background: "#f0fbfc" }}>
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-2 h-2 rounded-full" style={{ background: "#189aa1" }} />
-                  <span className="text-xs font-bold text-gray-800">Goal-Directed Valsalva</span>
+                  <h4 className="text-xs font-bold" style={{ color: "#0e4a50" }}>Goal-Directed Valsalva — Step-by-Step</h4>
                   <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded text-white" style={{ background: "#189aa1" }}>Preferred</span>
                 </div>
+                <p className="text-[10px] text-[#0e4a50]/70 mb-3 italic">Assemble circuit first: sphygmomanometer + O₂ tubing + 20 mL syringe (+ optional respiratory filter). Pre-inflate cuff to ~40 mmHg.</p>
                 <div className="space-y-2">
                   {[
-                    { label: "Instruction", text: "\"Blow into the tube until the gauge reads 40 — then hold it there for 10 seconds\"" },
-                    { label: "Endpoint", text: "Sphygmomanometer reads ≥40 mmHg sustained for 10 seconds" },
-                    { label: "Equipment", text: "Sphygmomanometer + oxygen tubing + 20 mL syringe (+ optional respiratory filter)" },
-                    { label: "Advantage", text: "Objective, measurable intrathoracic pressure → reproducible preload reduction → fewer false-negatives" },
-                    { label: "Adequacy confirmation", text: "Manometer gauge confirms ≥40 mmHg — no reliance on patient perception" },
-                    { label: "False-negative risk", text: "Lower — pressure target ensures consistent and adequate strain effort" },
-                  ].map(({ label, text }) => (
-                    <div key={label}>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{label}: </span>
-                      <span className="text-xs text-gray-700">{text}</span>
+                    { step: 1, text: "Obtain resting LVOT gradient from A5C or A3C. Confirm dagger-shaped CW signal. Set sweep speed to 50 mm/s." },
+                    { step: 2, text: "Hand patient the syringe mouthpiece. Practice once: \"Blow into the tube until the needle reaches 40 on the dial — then hold it there.\" Confirm they can sustain ≥40 mmHg." },
+                    { step: 3, text: "Start CW Doppler recording 3–5 beats before cueing the patient" },
+                    { step: 4, text: "Cue patient to blow. Watch the manometer — confirm gauge reaches ≥40 mmHg" },
+                    { step: 5, text: "Patient holds ≥40 mmHg for 10 seconds. Maintain CW beam on LVOT — do NOT move the probe" },
+                    { step: 6, text: "Cue patient to release. CRITICAL: Continue recording 5–10 beats AFTER release — peak gradient occurs during the rebound phase" },
+                    { step: 7, text: "Measure peak dagger velocity during release phase. Calculate ΔP = 4V². Report as 'Provoked LVOT gradient (goal-directed Valsalva): __ mmHg'" },
+                    { step: 8, text: "If patient cannot reach ≥40 mmHg after two attempts, document as inadequate and consider exercise stress echo" },
+                  ].map(({ step, text }) => (
+                    <div key={step} className="flex items-start gap-2">
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0" style={{ background: BRAND }}>{step}</div>
+                      <p className="text-xs leading-relaxed pt-0.5" style={{ color: "#0e4a50" }}>{text}</p>
                     </div>
                   ))}
                 </div>
               </div>
-            </div>
 
-            {/* Equipment assembly */}
-            <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 mb-4">
-              <h4 className="text-xs font-bold text-gray-700 mb-3">Assembling the Goal-Directed Valsalva Circuit</h4>
-              <div className="space-y-2">
-                {[
-                  { step: 1, text: "Obtain a standard sphygmomanometer (aneroid or mercury), a length of oxygen tubing (~30 cm), a 20 mL syringe, and optionally a disposable respiratory filter for infection control" },
-                  { step: 2, text: "Connect one end of the oxygen tubing to the sphygmomanometer inflation port (where the bulb normally attaches)" },
-                  { step: 3, text: "Attach the 20 mL syringe to the other end of the tubing — this is the mouthpiece the patient blows into. If using a respiratory filter, insert it between the syringe and the tubing" },
-                  { step: 4, text: "Inflate the cuff to approximately 40 mmHg manually, then close the valve — this pre-loads the system so the patient's blow immediately registers on the gauge" },
-                  { step: 5, text: "Instruct the patient: \"Take a normal breath, put your lips around the syringe, then blow hard and keep blowing until the needle reaches 40 on the dial — then hold it there for 10 seconds without letting any air escape\"" },
-                  { step: 6, text: "Practice once without imaging to confirm the patient can reach and hold ≥40 mmHg" },
-                ].map(({ step, text }) => (
-                  <div key={step} className="flex items-start gap-2">
-                    <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0" style={{ background: BRAND }}>{step}</div>
-                    <p className="text-xs text-gray-700 leading-relaxed pt-0.5">{text}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Protocol during imaging */}
-            <div className="rounded-xl border border-gray-100 bg-gray-50 p-4 mb-4">
-              <h4 className="text-xs font-bold text-gray-700 mb-3">Protocol During Echo Acquisition</h4>
-              <div className="space-y-2">
-                {[
-                  { step: 1, text: "Obtain and document resting LVOT gradient from A5C or A3C. Confirm dagger-shaped CW signal." },
-                  { step: 2, text: "Start CW Doppler recording 3–5 beats before the maneuver begins" },
-                  { step: 3, text: "Cue patient to blow into the circuit. Observe the manometer — confirm gauge reaches ≥40 mmHg" },
-                  { step: 4, text: "Patient holds ≥40 mmHg for 10 seconds. Maintain CW beam on LVOT — do NOT move the probe" },
-                  { step: 5, text: "Cue patient to release. CRITICAL: Continue recording for 5–10 beats AFTER release — peak gradient occurs during the rebound (release phase)" },
-                  { step: 6, text: "Measure peak velocity at the tip of the dagger during the release phase. Calculate ΔP = 4V². Report as 'Provoked LVOT gradient (goal-directed Valsalva): __ mmHg'" },
-                  { step: 7, text: "If patient cannot reach ≥40 mmHg after two attempts, document as inadequate and consider exercise stress echo" },
-                ].map(({ step, text }) => (
-                  <div key={step} className="flex items-start gap-2">
-                    <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0" style={{ background: BRAND }}>{step}</div>
-                    <p className="text-xs text-gray-700 leading-relaxed pt-0.5">{text}</p>
-                  </div>
-                ))}
-              </div>
             </div>
 
             {/* Supplies checklist */}

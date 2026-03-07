@@ -1126,3 +1126,11 @@
 ## Goal-Directed Valsalva Correction
 - [x] Rewrite goal-directed Valsalva in HOCMNavigator — manometer circuit (syringe + O2 tubing + optional respiratory filter), blow to ≥40 mmHg, hold 10 seconds
 - [x] Rewrite goal-directed Valsalva in HOCMScanCoach — same correction with sonographer setup steps
+
+## Split Valsalva Protocols
+- [ ] Split HOCMNavigator Valsalva section into two separate step-by-step protocol cards (Instructed + Goal-Directed)
+- [ ] Split HOCMScanCoach Valsalva section into two separate step-by-step protocol cards (Instructed + Goal-Directed)
+
+## HOCMScanCoach Doppler Tab Color Fix
+- [x] Update Doppler Evaluation tab color to brand teal in HOCMScanCoach
+- [x] Update modal waveform color to brand teal in HOCMScanCoach
