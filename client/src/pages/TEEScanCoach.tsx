@@ -3,7 +3,8 @@
   Interactive view-by-view TEE acquisition guide
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import {
@@ -726,7 +727,9 @@ export default function TEEScanCoach() {
     new Set(GROUPS.map(g => g.key))
   );
 
-  const selectedView = TEE_VIEWS.find(v => v.id === selectedViewId) ?? TEE_VIEWS[0];
+  const _selectedViewRaw = TEE_VIEWS.find(v => v.id === selectedViewId) ?? TEE_VIEWS[0];
+  const { mergeView: mergeTEEView } = useScanCoachOverrides("tee");
+  const selectedView = useMemo(() => mergeTEEView(_selectedViewRaw as any), [_selectedViewRaw, mergeTEEView]);
 
   function toggleGroup(key: string) {
     setExpandedGroups(prev => {

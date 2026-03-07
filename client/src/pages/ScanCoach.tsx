@@ -4,11 +4,12 @@
   Brand: Teal #189aa1, Aqua #4ad9e0
   Fonts: Merriweather headings, Open Sans body
 */
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useSearch } from "wouter";
 import Layout from "@/components/Layout";
 import { Scan, Heart, Info, Eye, AlertTriangle, ChevronRight } from "lucide-react";
 import PedCHDCoach from "@/components/PedCHDCoach";
+import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 
 // ─── CDN image URLs (clinical images from iHeartEcho curriculum) ───
 const CDN = {
@@ -748,6 +749,9 @@ export default function ScanCoach() {
   const [activeTab, setActiveTab] = useState<"tte" | "fetal" | "chd" | "achd">(_initialTab);
   const [selectedTTE, setSelectedTTE] = useState(tteViews[0]);
   const [selectedFetal, setSelectedFetal] = useState(fetalViews[0]);
+  const { mergeView: mergeTTEView } = useScanCoachOverrides("tte");
+  // Apply DB overrides to the selected TTE view at render time
+  const selectedTTEMerged = useMemo(() => mergeTTEView(selectedTTE as any), [selectedTTE, mergeTTEView]);
    const fetalDetailRef = useRef<HTMLDivElement>(null);
   const tteDetailRef = useRef<HTMLDivElement>(null);
   const scrollOnFetalChange = useRef(false);
@@ -803,16 +807,16 @@ export default function ScanCoach() {
             <div ref={tteDetailRef} className="lg:col-span-3 lg:order-2 order-1 space-y-4">
               {/* Header */}
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="px-5 py-4 border-b" style={{ borderColor: selectedTTE.color + "30", background: selectedTTE.color + "08" }}>
+                <div className="px-5 py-4 border-b" style={{ borderColor: selectedTTEMerged.color + "30", background: selectedTTEMerged.color + "08" }}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white text-xs font-bold"
-                        style={{ background: selectedTTE.color }}>
-                        {selectedTTE.abbr}
+                        style={{ background: selectedTTEMerged.color }}>
+                        {selectedTTEMerged.abbr}
                       </div>
                       <div>
-                        <h2 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>{selectedTTE.name}</h2>
-                        <p className="text-xs text-gray-500">{selectedTTE.doppler}</p>
+                        <h2 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>{selectedTTEMerged.name}</h2>
+                        <p className="text-xs text-gray-500">{selectedTTEMerged.doppler}</p>
                       </div>
                     </div>
                     {/* Navigation */}
@@ -826,7 +830,7 @@ export default function ScanCoach() {
                       {tteViews.indexOf(selectedTTE) < tteViews.length - 1 && (
                         <button onClick={() => setSelectedTTE(tteViews[tteViews.indexOf(selectedTTE) + 1])}
                           className="px-3 py-1 rounded text-xs text-white transition-colors"
-                          style={{ background: selectedTTE.color }}>
+                          style={{ background: selectedTTEMerged.color }}>
                           Next →
                         </button>
                       )}
@@ -839,22 +843,22 @@ export default function ScanCoach() {
                 {/* Probe diagram */}
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
                   <h3 className="font-bold text-sm text-gray-700 mb-3" style={{ fontFamily: "Merriweather, serif" }}>Transducer Positioning</h3>
-                  {(selectedTTE as any).transducerImageUrl ? (
+                  {(selectedTTEMerged as any).transducerImageUrl ? (
                     <img
-                      src={(selectedTTE as any).transducerImageUrl}
-                      alt={`${selectedTTE.name} transducer position`}
+                      src={(selectedTTEMerged as any).transducerImageUrl}
+                      alt={`${selectedTTEMerged.name} transducer position`}
                       className="w-full rounded-lg object-contain"
                       style={{ maxHeight: "220px" }}
                     />
                   ) : (
-                    <div dangerouslySetInnerHTML={{ __html: selectedTTE.probeSvg }} />
+                    <div dangerouslySetInnerHTML={{ __html: selectedTTEMerged.probeSvg }} />
                   )}
                   <div className="mt-3 space-y-1.5 text-xs text-gray-600">
-                    <div><span className="font-semibold text-gray-500">Position: </span>{selectedTTE.probePosition}</div>
-                    <div><span className="font-semibold text-gray-500">Notch: </span>{selectedTTE.probeOrientation}</div>
-                    {(selectedTTE as any).patientPosition && (
+                    <div><span className="font-semibold text-gray-500">Position: </span>{selectedTTEMerged.probePosition}</div>
+                    <div><span className="font-semibold text-gray-500">Notch: </span>{selectedTTEMerged.probeOrientation}</div>
+                    {(selectedTTEMerged as any).patientPosition && (
                       <div className="mt-2 pt-2 border-t border-gray-100">
-                        <span className="font-semibold text-gray-500">Patient: </span>{(selectedTTE as any).patientPosition}
+                        <span className="font-semibold text-gray-500">Patient: </span>{(selectedTTEMerged as any).patientPosition}
                       </div>
                     )}
                   </div>
@@ -863,13 +867,13 @@ export default function ScanCoach() {
                 {/* Structures */}
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
                   <div className="flex items-center gap-2 mb-3">
-                    <Eye className="w-4 h-4" style={{ color: selectedTTE.color }} />
+                    <Eye className="w-4 h-4" style={{ color: selectedTTEMerged.color }} />
                     <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>Structures</h3>
                   </div>
                   <ul className="space-y-1.5">
-                    {selectedTTE.structures.map((s, i) => (
+                    {(selectedTTEMerged as any).structures.map((s: string, i: number) => (
                       <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
-                        <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: selectedTTE.color }}></span>
+                        <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: selectedTTEMerged.color }}></span>
                         {s}
                       </li>
                     ))}
@@ -879,13 +883,13 @@ export default function ScanCoach() {
                 {/* Measurements */}
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
                   <div className="flex items-center gap-2 mb-3">
-                    <Info className="w-4 h-4" style={{ color: selectedTTE.color }} />
+                    <Info className="w-4 h-4" style={{ color: selectedTTEMerged.color }} />
                     <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>Key Measurements</h3>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
-                    {selectedTTE.measurements.map((m, i) => (
+                    {(selectedTTEMerged as any).measurements.map((m: string, i: number) => (
                       <span key={i} className="px-2 py-1 rounded text-xs font-mono text-white"
-                        style={{ background: selectedTTE.color }}>
+                        style={{ background: selectedTTEMerged.color }}>
                         {m}
                       </span>
                     ))}
@@ -894,29 +898,29 @@ export default function ScanCoach() {
               </div>
 
               {/* Echo Image + Anatomy */}
-              {((selectedTTE as any).echoImageUrl || (selectedTTE as any).anatomyImageUrl) && (
+              {((selectedTTEMerged as any).echoImageUrl || (selectedTTEMerged as any).anatomyImageUrl) && (
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                   <div className="px-4 py-3 border-b border-gray-100">
                     <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>View Reference Images</h3>
                   </div>
-                  <div className={`bg-gray-950 grid gap-2 p-4 ${ (selectedTTE as any).echoImageUrl && (selectedTTE as any).anatomyImageUrl ? 'grid-cols-2' : 'grid-cols-1' }`}>
-                    {(selectedTTE as any).echoImageUrl && (
+                  <div className={`bg-gray-950 grid gap-2 p-4 ${ (selectedTTEMerged as any).echoImageUrl && (selectedTTEMerged as any).anatomyImageUrl ? 'grid-cols-2' : 'grid-cols-1' }`}>
+                    {(selectedTTEMerged as any).echoImageUrl && (
                       <div className="flex flex-col items-center gap-1">
                         <p className="text-xs text-gray-400">Clinical Echo</p>
                         <img
-                          src={(selectedTTE as any).echoImageUrl}
-                          alt={`${selectedTTE.name} clinical echo`}
+                          src={(selectedTTEMerged as any).echoImageUrl}
+                          alt={`${selectedTTEMerged.name} clinical echo`}
                           className="max-h-64 object-contain rounded w-full"
                           style={{ background: "#030712" }}
                         />
                       </div>
                     )}
-                    {(selectedTTE as any).anatomyImageUrl && (
+                    {(selectedTTEMerged as any).anatomyImageUrl && (
                       <div className="flex flex-col items-center gap-1">
                         <p className="text-xs text-gray-400">Anatomy Reference</p>
                         <img
-                          src={(selectedTTE as any).anatomyImageUrl}
-                          alt={`${selectedTTE.name} anatomy`}
+                          src={(selectedTTEMerged as any).anatomyImageUrl}
+                          alt={`${selectedTTEMerged.name} anatomy`}
                           className="max-h-64 object-contain rounded w-full"
                           style={{ background: "#030712" }}
                         />
@@ -930,7 +934,7 @@ export default function ScanCoach() {
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
                   <h3 className="font-bold text-sm text-gray-700 mb-3" style={{ fontFamily: "Merriweather, serif" }}>Scanning Tips</h3>
                   <ul className="space-y-2">
-                    {selectedTTE.tips.map((tip, i) => (
+                    {(selectedTTEMerged as any).tips.map((tip: string, i: number) => (
                       <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
                         <span className="text-green-500 font-bold mt-0.5">+</span>
                         {tip}
@@ -941,7 +945,7 @@ export default function ScanCoach() {
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
                   <h3 className="font-bold text-sm text-gray-700 mb-3" style={{ fontFamily: "Merriweather, serif" }}>Common Pitfalls</h3>
                   <ul className="space-y-2">
-                    {selectedTTE.pitfalls.map((p, i) => (
+                    {(selectedTTEMerged as any).pitfalls.map((p: string, i: number) => (
                       <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
                         <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
                         {p}
@@ -960,7 +964,7 @@ export default function ScanCoach() {
                 </div>
                 <div className="p-3 space-y-1">
                   {tteViews.map(v => (
-                    <TTEViewCard key={v.id} view={v} isSelected={selectedTTE.id === v.id} onClick={() => { scrollOnTteChange.current = true; setSelectedTTE(v); }} />
+                    <TTEViewCard key={v.id} view={v} isSelected={selectedTTEMerged.id === v.id} onClick={() => { scrollOnTteChange.current = true; setSelectedTTE(v); }} />
                   ))}
                 </div>
               </div>

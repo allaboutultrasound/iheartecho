@@ -901,3 +901,47 @@ export const echoLibraryCaseAttempts = mysqlTable("echoLibraryCaseAttempts", {
 });
 export type EchoLibraryCaseAttempt = typeof echoLibraryCaseAttempts.$inferSelect;
 export type InsertEchoLibraryCaseAttempt = typeof echoLibraryCaseAttempts.$inferInsert;
+
+// ─── ScanCoach WYSIWYG Overrides ──────────────────────────────────────────────
+// Stores per-view content overrides set by platform admins via the WYSIWYG editor.
+// Each row overrides one or more fields for a specific view within a ScanCoach module.
+// The `module` field identifies which ScanCoach page (e.g. "tte", "tee", "ice", "uea", "strain").
+// The `viewId` field matches the `id` field on the static view data in the page component.
+// Image fields store S3 CDN URLs; text fields store plain strings or JSON arrays.
+export const scanCoachOverrides = mysqlTable("scanCoachOverrides", {
+  id: int("id").primaryKey().autoincrement(),
+  // Which ScanCoach module: tte | tee | ice | uea | strain
+  module: varchar("module", { length: 32 }).notNull(),
+  // Matches the `id` field on the static view object (e.g. "me4c", "plax", "a4c")
+  viewId: varchar("viewId", { length: 64 }).notNull(),
+  // Human-readable view name (denormalised for display in the editor)
+  viewName: varchar("viewName", { length: 128 }),
+  // ── Image overrides ──────────────────────────────────────────────────────────
+  // Clinical echo image (replaces echoImageUrl / imageUrl on the static view)
+  echoImageUrl: text("echoImageUrl"),
+  // Anatomy / diagram reference image
+  anatomyImageUrl: text("anatomyImageUrl"),
+  // Transducer / probe positioning image
+  transducerImageUrl: text("transducerImageUrl"),
+  // ── Text overrides (JSON arrays stored as text) ───────────────────────────────
+  // Override for the view description paragraph
+  description: text("description"),
+  // JSON: string[] — override for howToGet steps
+  howToGet: text("howToGet"),
+  // JSON: string[] — override for tips
+  tips: text("tips"),
+  // JSON: string[] — override for pitfalls
+  pitfalls: text("pitfalls"),
+  // JSON: string[] — override for structures list
+  structures: text("structures"),
+  // JSON: string[] — override for measurements list
+  measurements: text("measurements"),
+  // JSON: string[] — override for criticalFindings list
+  criticalFindings: text("criticalFindings"),
+  // ── Metadata ─────────────────────────────────────────────────────────────────
+  updatedByUserId: int("updatedByUserId"),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type ScanCoachOverride = typeof scanCoachOverrides.$inferSelect;
+export type InsertScanCoachOverride = typeof scanCoachOverrides.$inferInsert;

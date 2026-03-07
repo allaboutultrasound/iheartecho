@@ -5,7 +5,8 @@
   artefact recognition, and pitfall avoidance.
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import {
@@ -446,7 +447,12 @@ export default function UEAScanCoach() {
   const [selectedView, setSelectedView] = useState<string | null>("a4c");
   const [activeTab, setActiveTab] = useState<"views" | "injection" | "artefacts" | "tips">("views");
 
-  const currentView = UEA_VIEWS.find(v => v.id === selectedView);
+  const _currentViewRaw = UEA_VIEWS.find(v => v.id === selectedView);
+  const { mergeView: mergeUEAView } = useScanCoachOverrides("uea");
+  const currentView = useMemo(
+    () => _currentViewRaw ? mergeUEAView(_currentViewRaw as any) : undefined,
+    [_currentViewRaw, mergeUEAView]
+  );
   const groups = Array.from(new Set(UEA_VIEWS.map(v => v.group)));
 
   return (
@@ -624,7 +630,7 @@ export default function UEAScanCoach() {
                       Step-by-Step Acquisition
                     </h3>
                     <ol className="space-y-2">
-                      {currentView.howToGet.map((step, i) => (
+                      {(currentView as any).howToGet.map((step: string, i: number) => (
                         <li key={i} className="flex items-start gap-2.5">
                           <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0 mt-0.5"
                             style={{ background: BRAND }}>
@@ -643,7 +649,7 @@ export default function UEAScanCoach() {
                       Structures Visible
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {currentView.structures.map((s, i) => (
+                      {(currentView as any).structures.map((s: string, i: number) => (
                         <span key={i} className="text-xs px-2.5 py-1 rounded-full font-medium"
                           style={{ background: BRAND + "12", color: BRAND }}>
                           {s}
@@ -659,7 +665,7 @@ export default function UEAScanCoach() {
                       Contrast-Specific Tips
                     </h3>
                     <div className="space-y-2">
-                      {currentView.contrastTips.map((tip, i) => (
+                      {(currentView as any).contrastTips.map((tip: string, i: number) => (
                         <div key={i} className="flex items-start gap-2 p-2.5 rounded-lg bg-teal-50 border border-teal-100">
                           <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: BRAND }} />
                           <p className="text-xs text-teal-800 leading-relaxed">{tip}</p>
@@ -675,7 +681,7 @@ export default function UEAScanCoach() {
                       Common Pitfalls
                     </h3>
                     <div className="space-y-2">
-                      {currentView.pitfalls.map((pitfall, i) => (
+                      {(currentView as any).pitfalls.map((pitfall: string, i: number) => (
                         <div key={i} className="flex items-start gap-2 p-2.5 rounded-lg bg-amber-50 border border-amber-100">
                           <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-amber-600" />
                           <p className="text-xs text-amber-800 leading-relaxed">{pitfall}</p>
@@ -685,14 +691,14 @@ export default function UEAScanCoach() {
                   </div>
 
                   {/* View-specific artefacts */}
-                  {currentView.artefacts.length > 0 && (
+                  {(currentView as any).artefacts.length > 0 && (
                     <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
                       style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
                       <h3 className="text-xs font-bold uppercase tracking-wider mb-3 text-red-700">
                         Artefacts at This View
                       </h3>
                       <div className="space-y-2.5">
-                        {currentView.artefacts.map((art, i) => (
+                        {(currentView as any).artefacts.map((art: any, i: number) => (
                           <div key={i} className="p-3 rounded-lg border border-red-100 bg-red-50">
                             <div className="text-xs font-bold text-red-700 mb-1">{art.name}</div>
                             <p className="text-xs text-red-600 leading-relaxed">{art.description}</p>
@@ -709,7 +715,7 @@ export default function UEAScanCoach() {
                       Clinical Pearls
                     </h3>
                     <div className="space-y-2">
-                      {currentView.clinicalPearls.map((pearl, i) => (
+                      {(currentView as any).clinicalPearls.map((pearl: string, i: number) => (
                         <div key={i} className="flex items-start gap-2 p-2.5 rounded-lg bg-green-50 border border-green-100">
                           <CheckCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-green-600" />
                           <p className="text-xs text-green-800 leading-relaxed">{pearl}</p>

@@ -403,6 +403,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                                   QuickFire Admin
                                 </button>
                               </WouterLink>
+                              <WouterLink href="/admin/scancoach">
+                                <button onClick={() => setAccountOpen(false)}
+                                  className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-all text-left">
+                                  <Scan className="w-3.5 h-3.5 text-purple-500" />
+                                  ScanCoach Editor
+                                </button>
+                              </WouterLink>
                             </>
                           )}
                         </div>

@@ -1009,3 +1009,15 @@
 - [x] Add UEA ScanCoach to Layout.tsx sidebar under Clinical Tools section
 - [x] Add UEA Navigator and ScanCoach cards to Home dashboard module grid
 - [x] Vitest: no new server procedures needed (static content pages) — 583 tests pass
+
+## ScanCoach WYSIWYG Editor (Session Mar 7)
+- [x] DB: add scanCoachOverrides table (module, viewId, field, value, imageUrl, updatedAt, updatedByUserId)
+- [x] DB: run pnpm db:push to migrate
+- [x] Server: scanCoachAdminRouter — listOverrides, upsertOverride, uploadImage, deleteOverride, clearImageField
+- [x] Server: wire scanCoachAdminRouter into main routers.ts
+- [x] Client: ScanCoachEditor.tsx — admin WYSIWYG page with module selector, view list, inline text editing, image upload/replace/delete
+- [x] Client: useScanCoachOverrides hook — fetch overrides and merge with static view data
+- [x] Client: wire override merging into ScanCoach.tsx, TEEScanCoach.tsx, ICEScanCoach.tsx, UEAScanCoach.tsx
+- [x] Client: register /admin/scancoach route in App.tsx
+- [x] Client: add ScanCoach Editor link to Platform Admin sidebar/nav
+- [x] Vitest: scanCoachAdmin router unit tests (15 tests, all passing)

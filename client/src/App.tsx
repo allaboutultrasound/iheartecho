@@ -62,6 +62,7 @@ import QuickFireAdmin from "./pages/QuickFireAdmin";
 import Premium from "./pages/Premium";
 import UEANavigator from "./pages/UEANavigator";
 import UEAScanCoach from "./pages/UEAScanCoach";
+import ScanCoachEditor from "./pages/ScanCoachEditor";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -138,6 +139,7 @@ function Router() {
       <Route path="/case-library/:id" component={CaseDetail} />
       <Route path="/admin/cases" component={AdminCaseManagement} />
       <Route path="/admin/quickfire" component={QuickFireAdmin} />
+      <Route path="/admin/scancoach" component={ScanCoachEditor} />
       {/* ── Premium Access ──────────────────────────────────────────────── */}
       <Route path="/premium" component={Premium} />
       <Route path="/404" component={NotFound} />

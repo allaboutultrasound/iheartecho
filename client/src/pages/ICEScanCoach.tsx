@@ -3,7 +3,8 @@
   Interactive view-by-view ICE (Intracardiac Echocardiography) acquisition guide
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import {
@@ -527,7 +528,9 @@ function ViewDetail({ view }: { view: typeof ICE_VIEWS[0] }) {
 export default function ICEScanCoach() {
   const [selectedViewId, setSelectedViewId] = useState<string>(ICE_VIEWS[0].id);
 
-  const selectedView = ICE_VIEWS.find(v => v.id === selectedViewId) ?? ICE_VIEWS[0];
+  const _selectedViewRaw = ICE_VIEWS.find(v => v.id === selectedViewId) ?? ICE_VIEWS[0];
+  const { mergeView: mergeICEView } = useScanCoachOverrides("ice");
+  const selectedView = useMemo(() => mergeICEView(_selectedViewRaw as any), [_selectedViewRaw, mergeICEView]);
 
   return (
     <Layout>

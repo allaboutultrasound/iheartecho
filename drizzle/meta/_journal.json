@@ -246,6 +246,13 @@
       "when": 1772866232843,
       "tag": "0034_groovy_wallop",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "5",
+      "when": 1772868146949,
+      "tag": "0035_melodic_serpent_society",
+      "breakpoints": true
     }
   ]
 }

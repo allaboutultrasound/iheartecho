@@ -11,6 +11,7 @@ import { emailAuthRouter } from "./routers/emailAuthRouter";
 import { quickfireRouter } from "./routers/quickfireRouter";
 import { caseLibraryRouter } from "./routers/caseLibraryRouter";
 import { premiumRouter } from "./routers/premiumRouter";
+import { scanCoachAdminRouter } from "./routers/scanCoachAdminRouter";
 import {
   getUserById,
   getUsersByIds,
@@ -1483,6 +1484,9 @@ export const appRouter = router({
 
   // ─── Premium Access ───────────────────────────────────────────────────────────
   premium: premiumRouter,
+
+  // ─── ScanCoach WYSIWYG Admin ──────────────────────────────────────────────────
+  scanCoachAdmin: scanCoachAdminRouter,
 });
 export type AppRouter = typeof appRouter;
 
