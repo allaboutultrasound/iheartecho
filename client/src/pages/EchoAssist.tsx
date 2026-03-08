@@ -908,14 +908,6 @@ function DiastolicEngine() {
 
   return (
     <EngineSection id="engine-diastolic" title="Diastolic Function" subtitle="ASE 2025 · Two-step DD detection + Grading & LAP algorithm · e' · E/e' · TR · LARS · LAVI · PV S/D">
-      {/* Exclusion toggle */}
-      <div className="flex items-center gap-2 mb-3 p-2 rounded-lg bg-amber-50 border border-amber-200">
-        <input type="checkbox" id="diastExclusion" checked={exclusion} onChange={e => setExclusion(e.target.checked)} className="w-4 h-4 accent-amber-500" />
-        <label htmlFor="diastExclusion" className="text-xs text-amber-800 font-medium cursor-pointer">
-          Exclusion present: AF · MAC · MR · MS · LVAD · Non-cardiac PH · HTX · Pericardial constriction
-        </label>
-      </div>
-
       {/* Input grid */}
       <div className="grid grid-cols-2 gap-3">
         <NumInput label="e' Septal" value={ePrimeSep} onChange={setEPrimeSep} unit="cm/s" placeholder="nl >7" hint="(nl >7 cm/s)" />
@@ -2143,8 +2135,9 @@ export default function EchoAssist() {
 
         {/* Engine sections */}
         <div className="space-y-4">
-            <LVSystolicEngine />
+          <LVSystolicEngine />
           <DiastolicEngine />
+          <DiastologySpecialPopulations />
           <StrainEngine />
           <StressEchoAssistEngine />
           <AorticStenosisEngine />
@@ -2155,7 +2148,6 @@ export default function EchoAssist() {
           <RVFunctionEngine />
           <PulmonaryHTNEngine />
           <FrankStarlingEngine />
-          <DiastologySpecialPopulations />
         </div>
 
         {/* Footer */}

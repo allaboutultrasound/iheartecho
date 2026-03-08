@@ -1392,3 +1392,9 @@
 - [x] ACHDNavigator: added dark gradient hero banner with title, subtitle, back link, ScanCoach shortcut
 - [x] StressNavigator: added dark gradient hero banner with title, subtitle, back link, ScanCoach shortcut
 - [x] DeviceNavigator: added dark gradient hero banner with title, subtitle, back link, ScanCoach shortcut
+
+## Bug Fixes (Mar 8 2026)
+- [x] BackToEchoAssist link: fixed route to /echo-assist-hub (EchoAssist hub with navigators and ScanCoach)
+- [x] ScanCoach double header: removed 4 duplicate inner banners (PulmHTN, ACHD, TTE, Fetal tabs)
+- [x] Diastolic calculator: removed exclusion-present checkbox
+- [x] Special Populations calculators: made collapsible (matching other engines), added Premium crown badge, moved to appear right after DiastolicEngine for discoverability

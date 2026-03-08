@@ -815,33 +815,7 @@ function PulmHTNScanCoach() {
   const BRAND_DARK_LOCAL = "#0e7490";
   return (
     <div>
-      {/* Banner */}
-      <div className="relative overflow-hidden mb-6" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}>
-        <div className="relative container py-8 md:py-10">
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-3">
-              <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
-              <span className="text-xs text-white/80 font-medium">Pulmonary HTN & PE Acquisition Guide</span>
-            </div>
-            <h1 className="text-2xl md:text-3xl font-black text-white mb-1" style={{ fontFamily: "Merriweather, serif" }}>
-              Pulmonary HTN & PE ScanCoach
-            </h1>
-            <p className="text-[#4ad9e0] font-semibold text-sm mb-3">Pulmonary Hypertension & Pulmonary Embolism</p>
-            <p className="text-white/70 text-sm leading-relaxed mb-3 max-w-lg">
-              Echo probability assessment for pulmonary hypertension (ASE/ESC 2022) and acute PE risk stratification — view-by-view guide with Doppler targets and clinical pearls.
-            </p>
-            <p className="text-white/50 text-xs mb-4">
-              <span className="font-semibold text-white/70">Patient Positioning:</span> Supine or left lateral decubitus; left lateral tilt improves parasternal and apical windows for TR jet and RVSP measurement.
-            </p>
-            <Link href="/pulm-htn">
-              <button className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90" style={{ background: "#189aa1" }}>
-                <Wind className="w-4 h-4" />
-                Open Pulmonary HTN Navigator™
-              </button>
-            </Link>
-          </div>
-        </div>
-      </div>
+
       <div className="space-y-4">
       {/* Section Toggle */}
       <div className="flex gap-2">
@@ -1081,33 +1055,7 @@ function ACHDScanCoach() {
   const [selectedView, setSelectedView] = useState(achdLesions[0].views[0]);
   return (
     <div>
-      {/* Banner */}
-      <div className="relative overflow-hidden mb-6" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}>
-        <div className="relative container py-8 md:py-10">
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-3">
-              <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
-              <span className="text-xs text-white/80 font-medium">Adult Congenital Acquisition Guide</span>
-            </div>
-            <h1 className="text-2xl md:text-3xl font-black text-white mb-1" style={{ fontFamily: "Merriweather, serif" }}>
-              Adult Congenital ScanCoach
-            </h1>
-            <p className="text-[#4ad9e0] font-semibold text-sm mb-3">Adult Congenital Heart Disease (ACHD)</p>
-            <p className="text-white/70 text-sm leading-relaxed mb-3 max-w-lg">
-              Lesion-specific echo protocols for ASD, VSD, ToF, CoA, TGA, and Fontan — with ASE/AHA thresholds, key views, and clinical pearls for each lesion.
-            </p>
-            <p className="text-white/50 text-xs mb-4">
-              <span className="font-semibold text-white/70">Patient Positioning:</span> Left lateral decubitus for apical windows; supine for subcostal (ASD shunt, IVC) and SSN (CoA, arch) views.
-            </p>
-            <Link href="/achd">
-              <button className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90" style={{ background: "#189aa1" }}>
-                <Users className="w-4 h-4" />
-                Open ACHD Navigator™
-              </button>
-            </Link>
-          </div>
-        </div>
-      </div>
+
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 items-start">
       {/* Lesion list — sticky sidebar */}
       <div className="lg:col-span-1 lg:sticky lg:top-4">
@@ -1257,33 +1205,7 @@ export default function ScanCoach() {
         {/* ─── ADULT TTE TAB ─── */}
         {activeTab === "tte" && (
           <div>
-            {/* Banner */}
-            <div className="relative overflow-hidden mb-6" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}>
-              <div className="relative container py-8 md:py-10">
-                <div className="max-w-2xl">
-                  <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-3">
-                    <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
-                    <span className="text-xs text-white/80 font-medium">Adult TTE Acquisition Guide</span>
-                  </div>
-                  <h1 className="text-2xl md:text-3xl font-black text-white mb-1" style={{ fontFamily: "Merriweather, serif" }}>
-                    Adult TTE ScanCoach
-                  </h1>
-                  <p className="text-[#4ad9e0] font-semibold text-sm mb-3">Transthoracic Echocardiography</p>
-                  <p className="text-white/70 text-sm leading-relaxed mb-3 max-w-lg">
-                    View-by-view probe positioning, anatomy overlays, Doppler technique, and clinical pearls for a complete adult TTE study — including acute vs. chronic MR and AR assessment.
-                  </p>
-                  <p className="text-white/50 text-xs mb-4">
-                    <span className="font-semibold text-white/70">Patient Positioning:</span> Left lateral decubitus for parasternal and apical windows; supine for subcostal and SSN views.
-                  </p>
-                  <Link href="/tte">
-                    <button className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90" style={{ background: "#189aa1" }}>
-                      <Stethoscope className="w-4 h-4" />
-                      Open Adult TTE Navigator™
-                    </button>
-                  </Link>
-                </div>
-              </div>
-            </div>
+
            <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 items-start">
             {/* Detail panel — order-first on mobile so it appears at top */}
             <div ref={tteDetailRef} className="lg:col-span-3 lg:order-2 order-1 space-y-4">
@@ -1918,33 +1840,7 @@ export default function ScanCoach() {
         {/* ─── FETAL ECHO TAB ─── */}
         {activeTab === "fetal" && (
           <div>
-            {/* Banner */}
-            <div className="relative overflow-hidden mb-6" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}>
-              <div className="relative container py-8 md:py-10">
-                <div className="max-w-2xl">
-                  <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-3">
-                    <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
-                    <span className="text-xs text-white/80 font-medium">Fetal Echo Acquisition Guide</span>
-                  </div>
-                  <h1 className="text-2xl md:text-3xl font-black text-white mb-1" style={{ fontFamily: "Merriweather, serif" }}>
-                    Fetal Echo ScanCoach
-                  </h1>
-                  <p className="text-[#4ad9e0] font-semibold text-sm mb-3">Fetal Echocardiography</p>
-                  <p className="text-white/70 text-sm leading-relaxed mb-3 max-w-lg">
-                    13-view sweep sequence with probe positioning, anatomy, Doppler technique, and clinical pearls for a complete fetal cardiac assessment.
-                  </p>
-                  <p className="text-white/50 text-xs mb-4">
-                    <span className="font-semibold text-white/70">Patient Positioning:</span> Supine; use maternal left or right lateral tilt to optimise fetal lie and cardiac axis orientation.
-                  </p>
-                  <Link href="/fetal">
-                    <button className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90" style={{ background: "#189aa1" }}>
-                      <Baby className="w-4 h-4" />
-                      Open Fetal Echo Navigator™
-                    </button>
-                  </Link>
-                </div>
-              </div>
-            </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 items-start">
             {/* Fetal detail panel — order-first on mobile so it appears at top */}
             <div ref={fetalDetailRef} className="lg:col-span-3 lg:order-2 order-1 space-y-4">
