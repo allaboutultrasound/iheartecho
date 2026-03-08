@@ -393,27 +393,27 @@ export default function TTENavigator() {
               <div className="flex flex-wrap gap-2">
                 <a href="/echoassist#engine-strain" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
                   style={{ background: "#189aa1", color: "white" }}>
-                  ↗ Strain Analysis — EchoAssist™
+                  ↗ Strain Analysis — EchoAssist
                 </a>
                 <a href="/strain" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
                   style={{ background: "#0e4a50", color: "white" }}>
-                  ↗ Strain Navigator™
+                  ↗ Strain Navigator
                 </a>
                 <a href="/echoassist#engine-lv" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:bg-gray-50"
                   style={{ color: "#189aa1", borderColor: "#189aa140" }}>
-                  ↗ LV Systolic Function — EchoAssist™
+                  ↗ LV Systolic Function — EchoAssist
                 </a>
                 <a href="/echoassist#engine-diastolic" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:bg-gray-50"
                   style={{ color: "#189aa1", borderColor: "#189aa140" }}>
-                  ↗ Diastolic Function — EchoAssist™
+                  ↗ Diastolic Function — EchoAssist
                 </a>
                 <a href="/echoassist#engine-rv" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:bg-gray-50"
                   style={{ color: "#189aa1", borderColor: "#189aa140" }}>
-                  ↗ RV Function — EchoAssist™
+                  ↗ RV Function — EchoAssist
                 </a>
                 <a href="/echoassist#engine-ph" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:bg-gray-50"
                   style={{ color: "#189aa1", borderColor: "#189aa140" }}>
-                  ↗ Pulmonary Hypertension — EchoAssist™
+                  ↗ Pulmonary Hypertension — EchoAssist
                 </a>
               </div>
             </div>

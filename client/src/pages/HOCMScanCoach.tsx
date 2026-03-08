@@ -595,7 +595,7 @@ export default function HOCMScanCoach({ _noLayout }: { _noLayout?: boolean } = {
               <button className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
                 style={{ background: PURPLE }}>
                 <Target className="w-4 h-4" />
-                Open HOCM Navigator™
+                Open HOCM Navigator
               </button>
             </Link>
           </div>
@@ -1756,7 +1756,7 @@ export default function HOCMScanCoach({ _noLayout }: { _noLayout?: boolean } = {
             <Link href="/hocm-navigator">
               <button className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90 flex-shrink-0"
                 style={{ background: PURPLE }}>
-                Open Navigator™
+                Open Navigator
               </button>
             </Link>
           </div>

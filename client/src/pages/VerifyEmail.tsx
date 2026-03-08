@@ -82,7 +82,7 @@ export default function VerifyEmail() {
               )}
             </div>
             <h1 className="text-xl font-bold text-white" style={{ fontFamily: "Merriweather, serif" }}>
-              iHeartEcho™
+              iHeartEcho
             </h1>
             <p className="text-sm text-[#4ad9e0] mt-1">
               {isEmailChange ? "Email Address Change" : "Account Verification"}

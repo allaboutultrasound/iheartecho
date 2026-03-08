@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — Structural Heart Navigator™
+  iHeartEcho — Structural Heart Navigator
   Structural Heart Device Assessment Navigator
   Brand: Teal #189aa1, Aqua #4ad9e0
   Fonts: Merriweather headings, Open Sans body
@@ -258,7 +258,7 @@ export default function DeviceNavigator() {
                 </div>
               </div>
               <h1 className="text-2xl font-black text-white leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
-                Structural Heart Navigator™
+                Structural Heart Navigator
               </h1>
               <p className="text-white/70 text-sm mt-1 max-w-xl">
                 Pre- and post-procedure echo checklists, normal values, and procedural thresholds for TAVR, MitraClip, WATCHMAN, and ASD/PFO closure.
@@ -297,7 +297,7 @@ export default function DeviceNavigator() {
           <p>• AHA/ACC 2021 Valvular Heart Disease Guidelines | ASE/EACVI 2019 Prosthetic Valve Guidelines (Zoghbi et al.)</p>
           <p>• ESC/EACTS 2021 Valvular Heart Disease Guidelines | WATCHMAN FLX IFU | MitraClip NTR/XTR IFU</p>
           <p>• ASE 2022 ICE Guidelines (Enriquez et al.) | ACC/AHA 2014 ASD/PFO Guidelines</p>
-          <p className="pt-1">© All About Ultrasound — iHeartEcho™ | www.iheartecho.com</p>
+          <p className="pt-1">© All About Ultrasound — iHeartEcho | www.iheartecho.com</p>
         </div>
       </div>
     </Layout>

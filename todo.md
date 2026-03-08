@@ -1436,3 +1436,15 @@
 - [x] Structural Heart ScanCoach — hero banner confirmed correct
 - [x] TEE ScanCoach — hero banner confirmed correct
 - [x] ICE ScanCoach — hero banner confirmed correct
+
+## ScanCoach Hub Navigation & Navigator CTAs
+- [ ] Add "← Back to ScanCoach Hub" breadcrumb to all ScanCoach module heroes (TTE, TEE, Stress, Structural Heart, ICE, HOCM, Strain, UEA, Fetal, Pediatric, ACHD)
+- [ ] Add "Go to Navigator →" CTA button to all ScanCoach module heroes
+- [ ] Add "Go to Navigator →" CTA button to all Navigator page heroes (TTE, TEE, Stress, Strain, Structural/Device, ICE, Fetal, Pediatric, ACHD, POCUS)
+
+## Remove ™ Symbols from Navigators and ScanCoach
+- [x] Remove ™ from all ScanCoach pages (ScanCoach.tsx, StressScanCoach, TEEScanCoach, ICEScanCoach, StructuralHeartScanCoach, HOCMScanCoach, StrainScanCoach, UEAScanCoach)
+- [x] Remove ™ from all Navigator pages (TTENavigator, TEENavigator, StressNavigator, StrainNavigator, ICENavigator, DeviceNavigator, FetalNavigator, PediatricNavigator, ACHDNavigator, HOCMNavigator, UEANavigator, PulmHTNNavigator, DiastolicNavigator)
+- [x] Remove ™ from shared components and sidebar nav labels that reference Navigators/ScanCoach
+- [x] Remove ™ from Home dashboard module cards for Navigators/ScanCoach
+- [x] Keep ™ only in AccreditationNavigator (EchoAccreditation Navigator™, DIY Accreditation Tool™)

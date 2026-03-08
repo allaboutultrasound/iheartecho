@@ -331,7 +331,7 @@ export default function ICENavigator() {
           <p className="font-semibold text-gray-500">References</p>
           <p>• ASE 2022 ICE Guidelines (Enriquez et al.) | ACC/AHA 2021 Structural Heart Disease Guidelines</p>
           <p>• WATCHMAN FLX IFU | Abbott Amulet IFU | MitraClip NTR/XTR IFU</p>
-          <p className="pt-1">© All About Ultrasound — iHeartEcho™ | www.iheartecho.com</p>
+          <p className="pt-1">© All About Ultrasound — iHeartEcho | www.iheartecho.com</p>
         </div>
       </div>
     </Layout>

@@ -716,7 +716,7 @@ function generateReport(d: ReportData): string {
   lines.push(sep);
   lines.push(`Interpreted by: ___________________________`);
   lines.push(`Date: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`);
-  lines.push("© All About Ultrasound — iHeartEcho™ | www.iheartecho.com");
+  lines.push("© All About Ultrasound — iHeartEcho | www.iheartecho.com");
 
   return lines.join("\n");
 }

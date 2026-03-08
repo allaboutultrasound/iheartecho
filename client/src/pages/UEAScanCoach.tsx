@@ -361,7 +361,7 @@ const injectionSteps = [
   {
     step: 2,
     title: "Agent Preparation",
-    detail: "Definity: activate with Vialmix™ for 45 seconds, then withdraw 10 µL/kg (max 720 µL) into syringe. Lumason: attach transfer system, inject 5 mL NS into vial, shake 20 seconds until milky-white, withdraw 2.0 mL; may re-agitate if >5 min has elapsed. Optison: gently invert 10 times, withdraw 0.5 mL. See UEA Navigator for full agent-specific prep and dosing.",
+    detail: "Definity: activate with Vialmix for 45 seconds, then withdraw 10 µL/kg (max 720 µL) into syringe. Lumason: attach transfer system, inject 5 mL NS into vial, shake 20 seconds until milky-white, withdraw 2.0 mL; may re-agitate if >5 min has elapsed. Optison: gently invert 10 times, withdraw 0.5 mL. See UEA Navigator for full agent-specific prep and dosing.",
   },
   {
     step: 3,
@@ -496,7 +496,7 @@ function UEAScanCoachInner() {
               <Link href="/uea-navigator">
                 <button className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all">
                   <BookOpen className="w-4 h-4 text-[#4ad9e0]" />
-                  UEA Navigator™
+                  UEA Navigator
                 </button>
               </Link>
             </div>
@@ -932,7 +932,7 @@ function UEAScanCoachInner() {
                 </div>
                 <ul className="space-y-1.5">
                   {[
-                    "Lumason does not require activation with a Vialmix™ — gentle swirling only. No mechanical activator needed.",
+                    "Lumason does not require activation with a Vialmix — gentle swirling only. No mechanical activator needed.",
                     "SF₆ microspheres settle quickly — always invert 10× immediately before each withdrawal, even from the same vial.",
                     "Lumason is approved for both cardiac LVO and liver CEUS — the only FDA-approved agent for both indications.",
                     "Lumason has a favorable safety profile in patients with pulmonary hypertension — SF₆ gas is inert and rapidly exhaled.",
@@ -1154,7 +1154,7 @@ function UEAScanCoachInner() {
           <div className="p-4 rounded-xl flex items-center gap-4" style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}>
             <div className="flex-1">
               <p className="text-xs font-semibold text-[#4ad9e0] uppercase tracking-wider mb-0.5">Full Protocol Reference</p>
-              <p className="text-white text-sm font-bold">UEA Navigator™ — Bubble Study & PLSVC</p>
+              <p className="text-white text-sm font-bold">UEA Navigator — Bubble Study & PLSVC</p>
               <p className="text-white/60 text-xs">Full checklist, shunt grading, PLSVC echo findings, and clinical implications</p>
             </div>
             <Link href="/uea-navigator">
@@ -1321,7 +1321,7 @@ function UEAScanCoachInner() {
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
               <BookOpen className="w-4 h-4 text-[#4ad9e0]" />
-              <span className="text-xs font-semibold text-[#4ad9e0] uppercase tracking-wider">UEA Navigator™</span>
+              <span className="text-xs font-semibold text-[#4ad9e0] uppercase tracking-wider">UEA Navigator</span>
             </div>
             <h3 className="text-white font-bold text-sm mb-1" style={{ fontFamily: "Merriweather, serif" }}>
               Need the full protocol checklist?
@@ -1334,7 +1334,7 @@ function UEAScanCoachInner() {
             <button className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
               style={{ background: "#189aa1" }}>
               <BookOpen className="w-4 h-4" />
-              Open UEA Navigator™
+              Open UEA Navigator
             </button>
           </Link>
         </div>
@@ -1495,7 +1495,7 @@ function UEAScanCoachInner() {
                   <Droplets className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-white font-black text-base" style={{ fontFamily: "Merriweather, serif" }}>Optison™ (Perflutren Protein-Type A Microspheres)</h3>
+                  <h3 className="text-white font-black text-base" style={{ fontFamily: "Merriweather, serif" }}>Optison (Perflutren Protein-Type A Microspheres)</h3>
                   <p className="text-purple-200 text-xs">GE HealthCare · FDA approved 1997 · Oldest commercially available UEA</p>
                 </div>
               </div>
@@ -1571,7 +1571,7 @@ function UEAScanCoachInner() {
                       <th className="px-4 py-3 text-left font-bold text-gray-500 bg-gray-50">Feature</th>
                       <th className="px-4 py-3 text-left font-bold text-teal-600">Definity®</th>
                       <th className="px-4 py-3 text-left font-bold text-blue-600">Lumason®</th>
-                      <th className="px-4 py-3 text-left font-bold text-purple-600">Optison™</th>
+                      <th className="px-4 py-3 text-left font-bold text-purple-600">Optison</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">

@@ -1,5 +1,5 @@
 /*
-  Echo Correlation Review™
+  Echo Correlation Review
   Brand: Teal #189aa1, Aqua #4ad9e0
   Fonts: Merriweather headings, Open Sans body
 
@@ -278,10 +278,10 @@ export default function EchoCorrelationTab() {
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
-    doc.text("Echo Correlation Review™", 14, 12);
+    doc.text("Echo Correlation Review", 14, 12);
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    doc.text("iHeartEcho™ — Echocardiography Clinical Companion", 14, 19);
+    doc.text("iHeartEcho — Echocardiography Clinical Companion", 14, 19);
     doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 25);
     y = 36;
 
@@ -384,7 +384,7 @@ export default function EchoCorrelationTab() {
       doc.setPage(p);
       doc.setFontSize(7);
       doc.setTextColor(150, 150, 150);
-      doc.text(`iHeartEcho™ Echo Correlation Review — Page ${p} of ${pageCount} — Confidential`, 14, 290);
+      doc.text(`iHeartEcho Echo Correlation Review — Page ${p} of ${pageCount} — Confidential`, 14, 290);
     }
 
     doc.save(`echo-correlation-${organization || "review"}-${dateReviewCompleted || "draft"}.pdf`);
@@ -400,7 +400,7 @@ export default function EchoCorrelationTab() {
           <div>
             <div className="flex items-center gap-2 mb-0.5">
               <BarChart3 className="w-4 h-4" style={{ color: BRAND }} />
-              <h2 className="text-base font-black text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Echo Correlation Review™</h2>
+              <h2 className="text-base font-black text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Echo Correlation Review</h2>
             </div>
             <p className="text-xs text-gray-500">Compare original echo findings against correlative studies — cath, CTA, MRI, nuclear, surgical reports.</p>
           </div>

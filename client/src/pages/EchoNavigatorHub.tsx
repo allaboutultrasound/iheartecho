@@ -59,7 +59,7 @@ const navigators = [
   {
     path: "/device",
     icon: FlaskConical,
-    title: "Structural Heart Navigator™",
+    title: "Structural Heart Navigator",
     description: "TAVR, MitraClip, WATCHMAN, and ASD/PFO closure — procedural echo guidance and post-implant assessment.",
     badge: "Structural Heart",
     premium: true,
@@ -104,7 +104,7 @@ const navigators = [
   {
     path: "/pulm-htn",
     icon: Wind,
-    title: "Pulmonary HTN & PE Navigator™",
+    title: "Pulmonary HTN & PE Navigator",
     description: "Comprehensive right heart and pulmonary pressure assessment: TRV-based PH probability, RVSP estimation, RV function, PA dilation, PE echo signs (McConnell's, 60/60, D-sign), risk stratification, and ASE 2025 reporting thresholds.",
     badge: "Pulmonary",
     premium: false,
@@ -166,7 +166,7 @@ export default function EchoNavigatorHub() {
                 <Link href="/echoassist-hub">
                   <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/25 text-white hover:bg-white/20 transition-all">
                     <Zap className="w-3.5 h-3.5 text-[#4ad9e0]" />
-                    EchoAssist™
+                    EchoAssist
                     <span className="text-[#4ad9e0] text-xs">→</span>
                   </button>
                 </Link>

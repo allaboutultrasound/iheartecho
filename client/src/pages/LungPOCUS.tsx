@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — Lung POCUS Navigator™
+  iHeartEcho — Lung POCUS Navigator
   BLUE Protocol · 8-Zone Assessment · B-lines · Pleural Sliding · Consolidation
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
@@ -224,7 +224,7 @@ export default function LungPOCUS() {
           </div>
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-              Lung POCUS Navigator™
+              Lung POCUS Navigator
             </h1>
             <p className="text-sm text-gray-500 mt-0.5">
               6-Zone Assessment · BLUE Protocol · B-lines · Pleural Sliding · Consolidation · Effusion
@@ -276,7 +276,7 @@ export default function LungPOCUS() {
             href="/echoassist#engine-lung-pocus"
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-white border border-gray-200 text-gray-600 hover:border-[#189aa1] hover:text-[#189aa1] transition-all"
           >
-            <Wind className="w-3.5 h-3.5" /> EchoAssist™ Lung POCUS
+            <Wind className="w-3.5 h-3.5" /> EchoAssist Lung POCUS
           </a>
         </div>
 
@@ -390,7 +390,7 @@ export default function LungPOCUS() {
           <p>• <a href="https://pubmed.ncbi.nlm.nih.gov/22392031/" target="_blank" rel="noopener noreferrer" className="text-[#189aa1] hover:underline">Volpicelli G, et al. International evidence-based recommendations for point-of-care lung ultrasound. Intensive Care Med. 2012</a></p>
           <p>• <a href="https://www.acep.org/patient-care/policy-statements/ultrasound-guidelines-emergency-point-of-care-and-clinical-ultrasound-guidelines-in-medicine/" target="_blank" rel="noopener noreferrer" className="text-[#189aa1] hover:underline">ACEP Ultrasound Guidelines 2023</a></p>
           <p>• <a href="https://pubmed.ncbi.nlm.nih.gov/16840386/" target="_blank" rel="noopener noreferrer" className="text-[#189aa1] hover:underline">Lichtenstein D, et al. The comet-tail artifact: an ultrasound sign of alveolar-interstitial syndrome. Am J Respir Crit Care Med. 1997</a></p>
-          <p className="pt-1">© All About Ultrasound — iHeartEcho™ | www.iheartecho.com</p>
+          <p className="pt-1">© All About Ultrasound — iHeartEcho | www.iheartecho.com</p>
         </div>
       </div>
     </Layout>

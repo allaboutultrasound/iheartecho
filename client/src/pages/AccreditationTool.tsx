@@ -1,5 +1,5 @@
 /*
-  DIY Accreditation Tool™ — iHeartEcho
+  DIY Accreditation Tool — iHeartEcho
   Tabs: Quality Review | Peer Review | Policy Builder | Appropriate Use Monitor
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
@@ -408,10 +408,10 @@ function exportPeerReviewPDF(reviews: PeerReviewRow[]) {
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
-  doc.text("iHeartEcho™ — Peer Review Report", margin, 12);
+  doc.text("iHeartEcho — Peer Review Report", margin, 12);
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
-  doc.text("DIY Accreditation Tool™  |  For IAC Accreditation Preparation", margin, 19);
+  doc.text("DIY Accreditation Tool  |  For IAC Accreditation Preparation", margin, 19);
   doc.text(`Generated: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`, margin, 24);
   y = 36;
 
@@ -546,7 +546,7 @@ function exportPeerReviewPDF(reviews: PeerReviewRow[]) {
     doc.setTextColor(150, 150, 150);
     doc.setFont("helvetica", "normal");
     doc.text(
-      "iHeartEcho™ DIY Accreditation Tool™  |  For accreditation preparation use only  |  Not a substitute for official IAC review",
+      "iHeartEcho DIY Accreditation Tool  |  For accreditation preparation use only  |  Not a substitute for official IAC review",
       margin, pageH - 8
     );
     doc.text(`Page ${p} of ${totalPages}`, pageW - margin - 20, pageH - 8);
@@ -1331,7 +1331,7 @@ export default function AccreditationTool() {
         <div className="container py-12 text-center">
           <Shield className="w-12 h-12 mx-auto mb-4" style={{ color: BRAND }} />
           <h2 className="text-xl font-bold text-gray-800 mb-2" style={{ fontFamily: "Merriweather, serif" }}>Sign In Required</h2>
-          <p className="text-gray-500 text-sm mb-4">Please sign in to access the DIY Accreditation Tool™.</p>
+          <p className="text-gray-500 text-sm mb-4">Please sign in to access the DIY Accreditation Tool.</p>
           <a href="/login" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white" style={{ background: BRAND }}>
             Sign In
           </a>
@@ -1355,7 +1355,7 @@ export default function AccreditationTool() {
                 <span className="text-xs text-white/80 font-medium">Accreditation Tools</span>
               </div>
               <h1 className="text-2xl font-black text-white leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
-                DIY Accreditation Tool™
+                DIY Accreditation Tool
               </h1>
               <p className="text-white/70 text-sm mt-1 max-w-xl">
                 Quality reviews, peer review tracking, policy creation, and appropriate use monitoring — everything you need to prepare for IAC accreditation.
@@ -1364,7 +1364,7 @@ export default function AccreditationTool() {
                 <Link href="/accreditation-navigator">
                   <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/25 text-white hover:bg-white/20 transition-all">
                     <BookOpen className="w-3.5 h-3.5 text-[#4ad9e0]" />
-                    EchoAccreditation Navigator™
+                    EchoAccreditation Navigator
                     <span className="text-[#4ad9e0] text-xs">→</span>
                   </button>
                 </Link>

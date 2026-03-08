@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — Pulmonary HTN & PE Navigator™
+  iHeartEcho — Pulmonary HTN & PE Navigator
   Pulmonary Hypertension and Pulmonary Embolism Echo Assessment
   Brand: Teal #189aa1, Aqua #4ad9e0
   Fonts: Merriweather headings, Open Sans body
@@ -140,7 +140,7 @@ export default function PulmHTNNavigator() {
                 <span className="text-xs text-white/80 font-medium">ASE 2025 · ESC/ERS 2022 Guidelines</span>
               </div>
               <h1 className="text-2xl font-black text-white leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
-                Pulmonary HTN & PE Navigator™
+                Pulmonary HTN & PE Navigator
               </h1>
               <p className="text-white/70 text-sm mt-1 max-w-xl">
                 Echo-based assessment of pulmonary hypertension and pulmonary embolism — diagnostic criteria, RV/PA measurements, risk stratification, and clinical decision support.

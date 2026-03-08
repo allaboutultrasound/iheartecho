@@ -1,5 +1,5 @@
 /*
-  Strain Navigator™ — iHeartEcho
+  Strain Navigator — iHeartEcho
   LV GLS · RV Free-Wall Strain · LA Reservoir Strain · RAS
   Imaging Checklist · Normal Reference Values · ASE 2025
   Brand: Teal #189aa1, Aqua #4ad9e0
@@ -26,30 +26,30 @@ function interpretLvGls(val: number): { severity: string; color: string; suggest
   if (val <= -20) return {
     severity: "Normal LV GLS",
     color: "#15803d",
-    suggests: `EchoAssist™ Suggests: LV Global Longitudinal Strain is within normal limits (${val.toFixed(1)}%). Normal LV GLS is ≤ −20% by ASE/EACVI 2022 reference values. Subclinical LV dysfunction is not suggested by this value alone.`,
-    note: `EchoAssist™ Note: LV GLS is a sensitive marker of subclinical LV dysfunction and may be abnormal before EF declines. Ensure adequate frame rate (≥40 fps), consistent endocardial tracking, and vendor-specific reference ranges are applied.`,
-    tip: `EchoAssist™ Tip: LV GLS is particularly valuable in chemotherapy monitoring (cardio-oncology), pre-operative risk stratification, and early detection of cardiomyopathy before EF falls below 50%.`,
+    suggests: `EchoAssist Suggests: LV Global Longitudinal Strain is within normal limits (${val.toFixed(1)}%). Normal LV GLS is ≤ −20% by ASE/EACVI 2022 reference values. Subclinical LV dysfunction is not suggested by this value alone.`,
+    note: `EchoAssist Note: LV GLS is a sensitive marker of subclinical LV dysfunction and may be abnormal before EF declines. Ensure adequate frame rate (≥40 fps), consistent endocardial tracking, and vendor-specific reference ranges are applied.`,
+    tip: `EchoAssist Tip: LV GLS is particularly valuable in chemotherapy monitoring (cardio-oncology), pre-operative risk stratification, and early detection of cardiomyopathy before EF falls below 50%.`,
   };
   if (val <= -16) return {
     severity: "Mildly Reduced LV GLS",
     color: "#ca8a04",
-    suggests: `EchoAssist™ Suggests: LV Global Longitudinal Strain is mildly reduced (${val.toFixed(1)}%). Values between −16% and −20% suggest early or subclinical LV systolic dysfunction. EF may still be preserved. Clinical correlation with wall motion, EF, and diastolic parameters is recommended.`,
-    note: `EchoAssist™ Note: A relative reduction in LV GLS of >15% from baseline is considered clinically significant in cardio-oncology surveillance (ESMO/ASE 2022). Repeat strain imaging in 3–6 months if cardiotoxic therapy is ongoing.`,
-    tip: `EchoAssist™ Tip: Mildly reduced GLS with preserved EF is the hallmark of Stage B heart failure (structural disease without symptoms). Consider NT-proBNP and clinical risk factor assessment.`,
+    suggests: `EchoAssist Suggests: LV Global Longitudinal Strain is mildly reduced (${val.toFixed(1)}%). Values between −16% and −20% suggest early or subclinical LV systolic dysfunction. EF may still be preserved. Clinical correlation with wall motion, EF, and diastolic parameters is recommended.`,
+    note: `EchoAssist Note: A relative reduction in LV GLS of >15% from baseline is considered clinically significant in cardio-oncology surveillance (ESMO/ASE 2022). Repeat strain imaging in 3–6 months if cardiotoxic therapy is ongoing.`,
+    tip: `EchoAssist Tip: Mildly reduced GLS with preserved EF is the hallmark of Stage B heart failure (structural disease without symptoms). Consider NT-proBNP and clinical risk factor assessment.`,
   };
   if (val <= -12) return {
     severity: "Moderately Reduced LV GLS",
     color: "#ea580c",
-    suggests: `EchoAssist™ Suggests: LV Global Longitudinal Strain is moderately reduced (${val.toFixed(1)}%). Values between −12% and −16% indicate significant longitudinal dysfunction. This range is commonly seen in dilated cardiomyopathy, ischemic disease, and advanced Stage B/C HFpEF.`,
-    note: `EchoAssist™ Note: Segmental strain analysis (bull's-eye) should be reviewed for regional patterns. Ischemic patterns show basal-dominant reduction; non-ischemic patterns tend to be diffuse or apical-sparing. Use Strain ScanCoach for interactive segmental analysis.`,
-    tip: `EchoAssist™ Tip: Apical-sparing strain pattern (normal apical segments with reduced basal/mid segments) is a hallmark of cardiac amyloidosis and should prompt further evaluation with T1 mapping or nuclear imaging.`,
+    suggests: `EchoAssist Suggests: LV Global Longitudinal Strain is moderately reduced (${val.toFixed(1)}%). Values between −12% and −16% indicate significant longitudinal dysfunction. This range is commonly seen in dilated cardiomyopathy, ischemic disease, and advanced Stage B/C HFpEF.`,
+    note: `EchoAssist Note: Segmental strain analysis (bull's-eye) should be reviewed for regional patterns. Ischemic patterns show basal-dominant reduction; non-ischemic patterns tend to be diffuse or apical-sparing. Use Strain ScanCoach for interactive segmental analysis.`,
+    tip: `EchoAssist Tip: Apical-sparing strain pattern (normal apical segments with reduced basal/mid segments) is a hallmark of cardiac amyloidosis and should prompt further evaluation with T1 mapping or nuclear imaging.`,
   };
   return {
     severity: "Severely Reduced LV GLS",
     color: "#dc2626",
-    suggests: `EchoAssist™ Suggests: LV Global Longitudinal Strain is severely reduced (${val.toFixed(1)}%). Values > −12% indicate severe longitudinal dysfunction, typically associated with EF < 40%, advanced cardiomyopathy, or acute myocardial injury. Urgent clinical evaluation is warranted.`,
-    note: `EchoAssist™ Note: At this severity, LV GLS provides incremental prognostic value beyond EF. Severely reduced GLS is independently associated with adverse cardiovascular events, heart failure hospitalization, and mortality.`,
-    tip: `EchoAssist™ Tip: In acute settings (STEMI, myocarditis, Takotsubo), severely reduced GLS may be transient. Serial imaging at 3 months is recommended to assess recovery and guide therapy decisions.`,
+    suggests: `EchoAssist Suggests: LV Global Longitudinal Strain is severely reduced (${val.toFixed(1)}%). Values > −12% indicate severe longitudinal dysfunction, typically associated with EF < 40%, advanced cardiomyopathy, or acute myocardial injury. Urgent clinical evaluation is warranted.`,
+    note: `EchoAssist Note: At this severity, LV GLS provides incremental prognostic value beyond EF. Severely reduced GLS is independently associated with adverse cardiovascular events, heart failure hospitalization, and mortality.`,
+    tip: `EchoAssist Tip: In acute settings (STEMI, myocarditis, Takotsubo), severely reduced GLS may be transient. Serial imaging at 3 months is recommended to assess recovery and guide therapy decisions.`,
   };
 }
 
@@ -345,7 +345,7 @@ export default function StrainNavigator() {
                 PREMIUM FEATURE
               </div>
               <h1 className="text-2xl md:text-3xl font-black text-white mb-2" style={{ fontFamily: "Merriweather, serif" }}>
-                Strain Navigator™
+                Strain Navigator
               </h1>
               <p className="text-white/70 text-sm leading-relaxed mb-4">
                 LV GLS · RV Free-Wall Strain · LA Reservoir Strain · Relative Apical Strain · Imaging Checklist · ASE 2025 Reference Values
@@ -385,7 +385,7 @@ export default function StrainNavigator() {
         <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-6 flex gap-3">
           <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
           <p className="text-xs text-amber-800 leading-relaxed">
-            <strong>Clinical Disclaimer:</strong> Strain values are vendor-specific. Reference ranges are based on ASE/EACVI 2022 recommendations for vendor-neutral GLS (−20 ± 2%). Always apply vendor-specific normal ranges and correlate with clinical context. Strain Navigator™ is a clinical decision support tool, not a substitute for physician interpretation.
+            <strong>Clinical Disclaimer:</strong> Strain values are vendor-specific. Reference ranges are based on ASE/EACVI 2022 recommendations for vendor-neutral GLS (−20 ± 2%). Always apply vendor-specific normal ranges and correlate with clinical context. Strain Navigator is a clinical decision support tool, not a substitute for physician interpretation.
           </p>
         </div>
 
@@ -477,7 +477,7 @@ export default function StrainNavigator() {
                     <Zap className="w-4 h-4" style={{ color: BRAND }} />
                   </div>
                   <div className="flex-1">
-                    <div className="text-xs font-bold mb-0.5" style={{ color: BRAND }}>Open EchoAssist™ — Strain Engine</div>
+                    <div className="text-xs font-bold mb-0.5" style={{ color: BRAND }}>Open EchoAssist — Strain Engine</div>
                     <p className="text-xs text-gray-500 leading-snug">RV Free-Wall Strain · LA Reservoir Strain (LARS) · RA Reservoir Strain (RARS) · Relative Apical Strain (RAS) · Guideline-based interpretation</p>
                   </div>
                   <ArrowRight className="w-4 h-4 flex-shrink-0" style={{ color: BRAND }} />
@@ -525,7 +525,7 @@ export default function StrainNavigator() {
               <div className="space-y-3">
                 <ResultBox label="LV GLS" value={lvGls} normal="≤ −20" unit="%" interpretation={lvInterp?.severity ?? ""} />
                 {!lvGls && (
-                  <p className="text-xs text-gray-400 text-center py-3">Enter LV GLS above to see summary. For RV, LA, RA, and RAS — use EchoAssist™ Strain Engine.</p>
+                  <p className="text-xs text-gray-400 text-center py-3">Enter LV GLS above to see summary. For RV, LA, RA, and RAS — use EchoAssist Strain Engine.</p>
                 )}
               </div>
             </div>

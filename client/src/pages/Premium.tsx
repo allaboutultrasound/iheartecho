@@ -56,7 +56,7 @@ const PREMIUM_FEATURES = [
   },
   {
     icon: Zap,
-    title: "EchoAssist™ AI",
+    title: "EchoAssist AI",
     description: "Enter measurements and get instant guideline-based severity classification.",
   },
   {
@@ -76,8 +76,8 @@ const FREE_FEATURES = [
 const PREMIUM_ONLY_LABELS = [
   "Daily Challenge Archive (full history)",
   "Report Builder",
-  "All EchoNavigator™ protocols",
-  "EchoAssist™ clinical engines",
+  "All EchoNavigator protocols",
+  "EchoAssist clinical engines",
   "Hemodynamics Lab",
   "Diastology in Special Populations",
 ];

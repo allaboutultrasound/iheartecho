@@ -23,8 +23,8 @@ const PREMIUM_FEATURES = [
   "Strain Navigator — LV/RV/LA strain reference values",
   "ICE Navigator — Procedural checklists & measurements",
   "Device Navigator — TAVR, MitraClip, WATCHMAN guidance",
-  "EchoAssist™ Valve Engines — AS, MS, AR, MR severity grading",
-  "DIY Accreditation Tool™ — Full lab accreditation suite",
+  "EchoAssist Valve Engines — AS, MS, AR, MR severity grading",
+  "DIY Accreditation Tool — Full lab accreditation suite",
   "500+ Echo Case Lab cases with gamified learning",
 ];
 

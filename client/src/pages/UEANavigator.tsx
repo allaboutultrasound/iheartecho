@@ -143,7 +143,7 @@ const agents = [
     size: "Mean diameter 1.1–3.3 µm",
     approved: "LVO (FDA); off-label MPI",
     preparation: [
-      "Activate vial by mechanical agitation (Vialmix™) for 45 seconds",
+      "Activate vial by mechanical agitation (Vialmix) for 45 seconds",
       "Invert vial and withdraw dose with a 21G or larger needle",
       "Dilute in 1 mL NS if bolus injection preferred",
       "Use within 5 minutes of activation",

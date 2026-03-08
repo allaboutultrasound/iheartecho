@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — eFAST POCUS Navigator™
+  iHeartEcho — eFAST POCUS Navigator
   Extended Focused Assessment with Sonography in Trauma
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
@@ -200,7 +200,7 @@ export default function EfastPOCUS() {
           </div>
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-              eFAST POCUS Navigator™
+              eFAST POCUS Navigator
             </h1>
             <p className="text-sm text-gray-500 mt-0.5">
               Extended FAST · RUQ · LUQ · Pelvis · Cardiac · Bilateral Thorax (Pneumothorax)
@@ -262,7 +262,7 @@ export default function EfastPOCUS() {
             href="/echoassist#engine-efast-pocus"
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-white border border-gray-200 text-gray-600 hover:border-[#189aa1] hover:text-[#189aa1] transition-all"
           >
-            <Shield className="w-3.5 h-3.5" /> EchoAssist™ eFAST
+            <Shield className="w-3.5 h-3.5" /> EchoAssist eFAST
           </a>
         </div>
 
@@ -376,7 +376,7 @@ export default function EfastPOCUS() {
           <p>• <a href="https://pubmed.ncbi.nlm.nih.gov/10334745/" target="_blank" rel="noopener noreferrer" className="text-[#189aa1] hover:underline">Ma OJ, Mateer JR. Trauma ultrasound examination versus chest radiography in the detection of hemothorax. Ann Emerg Med. 1997</a></p>
           <p>• <a href="https://pubmed.ncbi.nlm.nih.gov/15930844/" target="_blank" rel="noopener noreferrer" className="text-[#189aa1] hover:underline">Kirkpatrick AW, et al. Hand-held thoracic sonography for detecting post-traumatic pneumothoraces. J Trauma. 2004</a></p>
           <p>• <a href="https://pubmed.ncbi.nlm.nih.gov/9682695/" target="_blank" rel="noopener noreferrer" className="text-[#189aa1] hover:underline">Rozycki GS, et al. Surgeon-performed ultrasound for the assessment of truncal injuries. Ann Surg. 1998</a></p>
-          <p className="pt-1">© All About Ultrasound — iHeartEcho™ | www.iheartecho.com</p>
+          <p className="pt-1">© All About Ultrasound — iHeartEcho | www.iheartecho.com</p>
         </div>
       </div>
     </Layout>

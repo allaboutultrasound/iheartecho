@@ -107,7 +107,7 @@ export default function Register() {
             </div>
           )}
           <div>
-            <div className="text-2xl font-black text-white" style={{ fontFamily: "Merriweather, serif" }}>iHeartEcho™</div>
+            <div className="text-2xl font-black text-white" style={{ fontFamily: "Merriweather, serif" }}>iHeartEcho</div>
             <div className="text-xs font-medium" style={{ color: "#4ad9e0" }}>Echocardiography Clinical Companion</div>
           </div>
         </div>
@@ -117,7 +117,7 @@ export default function Register() {
         <p className="text-white/70 text-sm leading-relaxed max-w-sm">
           Get instant access to guideline-based calculators, structured protocols, CME courses, and accreditation tools.
         </p>
-        <div className="mt-8 text-white/30 text-xs">© {new Date().getFullYear()} iHeartEcho™ · All About Ultrasound</div>
+        <div className="mt-8 text-white/30 text-xs">© {new Date().getFullYear()} iHeartEcho · All About Ultrasound</div>
       </div>
 
       {/* ── Right form panel ── */}
@@ -126,7 +126,7 @@ export default function Register() {
           {/* Mobile logo */}
           <div className="flex items-center gap-3 mb-8 lg:hidden">
             {LOGO ? <img src={LOGO} alt="iHeartEcho" className="w-10 h-10 object-contain" /> : <Heart className="w-8 h-8" style={{ color: "#189aa1" }} />}
-            <div className="text-xl font-black" style={{ fontFamily: "Merriweather, serif", color: "#0e1e2e" }}>iHeartEcho™</div>
+            <div className="text-xl font-black" style={{ fontFamily: "Merriweather, serif", color: "#0e1e2e" }}>iHeartEcho</div>
           </div>
 
           <h2 className="text-2xl font-black mb-2" style={{ fontFamily: "Merriweather, serif", color: "#0e1e2e" }}>Create your account</h2>

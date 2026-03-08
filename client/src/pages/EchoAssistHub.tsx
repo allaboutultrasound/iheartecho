@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — EchoAssist™ Hub
+  iHeartEcho — EchoAssist Hub
   Unified entry point for all echo protocol + scan coach specialties
   Brand: Teal #189aa1, Aqua #4ad9e0
   US spelling throughout
@@ -92,7 +92,7 @@ export default function EchoAssistHub() {
                 className="text-2xl md:text-3xl font-black text-white leading-tight"
                 style={{ fontFamily: "Merriweather, serif" }}
               >
-                EchoAssist™
+                EchoAssist
               </h1>
               <p className="text-[#4ad9e0] font-semibold text-base mt-0.5">Echo Protocol &amp; Scan Coach</p>
               <p className="text-white/70 text-sm md:text-base mt-2 max-w-xl leading-relaxed">

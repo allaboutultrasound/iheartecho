@@ -21,7 +21,7 @@ const modules: Module[] = [
   {
     path: "/echo-assist-hub",
     icon: Stethoscope,
-    title: "EchoAssist™",
+    title: "EchoAssist",
     description: "Echo protocol + scan coach for all 11 specialties — Adult Echo, Pediatric, Fetal, Stress, Strain, UEA, HOCM, Pulmonary HTN & PE, Structural Heart, TEE, and ICE. View-by-view checklists, reference values, and probe guidance.",
     badge: "11 Specialties",
     color: BRAND,
@@ -77,7 +77,7 @@ const modules: Module[] = [
   {
     path: "/accreditation-navigator",
     icon: Award,
-    title: "EchoAccreditation Navigator™",
+    title: "EchoAccreditation Navigator",
     description: "Free IAC standards guide — search case mix requirements, CME, staff qualifications, policies, and common deficiencies for TTE, TEE, Stress, Pediatric, Fetal, and HOCM.",
     badge: "Free · IAC",
     color: BRAND,
@@ -85,7 +85,7 @@ const modules: Module[] = [
   {
     path: "/accreditation",
     icon: ClipboardList,
-    title: "DIY Accreditation Tool™",
+    title: "DIY Accreditation Tool",
     description: "Quality reviews, peer review tracking, policy builder, and appropriate use monitoring — everything your lab needs for IAC accreditation.",
     badge: "Accreditation",
     color: BRAND,
@@ -152,7 +152,7 @@ export default function Home() {
               />
               <div>
                 <h1 className="text-3xl md:text-4xl font-black text-white leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
-                  iHeartEcho™
+                  iHeartEcho
                 </h1>
                 <p className="text-lg text-[#4ad9e0] font-semibold">Echocardiography Clinical Companion</p>
               </div>
@@ -165,7 +165,7 @@ export default function Home() {
                 <button className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90 hover:scale-105"
                   style={{ background: "#189aa1" }}>
                   <Stethoscope className="w-4 h-4" />
-                  Open EchoAssist™
+                  Open EchoAssist
                 </button>
               </Link>
               <Link href="/quickfire">

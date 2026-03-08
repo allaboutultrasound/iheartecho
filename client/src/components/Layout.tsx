@@ -58,7 +58,7 @@ const navGroups = [
   {
     label: "Clinical Tools",
     items: [
-      { path: "/echo-assist-hub", label: "EchoAssist™", icon: Stethoscope },
+      { path: "/echo-assist-hub", label: "EchoAssist", icon: Stethoscope },
       { path: "/hemodynamics", label: "Hemodynamics Lab", icon: Activity },
       { path: "/calculator", label: "Echo Calculators", icon: Calculator },
       { path: "/report", label: "Report Builder", icon: FileText },
@@ -78,8 +78,8 @@ const navGroups = [
   {
     label: "Accreditation",
     items: [
-      { path: "/accreditation-navigator", label: "EchoAccreditation Navigator™", icon: Award },
-      { path: "/accreditation", label: "DIY Accreditation Tool™", icon: ClipboardList },
+      { path: "/accreditation-navigator", label: "EchoAccreditation Navigator", icon: Award },
+      { path: "/accreditation", label: "DIY Accreditation Tool", icon: ClipboardList },
     ],
   },
   {
@@ -104,8 +104,8 @@ const hiddenNavItems = [
   { path: "/admin/cases", label: "Case Management" },
   { path: "/admin/quickfire", label: "Daily Challenge Admin" },
   { path: "/admin/thinkific-webhook", label: "Thinkific Webhook" },
-  { path: "/echo-assist-hub", label: "EchoAssist™" },
-  { path: "/scan-coach", label: "EchoAssist™ — Scan Coach" },
+  { path: "/echo-assist-hub", label: "EchoAssist" },
+  { path: "/scan-coach", label: "EchoAssist — Scan Coach" },
 ];
 const navItems = [...navGroups.flatMap(g => g.items), ...hiddenNavItems];
 
@@ -143,7 +143,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           />
           <div className="flex-1 min-w-0">
             <div className="font-bold text-white text-base leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
-              iHeartEcho™
+              iHeartEcho
             </div>
             <div className="text-xs md:text-sm text-[#4ad9e0] leading-tight">Echocardiography Clinical Companion</div>
           </div>

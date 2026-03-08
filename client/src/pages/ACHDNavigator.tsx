@@ -347,7 +347,7 @@ export default function ACHDNavigator() {
           <p>• AHA/ACC 2018 Adult Congenital Heart Disease Guidelines (Stout et al.)</p>
           <p>• ESC 2020 Adult Congenital Heart Disease Guidelines | ASE 2010 Echocardiography in ACHD (Silversides et al.)</p>
           <p>• ASE 2019 Multimodality Imaging in ACHD | ACC/AHA 2014 ASD/VSD Guidelines</p>
-          <p className="pt-1">© All About Ultrasound — iHeartEcho™ | www.iheartecho.com</p>
+          <p className="pt-1">© All About Ultrasound — iHeartEcho | www.iheartecho.com</p>
         </div>
       </div>
     </Layout>

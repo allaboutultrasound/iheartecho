@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — Image Quality Review™
+  iHeartEcho — Image Quality Review
   Full rebuild from Formsite IMAGE-QUALITY-REVIEW API
   6 exam types, full branching logic, auto-queried staff dropdowns from Lab Admin
 */

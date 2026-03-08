@@ -1177,7 +1177,7 @@ export default function ScanCoach() {
               <Scan className="w-5 h-5 text-[#4ad9e0]" />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-white" style={{ fontFamily: "Merriweather, serif" }}>ScanCoach™</h1>
+              <h1 className="text-2xl font-black text-white" style={{ fontFamily: "Merriweather, serif" }}>ScanCoach</h1>
               <p className="text-white/70 text-sm">View-by-view scanning guides with probe positioning, anatomy, and clinical pearls</p>
             </div>
           </div>

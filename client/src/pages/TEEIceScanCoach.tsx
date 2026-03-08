@@ -643,7 +643,7 @@ export function TEEIceScanCoachContent() {
             <Link href="/tee">
               <button className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90" style={{ background: "#189aa1" }}>
                 <Microscope className="w-4 h-4" />
-                Open TEE Navigator™
+                Open TEE Navigator
               </button>
             </Link>
           </div>

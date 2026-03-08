@@ -1,5 +1,5 @@
 /**
- * Physician Peer Review™
+ * Physician Peer Review
  * Rebuilt from the Formsite PhysVariabilityECHO form.
  * Staff dropdowns auto-query Lab Admin physician-role members.
  * Submissions link back to Lab Admin analytics via revieweeLabMemberId / reviewerLabMemberId.
@@ -163,7 +163,7 @@ function exportPhysicianPeerReviewPDF(review: any) {
   // Header
   doc.setFillColor(14, 74, 80); doc.rect(0, 0, pageW, 14, "F");
   doc.setTextColor(255, 255, 255); doc.setFontSize(11); doc.setFont("helvetica", "bold");
-  doc.text("iHeartEcho™ — Physician Peer Review Report", margin, 9.5);
+  doc.text("iHeartEcho — Physician Peer Review Report", margin, 9.5);
   doc.setFontSize(8); doc.setFont("helvetica", "normal");
   doc.text(`Generated: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`, pageW - margin, 9.5, { align: "right" });
   y = 22;
