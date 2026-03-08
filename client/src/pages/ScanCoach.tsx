@@ -5,9 +5,9 @@
   Fonts: Merriweather headings, Open Sans body
 */
 import { useState, useRef, useEffect, useMemo } from "react";
-import { useSearch } from "wouter";
+import { useSearch, Link } from "wouter";
 import Layout from "@/components/Layout";
-import { Scan, Heart, Info, Eye, AlertTriangle, ChevronRight, Zap, Clock, Activity, TrendingUp, CheckCircle2, XCircle, Wind } from "lucide-react";
+import { Scan, Heart, Info, Eye, AlertTriangle, ChevronRight, Zap, Clock, Activity, TrendingUp, CheckCircle2, XCircle, Wind, Stethoscope, Baby, Users, Wind as WindIcon } from "lucide-react";
 import PedCHDCoach from "@/components/PedCHDCoach";
 import { HOCMScanCoachContent } from "@/pages/HOCMScanCoach";
 import { StrainScanCoachContent } from "@/pages/StrainScanCoach";
@@ -812,7 +812,26 @@ function PulmHTNScanCoach() {
   const BRAND_LOCAL = "#189aa1";
   const BRAND_DARK_LOCAL = "#0e7490";
   return (
-    <div className="space-y-4">
+    <div>
+      {/* Banner */}
+      <div className="relative overflow-hidden mb-6" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}>
+        <div className="relative container py-8 md:py-10">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-3">
+              <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
+              <span className="text-xs text-white/80 font-medium">Pulmonary HTN & PE Acquisition Guide</span>
+            </div>
+            <h1 className="text-2xl md:text-3xl font-black text-white mb-1" style={{ fontFamily: "Merriweather, serif" }}>
+              Pulmonary HTN & PE ScanCoach™
+            </h1>
+            <p className="text-[#4ad9e0] font-semibold text-sm mb-3">Pulmonary Hypertension & Pulmonary Embolism</p>
+            <p className="text-white/70 text-sm leading-relaxed mb-4 max-w-lg">
+              Echo probability assessment for pulmonary hypertension (ASE/ESC 2022) and acute PE risk stratification — view-by-view guide with Doppler targets and clinical pearls.
+            </p>
+          </div>
+        </div>
+      </div>
+      <div className="space-y-4">
       {/* Section Toggle */}
       <div className="flex gap-2">
         {(["ph", "pe"] as const).map(s => (
@@ -1041,6 +1060,7 @@ function PulmHTNScanCoach() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
@@ -1049,6 +1069,31 @@ function ACHDScanCoach() {
   const [selectedLesion, setSelectedLesion] = useState(achdLesions[0]);
   const [selectedView, setSelectedView] = useState(achdLesions[0].views[0]);
   return (
+    <div>
+      {/* Banner */}
+      <div className="relative overflow-hidden mb-6" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}>
+        <div className="relative container py-8 md:py-10">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-3">
+              <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
+              <span className="text-xs text-white/80 font-medium">Adult Congenital Acquisition Guide</span>
+            </div>
+            <h1 className="text-2xl md:text-3xl font-black text-white mb-1" style={{ fontFamily: "Merriweather, serif" }}>
+              Adult Congenital ScanCoach™
+            </h1>
+            <p className="text-[#4ad9e0] font-semibold text-sm mb-3">Adult Congenital Heart Disease (ACHD)</p>
+            <p className="text-white/70 text-sm leading-relaxed mb-4 max-w-lg">
+              Lesion-specific echo protocols for ASD, VSD, ToF, CoA, TGA, and Fontan — with ASE/AHA thresholds, key views, and clinical pearls for each lesion.
+            </p>
+            <Link href="/achd">
+              <button className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90" style={{ background: "#189aa1" }}>
+                <Users className="w-4 h-4" />
+                Open ACHD Navigator™
+              </button>
+            </Link>
+          </div>
+        </div>
+      </div>
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
       {/* Lesion list */}
       <div className="lg:col-span-1 space-y-2">
@@ -1122,6 +1167,7 @@ function ACHDScanCoach() {
         </div>
       </div>
     </div>
+    </div>
   );
 }
 
@@ -1172,7 +1218,7 @@ export default function ScanCoach() {
 
         {/* Tab switcher */}
         <div className="flex gap-2 mb-6">
-          {(["tte", "fetal", "achd", "diastolic", "strain", "uea", "hocm", "pulm", "chd"] as const).map(tab => (
+          {(["tte", "chd", "fetal", "achd", "diastolic", "strain", "uea", "hocm", "pulm"] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -1188,6 +1234,31 @@ export default function ScanCoach() {
 
         {/* ─── ADULT TTE TAB ─── */}
         {activeTab === "tte" && (
+          <div>
+            {/* Banner */}
+            <div className="relative overflow-hidden mb-6" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}>
+              <div className="relative container py-8 md:py-10">
+                <div className="max-w-2xl">
+                  <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-3">
+                    <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
+                    <span className="text-xs text-white/80 font-medium">Adult TTE Acquisition Guide</span>
+                  </div>
+                  <h1 className="text-2xl md:text-3xl font-black text-white mb-1" style={{ fontFamily: "Merriweather, serif" }}>
+                    Adult TTE ScanCoach™
+                  </h1>
+                  <p className="text-[#4ad9e0] font-semibold text-sm mb-3">Transthoracic Echocardiography</p>
+                  <p className="text-white/70 text-sm leading-relaxed mb-4 max-w-lg">
+                    View-by-view probe positioning, anatomy overlays, Doppler technique, and clinical pearls for a complete adult TTE study — including acute vs. chronic MR and AR assessment.
+                  </p>
+                  <Link href="/tte">
+                    <button className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90" style={{ background: "#189aa1" }}>
+                      <Stethoscope className="w-4 h-4" />
+                      Open Adult TTE Navigator™
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            </div>
            <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
             {/* Detail panel — order-first on mobile so it appears at top */}
             <div ref={tteDetailRef} className="lg:col-span-3 lg:order-2 order-1 space-y-4">
@@ -1355,10 +1426,8 @@ export default function ScanCoach() {
                 </div>
               </div>
             </div>
-          </div>
-        )}
-        {/* ─── ACUTE vs CHRONIC MR SECTION (collapsible, below TTE grid) ─── */}
-        {activeTab === "tte" && (
+          </div>{/* end TTE grid */}
+          {/* ─── ACUTE vs CHRONIC MR SECTION (collapsible, below TTE grid) ─── */}
           <div className="mt-6 space-y-4">
             {/* Section Header — clickable toggle */}
             <button
@@ -1591,11 +1660,8 @@ export default function ScanCoach() {
               Clinical content © All About Ultrasound, Inc. / iHeartEcho. Educational use only. Based on ASE/AHA/ACC 2021 guidelines.
             </div>
             </div>}{/* end mrExpanded */}
-          </div>
-        )}
-
-        {/* ─── ACUTE vs CHRONIC AR SECTION (collapsible, below MR section) ─── */}
-        {activeTab === "tte" && (
+          </div>{/* end MR section */}
+          {/* ─── ACUTE vs CHRONIC AR SECTION (collapsible, below MR section) ─── */}
           <div className="mt-2 space-y-4">
             {/* Section Header — clickable toggle */}
             <button
@@ -1820,11 +1886,37 @@ export default function ScanCoach() {
               Clinical content © All About Ultrasound, Inc. / iHeartEcho. Educational use only. Based on ASE/AHA/ACC 2021 guidelines.
             </div>
             </div>}{/* end arExpanded */}
+          </div>{/* end AR section */}
           </div>
         )}
 
         {/* ─── FETAL ECHO TAB ─── */}
         {activeTab === "fetal" && (
+          <div>
+            {/* Banner */}
+            <div className="relative overflow-hidden mb-6" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}>
+              <div className="relative container py-8 md:py-10">
+                <div className="max-w-2xl">
+                  <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-3">
+                    <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
+                    <span className="text-xs text-white/80 font-medium">Fetal Echo Acquisition Guide</span>
+                  </div>
+                  <h1 className="text-2xl md:text-3xl font-black text-white mb-1" style={{ fontFamily: "Merriweather, serif" }}>
+                    Fetal Echo ScanCoach™
+                  </h1>
+                  <p className="text-[#4ad9e0] font-semibold text-sm mb-3">Fetal Echocardiography</p>
+                  <p className="text-white/70 text-sm leading-relaxed mb-4 max-w-lg">
+                    13-view sweep sequence with probe positioning, anatomy, Doppler technique, and clinical pearls for a complete fetal cardiac assessment.
+                  </p>
+                  <Link href="/fetal">
+                    <button className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90" style={{ background: "#189aa1" }}>
+                      <Baby className="w-4 h-4" />
+                      Open Fetal Echo Navigator™
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            </div>
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
             {/* Fetal detail panel — order-first on mobile so it appears at top */}
             <div ref={fetalDetailRef} className="lg:col-span-3 lg:order-2 order-1 space-y-4">
@@ -2000,6 +2092,7 @@ export default function ScanCoach() {
                 </div>
               </div>
             </div>
+          </div>
           </div>
         )}
         {/* ─── PEDIATRIC CHD TAB ─── */}
