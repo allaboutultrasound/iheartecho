@@ -14,6 +14,7 @@ import { StrainScanCoachContent } from "@/pages/StrainScanCoach";
 import { UEAScanCoachContent } from "@/pages/UEAScanCoach";
 import { DiastolicScanCoachContent } from "@/pages/DiastolicNavigator";
 import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
+import { TEEIceScanCoachContent } from "@/pages/TEEIceScanCoach";
 
 // ─── CDN image URLs (clinical images from iHeartEcho curriculum) ───
 const CDN = {
@@ -825,9 +826,18 @@ function PulmHTNScanCoach() {
               Pulmonary HTN & PE ScanCoach™
             </h1>
             <p className="text-[#4ad9e0] font-semibold text-sm mb-3">Pulmonary Hypertension & Pulmonary Embolism</p>
-            <p className="text-white/70 text-sm leading-relaxed mb-4 max-w-lg">
+            <p className="text-white/70 text-sm leading-relaxed mb-3 max-w-lg">
               Echo probability assessment for pulmonary hypertension (ASE/ESC 2022) and acute PE risk stratification — view-by-view guide with Doppler targets and clinical pearls.
             </p>
+            <p className="text-white/50 text-xs mb-4">
+              <span className="font-semibold text-white/70">Patient Positioning:</span> Supine or left lateral decubitus; left lateral tilt improves parasternal and apical windows for TR jet and RVSP measurement.
+            </p>
+            <Link href="/pulm-htn">
+              <button className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90" style={{ background: "#189aa1" }}>
+                <Wind className="w-4 h-4" />
+                Open Pulmonary HTN Navigator™
+              </button>
+            </Link>
           </div>
         </div>
       </div>
@@ -1082,8 +1092,11 @@ function ACHDScanCoach() {
               Adult Congenital ScanCoach™
             </h1>
             <p className="text-[#4ad9e0] font-semibold text-sm mb-3">Adult Congenital Heart Disease (ACHD)</p>
-            <p className="text-white/70 text-sm leading-relaxed mb-4 max-w-lg">
+            <p className="text-white/70 text-sm leading-relaxed mb-3 max-w-lg">
               Lesion-specific echo protocols for ASD, VSD, ToF, CoA, TGA, and Fontan — with ASE/AHA thresholds, key views, and clinical pearls for each lesion.
+            </p>
+            <p className="text-white/50 text-xs mb-4">
+              <span className="font-semibold text-white/70">Patient Positioning:</span> Left lateral decubitus for apical windows; supine for subcostal (ASD shunt, IVC) and SSN (CoA, arch) views.
             </p>
             <Link href="/achd">
               <button className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90" style={{ background: "#189aa1" }}>
@@ -1176,7 +1189,7 @@ export default function ScanCoach() {
   const search = useSearch();
   const _params = new URLSearchParams(search);
   const _initialTab = (_params.get("tab") as "tte" | "fetal" | "chd" | "achd" | "diastolic" | "pulm" | "strain" | "hocm" | "uea") || "tte";
-  const [activeTab, setActiveTab] = useState<"tte" | "fetal" | "chd" | "achd" | "diastolic" | "pulm" | "strain" | "hocm" | "uea">(_initialTab);
+  const [activeTab, setActiveTab] = useState<"tte" | "fetal" | "chd" | "achd" | "diastolic" | "pulm" | "strain" | "hocm" | "uea" | "tee">(_initialTab as any);
   const [selectedTTE, setSelectedTTE] = useState(tteViews[0]);
   const [selectedFetal, setSelectedFetal] = useState(fetalViews[0]);
   const [mrExpanded, setMrExpanded] = useState(false);
@@ -1217,8 +1230,8 @@ export default function ScanCoach() {
         </div>
 
         {/* Tab switcher */}
-        <div className="flex gap-2 mb-6">
-          {(["tte", "chd", "fetal", "achd", "diastolic", "strain", "uea", "hocm", "pulm"] as const).map(tab => (
+        <div className="flex flex-wrap gap-2 mb-6">
+          {(["tte", "chd", "fetal", "achd", "diastolic", "strain", "uea", "hocm", "pulm", "tee"] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -1227,7 +1240,7 @@ export default function ScanCoach() {
                 ? { background: "#189aa1", color: "white" }
                 : { background: "white", color: "#189aa1", border: "1px solid #e2e8f0" }}
             >
-              {tab === "tte" ? "Adult TTE" : tab === "fetal" ? "Fetal Echo" : tab === "achd" ? "Adult Congenital" : tab === "diastolic" ? "Diastolic Function" : tab === "strain" ? "Strain" : tab === "uea" ? "UEA" : tab === "hocm" ? "HOCM" : tab === "pulm" ? "Pulmonary HTN & PE" : "Pediatric CHD"}
+              {tab === "tte" ? "Adult TTE" : tab === "fetal" ? "Fetal Echo" : tab === "achd" ? "Adult Congenital" : tab === "diastolic" ? "Diastolic Function" : tab === "strain" ? "Strain" : tab === "uea" ? "UEA" : tab === "hocm" ? "HOCM" : tab === "pulm" ? "Pulmonary HTN & PE" : tab === "tee" ? "TEE / ICE" : "Pediatric CHD"}
             </button>
           ))}
         </div>
@@ -1247,8 +1260,11 @@ export default function ScanCoach() {
                     Adult TTE ScanCoach™
                   </h1>
                   <p className="text-[#4ad9e0] font-semibold text-sm mb-3">Transthoracic Echocardiography</p>
-                  <p className="text-white/70 text-sm leading-relaxed mb-4 max-w-lg">
+                  <p className="text-white/70 text-sm leading-relaxed mb-3 max-w-lg">
                     View-by-view probe positioning, anatomy overlays, Doppler technique, and clinical pearls for a complete adult TTE study — including acute vs. chronic MR and AR assessment.
+                  </p>
+                  <p className="text-white/50 text-xs mb-4">
+                    <span className="font-semibold text-white/70">Patient Positioning:</span> Left lateral decubitus for parasternal and apical windows; supine for subcostal and SSN views.
                   </p>
                   <Link href="/tte">
                     <button className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90" style={{ background: "#189aa1" }}>
@@ -1905,8 +1921,11 @@ export default function ScanCoach() {
                     Fetal Echo ScanCoach™
                   </h1>
                   <p className="text-[#4ad9e0] font-semibold text-sm mb-3">Fetal Echocardiography</p>
-                  <p className="text-white/70 text-sm leading-relaxed mb-4 max-w-lg">
+                  <p className="text-white/70 text-sm leading-relaxed mb-3 max-w-lg">
                     13-view sweep sequence with probe positioning, anatomy, Doppler technique, and clinical pearls for a complete fetal cardiac assessment.
+                  </p>
+                  <p className="text-white/50 text-xs mb-4">
+                    <span className="font-semibold text-white/70">Patient Positioning:</span> Supine; use maternal left or right lateral tilt to optimise fetal lie and cardiac axis orientation.
                   </p>
                   <Link href="/fetal">
                     <button className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90" style={{ background: "#189aa1" }}>
@@ -2110,6 +2129,8 @@ export default function ScanCoach() {
         {activeTab === "uea" && <UEAScanCoachContent />}
         {/* ─── DIASTOLIC FUNCTION TAB ─── */}
         {activeTab === "diastolic" && <DiastolicScanCoachContent />}
+        {/* ─── TEE / ICE TAB ─── */}
+        {activeTab === "tee" && <TEEIceScanCoachContent />}
       </div>
     </Layout>
   );

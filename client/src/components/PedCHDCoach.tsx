@@ -596,8 +596,11 @@ export default function PedCHDCoach() {
               Pediatric CHD ScanCoach™
             </h1>
             <p className="text-[#4ad9e0] font-semibold text-sm mb-3">Congenital Heart Disease</p>
-            <p className="text-white/70 text-sm leading-relaxed mb-4 max-w-lg">
+            <p className="text-white/70 text-sm leading-relaxed mb-3 max-w-lg">
               Lesion-specific scanning protocols for paediatric CHD — defect anatomy, staged palliation surveillance, key views, Doppler targets, and red-flag criteria.
+            </p>
+            <p className="text-white/50 text-xs mb-4">
+              <span className="font-semibold text-white/70">Patient Positioning:</span> Supine for neonates/infants; left lateral decubitus for older children; subcostal windows are often the primary approach in small patients.
             </p>
           </div>
         </div>

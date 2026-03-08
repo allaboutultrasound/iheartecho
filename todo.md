@@ -1304,3 +1304,9 @@
 - [ ] Update sidebar: Echo Calculator → Echo Calculators
 - [ ] Update dashboard home card order: EchoAssist, Echo Calculators, Daily Challenge, Hemodynamics Lab, CME Hub, Registry Review Hub, Report Builder, EchoAccreditation Navigator, DIY Accreditation Tool, Community Hub (pinLast)
 - [ ] Register /echoassist route in App.tsx
+
+## ScanCoach Banner & TEE/ICE Tab (In Progress)
+- [x] Add CTA button to Pulmonary HTN & PE banner (link to PulmHTN Navigator)
+- [x] Add patient positioning one-liner to all five new banners (Adult TTE, Pediatric CHD, Fetal Echo, Adult Congenital, Pulmonary HTN & PE)
+- [x] Build TEE/ICE ScanCoach tab — ME, TG, UE views for TEE; ICE views; probe guidance, anatomy, Doppler tips, image placeholders
+- [x] Register TEE/ICE tab in ScanCoach tab list and activeTab type
