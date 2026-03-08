@@ -1459,3 +1459,10 @@
 - [x] Remove hero banner from UEAScanCoach sub-page
 - [x] Ensure TEEScanCoach is a fully standalone page at /tee-scan-coach (not shared with ICE)
 - [x] Ensure ICEScanCoach is a fully standalone page at /ice-scan-coach (not shared with TEE)
+
+## Diastology Calculator Fixes (ASE 2025)
+- [x] Change subtitle from "ASE 2016 + LARS" to "ASE 2025"
+- [x] Show LARS automatically (remove dropdown, always display LARS section)
+- [x] Implement correct 2025 ASE diastolic dysfunction grading algorithm
+- [x] Remove requirement for E and A waves to produce a result
+- [x] Fix Special Populations upgrade gate — bypass for admin users (should never show upgrade prompt to admin)

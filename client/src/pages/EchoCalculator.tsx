@@ -675,7 +675,7 @@ function RVSPCalculator() {
   );
 }
 
-// --- DIASTOLOGY ENGINE (ASE 2016 + LARS) -------------------------------------
+// --- DIASTOLOGY ENGINE (ASE 2025 Two-Step Algorithm) -------------------------
 function DiastologyCalculator() {
   const [e, setE] = useState("");
   const [a, setA] = useState("");
@@ -684,7 +684,6 @@ function DiastologyCalculator() {
   const [trVel, setTrVel] = useState("");
   const [lavi, setLavi] = useState("");
   const [lars, setLars] = useState("");
-  const [showLars, setShowLars] = useState(false);
 
   const eVal = parseFloat(e), aVal = parseFloat(a);
   const eaRatio = eVal && aVal ? eVal / aVal : 0;
@@ -695,151 +694,199 @@ function DiastologyCalculator() {
   const laviVal = parseFloat(lavi);
   const larsVal = parseFloat(lars);
 
-  // ASE 2016 Algorithm A (EF ≥50%)
-  // Step 1: Is e' abnormal? septal <7 or lateral <10
-  const epAbnormal = (epSeptal > 0 && epSeptal < 7) || (epLateral > 0 && epLateral < 10);
-  // Step 2: Count abnormal criteria (≥2 of 3 = elevated filling pressure)
-  const abnormalCriteria = [
-    eeRatio > 14,
-    tr > 2.8,
-    laviVal > 34,
-  ];
-  const abnormalCount = abnormalCriteria.filter(Boolean).length;
+  // ── ASE 2025 Two-Step Algorithm (Figure 3) ──────────────────────────────────
+  // Step 1: Is e' abnormal? (septal e' <7 cm/s OR lateral e' <10 cm/s)
+  const epSeptalEntered = epSeptal > 0;
+  const epLateralEntered = epLateral > 0;
+  const epAbnormal = (epSeptalEntered && epSeptal < 7) || (epLateralEntered && epLateral < 10);
+  const epNormal = (epSeptalEntered && epSeptal >= 7) || (epLateralEntered && epLateral >= 10);
 
-  // LARS grading (per published cutoffs: ≥35% normal, 24–35% grade I, <24% grade II/III)
+  // Step 2: Count abnormal criteria (≥2 of 4 = elevated LV filling pressures)
+  // Criteria: E/e' >14 | TR Vmax >2.8 m/s | LAVI >34 mL/m² | LARS <18%
+  const eeAbnormal = eeRatio > 14;
+  const trAbnormal = tr > 2.8;
+  const laviAbnormal = laviVal > 34;
+  const larsAbnormal = larsVal > 0 && larsVal < 18;
+  const step2Criteria = [
+    eeRatio > 0 ? eeAbnormal : null,
+    tr > 0 ? trAbnormal : null,
+    laviVal > 0 ? laviAbnormal : null,
+    larsVal > 0 ? larsAbnormal : null,
+  ].filter(v => v !== null) as boolean[];
+  const step2Count = step2Criteria.filter(Boolean).length;
+  const step2Total = step2Criteria.length;
+
+  // LARS standalone interpretation
   const larsGrade = larsVal > 0
-    ? larsVal >= 35 ? { label: "Normal (≥35%)", color: "#16a34a" }
-    : larsVal >= 24 ? { label: "Mildly Reduced — Grade I DD", color: "#d97706" }
-    : larsVal >= 18 ? { label: "Moderately Reduced — Grade II DD", color: "#d97706" }
-    : { label: "Severely Reduced — Grade III DD", color: "#dc2626" }
+    ? larsVal >= 18 ? { label: "Normal (≥18%)", color: "#16a34a", note: "Normal LA reservoir function" }
+    : { label: "Reduced (<18%) — Elevated LVFP", color: "#dc2626", note: "LARS <18% = elevated LV filling pressures (high specificity)" }
     : null;
 
-  // Grade determination
+  // ── Grade determination (ASE 2025) ──────────────────────────────────────────
+  // Requires at least one Step 2 criterion entered to grade
   let grade = "";
   let fillingPressure = "";
   let gradeColor = "#189aa1";
+  let gradeNote = "";
 
-  if (eaRatio > 0) {
-    if (eaRatio < 0.8) {
-      grade = "Grade I — Impaired Relaxation";
-      fillingPressure = "Normal filling pressures";
-      gradeColor = "#d97706";
-    } else if (eaRatio >= 0.8 && eaRatio <= 2.0) {
-      if (abnormalCount >= 2) {
-        grade = "Grade II — Pseudonormal (Elevated Filling Pressures)";
-        fillingPressure = "Elevated filling pressures";
-        gradeColor = "#d97706";
-      } else if (abnormalCount === 1) {
-        grade = "Indeterminate — Insufficient criteria";
-        fillingPressure = "Filling pressure uncertain";
+  const hasStep1 = epSeptalEntered || epLateralEntered;
+  const hasStep2 = step2Total > 0;
+
+  if (hasStep1 && hasStep2) {
+    if (!epAbnormal && epNormal) {
+      // e' normal → Normal diastolic function (regardless of Step 2)
+      grade = "Normal Diastolic Function";
+      fillingPressure = "Normal LV filling pressures";
+      gradeColor = "#16a34a";
+      gradeNote = "Normal e' — diastolic function is normal per ASE 2025 Step 1.";
+    } else if (epAbnormal) {
+      // e' abnormal → proceed to Step 2
+      if (step2Count >= 2) {
+        // ≥2 of 4 Step 2 criteria abnormal → elevated LVFP
+        if (eaRatio >= 2) {
+          grade = "Grade III — Restrictive Filling";
+          fillingPressure = "Markedly elevated LV filling pressures";
+          gradeColor = "#dc2626";
+          gradeNote = "Abnormal e' + ≥2 Step 2 criteria + E/A ≥2 → Grade III (restrictive physiology).";
+        } else {
+          grade = "Grade II — Elevated Filling Pressures";
+          fillingPressure = "Elevated LV filling pressures";
+          gradeColor = "#f97316";
+          gradeNote = "Abnormal e' + ≥2 Step 2 criteria → Grade II diastolic dysfunction.";
+        }
+      } else if (step2Count === 1) {
+        grade = "Indeterminate";
+        fillingPressure = "LV filling pressures uncertain";
         gradeColor = "#189aa1";
+        gradeNote = "Abnormal e' + 1 of " + step2Total + " Step 2 criteria abnormal. Enter more parameters to classify.";
       } else {
-        grade = "Normal Diastolic Function";
-        fillingPressure = "Normal filling pressures";
-        gradeColor = "#16a34a";
+        // 0 of entered Step 2 criteria abnormal
+        grade = "Grade I — Impaired Relaxation";
+        fillingPressure = "Normal LV filling pressures";
+        gradeColor = "#d97706";
+        gradeNote = "Abnormal e' + no elevated Step 2 criteria → Grade I (impaired relaxation, normal filling pressures).";
       }
-    } else if (eaRatio > 2.0) {
-      grade = "Grade III — Restrictive Filling";
-      fillingPressure = "Markedly elevated filling pressures";
-      gradeColor = "#dc2626";
+    }
+  } else if (!hasStep1 && hasStep2) {
+    // Step 2 criteria entered without e' — show filling pressure estimate only
+    if (step2Count >= 2) {
+      grade = "Elevated Filling Pressures (Step 2 only)";
+      fillingPressure = "≥2 Step 2 criteria abnormal — likely elevated LVFP";
+      gradeColor = "#f97316";
+      gradeNote = "Enter e' septal/lateral to complete Step 1 and assign a diastolic grade.";
+    } else if (step2Count === 1) {
+      grade = "Indeterminate (Step 2 only)";
+      fillingPressure = "1 Step 2 criterion abnormal — insufficient to classify";
+      gradeColor = "#189aa1";
+      gradeNote = "Enter e' septal/lateral to complete Step 1 and assign a diastolic grade.";
+    } else {
+      grade = "Normal Filling Pressures (Step 2 only)";
+      fillingPressure = "No Step 2 criteria abnormal";
+      gradeColor = "#16a34a";
+      gradeNote = "Enter e' septal/lateral to complete Step 1 and assign a diastolic grade.";
     }
   }
 
-  // LARS override: if LARS severely reduced, upgrade filling pressure concern
-  const larsElevated = larsVal > 0 && larsVal < 18;
-
-  const hasInput = e || a || eSeptal;
+  const hasInput = e || a || eSeptal || eLateral || trVel || lavi || lars;
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <InputField label="E velocity" unit="m/s" value={e} onChange={setE} placeholder="e.g. 0.85" />
-        <InputField label="A velocity" unit="m/s" value={a} onChange={setA} placeholder="e.g. 0.65" />
-        <InputField label="e' Septal" unit="cm/s" value={eSeptal} onChange={setESeptal} placeholder="e.g. 6" hint="<7 = abnormal" />
-        <InputField label="e' Lateral" unit="cm/s" value={eLateral} onChange={setELateral} placeholder="e.g. 9" hint="<10 = abnormal" />
-        <InputField label="TR Vmax" unit="m/s" value={trVel} onChange={setTrVel} placeholder="e.g. 2.5" hint=">2.8 = abnormal" />
-        <InputField label="LAVI" unit="mL/m²" value={lavi} onChange={setLavi} placeholder="e.g. 38" hint=">34 = abnormal" />
+        <InputField label="E velocity" unit="m/s" value={e} onChange={setE} placeholder="e.g. 0.85" hint="Step 2 (optional)" />
+        <InputField label="A velocity" unit="m/s" value={a} onChange={setA} placeholder="e.g. 0.65" hint="Step 2 (optional)" />
+        <InputField label="e' Septal" unit="cm/s" value={eSeptal} onChange={setESeptal} placeholder="e.g. 6" hint="Step 1 — <7 = abnormal" />
+        <InputField label="e' Lateral" unit="cm/s" value={eLateral} onChange={setELateral} placeholder="e.g. 9" hint="Step 1 — <10 = abnormal" />
+        <InputField label="TR Vmax" unit="m/s" value={trVel} onChange={setTrVel} placeholder="e.g. 2.5" hint="Step 2 — >2.8 = abnormal" />
+        <InputField label="LAVI" unit="mL/m²" value={lavi} onChange={setLavi} placeholder="e.g. 38" hint="Step 2 — >34 = abnormal" />
       </div>
 
-      {/* LARS section */}
-      <div className="border border-[#189aa1]/20 rounded-lg overflow-hidden">
-        <button
-          className="w-full flex items-center justify-between px-4 py-2.5 bg-[#f0fbfc] text-sm font-semibold text-[#189aa1] hover:bg-[#e0f7f8] transition-all"
-          onClick={() => setShowLars(!showLars)}>
-          <span>Left Atrial Reservoir Strain (LARS)</span>
-          {showLars ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-        </button>
-        {showLars && (
-          <div className="p-4 space-y-3">
-            <InputField label="LA Reservoir Strain (LASr)" unit="%" value={lars} onChange={setLars} placeholder="e.g. 28" hint="Normal ≥35%" />
-            {larsGrade && (
-              <div className="p-3 rounded-lg border animate-in fade-in duration-200" style={{ borderColor: larsGrade.color + "40", background: larsGrade.color + "10" }}>
-                <div className="text-sm font-bold mb-0.5" style={{ color: larsGrade.color }}>{larsGrade.label}</div>
-                <div className="text-xs text-gray-500">
-                  LARS normal ≥35% | Grade I DD: 24–35% | Grade II DD: 18–24% | Grade III DD: &lt;18%
-                </div>
-                <div className="text-xs text-gray-500 mt-1">
-                  LARS &lt;18% is associated with elevated LV filling pressures (PCWP ≥15 mmHg). Can substitute for TR velocity in indeterminate cases.
-                </div>
-              </div>
-            )}
+      {/* LARS — always visible, ASE 2025 Step 2 criterion */}
+      <div className="border border-[#189aa1]/20 rounded-lg p-4 space-y-3 bg-[#f8feff]">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-sm font-semibold text-[#189aa1]">Left Atrial Reservoir Strain (LARS)</span>
+          <span className="text-xs bg-[#189aa1]/10 text-[#189aa1] font-semibold px-2 py-0.5 rounded-full">Step 2 · ASE 2025</span>
+        </div>
+        <InputField label="LA Reservoir Strain (LASr)" unit="%" value={lars} onChange={setLars} placeholder="e.g. 28" hint="Step 2 — <18% = elevated LVFP" />
+        {larsGrade && (
+          <div className="p-3 rounded-lg border animate-in fade-in duration-200" style={{ borderColor: larsGrade.color + "40", background: larsGrade.color + "10" }}>
+            <div className="text-sm font-bold mb-0.5" style={{ color: larsGrade.color }}>{larsGrade.label}</div>
+            <div className="text-xs text-gray-500">{larsGrade.note}</div>
           </div>
         )}
+        <div className="text-xs text-gray-400">LARS threshold: &lt;18% = elevated LVFP (high specificity). Normal lower limit ≥18%. Obtain from dedicated A4C + A2C apical views.</div>
       </div>
 
       {hasInput && (
-        <ResultPanel guideline="Per ASE/EACVI 2016 Diastology Guidelines (Nagueh et al.) + LARS (Nagueh 2023, JACC Imaging)">
+        <ResultPanel guideline="Per ASE 2025 LV Diastolic Function Guidelines — Two-Step Algorithm (Figure 3)">
           <div className="mb-3">
-            <div className="text-sm font-bold mb-0.5" style={{ color: gradeColor }}>{grade || "Enter E and A to grade"}</div>
-            {fillingPressure && <div className="text-xs font-semibold" style={{ color: gradeColor }}>{fillingPressure}</div>}
+            <div className="text-sm font-bold mb-0.5" style={{ color: gradeColor }}>{grade || "Enter at least one parameter"}</div>
+            {fillingPressure && <div className="text-xs font-semibold mb-1" style={{ color: gradeColor }}>{fillingPressure}</div>}
+            {gradeNote && <div className="text-xs text-gray-500">{gradeNote}</div>}
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
-            {eaRatio > 0 && (
-              <div className="bg-white rounded p-2 border border-gray-100 text-center">
-                <div className="text-xs text-gray-400">E/A</div>
-                <div className="font-bold text-[#189aa1]" style={{ fontFamily: "JetBrains Mono, monospace" }}>{eaRatio.toFixed(2)}</div>
+          {/* Step 1 summary */}
+          {hasStep1 && (
+            <div className="mb-2 p-2 rounded bg-gray-50 border border-gray-100">
+              <div className="text-xs font-semibold text-gray-600 mb-1">Step 1 — e' (Myocardial Relaxation)</div>
+              <div className="flex flex-wrap gap-2">
+                {epSeptalEntered && (
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${epSeptal < 7 ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                    e' sep {epSeptal} cm/s {epSeptal < 7 ? "↓ Abnormal" : "✓ Normal"}
+                  </span>
+                )}
+                {epLateralEntered && (
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${epLateral < 10 ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                    e' lat {epLateral} cm/s {epLateral < 10 ? "↓ Abnormal" : "✓ Normal"}
+                  </span>
+                )}
               </div>
-            )}
-            {eeRatio > 0 && (
-              <div className={`bg-white rounded p-2 border text-center ${eeRatio > 14 ? "border-red-200" : "border-gray-100"}`}>
-                <div className="text-xs text-gray-400">E/e' avg</div>
-                <div className={`font-bold ${eeRatio > 14 ? "text-red-600" : "text-[#189aa1]"}`} style={{ fontFamily: "JetBrains Mono, monospace" }}>
-                  {eeRatio.toFixed(1)}
-                </div>
-                <div className="text-xs text-gray-400">{eeRatio > 14 ? "↑ Elevated" : "Normal"}</div>
-              </div>
-            )}
-            {tr > 0 && (
-              <div className={`bg-white rounded p-2 border text-center ${tr > 2.8 ? "border-red-200" : "border-gray-100"}`}>
-                <div className="text-xs text-gray-400">TR Vmax</div>
-                <div className={`font-bold ${tr > 2.8 ? "text-red-600" : "text-[#189aa1]"}`} style={{ fontFamily: "JetBrains Mono, monospace" }}>
-                  {tr}
-                </div>
-                <div className="text-xs text-gray-400">{tr > 2.8 ? "↑ Elevated" : "Normal"}</div>
-              </div>
-            )}
-            {laviVal > 0 && (
-              <div className={`bg-white rounded p-2 border text-center ${laviVal > 34 ? "border-red-200" : "border-gray-100"}`}>
-                <div className="text-xs text-gray-400">LAVI</div>
-                <div className={`font-bold ${laviVal > 34 ? "text-red-600" : "text-[#189aa1]"}`} style={{ fontFamily: "JetBrains Mono, monospace" }}>
-                  {laviVal}
-                </div>
-                <div className="text-xs text-gray-400">{laviVal > 34 ? "↑ Dilated" : "Normal"}</div>
-              </div>
-            )}
-          </div>
-
-          <div className="text-xs text-gray-600 mb-1">
-            Abnormal criteria met: <span className="font-bold text-[#189aa1]">{abnormalCount}/3</span>
-            <span className="text-gray-400 ml-1">(≥2/3 = elevated filling pressures)</span>
-          </div>
-
-          {larsElevated && (
-            <div className="mt-2 p-2 rounded bg-red-50 border border-red-200 text-xs text-red-700 font-semibold">
-              ⚠ LARS &lt;18% — strongly suggests elevated LV filling pressures regardless of E/A pattern.
             </div>
           )}
+
+          {/* Step 2 criteria grid */}
+          {hasStep2 && (
+            <div className="mb-2">
+              <div className="text-xs font-semibold text-gray-600 mb-1">Step 2 — Filling Pressure Criteria ({step2Count}/{step2Total} abnormal)</div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {eeRatio > 0 && (
+                  <div className={`bg-white rounded p-2 border text-center ${eeAbnormal ? "border-red-200" : "border-gray-100"}`}>
+                    <div className="text-xs text-gray-400">E/e' avg</div>
+                    <div className={`font-bold text-sm ${eeAbnormal ? "text-red-600" : "text-[#189aa1]"}`} style={{ fontFamily: "JetBrains Mono, monospace" }}>{eeRatio.toFixed(1)}</div>
+                    <div className="text-xs text-gray-400">{eeAbnormal ? "↑ >14" : "≤14"}</div>
+                  </div>
+                )}
+                {tr > 0 && (
+                  <div className={`bg-white rounded p-2 border text-center ${trAbnormal ? "border-red-200" : "border-gray-100"}`}>
+                    <div className="text-xs text-gray-400">TR Vmax</div>
+                    <div className={`font-bold text-sm ${trAbnormal ? "text-red-600" : "text-[#189aa1]"}`} style={{ fontFamily: "JetBrains Mono, monospace" }}>{tr}</div>
+                    <div className="text-xs text-gray-400">{trAbnormal ? "↑ >2.8" : "≤2.8"}</div>
+                  </div>
+                )}
+                {laviVal > 0 && (
+                  <div className={`bg-white rounded p-2 border text-center ${laviAbnormal ? "border-red-200" : "border-gray-100"}`}>
+                    <div className="text-xs text-gray-400">LAVI</div>
+                    <div className={`font-bold text-sm ${laviAbnormal ? "text-red-600" : "text-[#189aa1]"}`} style={{ fontFamily: "JetBrains Mono, monospace" }}>{laviVal}</div>
+                    <div className="text-xs text-gray-400">{laviAbnormal ? "↑ >34" : "≤34"}</div>
+                  </div>
+                )}
+                {larsVal > 0 && (
+                  <div className={`bg-white rounded p-2 border text-center ${larsAbnormal ? "border-red-200" : "border-gray-100"}`}>
+                    <div className="text-xs text-gray-400">LARS</div>
+                    <div className={`font-bold text-sm ${larsAbnormal ? "text-red-600" : "text-[#189aa1]"}`} style={{ fontFamily: "JetBrains Mono, monospace" }}>{larsVal}%</div>
+                    <div className="text-xs text-gray-400">{larsAbnormal ? "↑ <18%" : "≥18%"}</div>
+                  </div>
+                )}
+                {eaRatio > 0 && (
+                  <div className="bg-white rounded p-2 border border-gray-100 text-center">
+                    <div className="text-xs text-gray-400">E/A</div>
+                    <div className="font-bold text-sm text-[#189aa1]" style={{ fontFamily: "JetBrains Mono, monospace" }}>{eaRatio.toFixed(2)}</div>
+                    <div className="text-xs text-gray-400">{eaRatio >= 2 ? "≥2 → Gr III" : eaRatio < 0.8 ? "<0.8" : "0.8–2"}</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           <EchoAssistLink engine="diastolic" params={{ eVel: e, aVel: a, ePrimeSep: eSeptal, ePrimeLat: eLateral, trVmax: trVel, lavi, lars }} />
         </ResultPanel>
       )}
@@ -1100,7 +1147,7 @@ const calculators = [
   { id: "ar", label: "Aortic Regurgitation", sub: "ASE 2021" },
   { id: "mva", label: "MVA (PHT)", sub: "Pressure Half-Time" },
   { id: "rvsp", label: "RVSP / PAP", sub: "Bernoulli" },
-  { id: "diastology", label: "Diastology + LARS", sub: "ASE 2016 + LARS" },
+  { id: "diastology", label: "Diastology + LARS", sub: "ASE 2025" },
   { id: "diastology_special", label: "Diastology — Special Populations", sub: "ASE 2025 · Premium" },
   { id: "lv", label: "LV Function + GLS", sub: "ASE 2025 Strain" },
   { id: "rv", label: "RV Function + Strain", sub: "ASE 2025 Strain" },
@@ -1132,7 +1179,7 @@ export default function EchoCalculator() {
             Echo Severity Calculator
           </h1>
           <p className="text-sm text-gray-500">
-            Guideline-based interpretation per ASE/ACC/AHA 2021 VHD, ASE 2016 Diastology, and ASE 2025 Strain Guidelines.
+            Guideline-based interpretation per ASE/ACC/AHA 2021 VHD, ASE 2025 Diastology, and ASE 2025 Strain Guidelines.
           </p>
         </div>
 

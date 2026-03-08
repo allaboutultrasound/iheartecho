@@ -66,8 +66,10 @@ export const premiumRouter = router({
   getStatus: protectedProcedure.query(async ({ ctx }) => {
     const user = await getUserById(ctx.user.id);
     if (!user) throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+    // Admin users always have full premium access — never show upgrade prompts to admins
+    const isPremium = ctx.user.role === "admin" ? true : user.isPremium;
     return {
-      isPremium: user.isPremium,
+      isPremium,
       premiumGrantedAt: user.premiumGrantedAt ?? null,
       premiumSource: user.premiumSource ?? null,
       checkoutUrl: "https://member.allaboutultrasound.com/enroll/3703267?price_id=4651832",
