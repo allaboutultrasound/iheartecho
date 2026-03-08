@@ -16,6 +16,162 @@ import {
 const BRAND = "#189aa1";
 const AQUA = "#4ad9e0";
 
+// ── Named export for embedding in ScanCoach.tsx ────────────────────────────
+export function DiastolicScanCoachContent() {
+  return (
+    <div className="max-w-4xl">
+
+      <SectionCard title="Mitral Inflow — Apical 4-Chamber" icon={Stethoscope} defaultOpen>
+        <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {[
+              { label: "View", value: "Apical 4-chamber (A4C)" },
+              { label: "Doppler Mode", value: "Pulsed Wave (PW)" },
+              { label: "Sample Volume", value: "1–3 mm at mitral leaflet tips" },
+              { label: "Timing", value: "End-expiration, held breath" },
+              { label: "Angle Correction", value: "Align beam parallel to mitral inflow (< 20°)" },
+              { label: "Gain", value: "Reduce to see spectral envelope clearly" },
+            ].map(({ label, value }) => (
+              <div key={label} className="flex gap-2 text-sm">
+                <span className="text-gray-500 w-32 flex-shrink-0">{label}:</span>
+                <span className="font-medium text-gray-800">{value}</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 p-3 rounded-lg bg-teal-50 border border-teal-100">
+            <p className="text-sm text-teal-800 leading-relaxed">
+              <strong>Tip:</strong> Position the sample volume precisely at the leaflet tips — moving it toward the annulus or into the LV will alter E and A velocities. Repeat if E/A ratio seems inconsistent with clinical picture.
+            </p>
+          </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Tissue Doppler Imaging (TDI) — Mitral Annulus" icon={Activity} defaultOpen>
+        <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {[
+              { label: "View", value: "Apical 4-chamber (A4C)" },
+              { label: "Doppler Mode", value: "Pulsed TDI (tissue velocity mode)" },
+              { label: "Septal Site", value: "Medial mitral annulus (septal corner)" },
+              { label: "Lateral Site", value: "Lateral mitral annulus" },
+              { label: "Sample Volume", value: "5–10 mm over annulus" },
+              { label: "Filter", value: "Low (to capture annular velocities)" },
+              { label: "Scale", value: "20–30 cm/s" },
+            ].map(({ label, value }) => (
+              <div key={label} className="flex gap-2 text-sm">
+                <span className="text-gray-500 w-32 flex-shrink-0">{label}:</span>
+                <span className="font-medium text-gray-800">{value}</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 p-3 rounded-lg bg-teal-50 border border-teal-100">
+            <p className="text-sm text-teal-800 leading-relaxed">
+              <strong>Tip:</strong> Measure both septal and lateral e' and average them for E/e' calculation. Lateral e' is more variable — if the lateral wall has a motion abnormality, rely on septal e' alone.
+            </p>
+          </div>
+          <div className="mt-2 p-3 rounded-lg bg-amber-50 border border-amber-100">
+            <p className="text-sm text-amber-800 leading-relaxed">
+              <strong>Pitfall:</strong> Do not confuse the s' (systolic) wave with e'. The e' wave occurs immediately after the QRS-T complex on ECG. The s' wave is the tallest peak during systole.
+            </p>
+          </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Pulmonary Venous Flow" icon={TrendingUp}>
+        <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {[
+              { label: "View", value: "Apical 4-chamber (A4C)" },
+              { label: "Doppler Mode", value: "Pulsed Wave (PW)" },
+              { label: "Sample Volume", value: "Right upper pulmonary vein, 1–2 cm into vein" },
+              { label: "Gain", value: "Reduce to see S, D, and Ar waves" },
+              { label: "Scale", value: "40–60 cm/s" },
+            ].map(({ label, value }) => (
+              <div key={label} className="flex gap-2 text-sm">
+                <span className="text-gray-500 w-32 flex-shrink-0">{label}:</span>
+                <span className="font-medium text-gray-800">{value}</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 p-3 rounded-lg bg-teal-50 border border-teal-100">
+            <p className="text-sm text-teal-800 leading-relaxed">
+              <strong>Tip:</strong> Ar duration &gt; 30 ms longer than mitral A duration indicates elevated LV end-diastolic pressure (LVEDP). This is one of the most specific signs of elevated filling pressures.
+            </p>
+          </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Left Atrial Volume Index (LAVI)" icon={BarChart3}>
+        <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {[
+              { label: "Views", value: "A4C and A2C at end-systole" },
+              { label: "Method", value: "Biplane area-length or Simpson's" },
+              { label: "Timing", value: "Frame before mitral valve opens (end-systole)" },
+              { label: "Exclude", value: "Pulmonary veins and LAA from tracing" },
+              { label: "Normal", value: "< 34 mL/m²" },
+              { label: "Abnormal", value: "≥ 34 mL/m²" },
+            ].map(({ label, value }) => (
+              <div key={label} className="flex gap-2 text-sm">
+                <span className="text-gray-500 w-32 flex-shrink-0">{label}:</span>
+                <span className="font-medium text-gray-800">{value}</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 p-3 rounded-lg bg-amber-50 border border-amber-100">
+            <p className="text-sm text-amber-800 leading-relaxed">
+              <strong>Pitfall:</strong> Atrial fibrillation, mitral stenosis, and mitral regurgitation cause LA enlargement independent of diastolic dysfunction. Do not use LAVI as a diastolic marker in these conditions.
+            </p>
+          </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard title="TR Velocity (RVSP Estimation)" icon={Zap}>
+        <div className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {[
+              { label: "View", value: "Apical 4-chamber or parasternal" },
+              { label: "Doppler Mode", value: "Continuous Wave (CW)" },
+              { label: "Alignment", value: "Align parallel to TR jet (use color Doppler first)" },
+              { label: "Threshold", value: "> 2.8 m/s = abnormal for diastolic grading" },
+              { label: "Formula", value: "RVSP = 4(TRV²) + RAP" },
+            ].map(({ label, value }) => (
+              <div key={label} className="flex gap-2 text-sm">
+                <span className="text-gray-500 w-32 flex-shrink-0">{label}:</span>
+                <span className="font-medium text-gray-800">{value}</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 p-3 rounded-lg bg-teal-50 border border-teal-100">
+            <p className="text-sm text-teal-800 leading-relaxed">
+              <strong>Tip:</strong> Use agitated saline contrast if TR is not well visualized. Even a trace TR jet can be used for velocity measurement if the envelope is complete.
+            </p>
+          </div>
+        </div>
+      </SectionCard>
+
+      <div className="mt-6 rounded-xl p-5" style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}>
+        <div className="text-sm font-bold text-[#4ad9e0] mb-3">Quick Reference — ASE 2025 Diastolic Grading</div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { grade: "Normal", ea: "0.8–2.0", ee: "≤ 14", color: "#22c55e" },
+            { grade: "Grade I", ea: "≤ 0.8", ee: "≤ 14", color: "#facc15" },
+            { grade: "Grade II", ea: "0.8–2.0", ee: "> 14", color: "#f97316" },
+            { grade: "Grade III", ea: "> 2.0", ee: "> 14", color: "#ef4444" },
+          ].map(({ grade, ea, ee, color }) => (
+            <div key={grade} className="rounded-lg p-3 bg-white/10">
+              <div className="font-bold text-sm mb-1" style={{ color }}>{grade}</div>
+              <div className="text-xs text-white/70">E/A: <span className="text-white font-medium">{ea}</span></div>
+              <div className="text-xs text-white/70">E/e': <span className="text-white font-medium">{ee}</span></div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
 // ── Types ──────────────────────────────────────────────────────────────────
 type Section = {
   id: string;
