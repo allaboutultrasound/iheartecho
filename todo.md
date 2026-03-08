@@ -1338,3 +1338,9 @@
 - [ ] Protocol steps: 1. LV systolic function, 2. e' (TDI), 3. E/e' (mitral inflow), 4. TR velocity/PASP, 5. LARS, 6. LAVI, 7. Pulmonary venous flow, 8. Algorithm
 - [ ] ScanCoach sections: TDI first, then Mitral Inflow, then TR/PASP, then LARS, then LAVI, then PV flow
 - [x] Add Deceleration Time SectionCard before Valsalva in Diastolic ScanCoach and Protocol steps
+
+## Diastolic Calculator ASE 2025 Algorithm Update
+- [x] Update EchoAssist diastolic engine to implement ASE 2025 two-step DD detection (e' Step 1, E/e'/LARS/E/A/LAVI Step 2)
+- [x] Update EchoAssist diastolic engine to implement full LV Diastolic Grading & LAP flowchart (Normal/Grade1/Grade2/Grade3 + PV S/D, LARS, LAVI, IVRT branches)
+- [x] Add exclusion criteria warnings (AF, MAC, MR, MS, LVAD, non-cardiac PH, HTX, pericardial constriction)
+- [ ] Update Echo Severity Calculator diastolic section with same ASE 2025 algorithms
