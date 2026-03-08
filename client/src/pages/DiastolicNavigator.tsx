@@ -83,7 +83,9 @@ function Chip({ label, color }: { label: string; color: string }) {
 
 // ── Main Component ─────────────────────────────────────────────────────────
 export default function DiastolicNavigator() {
-  const [activeTab, setActiveTab] = useState<"protocol" | "scancoach">("protocol");
+  const _params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+  const _initialTab = (_params.get("tab") === "scancoach" ? "scancoach" : "protocol") as "protocol" | "scancoach";
+  const [activeTab, setActiveTab] = useState<"protocol" | "scancoach">(_initialTab);
 
   return (
     <Layout>

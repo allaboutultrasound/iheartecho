@@ -10,7 +10,7 @@ import {
   Scan, BookOpen, FileText, Menu, X, ChevronRight,
   Stethoscope, Zap, ExternalLink, ShoppingBag, FlaskConical, MessageCircle, Award, Shield, GraduationCap,
   BookMarked, Library, Plus, Crown, Droplets,
-  LogIn, LogOut, Settings, ChevronDown, Webhook
+  LogIn, LogOut, Settings, ChevronDown, Webhook, Wind, Baby, Users, Microscope, Layers
 } from "lucide-react";
 
 import { trpc } from "@/lib/trpc";
@@ -65,6 +65,21 @@ const navGroups = [
     ],
   },
   {
+    label: "Scan Coach",
+    items: [
+      { path: "/scan-coach?tab=tte",     label: "Adult Echo",          icon: Stethoscope },
+      { path: "/scan-coach?tab=chd",     label: "Pediatric Echo",      icon: Users },
+      { path: "/scan-coach?tab=fetal",   label: "Fetal Echo",          icon: Baby },
+      { path: "/diastolic?tab=scancoach", label: "Diastolic Function",  icon: Activity },
+      { path: "/strain-scan-coach",      label: "Strain",              icon: Layers },
+      { path: "/uea-scan-coach",         label: "UEA",                 icon: Droplets },
+      { path: "/hocm-scan-coach",        label: "HOCM",                icon: Heart },
+      { path: "/scan-coach?tab=pulm",    label: "Pulmonary HTN & PE",  icon: Wind },
+      { path: "/tee-scan-coach",         label: "Structural Heart (TEE)", icon: Microscope },
+      { path: "/ice-scan-coach",         label: "ICE",                 icon: Scan },
+    ],
+  },
+  {
     label: "Learning",
     items: [
       { path: "/quickfire", label: "Daily Challenge", icon: Zap },
@@ -112,6 +127,7 @@ const navItems = [...navGroups.flatMap(g => g.items), ...hiddenNavItems];
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [rawLocation] = useLocation();
   const location = rawLocation.split("?")[0];
+  const fullLocation = rawLocation; // includes query string, used for tab-specific active state
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const { isAuthenticated, user, logout } = useAuth();
@@ -160,7 +176,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <div key={group.label}>
               <div className="text-xs font-semibold text-white/40 uppercase tracking-wider px-3 mb-1">{group.label}</div>
               {group.items.map(({ path, label, icon: Icon, external }) => {
-                const active = !external && (location === path || (path !== "/" && location.startsWith(path)));
+                // For paths with query params (e.g. /scan-coach?tab=tte), match full URL; otherwise use path-only match
+                const hasQuery = path.includes("?");
+                const active = !external && (
+                  hasQuery
+                    ? fullLocation === path
+                    : (location === path || (path !== "/" && location.startsWith(path)))
+                );
                 const isCaseLibrary = path === "/case-library";
                 const innerContent = (
                   <div
