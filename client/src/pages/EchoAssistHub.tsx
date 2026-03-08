@@ -151,7 +151,7 @@ export default function EchoAssistHub() {
                         className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90"
                         style={{ background: BRAND }}
                       >
-                        Protocol <ArrowRight className="w-3.5 h-3.5" />
+                        Go to Navigator <ArrowRight className="w-3.5 h-3.5" />
                       </button>
                     </Link>
                     {scanCoachPath && (
@@ -160,7 +160,7 @@ export default function EchoAssistHub() {
                           className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border transition-all hover:bg-[#189aa1]/5"
                           style={{ borderColor: BRAND + "40", color: BRAND }}
                         >
-                          Scan Coach
+                          Go to ScanCoach
                         </button>
                       </Link>
                     )}
@@ -221,7 +221,7 @@ export default function EchoAssistHub() {
                         className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90"
                         style={{ background: BRAND }}
                       >
-                        Protocol <ArrowRight className="w-3.5 h-3.5" />
+                        Go to Navigator <ArrowRight className="w-3.5 h-3.5" />
                       </button>
                     </Link>
                     {scanCoachPath && (
@@ -230,7 +230,7 @@ export default function EchoAssistHub() {
                           className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border transition-all hover:bg-[#189aa1]/5"
                           style={{ borderColor: BRAND + "40", color: BRAND }}
                         >
-                          Scan Coach
+                          Go to ScanCoach
                         </button>
                       </Link>
                     )}

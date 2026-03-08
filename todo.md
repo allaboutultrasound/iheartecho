@@ -1476,3 +1476,17 @@
 - [x] Add "Back to ScanCoach Hub" breadcrumb + "Go to Navigator" button to StrainScanCoach
 - [x] Add "Back to ScanCoach Hub" breadcrumb + "Go to Navigator" button to UEAScanCoach
 - [x] Verify Diastology Special Populations shows content (not upgrade prompt) for admin users
+
+## Navigator ↔ ScanCoach Cross-Navigation Links
+- [x] Add "Go to ScanCoach" link in TTENavigator hero (already present)
+- [x] Add "Go to ScanCoach" link in TEENavigator hero (fixed to /tee-scan-coach)
+- [x] Add "Go to ScanCoach" link in ICENavigator hero (fixed to /ice-scan-coach)
+- [x] Add "Go to ScanCoach" link in StressNavigator hero (already present)
+- [x] Add "Go to ScanCoach" link in StrainNavigator hero (already present)
+- [x] Add "Go to ScanCoach" link in HOCMNavigator hero (already present)
+- [x] Add "Go to ScanCoach" link in UEANavigator hero (already present)
+- [x] Add "Go to ScanCoach" link in StructuralHeart/DeviceNavigator hero (already present)
+- [x] Add "Go to Navigator" link on each ScanCoach module card in EchoAssist Hub (updated labels to Go to Navigator / Go to ScanCoach)
+
+## Case Submission Bug Fixes
+- [ ] Fix LinkedIn URL validation — currently rejects valid company URLs like https://www.linkedin.com/company/all-about-ultrasound/

@@ -243,10 +243,10 @@ export default function ICENavigator() {
                 Intracardiac Echocardiography — structural heart procedure guidance, views, and real-time checklists.
               </p>
               <div className="mt-3">
-                <Link href="/scan-coach?tab=structural">
+                <Link href="/ice-scan-coach">
                   <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/25 text-white hover:bg-white/20 transition-all">
                     <ChevronDown className="w-3.5 h-3.5 text-[#4ad9e0]" />
-                    Open in ScanCoach
+                    Go to ICE ScanCoach
                     <span className="text-xs text-[#4ad9e0]">→</span>
                   </button>
                 </Link>
