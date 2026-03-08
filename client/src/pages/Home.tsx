@@ -14,22 +14,32 @@ import {
 
 const BRAND = "#189aa1";
 
-type Module = { path: string; icon: any; title: string; description: string; badge: string; color: string; premium?: boolean; external?: boolean };
+type Module = { path: string; icon: any; title: string; description: string; badge: string; color: string; premium?: boolean; external?: boolean; pinLast?: boolean };
+// NOTE: Any module with pinLast: true will always render at the end of the grid,
+// regardless of its position in this array. Add new modules ABOVE the Community Hub entry.
 const modules: Module[] = [
   {
     path: "/echo-navigators",
     icon: Stethoscope,
     title: "EchoNavigator™",
-    description: "Structured echo protocols for Adult TTE, TEE, Stress, Strain, ICE, Device, Pediatric, Fetal, and ACHD — view-by-view checklists, reference values, and scanning tips.",
-    badge: "9 Protocols",
+    description: "Structured echo protocols for Adult TTE, TEE, Stress, Strain, ICE, Structural Heart, Pediatric, Fetal, ACHD, and Pulmonary HTN & PE — view-by-view checklists, reference values, and scanning tips.",
+    badge: "12 Protocols",
     color: BRAND,
   },
   {
     path: "/scan-coach-hub",
     icon: Scan,
     title: "ScanCoach™",
-    description: "Visual probe guidance with anatomy overlays, Doppler positioning, and orientation tips for Adult TTE, Fetal, Pediatric CHD, ACHD, and Strain.",
-    badge: "5 Modules",
+    description: "Visual probe guidance with anatomy overlays, Doppler positioning, and orientation tips for Adult TTE, Fetal, Pediatric CHD, ACHD, Strain, and Pulmonary HTN & PE.",
+    badge: "6 Modules",
+    color: BRAND,
+  },
+  {
+    path: "/quickfire",
+    icon: BookOpen,
+    title: "Daily Challenge",
+    description: "One question. One case. One chance today. Answer the challenge, see the explanation. Maintain your streak, earn points and compare with other echo professionals.",
+    badge: "Daily",
     color: BRAND,
   },
   {
@@ -41,11 +51,19 @@ const modules: Module[] = [
     color: BRAND,
   },
   {
-    path: "/hemodynamics",
-    icon: Activity,
-    title: "Hemodynamics Lab",
-    description: "Adjust preload, afterload, and contractility. See PV loop changes and echo findings in real time.",
-    badge: "Training",
+    path: "/cme",
+    icon: GraduationCap,
+    title: "CME Hub",
+    description: "Browse accredited CME courses from All About Ultrasound — SDMS, AMA PRA, and more. Click to enroll directly on Thinkific.",
+    badge: "CME",
+    color: BRAND,
+  },
+  {
+    path: "/registry-review",
+    icon: Award,
+    title: "Registry Review Hub",
+    description: "Prepare for ARDMS, CCI, and other registry exams with comprehensive review courses from All About Ultrasound.",
+    badge: "Registry Prep",
     color: BRAND,
   },
   {
@@ -57,11 +75,11 @@ const modules: Module[] = [
     color: BRAND,
   },
   {
-    path: "/quickfire",
-    icon: BookOpen,
-    title: "Daily Challenge",
-    description: "One question. One case. One chance today. Answer the challenge, see the explanation. Maintain your streak, earn points and compare with other echo professionals.",
-    badge: "Daily",
+    path: "/hemodynamics",
+    icon: Activity,
+    title: "Hemodynamics Lab",
+    description: "Adjust preload, afterload, and contractility. See PV loop changes and echo findings in real time.",
+    badge: "Training",
     color: BRAND,
   },
   {
@@ -81,6 +99,7 @@ const modules: Module[] = [
     color: BRAND,
     premium: true,
   },
+  // ⚠️ pinLast: true — Community Hub always renders last. Do not remove this flag.
   {
     path: "https://member.allaboutultrasound.com/products/communities/allaboutultrasound-community",
     icon: MessageCircle,
@@ -89,23 +108,13 @@ const modules: Module[] = [
     badge: "Community",
     color: BRAND,
     external: true,
+    pinLast: true,
   },
-  {
-    path: "/cme",
-    icon: GraduationCap,
-    title: "CME Hub",
-    description: "Browse accredited CME courses from All About Ultrasound — SDMS, AMA PRA, and more. Click to enroll directly on Thinkific.",
-    badge: "CME",
-    color: BRAND,
-  },
-  {
-    path: "/registry-review",
-    icon: Award,
-    title: "Registry Review Hub",
-    description: "Prepare for ARDMS, CCI, and other registry exams with comprehensive review courses from All About Ultrasound.",
-    badge: "Registry Prep",
-    color: BRAND,
-  },
+];
+// Stable sort: pinLast items always go to the end, preserving relative order of all others
+const sortedModules = [
+  ...modules.filter(m => !m.pinLast),
+  ...modules.filter(m => m.pinLast),
 ];
 
 const stats = [
@@ -212,7 +221,7 @@ export default function Home() {
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {modules.map(({ path, icon: Icon, title, description, badge, color, premium, external }) => {
+          {sortedModules.map(({ path, icon: Icon, title, description, badge, color, premium, external }) => {
             const cardContent = (
               <div className="module-card bg-white rounded-xl p-5 cursor-pointer group h-full relative overflow-hidden">
                 {premium && (
