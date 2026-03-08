@@ -264,10 +264,10 @@ export default function DeviceNavigator() {
                 Pre- and post-procedure echo checklists, normal values, and procedural thresholds for TAVR, MitraClip, WATCHMAN, and ASD/PFO closure.
               </p>
               <div className="mt-3">
-                <Link href="/scan-coach?tab=structural">
+                <Link href="/structural-heart-scan-coach">
                   <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/25 text-white hover:bg-white/20 transition-all">
                     <Scan className="w-3.5 h-3.5 text-[#4ad9e0]" />
-                    Open in ScanCoach
+                    Structural Heart ScanCoach
                     <span className="text-xs text-[#4ad9e0]">→</span>
                   </button>
                 </Link>

@@ -1398,3 +1398,13 @@
 - [x] ScanCoach double header: removed 4 duplicate inner banners (PulmHTN, ACHD, TTE, Fetal tabs)
 - [x] Diastolic calculator: removed exclusion-present checkbox
 - [x] Special Populations calculators: made collapsible (matching other engines), added Premium crown badge, moved to appear right after DiastolicEngine for discoverability
+
+## New ScanCoach Pages & Calculator Updates (Mar 8 2026)
+- [x] Create StressScanCoach.tsx — stress echo protocol views with probe guidance, acquisition tips, target HR, and BackToEchoAssist link
+- [x] Create StructuralHeartScanCoach.tsx — procedure-specific views for TAVR, MitraClip, TEER, LAAO, ASD/PFO closure, TMVR with TEE/ICE guidance and BackToEchoAssist link
+- [x] Register /stress-scan-coach and /structural-heart-scan-coach routes in App.tsx
+- [x] Add Stress Echo and Structural Heart ScanCoach buttons to EchoAssistHub.tsx
+- [x] Update StressNavigator ScanCoach link to /stress-scan-coach
+- [x] Update DeviceNavigator ScanCoach link to /structural-heart-scan-coach
+- [x] Gate StressEchoAssistEngine behind PremiumGate in EchoAssist.tsx
+- [x] Added Diastology — Special Populations as new tab in EchoCalculator.tsx directly after Diastology + LARS tab (premium-gated)

@@ -13,6 +13,7 @@ import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import FrankStarlingGraph, { type FrankStarlingParams } from "@/components/FrankStarlingGraph";
 import DiastologySpecialPopulations from "@/pages/DiastologySpecialPopulations";
+import { PremiumGate } from "@/components/PremiumGate";
 
 // ─── UI PRIMITIVES ────────────────────────────────────────────────────────────
 
@@ -2139,7 +2140,9 @@ export default function EchoAssist() {
           <DiastolicEngine />
           <DiastologySpecialPopulations />
           <StrainEngine />
-          <StressEchoAssistEngine />
+          <PremiumGate featureName="Stress Echo EchoAssist">
+            <StressEchoAssistEngine />
+          </PremiumGate>
           <AorticStenosisEngine />
           <MitraStenosisEngine />
           <AorticRegurgEngine />

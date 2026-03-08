@@ -8,6 +8,8 @@ import { useState } from "react";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import { Calculator, Info, ChevronDown, ChevronUp, Zap } from "lucide-react";
+import DiastologySpecialPopulations from "@/pages/DiastologySpecialPopulations";
+import { PremiumGate } from "@/components/PremiumGate";
 
 function EchoAssistLink({ engine, params }: { engine: string; params: Record<string, string> }) {
   const qs = Object.entries(params).filter(([, v]) => v !== "").map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join("&");
@@ -1099,6 +1101,7 @@ const calculators = [
   { id: "mva", label: "MVA (PHT)", sub: "Pressure Half-Time" },
   { id: "rvsp", label: "RVSP / PAP", sub: "Bernoulli" },
   { id: "diastology", label: "Diastology + LARS", sub: "ASE 2016 + LARS" },
+  { id: "diastology_special", label: "Diastology — Special Populations", sub: "ASE 2025 · Premium" },
   { id: "lv", label: "LV Function + GLS", sub: "ASE 2025 Strain" },
   { id: "rv", label: "RV Function + Strain", sub: "ASE 2025 Strain" },
   { id: "sv", label: "Stroke Volume / CO", sub: "LVOT Method" },
@@ -1112,6 +1115,7 @@ const componentMap: Record<string, React.ReactNode> = {
   mva: <MVACalculator />,
   rvsp: <RVSPCalculator />,
   diastology: <DiastologyCalculator />,
+  diastology_special: <PremiumGate featureName="Diastology — Special Populations"><DiastologySpecialPopulations /></PremiumGate>,
   lv: <LVFunctionCalculator />,
   rv: <RVFunctionCalculator />,
   sv: <SVCalculator />,

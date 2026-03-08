@@ -431,10 +431,10 @@ export default function StressNavigator() {
                 Exercise and dobutamine stress echo protocols, target HR calculator, and interpretation criteria.
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
-                <Link href="/scan-coach?tab=tte">
+                <Link href="/stress-scan-coach">
                   <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/25 text-white hover:bg-white/20 transition-all">
                     <Scan className="w-3.5 h-3.5 text-[#4ad9e0]" />
-                    Open in ScanCoach
+                    Stress ScanCoach
                     <span className="text-xs text-[#4ad9e0]">→</span>
                   </button>
                 </Link>

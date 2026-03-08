@@ -65,6 +65,8 @@ import UEAScanCoach from "./pages/UEAScanCoach";
 import ScanCoachEditor from "./pages/ScanCoachEditor";
 import HOCMNavigator from "./pages/HOCMNavigator";
 import HOCMScanCoach from "./pages/HOCMScanCoach";
+import StressScanCoach from "./pages/StressScanCoach";
+import StructuralHeartScanCoach from "./pages/StructuralHeartScanCoach";
 import PulmHTNNavigator from "./pages/PulmHTNNavigator";
 import DiastolicNavigator from "./pages/DiastolicNavigator";
 import ThinkificWebhookAdmin from "./pages/ThinkificWebhookAdmin";
@@ -138,6 +140,8 @@ function Router() {
       <Route path="/uea-scan-coach" component={UEAScanCoach} />
       <Route path="/hocm-navigator" component={HOCMNavigator} />
       <Route path="/hocm-scan-coach" component={HOCMScanCoach} />
+      <Route path="/stress-scan-coach" component={StressScanCoach} />
+      <Route path="/structural-heart-scan-coach" component={StructuralHeartScanCoach} />
       <Route path="/pulm-htn" component={PulmHTNNavigator} />
       <Route path="/diastolic" component={DiastolicNavigator} />
       <Route path="/echo-assist-hub" component={EchoAssistHub} />
