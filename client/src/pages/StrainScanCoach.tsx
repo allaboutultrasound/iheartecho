@@ -1007,37 +1007,6 @@ function StrainScanCoachInner() {
 
   return (
     <div>
-      {/* ── Hero Banner ── */}
-      <div style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}>
-        <div className="relative container py-8 md:py-10">
-          <div className="mb-3">
-            <BackToEchoAssist className="text-white/70 hover:text-white" />
-          </div>
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-4">
-              <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
-              <span className="text-xs text-white/80 font-medium">LV Strain · ASE 2025</span>
-            </div>
-            <div className="flex items-center gap-4 mb-3">
-              <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: "rgba(255,255,255,0.12)" }}>
-                <Activity className="w-7 h-7 text-[#4ad9e0]" />
-              </div>
-              <div>
-                <h1 className="text-2xl md:text-3xl font-black text-white leading-tight"
-                  style={{ fontFamily: "Merriweather, serif" }}>
-                  Strain ScanCoach
-                </h1>
-                <p className="text-[#4ad9e0] font-semibold text-sm">LV Global Longitudinal Strain — Acquisition &amp; Interpretation Guide</p>
-              </div>
-            </div>
-            <p className="text-white/70 text-sm leading-relaxed max-w-2xl">
-              Interactive 17-segment bull's-eye, LV GLS calculator, clinical pattern library, and acquisition tips.
-              ASE 2025 guideline thresholds with vendor-specific normal ranges.
-            </p>
-          </div>
-        </div>
-      </div>
       <div className="container py-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
 

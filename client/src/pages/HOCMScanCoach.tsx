@@ -571,36 +571,6 @@ export default function HOCMScanCoach({ _noLayout }: { _noLayout?: boolean } = {
     [selectedView, mergeHOCMView]
   );
   const inner = (<div>
-      <div
-        className="relative overflow-hidden"
-        style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}
-      >
-        <div className="relative container py-8 md:py-10">
-          <div className="mb-3">
-            <BackToEchoAssist className="text-white/70 hover:text-white" />
-          </div>
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-3">
-              <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
-              <span className="text-xs text-white/80 font-medium">HOCM Acquisition Guide</span>
-            </div>
-            <h1 className="text-2xl md:text-3xl font-black text-white mb-1" style={{ fontFamily: "Merriweather, serif" }}>
-              HOCM ScanCoach
-            </h1>
-            <p className="text-[#4ad9e0] font-semibold text-sm mb-3">Hypertrophic Obstructive Cardiomyopathy</p>
-            <p className="text-white/70 text-sm leading-relaxed mb-4 max-w-lg">
-              View-by-view acquisition guide for HOCM echo — probe positioning, CW Doppler technique, Valsalva acquisition, and Doppler differentiation (HOCM LVOT vs. MR).
-            </p>
-            <Link href="/hocm-navigator">
-              <button className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
-                style={{ background: PURPLE }}>
-                <Target className="w-4 h-4" />
-                Open HOCM Navigator
-              </button>
-            </Link>
-          </div>
-        </div>
-      </div>
 
       {/* ── Tab Bar ──────────────────────────────────────────────────────── */}
       <div className="border-b border-gray-200 bg-white sticky top-0 z-10">

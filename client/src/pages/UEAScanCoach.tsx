@@ -462,86 +462,35 @@ function UEAScanCoachInner() {
   const groups = Array.from(new Set(UEA_VIEWS.map(v => v.group)));
   return (
     <div>
-      <div
-        style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}
-      >
-        <div className="relative container py-8 md:py-10">
-          <div className="mb-3">
-            <BackToEchoAssist className="text-white/70 hover:text-white" />
-          </div>
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-4">
-              <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
-              <span className="text-xs text-white/80 font-medium">Contrast Echo Acquisition Guide</span>
-            </div>
-            <div className="flex items-center gap-4 mb-3">
-              <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: "rgba(255,255,255,0.12)" }}>
-                <Droplets className="w-7 h-7 text-[#4ad9e0]" />
-              </div>
-              <div>
-                <h1 className="text-2xl md:text-3xl font-black text-white leading-tight"
-                  style={{ fontFamily: "Merriweather, serif" }}>
-                  UEA ScanCoach
-                </h1>
-                <p className="text-[#4ad9e0] font-semibold text-sm">Ultrasound Enhancing Agents — Acquisition Guide</p>
-              </div>
-            </div>
-            <p className="text-white/70 text-sm leading-relaxed mb-5 max-w-2xl">
-              View-by-view probe guidance for contrast echocardiography. Covers patient positioning,
-              machine optimization, injection technique, artifact recognition, and clinical pearls
-              for LV opacification and myocardial perfusion imaging.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Link href="/uea-navigator">
-                <button className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all">
-                  <BookOpen className="w-4 h-4 text-[#4ad9e0]" />
-                  UEA Navigator
-                </button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Tab Bar ───────────────────────────────────────────────────────── */}
+      {/* ── Tab Bar ── */}
       <div className="border-b border-gray-200 bg-white sticky top-0 z-10">
         <div className="container">
           <div className="flex gap-1 overflow-x-auto py-2">
-            {(["views", "injection", "bubble", "artifacts", "tips", "vendors", "peg"] as const).map(tab => (
+            {([
+              { id: "views", label: "View-by-View Guide" },
+              { id: "injection", label: "Injection Technique" },
+              { id: "bubble", label: "Bubble Study" },
+              { id: "artifacts", label: "Artifacts" },
+              { id: "tips", label: "Tips & Tricks" },
+              { id: "vendors", label: "UEA Agents" },
+              { id: "peg", label: "PEG Allergy" },
+            ] as const).map(({ id, label }) => (
               <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
+                key={id}
+                onClick={() => setActiveTab(id)}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
-                  activeTab === tab
-                    ? "text-white"
-                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                  activeTab === id ? "text-white" : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                 }`}
-                style={activeTab === tab ? { background: BRAND } : {}}
+                style={activeTab === id ? { background: BRAND } : {}}
               >
-                {tab === "views" && <Eye className="w-3.5 h-3.5" />}
-                {tab === "injection" && <Droplets className="w-3.5 h-3.5" />}
-                {tab === "bubble" && <Activity className="w-3.5 h-3.5" />}
-                {tab === "artifacts" && <AlertTriangle className="w-3.5 h-3.5" />}
-                {tab === "tips" && <Zap className="w-3.5 h-3.5" />}
-                {tab === "vendors" && <Shield className="w-3.5 h-3.5" />}
-                {tab === "peg" && <AlertTriangle className="w-3.5 h-3.5" />}
-                {tab === "views" && "View Guide"}
-                {tab === "injection" && "Injection Technique"}
-                {tab === "bubble" && "Bubble Study"}
-                {tab === "artifacts" && "Artifact Guide"}
-                {tab === "tips" && "Quick Tips"}
-                {tab === "vendors" && "Agent Reference"}
-                {tab === "peg" && "PEG Allergy"}
+                {label}
               </button>
             ))}
           </div>
         </div>
       </div>
-
-      {/* ── Views Tab ─────────────────────────────────────────────────────── */}
       {activeTab === "views" && (
-        <div className="container py-6">
+      <div className="container py-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
             {/* View selector */}
             <div className="lg:col-span-1 lg:sticky lg:top-16">

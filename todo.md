@@ -1448,3 +1448,14 @@
 - [x] Remove ™ from shared components and sidebar nav labels that reference Navigators/ScanCoach
 - [x] Remove ™ from Home dashboard module cards for Navigators/ScanCoach
 - [x] Keep ™ only in AccreditationNavigator (EchoAccreditation Navigator™, DIY Accreditation Tool™)
+
+## ScanCoach Sub-page Hero Banner Removal & TEE/ICE Split
+- [x] Remove hero banner from StressScanCoach sub-page (content only, no hero)
+- [x] Remove hero banner from StructuralHeartScanCoach sub-page
+- [x] Remove hero banner from TEEScanCoach sub-page
+- [x] Remove hero banner from ICEScanCoach sub-page
+- [x] Remove hero banner from HOCMScanCoach sub-page
+- [x] Remove hero banner from StrainScanCoach sub-page
+- [x] Remove hero banner from UEAScanCoach sub-page
+- [x] Ensure TEEScanCoach is a fully standalone page at /tee-scan-coach (not shared with ICE)
+- [x] Ensure ICEScanCoach is a fully standalone page at /ice-scan-coach (not shared with TEE)

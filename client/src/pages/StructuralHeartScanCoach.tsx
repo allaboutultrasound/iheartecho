@@ -671,54 +671,6 @@ export default function StructuralHeartScanCoach() {
 
   return (
     <Layout>
-      {/* Hero Banner */}
-      <div
-        className="relative overflow-hidden"
-        style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}
-      >
-        <div className="relative container py-10">
-          <BackToEchoAssist className="text-white/70 hover:text-white mb-4" />
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: "linear-gradient(135deg, #7c3aed, #4c1d95)" }}>
-              <Heart className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-white/15 text-white/80">Structural Heart</span>
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#4ad9e0]/20 text-[#4ad9e0]">TEE · ICE</span>
-              </div>
-              <h1 className="text-2xl md:text-3xl font-black text-white leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
-                Structural Heart ScanCoach
-              </h1>
-              <p className="text-white/70 text-sm mt-1 max-w-xl">
-                Procedure-specific TEE and ICE acquisition guide for transcatheter structural heart interventions — TAVR, TEER, LAAO, ASD/PFO closure, Tricuspid TEER, and TMVR.
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Link href="/device">
-                  <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/25 text-white hover:bg-white/20 transition-all">
-                    <Stethoscope className="w-3.5 h-3.5 text-[#4ad9e0]" />
-                    Device Navigator <span className="text-[#4ad9e0]">→</span>
-                  </button>
-                </Link>
-                <Link href="/tee">
-                  <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/25 text-white hover:bg-white/20 transition-all">
-                    <Stethoscope className="w-3.5 h-3.5 text-[#4ad9e0]" />
-                    TEE Navigator <span className="text-[#4ad9e0]">→</span>
-                  </button>
-                </Link>
-                <Link href="/echoassist-hub">
-                  <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/25 text-white hover:bg-white/20 transition-all">
-                    <Zap className="w-3.5 h-3.5 text-[#4ad9e0]" />
-                    EchoAssist <span className="text-[#4ad9e0]">→</span>
-                  </button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Main Layout */}
       <div className="container py-6">
         <div className="flex gap-5">

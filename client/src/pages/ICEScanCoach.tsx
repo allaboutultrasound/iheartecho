@@ -512,52 +512,6 @@ export default function ICEScanCoach() {
 
   return (
     <Layout>
-      {/* Hero Banner */}
-      <div className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}>
-        <div className="container py-8 md:py-10">
-          <div className="mb-3">
-            <BackToEchoAssist className="text-white/70 hover:text-white" />
-          </div>
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(255,255,255,0.1)" }}>
-              <Scan className="w-6 h-6 text-[#4ad9e0]" />
-            </div>
-            <div>
-              <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-2">
-                <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
-                <span className="text-xs text-white/80 font-medium">7 Views · Procedural Guidance</span>
-              </div>
-              <h1 className="text-2xl font-black text-white leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
-                ICE ScanCoach
-              </h1>
-              <p className="text-white/70 text-sm mt-1 max-w-xl">
-                View-by-view intracardiac echocardiography guide with catheter positioning, rotation technique, anatomy descriptions, procedural Doppler tips, and reference image placeholders.
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Link href="/echo-navigators">
-                  <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/25 text-white hover:bg-white/20 transition-all">
-                    <Stethoscope className="w-3.5 h-3.5 text-[#4ad9e0]" />
-                    Navigator <span className="text-[#4ad9e0]">→</span>
-                  </button>
-                </Link>
-                <Link href="/echoassist-hub">
-                  <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/25 text-white hover:bg-white/20 transition-all">
-                    <Zap className="w-3.5 h-3.5 text-[#4ad9e0]" />
-                    EchoAssist <span className="text-[#4ad9e0]">→</span>
-                  </button>
-                </Link>
-                <Link href="/tee">
-                  <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/25 text-white hover:bg-white/20 transition-all">
-                    <Microscope className="w-3.5 h-3.5 text-[#4ad9e0]" />
-                    TEE ScanCoach <span className="text-[#4ad9e0]">→</span>
-                  </button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Main Layout */}
       <div className="container py-6">
         <div className="flex gap-5">
