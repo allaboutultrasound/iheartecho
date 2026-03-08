@@ -1408,3 +1408,6 @@
 - [x] Update DeviceNavigator ScanCoach link to /structural-heart-scan-coach
 - [x] Gate StressEchoAssistEngine behind PremiumGate in EchoAssist.tsx
 - [x] Added Diastology — Special Populations as new tab in EchoCalculator.tsx directly after Diastology + LARS tab (premium-gated)
+
+## Bug Fix (Mar 8 2026 — Session 2)
+- [x] Diastolic Function card on EchoAssistHub missing Scan Coach button — fixed: added scanCoachPath: "/scan-coach?tab=diastolic"
