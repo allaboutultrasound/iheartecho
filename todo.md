@@ -1344,3 +1344,13 @@
 - [x] Update EchoAssist diastolic engine to implement full LV Diastolic Grading & LAP flowchart (Normal/Grade1/Grade2/Grade3 + PV S/D, LARS, LAVI, IVRT branches)
 - [x] Add exclusion criteria warnings (AF, MAC, MR, MS, LVAD, non-cardiac PH, HTX, pericardial constriction)
 - [ ] Update Echo Severity Calculator diastolic section with same ASE 2025 algorithms
+
+## Diastology in Special Populations Calculator Group
+- [x] MAC calculator — E/A ratio → IVRT branch (Figure 4)
+- [x] Heart Transplant calculator — Average E/e' → E/SR_IVR or TR velocity (Figure 5)
+- [x] Pulmonary Hypertension LAP calculator — E/A + E velocity → LARS → lateral E/e' (Figure 6)
+- [x] Atrial Fibrillation LAP calculator — 4-criteria count → LARS/PV S/D/BMI secondary (Figure 8)
+- [x] Constrictive vs Restrictive calculator — E/A + IVC → respirophasic VSM → medial e' → annulus reversus → hepatic vein (Figure 7)
+- [x] Register all five as a "Diastology in Special Populations" group in EchoAssist engine list
+- [x] Gate Diastology in Special Populations behind premium subscription check (locked preview + upgrade CTA for non-premium users)
+- [x] 37 unit tests written and passing for all five algorithm engines

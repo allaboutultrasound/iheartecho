@@ -12,6 +12,7 @@ import { Zap, ChevronDown, ChevronUp, Info, Lightbulb, MessageSquare, AlertCircl
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import FrankStarlingGraph, { type FrankStarlingParams } from "@/components/FrankStarlingGraph";
+import DiastologySpecialPopulations from "@/pages/DiastologySpecialPopulations";
 
 // ─── UI PRIMITIVES ────────────────────────────────────────────────────────────
 
@@ -2154,6 +2155,7 @@ export default function EchoAssist() {
           <RVFunctionEngine />
           <PulmonaryHTNEngine />
           <FrankStarlingEngine />
+          <DiastologySpecialPopulations />
         </div>
 
         {/* Footer */}
@@ -2161,6 +2163,7 @@ export default function EchoAssist() {
           <p className="font-semibold text-gray-500">Guideline References</p>
           <p>• <a href='https://asecho.org/wp-content/uploads/2018/08/WFTF-Chamber-Quantification-Summary-Doc-Final-July-18.pdf' target='_blank' rel='noopener noreferrer' className='underline hover:text-[#189aa1]'>ASE/WFTF 2018 Chamber Quantification</a> | ASE 2025 LV Diastolic Function Guidelines</p>
           <p>• ASE 2025 Strain Guideline (Thomas et al.) | <a href='https://www.asecho.org/wp-content/uploads/2025/03/PIIS0894731725000379.pdf' target='_blank' rel='noopener noreferrer' className='underline hover:text-[#189aa1]'>ASE 2025 Right Heart & PH Guidelines</a></p>
+          <p>• ASE 2025 Special Populations Diastology (Nagueh et al.) — MAC (Fig. 4), Heart Transplant (Fig. 5), Pulmonary HTN (Fig. 6), Constriction vs Restriction (Fig. 7), Atrial Fibrillation (Fig. 8)</p>
           <p>• AHA/ACC 2021 Valvular Heart Disease Guidelines | ASE/EACVI 2017 Valve Regurgitation (Zoghbi et al.) | Hahn et al. JACC 2019 TR Grading</p>
           <p>• ESC/ERS 2022 PH Guidelines | AHA/ACC 2022 Heart Failure Guidelines</p>
           <p className="pt-1">© All About Ultrasound — iHeartEcho™ | www.iheartecho.com</p>
