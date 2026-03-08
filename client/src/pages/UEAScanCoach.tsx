@@ -443,7 +443,12 @@ const artifactGuide = [
 
 // ─── COMPONENT ────────────────────────────────────────────────────────────────
 
-export default function UEAScanCoach() {
+// Named export for embedding as a tab inside ScanCoach.tsx (no Layout wrapper)
+export function UEAScanCoachContent() {
+  return <UEAScanCoachInner />;
+}
+
+function UEAScanCoachInner() {
   const [selectedView, setSelectedView] = useState<string | null>("a4c");
   const [activeTab, setActiveTab] = useState<"views" | "injection" | "bubble" | "artifacts" | "tips" | "vendors" | "peg">("views");
 
@@ -454,11 +459,8 @@ export default function UEAScanCoach() {
     [_currentViewRaw, mergeUEAView]
   );
   const groups = Array.from(new Set(UEA_VIEWS.map(v => v.group)));
-
   return (
-    <Layout>
-      {/* ── Hero ──────────────────────────────────────────────────────────── */}
-      <div
+    <div>  <div
         className="relative overflow-hidden"
         style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}
       >
@@ -1737,6 +1739,14 @@ export default function UEAScanCoach() {
         </div>
       )}
 
+    </div>
+  );
+}
+
+export default function UEAScanCoach() {
+  return (
+    <Layout>
+      <UEAScanCoachInner />
     </Layout>
   );
 }

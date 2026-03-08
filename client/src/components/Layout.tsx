@@ -65,21 +65,6 @@ const navGroups = [
     ],
   },
   {
-    label: "Scan Coach",
-    items: [
-      { path: "/scan-coach?tab=tte",     label: "Adult Echo",          icon: Stethoscope },
-      { path: "/scan-coach?tab=chd",     label: "Pediatric Echo",      icon: Users },
-      { path: "/scan-coach?tab=fetal",   label: "Fetal Echo",          icon: Baby },
-      { path: "/diastolic?tab=scancoach", label: "Diastolic Function",  icon: Activity },
-      { path: "/strain-scan-coach",      label: "Strain",              icon: Layers },
-      { path: "/uea-scan-coach",         label: "UEA",                 icon: Droplets },
-      { path: "/hocm-scan-coach",        label: "HOCM",                icon: Heart },
-      { path: "/scan-coach?tab=pulm",    label: "Pulmonary HTN & PE",  icon: Wind },
-      { path: "/tee-scan-coach",         label: "Structural Heart (TEE)", icon: Microscope },
-      { path: "/ice-scan-coach",         label: "ICE",                 icon: Scan },
-    ],
-  },
-  {
     label: "Learning",
     items: [
       { path: "/quickfire", label: "Daily Challenge", icon: Zap },

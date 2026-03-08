@@ -928,7 +928,12 @@ const CLINICAL_PATTERNS: {
 ];
 
 // ─── Main Component ───────────────────────────────────────────────────────────
-export default function StrainScanCoach() {
+// Named export for embedding as a tab inside ScanCoach.tsx (no Layout wrapper)
+export function StrainScanCoachContent() {
+  return <StrainScanCoachInner />;
+}
+
+function StrainScanCoachInner() {
   // Bull's-eye state — default to -22 (normal) per preference
   const [segValues, setSegValues] = useState<Record<number, number | null>>(
     () => Object.fromEntries(SEGMENTS_17.map(s => [s.id, -22])) as Record<number, number | null>
@@ -1000,8 +1005,7 @@ export default function StrainScanCoach() {
   }
 
   return (
-    <Layout>
-      {/* Header */}
+    <div>
       <div className="relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${BRAND_DARK} 0%, #0e3a40 60%, ${BRAND} 100%)` }}>
         <div className="relative container py-8 md:py-10">
           <div className="flex items-start justify-between gap-4">
@@ -1479,6 +1483,14 @@ export default function StrainScanCoach() {
           </div>
         </SectionCard>
       </div>
+    </div>
+  );
+}
+
+export default function StrainScanCoach() {
+  return (
+    <Layout>
+      <StrainScanCoachInner />
     </Layout>
   );
 }

@@ -9,6 +9,9 @@ import { useSearch } from "wouter";
 import Layout from "@/components/Layout";
 import { Scan, Heart, Info, Eye, AlertTriangle, ChevronRight, Zap, Clock, Activity, TrendingUp, CheckCircle2, XCircle, Wind } from "lucide-react";
 import PedCHDCoach from "@/components/PedCHDCoach";
+import { HOCMScanCoachContent } from "@/pages/HOCMScanCoach";
+import { StrainScanCoachContent } from "@/pages/StrainScanCoach";
+import { UEAScanCoachContent } from "@/pages/UEAScanCoach";
 import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 
 // ─── CDN image URLs (clinical images from iHeartEcho curriculum) ───
@@ -1125,8 +1128,8 @@ function ACHDScanCoach() {
 export default function ScanCoach() {
   const search = useSearch();
   const _params = new URLSearchParams(search);
-  const _initialTab = (_params.get("tab") as "tte" | "fetal" | "chd" | "achd" | "pulm") || "tte";
-  const [activeTab, setActiveTab] = useState<"tte" | "fetal" | "chd" | "achd" | "pulm">(_initialTab);
+  const _initialTab = (_params.get("tab") as "tte" | "fetal" | "chd" | "achd" | "pulm" | "strain" | "hocm" | "uea") || "tte";
+  const [activeTab, setActiveTab] = useState<"tte" | "fetal" | "chd" | "achd" | "pulm" | "strain" | "hocm" | "uea">(_initialTab);
   const [selectedTTE, setSelectedTTE] = useState(tteViews[0]);
   const [selectedFetal, setSelectedFetal] = useState(fetalViews[0]);
   const [mrExpanded, setMrExpanded] = useState(false);
@@ -1168,7 +1171,7 @@ export default function ScanCoach() {
 
         {/* Tab switcher */}
         <div className="flex gap-2 mb-6">
-          {(["tte", "fetal", "chd", "achd", "pulm"] as const).map(tab => (
+          {(["tte", "fetal", "chd", "strain", "uea", "hocm", "pulm", "achd"] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -1177,7 +1180,7 @@ export default function ScanCoach() {
                 ? { background: "#189aa1", color: "white" }
                 : { background: "white", color: "#189aa1", border: "1px solid #e2e8f0" }}
             >
-              {tab === "tte" ? "Adult TTE" : tab === "fetal" ? "Fetal Echo" : tab === "chd" ? "Pediatric CHD" : tab === "achd" ? "Adult Congenital" : "Pulmonary HTN & PE"}
+              {tab === "tte" ? "Adult TTE" : tab === "fetal" ? "Fetal Echo" : tab === "chd" ? "Pediatric CHD" : tab === "strain" ? "Strain" : tab === "uea" ? "UEA" : tab === "hocm" ? "HOCM" : tab === "pulm" ? "Pulmonary HTN & PE" : "Adult Congenital"}
             </button>
           ))}
         </div>
@@ -2005,6 +2008,12 @@ export default function ScanCoach() {
 
         {/* ─── PULMONARY HTN & PE TAB ─── */}
         {activeTab === "pulm" && <PulmHTNScanCoach />}
+        {/* ─── STRAIN TAB ─── */}
+        {activeTab === "strain" && <StrainScanCoachContent />}
+        {/* ─── HOCM TAB ─── */}
+        {activeTab === "hocm" && <HOCMScanCoachContent />}
+        {/* ─── UEA TAB ─── */}
+        {activeTab === "uea" && <UEAScanCoachContent />}
       </div>
     </Layout>
   );

@@ -554,7 +554,12 @@ const machineSettings = [
 
 // ─── COMPONENT ────────────────────────────────────────────────────────────────
 
-export default function HOCMScanCoach() {
+// Named export for embedding as a tab inside ScanCoach.tsx (no Layout wrapper)
+export function HOCMScanCoachContent() {
+  return <HOCMScanCoach _noLayout />;
+}
+
+export default function HOCMScanCoach({ _noLayout }: { _noLayout?: boolean } = {}) {
   const [selectedView, setSelectedView] = useState(views[0]);
   const [expandedSection, setExpandedSection] = useState<string | null>("criteria");
   const [activeTab, setActiveTab] = useState<"views" | "doppler" | "valsalva" | "myosin" | "settings">("views");
@@ -564,9 +569,7 @@ export default function HOCMScanCoach() {
     () => mergeHOCMView(selectedView as any),
     [selectedView, mergeHOCMView]
   );
-  return (
-    <Layout>
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+  return (    <div>
       <div
         className="relative overflow-hidden"
         style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}
@@ -1755,6 +1758,7 @@ export default function HOCMScanCoach() {
           </div>
         </div>
       )}
-    </Layout>
+    </div>
   );
 }
+
