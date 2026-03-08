@@ -463,6 +463,7 @@ function UEAScanCoachInner() {
   return (
     <div>
       <div
+        style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}
       >
         <div className="relative container py-8 md:py-10">
           <div className="mb-3">

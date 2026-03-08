@@ -570,7 +570,7 @@ export default function HOCMScanCoach({ _noLayout }: { _noLayout?: boolean } = {
     () => mergeHOCMView(selectedView as any),
     [selectedView, mergeHOCMView]
   );
-  return (    <div>
+  const inner = (<div>
       <div
         className="relative overflow-hidden"
         style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}
@@ -1760,9 +1760,11 @@ export default function HOCMScanCoach({ _noLayout }: { _noLayout?: boolean } = {
               </button>
             </Link>
           </div>
-        </div>
+      </div>
       )}
     </div>
   );
+  if (_noLayout) return inner;
+  return <Layout>{inner}</Layout>;
 }
 

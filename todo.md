@@ -1427,3 +1427,12 @@
 ## Content Rename (Mar 8 2026)
 - [x] Renamed "Registry Review Hub" to "Registry Review" in all locations: Layout.tsx sidebar, Home.tsx module card, RegistryReviewHub.tsx page header and comment
 - [x] Updated CME page header h1 to "CME & E-Learning Courses" — sidebar nav label remains "CME Hub"
+
+## ScanCoach Hero Banner Fixes
+- [x] UEA ScanCoach — hero banner background gradient restored (was missing style attribute)
+- [x] Strain ScanCoach — hero banner added at top (was missing entirely)
+- [x] HOCM ScanCoach — Layout wrapper added for sidebar navigation (was missing)
+- [x] Stress Echo ScanCoach — hero banner confirmed correct
+- [x] Structural Heart ScanCoach — hero banner confirmed correct
+- [x] TEE ScanCoach — hero banner confirmed correct
+- [x] ICE ScanCoach — hero banner confirmed correct
