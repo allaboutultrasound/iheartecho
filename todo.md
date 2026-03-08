@@ -1319,3 +1319,13 @@
 - [x] Admin upload UI in TEE/ICE ScanCoach — visible only to admin role users; drag-and-drop image/clip upload per view
 - [x] TEE/ICE ScanCoach: hide placeholder box when no media; show image/clip when filled
 - [x] ICE Structural Heart sub-section: WATCHMAN sizing/deployment, MitraClip guidance views, LAAO leak assessment
+
+## Diastolic ScanCoach Banner
+- [x] Add header banner to Diastolic Function ScanCoach tab (matching format of other tabs)
+
+## Diastolic Function ASE 2025 Update
+- [x] Fix banner TS error in DiastolicNavigator.tsx
+- [x] Update Diastolic ScanCoach to ASE 2025 guidelines (new grading algorithm, updated thresholds)
+- [x] Add LA Reservoir Strain section to Diastolic ScanCoach
+- [x] Update Diastolic Navigator protocol to ASE 2025 guidelines
+- [x] Add LA Reservoir Strain to Diastolic Navigator reference values
