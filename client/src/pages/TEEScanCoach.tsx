@@ -7,6 +7,7 @@ import { useState, useMemo } from "react";
 import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
+import BackToEchoAssist from "@/components/BackToEchoAssist";
 import {
   Microscope, ChevronRight, ChevronDown, ChevronUp,
   Stethoscope, Zap, Info, AlertTriangle,
@@ -718,9 +719,12 @@ export default function TEEScanCoach() {
 
   return (
     <Layout>
-      {/* Header */}
+      {/* Hero Banner */}
       <div className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}>
-        <div className="container py-10">
+        <div className="container py-8 md:py-10">
+          <div className="mb-3">
+            <BackToEchoAssist className="text-white/70 hover:text-white" />
+          </div>
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(255,255,255,0.1)" }}>
               <Microscope className="w-6 h-6 text-[#4ad9e0]" />

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import BackToEchoAssist from "@/components/BackToEchoAssist";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface TEEView {
@@ -621,6 +622,9 @@ export function TEEIceScanCoachContent() {
       {/* Banner */}
       <div className="relative overflow-hidden mb-6" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}>
         <div className="relative container py-8 md:py-10">
+          <div className="mb-3">
+            <BackToEchoAssist className="text-white/70 hover:text-white" />
+          </div>
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-3">
               <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
@@ -666,7 +670,7 @@ export function TEEIceScanCoachContent() {
       </div>
 
       {/* Main grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 items-start">
         {/* Detail panel */}
         <div ref={detailRef} className="lg:col-span-3 lg:order-2 order-1 space-y-4">
           {/* Header card */}
@@ -806,7 +810,7 @@ export function TEEIceScanCoachContent() {
         </div>
 
         {/* View list sidebar */}
-        <div className="lg:col-span-1 lg:order-1 order-2 space-y-2">
+        <div className="lg:col-span-1 lg:order-1 order-2 lg:sticky lg:top-4">
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="px-4 py-3 border-b border-gray-100">
               <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>
@@ -814,7 +818,7 @@ export function TEEIceScanCoachContent() {
               </h3>
               <p className="text-xs text-gray-400 mt-0.5">{sectionViews.length} views</p>
             </div>
-            <div className="p-3 space-y-0.5 max-h-[70vh] overflow-y-auto">
+            <div className="p-3 space-y-0.5 max-h-[calc(100vh-220px)] overflow-y-auto">
               {sectionViews.map(v => (
                 <ViewCard key={v.id} view={v} isSelected={selectedView.id === v.id} onClick={() => handleViewSelect(v)} />
               ))}

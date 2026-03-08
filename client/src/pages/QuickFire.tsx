@@ -3,7 +3,7 @@
  *
  * Four tabs:
  *   1. Daily Challenge  — today's question set (scenario / image / quick-review)
- *   2. Challenge Archive — past daily challenges (free: 7 days, premium: unlimited) with filters
+ *   2. Challenge Archive — past daily challenges (premium only; free members see today's challenge only)
  *   3. My Performance   — personal stats, per-category breakdown, 14-day activity chart
  *   4. Leaderboard      — ranked leaderboard with period filter and current user rank
  */
@@ -711,14 +711,14 @@ export default function QuickFire() {
                     <p className="text-xs text-gray-500 mt-0.5">
                       {isPremium
                         ? "Unlimited access — all past challenges"
-                        : "Free access — last 7 days. Upgrade for unlimited history."}
+                        : "Premium members get full archive access. Upgrade to browse past challenges."}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
                     {!isPremium && (
                       <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200">
                         <Crown className="w-3.5 h-3.5 text-amber-500" />
-                        <span className="text-xs font-bold text-amber-700">Free: 7 days</span>
+                        <span className="text-xs font-bold text-amber-700">Premium only</span>
                       </div>
                     )}
                     <button
@@ -849,7 +849,7 @@ export default function QuickFire() {
                       const daysAgo = challenge.archivedAt
                         ? Math.floor((Date.now() - new Date(challenge.archivedAt).getTime()) / (1000 * 60 * 60 * 24))
                         : null;
-                      const isLocked = !isPremium && daysAgo !== null && daysAgo > 7;
+                      const isLocked = !isPremium;
                       return (
                         <div
                           key={challenge.id}
@@ -906,10 +906,10 @@ export default function QuickFire() {
                       <div className="rounded-xl p-5 flex items-center gap-4" style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}>
                         <Crown className="w-8 h-8 text-amber-400 flex-shrink-0" />
                         <div className="flex-1">
-                          <div className="text-white font-bold text-sm">Unlock Unlimited Archive Access</div>
-                          <div className="text-white/60 text-xs mt-0.5">Premium members can access all past challenges, no time limit.</div>
+                          <div className="text-white font-bold text-sm">Unlock the Challenge Archive</div>
+                          <div className="text-white/60 text-xs mt-0.5">Premium members get full access to all past daily challenges — $9.99/month.</div>
                         </div>
-                        <a href="https://www.iheartecho.com" target="_blank" rel="noopener noreferrer">
+                        <a href="/premium">
                           <Button size="sm" className="text-white flex-shrink-0" style={{ background: "#189aa1" }}>
                             Upgrade
                           </Button>

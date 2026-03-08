@@ -605,7 +605,7 @@ export default function PedCHDCoach() {
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 items-start">
       {/* Detail panel — order-first on mobile */}
       <div ref={detailRef} className="lg:col-span-3 lg:order-2 order-1 space-y-4">
 
@@ -766,8 +766,8 @@ export default function PedCHDCoach() {
       </div>
 
       {/* Sidebar — CHD list */}
-      <div className="lg:col-span-1 lg:order-1 order-2">
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden sticky top-4">
+      <div className="lg:col-span-1 lg:order-1 order-2 lg:sticky lg:top-4">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100" style={{ background: "linear-gradient(135deg, #189aa110, #4ad9e008)" }}>
             <div className="flex items-center gap-2">
               <Heart size={14} style={{ color: "#189aa1" }} />
@@ -775,7 +775,7 @@ export default function PedCHDCoach() {
             </div>
             <p className="text-xs text-gray-400 mt-0.5">{chdDefects.length} major congenital defects</p>
           </div>
-          <div className="p-3 space-y-0.5 max-h-[70vh] overflow-y-auto">
+          <div className="p-3 space-y-0.5 max-h-[calc(100vh-180px)] overflow-y-auto">
             {chdDefects.map(defect => (
               <CHDCard key={defect.id} defect={defect} isSelected={selectedDefect.id === defect.id} onClick={() => handleDefectSelect(defect)} />
             ))}

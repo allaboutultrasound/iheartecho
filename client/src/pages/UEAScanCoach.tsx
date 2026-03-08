@@ -9,6 +9,7 @@ import { useState, useMemo } from "react";
 import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
+import BackToEchoAssist from "@/components/BackToEchoAssist";
 import {
   Droplets, ChevronDown, ChevronUp, Info, AlertTriangle,
   Target, CheckCircle, RotateCcw, ArrowRight, Stethoscope,
@@ -464,7 +465,10 @@ function UEAScanCoachInner() {
         className="relative overflow-hidden"
         style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}
       >
-        <div className="relative container py-10 md:py-14">
+        <div className="relative container py-8 md:py-10">
+          <div className="mb-3">
+            <BackToEchoAssist className="text-white/70 hover:text-white" />
+          </div>
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-4">
               <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
@@ -538,9 +542,9 @@ function UEAScanCoachInner() {
       {/* ── Views Tab ─────────────────────────────────────────────────────── */}
       {activeTab === "views" && (
         <div className="container py-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
             {/* View selector */}
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 lg:sticky lg:top-16">
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
                 style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
                 <div className="px-4 py-3 border-b border-gray-100">

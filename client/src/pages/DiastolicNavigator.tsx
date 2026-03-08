@@ -7,6 +7,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
+import BackToEchoAssist from "@/components/BackToEchoAssist";
 import {
   ChevronDown, ChevronRight, Activity, AlertTriangle,
   CheckCircle, Info, BarChart3, Stethoscope, BookOpen,
@@ -415,6 +416,9 @@ export default function DiastolicNavigator() {
       {/* Hero */}
       <div className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}>
         <div className="container py-10 md:py-14">
+          <div className="mb-3">
+            <BackToEchoAssist className="text-white/70 hover:text-white" />
+          </div>
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 mt-1" style={{ background: "rgba(255,255,255,0.1)" }}>
               <Activity className="w-6 h-6 text-[#4ad9e0]" />

@@ -7,6 +7,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useSearch, Link } from "wouter";
 import Layout from "@/components/Layout";
+import BackToEchoAssist from "@/components/BackToEchoAssist";
 import { Scan, Heart, Info, Eye, AlertTriangle, ChevronRight, Zap, Clock, Activity, TrendingUp, CheckCircle2, XCircle, Wind, Stethoscope, Baby, Users, Wind as WindIcon } from "lucide-react";
 import PedCHDCoach from "@/components/PedCHDCoach";
 import { HOCMScanCoachContent } from "@/pages/HOCMScanCoach";
@@ -862,8 +863,8 @@ function PulmHTNScanCoach() {
 
       {/* PH View-by-View Guide */}
       {activeSection === "ph" && (
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
-          <div className="lg:col-span-1 space-y-2">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 items-start">
+          <div className="lg:col-span-1 lg:sticky lg:top-4">
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
               <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Echo Windows</h3>
               {pulmViews.map(v => (
@@ -1107,9 +1108,9 @@ function ACHDScanCoach() {
           </div>
         </div>
       </div>
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
-      {/* Lesion list */}
-      <div className="lg:col-span-1 space-y-2">
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 items-start">
+      {/* Lesion list — sticky sidebar */}
+      <div className="lg:col-span-1 lg:sticky lg:top-4">
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
           <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">ACHD Lesions</h3>
           {achdLesions.map(lesion => (
@@ -1217,17 +1218,25 @@ export default function ScanCoach() {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "#189aa1" }}>
-            <Scan className="w-5 h-5 text-white" />
+      {/* Hero Banner */}
+      <div className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}>
+        <div className="container py-6 md:py-8">
+          <div className="mb-3">
+            <BackToEchoAssist className="text-white/70 hover:text-white" />
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>ScanCoach</h1>
-            <p className="text-sm text-gray-500">View-by-view scanning guides with probe positioning, anatomy, and clinical pearls</p>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(255,255,255,0.1)" }}>
+              <Scan className="w-5 h-5 text-[#4ad9e0]" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-black text-white" style={{ fontFamily: "Merriweather, serif" }}>ScanCoach™</h1>
+              <p className="text-white/70 text-sm">View-by-view scanning guides with probe positioning, anatomy, and clinical pearls</p>
+            </div>
           </div>
         </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4 py-6">
 
         {/* Tab switcher */}
         <div className="flex flex-wrap gap-2 mb-6">
@@ -1275,7 +1284,7 @@ export default function ScanCoach() {
                 </div>
               </div>
             </div>
-           <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
+           <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 items-start">
             {/* Detail panel — order-first on mobile so it appears at top */}
             <div ref={tteDetailRef} className="lg:col-span-3 lg:order-2 order-1 space-y-4">
               {/* Header */}
@@ -1428,16 +1437,16 @@ export default function ScanCoach() {
                  </div>
               </div>
             </div>
-            {/* View list sidebar — order-1 on desktop, order-2 on mobile so detail panel shows first */}
-            <div className="lg:col-span-1 lg:order-1 order-2">
+            {/* View list sidebar — sticky on desktop, above content on mobile */}
+            <div className="lg:col-span-1 lg:order-1 order-2 lg:sticky lg:top-4">
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="px-4 py-3 border-b border-gray-100">
                   <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>TTE Views</h3>
                   <p className="text-xs text-gray-400 mt-0.5">10 standard acoustic windows</p>
                 </div>
-                <div className="p-3 space-y-1">
+                <div className="p-3 space-y-1 max-h-[calc(100vh-180px)] overflow-y-auto">
                   {tteViews.map(v => (
-                    <TTEViewCard key={v.id} view={v} isSelected={selectedTTEMerged.id === v.id} onClick={() => { scrollOnTteChange.current = true; setSelectedTTE(v); }} />
+                    <TTEViewCard key={v.id} view={v} isSelected={selectedTTEMerged.id === v.id} onClick={() => setSelectedTTE(v)} />
                   ))}
                 </div>
               </div>
@@ -1936,7 +1945,7 @@ export default function ScanCoach() {
                 </div>
               </div>
             </div>
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 items-start">
             {/* Fetal detail panel — order-first on mobile so it appears at top */}
             <div ref={fetalDetailRef} className="lg:col-span-3 lg:order-2 order-1 space-y-4">
               {/* Header */}
@@ -2092,21 +2101,20 @@ export default function ScanCoach() {
                 Clinical images © All About Ultrasound, Inc. / iHeartEcho. Educational use only.
               </div>
             </div>
-            {/* View list sidebar — order-2 on mobile so detail panel shows first */}
-            <div className="lg:col-span-1 lg:order-1 order-2 space-y-2">
+            {/* View list sidebar — sticky on desktop */}
+            <div className="lg:col-span-1 lg:order-1 order-2 lg:sticky lg:top-4">
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="px-4 py-3 border-b border-gray-100">
                   <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>Fetal Echo Views</h3>
                   <p className="text-xs text-gray-400 mt-0.5">13-view sweep sequence</p>
-
                 </div>
                 {/* Sweep overview image */}
                 <div className="p-2">
-                  <img src={CDN.sweep} alt="Fetal echo sweep overview" className="w-full rounded-lg object-contain bg-gray-900" style={{ maxHeight: "120px" }} />
+                  <img src={CDN.sweep} alt="Fetal echo sweep overview" className="w-full rounded-lg object-contain bg-gray-900" style={{ maxHeight: "100px" }} />
                 </div>
-                <div className="p-3 space-y-1">
+                <div className="p-3 space-y-1 max-h-[calc(100vh-300px)] overflow-y-auto">
                   {fetalViews.map(v => (
-                    <FetalViewCard key={v.id} view={v} isSelected={selectedFetal.id === v.id} onClick={() => { scrollOnFetalChange.current = true; setSelectedFetal(v); }} />
+                    <FetalViewCard key={v.id} view={v} isSelected={selectedFetal.id === v.id} onClick={() => setSelectedFetal(v)} />
                   ))}
                 </div>
               </div>

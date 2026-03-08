@@ -2,7 +2,7 @@
  * Premium Access Router
  *
  * Handles premium membership status for the iHeartEcho App Premium Access
- * membership ($9/month) sold via Thinkific at:
+ * membership ($9.99/month) sold via Thinkific at:
  * https://member.allaboutultrasound.com/enroll/3703267?price_id=4651832
  *
  * Procedures:

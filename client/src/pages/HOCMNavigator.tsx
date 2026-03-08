@@ -8,6 +8,7 @@
 
 import { useState } from "react";
 import Layout from "@/components/Layout";
+import BackToEchoAssist from "@/components/BackToEchoAssist";
 import {
   Activity,
   AlertTriangle,
@@ -428,6 +429,9 @@ export default function HOCMNavigator() {
         style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}
       >
         <div className="relative container py-10 md:py-12">
+          <div className="mb-3">
+            <BackToEchoAssist className="text-white/70 hover:text-white" />
+          </div>
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-4">
               <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />

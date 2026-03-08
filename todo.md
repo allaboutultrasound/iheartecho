@@ -1354,3 +1354,41 @@
 - [x] Register all five as a "Diastology in Special Populations" group in EchoAssist engine list
 - [x] Gate Diastology in Special Populations behind premium subscription check (locked preview + upgrade CTA for non-premium users)
 - [x] 37 unit tests written and passing for all five algorithm engines
+
+## Pricing & Access Gating Updates
+- [x] Update premium price to $9.99/month everywhere (PremiumGate, Premium page, Home, Profile, premiumRouter comment)
+- [x] Daily Challenge: free members get today's challenge only; premium members get archive access
+- [x] Remove "3 daily challenges" from all ad copy
+- [x] Echo Case Library: set to free access
+- [x] Report Builder: set to premium-gated
+
+## TEE/ICE ScanCoach Split
+- [ ] Split TEE/ICE ScanCoach into two separate tabs: TEE ScanCoach and ICE ScanCoach
+- [ ] TEE ScanCoach: Midesophageal, Transgastric, Upper Esophageal views only
+- [ ] ICE ScanCoach: ICE views + ICE Structural Heart sub-section
+- [ ] Update ScanCoach.tsx tab list and activeTab type
+- [ ] Update TEEIceScanCoach.tsx to export separate TEEScanCoachContent and ICEScanCoachContent components
+  NOTE: TEE and ICE are already separate standalone pages (TEEScanCoach.tsx and ICEScanCoach.tsx). The combined TEEIceScanCoach.tsx is used as a sub-tab in ScanCoach.tsx. Splitting the sub-tab is pending.
+
+## ScanCoach Layout Redesign — Left Sidebar Navigation
+- [x] Redesign ScanCoach layout: left sidebar lists all views/CHD states, right panel shows selected view content
+- [x] Sidebar is persistent and scrollable (sticky top-4 + max-h overflow-y-auto); content panel scrolls independently
+- [x] Apply to all ScanCoach tabs: Adult TTE, Pediatric CHD, Fetal, Adult Congenital, Pulmonary HTN, Diastolic
+- [x] Apply to TEE ScanCoach and ICE ScanCoach tabs
+- [x] Apply to HOCMScanCoach, StrainScanCoach, UEAScanCoach
+
+## Back to EchoAssist Link
+- [x] Create reusable BackToEchoAssist component (ChevronLeft + "EchoAssist" text, links to /echoassist-hub)
+- [x] Add to all Navigator pages: TTENavigator, TEENavigator, ICENavigator, FetalNavigator, PediatricNavigator, ACHDNavigator, StressNavigator, HOCMNavigator, PulmHTNNavigator, DiastolicNavigator, UEANavigator, DeviceNavigator, StrainNavigator, AccreditationNavigator
+- [x] Add to all ScanCoach pages: ScanCoach (main), TEEScanCoach, ICEScanCoach, TEEIceScanCoach, HOCMScanCoach, StrainScanCoach, UEAScanCoach
+
+## Navigator Hero Banner Standardization
+- [x] Audit all navigators for hero banner presence
+- [x] TTENavigator: added dark gradient hero banner with title, subtitle, back link, ScanCoach shortcut
+- [x] TEENavigator: added dark gradient hero banner with title, subtitle, back link, ScanCoach shortcut
+- [x] ICENavigator: added dark gradient hero banner with title, subtitle, back link, ScanCoach shortcut
+- [x] FetalNavigator: added dark gradient hero banner with title, subtitle, back link, ScanCoach shortcut
+- [x] PediatricNavigator: added dark gradient hero banner with title, subtitle, back link, ScanCoach shortcut
+- [x] ACHDNavigator: added dark gradient hero banner with title, subtitle, back link, ScanCoach shortcut
+- [x] StressNavigator: added dark gradient hero banner with title, subtitle, back link, ScanCoach shortcut
+- [x] DeviceNavigator: added dark gradient hero banner with title, subtitle, back link, ScanCoach shortcut

@@ -6,6 +6,7 @@
 */
 import { useState } from "react";
 import Layout from "@/components/Layout";
+import BackToEchoAssist from "@/components/BackToEchoAssist";
 import { CheckCircle2, Circle, ChevronDown, ChevronUp, AlertCircle, Eye, Printer, Scan, ExternalLink } from "lucide-react";
 import { Link } from "wouter";
 
@@ -250,20 +251,48 @@ export default function TEENavigator() {
 
   return (
     <Layout>
-      <div className="container py-6">
-        <div className="mb-6">
-          {/* Premium Badge */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-white mb-2" style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            PREMIUM FEATURE
+      {/* Hero Banner */}
+      <div className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}>
+        <div className="container py-8 md:py-10">
+          <div className="mb-3">
+            <BackToEchoAssist className="text-white/70 hover:text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-1" style={{ fontFamily: "Merriweather, serif" }}>
-            TEE Navigator
-          </h1>
-          <p className="text-sm text-gray-500">
-            Comprehensive transesophageal echocardiography protocol with ME, TG, and UE views, clinical applications, and intraoperative guidance.
-          </p>
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(255,255,255,0.1)" }}>
+              <Eye className="w-6 h-6 text-[#4ad9e0]" />
+            </div>
+            <div className="flex-1">
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1">
+                  <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
+                  <span className="text-xs text-white/80 font-medium">ASE 2025 · TEE Protocol</span>
+                </div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-white" style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  PREMIUM
+                </div>
+              </div>
+              <h1 className="text-2xl font-black text-white leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
+                TEE Navigator
+              </h1>
+              <p className="text-white/70 text-sm mt-1 max-w-xl">
+                Comprehensive transesophageal echocardiography protocol with ME, TG, and UE views, clinical applications, and intraoperative guidance.
+              </p>
+              <div className="mt-3">
+                <Link href="/scan-coach?tab=tee">
+                  <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/25 text-white hover:bg-white/20 transition-all">
+                    <Scan className="w-3.5 h-3.5 text-[#4ad9e0]" />
+                    Open in ScanCoach
+                    <span className="text-xs text-[#4ad9e0]">→</span>
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
+
+      <div className="container py-6">
 
         {/* Safety reminder */}
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-5 flex items-start gap-2">
@@ -285,15 +314,6 @@ export default function TEENavigator() {
           </div>
         </div>
 
-        {/* ScanCoach Link */}
-        <div className="mb-4">
-          <Link href="/scan-coach?tab=tee">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90" style={{ background: "#189aa1" }}>
-              <Scan className="w-4 h-4" />
-              Open in ScanCoach
-            </div>
-          </Link>
-        </div>
         {/* Tabs */}
         <div className="flex gap-2 mb-5">
           {[{ id: "protocol", label: "Protocol Checklist" }, { id: "applications", label: "Clinical Applications" }, { id: "reference", label: "Normal Reference Values" }].map(t => (

@@ -7,6 +7,7 @@
 
 import { useState, useMemo } from "react";
 import Layout from "@/components/Layout";
+import BackToEchoAssist from "@/components/BackToEchoAssist";
 import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 import {
   Activity,
@@ -575,6 +576,9 @@ export default function HOCMScanCoach({ _noLayout }: { _noLayout?: boolean } = {
         style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}
       >
         <div className="relative container py-8 md:py-10">
+          <div className="mb-3">
+            <BackToEchoAssist className="text-white/70 hover:text-white" />
+          </div>
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-3">
               <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
@@ -628,9 +632,9 @@ export default function HOCMScanCoach({ _noLayout }: { _noLayout?: boolean } = {
       {/* ── View-by-View Tab ─────────────────────────────────────────────── */}
       {activeTab === "views" && (
         <div className="container py-6">
-          <div className="flex flex-col lg:flex-row gap-5">
+          <div className="flex flex-col lg:flex-row gap-5 items-start">
             {/* View selector */}
-            <div className="lg:w-52 flex-shrink-0">
+            <div className="lg:w-52 flex-shrink-0 lg:sticky lg:top-16">
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
                 style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
                 <div className="px-3 py-2.5 border-b border-gray-50">

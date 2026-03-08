@@ -6,6 +6,7 @@
 */
 import { useState, useMemo, useRef, useCallback } from "react";
 import Layout from "@/components/Layout";
+import BackToEchoAssist from "@/components/BackToEchoAssist";
 import {
   Activity, ChevronDown, ChevronUp, Info, AlertCircle,
   BarChart3, CheckCircle2, Lightbulb, Target, Zap,
@@ -1008,6 +1009,9 @@ function StrainScanCoachInner() {
     <div>
       <div className="relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${BRAND_DARK} 0%, #0e3a40 60%, ${BRAND} 100%)` }}>
         <div className="relative container py-8 md:py-10">
+          <div className="mb-3">
+            <BackToEchoAssist className="text-white/70 hover:text-white" />
+          </div>
           <div className="flex items-start justify-between gap-4">
             <div className="max-w-2xl">
               <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-3">
@@ -1042,7 +1046,7 @@ function StrainScanCoachInner() {
       </div>
 
       <div className="container py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
 
           {/* ── Left Column ── */}
           <div className="lg:col-span-2 flex flex-col gap-5">
@@ -1317,7 +1321,7 @@ function StrainScanCoachInner() {
           </div>
 
           {/* ── Right Column — Bull's Eye + Curves + Summary ── */}
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-5 lg:sticky lg:top-4">
 
             {/* Bull's Eye */}
             <div id="bullseye-panel" className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">

@@ -40,17 +40,17 @@ const PREMIUM_FEATURES = [
     description: "CHD findings, BSA Z-scores, Qp/Qs shunt estimation, and fetal cardiac scan coach.",
   },
   {
-    icon: BookOpen,
-    title: "500+ Echo Cases",
-    description: "Curated echo case library with image/video clips, MCQs, and teaching points.",
-  },
-  {
     icon: Activity,
-    title: "Daily Challenge",
-    description: "One question. One case. One chance today. Answer the challenge, see the explanation. Maintain your streak, earn points and compare with other echo professionals.",
+    title: "Daily Challenge Archive",
+    description: "Access the full archive of past daily challenges. Free members get today's challenge only — premium unlocks the complete history.",
   },
   {
     icon: FileText,
+    title: "Report Builder",
+    description: "Generate complete, structured echo reports instantly from your measurements with 2025 ASE-compliant clinical narratives.",
+  },
+  {
+    icon: Zap,
     title: "Echo Severity Calculator",
     description: "Guideline-based AS, MR, TR, AR, diastology interpretation with LARS and LV GLS.",
   },
@@ -67,10 +67,19 @@ const PREMIUM_FEATURES = [
 ];
 
 const FREE_FEATURES = [
-  "Echo Case Library (limited)",
-  "Daily Challenge (3 questions/day)",
+  "Echo Case Library (full access)",
+  "Daily Challenge (today's challenge only)",
   "Basic echo reference values",
-  "Community access",
+  "Community Hub access",
+];
+
+const PREMIUM_ONLY_LABELS = [
+  "Daily Challenge Archive (full history)",
+  "Report Builder",
+  "All EchoNavigator™ protocols",
+  "EchoAssist™ clinical engines",
+  "Hemodynamics Lab",
+  "Diastology in Special Populations",
 ];
 
 export default function Premium() {
@@ -150,7 +159,7 @@ export default function Premium() {
             {/* Pricing card */}
             <div className="inline-block bg-white rounded-2xl shadow-xl px-8 py-6 text-center mb-6">
               <div className="text-5xl font-black text-[#189aa1] mb-1" style={{ fontFamily: "Merriweather, serif" }}>
-                $9
+                $9.99
               </div>
               <div className="text-gray-500 text-sm mb-4">per month · cancel anytime</div>
 
@@ -260,21 +269,21 @@ export default function Premium() {
             {/* Premium */}
             <div className="rounded-xl border-2 border-[#189aa1] p-5 relative overflow-hidden">
               <div className="absolute top-0 right-0 bg-[#189aa1] text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
-                $9/mo
+                $9.99/mo
               </div>
               <div className="font-bold text-[#189aa1] text-sm mb-4 uppercase tracking-wider flex items-center gap-1.5">
                 <Crown className="w-3.5 h-3.5" /> Premium
               </div>
               <ul className="space-y-2.5">
-                {PREMIUM_FEATURES.slice(0, 6).map(({ title }) => (
-                  <li key={title} className="flex items-start gap-2 text-sm text-gray-700">
+                {PREMIUM_ONLY_LABELS.map((label) => (
+                  <li key={label} className="flex items-start gap-2 text-sm text-gray-700">
                     <Check className="w-4 h-4 text-[#189aa1] mt-0.5 flex-shrink-0" />
-                    {title}
+                    {label}
                   </li>
                 ))}
                 <li className="flex items-start gap-2 text-sm text-[#189aa1] font-medium">
                   <Sparkles className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                  + {PREMIUM_FEATURES.length - 6} more tools
+                  + all premium modules
                 </li>
               </ul>
             </div>
@@ -290,7 +299,7 @@ export default function Premium() {
                 className="bg-[#189aa1] hover:bg-[#147a80] text-white font-bold px-10 py-3 text-base rounded-xl"
               >
                 <Crown className="w-4 h-4 mr-2" />
-                Get Premium Access — $9/month
+                Get Premium Access — $9.99/month
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             ) : (

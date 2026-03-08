@@ -8,6 +8,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import { CheckCircle2, Circle, ChevronDown, ChevronUp, Info, Stethoscope, Printer, Scan } from "lucide-react";
+import BackToEchoAssist from "@/components/BackToEchoAssist";
 
 type ChecklistItem = { id: string; label: string; detail?: string; critical?: boolean };
 type ViewSection = { view: string; probe: string; items: ChecklistItem[] };
@@ -206,27 +207,42 @@ export default function TTENavigator() {
 
   return (
     <Layout>
-      <div className="container py-6">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-800 mb-1" style={{ fontFamily: "Merriweather, serif" }}>
-            Adult TTE Navigator
-          </h1>
-          <p className="text-sm text-gray-500">
-            Structured transthoracic echocardiography protocol with interactive checklist and ASE reference values.
-          </p>
-        </div>
-
-        {/* Scan Coach shortcut banner */}
-        <div className="flex items-center justify-between bg-[#f0fbfc] border border-[#b2e8ec] rounded-xl px-5 py-3 mb-5">
-          <div>
-            <p className="text-sm font-semibold text-[#0e7490]">Adult TTE Scan Coach</p>
-            <p className="text-xs text-gray-500 mt-0.5">Step-by-step view guides with probe positioning, anatomy diagrams, and clinical technique tips.</p>
+      {/* Hero Banner */}
+      <div className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}>
+        <div className="container py-8 md:py-10">
+          <div className="mb-3">
+            <BackToEchoAssist className="text-white/70 hover:text-white" />
           </div>
-          <Link href="/scan-coach?tab=tte" className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-bold text-white whitespace-nowrap transition-all hover:opacity-90" style={{ background: "#189aa1" } as React.CSSProperties}>
-              <Scan className="w-4 h-4" />
-              Scan Coach
-          </Link>
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(255,255,255,0.1)" }}>
+              <Stethoscope className="w-6 h-6 text-[#4ad9e0]" />
+            </div>
+            <div className="flex-1">
+              <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-2">
+                <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
+                <span className="text-xs text-white/80 font-medium">ASE 2025 · Adult TTE Protocol</span>
+              </div>
+              <h1 className="text-2xl font-black text-white leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
+                Adult TTE Navigator
+              </h1>
+              <p className="text-white/70 text-sm mt-1 max-w-xl">
+                Structured transthoracic echocardiography protocol with interactive checklist and ASE reference values.
+              </p>
+              <div className="mt-3">
+                <Link href="/scan-coach?tab=tte">
+                  <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/25 text-white hover:bg-white/20 transition-all">
+                    <Scan className="w-3.5 h-3.5 text-[#4ad9e0]" />
+                    Open in ScanCoach
+                    <span className="text-xs text-[#4ad9e0]">→</span>
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
+
+      <div className="container py-6">
 
         {/* Progress bar */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 mb-5">

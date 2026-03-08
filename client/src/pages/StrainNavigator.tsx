@@ -6,6 +6,7 @@
 */
 import { useState, useCallback } from "react";
 import Layout from "@/components/Layout";
+import BackToEchoAssist from "@/components/BackToEchoAssist";
 import {
   Activity, ChevronDown, ChevronUp, Info, AlertCircle,
   BookOpen, ExternalLink, Save, X, Plus, CheckCircle2,
@@ -328,6 +329,9 @@ export default function StrainNavigator() {
       {/* Header */}
       <div className="relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${BRAND_DARK} 0%, #0e3a40 60%, ${BRAND} 100%)` }}>
         <div className="relative container py-8 md:py-10">
+          <div className="mb-3">
+            <BackToEchoAssist className="text-white/70 hover:text-white" />
+          </div>
           <div className="flex items-start justify-between gap-4">
             <div className="max-w-2xl">
               <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-3">

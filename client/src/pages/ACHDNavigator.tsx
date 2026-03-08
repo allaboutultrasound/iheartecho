@@ -6,6 +6,7 @@
 */
 import { useState } from "react";
 import Layout from "@/components/Layout";
+import BackToEchoAssist from "@/components/BackToEchoAssist";
 import { Link } from "wouter";
 import { Heart, ChevronDown, ChevronUp, CheckCircle, Circle } from "lucide-react";
 
@@ -290,35 +291,42 @@ function LesionCard({ lesion }: { lesion: typeof ACHD_LESIONS[0] }) {
 export default function ACHDNavigator() {
   return (
     <Layout>
-      <div className="container py-6">
-        {/* Header */}
-        <div className="flex items-start gap-4 mb-5">
-          <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: "linear-gradient(135deg, #189aa1, #0e7490)" }}>
-            <Heart className="w-6 h-6 text-white" />
+      {/* Hero Banner */}
+      <div className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}>
+        <div className="container py-8 md:py-10">
+          <div className="mb-3">
+            <BackToEchoAssist className="text-white/70 hover:text-white" />
           </div>
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-              Adult Congenital Navigator
-            </h1>
-            <p className="text-sm text-gray-500 mt-0.5">
-              Echocardiographic assessment protocols for adults with congenital heart disease — lesion-specific views, key measurements, and procedural checklists
-            </p>
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(255,255,255,0.1)" }}>
+              <Heart className="w-6 h-6 text-[#4ad9e0]" />
+            </div>
+            <div className="flex-1">
+              <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-2">
+                <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
+                <span className="text-xs text-white/80 font-medium">ACC/AHA 2018 · Adult Congenital Heart</span>
+              </div>
+              <h1 className="text-2xl font-black text-white leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
+                Adult Congenital Navigator
+              </h1>
+              <p className="text-white/70 text-sm mt-1 max-w-xl">
+                Echocardiographic assessment protocols for adults with congenital heart disease — lesion-specific views, key measurements, and procedural checklists.
+              </p>
+              <div className="mt-3">
+                <Link href="/scan-coach?tab=achd">
+                  <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/25 text-white hover:bg-white/20 transition-all">
+                    <ChevronDown className="w-3.5 h-3.5 text-[#4ad9e0]" />
+                    Open in ScanCoach
+                    <span className="text-xs text-[#4ad9e0]">→</span>
+                  </button>
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Scan Coach shortcut */}
-        <div className="flex items-center justify-between bg-[#f0fbfc] border border-[#b2e8ec] rounded-xl px-5 py-3 mb-5">
-          <div>
-            <p className="text-sm font-semibold text-[#0e7490]">Pediatric CHD Scan Coach</p>
-            <p className="text-xs text-[#189aa1]">Practice CHD views and congenital echo techniques</p>
-          </div>
-          <Link href="/scan-coach?tab=achd"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90"
-            style={{ background: "linear-gradient(135deg, #189aa1, #0e7490)" }}>
-            Scan Coach →
-          </Link>
-        </div>
+      <div className="container py-6">
 
         {/* Info banner */}
         <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-5 py-3 mb-5">

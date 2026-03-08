@@ -471,7 +471,7 @@ export default function Profile() {
                               <CheckCircle className="w-2.5 h-2.5" /> Active
                             </span>
                           </div>
-                          <p className="text-xs text-gray-500 leading-relaxed">Full access to all iHeartEcho premium features — $9/month.</p>
+                          <p className="text-xs text-gray-500 leading-relaxed">Full access to all iHeartEcho premium features — $9.99/month.</p>
                           <a
                             href="https://member.allaboutultrasound.com/enroll/3703267?price_id=4651832"
                             target="_blank"
