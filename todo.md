@@ -1329,3 +1329,12 @@
 - [x] Add LA Reservoir Strain section to Diastolic ScanCoach
 - [x] Update Diastolic Navigator protocol to ASE 2025 guidelines
 - [x] Add LA Reservoir Strain to Diastolic Navigator reference values
+
+## Diastolic Function — TDI Reorder
+- [ ] Move TDI (e') to Step 1 in Protocol tab (before mitral inflow)
+- [ ] Move TDI SectionCard to top of ScanCoach tab (before mitral inflow)
+
+## Diastolic Function — ASE 2025 Step Reorder
+- [ ] Protocol steps: 1. LV systolic function, 2. e' (TDI), 3. E/e' (mitral inflow), 4. TR velocity/PASP, 5. LARS, 6. LAVI, 7. Pulmonary venous flow, 8. Algorithm
+- [ ] ScanCoach sections: TDI first, then Mitral Inflow, then TR/PASP, then LARS, then LAVI, then PV flow
+- [x] Add Deceleration Time SectionCard before Valsalva in Diastolic ScanCoach and Protocol steps

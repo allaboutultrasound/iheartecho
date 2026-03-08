@@ -58,35 +58,11 @@ export function DiastolicScanCoachContent() {
 
       <div className="max-w-4xl">
 
-        <SectionCard title="Mitral Inflow — Apical 4-Chamber" icon={Stethoscope} defaultOpen>
+        <SectionCard title="Tissue Doppler Imaging (TDI) — e' Velocity" icon={Activity} defaultOpen>
           <div className="space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {[
-                { label: "View", value: "Apical 4-chamber (A4C)" },
-                { label: "Doppler Mode", value: "Pulsed Wave (PW)" },
-                { label: "Sample Volume", value: "1–3 mm at mitral leaflet tips" },
-                { label: "Sweep Speed", value: "100 mm/s" },
-                { label: "Timing", value: "End-expiration, held breath" },
-                { label: "Angle Correction", value: "Align beam parallel to mitral inflow (< 20°)" },
-                { label: "Gain", value: "Reduce to see spectral envelope clearly" },
-                { label: "Measure", value: "E wave, A wave, E/A ratio, DT, IVRT" },
-              ].map(({ label, value }) => (
-                <div key={label} className="flex gap-2 text-sm">
-                  <span className="text-gray-500 w-32 flex-shrink-0">{label}:</span>
-                  <span className="font-medium text-gray-800">{value}</span>
-                </div>
-              ))}
-            </div>
-            <div className="mt-3 p-3 rounded-lg bg-teal-50 border border-teal-100">
-              <p className="text-sm text-teal-800 leading-relaxed">
-                <strong>Tip:</strong> Position the sample volume precisely at the leaflet tips — moving it toward the annulus or into the LV will alter E and A velocities. Repeat if E/A ratio seems inconsistent with clinical picture.
-              </p>
-            </div>
-          </div>
-        </SectionCard>
-
-        <SectionCard title="Tissue Doppler Imaging (TDI) — Mitral Annulus" icon={Activity} defaultOpen>
-          <div className="space-y-3">
+            <p className="text-sm text-gray-600 leading-relaxed">
+              e' is the <strong>starting point</strong> for diastolic assessment per ASE 2025. Measure at both the septal and lateral mitral annulus. A reduced e' (Step 1 positive) confirms impaired LV relaxation before applying Step 2 markers.
+            </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
                 { label: "View", value: "Apical 4-chamber (A4C)" },
@@ -105,18 +81,18 @@ export function DiastolicScanCoachContent() {
               ))}
             </div>
             <div className="mt-3 p-3 rounded-lg bg-blue-50 border border-blue-100">
-              <p className="text-xs font-semibold text-blue-800 mb-1">ASE 2025 Age-Specific e' Cutoffs (Table 6)</p>
+              <p className="text-xs font-semibold text-blue-800 mb-1">ASE 2025 Age-Specific e' Cutoffs — Step 1 Positive Threshold (Table 6)</p>
               <div className="grid grid-cols-3 gap-2 text-xs">
                 {[
-                  { age: "20–39 y", septal: "< 7", lateral: "< 10", avg: "< 9" },
-                  { age: "40–65 y", septal: "< 6", lateral: "< 8", avg: "< 7" },
-                  { age: "> 65 y", septal: "< 8", lateral: "< 7", avg: "< 6.5" },
+                  { age: "20–39 y", septal: "≤ 7", lateral: "≤ 10", avg: "≤ 9" },
+                  { age: "40–65 y", septal: "≤ 6", lateral: "≤ 8", avg: "≤ 7" },
+                  { age: "> 65 y", septal: "≤ 8", lateral: "≤ 7", avg: "≤ 6.5" },
                 ].map(r => (
                   <div key={r.age} className="bg-white/70 rounded p-2">
                     <div className="font-semibold text-blue-900 mb-1">{r.age}</div>
-                    <div className="text-blue-700">Septal: <span className="font-medium">{r.septal}</span></div>
-                    <div className="text-blue-700">Lateral: <span className="font-medium">{r.lateral}</span></div>
-                    <div className="text-blue-700">Average: <span className="font-medium">{r.avg}</span></div>
+                    <div className="text-blue-700">Septal: <span className="font-medium text-red-600">{r.septal}</span></div>
+                    <div className="text-blue-700">Lateral: <span className="font-medium text-red-600">{r.lateral}</span></div>
+                    <div className="text-blue-700">Average: <span className="font-medium text-red-600">{r.avg}</span></div>
                   </div>
                 ))}
               </div>
@@ -129,6 +105,61 @@ export function DiastolicScanCoachContent() {
             <div className="mt-2 p-3 rounded-lg bg-amber-50 border border-amber-100">
               <p className="text-sm text-amber-800 leading-relaxed">
                 <strong>Pitfall:</strong> Do not confuse the s' (systolic) wave with e'. The e' wave occurs immediately after the QRS-T complex on ECG. The s' wave is the tallest peak during systole.
+              </p>
+            </div>
+          </div>
+        </SectionCard>
+
+        <SectionCard title="Mitral Inflow — E/e' Ratio" icon={Stethoscope} defaultOpen>
+          <div className="space-y-3">
+            <p className="text-sm text-gray-600 leading-relaxed">
+              After obtaining e', measure mitral inflow to calculate E/e'. Average E/e' &gt; 14 is a Step 2 marker of elevated LA pressure. Also measure E/A ratio and DT to determine diastolic grade.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[
+                { label: "View", value: "Apical 4-chamber (A4C)" },
+                { label: "Doppler Mode", value: "Pulsed Wave (PW)" },
+                { label: "Sample Volume", value: "1–3 mm at mitral leaflet tips" },
+                { label: "Sweep Speed", value: "100 mm/s" },
+                { label: "Timing", value: "End-expiration, held breath" },
+                { label: "Angle Correction", value: "Align beam parallel to mitral inflow (< 20°)" },
+                { label: "Measure", value: "E wave, A wave, E/A ratio, DT, IVRT" },
+                { label: "E/e' Threshold", value: "Average E/e' > 14 = elevated LAP (Step 2)" },
+              ].map(({ label, value }) => (
+                <div key={label} className="flex gap-2 text-sm">
+                  <span className="text-gray-500 w-36 flex-shrink-0">{label}:</span>
+                  <span className="font-medium text-gray-800">{value}</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 p-3 rounded-lg bg-teal-50 border border-teal-100">
+              <p className="text-sm text-teal-800 leading-relaxed">
+                <strong>Tip:</strong> Position the sample volume precisely at the leaflet tips — moving it toward the annulus or into the LV will alter E and A velocities. Use the average of septal and lateral e' from TDI for the E/e' ratio.
+              </p>
+            </div>
+          </div>
+        </SectionCard>
+
+        <SectionCard title="TR Jet — Peak Velocity & PASP" icon={Zap}>
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[
+                { label: "View", value: "Apical 4-chamber or parasternal RV inflow" },
+                { label: "Doppler Mode", value: "Continuous Wave (CW)" },
+                { label: "Angle", value: "Align parallel to TR jet (use color Doppler to guide)" },
+                { label: "Measure", value: "Peak TR velocity (m/s)" },
+                { label: "RVSP", value: "4 × TR² + estimated RAP (5, 10, or 15 mmHg)" },
+                { label: "Threshold", value: "> 2.8 m/s = abnormal (Step 2 criterion)" },
+              ].map(({ label, value }) => (
+                <div key={label} className="flex gap-2 text-sm">
+                  <span className="text-gray-500 w-32 flex-shrink-0">{label}:</span>
+                  <span className="font-medium text-gray-800">{value}</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 p-3 rounded-lg bg-teal-50 border border-teal-100">
+              <p className="text-sm text-teal-800 leading-relaxed">
+                <strong>Tip:</strong> Use multiple windows to find the highest TR velocity. Try subcostal or parasternal RV inflow views if the jet is eccentric. Use agitated saline contrast if TR is not well visualized.
               </p>
             </div>
           </div>
@@ -225,26 +256,31 @@ export function DiastolicScanCoachContent() {
           </div>
         </SectionCard>
 
-        <SectionCard title="TR Jet — Peak Velocity" icon={Zap}>
+        <SectionCard title="Deceleration Time (DT) & IVRT" icon={TrendingDown}>
           <div className="space-y-3">
+            <p className="text-sm text-gray-600 leading-relaxed">
+              Deceleration time (DT) is measured from the peak of the E wave to baseline. IVRT is the time from aortic valve closure to mitral valve opening. Both reflect LV relaxation and filling pressures.
+            </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
-                { label: "View", value: "Apical 4-chamber or parasternal RV inflow" },
-                { label: "Doppler Mode", value: "Continuous Wave (CW)" },
-                { label: "Angle", value: "Align parallel to TR jet (use color Doppler to guide)" },
-                { label: "Measure", value: "Peak TR velocity (m/s)" },
-                { label: "RVSP", value: "4 × TR² + estimated RAP (5, 10, or 15 mmHg)" },
-                { label: "Threshold", value: "> 2.8 m/s = abnormal for diastolic grading" },
+                { label: "DT Normal", value: "160–240 ms" },
+                { label: "DT Short (< 160 ms)", value: "Elevated LAP, restrictive physiology (Grade III)" },
+                { label: "DT Prolonged (> 240 ms)", value: "Impaired relaxation (Grade I)" },
+                { label: "IVRT Normal", value: "70–90 ms" },
+                { label: "IVRT Short (< 60 ms)", value: "Elevated LAP, restrictive filling" },
+                { label: "IVRT Prolonged (> 100 ms)", value: "Impaired relaxation" },
+                { label: "DT Method", value: "Slope from E peak to baseline on mitral inflow PW trace" },
+                { label: "IVRT Method", value: "PW between LVOT and mitral inflow, or TDI-derived" },
               ].map(({ label, value }) => (
                 <div key={label} className="flex gap-2 text-sm">
-                  <span className="text-gray-500 w-32 flex-shrink-0">{label}:</span>
+                  <span className="text-gray-500 w-44 flex-shrink-0">{label}:</span>
                   <span className="font-medium text-gray-800">{value}</span>
                 </div>
               ))}
             </div>
             <div className="mt-3 p-3 rounded-lg bg-teal-50 border border-teal-100">
               <p className="text-sm text-teal-800 leading-relaxed">
-                <strong>Tip:</strong> Use multiple windows to find the highest TR velocity. Try subcostal or parasternal RV inflow views if the jet is eccentric. Use agitated saline contrast if TR is not well visualized.
+                <strong>Tip:</strong> DT is most reliable at sweep speed 100 mm/s. A short DT with high E/A ratio and elevated E/e' strongly supports Grade III (restrictive) diastolic dysfunction.
               </p>
             </div>
           </div>
@@ -433,13 +469,14 @@ export default function DiastolicNavigator() {
               <ol className="space-y-3">
                 {[
                   { step: "1", label: "Assess LV Systolic Function", detail: "Confirm LVEF. Diastolic grading applies to preserved (EF ≥ 50%) and mildly reduced (EF 40–49%) function. Separate algorithm applies for EF < 40%." },
-                  { step: "2", label: "Mitral Inflow (Pulsed Doppler)", detail: "Sample volume at mitral leaflet tips. Measure E wave, A wave, E/A ratio, deceleration time (DT), and IVRT. Sweep speed 100 mm/s." },
-                  { step: "3", label: "Tissue Doppler Imaging (TDI)", detail: "Pulsed TDI at septal and lateral mitral annulus. Measure e' at each site. Use age-specific cutoffs (Table 6). Average septal and lateral e' for E/e' ratio." },
-                  { step: "4", label: "LA Reservoir Strain (LARS)", detail: "Dedicated apical 4C and 2C views at 50–70 fps. Use R-R gating. LARS < 18% = elevated LVFPs. Do not use in AF, significant MR, or heart transplant." },
-                  { step: "5", label: "Peak TR Velocity", detail: "CW Doppler across tricuspid valve. Measure peak TR jet velocity. > 2.8 m/s = abnormal. RVSP = 4(TRV²) + RAP." },
-                  { step: "6", label: "Left Atrial Volume Index (LAVI)", detail: "Biplane Simpson's method. Index to BSA. LAVI > 34 mL/m² = LA enlargement. Exclude PVs and LAA from tracing." },
-                  { step: "7", label: "Pulmonary Venous Flow (if needed)", detail: "PW Doppler in right upper pulmonary vein. Measure S, D, and Ar. Ar – A duration > 30 ms = elevated LVEDP. S/D < 1 suggests elevated LA pressure." },
-                  { step: "8", label: "Apply ASE 2025 Two-Step Algorithm", detail: "Step 1: Is e' reduced (impaired relaxation)? Step 2: Count elevated LAP markers (E/e' > 14, LARS < 18%, Valsalva E/A, LAVi > 34). See Grading Algorithm section." },
+                  { step: "2", label: "Tissue Doppler Imaging (TDI) — e' Velocity", detail: "Pulsed TDI at septal and lateral mitral annulus. e' is the starting point for diastolic assessment (ASE 2025 Step 1). Measure septal and lateral e'. Use age-specific cutoffs (Table 6). Average for E/e' ratio." },
+                  { step: "3", label: "Mitral Inflow — E/e' Ratio", detail: "PW Doppler at mitral leaflet tips. Measure E wave, A wave, E/A ratio, and DT. Calculate average E/e' using TDI from Step 2. E/e' > 14 = elevated LAP (Step 2 criterion). Sweep speed 100 mm/s." },
+                  { step: "4", label: "TR Velocity & PASP", detail: "CW Doppler across tricuspid valve. Peak TR velocity > 2.8 m/s = elevated RVSP (Step 2 criterion). RVSP = 4(TRV²) + estimated RAP. Use multiple windows to find highest velocity." },
+                  { step: "5", label: "Pulmonary Venous Flow", detail: "PW Doppler in right upper pulmonary vein. Measure S, D, Ar velocity, and Ar duration. Ar – A duration > 30 ms = elevated LVEDP. S/D < 1 suggests elevated LA pressure." },
+                  { step: "6", label: "LA Reservoir Strain (LARS)", detail: "Dedicated apical 4C and 2C views at 50–70 fps. R-R gating. LARS < 18% = elevated LVFPs (Step 2 criterion). Do not use in AF, significant MR, or heart transplant." },
+                  { step: "7", label: "Left Atrial Volume Index (LAVI)", detail: "Biplane Simpson's method. Index to BSA. LAVI > 34 mL/m² = LA enlargement (Step 2 criterion). Exclude PVs and LAA from tracing." },
+                  { step: "8", label: "IVRT (Isovolumic Relaxation Time)", detail: "PW Doppler between LVOT and mitral inflow, or tissue Doppler method. Normal IVRT: 70–90 ms. Shortened IVRT (< 60 ms) suggests elevated LAP. Prolonged IVRT (> 100 ms) suggests impaired relaxation." },
+                  { step: "9", label: "Apply ASE 2025 Two-Step Algorithm", detail: "Step 1: Is e' reduced (impaired relaxation)? Step 2: Count elevated LAP markers (E/e' > 14, TR > 2.8 m/s, LARS < 18%, LAVi > 34). See Grading Algorithm section." },
                 ].map(({ step, label, detail }) => (
                   <li key={step} className="flex gap-3">
                     <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold mt-0.5" style={{ background: BRAND }}>
