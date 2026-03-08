@@ -7,7 +7,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useSearch } from "wouter";
 import Layout from "@/components/Layout";
-import { Scan, Heart, Info, Eye, AlertTriangle, ChevronRight, Zap, Clock, Activity, TrendingUp, CheckCircle2, XCircle } from "lucide-react";
+import { Scan, Heart, Info, Eye, AlertTriangle, ChevronRight, Zap, Clock, Activity, TrendingUp, CheckCircle2, XCircle, Wind } from "lucide-react";
 import PedCHDCoach from "@/components/PedCHDCoach";
 import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 
@@ -661,6 +661,386 @@ const achdLesions = [
   },
 ];
 
+// ─── PULMONARY HTN & PE SCAN COACH ──────────────────────────────────────────
+const pulmViews = [
+  {
+    id: "psax-av",
+    label: "PSAX — Aortic Valve Level",
+    color: "#189aa1",
+    probe: "Parasternal short-axis, 3rd–4th ICS, left sternal border. Rotate clockwise from PLAX.",
+    anatomy: "Aortic valve (center), RVOT (anterior), pulmonary valve (top), left atrium (posterior), tricuspid valve (right).",
+    acquisition: "Tilt superiorly to open RVOT. Align PW Doppler sample volume in RVOT just proximal to pulmonic valve for PAAT measurement. Measure PA diameter at end-diastole.",
+    measurements: [
+      { label: "PA Acceleration Time (PAAT)", normal: "≥105 ms", abnormal: "<105 ms", note: "<60 ms with notch = severe PH" },
+      { label: "PA diameter", normal: "≤25 mm", abnormal: ">25 mm", note: "Measure at end-diastole" },
+      { label: "RVOT Doppler envelope", normal: "Smooth, symmetric", abnormal: "Mid-systolic notch", note: "Notch = severe PH" },
+    ],
+    pearls: [
+      "Mid-systolic notching of the RVOT Doppler envelope is highly specific for severe PH.",
+      "PAAT/RVET ratio <0.33 supports elevated PA pressure.",
+      "Measure PA diameter perpendicular to long axis, at the level of the pulmonic valve.",
+    ],
+  },
+  {
+    id: "a4ch-rv",
+    label: "Apical 4-Chamber (RV-Focused)",
+    color: "#189aa1",
+    probe: "Apical window, 5th–6th ICS, mid-clavicular line. Rotate probe slightly to open RV.",
+    anatomy: "RV (left on screen), LV (right), RA, LA, tricuspid valve, mitral valve. RV-focused view shifts probe toward RV apex.",
+    acquisition: "Tilt probe to maximize RV visualization. Measure RV basal, mid, and longitudinal diameters. Use CW Doppler through TR jet for TRV. Measure TAPSE with M-mode at lateral tricuspid annulus.",
+    measurements: [
+      { label: "RV basal diameter", normal: "≤41 mm", abnormal: ">41 mm", note: "RV-focused view essential" },
+      { label: "RV/LV basal ratio", normal: "<1.0", abnormal: "≥1.0", note: "Key PH and PE sign" },
+      { label: "TRV (peak)", normal: "≤2.8 m/s", abnormal: ">2.8 m/s", note: ">3.4 m/s = high PH probability" },
+      { label: "TAPSE", normal: "≥17 mm", abnormal: "<17 mm", note: "RV longitudinal dysfunction" },
+      { label: "RA area", normal: "≤18 cm²", abnormal: ">18 cm²", note: "Measured end-systole" },
+    ],
+    pearls: [
+      "Always use RV-focused apical 4-ch — standard LV-focused view underestimates RV size.",
+      "Measure TRV from multiple windows (apical, parasternal, subcostal) and use the highest quality signal.",
+      "McConnell's sign in PE: RV free wall hypokinesis with preserved or hyperdynamic apex.",
+    ],
+  },
+  {
+    id: "a5ch-cw",
+    label: "Apical 5-Chamber / CW Doppler",
+    color: "#189aa1",
+    probe: "Apical window, tilt anteriorly from A4Ch to open LVOT and aortic valve.",
+    anatomy: "LVOT, aortic valve, and RVOT visible. CW cursor aligned with TR jet for highest TRV.",
+    acquisition: "Align CW Doppler parallel to TR jet. Optimize gain and reject. Measure peak TRV. Calculate RVSP = 4×TRV² + RAP.",
+    measurements: [
+      { label: "TRV (peak)", normal: "≤2.8 m/s", abnormal: ">2.8 m/s", note: "Use highest quality from any window" },
+      { label: "RVSP (estimated)", normal: "<35 mmHg", abnormal: "≥35 mmHg", note: "Report as estimate + RAP assumption" },
+    ],
+    pearls: [
+      "RVSP is an estimate — always document assumed RAP and note it is not a standalone PH diagnosis.",
+      "60/60 sign for PE: PAAT <60 ms AND RVSP <60 mmHg — high specificity for acute PE.",
+      "Absent or poor TR signal does NOT exclude PH — document and note limitation.",
+    ],
+  },
+  {
+    id: "psax-pap",
+    label: "PSAX — Papillary Muscle Level",
+    color: "#0e7490",
+    probe: "Parasternal short-axis, tilt inferiorly from AV level to visualize papillary muscles.",
+    anatomy: "LV circular cross-section with posteromedial and anterolateral papillary muscles. IVS visible between LV and RV.",
+    acquisition: "Assess IVS morphology throughout the cardiac cycle. D-sign: flattening in systole = pressure overload (PE/PH); flattening in diastole = volume overload (ASD/TR).",
+    measurements: [
+      { label: "IVS morphology", normal: "Circular LV", abnormal: "D-shaped LV", note: "Systolic D-sign = pressure overload" },
+      { label: "Eccentricity index", normal: "≤1.0", abnormal: ">1.0", note: "D/D ratio at end-systole" },
+    ],
+    pearls: [
+      "Systolic D-sign = RV pressure overload (PH or acute PE).",
+      "Diastolic D-sign = RV volume overload (ASD, severe TR).",
+      "Both systolic and diastolic flattening = combined pressure and volume overload.",
+    ],
+  },
+  {
+    id: "subcostal-ivc",
+    label: "Subcostal — IVC & RA",
+    color: "#0e7490",
+    probe: "Subcostal window, probe pointing toward right shoulder. Rotate to visualize IVC entering RA.",
+    anatomy: "IVC entering RA from below. Hepatic veins join IVC 1–2 cm below RA junction.",
+    acquisition: "Measure IVC diameter 1–2 cm from RA junction at end-expiration. Perform sniff test: >50% collapse = normal RAP (0–5 mmHg); ≤50% collapse with IVC >21 mm = RAP 15 mmHg.",
+    measurements: [
+      { label: "IVC diameter", normal: "≤21 mm", abnormal: ">21 mm", note: "Measure 1–2 cm from RA" },
+      { label: "IVC collapse (sniff)", normal: ">50%", abnormal: "≤50%", note: "≤50% + IVC >21 mm = RAP 15 mmHg" },
+      { label: "Estimated RAP", normal: "3–5 mmHg", abnormal: "≥10 mmHg", note: "Used in RVSP calculation" },
+    ],
+    pearls: [
+      "IVC assessment is mandatory for accurate RVSP estimation — do not assume RAP without measuring.",
+      "In ventilated patients, IVC collapsibility is unreliable — use clinical estimate of RAP.",
+      "Dilated non-collapsing IVC in acute PE = RV failure and hemodynamic compromise.",
+    ],
+  },
+  {
+    id: "subcostal-rv",
+    label: "Subcostal — RV Free Wall",
+    color: "#0e7490",
+    probe: "Subcostal window, rotate to visualize RV free wall in long axis.",
+    anatomy: "RV free wall, RV apex, interventricular septum, and LV visible.",
+    acquisition: "Measure RV free wall thickness at end-diastole. >5 mm = RV hypertrophy (chronic pressure overload). Assess TR jet with CW Doppler in this window if apical signal is suboptimal.",
+    measurements: [
+      { label: "RV free wall thickness", normal: "≤5 mm", abnormal: ">5 mm", note: "Hypertrophy = chronic pressure overload" },
+    ],
+    pearls: [
+      "RV wall thickness >5 mm distinguishes chronic PH from acute PE (no time for hypertrophy in acute PE).",
+      "Subcostal window often provides the best TR signal in patients with poor apical windows.",
+      "Assess for pericardial effusion — any effusion in PH is an adverse prognostic marker.",
+    ],
+  },
+  {
+    id: "plax-rv",
+    label: "PLAX — RV Inflow",
+    color: "#189aa1",
+    probe: "Parasternal long-axis, tilt rightward and inferiorly to open RV inflow view.",
+    anatomy: "RV, tricuspid valve, RA, and coronary sinus visible.",
+    acquisition: "Align CW Doppler with TR jet in this view if other windows are suboptimal. Assess tricuspid valve morphology and TR severity.",
+    measurements: [
+      { label: "TRV (peak)", normal: "≤2.8 m/s", abnormal: ">2.8 m/s", note: "Alternative window for TR signal" },
+      { label: "TR severity", normal: "None / trivial", abnormal: "Moderate–severe", note: "Significant TR worsens RV volume overload" },
+    ],
+    pearls: [
+      "RV inflow view provides an alternative TR signal when apical and parasternal windows are suboptimal.",
+      "Assess tricuspid valve for structural abnormality (Ebstein's, carcinoid, rheumatic).",
+    ],
+  },
+  {
+    id: "suprasternal",
+    label: "Suprasternal — PA Flow",
+    color: "#0e7490",
+    probe: "Suprasternal notch, patient neck extended. Probe pointing toward left shoulder.",
+    anatomy: "Aortic arch, descending aorta, and right PA visible in cross-section beneath aorta.",
+    acquisition: "Align PW Doppler in right PA for PA flow assessment. Measure PA diameter if visible. Assess for branch PA stenosis.",
+    measurements: [
+      { label: "Right PA diameter", normal: "≤15 mm", abnormal: ">15 mm", note: "Dilated in significant PH" },
+    ],
+    pearls: [
+      "Suprasternal window provides direct PA flow assessment and right PA diameter measurement.",
+      "Branch PA stenosis causes asymmetric PA flow — compare left and right PA velocities.",
+    ],
+  },
+];
+
+function PulmHTNScanCoach() {
+  const [selectedView, setSelectedView] = useState(pulmViews[0]);
+  const [activeSection, setActiveSection] = useState<"ph" | "pe">("ph");
+  const BRAND_LOCAL = "#189aa1";
+  const BRAND_DARK_LOCAL = "#0e7490";
+  return (
+    <div className="space-y-4">
+      {/* Section Toggle */}
+      <div className="flex gap-2">
+        {(["ph", "pe"] as const).map(s => (
+          <button
+            key={s}
+            onClick={() => setActiveSection(s)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
+            style={{
+              background: activeSection === s ? BRAND_LOCAL : "#f8fafc",
+              color: activeSection === s ? "white" : "#374151",
+              border: `1.5px solid ${activeSection === s ? BRAND_LOCAL : "#e5e7eb"}`,
+            }}
+          >
+            {s === "ph" ? "Pulmonary Hypertension" : "Pulmonary Embolism"}
+          </button>
+        ))}
+      </div>
+
+      {/* PH View-by-View Guide */}
+      {activeSection === "ph" && (
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
+          <div className="lg:col-span-1 space-y-2">
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+              <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Echo Windows</h3>
+              {pulmViews.map(v => (
+                <button
+                  key={v.id}
+                  onClick={() => setSelectedView(v)}
+                  className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-semibold mb-1 transition-all"
+                  style={selectedView.id === v.id
+                    ? { background: BRAND_LOCAL, color: "white" }
+                    : { background: "#f8fffe", color: BRAND_LOCAL, border: "1px solid #e2e8f0" }}
+                >
+                  {v.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="lg:col-span-3 space-y-4">
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="px-5 py-4 border-b" style={{ borderColor: BRAND_LOCAL + "30", background: BRAND_LOCAL + "08" }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white text-xs font-bold flex-shrink-0" style={{ background: selectedView.color }}>
+                    <Wind className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>{selectedView.label}</h2>
+                    <p className="text-xs text-gray-500">Pulmonary HTN Assessment — ScanCoach™</p>
+                  </div>
+                </div>
+              </div>
+              <div className="p-5 space-y-5">
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: BRAND_LOCAL }}>Probe Positioning</h4>
+                  <p className="text-sm text-gray-700">{selectedView.probe}</p>
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: BRAND_LOCAL }}>Key Anatomy</h4>
+                  <p className="text-sm text-gray-700">{selectedView.anatomy}</p>
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: BRAND_DARK_LOCAL }}>Acquisition & Measurements</h4>
+                  <p className="text-sm text-gray-700">{selectedView.acquisition}</p>
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: BRAND_LOCAL }}>Reference Values</h4>
+                  <div className="overflow-x-auto rounded-lg border border-gray-100">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr style={{ background: "#f8fafc" }}>
+                          <th className="text-left px-4 py-2.5 font-semibold text-gray-600">Parameter</th>
+                          <th className="text-left px-4 py-2.5 font-semibold text-green-600">Normal</th>
+                          <th className="text-left px-4 py-2.5 font-semibold text-red-600">Abnormal</th>
+                          <th className="text-left px-4 py-2.5 font-semibold text-gray-500">Note</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedView.measurements.map(({ label, normal, abnormal, note }, i) => (
+                          <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                            <td className="px-4 py-2 font-medium text-gray-700 border-r border-gray-100">{label}</td>
+                            <td className="px-4 py-2 text-green-700">{normal}</td>
+                            <td className="px-4 py-2 text-red-700 font-semibold">{abnormal}</td>
+                            <td className="px-4 py-2 text-gray-500 text-xs">{note}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: BRAND_LOCAL }}>Clinical Pearls</h4>
+                  <ul className="space-y-2">
+                    {selectedView.pearls.map((pearl, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                        <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: BRAND_LOCAL }} />
+                        {pearl}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* PE View-by-View Guide */}
+      {activeSection === "pe" && (
+        <div className="space-y-4">
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="px-5 py-3 border-b" style={{ borderColor: "#ef444430", background: "#fef2f2" }}>
+              <h3 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>PE Echo Assessment — View-by-View Guide</h3>
+              <p className="text-xs text-gray-500 mt-0.5">Systematic approach for suspected or confirmed pulmonary embolism</p>
+            </div>
+            <div className="p-5 space-y-4">
+              {[
+                {
+                  step: "1",
+                  view: "Apical 4-Chamber (RV-Focused)",
+                  color: "#dc2626",
+                  tasks: [
+                    "Measure RV/LV basal diameter ratio — ratio >1.0 = RV dilation = RV strain",
+                    "Assess McConnell's sign: RV free wall hypokinesis with preserved or hyperdynamic apex",
+                    "Measure TAPSE with M-mode at lateral tricuspid annulus — <17 mm = RV dysfunction",
+                    "Measure RA area at end-systole — >18 cm² = enlarged",
+                    "CW Doppler through TR jet — measure peak TRV for RVSP estimation",
+                  ],
+                  keySign: "McConnell's Sign + RV/LV >1.0",
+                },
+                {
+                  step: "2",
+                  view: "PSAX — Papillary Muscle Level",
+                  color: "#d97706",
+                  tasks: [
+                    "Assess IVS morphology — systolic D-sign = RV pressure overload",
+                    "Circular LV = normal; D-shaped LV = RV pressure overload",
+                    "Measure eccentricity index if available",
+                  ],
+                  keySign: "Systolic D-Sign",
+                },
+                {
+                  step: "3",
+                  view: "PSAX — Aortic Valve Level (RVOT)",
+                  color: "#d97706",
+                  tasks: [
+                    "PW Doppler in RVOT — measure PAAT",
+                    "60/60 sign: PAAT <60 ms AND RVSP <60 mmHg = acute PE (high specificity)",
+                    "Assess for mid-systolic notching of RVOT Doppler envelope",
+                    "Measure PA diameter at end-diastole",
+                  ],
+                  keySign: "60/60 Sign",
+                },
+                {
+                  step: "4",
+                  view: "Subcostal — IVC & RA",
+                  color: BRAND_LOCAL,
+                  tasks: [
+                    "Measure IVC diameter 1–2 cm from RA junction",
+                    "Sniff test — ≤50% collapse with IVC >21 mm = elevated RAP",
+                    "Calculate RVSP = 4×TRV² + estimated RAP",
+                    "Carefully assess RA and RV for mobile thrombus",
+                  ],
+                  keySign: "IVC Dilation + Non-Collapse",
+                },
+                {
+                  step: "5",
+                  view: "Subcostal — RV Free Wall",
+                  color: BRAND_LOCAL,
+                  tasks: [
+                    "Measure RV free wall thickness — >5 mm = hypertrophy = chronic, not acute PE",
+                    "Assess for pericardial effusion — exclude tamponade",
+                    "CW Doppler TR jet if apical window is suboptimal",
+                  ],
+                  keySign: "RV Wall Thickness (Acute vs. Chronic)",
+                },
+                {
+                  step: "6",
+                  view: "PLAX — Aorta & Pericardium",
+                  color: BRAND_DARK_LOCAL,
+                  tasks: [
+                    "Assess aortic root and proximal descending aorta — exclude dissection before thrombolysis",
+                    "Assess LV size and function — underfilled LV in massive PE",
+                    "Assess for pericardial effusion",
+                  ],
+                  keySign: "Exclude Dissection Before Thrombolysis",
+                },
+              ].map(({ step, view, color, tasks, keySign }) => (
+                <div key={step} className="flex items-start gap-4 p-4 rounded-xl border" style={{ borderColor: color + "30", background: color + "05" }}>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0" style={{ background: color }}>{step}</div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h4 className="text-sm font-bold text-gray-800">{view}</h4>
+                      <span className="text-xs px-2 py-0.5 rounded-full font-semibold text-white" style={{ background: color }}>{keySign}</span>
+                    </div>
+                    <ul className="space-y-1">
+                      {tasks.map((task, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                          <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: color }} />
+                          {task}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+            <h4 className="text-sm font-bold text-gray-700 mb-3" style={{ fontFamily: "Merriweather, serif" }}>PE Echo Quick Reference</h4>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {[
+                { sign: "McConnell's", detail: "RV free wall hypokinesis, apex spared", color: "#dc2626" },
+                { sign: "60/60 Sign", detail: "PAAT <60 ms AND RVSP <60 mmHg", color: "#dc2626" },
+                { sign: "D-Sign", detail: "Systolic IVS flattening = pressure overload", color: "#d97706" },
+                { sign: "RV/LV >1.0", detail: "RV dilation = RV strain", color: BRAND_LOCAL },
+              ].map(({ sign, detail, color }) => (
+                <div key={sign} className="p-3 rounded-lg text-center" style={{ background: color + "08", border: `1.5px solid ${color}30` }}>
+                  <p className="text-sm font-bold mb-1" style={{ color }}>{sign}</p>
+                  <p className="text-xs text-gray-500">{detail}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="text-xs text-gray-400 text-center py-2">
+            Clinical content © All About Ultrasound, Inc. / iHeartEcho. Educational use only. Based on ASE 2025, ESC/ERS 2022, and ESC 2019 PE guidelines.
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ACHDScanCoach() {
   const [selectedLesion, setSelectedLesion] = useState(achdLesions[0]);
   const [selectedView, setSelectedView] = useState(achdLesions[0].views[0]);
@@ -745,8 +1125,8 @@ function ACHDScanCoach() {
 export default function ScanCoach() {
   const search = useSearch();
   const _params = new URLSearchParams(search);
-  const _initialTab = (_params.get("tab") as "tte" | "fetal" | "chd" | "achd") || "tte";
-  const [activeTab, setActiveTab] = useState<"tte" | "fetal" | "chd" | "achd">(_initialTab);
+  const _initialTab = (_params.get("tab") as "tte" | "fetal" | "chd" | "achd" | "pulm") || "tte";
+  const [activeTab, setActiveTab] = useState<"tte" | "fetal" | "chd" | "achd" | "pulm">(_initialTab);
   const [selectedTTE, setSelectedTTE] = useState(tteViews[0]);
   const [selectedFetal, setSelectedFetal] = useState(fetalViews[0]);
   const [mrExpanded, setMrExpanded] = useState(false);
@@ -788,7 +1168,7 @@ export default function ScanCoach() {
 
         {/* Tab switcher */}
         <div className="flex gap-2 mb-6">
-          {(["tte", "fetal", "chd", "achd"] as const).map(tab => (
+          {(["tte", "fetal", "chd", "achd", "pulm"] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -797,7 +1177,7 @@ export default function ScanCoach() {
                 ? { background: "#189aa1", color: "white" }
                 : { background: "white", color: "#189aa1", border: "1px solid #e2e8f0" }}
             >
-              {tab === "tte" ? "Adult TTE" : tab === "fetal" ? "Fetal Echo" : tab === "chd" ? "Pediatric CHD" : "Adult Congenital"}
+              {tab === "tte" ? "Adult TTE" : tab === "fetal" ? "Fetal Echo" : tab === "chd" ? "Pediatric CHD" : tab === "achd" ? "Adult Congenital" : "Pulmonary HTN & PE"}
             </button>
           ))}
         </div>
@@ -1622,6 +2002,9 @@ export default function ScanCoach() {
         {activeTab === "chd" && <PedCHDCoach />}
         {/* ─── ADULT CONGENITAL TAB ─── */}
         {activeTab === "achd" && <ACHDScanCoach />}
+
+        {/* ─── PULMONARY HTN & PE TAB ─── */}
+        {activeTab === "pulm" && <PulmHTNScanCoach />}
       </div>
     </Layout>
   );

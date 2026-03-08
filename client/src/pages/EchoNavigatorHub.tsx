@@ -10,7 +10,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { hasPremiumAccess } from "@/lib/roles";
 import {
   Stethoscope, Microscope, Zap, Users, Baby, Heart,
-  Cpu, FlaskConical, BarChart3, ArrowRight, Scan, Lock, Droplets, Activity
+  Cpu, FlaskConical, BarChart3, ArrowRight, Scan, Lock, Droplets, Activity, Wind
 } from "lucide-react";
 
 const BRAND = "#189aa1";
@@ -101,6 +101,14 @@ const navigators = [
     badge: "Cardiomyopathy",
     premium: true,
   },
+  {
+    path: "/pulm-htn",
+    icon: Wind,
+    title: "Pulmonary HTN & PE Navigator™",
+    description: "Comprehensive right heart and pulmonary pressure assessment: TRV-based PH probability, RVSP estimation, RV function, PA dilation, PE echo signs (McConnell's, 60/60, D-sign), risk stratification, and ASE 2025 reporting thresholds.",
+    badge: "Pulmonary",
+    premium: false,
+  },
 ];
 
 const badgeColors: Record<string, string> = {
@@ -110,6 +118,7 @@ const badgeColors: Record<string, string> = {
   "Congenital Heart": "#0369a1",
   "Contrast Echo": "#0e7490",
   "Cardiomyopathy": "#b45309",
+  "Pulmonary": "#0e7490",
 };
 
 export default function EchoNavigatorHub() {
@@ -135,7 +144,7 @@ export default function EchoNavigatorHub() {
             <div>
               <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-2">
                 <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
-                <span className="text-xs text-white/80 font-medium">9 Protocols Available</span>
+                <span className="text-xs text-white/80 font-medium">12 Protocols Available</span>
               </div>
               <h1
                 className="text-2xl font-black text-white leading-tight"

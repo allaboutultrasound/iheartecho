@@ -65,6 +65,7 @@ import UEAScanCoach from "./pages/UEAScanCoach";
 import ScanCoachEditor from "./pages/ScanCoachEditor";
 import HOCMNavigator from "./pages/HOCMNavigator";
 import HOCMScanCoach from "./pages/HOCMScanCoach";
+import PulmHTNNavigator from "./pages/PulmHTNNavigator";
 import ThinkificWebhookAdmin from "./pages/ThinkificWebhookAdmin";
 
 function Router() {
@@ -135,6 +136,7 @@ function Router() {
       <Route path="/uea-scan-coach" component={UEAScanCoach} />
       <Route path="/hocm-navigator" component={HOCMNavigator} />
       <Route path="/hocm-scan-coach" component={HOCMScanCoach} />
+      <Route path="/pulm-htn" component={PulmHTNNavigator} />
       <Route path="/echo-assist-hub" component={EchoAssistHub} />
       {/* ── LMS Engines ──────────────────────────────────────────────────── */}
       <Route path="/quickfire" component={QuickFire} />
