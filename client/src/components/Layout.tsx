@@ -61,6 +61,7 @@ const navGroups = [
       { path: "/echo-assist-hub", label: "EchoAssist™", icon: Stethoscope },
       { path: "/hemodynamics", label: "Hemodynamics Lab", icon: Activity },
       { path: "/calculator", label: "Echo Calculators", icon: Calculator },
+      { path: "/report", label: "Report Builder", icon: FileText },
     ],
   },
   {
@@ -68,7 +69,6 @@ const navGroups = [
     items: [
       { path: "/quickfire", label: "Daily Challenge", icon: Zap },
       { path: "/case-library", label: "Echo Case Library", icon: Library },
-      { path: "/report", label: "Report Builder", icon: FileText },
       { path: "/cme", label: "CME Hub", icon: GraduationCap },
       { path: "/registry-review", label: "Registry Review Hub", icon: BookMarked },
       { path: "https://www.allaboutultrasound.net/acs-preview-pass-access", label: "ACS Mastery", icon: Award, external: true },
