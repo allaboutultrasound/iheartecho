@@ -105,7 +105,7 @@ export function DiastolicScanCoachContent() {
             </div>
             <div className="mt-2 p-3 rounded-lg bg-amber-50 border border-amber-100">
               <p className="text-sm text-amber-800 leading-relaxed">
-                <strong>Pitfall:</strong> Do not confuse the s' (systolic) wave with e'. The e' wave occurs immediately after the QRS-T complex on ECG. The s' wave is the tallest peak during systole.
+                <strong>Pitfall:</strong> Do not confuse the a' (late diastolic annular velocity) with the pre-systolic wave or other waves (L-waves) when present. The a' wave follows atrial contraction and occurs just before the QRS complex on ECG. L-waves are low-velocity mid-diastolic waves seen in some patients and should not be measured as the a' wave.
               </p>
             </div>
           </div>

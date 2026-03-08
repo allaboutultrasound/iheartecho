@@ -1411,3 +1411,6 @@
 
 ## Bug Fix (Mar 8 2026 — Session 2)
 - [x] Diastolic Function card on EchoAssistHub missing Scan Coach button — fixed: added scanCoachPath: "/scan-coach?tab=diastolic"
+
+## Content Fix (Mar 8 2026)
+- [x] Diastolic Function ScanCoach: updated pitfall to "Do not confuse the a' (late diastolic annular velocity) with the pre-systolic wave or other waves (L-waves) when present" — correct TDI notation with L-wave context
