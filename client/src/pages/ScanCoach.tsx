@@ -7,7 +7,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useSearch } from "wouter";
 import Layout from "@/components/Layout";
-import { Scan, Heart, Info, Eye, AlertTriangle, ChevronRight } from "lucide-react";
+import { Scan, Heart, Info, Eye, AlertTriangle, ChevronRight, Zap, Clock, Activity, TrendingUp, CheckCircle2, XCircle } from "lucide-react";
 import PedCHDCoach from "@/components/PedCHDCoach";
 import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 
@@ -971,6 +971,237 @@ export default function ScanCoach() {
             </div>
           </div>
         )}
+        {/* ─── ACUTE vs CHRONIC MR SECTION (below TTE grid, always visible on TTE tab) ─── */}
+        {activeTab === "tte" && (
+          <div className="mt-6 space-y-4">
+            {/* Section Header */}
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "#189aa1" }}>
+                <Heart className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Acute vs Chronic Mitral Regurgitation</h2>
+                <p className="text-sm text-gray-500">Echo differentiation guide — haemodynamics, 2D, Doppler, and clinical context</p>
+              </div>
+            </div>
+
+            {/* Comparison Cards Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* ACUTE MR Card */}
+              <div className="bg-white rounded-xl border-2 shadow-sm overflow-hidden" style={{ borderColor: "#ef4444" }}>
+                <div className="px-5 py-3 flex items-center gap-2" style={{ background: "#fef2f2" }}>
+                  <Zap className="w-4 h-4" style={{ color: "#ef4444" }} />
+                  <h3 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Acute MR</h3>
+                  <span className="ml-auto text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "#fee2e2", color: "#dc2626" }}>Haemodynamic Emergency</span>
+                </div>
+                <div className="p-4 space-y-3">
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wide mb-1.5" style={{ color: "#ef4444" }}>Common Causes</h4>
+                    <ul className="space-y-1">
+                      {["Papillary muscle rupture (post-MI — posteromedial PM most common)","Chordae tendineae rupture (myxomatous, endocarditis, trauma)","Infective endocarditis with leaflet perforation","Acute leaflet prolapse (flail leaflet)","Blunt chest trauma"].map((c,i) => (
+                        <li key={i} className="flex items-start gap-1.5 text-sm text-gray-600">
+                          <span className="mt-1 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "#ef4444" }} />
+                          {c}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="border-t border-gray-100 pt-3">
+                    <h4 className="text-xs font-bold uppercase tracking-wide mb-1.5" style={{ color: "#ef4444" }}>Haemodynamic Context</h4>
+                    <p className="text-sm text-gray-600 leading-relaxed">Normal-sized, non-compliant LA and LV. Sudden volume overload into a non-dilated LA causes <span className="font-semibold text-red-700">acute pulmonary oedema</span> and cardiogenic shock despite a normal or hyperdynamic LV. Systemic BP may be low despite preserved or elevated LVEDP.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* CHRONIC MR Card */}
+              <div className="bg-white rounded-xl border-2 shadow-sm overflow-hidden" style={{ borderColor: "#189aa1" }}>
+                <div className="px-5 py-3 flex items-center gap-2" style={{ background: "#f0fbfc" }}>
+                  <Clock className="w-4 h-4" style={{ color: "#189aa1" }} />
+                  <h3 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Chronic MR</h3>
+                  <span className="ml-auto text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "#d0f4f5", color: "#0e7490" }}>Compensated → Decompensated</span>
+                </div>
+                <div className="p-4 space-y-3">
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wide mb-1.5" style={{ color: "#189aa1" }}>Common Causes</h4>
+                    <ul className="space-y-1">
+                      {["Myxomatous mitral valve disease / MVP (most common in developed world)","Rheumatic heart disease (leaflet thickening, commissural fusion)","Ischaemic MR (annular dilation, tethering of leaflets)","Dilated cardiomyopathy (functional/secondary MR)","Radiation-induced valve disease"].map((c,i) => (
+                        <li key={i} className="flex items-start gap-1.5 text-sm text-gray-600">
+                          <span className="mt-1 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: "#189aa1" }} />
+                          {c}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="border-t border-gray-100 pt-3">
+                    <h4 className="text-xs font-bold uppercase tracking-wide mb-1.5" style={{ color: "#189aa1" }}>Haemodynamic Context</h4>
+                    <p className="text-sm text-gray-600 leading-relaxed">Progressive LA and LV dilation allows accommodation of the regurgitant volume. LV is typically <span className="font-semibold text-teal-700">hyperdynamic with preserved EF</span> in compensation. EF may appear falsely normal even when LV contractility is impaired — EF &lt;60% or LVESD &gt;40 mm signals decompensation.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Echo Findings Comparison Table */}
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="px-5 py-3 border-b border-gray-100 flex items-center gap-2">
+                <Activity className="w-4 h-4" style={{ color: "#189aa1" }} />
+                <h3 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Echo Findings: Side-by-Side Comparison</h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr style={{ background: "#f8fafc" }}>
+                      <th className="text-left px-4 py-3 font-semibold text-gray-600 w-1/3">Parameter</th>
+                      <th className="text-left px-4 py-3 font-semibold" style={{ color: "#ef4444" }}>Acute MR</th>
+                      <th className="text-left px-4 py-3 font-semibold" style={{ color: "#189aa1" }}>Chronic MR</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      ["LA size", "Normal (non-dilated)", "Dilated (LA volume index >34 mL/m²)"],
+                      ["LV size", "Normal or mildly enlarged", "Dilated (LVEDD >60 mm in severe)"],
+                      ["LV function (EF)", "Hyperdynamic (EF often >70%)", "Preserved (EF ≥60%) until decompensation"],
+                      ["Colour Doppler jet", "Large, eccentric jet — may underestimate severity (wall-hugging)", "Large central or eccentric jet; vena contracta ≥7 mm = severe"],
+                      ["Vena contracta", "≥7 mm (severe) but may be underestimated", "≥7 mm = severe; measure in PLAX"],
+                      ["EROA (PISA)", "≥0.40 cm² = severe; PISA radius often large", "≥0.40 cm² = severe (primary); ≥0.20 cm² = severe (secondary)"],
+                      ["Regurgitant volume", "≥60 mL = severe", "≥60 mL = severe (primary); ≥30 mL = severe (secondary)"],
+                      ["Pulmonary veins", "Systolic flow reversal (highly specific for severe acute MR)", "Blunted S wave; systolic reversal in severe chronic MR"],
+                      ["Mitral inflow (E wave)", "Elevated E wave (>1.5 m/s) due to high LA pressure", "E-dominant pattern; E/A >2 in severe with elevated filling pressures"],
+                      ["CW Doppler MR jet", "Dense, early-peaking, triangular (rapid LA pressure equalisation)", "Dense, holosystolic, plateau-shaped"],
+                      ["Pulmonary artery pressure", "Severely elevated (acute pulmonary hypertension)", "Elevated in decompensated; may be normal in compensated"],
+                      ["Structural cause visible", "Flail leaflet, ruptured chord, papillary muscle rupture", "Leaflet prolapse, thickening, annular dilation, tethering"],
+                    ].map(([param, acute, chronic], i) => (
+                      <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                        <td className="px-4 py-2.5 font-medium text-gray-700 border-r border-gray-100">{param}</td>
+                        <td className="px-4 py-2.5 text-red-700">{acute}</td>
+                        <td className="px-4 py-2.5 text-teal-700">{chronic}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* 2-column: Key Echo Views + Clinical Red Flags */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Key Echo Views */}
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Eye className="w-4 h-4" style={{ color: "#189aa1" }} />
+                  <h3 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Key Echo Views for MR Assessment</h3>
+                </div>
+                <ul className="space-y-2.5">
+                  {[
+                    { view: "PLAX", tip: "Vena contracta measurement. Assess leaflet morphology, chordal integrity, and posterior leaflet motion. Flail tip visible as systolic whipping motion." },
+                    { view: "PSAX (MV level)", tip: "Identify prolapsing or flail scallop (P1/P2/P3, A1/A2/A3). Planimetry of MV area if stenosis coexists. Color Doppler to localise jet origin." },
+                    { view: "Apical 4-Chamber", tip: "PISA/EROA calculation. Assess LA size (LAVI). Pulmonary vein Doppler (systolic reversal = severe). Measure LV volumes (biplane Simpson's)." },
+                    { view: "Apical 2-Chamber", tip: "Biplane EF. Assess anterior and inferior walls for ischaemic MR. Pulmonary vein Doppler in left upper PV." },
+                    { view: "Apical 3-Chamber (APLAX)", tip: "CW Doppler through MR jet — assess jet density, shape (triangular vs plateau), and peak velocity. LVOT VTI for stroke volume." },
+                    { view: "Subcostal", tip: "IVC size and collapsibility for RA pressure estimation. Hepatic vein flow reversal suggests elevated RA pressure or severe TR." },
+                  ].map(({ view, tip }, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <span className="text-xs font-bold px-1.5 py-0.5 rounded mt-0.5 flex-shrink-0 font-mono" style={{ background: "#189aa1", color: "white" }}>{view}</span>
+                      <span className="text-sm text-gray-600 leading-relaxed">{tip}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Clinical Pearls + Red Flags */}
+              <div className="space-y-4">
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <TrendingUp className="w-4 h-4" style={{ color: "#189aa1" }} />
+                    <h3 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Clinical Pearls</h3>
+                  </div>
+                  <ul className="space-y-2">
+                    {[
+                      "In acute MR, EF appears falsely normal or elevated — the LV is unloading into the low-resistance LA, masking true contractile dysfunction.",
+                      "A wall-hugging eccentric jet on colour Doppler significantly underestimates MR severity — always use PISA/EROA and pulmonary vein Doppler.",
+                      "Systolic pulmonary vein flow reversal is the most specific colour Doppler sign of severe acute MR.",
+                      "In ischaemic MR, severity is dynamic — repeat assessment at rest and with exercise (stress echo) to capture the full haemodynamic burden.",
+                      "EF <60% in chronic primary MR represents significant LV dysfunction — normal EF threshold is lower than in other conditions.",
+                      "LVESD >40 mm (or >22 mm/m²) is a Class I indication for surgery in asymptomatic severe primary MR regardless of EF.",
+                    ].map((p, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                        <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: "#189aa1" }} />
+                        {p}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="bg-white rounded-xl border border-red-50 shadow-sm p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <AlertTriangle className="w-4 h-4 text-red-500" />
+                    <h3 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Red Flags — Urgent Surgical Review</h3>
+                  </div>
+                  <ul className="space-y-2">
+                    {[
+                      "Flail leaflet with haemodynamic instability — surgical emergency",
+                      "Papillary muscle rupture (post-MI) — mortality >50% without emergent surgery",
+                      "Acute MR with pulmonary oedema and cardiogenic shock",
+                      "Chronic MR with EF <60% or LVESD >40 mm",
+                      "New onset AF or pulmonary hypertension (PASP >50 mmHg) in severe MR",
+                      "Infective endocarditis with leaflet perforation or abscess",
+                    ].map((f, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-red-700">
+                        <XCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5 text-red-500" />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* ASE 2021 Severity Thresholds */}
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="px-5 py-3 border-b border-gray-100 flex items-center gap-2">
+                <Info className="w-4 h-4" style={{ color: "#189aa1" }} />
+                <h3 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>ASE/AHA/ACC Severity Thresholds — Primary MR</h3>
+                <span className="ml-auto text-xs font-medium px-2 py-0.5 rounded-full" style={{ background: "#d0f4f5", color: "#0e7490" }}>2021 Guidelines</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr style={{ background: "#f8fafc" }}>
+                      <th className="text-left px-4 py-3 font-semibold text-gray-600">Parameter</th>
+                      <th className="text-left px-4 py-3 font-semibold text-gray-500">Mild</th>
+                      <th className="text-left px-4 py-3 font-semibold text-amber-600">Moderate</th>
+                      <th className="text-left px-4 py-3 font-semibold text-red-600">Severe</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      ["Vena contracta (cm)", "<0.3", "0.3–0.69", "≥0.7"],
+                      ["EROA — PISA (cm²)", "<0.20", "0.20–0.39", "≥0.40"],
+                      ["Regurgitant volume (mL)", "<30", "30–59", "≥60"],
+                      ["Regurgitant fraction (%)", "<30", "30–49", "≥50"],
+                      ["LA volume index (mL/m²)", "Normal", "Mildly elevated", ">34 (dilated)"],
+                      ["LV end-systolic diameter", "Normal", "Mildly enlarged", ">40 mm (surgery threshold)"],
+                    ].map(([param, mild, mod, severe], i) => (
+                      <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                        <td className="px-4 py-2.5 font-medium text-gray-700 border-r border-gray-100">{param}</td>
+                        <td className="px-4 py-2.5 text-gray-500">{mild}</td>
+                        <td className="px-4 py-2.5 text-amber-700">{mod}</td>
+                        <td className="px-4 py-2.5 text-red-700 font-semibold">{severe}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="px-5 py-3 border-t border-gray-100 bg-gray-50">
+                <p className="text-xs text-gray-500"><span className="font-semibold">Secondary (functional) MR thresholds are lower:</span> EROA ≥0.20 cm² and RVol ≥30 mL = severe. These reflect the worse prognosis at lower volumes in the setting of LV dysfunction.</p>
+              </div>
+            </div>
+
+            {/* Copyright */}
+            <div className="text-xs text-gray-400 text-center py-2">
+              Clinical content © All About Ultrasound, Inc. / iHeartEcho. Educational use only. Based on ASE/AHA/ACC 2021 guidelines.
+            </div>
+          </div>
+        )}
+
         {/* ─── FETAL ECHO TAB ─── */}
         {activeTab === "fetal" && (
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
