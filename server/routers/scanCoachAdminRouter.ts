@@ -14,7 +14,14 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { eq, and } from "drizzle-orm";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
-import { getDb, getUserRoles } from "../db";
+import {
+  getDb,
+  getUserRoles,
+  insertScanCoachMedia,
+  getScanCoachMediaByView,
+  getScanCoachMediaByViews,
+  deleteScanCoachMedia,
+} from "../db";
 import { scanCoachOverrides } from "../../drizzle/schema";
 import { storagePut } from "../storage";
 
@@ -225,5 +232,79 @@ export const scanCoachAdminRouter = router({
         .set({ [input.field]: null, updatedByUserId: ctx.user.id })
         .where(eq(scanCoachOverrides.id, input.id));
       return { cleared: true };
+    }),
+
+  // ─── TEE/ICE ScanCoach Media procedures ────────────────────────────────────
+
+  /**
+   * Get all media for a specific TEE/ICE view (public — users see filled slots only).
+   */
+  getMediaByView: publicProcedure
+    .input(z.object({ viewId: z.string().min(1).max(64) }))
+    .query(async ({ input }) => {
+      return getScanCoachMediaByView(input.viewId);
+    }),
+
+  /**
+   * Bulk-fetch media for multiple views at once (used for preloading all views in a section).
+   */
+  getMediaByViews: publicProcedure
+    .input(z.object({ viewIds: z.array(z.string().min(1).max(64)).max(50) }))
+    .query(async ({ input }) => {
+      return getScanCoachMediaByViews(input.viewIds);
+    }),
+
+  /**
+   * Upload a reference image or video clip for a TEE/ICE view (admin only).
+   * Accepts base64-encoded data, uploads to S3, and stores the record.
+   */
+  uploadViewMedia: protectedProcedure
+    .input(
+      z.object({
+        viewId: z.string().min(1).max(64),
+        mediaType: z.enum(["image", "clip"]),
+        /** Base64-encoded file data (without data: prefix) */
+        base64Data: z.string(),
+        /** MIME type, e.g. image/jpeg or video/mp4 */
+        mimeType: z.string().regex(/^(image\/(jpeg|png|gif|webp|svg\+xml)|video\/(mp4|webm|ogg))$/),
+        /** Original filename */
+        fileName: z.string().max(128),
+        caption: z.string().max(255).optional(),
+        sortOrder: z.number().int().min(0).default(0),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      await assertPlatformAdmin(ctx);
+
+      const buffer = Buffer.from(input.base64Data, "base64");
+      const ext = input.mimeType.split("/")[1].replace("svg+xml", "svg");
+      const randomSuffix = Math.random().toString(36).slice(2, 10);
+      const safeFileName = input.fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const key = `scancoach/tee-ice/${input.viewId}/${input.mediaType}-${safeFileName}-${randomSuffix}.${ext}`;
+
+      const { url } = await storagePut(key, buffer, input.mimeType);
+
+      const id = await insertScanCoachMedia({
+        viewId: input.viewId,
+        mediaType: input.mediaType,
+        url,
+        fileKey: key,
+        caption: input.caption ?? null,
+        sortOrder: input.sortOrder,
+        uploadedBy: ctx.user.id,
+      });
+
+      return { id, url, key };
+    }),
+
+  /**
+   * Delete a media record by ID (admin only). The S3 file is NOT deleted — only the DB record.
+   */
+  deleteViewMedia: protectedProcedure
+    .input(z.object({ id: z.number().int().positive() }))
+    .mutation(async ({ ctx, input }) => {
+      await assertPlatformAdmin(ctx);
+      await deleteScanCoachMedia(input.id);
+      return { deleted: true };
     }),
 });

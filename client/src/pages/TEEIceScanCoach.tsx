@@ -3,10 +3,16 @@
   Brand: Teal #189aa1, Aqua #4ad9e0
   Fonts: Merriweather headings, Open Sans body
   Covers: ME, TG, UE views for TEE; ICE views for structural procedures
+  Media: Admin-uploadable reference images/clips per view; hidden from users when empty.
 */
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Link } from "wouter";
-import { ChevronRight, Eye, Info, AlertTriangle, Microscope, Activity } from "lucide-react";
+import {
+  ChevronRight, Eye, Info, AlertTriangle, Microscope, Activity,
+  Upload, Trash2, ImagePlus, Video, X, CheckCircle2,
+} from "lucide-react";
+import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface TEEView {
@@ -14,8 +20,8 @@ interface TEEView {
   name: string;
   abbr: string;
   section: "ME" | "TG" | "UE" | "ICE";
-  angle: string;          // probe angle range
-  depth: string;          // insertion depth
+  angle: string;
+  depth: string;
   color: string;
   description: string;
   probeManeuver: string;
@@ -24,7 +30,6 @@ interface TEEView {
   clinicalUse: string[];
   normalFindings: string[];
   pitfalls: string[];
-  imagePlaceholder: string; // descriptive text for placeholder
 }
 
 // ─── TEE View Data ─────────────────────────────────────────────────────────────
@@ -45,7 +50,6 @@ const teeViews: TEEView[] = [
     clinicalUse: ["Global LV/RV function", "Mitral and tricuspid valve assessment", "ASD/PFO screening (color Doppler)", "Pericardial effusion"],
     normalFindings: ["LV EF ≥55%", "No MV/TV regurgitation", "Intact IAS", "Normal RV size"],
     pitfalls: ["LV apex may be foreshortened — use deep transgastric view for true apex", "Gain too high obscures valve leaflets"],
-    imagePlaceholder: "ME 4C view — all four chambers, MV and TV visible, LV apex at top",
   },
   {
     id: "me-2c",
@@ -62,10 +66,9 @@ const teeViews: TEEView[] = [
     clinicalUse: ["LV wall motion (anterior, inferior)", "LAA thrombus exclusion", "MV regurgitation jet direction", "Mitral annular calcification"],
     normalFindings: ["LAA emptying velocity >40 cm/s (sinus rhythm)", "No LAA thrombus", "Normal anterior/inferior wall motion"],
     pitfalls: ["LAA pectinate muscles can mimic thrombus — use agitated saline or 3D", "Rotate slowly from ME 4C to avoid losing orientation"],
-    imagePlaceholder: "ME 2C view — LV and LA, LAA visible at left, anterior and inferior walls",
   },
   {
-    id: "me-lac",
+    id: "me-lax",
     name: "ME Long-Axis",
     abbr: "ME LAX",
     section: "ME",
@@ -79,10 +82,9 @@ const teeViews: TEEView[] = [
     clinicalUse: ["Aortic stenosis severity (LVOT VTI + AV CW)", "Aortic regurgitation (AR jet width/LVOT)", "LVOT obstruction (HOCM, SAM)", "Aortic root dilation"],
     normalFindings: ["LVOT diameter 1.8–2.2 cm", "AV peak velocity <2.0 m/s", "No AR", "Aortic root ≤4.0 cm"],
     pitfalls: ["LVOT angle to aorta must be <20° for accurate CW gradient", "NCC vs LCC orientation: NCC is posterior in this view"],
-    imagePlaceholder: "ME LAX view — LVOT, aortic valve, proximal ascending aorta, MV in long axis",
   },
   {
-    id: "me-asc-ao",
+    id: "me-asc-ao-sax",
     name: "ME Ascending Aorta SAX",
     abbr: "ME Asc Ao SAX",
     section: "ME",
@@ -96,7 +98,6 @@ const teeViews: TEEView[] = [
     clinicalUse: ["Aortic root diameter", "Pulmonic valve stenosis/regurgitation", "PA dilation (pulmonary HTN)", "RVOT assessment"],
     normalFindings: ["Aortic root ≤4.0 cm", "PV peak velocity <1.5 m/s", "No PR", "Normal PA size"],
     pitfalls: ["Ascending aorta may be partially obscured by trachea/bronchus — rotate and adjust depth", "Do not confuse PA with aorta — PA wraps anterior to aorta"],
-    imagePlaceholder: "ME Asc Ao SAX — circular aorta with PA wrapping, pulmonic valve visible",
   },
   {
     id: "me-av-sax",
@@ -113,10 +114,9 @@ const teeViews: TEEView[] = [
     clinicalUse: ["AV planimetry (AVA direct measurement)", "Bicuspid AV identification", "ASD/PFO screening", "AV vegetation assessment"],
     normalFindings: ["Three equal cusps opening symmetrically", "AVA ≥2.0 cm²", "No calcification", "Intact IAS"],
     pitfalls: ["Calcification causes acoustic shadowing — planimetry unreliable in severe calcification", "Bicuspid AV: two cusps with raphe — do not confuse with tricuspid"],
-    imagePlaceholder: "ME AV SAX — three aortic cusps in 'Mercedes-Benz' pattern, LA and RA visible",
   },
   {
-    id: "me-bic",
+    id: "me-bicaval",
     name: "ME Bicaval",
     abbr: "ME Bicaval",
     section: "ME",
@@ -130,7 +130,6 @@ const teeViews: TEEView[] = [
     clinicalUse: ["ASD sizing and location (sinus venosus vs secundum)", "PFO detection (bubble study)", "WATCHMAN/ASD device guidance", "Central line/IABP position"],
     normalFindings: ["Intact IAS", "No shunt on color Doppler", "Normal caval flow"],
     pitfalls: ["Sinus venosus ASD is near SVC — do not miss by focusing only on fossa ovalis", "Eustachian valve can be mistaken for IAS pathology"],
-    imagePlaceholder: "ME Bicaval — SVC (top) and IVC (bottom) entering RA, IAS in centre",
   },
   {
     id: "me-mv-comm",
@@ -147,7 +146,6 @@ const teeViews: TEEView[] = [
     clinicalUse: ["MR jet origin (which scallop)", "Mitral stenosis commissural fusion", "MitraClip procedure guidance", "Prolapse/flail segment localisation"],
     normalFindings: ["All three scallops coapting normally", "No MR", "MVA ≥2.0 cm²"],
     pitfalls: ["Eccentric MR jets may be underestimated — always use multiple views", "P2 prolapse is most common — check all scallops systematically"],
-    imagePlaceholder: "ME MV Commissural — 'fish-mouth' MV with P1/A1, P2/A2, P3/A3 visible",
   },
   // ── Transgastric (TG) ──
   {
@@ -165,7 +163,6 @@ const teeViews: TEEView[] = [
     clinicalUse: ["Intraoperative LV monitoring (wall motion changes = ischaemia)", "Preload assessment (LV cavity size)", "Systolic function (EF estimation)", "Papillary muscle rupture"],
     normalFindings: ["Symmetric wall motion all segments", "Normal LV cavity size", "Both PMs visible and symmetric"],
     pitfalls: ["Off-axis view can make normal wall appear hypokinetic — ensure circular LV cross-section", "RV volume overload causes IVS flattening — do not misinterpret as ischaemia"],
-    imagePlaceholder: "TG Mid SAX — circular LV with both papillary muscles, RV crescent at right",
   },
   {
     id: "tg-2c",
@@ -182,10 +179,9 @@ const teeViews: TEEView[] = [
     clinicalUse: ["True LV apex assessment (apical HCM, thrombus)", "LV length measurement", "Inferior wall motion (RCA territory)", "Anterior wall motion (LAD territory)"],
     normalFindings: ["Smooth LV apex", "Normal anterior and inferior wall motion", "No apical thrombus"],
     pitfalls: ["Foreshortening is common — ensure probe is fully advanced and antiflex maximally", "Apical trabeculations can mimic thrombus — use contrast if uncertain"],
-    imagePlaceholder: "TG 2C — LV in long axis from stomach, true apex at top, MV at bottom",
   },
   {
-    id: "tg-deep",
+    id: "tg-deep-lax",
     name: "Deep TG Long-Axis",
     abbr: "Deep TG LAX",
     section: "TG",
@@ -199,11 +195,10 @@ const teeViews: TEEView[] = [
     clinicalUse: ["Aortic stenosis gradient (most accurate TEE position)", "LVOT obstruction (HOCM, SAM)", "Post-TAVR gradient assessment", "SV and CO calculation"],
     normalFindings: ["LVOT VTI 18–22 cm", "AV peak velocity <2.0 m/s", "No LVOT obstruction"],
     pitfalls: ["Requires deep probe insertion — may cause patient discomfort; ensure adequate sedation", "Beam-flow angle must be <20° for accurate gradients — adjust probe rotation"],
-    imagePlaceholder: "Deep TG LAX — LV apex at bottom, LVOT and AV aligned with Doppler beam",
   },
   // ── Upper Esophageal (UE) ──
   {
-    id: "ue-ao-arch",
+    id: "ue-arch-lax",
     name: "UE Aortic Arch LAX",
     abbr: "UE Arch LAX",
     section: "UE",
@@ -217,10 +212,9 @@ const teeViews: TEEView[] = [
     clinicalUse: ["Aortic arch atheroma grading (I–V)", "Type A dissection — arch involvement", "Coarctation assessment", "Cannulation site selection (cardiac surgery)"],
     normalFindings: ["Smooth intima", "No atheroma", "No dissection flap", "Normal arch diameter"],
     pitfalls: ["Left main bronchus causes acoustic dropout — rotate probe to avoid", "Atheroma grading: Grade IV (mobile) and V (ulcerated) are highest embolic risk"],
-    imagePlaceholder: "UE Arch LAX — curved aortic arch, left subclavian origin, smooth intima",
   },
   {
-    id: "ue-ao-arch-sax",
+    id: "ue-arch-sax",
     name: "UE Aortic Arch SAX",
     abbr: "UE Arch SAX",
     section: "UE",
@@ -234,7 +228,6 @@ const teeViews: TEEView[] = [
     clinicalUse: ["PA dilation assessment", "Pulmonary embolism (central PE in main PA)", "Arch diameter measurement", "Pulmonary HTN screening"],
     normalFindings: ["Main PA diameter ≤2.5 cm", "No intraluminal filling defect", "Normal arch diameter"],
     pitfalls: ["Central PE may be visible as echogenic filling defect — confirm with CT-PA", "PA and aorta can be confused — PA is anterior and has thinner walls"],
-    imagePlaceholder: "UE Arch SAX — circular arch cross-section, main PA anterior with left PA bifurcation",
   },
   // ── ICE Views ──
   {
@@ -252,7 +245,6 @@ const teeViews: TEEView[] = [
     clinicalUse: ["Baseline RA/RV assessment", "TR severity", "RVSP estimation", "Catheter position confirmation"],
     normalFindings: ["Normal RA/RV size", "No TR or mild TR", "Normal RVOT"],
     pitfalls: ["Catheter position affects image — ensure stable position before measurements", "Near-field artifact from catheter tip can obscure TV"],
-    imagePlaceholder: "ICE Home View — RA, TV, RV, RVOT from right atrium; catheter tip visible",
   },
   {
     id: "ice-ias",
@@ -269,7 +261,6 @@ const teeViews: TEEView[] = [
     clinicalUse: ["ASD/PFO sizing and location", "Transseptal puncture guidance", "WATCHMAN device deployment", "ASD closure device guidance"],
     normalFindings: ["Intact IAS", "No shunt on color Doppler", "Fossa ovalis visible as thin membrane"],
     pitfalls: ["Fossa ovalis is the thinnest part of IAS — transseptal needle should target this area", "Lipomatous hypertrophy of IAS can mimic mass — spare fossa ovalis is characteristic"],
-    imagePlaceholder: "ICE IAS View — IAS with fossa ovalis, LA behind, color Doppler for shunt detection",
   },
   {
     id: "ice-laa",
@@ -286,10 +277,9 @@ const teeViews: TEEView[] = [
     clinicalUse: ["LAA thrombus exclusion (pre-cardioversion, pre-ablation)", "WATCHMAN device sizing (LAA ostium diameter, depth)", "WATCHMAN deployment and leak assessment", "AF ablation guidance"],
     normalFindings: ["LAA emptying velocity >40 cm/s", "No thrombus", "No spontaneous echo contrast"],
     pitfalls: ["Pectinate muscles mimic thrombus — use multiple views and Doppler", "WATCHMAN leak: residual flow around device on color Doppler — acceptable if ≤5 mm"],
-    imagePlaceholder: "ICE LAA View — finger-like LAA with LSPV, color Doppler for thrombus/SEC",
   },
   {
-    id: "ice-aorta",
+    id: "ice-av",
     name: "ICE Aortic Valve View",
     abbr: "ICE AV",
     section: "ICE",
@@ -303,11 +293,293 @@ const teeViews: TEEView[] = [
     clinicalUse: ["TAVR valve positioning and deployment", "Post-TAVR paravalvular leak assessment", "AV morphology (bicuspid)", "LVOT measurement"],
     normalFindings: ["Three equal cusps", "No AR", "Normal LVOT diameter"],
     pitfalls: ["ICE provides limited AV gradient accuracy — use TEE or TTE for haemodynamic assessment", "Paravalvular leak: circumferential color signal around prosthesis — quantify by circumference"],
-    imagePlaceholder: "ICE AV View — aortic valve en-face from RA, three cusps, LVOT visible",
+  },
+  // ── ICE Structural Heart ──
+  {
+    id: "ice-watchman-sizing",
+    name: "WATCHMAN Sizing",
+    abbr: "WATCHMAN Size",
+    section: "ICE",
+    angle: "LAA view (transseptal)",
+    depth: "Left atrium (transseptal)",
+    color: "#d97706",
+    description: "ICE-guided LAA ostium measurement for WATCHMAN FLX device sizing. Requires transseptal access for optimal LA views.",
+    probeManeuver: "After transseptal puncture, advance ICE into LA. Rotate to display LAA in long axis. Measure ostium diameter at the level of the left circumflex artery and LSPV ridge.",
+    anatomy: ["LAA ostium", "LAA body and lobes", "LSPV ridge", "Left circumflex artery (landmark)", "Mitral annulus"],
+    doppler: ["Color over LAA ostium (baseline flow pattern)", "PW in LAA (emptying velocity — target >40 cm/s)", "Color post-deployment (residual leak)"],
+    clinicalUse: ["LAA ostium diameter measurement (sizing: device = ostium + 10–20%)", "LAA depth measurement (must exceed device diameter)", "Device deployment guidance (position, compression)", "Post-deployment leak assessment"],
+    normalFindings: ["Ostium diameter 17–31 mm (WATCHMAN FLX range)", "LAA depth ≥ device diameter", "Device compression 8–20% post-deployment", "No leak or ≤5 mm residual leak acceptable"],
+    pitfalls: ["Measure at widest ostium diameter — use multiple angles (0°, 45°, 90°, 135°)", "Pectinate muscles can obscure true ostium — use color Doppler to delineate boundary", "Device embolisation risk: ensure anchor zone engagement before release"],
+  },
+  {
+    id: "ice-watchman-deploy",
+    name: "WATCHMAN Deployment",
+    abbr: "WATCHMAN Deploy",
+    section: "ICE",
+    angle: "LAA view (transseptal)",
+    depth: "Left atrium (transseptal)",
+    color: "#d97706",
+    description: "Real-time ICE guidance during WATCHMAN FLX device deployment — confirms position, compression, and absence of significant leak.",
+    probeManeuver: "Maintain ICE in LA with LAA in view. Track device advancement into LAA. Confirm PASS criteria before release.",
+    anatomy: ["WATCHMAN device (echogenic disc)", "LAA ostium", "Device anchor zone", "Mitral valve (reference)"],
+    doppler: ["Color Doppler around device perimeter (leak assessment)", "PW at residual gap (if present)"],
+    clinicalUse: ["PASS criteria confirmation: Position (at/distal to ostium), Anchor (tug test), Size (compression 8–20%), Seal (≤5 mm leak)", "Pericardial effusion monitoring during deployment", "Device embolisation detection"],
+    normalFindings: ["Device seated at LAA ostium", "Compression 8–20%", "No or ≤5 mm residual leak", "No pericardial effusion"],
+    pitfalls: ["Inadequate compression (<8%) → risk of embolisation; reposition", "Excessive compression (>20%) → risk of device fracture; reconsider sizing", "Always confirm no pericardial effusion before and after release"],
+  },
+  {
+    id: "ice-mitraclip",
+    name: "MitraClip Guidance",
+    abbr: "MitraClip",
+    section: "ICE",
+    angle: "ME 4C / Commissural equivalent (transseptal)",
+    depth: "Left atrium (transseptal)",
+    color: "#d97706",
+    description: "ICE guidance for MitraClip (TEER) procedure — transseptal puncture, clip positioning, and post-deployment MR assessment.",
+    probeManeuver: "Transseptal puncture at posterior-superior IAS (target: 3.5–4.0 cm above MV plane). Advance ICE into LA. Display MV in long axis and commissural views for clip positioning.",
+    anatomy: ["MV (AML, PML, all scallops)", "LVOT (for SAM risk assessment)", "LA", "LV", "MitraClip device (echogenic)"],
+    doppler: ["Color Doppler over MV (residual MR, clip position)", "CW across MV (MVA post-clip — avoid iatrogenic MS)", "Color over LVOT (SAM detection post-clip)"],
+    clinicalUse: ["Transseptal puncture height guidance (posterior-superior IAS)", "Clip orientation to MR jet (perpendicular to coaptation line)", "Leaflet insertion confirmation (A2/P2 grasping)", "Post-clip MR grade and MVA assessment"],
+    normalFindings: ["Residual MR ≤2+ post-clip", "MVA ≥1.5 cm² (avoid iatrogenic MS)", "No LVOT obstruction (SAM)", "Symmetric leaflet insertion"],
+    pitfalls: ["Low transseptal puncture → inadequate working height; target posterior-superior IAS", "SAM risk: short posterior leaflet, small LVOT, hyperdynamic LV — consider surgical referral", "Leaflet trauma: avoid excessive clip force; confirm both leaflets grasped before locking"],
+  },
+  {
+    id: "ice-laao-leak",
+    name: "LAAO Leak Assessment",
+    abbr: "LAAO Leak",
+    section: "ICE",
+    angle: "LAA view (transseptal or RA)",
+    depth: "LA or RA",
+    color: "#d97706",
+    description: "Post-LAAO device leak assessment using ICE color Doppler. Evaluates peridevice flow and device position at 45-day follow-up.",
+    probeManeuver: "Position ICE to display device en-face and in long axis. Apply color Doppler at multiple angles (0°, 45°, 90°, 135°) to detect peridevice flow.",
+    anatomy: ["LAAO device (WATCHMAN/Amulet)", "LAA ostium", "Device-tissue interface", "Residual LAA lumen (if any)"],
+    doppler: ["Color Doppler at all angles around device perimeter", "PW at any residual flow jet (measure peak velocity)", "Measure leak jet width perpendicular to flow direction"],
+    clinicalUse: ["Peridevice leak grading: None / ≤3 mm (minor) / 3–5 mm (moderate) / >5 mm (major)", "Device position assessment (migration, embolisation)", "45-day follow-up: determine if anticoagulation can be stopped", "Endothelialisation assessment (device echogenicity)"],
+    normalFindings: ["No peridevice flow or ≤3 mm minor leak", "Device seated at ostium without migration", "Increasing echogenicity = endothelialisation (expected at 45 days)"],
+    pitfalls: ["Gain settings affect leak detection — use standardised settings", "Multiple jets may be present — assess entire circumference", ">5 mm leak at 45 days → continue anticoagulation; consider reintervention if symptomatic"],
   },
 ];
 
-// ─── Sub-components ────────────────────────────────────────────────────────────
+// ─── Section config ────────────────────────────────────────────────────────────
+const SECTION_LABELS: Record<string, string> = {
+  ME: "Midesophageal (ME)",
+  TG: "Transgastric (TG)",
+  UE: "Upper Esophageal (UE)",
+  ICE: "Intracardiac Echo (ICE)",
+};
+
+const SECTION_COLORS: Record<string, string> = {
+  ME: "#189aa1",
+  TG: "#0e7490",
+  UE: "#6366f1",
+  ICE: "#d97706",
+};
+
+// ─── Admin Media Upload Panel ──────────────────────────────────────────────────
+function AdminMediaPanel({ viewId }: { viewId: string }) {
+  const utils = trpc.useUtils();
+  const [dragOver, setDragOver] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [caption, setCaption] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { data: media = [], isLoading } = trpc.scanCoachAdmin.getMediaByView.useQuery({ viewId });
+  const uploadMutation = trpc.scanCoachAdmin.uploadViewMedia.useMutation({
+    onSuccess: () => {
+      utils.scanCoachAdmin.getMediaByView.invalidate({ viewId });
+      setCaption("");
+      setUploadSuccess(true);
+      setTimeout(() => setUploadSuccess(false), 3000);
+    },
+    onError: (e) => setUploadError(e.message),
+  });
+  const deleteMutation = trpc.scanCoachAdmin.deleteViewMedia.useMutation({
+    onSuccess: () => utils.scanCoachAdmin.getMediaByView.invalidate({ viewId }),
+  });
+
+  const handleFile = useCallback(async (file: File) => {
+    setUploadError(null);
+    setUploading(true);
+    try {
+      const isVideo = file.type.startsWith("video/");
+      const isImage = file.type.startsWith("image/");
+      if (!isVideo && !isImage) {
+        setUploadError("Only images (JPEG, PNG, WebP, GIF) and videos (MP4, WebM) are supported.");
+        setUploading(false);
+        return;
+      }
+      const maxMB = isVideo ? 50 : 10;
+      if (file.size > maxMB * 1024 * 1024) {
+        setUploadError(`File too large. Max ${maxMB} MB.`);
+        setUploading(false);
+        return;
+      }
+      const base64Data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          // Strip data URL prefix
+          resolve(result.split(",")[1]);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      await uploadMutation.mutateAsync({
+        viewId,
+        mediaType: isVideo ? "clip" : "image",
+        base64Data,
+        mimeType: file.type,
+        fileName: file.name,
+        caption: caption.trim() || undefined,
+        sortOrder: media.length,
+      });
+    } catch (e: any) {
+      setUploadError(e?.message ?? "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  }, [viewId, caption, media.length, uploadMutation]);
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  };
+
+  return (
+    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mt-4">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-6 h-6 rounded-lg flex items-center justify-center bg-amber-500 text-white">
+          <Upload className="w-3.5 h-3.5" />
+        </div>
+        <h3 className="text-sm font-bold text-amber-800" style={{ fontFamily: "Merriweather, serif" }}>
+          Admin: Reference Media
+        </h3>
+        <span className="ml-auto text-xs text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full">Admin only</span>
+      </div>
+
+      {/* Existing media */}
+      {isLoading ? (
+        <p className="text-xs text-amber-600 mb-3">Loading media…</p>
+      ) : media.length > 0 ? (
+        <div className="grid grid-cols-2 gap-2 mb-3">
+          {media.map((m) => (
+            <div key={m.id} className="relative rounded-lg overflow-hidden border border-amber-200 bg-white group">
+              {m.mediaType === "image" ? (
+                <img src={m.url} alt={m.caption ?? "Reference image"} className="w-full h-24 object-cover" />
+              ) : (
+                <video src={m.url} className="w-full h-24 object-cover" controls={false} muted />
+              )}
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                <button
+                  onClick={() => deleteMutation.mutate({ id: m.id })}
+                  className="p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                  title="Delete"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              {m.caption && (
+                <p className="text-xs text-gray-600 px-2 py-1 truncate">{m.caption}</p>
+              )}
+              <span className="absolute top-1 left-1 text-xs bg-black/60 text-white px-1.5 py-0.5 rounded">
+                {m.mediaType === "clip" ? "Clip" : "Image"}
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-xs text-amber-600 mb-3">No media uploaded yet for this view.</p>
+      )}
+
+      {/* Caption input */}
+      <input
+        type="text"
+        placeholder="Caption (optional)"
+        value={caption}
+        onChange={(e) => setCaption(e.target.value)}
+        className="w-full text-xs border border-amber-200 rounded-lg px-3 py-1.5 mb-2 bg-white focus:outline-none focus:ring-1 focus:ring-amber-400"
+      />
+
+      {/* Drop zone */}
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={handleDrop}
+        onClick={() => fileInputRef.current?.click()}
+        className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors"
+        style={{ borderColor: dragOver ? "#d97706" : "#fcd34d", background: dragOver ? "#fef3c7" : "transparent" }}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
+          className="hidden"
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
+        />
+        <div className="flex items-center justify-center gap-2 text-amber-600 mb-1">
+          <ImagePlus className="w-4 h-4" />
+          <Video className="w-4 h-4" />
+        </div>
+        <p className="text-xs text-amber-700 font-medium">
+          {uploading ? "Uploading…" : "Drop image or clip here, or click to browse"}
+        </p>
+        <p className="text-xs text-amber-500 mt-0.5">JPEG, PNG, WebP, GIF (max 10 MB) · MP4, WebM (max 50 MB)</p>
+      </div>
+
+      {uploadError && (
+        <div className="flex items-center gap-2 mt-2 text-xs text-red-700 bg-red-50 rounded-lg px-3 py-2">
+          <X className="w-3.5 h-3.5 flex-shrink-0" />
+          {uploadError}
+        </div>
+      )}
+      {uploadSuccess && (
+        <div className="flex items-center gap-2 mt-2 text-xs text-green-700 bg-green-50 rounded-lg px-3 py-2">
+          <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
+          Media uploaded successfully.
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── View Media Display (users) ───────────────────────────────────────────────
+function ViewMediaDisplay({ viewId }: { viewId: string }) {
+  const { data: media = [], isLoading } = trpc.scanCoachAdmin.getMediaByView.useQuery({ viewId });
+
+  if (isLoading || media.length === 0) return null;
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+      <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2" style={{ fontFamily: "Merriweather, serif" }}>
+        <div className="w-6 h-6 rounded-lg flex items-center justify-center text-white bg-gray-600">
+          <Eye className="w-3.5 h-3.5" />
+        </div>
+        Reference Images & Clips
+      </h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {media.map((m) => (
+          <div key={m.id} className="rounded-xl overflow-hidden border border-gray-100">
+            {m.mediaType === "image" ? (
+              <img src={m.url} alt={m.caption ?? "Reference image"} className="w-full object-contain bg-gray-900 max-h-48" />
+            ) : (
+              <video src={m.url} className="w-full max-h-48 bg-gray-900" controls muted />
+            )}
+            {m.caption && (
+              <p className="text-xs text-gray-500 px-3 py-2">{m.caption}</p>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── View Card (sidebar) ──────────────────────────────────────────────────────
 function ViewCard({ view, isSelected, onClick }: { view: TEEView; isSelected: boolean; onClick: () => void }) {
   return (
     <button
@@ -328,22 +600,11 @@ function ViewCard({ view, isSelected, onClick }: { view: TEEView; isSelected: bo
   );
 }
 
-const SECTION_LABELS: Record<string, string> = {
-  ME: "Midesophageal (ME)",
-  TG: "Transgastric (TG)",
-  UE: "Upper Esophageal (UE)",
-  ICE: "Intracardiac Echo (ICE)",
-};
-
-const SECTION_COLORS: Record<string, string> = {
-  ME: "#189aa1",
-  TG: "#0e7490",
-  UE: "#6366f1",
-  ICE: "#d97706",
-};
-
 // ─── Main Export ───────────────────────────────────────────────────────────────
 export function TEEIceScanCoachContent() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+
   const [activeSection, setActiveSection] = useState<"ME" | "TG" | "UE" | "ICE">("ME");
   const [selectedView, setSelectedView] = useState<TEEView>(teeViews[0]);
   const detailRef = useRef<HTMLDivElement>(null);
@@ -370,7 +631,7 @@ export function TEEIceScanCoachContent() {
             </h1>
             <p className="text-[#4ad9e0] font-semibold text-sm mb-3">Transesophageal & Intracardiac Echocardiography</p>
             <p className="text-white/70 text-sm leading-relaxed mb-3 max-w-lg">
-              View-by-view probe manipulation, anatomy, Doppler technique, and clinical pearls for ME, TG, and UE TEE views — plus ICE views for structural heart procedures.
+              View-by-view probe manipulation, anatomy, Doppler technique, and clinical pearls for ME, TG, and UE TEE views — plus ICE views for structural heart procedures including WATCHMAN, MitraClip, and LAAO leak assessment.
             </p>
             <p className="text-white/50 text-xs mb-4">
               <span className="font-semibold text-white/70">Patient Positioning:</span> Left lateral decubitus for TEE; supine for ICE (catheter-based). Ensure adequate sedation/anaesthesia and bite guard in place before probe insertion.
@@ -428,24 +689,14 @@ export function TEEIceScanCoachContent() {
                 </span>
               </div>
             </div>
-
-            {/* Description */}
-            <div className="px-5 py-4 border-b border-gray-50">
+            <div className="px-5 py-4">
               <p className="text-sm text-gray-700 leading-relaxed">{selectedView.description}</p>
             </div>
-
-            {/* Image placeholder */}
-            <div className="px-5 py-4 border-b border-gray-50">
-              <div className="rounded-xl flex items-center justify-center"
-                style={{ background: selectedView.color + "08", border: `2px dashed ${selectedView.color}40`, minHeight: "160px" }}>
-                <div className="text-center p-6">
-                  <Eye className="w-8 h-8 mx-auto mb-2" style={{ color: selectedView.color + "80" }} />
-                  <p className="text-xs font-semibold mb-1" style={{ color: selectedView.color }}>Reference Image / Clip</p>
-                  <p className="text-xs text-gray-400 max-w-xs">{selectedView.imagePlaceholder}</p>
-                </div>
-              </div>
-            </div>
           </div>
+
+          {/* Reference media — shown only when filled; admin upload panel shown to admins */}
+          <ViewMediaDisplay viewId={selectedView.id} />
+          {isAdmin && <AdminMediaPanel viewId={selectedView.id} />}
 
           {/* Probe Maneuver */}
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
@@ -476,7 +727,6 @@ export function TEEIceScanCoachContent() {
                 ))}
               </ul>
             </div>
-
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
               <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2" style={{ fontFamily: "Merriweather, serif" }}>
                 <div className="w-6 h-6 rounded-lg flex items-center justify-center text-white" style={{ background: selectedView.color }}>
@@ -513,10 +763,9 @@ export function TEEIceScanCoachContent() {
                 ))}
               </ul>
             </div>
-
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
               <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2" style={{ fontFamily: "Merriweather, serif" }}>
-                <div className="w-6 h-6 rounded-lg flex items-center justify-center text-white" style={{ background: "#16a34a" }}>
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center text-white bg-green-600">
                   <Info className="w-3.5 h-3.5" />
                 </div>
                 Normal Findings

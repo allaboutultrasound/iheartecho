@@ -281,6 +281,13 @@
       "when": 1772920261109,
       "tag": "0039_harsh_ben_grimm",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "5",
+      "when": 1772988868491,
+      "tag": "0040_wonderful_molten_man",
+      "breakpoints": true
     }
   ]
 }

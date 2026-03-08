@@ -1007,3 +1007,27 @@ export const webhookEvents = mysqlTable("webhookEvents", {
 });
 export type WebhookEvent = typeof webhookEvents.$inferSelect;
 export type InsertWebhookEvent = typeof webhookEvents.$inferInsert;
+
+// ─── ScanCoach Media ──────────────────────────────────────────────────────────
+// Stores reference images and video clips for TEE/ICE ScanCoach views.
+// Admins upload via the ScanCoach admin panel; users only see filled slots.
+
+export const scanCoachMedia = mysqlTable("scanCoachMedia", {
+  id: int("id").autoincrement().primaryKey(),
+  /** View identifier matching TEEView.id in TEEIceScanCoach.tsx, e.g. "me-4c" */
+  viewId: varchar("viewId", { length: 64 }).notNull(),
+  /** "image" | "clip" */
+  mediaType: mysqlEnum("mediaType", ["image", "clip"]).notNull().default("image"),
+  /** Public S3 URL */
+  url: text("url").notNull(),
+  /** S3 key for deletion */
+  fileKey: text("fileKey").notNull(),
+  /** Optional caption shown below the media */
+  caption: varchar("caption", { length: 255 }),
+  /** Sort order within a view (0 = primary) */
+  sortOrder: int("sortOrder").default(0).notNull(),
+  uploadedBy: int("uploadedBy").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type ScanCoachMedia = typeof scanCoachMedia.$inferSelect;
+export type InsertScanCoachMedia = typeof scanCoachMedia.$inferInsert;

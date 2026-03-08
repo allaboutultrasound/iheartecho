@@ -1,4 +1,4 @@
-import { and, avg, count, desc, eq, gte, lte, or, sql } from "drizzle-orm";
+import { and, avg, count, desc, eq, gte, inArray, lte, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   InsertUser,
@@ -39,6 +39,9 @@ import {
   type PhysicianPeerReview,
   type InsertPhysicianPeerReview,
   type PhysicianNotification,
+  scanCoachMedia,
+  type ScanCoachMedia,
+  type InsertScanCoachMedia,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -1878,4 +1881,44 @@ export async function countPendingUsers(): Promise<number> {
     .from(users)
     .where(eq(users.isPending, true));
   return Number(rows[0]?.count ?? 0);
+}
+
+// ─── ScanCoach Media helpers ──────────────────────────────────────────────────
+
+/** Insert a new media record for a ScanCoach view */
+export async function insertScanCoachMedia(data: InsertScanCoachMedia): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const result = await db.insert(scanCoachMedia).values(data);
+  return (result[0] as any).insertId as number;
+}
+
+/** Get all media for a specific view, ordered by sortOrder */
+export async function getScanCoachMediaByView(viewId: string): Promise<ScanCoachMedia[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(scanCoachMedia)
+    .where(eq(scanCoachMedia.viewId, viewId))
+    .orderBy(scanCoachMedia.sortOrder);
+}
+
+/** Get all media for multiple views at once (used for bulk preload) */
+export async function getScanCoachMediaByViews(viewIds: string[]): Promise<ScanCoachMedia[]> {
+  if (!viewIds.length) return [];
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(scanCoachMedia)
+    .where(inArray(scanCoachMedia.viewId, viewIds))
+    .orderBy(scanCoachMedia.sortOrder);
+}
+
+/** Delete a media record by id */
+export async function deleteScanCoachMedia(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(scanCoachMedia).where(eq(scanCoachMedia.id, id));
 }

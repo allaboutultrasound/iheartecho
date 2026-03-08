@@ -1310,3 +1310,12 @@
 - [x] Add patient positioning one-liner to all five new banners (Adult TTE, Pediatric CHD, Fetal Echo, Adult Congenital, Pulmonary HTN & PE)
 - [x] Build TEE/ICE ScanCoach tab — ME, TG, UE views for TEE; ICE views; probe guidance, anatomy, Doppler tips, image placeholders
 - [x] Register TEE/ICE tab in ScanCoach tab list and activeTab type
+
+## TEE/ICE ScanCoach Media & ICE Structural Heart
+- [x] DB schema: scanCoachMedia table (viewId, mediaType: image|clip, url, fileKey, caption, uploadedBy, createdAt)
+- [x] tRPC: scanCoachMedia.upload mutation (admin only — S3 upload)
+- [x] tRPC: scanCoachMedia.getByView query (public — returns media for a view)
+- [x] tRPC: scanCoachMedia.delete mutation (admin only)
+- [x] Admin upload UI in TEE/ICE ScanCoach — visible only to admin role users; drag-and-drop image/clip upload per view
+- [x] TEE/ICE ScanCoach: hide placeholder box when no media; show image/clip when filled
+- [x] ICE Structural Heart sub-section: WATCHMAN sizing/deployment, MitraClip guidance views, LAAO leak assessment
