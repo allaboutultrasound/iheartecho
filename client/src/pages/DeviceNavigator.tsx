@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — Device EchoNavigator™
+  iHeartEcho — Structural Heart Navigator™
   Structural Heart Device Assessment Navigator
   Brand: Teal #189aa1, Aqua #4ad9e0
   Fonts: Merriweather headings, Open Sans body
@@ -249,7 +249,7 @@ export default function DeviceNavigator() {
               PREMIUM FEATURE
             </div>
             <h1 className="text-2xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-              Device EchoNavigator™
+              Structural Heart Navigator™
             </h1>
             <p className="text-sm text-gray-500 mt-0.5">
               Structural heart device assessment — pre- and post-procedure echo checklists, normal values, and procedural thresholds for TAVR, MitraClip, WATCHMAN, and ASD/PFO closure

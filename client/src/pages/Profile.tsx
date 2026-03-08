@@ -25,7 +25,7 @@ const ROLE_CONFIG: Record<string, {
 }> = {
   premium_user: {
     label: "Premium",
-    description: "Access to TEE, ICE, Strain & Device Navigators and premium EchoAssist modules.",
+    description: "Access to TEE, ICE, Strain & Structural Heart Navigators and premium EchoAssist modules.",
     color: "#189aa1",
     icon: Star,
     manageUrl: "https://member.allaboutultrasound.com/bundles/premium",

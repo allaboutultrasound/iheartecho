@@ -749,6 +749,8 @@ export default function ScanCoach() {
   const [activeTab, setActiveTab] = useState<"tte" | "fetal" | "chd" | "achd">(_initialTab);
   const [selectedTTE, setSelectedTTE] = useState(tteViews[0]);
   const [selectedFetal, setSelectedFetal] = useState(fetalViews[0]);
+  const [mrExpanded, setMrExpanded] = useState(false);
+  const [arExpanded, setArExpanded] = useState(false);
   const { mergeView: mergeTTEView } = useScanCoachOverrides("tte");
   // Apply DB overrides to the selected TTE view at render time
   const selectedTTEMerged = useMemo(() => mergeTTEView(selectedTTE as any), [selectedTTE, mergeTTEView]);
@@ -971,19 +973,24 @@ export default function ScanCoach() {
             </div>
           </div>
         )}
-        {/* ─── ACUTE vs CHRONIC MR SECTION (below TTE grid, always visible on TTE tab) ─── */}
+        {/* ─── ACUTE vs CHRONIC MR SECTION (collapsible, below TTE grid) ─── */}
         {activeTab === "tte" && (
           <div className="mt-6 space-y-4">
-            {/* Section Header */}
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "#189aa1" }}>
+            {/* Section Header — clickable toggle */}
+            <button
+              onClick={() => setMrExpanded(e => !e)}
+              className="w-full flex items-center gap-3 bg-white rounded-xl border border-gray-100 shadow-sm px-5 py-4 hover:border-[#189aa1]/40 transition-all text-left"
+            >
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "#189aa1" }}>
                 <Heart className="w-4 h-4 text-white" />
               </div>
-              <div>
+              <div className="flex-1">
                 <h2 className="text-lg font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Acute vs Chronic Mitral Regurgitation</h2>
                 <p className="text-sm text-gray-500">Echo differentiation guide — haemodynamics, 2D, Doppler, and clinical context</p>
               </div>
-            </div>
+              <ChevronRight className={"w-5 h-5 text-gray-400 flex-shrink-0 transition-transform duration-200" + (mrExpanded ? " rotate-90" : "")} />
+            </button>
+            {mrExpanded && <div className="space-y-4">
 
             {/* Comparison Cards Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1199,6 +1206,236 @@ export default function ScanCoach() {
             <div className="text-xs text-gray-400 text-center py-2">
               Clinical content © All About Ultrasound, Inc. / iHeartEcho. Educational use only. Based on ASE/AHA/ACC 2021 guidelines.
             </div>
+            </div>}{/* end mrExpanded */}
+          </div>
+        )}
+
+        {/* ─── ACUTE vs CHRONIC AR SECTION (collapsible, below MR section) ─── */}
+        {activeTab === "tte" && (
+          <div className="mt-2 space-y-4">
+            {/* Section Header — clickable toggle */}
+            <button
+              onClick={() => setArExpanded(e => !e)}
+              className="w-full flex items-center gap-3 bg-white rounded-xl border border-gray-100 shadow-sm px-5 py-4 hover:border-[#189aa1]/40 transition-all text-left"
+            >
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "#0e7490" }}>
+                <Activity className="w-4 h-4 text-white" />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-lg font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Acute vs Chronic Aortic Regurgitation</h2>
+                <p className="text-sm text-gray-500">Echo differentiation guide — haemodynamics, 2D, Doppler, and clinical context</p>
+              </div>
+              <ChevronRight className={"w-5 h-5 text-gray-400 flex-shrink-0 transition-transform duration-200" + (arExpanded ? " rotate-90" : "")} />
+            </button>
+            {arExpanded && <div className="space-y-4">
+
+            {/* Comparison Cards Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* ACUTE AR Card */}
+              <div className="bg-white rounded-xl border-2 shadow-sm overflow-hidden" style={{ borderColor: "#ef4444" }}>
+                <div className="px-5 py-3 flex items-center gap-2" style={{ background: "#fef2f2" }}>
+                  <Zap className="w-4 h-4" style={{ color: "#ef4444" }} />
+                  <h3 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Acute AR</h3>
+                  <span className="ml-auto text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "#fee2e2", color: "#dc2626" }}>Haemodynamic Emergency</span>
+                </div>
+                <div className="p-4 space-y-3">
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wide mb-1.5" style={{ color: "#ef4444" }}>Common Causes</h4>
+                    <ul className="space-y-1">
+                      {["Acute aortic dissection (Type A)", "Infective endocarditis with leaflet destruction", "Iatrogenic (post-TAVR, post-balloon valvuloplasty)", "Blunt chest trauma", "Spontaneous leaflet tear (rare)"].map((c, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                          <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: "#ef4444" }} />
+                          {c}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wide mb-1.5" style={{ color: "#ef4444" }}>Haemodynamics</h4>
+                    <p className="text-sm text-gray-600">Sudden volume overload into a <strong>non-dilated, non-compliant LV</strong>. LVEDP rises sharply → premature mitral valve closure → pulmonary oedema. No compensatory LV dilatation. Narrow pulse pressure. Tachycardia as compensatory mechanism.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* CHRONIC AR Card */}
+              <div className="bg-white rounded-xl border-2 shadow-sm overflow-hidden" style={{ borderColor: "#189aa1" }}>
+                <div className="px-5 py-3 flex items-center gap-2" style={{ background: "#f0fbfc" }}>
+                  <Clock className="w-4 h-4" style={{ color: "#189aa1" }} />
+                  <h3 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Chronic AR</h3>
+                  <span className="ml-auto text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "#d0f4f5", color: "#0e7490" }}>Compensated / Decompensated</span>
+                </div>
+                <div className="p-4 space-y-3">
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wide mb-1.5" style={{ color: "#189aa1" }}>Common Causes</h4>
+                    <ul className="space-y-1">
+                      {["Bicuspid aortic valve", "Aortic root dilatation (Marfan, HTN, idiopathic)", "Rheumatic heart disease", "Degenerative calcific disease", "Previous endocarditis (healed)"].map((c, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                          <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: "#189aa1" }} />
+                          {c}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wide mb-1.5" style={{ color: "#189aa1" }}>Haemodynamics</h4>
+                    <p className="text-sm text-gray-600">Gradual volume overload → <strong>eccentric LV hypertrophy and dilatation</strong>. LV accommodates large regurgitant volumes. Wide pulse pressure (high SBP, low DBP). Compensated for years; decompensation occurs when EF falls or symptoms develop.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Echo Findings Comparison Table */}
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
+                <h3 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Echo Findings: Acute vs Chronic AR</h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr style={{ background: "#f8fafc" }}>
+                      <th className="text-left px-4 py-3 font-semibold text-gray-600">Finding</th>
+                      <th className="text-left px-4 py-3 font-semibold" style={{ color: "#ef4444" }}>Acute AR</th>
+                      <th className="text-left px-4 py-3 font-semibold" style={{ color: "#189aa1" }}>Chronic AR</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      ["LV size", "Normal or mildly enlarged", "Markedly dilated (LVEDD >65 mm)"],
+                      ["LV wall thickness", "Normal", "Eccentric hypertrophy"],
+                      ["LV systolic function", "Hyperdynamic initially, then impaired", "Preserved until late decompensation"],
+                      ["Aortic valve", "Flail leaflet / vegetation / dissection flap", "Thickened, prolapsing, or bicuspid"],
+                      ["Regurgitant jet", "Broad, eccentric, may be difficult to grade", "Central or eccentric; graded by EROA/RVol"],
+                      ["Pressure half-time (PHT)", "Very short (<200 ms) — rapid equilibration", "Longer PHT; shortens as severity increases"],
+                      ["Diastolic flow reversal (descending aorta)", "Present; holodiastolic in severe", "Present; holodiastolic in severe"],
+                      ["Premature MV closure", "Classic sign — MV closes before QRS", "Absent"],
+                      ["Austin Flint murmur", "May be present", "May be present in severe"],
+                      ["Aortic root / ascending aorta", "Dilated in dissection; assess carefully", "May be dilated (root AR)"],
+                      ["Pericardial effusion", "May be present (dissection / endocarditis)", "Uncommon"],
+                      ["Pulse pressure", "Narrow (shock physiology)", "Wide (≥60 mmHg in severe)"],
+                    ].map(([finding, acute, chronic], i) => (
+                      <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                        <td className="px-4 py-2.5 font-medium text-gray-700 border-r border-gray-100">{finding}</td>
+                        <td className="px-4 py-2.5 text-red-700">{acute}</td>
+                        <td className="px-4 py-2.5 text-teal-700">{chronic}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Per-View Scanning Tips */}
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="px-5 py-3 border-b border-gray-100">
+                <h3 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Per-View Scanning Tips for AR Assessment</h3>
+              </div>
+              <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {[
+                  { view: "PLAX", tip: "Measure LVEDD/LVESD and aortic root. Look for diastolic fluttering of anterior mitral leaflet (AMVL) — pathognomonic of AR. Premature MV closure in acute AR." },
+                  { view: "PSAX (AV level)", tip: "Assess aortic valve morphology (bicuspid, tricuspid, vegetations). Colour Doppler to map jet origin and width at vena contracta." },
+                  { view: "Apical 5-chamber", tip: "Align CW Doppler with AR jet. Measure PHT: <200 ms = severe acute AR. Holodiastolic flow reversal in LVOT confirms significant AR." },
+                  { view: "Apical 3-chamber (APLAX)", tip: "Best for eccentric jets directed along the AMVL. Measure vena contracta width. Assess AMVL diastolic flutter." },
+                  { view: "Suprasternal", tip: "Descending aorta holodiastolic flow reversal: end-diastolic velocity >20 cm/s = severe AR. Essential in all significant AR." },
+                  { view: "Abdominal aorta", tip: "Holodiastolic flow reversal in abdominal aorta confirms severe AR. Use PW Doppler with sample volume in proximal abdominal aorta." },
+                ].map(({ view, tip }, i) => (
+                  <div key={i} className="flex items-start gap-3 p-3 rounded-lg" style={{ background: "#f8fafc" }}>
+                    <div className="w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 text-white text-xs font-bold" style={{ background: "#0e7490" }}>{view.slice(0, 2)}</div>
+                    <div>
+                      <p className="text-xs font-bold text-gray-700 mb-0.5">{view}</p>
+                      <p className="text-xs text-gray-500 leading-relaxed">{tip}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Clinical Pearls */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+                <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-[#189aa1]" /> Clinical Pearls
+                </h4>
+                <ul className="space-y-2">
+                  {[
+                    "Premature MV closure on M-mode is the hallmark of acute severe AR — indicates very high LVEDP.",
+                    "PHT <200 ms in acute AR reflects rapid LV-aortic pressure equilibration, not mild AR.",
+                    "Holodiastolic flow reversal in the descending aorta is the most specific Doppler sign of severe AR.",
+                    "In acute AR, LV size may be near-normal despite severe regurgitation — do not underestimate severity.",
+                    "Bicuspid AV is the most common cause of AR in patients under 60 years.",
+                    "Aortic root dilatation (>45 mm) with AR may require root replacement regardless of AR severity.",
+                  ].map((pearl, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                      <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: "#189aa1" }} />
+                      {pearl}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+                <h4 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                  <XCircle className="w-4 h-4 text-red-500" /> Surgical Triggers (AHA/ACC 2021)
+                </h4>
+                <ul className="space-y-2">
+                  {[
+                    "Acute severe AR: urgent surgery regardless of symptoms.",
+                    "Chronic severe AR + symptoms (dyspnoea, angina, HF): surgery indicated.",
+                    "Asymptomatic severe AR + LVEF <55%: surgery indicated.",
+                    "Asymptomatic severe AR + LVEDD >65 mm (or LVESD >50 mm): surgery indicated.",
+                    "Aortic root ≥45 mm in Marfan syndrome: prophylactic root replacement.",
+                    "Aortic root ≥50 mm in bicuspid AV: surgery indicated.",
+                  ].map((trigger, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                      <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: "#ef4444" }} />
+                      {trigger}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* ASE Severity Table */}
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
+                <h3 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>ASE/AHA/ACC Severity Thresholds — Aortic Regurgitation</h3>
+                <span className="ml-auto text-xs font-medium px-2 py-0.5 rounded-full" style={{ background: "#d0f4f5", color: "#0e7490" }}>2021 Guidelines</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr style={{ background: "#f8fafc" }}>
+                      <th className="text-left px-4 py-3 font-semibold text-gray-600">Parameter</th>
+                      <th className="text-left px-4 py-3 font-semibold text-gray-500">Mild</th>
+                      <th className="text-left px-4 py-3 font-semibold text-amber-600">Moderate</th>
+                      <th className="text-left px-4 py-3 font-semibold text-red-600">Severe</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      ["Vena contracta (cm)", "<0.3", "0.3–0.59", "\u22650.6"],
+                      ["Jet width / LVOT width (%)", "<25%", "25–64%", "\u226565%"],
+                      ["EROA — PISA (cm\u00b2)", "<0.10", "0.10–0.29", "\u22650.30"],
+                      ["Regurgitant volume (mL)", "<30", "30–59", "\u226560"],
+                      ["Regurgitant fraction (%)", "<30", "30–49", "\u226550"],
+                      ["PHT (ms)", ">500", "200–500", "<200"],
+                      ["Holodiastolic aortic reversal", "Absent", "Brief", "Holodiastolic"],
+                    ].map(([param, mild, mod, severe], i) => (
+                      <tr key={i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                        <td className="px-4 py-2.5 font-medium text-gray-700 border-r border-gray-100">{param}</td>
+                        <td className="px-4 py-2.5 text-gray-500">{mild}</td>
+                        <td className="px-4 py-2.5 text-amber-700">{mod}</td>
+                        <td className="px-4 py-2.5 text-red-700 font-semibold">{severe}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Copyright */}
+            <div className="text-xs text-gray-400 text-center py-2">
+              Clinical content © All About Ultrasound, Inc. / iHeartEcho. Educational use only. Based on ASE/AHA/ACC 2021 guidelines.
+            </div>
+            </div>}{/* end arExpanded */}
           </div>
         )}
 

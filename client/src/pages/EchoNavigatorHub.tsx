@@ -59,7 +59,7 @@ const navigators = [
   {
     path: "/device",
     icon: FlaskConical,
-    title: "Device EchoNavigator™",
+    title: "Structural Heart Navigator™",
     description: "TAVR, MitraClip, WATCHMAN, and ASD/PFO closure — procedural echo guidance and post-implant assessment.",
     badge: "Structural Heart",
     premium: true,
