@@ -8,8 +8,8 @@ import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import { trpc } from "@/lib/trpc";
 import {
-  Calculator, ClipboardList, Activity, Scan, BookOpen, FileText,
-  ArrowRight, Users, Award, Zap, Stethoscope, ExternalLink, MessageCircle, GraduationCap, Crown
+  Calculator, ClipboardList, Activity, BookOpen, FileText,
+  ArrowRight, Users, Award, Zap, Stethoscope, ExternalLink, MessageCircle, GraduationCap, BookMarked, Crown
 } from "lucide-react";
 
 const BRAND = "#189aa1";
@@ -19,19 +19,19 @@ type Module = { path: string; icon: any; title: string; description: string; bad
 // regardless of its position in this array. Add new modules ABOVE the Community Hub entry.
 const modules: Module[] = [
   {
-    path: "/echo-navigators",
+    path: "/echo-assist-hub",
     icon: Stethoscope,
-    title: "EchoNavigator™",
-    description: "Structured echo protocols for Adult TTE, TEE, Stress, Strain, ICE, Structural Heart, Pediatric, Fetal, ACHD, and Pulmonary HTN & PE — view-by-view checklists, reference values, and scanning tips.",
-    badge: "12 Protocols",
+    title: "EchoAssist™",
+    description: "Echo protocol + scan coach for all 11 specialties — Adult Echo, Pediatric, Fetal, Stress, Strain, UEA, HOCM, Pulmonary HTN & PE, Structural Heart, TEE, and ICE. View-by-view checklists, reference values, and probe guidance.",
+    badge: "11 Specialties",
     color: BRAND,
   },
   {
-    path: "/scan-coach-hub",
-    icon: Scan,
-    title: "ScanCoach™",
-    description: "Visual probe guidance with anatomy overlays, Doppler positioning, and orientation tips for Adult TTE, Fetal, Pediatric CHD, ACHD, Strain, and Pulmonary HTN & PE.",
-    badge: "6 Modules",
+    path: "/calculator",
+    icon: Calculator,
+    title: "Echo Calculators",
+    description: "Guideline-based severity calculators for AS, MR, AR, TR, MS, LV function, diastology, strain, RV function, PA pressure, and more — ASE 2025.",
+    badge: "ASE 2025",
     color: BRAND,
   },
   {
@@ -43,11 +43,11 @@ const modules: Module[] = [
     color: BRAND,
   },
   {
-    path: "/echo-assist-hub",
-    icon: Zap,
-    title: "EchoAssist™",
-    description: "Enter measurements and get instant guideline-based severity classification — AS, MS, AR, MR, LV function, diastology, strain, RV function, and PA pressure.",
-    badge: "ASE 2025",
+    path: "/hemodynamics",
+    icon: Activity,
+    title: "Hemodynamics Lab",
+    description: "Adjust preload, afterload, and contractility. See PV loop changes and echo findings in real time.",
+    badge: "Training",
     color: BRAND,
   },
   {
@@ -60,7 +60,7 @@ const modules: Module[] = [
   },
   {
     path: "/registry-review",
-    icon: Award,
+    icon: BookMarked,
     title: "Registry Review Hub",
     description: "Prepare for ARDMS, CCI, and other registry exams with comprehensive review courses from All About Ultrasound.",
     badge: "Registry Prep",
@@ -72,14 +72,6 @@ const modules: Module[] = [
     title: "Report Builder",
     description: "Enter measurements and generate a complete, structured echo report instantly.",
     badge: "Time Saver",
-    color: BRAND,
-  },
-  {
-    path: "/hemodynamics",
-    icon: Activity,
-    title: "Hemodynamics Lab",
-    description: "Adjust preload, afterload, and contractility. See PV loop changes and echo findings in real time.",
-    badge: "Training",
     color: BRAND,
   },
   {

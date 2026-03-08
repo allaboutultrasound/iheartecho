@@ -58,11 +58,9 @@ const navGroups = [
   {
     label: "Clinical Tools",
     items: [
-      { path: "/echo-navigators", label: "EchoNavigator™", icon: Stethoscope },
-      { path: "/scan-coach-hub", label: "ScanCoach™", icon: Scan },
-      { path: "/echo-assist-hub", label: "EchoAssist™", icon: FlaskConical },
+      { path: "/echo-assist-hub", label: "EchoAssist™", icon: Stethoscope },
       { path: "/hemodynamics", label: "Hemodynamics Lab", icon: Activity },
-      { path: "/calculator", label: "Echo Calculator", icon: Calculator },
+      { path: "/calculator", label: "Echo Calculators", icon: Calculator },
     ],
   },
   {
@@ -106,6 +104,8 @@ const hiddenNavItems = [
   { path: "/admin/cases", label: "Case Management" },
   { path: "/admin/quickfire", label: "Daily Challenge Admin" },
   { path: "/admin/thinkific-webhook", label: "Thinkific Webhook" },
+  { path: "/echo-assist-hub", label: "EchoAssist™" },
+  { path: "/scan-coach", label: "EchoAssist™ — Scan Coach" },
 ];
 const navItems = [...navGroups.flatMap(g => g.items), ...hiddenNavItems];
 

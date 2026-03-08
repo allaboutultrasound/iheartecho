@@ -1287,3 +1287,20 @@
 - [ ] Update sidebar nav label
 - [ ] Update page title, hero tagline with new copy
 - [ ] Keep /quickfire route URL (no redirect needed)
+
+## Structural Reorganization (Mar 2026)
+- [ ] Create unified EchoAssist hub at /echoassist (merges EchoNavigator + ScanCoach)
+- [ ] Specialty order in EchoAssist: Adult Echo, Pediatric Echo, Fetal Echo, Stress Echo, Strain, UEA, HOCM, Pulmonary HTN, Structural Heart, TEE, ICE
+- [ ] Each specialty card in EchoAssist links to its existing combined navigator+scancoach page
+- [ ] Remove EchoNavigator™ and ScanCoach™ branding from all specialty pages (keep content)
+- [ ] Redirect /echo-navigators → /echoassist
+- [ ] Redirect /scan-coach-hub → /echoassist
+- [ ] Redirect /echo-assist-hub → /echoassist
+- [ ] Rename Echo Calculator → Echo Calculators in sidebar and dashboard
+- [ ] Move all EchoAssist severity calculators (AS, MR, AR, TR, MS, LV, Diastology, Strain, RV, PH, Frank-Starling) into EchoCalculator page
+- [ ] Remove EchoAssist branding from calculator outputs in EchoCalculator page
+- [ ] Update sidebar: EchoNavigator™ → EchoAssist™ (links to /echoassist)
+- [ ] Update sidebar: remove ScanCoach™ entry
+- [ ] Update sidebar: Echo Calculator → Echo Calculators
+- [ ] Update dashboard home card order: EchoAssist, Echo Calculators, Daily Challenge, Hemodynamics Lab, CME Hub, Registry Review Hub, Report Builder, EchoAccreditation Navigator, DIY Accreditation Tool, Community Hub (pinLast)
+- [ ] Register /echoassist route in App.tsx

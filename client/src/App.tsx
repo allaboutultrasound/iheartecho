@@ -127,8 +127,9 @@ function Router() {
       <Route path="/image-quality-review" component={ImageQualityReview} />
       <Route path="/profile" component={Profile} />
       <Route path="/echo-correlation" component={() => { window.location.replace("/accreditation"); return null; }} />
-      <Route path="/echo-navigators" component={EchoNavigatorHub} />
-      <Route path="/scan-coach-hub" component={ScanCoachHub} />
+      {/* Legacy redirects — old EchoNavigator and ScanCoach hub URLs now point to unified EchoAssist hub */}
+      <Route path="/echo-navigators">{() => { window.location.replace("/echo-assist-hub"); return null; }}</Route>
+      <Route path="/scan-coach-hub">{() => { window.location.replace("/echo-assist-hub"); return null; }}</Route>
       <Route path="/strain-scan-coach" component={StrainScanCoach} />
       <Route path="/tee-scan-coach" component={TEEScanCoach} />
       <Route path="/ice-scan-coach" component={ICEScanCoach} />
