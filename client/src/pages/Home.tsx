@@ -113,7 +113,7 @@ const stats = [
   { label: "Clinical Calculators", value: "20+", icon: Calculator },
   { label: "Echo Cases", value: "500+", icon: BookOpen },
   { label: "Protocols Covered", value: "15", icon: ClipboardList },
-  { label: "Active Users", value: "13,000+", icon: Users },
+  { label: "Active Members", value: "13,000+", icon: Users },
 ];
 
 export default function Home() {
@@ -161,11 +161,11 @@ export default function Home() {
               A real-time echo interpretation and measurement assistant for sonographers, cardiologists, and ACS professionals. Guideline-based, fast, and built for the clinical environment.
             </p>
             <div className="flex flex-wrap gap-3">
-              <Link href="/echo-navigators">
+              <Link href="/echo-assist-hub">
                 <button className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90 hover:scale-105"
                   style={{ background: "#189aa1" }}>
                   <Stethoscope className="w-4 h-4" />
-                  EchoNavigator™
+                  Open EchoAssist™
                 </button>
               </Link>
               <Link href="/quickfire">

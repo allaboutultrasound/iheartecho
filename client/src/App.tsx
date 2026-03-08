@@ -66,6 +66,7 @@ import ScanCoachEditor from "./pages/ScanCoachEditor";
 import HOCMNavigator from "./pages/HOCMNavigator";
 import HOCMScanCoach from "./pages/HOCMScanCoach";
 import PulmHTNNavigator from "./pages/PulmHTNNavigator";
+import DiastolicNavigator from "./pages/DiastolicNavigator";
 import ThinkificWebhookAdmin from "./pages/ThinkificWebhookAdmin";
 
 function Router() {
@@ -138,6 +139,7 @@ function Router() {
       <Route path="/hocm-navigator" component={HOCMNavigator} />
       <Route path="/hocm-scan-coach" component={HOCMScanCoach} />
       <Route path="/pulm-htn" component={PulmHTNNavigator} />
+      <Route path="/diastolic" component={DiastolicNavigator} />
       <Route path="/echo-assist-hub" component={EchoAssistHub} />
       {/* ── LMS Engines ──────────────────────────────────────────────────── */}
       <Route path="/quickfire" component={QuickFire} />

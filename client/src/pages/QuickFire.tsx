@@ -329,7 +329,7 @@ export default function QuickFire() {
             Sign In to Play Daily Challenge
           </h1>
           <p className="text-gray-500 text-sm">
-            Daily challenges and the challenge archive are available to registered users. Sign in to test your knowledge.
+            Daily challenges and the challenge archive are available to registered members. Sign in to test your knowledge.
           </p>
           <a href={getLoginUrl()}>
             <Button style={{ background: "#189aa1" }} className="text-white">Sign In / Register</Button>

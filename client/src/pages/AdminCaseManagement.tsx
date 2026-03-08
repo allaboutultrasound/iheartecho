@@ -651,7 +651,7 @@ export default function AdminCaseManagement() {
               <h1 className="text-xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
                 Case Management
               </h1>
-              <p className="text-xs text-gray-400">Review and approve user-submitted echo cases</p>
+              <p className="text-xs text-gray-400">Review and approve member-submitted echo cases</p>
             </div>
           </div>
           <div className="flex items-center gap-2">

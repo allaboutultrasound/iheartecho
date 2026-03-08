@@ -140,7 +140,7 @@ export default function RegistryReviewHub() {
             {user && (
               <div className="mt-3 inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-lg px-3 py-1.5">
                 <div className="w-1.5 h-1.5 rounded-full bg-green-400" />
-                <span className="text-xs text-white/80">Logged in as <span className="text-white font-medium">{user.email}</span> — checkout links are pre-filled</span>
+                <span className="text-xs text-white/80">Signed in as <span className="text-white font-medium">{user.email}</span> — checkout links are pre-filled</span>
               </div>
             )}
           </div>
