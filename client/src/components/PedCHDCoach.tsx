@@ -593,7 +593,7 @@ export default function PedCHDCoach() {
               <span className="text-xs text-white/80 font-medium">Pediatric CHD Acquisition Guide</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-black text-white mb-1" style={{ fontFamily: "Merriweather, serif" }}>
-              Pediatric CHD ScanCoach™
+              Pediatric CHD ScanCoach
             </h1>
             <p className="text-[#4ad9e0] font-semibold text-sm mb-3">Congenital Heart Disease</p>
             <p className="text-white/70 text-sm leading-relaxed mb-3 max-w-lg">

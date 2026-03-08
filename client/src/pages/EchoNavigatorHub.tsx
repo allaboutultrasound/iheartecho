@@ -1,6 +1,6 @@
 /*
-  EchoNavigator Hub — iHeartEcho
-  Landing page listing all EchoNavigator modules
+  Navigator Hub — iHeartEcho
+  Landing page listing all Navigator modules
 */
 import { useState } from "react";
 import { Link } from "wouter";
@@ -19,7 +19,7 @@ const navigators = [
   {
     path: "/tte",
     icon: Stethoscope,
-    title: "Adult TTE EchoNavigator™",
+    title: "Adult TTE Navigator",
     description: "View-by-view checklist, critical item tracking, normal reference values, and ASE 2025 guidelines.",
     badge: "Adult Echo",
     premium: false,
@@ -27,7 +27,7 @@ const navigators = [
   {
     path: "/tee",
     icon: Microscope,
-    title: "TEE EchoNavigator™",
+    title: "TEE Navigator",
     description: "ME, TG, and UE views with angle/depth guidance, clinical applications, and intraoperative checklist.",
     badge: "Structural Heart",
     premium: true,
@@ -35,7 +35,7 @@ const navigators = [
   {
     path: "/stress",
     icon: Zap,
-    title: "Stress Echo EchoNavigator™",
+    title: "Stress Echo Navigator",
     description: "Exercise and DSE protocols, 17-segment WMSI scorer, target HR calculator, and interpretation criteria.",
     badge: "Stress Echo",
     premium: true,
@@ -43,7 +43,7 @@ const navigators = [
   {
     path: "/strain",
     icon: BarChart3,
-    title: "Strain EchoNavigator™",
+    title: "Strain Navigator",
     description: "Protocol checklist, scanning tips, basic pathology overview, and LV/RV/LA strain reference values.",
     badge: "Adult Echo",
     premium: true,
@@ -51,7 +51,7 @@ const navigators = [
   {
     path: "/ice",
     icon: Cpu,
-    title: "ICE EchoNavigator™",
+    title: "ICE Navigator",
     description: "Intracardiac echo views, procedural checklists, and key measurements for structural interventions.",
     badge: "Structural Heart",
     premium: true,
@@ -67,28 +67,28 @@ const navigators = [
   {
     path: "/pediatric",
     icon: Users,
-    title: "Pediatric EchoNavigator™",
+    title: "Pediatric Navigator",
     description: "CHD findings, BSA Z-score calculators, Qp/Qs shunt estimation, segmental analysis, and neonatal hemodynamics.",
     badge: "Congenital Heart",
   },
   {
     path: "/fetal",
     icon: Baby,
-    title: "Fetal EchoNavigator™",
+    title: "Fetal Navigator",
     description: "Fetal cardiac findings, CHD differentials, biometry Z-scores, situs, arch patterns, and scan coach.",
     badge: "Congenital Heart",
   },
   {
     path: "/achd",
     icon: Heart,
-    title: "Adult Congenital EchoNavigator™",
+    title: "Adult Congenital Navigator",
     description: "ACHD lesion-specific protocols for ASD, VSD, ToF, CoA, TGA, and Fontan with ASE/AHA thresholds.",
     badge: "Congenital Heart",
   },
   {
     path: "/uea-navigator",
     icon: Droplets,
-    title: "UEA EchoNavigator™",
+    title: "UEA Navigator",
     description: "Contrast echo protocol: safety screening, agent preparation, view-by-view LVO and myocardial perfusion assessment, and reporting guidance.",
     badge: "Contrast Echo",
     premium: true,
@@ -96,7 +96,7 @@ const navigators = [
   {
     path: "/hocm-navigator",
     icon: Activity,
-    title: "HOCM EchoNavigator™",
+    title: "HOCM Navigator",
     description: "Comprehensive HOCM protocol: morphology assessment, SAM grading, resting and provoked LVOT gradients, goal-directed Valsalva, MR evaluation, and ASE/AHA reporting thresholds.",
     badge: "Cardiomyopathy",
     premium: true,
@@ -150,7 +150,7 @@ export default function EchoNavigatorHub() {
                 className="text-2xl font-black text-white leading-tight"
                 style={{ fontFamily: "Merriweather, serif" }}
               >
-                EchoNavigator™
+                Navigator
               </h1>
               <p className="text-white/70 text-sm mt-1 max-w-xl">
                 Structured echo protocols with view-by-view checklists, normal reference values, scanning tips, and guideline-based interpretation — for every modality and patient population.
@@ -159,7 +159,7 @@ export default function EchoNavigatorHub() {
                 <Link href="/scan-coach">
                   <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/25 text-white hover:bg-white/20 transition-all">
                     <Scan className="w-3.5 h-3.5 text-[#4ad9e0]" />
-                    ScanCoach™
+                    ScanCoach
                     <span className="text-[#4ad9e0] text-xs">→</span>
                   </button>
                 </Link>

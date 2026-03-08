@@ -1,5 +1,5 @@
 /*
-  HOCM EchoNavigator™
+  HOCM Navigator
   Hypertrophic Obstructive Cardiomyopathy — Comprehensive Echo Protocol
   Brand: Teal #189aa1, Aqua #4ad9e0
   Fonts: Merriweather headings, Open Sans body
@@ -434,7 +434,7 @@ export default function HOCMNavigator() {
               <span className="text-xs text-white/80 font-medium">ASE/AHA HCM Guidelines 2020</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-black text-white mb-2" style={{ fontFamily: "Merriweather, serif" }}>
-              HOCM EchoNavigator™
+              HOCM Navigator
             </h1>
             <p className="text-[#4ad9e0] font-semibold mb-2">Hypertrophic Obstructive Cardiomyopathy</p>
             <p className="text-white/70 text-sm leading-relaxed mb-5 max-w-lg">
@@ -445,7 +445,7 @@ export default function HOCMNavigator() {
                 <button className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
                   style={{ background: "#189aa1" }}>
                   <Target className="w-4 h-4" />
-                  Open ScanCoach™
+                  Open ScanCoach
                 </button>
               </Link>
               <button
@@ -1201,14 +1201,14 @@ export default function HOCMNavigator() {
             style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}>
             <div className="flex-1">
               <p className="text-xs font-semibold text-[#4ad9e0] uppercase tracking-wider mb-0.5">Acquisition Guide</p>
-              <p className="text-white text-sm font-bold">HOCM ScanCoach™</p>
+              <p className="text-white text-sm font-bold">HOCM ScanCoach</p>
               <p className="text-white/60 text-xs">View-by-view probe positioning, CW Doppler technique, and Valsalva acquisition tips</p>
             </div>
             <Link href="/hocm-scan-coach">
               <button className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90 flex-shrink-0"
                 style={{ background: "#189aa1" }}>
                 <ArrowRight className="w-4 h-4" />
-                Open ScanCoach™
+                Open ScanCoach
               </button>
             </Link>
           </div>

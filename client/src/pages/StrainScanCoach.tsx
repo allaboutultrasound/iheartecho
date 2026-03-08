@@ -1,5 +1,5 @@
 /*
-  Strain ScanCoach™ — iHeartEcho
+  Strain ScanCoach — iHeartEcho
   Bull's-Eye · Segmental Strain Curves · LV GLS Calculator · Tips & Tricks
   ASE 2025 Strain Guideline · Acquisition Best Practices
   Brand: Teal #189aa1, Aqua #4ad9e0
@@ -1012,10 +1012,10 @@ function StrainScanCoachInner() {
             <div className="max-w-2xl">
               <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-3">
                 <Camera className="w-3.5 h-3.5 text-[#4ad9e0]" />
-                <span className="text-xs text-white/80 font-medium">ScanCoach™ · Strain Imaging</span>
+                <span className="text-xs text-white/80 font-medium">ScanCoach · Strain Imaging</span>
               </div>
               <h1 className="text-2xl md:text-3xl font-black text-white mb-2" style={{ fontFamily: "Merriweather, serif" }}>
-                Strain ScanCoach™
+                Strain ScanCoach
               </h1>
               <p className="text-white/70 text-sm leading-relaxed mb-4">
                 Interactive bull's-eye, segmental strain curves, LV GLS calculator, and ASE 2025 acquisition guidance — all in one place.

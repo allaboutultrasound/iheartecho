@@ -1,5 +1,5 @@
 /*
-  TEE ScanCoach™ — iHeartEcho
+  TEE ScanCoach — iHeartEcho
   Interactive view-by-view TEE acquisition guide
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
@@ -731,7 +731,7 @@ export default function TEEScanCoach() {
                 <span className="text-xs text-white/80 font-medium">13 Views · ME / TG / UE</span>
               </div>
               <h1 className="text-2xl font-black text-white leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
-                TEE ScanCoach™
+                TEE ScanCoach
               </h1>
               <p className="text-white/70 text-sm mt-1 max-w-xl">
                 View-by-view TEE acquisition guide with probe positioning, angle/depth, anatomy descriptions, Doppler tips, and reference image placeholders.
@@ -740,7 +740,7 @@ export default function TEEScanCoach() {
                 <Link href="/echo-navigators">
                   <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/25 text-white hover:bg-white/20 transition-all">
                     <Stethoscope className="w-3.5 h-3.5 text-[#4ad9e0]" />
-                    EchoNavigator™ <span className="text-[#4ad9e0]">→</span>
+                    Navigator <span className="text-[#4ad9e0]">→</span>
                   </button>
                 </Link>
                 <Link href="/echoassist-hub">

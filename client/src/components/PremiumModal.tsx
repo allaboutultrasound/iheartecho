@@ -12,11 +12,11 @@ interface PremiumModalProps {
 }
 
 const PREMIUM_FEATURES = [
-  "TEE EchoNavigator™ — ME, TG & UE views with full guidance",
-  "Stress Echo EchoNavigator™ — Exercise & DSE protocols",
-  "Strain EchoNavigator™ — LV/RV/LA strain reference values",
-  "ICE EchoNavigator™ — Procedural checklists & measurements",
-  "Device EchoNavigator™ — TAVR, MitraClip, WATCHMAN guidance",
+  "TEE Navigator — ME, TG & UE views with full guidance",
+  "Stress Echo Navigator — Exercise & DSE protocols",
+  "Strain Navigator — LV/RV/LA strain reference values",
+  "ICE Navigator — Procedural checklists & measurements",
+  "Device Navigator — TAVR, MitraClip, WATCHMAN guidance",
   "EchoAssist™ Valve Engines — AS, MS, AR, MR severity grading",
   "EchoAssist™ Strain Engine — LV GLS, RV & LA strain",
   "EchoAssist™ RV Function & PA Pressure engines",

@@ -227,7 +227,7 @@ export default function CardiacPOCUS() {
         <div className="flex items-start gap-3 bg-[#f0fbfc] border border-[#b2e8ec] rounded-xl px-5 py-3 mb-5">
           <Info className="w-4 h-4 text-[#189aa1] flex-shrink-0 mt-0.5" />
           <p className="text-xs text-[#0e7490]">
-            <strong>Cardiac POCUS is a focused, goal-directed examination</strong> — not a comprehensive echo study. Use for rapid hemodynamic assessment in shock, dyspnea, cardiac arrest, and critical care. For full diagnostic echo, use the TTE EchoNavigator™.
+            <strong>Cardiac POCUS is a focused, goal-directed examination</strong> — not a comprehensive echo study. Use for rapid hemodynamic assessment in shock, dyspnea, cardiac arrest, and critical care. For full diagnostic echo, use the TTE Navigator.
             <a href="https://www.asecho.org/guideline/guidelines-for-performing-a-comprehensive-transthoracic-echocardiographic-examination/" target="_blank" rel="noopener noreferrer"
               className="ml-1 inline-flex items-center gap-0.5 underline">ASE Guidelines <ExternalLink className="w-3 h-3" /></a>
           </p>

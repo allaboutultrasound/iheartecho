@@ -23,7 +23,7 @@ export interface ScanCoachModuleMeta {
 export const SCANCOACH_MODULES: ScanCoachModuleMeta[] = [
   {
     key: "tte",
-    label: "Adult TTE ScanCoach™",
+    label: "Adult TTE ScanCoach",
     path: "/scan-coach",
     views: [
       { id: "plax",        name: "Parasternal Long Axis",                   group: "Parasternal" },
@@ -40,7 +40,7 @@ export const SCANCOACH_MODULES: ScanCoachModuleMeta[] = [
   },
   {
     key: "tee",
-    label: "TEE ScanCoach™",
+    label: "TEE ScanCoach",
     path: "/tee-scan-coach",
     views: [
       { id: "me4c",         name: "ME 4-Chamber",                           group: "Mid-Esophageal" },
@@ -60,7 +60,7 @@ export const SCANCOACH_MODULES: ScanCoachModuleMeta[] = [
   },
   {
     key: "ice",
-    label: "ICE ScanCoach™",
+    label: "ICE ScanCoach",
     path: "/ice-scan-coach",
     views: [
       { id: "home",           name: "Home View",                            group: "Standard Views" },
@@ -74,7 +74,7 @@ export const SCANCOACH_MODULES: ScanCoachModuleMeta[] = [
   },
   {
     key: "uea",
-    label: "UEA ScanCoach™",
+    label: "UEA ScanCoach",
     path: "/uea-scan-coach",
     views: [
       { id: "plax",     name: "Parasternal Long Axis (PLAX)",               group: "Standard Views" },
@@ -88,7 +88,7 @@ export const SCANCOACH_MODULES: ScanCoachModuleMeta[] = [
   },
   {
     key: "strain",
-    label: "Strain ScanCoach™",
+    label: "Strain ScanCoach",
     path: "/strain-scan-coach",
     views: [
       { id: "plax",     name: "Parasternal Long Axis (PLAX)",               group: "Acquisition" },
@@ -99,7 +99,7 @@ export const SCANCOACH_MODULES: ScanCoachModuleMeta[] = [
   },
   {
     key: "hocm",
-    label: "HOCM ScanCoach™",
+    label: "HOCM ScanCoach",
     path: "/hocm-scan-coach",
     views: [
       { id: "plax",          name: "Parasternal Long Axis (PLAX)",          group: "2D Assessment" },

@@ -9,7 +9,7 @@
  *   user            – free tier (base clinical tools only)
  */
 
-/** Roles that grant access to premium clinical features (EchoNavigator TEE/ICE/Strain/Device, EchoAssist engines) */
+/** Roles that grant access to premium clinical features (Navigator TEE/ICE/Strain/Device, EchoAssist engines) */
 const PREMIUM_ROLES = new Set(["premium_user", "diy_user", "diy_admin", "platform_admin"]);
 
 /** Roles that grant access to the DIY Accreditation Tool */

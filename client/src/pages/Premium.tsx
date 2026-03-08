@@ -21,17 +21,17 @@ const CHECKOUT_URL =
 const PREMIUM_FEATURES = [
   {
     icon: Stethoscope,
-    title: "Adult TTE EchoNavigator™",
+    title: "Adult TTE Navigator",
     description: "Full structured TTE protocol with view-by-view checklist and ASE reference values.",
   },
   {
     icon: Stethoscope,
-    title: "TEE EchoNavigator™",
+    title: "TEE Navigator",
     description: "ME, TG, and UE views with angle/depth guidance and intraoperative checklist.",
   },
   {
     icon: Zap,
-    title: "Stress Echo EchoNavigator™",
+    title: "Stress Echo Navigator",
     description: "Exercise and DSE protocols, 17-segment WMSI scorer, and interpretation criteria.",
   },
   {

@@ -1,5 +1,5 @@
 /*
-  UEA EchoNavigator™ — iHeartEcho
+  UEA Navigator — iHeartEcho
   Ultrasound Enhancing Agents (Contrast Echo) protocol navigator
   Covers: safety screening, indications, agent prep, view-by-view enhancement,
   LVO/myocardial perfusion assessment, and reporting guidance.
@@ -456,7 +456,7 @@ export default function UEANavigator() {
               <div>
                 <h1 className="text-2xl md:text-3xl font-black text-white leading-tight"
                   style={{ fontFamily: "Merriweather, serif" }}>
-                  UEA EchoNavigator™
+                  UEA Navigator
                 </h1>
                 <p className="text-[#4ad9e0] font-semibold text-sm">Ultrasound Enhancing Agents — Contrast Echo Protocol</p>
               </div>
@@ -470,7 +470,7 @@ export default function UEANavigator() {
               <Link href="/uea-scan-coach">
                 <button className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all">
                   <Scan className="w-4 h-4 text-[#4ad9e0]" />
-                  UEA ScanCoach™
+                  UEA ScanCoach
                 </button>
               </Link>
               <a href="https://www.asecho.org/guideline/guidelines-for-the-use-of-echocardiographic-contrast-agents/"
@@ -1251,7 +1251,7 @@ export default function UEANavigator() {
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
               <Scan className="w-4 h-4 text-[#4ad9e0]" />
-              <span className="text-xs font-semibold text-[#4ad9e0] uppercase tracking-wider">UEA ScanCoach™</span>
+              <span className="text-xs font-semibold text-[#4ad9e0] uppercase tracking-wider">UEA ScanCoach</span>
             </div>
             <h3 className="text-white font-bold text-sm mb-1" style={{ fontFamily: "Merriweather, serif" }}>
               Need acquisition guidance?
@@ -1264,7 +1264,7 @@ export default function UEANavigator() {
             <button className="flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
               style={{ background: "#189aa1" }}>
               <Scan className="w-4 h-4" />
-              Open UEA ScanCoach™
+              Open UEA ScanCoach
             </button>
           </Link>
         </div>

@@ -1,5 +1,5 @@
 /*
-  ICE ScanCoach™ — iHeartEcho
+  ICE ScanCoach — iHeartEcho
   Interactive view-by-view ICE (Intracardiac Echocardiography) acquisition guide
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
@@ -524,7 +524,7 @@ export default function ICEScanCoach() {
                 <span className="text-xs text-white/80 font-medium">7 Views · Procedural Guidance</span>
               </div>
               <h1 className="text-2xl font-black text-white leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
-                ICE ScanCoach™
+                ICE ScanCoach
               </h1>
               <p className="text-white/70 text-sm mt-1 max-w-xl">
                 View-by-view intracardiac echocardiography guide with catheter positioning, rotation technique, anatomy descriptions, procedural Doppler tips, and reference image placeholders.
@@ -533,7 +533,7 @@ export default function ICEScanCoach() {
                 <Link href="/echo-navigators">
                   <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/25 text-white hover:bg-white/20 transition-all">
                     <Stethoscope className="w-3.5 h-3.5 text-[#4ad9e0]" />
-                    EchoNavigator™ <span className="text-[#4ad9e0]">→</span>
+                    Navigator <span className="text-[#4ad9e0]">→</span>
                   </button>
                 </Link>
                 <Link href="/echoassist-hub">
@@ -545,7 +545,7 @@ export default function ICEScanCoach() {
                 <Link href="/tee">
                   <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/25 text-white hover:bg-white/20 transition-all">
                     <Microscope className="w-3.5 h-3.5 text-[#4ad9e0]" />
-                    TEE ScanCoach™ <span className="text-[#4ad9e0]">→</span>
+                    TEE ScanCoach <span className="text-[#4ad9e0]">→</span>
                   </button>
                 </Link>
               </div>

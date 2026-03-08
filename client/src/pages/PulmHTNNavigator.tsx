@@ -145,7 +145,7 @@ export default function PulmHTNNavigator() {
                 <Link href="/scan-coach?tab=pulm">
                   <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/25 text-white hover:bg-white/20 transition-all">
                     <Scan className="w-3.5 h-3.5" style={{ color: AQUA }} />
-                    Open in ScanCoach™
+                    Open in ScanCoach
                     <span className="text-xs" style={{ color: AQUA }}>→</span>
                   </button>
                 </Link>

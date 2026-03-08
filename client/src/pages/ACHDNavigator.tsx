@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — Adult Congenital EchoNavigator™
+  iHeartEcho — Adult Congenital Navigator
   Adult Congenital Heart Disease echo assessment protocols
   Brand: Teal #189aa1, Aqua #4ad9e0
   Fonts: Merriweather headings, Open Sans body
@@ -299,7 +299,7 @@ export default function ACHDNavigator() {
           </div>
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-              Adult Congenital EchoNavigator™
+              Adult Congenital Navigator
             </h1>
             <p className="text-sm text-gray-500 mt-0.5">
               Echocardiographic assessment protocols for adults with congenital heart disease — lesion-specific views, key measurements, and procedural checklists

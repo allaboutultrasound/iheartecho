@@ -1,5 +1,5 @@
 /*
-  HOCM ScanCoach™
+  HOCM ScanCoach
   Hypertrophic Obstructive Cardiomyopathy — Acquisition Guide
   Brand: Teal #189aa1, Aqua #4ad9e0 / HOCM accent: Teal #189aa1
   Fonts: Merriweather headings, Open Sans body
@@ -581,7 +581,7 @@ export default function HOCMScanCoach({ _noLayout }: { _noLayout?: boolean } = {
               <span className="text-xs text-white/80 font-medium">HOCM Acquisition Guide</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-black text-white mb-1" style={{ fontFamily: "Merriweather, serif" }}>
-              HOCM ScanCoach™
+              HOCM ScanCoach
             </h1>
             <p className="text-[#4ad9e0] font-semibold text-sm mb-3">Hypertrophic Obstructive Cardiomyopathy</p>
             <p className="text-white/70 text-sm leading-relaxed mb-4 max-w-lg">
@@ -1746,7 +1746,7 @@ export default function HOCMScanCoach({ _noLayout }: { _noLayout?: boolean } = {
             style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}>
             <div className="flex-1">
               <p className="text-xs font-semibold text-[#4ad9e0] uppercase tracking-wider mb-0.5">Protocol Reference</p>
-              <p className="text-white text-sm font-bold">HOCM EchoNavigator™</p>
+              <p className="text-white text-sm font-bold">HOCM Navigator</p>
               <p className="text-white/60 text-xs">SAM grading, gradient thresholds, Valsalva protocol, and reporting guide</p>
             </div>
             <Link href="/hocm-navigator">

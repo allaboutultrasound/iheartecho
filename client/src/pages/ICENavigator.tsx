@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — ICE EchoNavigator™
+  iHeartEcho — ICE Navigator
   Intracardiac Echocardiography Navigator for structural heart procedures
   Brand: Teal #189aa1, Aqua #4ad9e0
   Fonts: Merriweather headings, Open Sans body
@@ -228,7 +228,7 @@ export default function ICENavigator() {
               PREMIUM FEATURE
             </div>
             <h1 className="text-2xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-              ICE EchoNavigator™
+              ICE Navigator
             </h1>
             <p className="text-sm text-gray-500 mt-0.5">
               Intracardiac Echocardiography — structural heart procedure guidance, views, and real-time checklists

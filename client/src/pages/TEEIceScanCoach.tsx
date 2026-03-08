@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — TEE/ICE ScanCoach™
+  iHeartEcho — TEE/ICE ScanCoach
   Brand: Teal #189aa1, Aqua #4ad9e0
   Fonts: Merriweather headings, Open Sans body
   Covers: ME, TG, UE views for TEE; ICE views for structural procedures
@@ -627,7 +627,7 @@ export function TEEIceScanCoachContent() {
               <span className="text-xs text-white/80 font-medium">TEE & ICE Acquisition Guide</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-black text-white mb-1" style={{ fontFamily: "Merriweather, serif" }}>
-              TEE/ICE ScanCoach™
+              TEE/ICE ScanCoach
             </h1>
             <p className="text-[#4ad9e0] font-semibold text-sm mb-3">Transesophageal & Intracardiac Echocardiography</p>
             <p className="text-white/70 text-sm leading-relaxed mb-3 max-w-lg">

@@ -975,14 +975,14 @@ function StrainEngine() {
       {/* Clinical Applications */}
       <div className="mt-4 border-t border-gray-100 pt-4">
         <div className="text-sm font-bold text-gray-700 mb-1">Clinical Pattern Library</div>
-        <div className="text-xs text-gray-500 mb-3">Interactive disease-specific strain patterns have moved to Strain ScanCoach™</div>
+        <div className="text-xs text-gray-500 mb-3">Interactive disease-specific strain patterns have moved to Strain ScanCoach</div>
         <a
           href="/strain-scan-coach"
           className="flex items-center justify-between gap-3 rounded-xl p-4 border-2 transition-all hover:shadow-md group"
           style={{ background: "#f0fbfc", borderColor: "#189aa1" + "40" }}
         >
           <div>
-            <div className="font-bold text-sm text-gray-800 mb-1" style={{ fontFamily: "Merriweather, serif" }}>Strain ScanCoach™ — Clinical Pattern Library</div>
+            <div className="font-bold text-sm text-gray-800 mb-1" style={{ fontFamily: "Merriweather, serif" }}>Strain ScanCoach — Clinical Pattern Library</div>
             <p className="text-xs text-gray-500 leading-relaxed">
               10 clickable disease patterns (DCM, HCM, ATTR amyloid, LAD/RCA ischemia, Takotsubo, cardiotoxicity, myocarditis, LBBB) that load representative 17-segment values into the interactive bull's-eye for visual comparison and teaching.
             </p>

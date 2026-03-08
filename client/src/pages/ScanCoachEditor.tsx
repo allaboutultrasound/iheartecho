@@ -642,7 +642,7 @@ export default function ScanCoachEditor() {
                 <span className="text-xs font-semibold text-[#4ad9e0] uppercase tracking-wider">Platform Admin</span>
               </div>
               <h1 className="text-2xl font-black text-white" style={{ fontFamily: "Merriweather, serif" }}>
-                ScanCoach™ Editor
+                ScanCoach Editor
               </h1>
               <p className="text-white/60 text-sm mt-1">
                 Upload images and edit content for any ScanCoach view. Changes are reflected live.

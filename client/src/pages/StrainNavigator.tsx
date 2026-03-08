@@ -40,7 +40,7 @@ function interpretLvGls(val: number): { severity: string; color: string; suggest
     severity: "Moderately Reduced LV GLS",
     color: "#ea580c",
     suggests: `EchoAssist™ Suggests: LV Global Longitudinal Strain is moderately reduced (${val.toFixed(1)}%). Values between −12% and −16% indicate significant longitudinal dysfunction. This range is commonly seen in dilated cardiomyopathy, ischemic disease, and advanced Stage B/C HFpEF.`,
-    note: `EchoAssist™ Note: Segmental strain analysis (bull's-eye) should be reviewed for regional patterns. Ischemic patterns show basal-dominant reduction; non-ischemic patterns tend to be diffuse or apical-sparing. Use Strain ScanCoach™ for interactive segmental analysis.`,
+    note: `EchoAssist™ Note: Segmental strain analysis (bull's-eye) should be reviewed for regional patterns. Ischemic patterns show basal-dominant reduction; non-ischemic patterns tend to be diffuse or apical-sparing. Use Strain ScanCoach for interactive segmental analysis.`,
     tip: `EchoAssist™ Tip: Apical-sparing strain pattern (normal apical segments with reduced basal/mid segments) is a hallmark of cardiac amyloidosis and should prompt further evaluation with T1 mapping or nuclear imaging.`,
   };
   return {
@@ -332,7 +332,7 @@ export default function StrainNavigator() {
             <div className="max-w-2xl">
               <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-3">
                 <Activity className="w-3.5 h-3.5 text-[#4ad9e0]" />
-                <span className="text-xs text-white/80 font-medium">EchoNavigator™ · Strain Imaging</span>
+                <span className="text-xs text-white/80 font-medium">Navigator · Strain Imaging</span>
               </div>
 
               {/* Premium Badge */}
@@ -356,7 +356,7 @@ export default function StrainNavigator() {
                 </button>
                 <Link href="/strain-scan-coach">
                   <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all">
-                    <Camera className="w-3.5 h-3.5" /> Strain ScanCoach™
+                    <Camera className="w-3.5 h-3.5" /> Strain ScanCoach
                   </button>
                 </Link>
                 <a href="https://www.asecho.org/wp-content/uploads/2025/08/Strain-Guideline-AIP-August-2025.pdf"
@@ -505,7 +505,7 @@ export default function StrainNavigator() {
                 <Lightbulb className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: BRAND }} />
                 <p className="text-xs text-gray-600 leading-relaxed">
                   For detailed acquisition tips, probe guidance, and interactive bull's-eye analysis, open{" "}
-                  <Link href="/strain-scan-coach" className="font-semibold underline" style={{ color: BRAND }}>Strain ScanCoach™</Link>.
+                  <Link href="/strain-scan-coach" className="font-semibold underline" style={{ color: BRAND }}>Strain ScanCoach</Link>.
                 </p>
               </div>
             </SectionCard>
@@ -637,7 +637,7 @@ export default function StrainNavigator() {
                     <Camera className="w-4 h-4 text-white" />
                   </div>
                   <div>
-                    <div className="text-xs font-bold text-white mb-0.5">Open Strain ScanCoach™</div>
+                    <div className="text-xs font-bold text-white mb-0.5">Open Strain ScanCoach</div>
                     <p className="text-xs text-white/70 leading-snug">Interactive bull's-eye · Segmental curves · Acquisition tips</p>
                   </div>
                 </div>

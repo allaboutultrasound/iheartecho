@@ -422,7 +422,7 @@ export default function StressNavigator() {
           <Link href="/scan-coach?tab=tte">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90" style={{ background: "#189aa1" }}>
               <Scan className="w-4 h-4" />
-              Open in ScanCoach™
+              Open in ScanCoach
             </div>
           </Link>
           <Link href="/echoassist#engine-stress">

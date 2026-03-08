@@ -823,7 +823,7 @@ function PulmHTNScanCoach() {
               <span className="text-xs text-white/80 font-medium">Pulmonary HTN & PE Acquisition Guide</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-black text-white mb-1" style={{ fontFamily: "Merriweather, serif" }}>
-              Pulmonary HTN & PE ScanCoach™
+              Pulmonary HTN & PE ScanCoach
             </h1>
             <p className="text-[#4ad9e0] font-semibold text-sm mb-3">Pulmonary Hypertension & Pulmonary Embolism</p>
             <p className="text-white/70 text-sm leading-relaxed mb-3 max-w-lg">
@@ -889,7 +889,7 @@ function PulmHTNScanCoach() {
                   </div>
                   <div>
                     <h2 className="text-lg font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>{selectedView.label}</h2>
-                    <p className="text-xs text-gray-500">Pulmonary HTN Assessment — ScanCoach™</p>
+                    <p className="text-xs text-gray-500">Pulmonary HTN Assessment — ScanCoach</p>
                   </div>
                 </div>
               </div>
@@ -1089,7 +1089,7 @@ function ACHDScanCoach() {
               <span className="text-xs text-white/80 font-medium">Adult Congenital Acquisition Guide</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-black text-white mb-1" style={{ fontFamily: "Merriweather, serif" }}>
-              Adult Congenital ScanCoach™
+              Adult Congenital ScanCoach
             </h1>
             <p className="text-[#4ad9e0] font-semibold text-sm mb-3">Adult Congenital Heart Disease (ACHD)</p>
             <p className="text-white/70 text-sm leading-relaxed mb-3 max-w-lg">
@@ -1136,7 +1136,7 @@ function ACHDScanCoach() {
               </div>
               <div>
                 <h2 className="text-lg font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>{selectedLesion.label}</h2>
-                <p className="text-xs text-gray-500">Adult Congenital Heart Disease — ScanCoach™</p>
+                <p className="text-xs text-gray-500">Adult Congenital Heart Disease — ScanCoach</p>
               </div>
             </div>
           </div>
@@ -1224,7 +1224,7 @@ export default function ScanCoach() {
             <Scan className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>ScanCoach™</h1>
+            <h1 className="text-2xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>ScanCoach</h1>
             <p className="text-sm text-gray-500">View-by-view scanning guides with probe positioning, anatomy, and clinical pearls</p>
           </div>
         </div>
@@ -1257,7 +1257,7 @@ export default function ScanCoach() {
                     <span className="text-xs text-white/80 font-medium">Adult TTE Acquisition Guide</span>
                   </div>
                   <h1 className="text-2xl md:text-3xl font-black text-white mb-1" style={{ fontFamily: "Merriweather, serif" }}>
-                    Adult TTE ScanCoach™
+                    Adult TTE ScanCoach
                   </h1>
                   <p className="text-[#4ad9e0] font-semibold text-sm mb-3">Transthoracic Echocardiography</p>
                   <p className="text-white/70 text-sm leading-relaxed mb-3 max-w-lg">
@@ -1918,7 +1918,7 @@ export default function ScanCoach() {
                     <span className="text-xs text-white/80 font-medium">Fetal Echo Acquisition Guide</span>
                   </div>
                   <h1 className="text-2xl md:text-3xl font-black text-white mb-1" style={{ fontFamily: "Merriweather, serif" }}>
-                    Fetal Echo ScanCoach™
+                    Fetal Echo ScanCoach
                   </h1>
                   <p className="text-[#4ad9e0] font-semibold text-sm mb-3">Fetal Echocardiography</p>
                   <p className="text-white/70 text-sm leading-relaxed mb-3 max-w-lg">

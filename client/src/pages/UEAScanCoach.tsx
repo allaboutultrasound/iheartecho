@@ -1,5 +1,5 @@
 /*
-  UEA ScanCoach™ — iHeartEcho
+  UEA ScanCoach — iHeartEcho
   Ultrasound Enhancing Agents — Contrast Echo Acquisition Guide
   View-by-view probe guidance, machine optimization, injection technique,
   artifact recognition, and pitfall avoidance.
@@ -478,7 +478,7 @@ function UEAScanCoachInner() {
               <div>
                 <h1 className="text-2xl md:text-3xl font-black text-white leading-tight"
                   style={{ fontFamily: "Merriweather, serif" }}>
-                  UEA ScanCoach™
+                  UEA ScanCoach
                 </h1>
                 <p className="text-[#4ad9e0] font-semibold text-sm">Ultrasound Enhancing Agents — Acquisition Guide</p>
               </div>

@@ -16,7 +16,7 @@ import { toast } from "sonner";
 const LOGO = import.meta.env.VITE_APP_LOGO as string;
 
 const FEATURES = [
-  { icon: Stethoscope, title: "Clinical EchoNavigators™", desc: "TTE, TEE, Stress, Fetal, Pediatric, ACHD protocols" },
+  { icon: Stethoscope, title: "Clinical Navigators", desc: "TTE, TEE, Stress, Fetal, Pediatric, ACHD protocols" },
   { icon: Activity, title: "EchoAssist™ & Calculators", desc: "Guideline-based severity grading across 9 domains" },
   { icon: BookOpen, title: "CME & Registry Review", desc: "Accredited courses, registry prep, 500+ echo cases" },
   { icon: Shield, title: "Accreditation Tools", desc: "Peer review, IQR, echo correlation, lab analytics" },
