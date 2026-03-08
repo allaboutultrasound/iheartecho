@@ -10,6 +10,7 @@ import { useState, useMemo } from "react";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
+import ScanCoachNavBar from "@/components/ScanCoachNavBar";
 import {
   ChevronDown, ChevronUp, ArrowRight, Zap, Activity,
   AlertTriangle, Lightbulb, Info, ImageIcon, Stethoscope,
@@ -698,7 +699,8 @@ export default function StressScanCoach() {
 
   return (
     <Layout>
-      {/* Main Layout */}
+      <ScanCoachNavBar navigatorPath="/stress" navigatorLabel="Stress Navigator" />
+{/* Main Layout */}
       <div className="container py-6">
         <div className="flex gap-5">
           {/* Sidebar */}

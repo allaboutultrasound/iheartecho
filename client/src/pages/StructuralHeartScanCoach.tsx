@@ -11,6 +11,7 @@ import { useState, useMemo } from "react";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
+import ScanCoachNavBar from "@/components/ScanCoachNavBar";
 import {
   ChevronDown, ChevronUp, ArrowRight, Zap,
   AlertTriangle, Lightbulb, Info, ImageIcon, Stethoscope, Heart,
@@ -671,7 +672,8 @@ export default function StructuralHeartScanCoach() {
 
   return (
     <Layout>
-      {/* Main Layout */}
+      <ScanCoachNavBar navigatorPath="/device" navigatorLabel="Device Navigator" />
+{/* Main Layout */}
       <div className="container py-6">
         <div className="flex gap-5">
           {/* Sidebar */}

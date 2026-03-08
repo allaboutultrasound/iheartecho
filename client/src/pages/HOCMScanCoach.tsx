@@ -24,6 +24,7 @@ import {
   Zap,
 } from "lucide-react";
 import { Link } from "wouter";
+import ScanCoachNavBar from "@/components/ScanCoachNavBar";
 
 const BRAND = "#189aa1";
 const PURPLE = "#189aa1";
@@ -1735,6 +1736,11 @@ export default function HOCMScanCoach({ _noLayout }: { _noLayout?: boolean } = {
     </div>
   );
   if (_noLayout) return inner;
-  return <Layout>{inner}</Layout>;
+  return (
+    <Layout>
+      <ScanCoachNavBar navigatorPath="/hocm-navigator" navigatorLabel="HOCM Navigator" />
+      {inner}
+    </Layout>
+  );
 }
 

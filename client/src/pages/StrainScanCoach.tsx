@@ -17,6 +17,7 @@ import {
   Legend, ResponsiveContainer, ReferenceLine
 } from "recharts";
 import { Link } from "wouter";
+import ScanCoachNavBar from "@/components/ScanCoachNavBar";
 
 const BRAND = "#189aa1";
 const BRAND_DARK = "#0e4a50";
@@ -1456,7 +1457,8 @@ function StrainScanCoachInner() {
 export default function StrainScanCoach() {
   return (
     <Layout>
-      <StrainScanCoachInner />
+      <ScanCoachNavBar navigatorPath="/strain" navigatorLabel="Strain Navigator" />
+<StrainScanCoachInner />
     </Layout>
   );
 }

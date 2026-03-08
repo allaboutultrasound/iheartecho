@@ -1466,3 +1466,13 @@
 - [x] Implement correct 2025 ASE diastolic dysfunction grading algorithm
 - [x] Remove requirement for E and A waves to produce a result
 - [x] Fix Special Populations upgrade gate — bypass for admin users (should never show upgrade prompt to admin)
+
+## ScanCoach Navigation Enhancements
+- [x] Add "Back to ScanCoach Hub" breadcrumb + "Go to Navigator" button to StressScanCoach
+- [x] Add "Back to ScanCoach Hub" breadcrumb + "Go to Navigator" button to StructuralHeartScanCoach
+- [x] Add "Back to ScanCoach Hub" breadcrumb + "Go to Navigator" button to TEEScanCoach
+- [x] Add "Back to ScanCoach Hub" breadcrumb + "Go to Navigator" button to ICEScanCoach
+- [x] Add "Back to ScanCoach Hub" breadcrumb + "Go to Navigator" button to HOCMScanCoach
+- [x] Add "Back to ScanCoach Hub" breadcrumb + "Go to Navigator" button to StrainScanCoach
+- [x] Add "Back to ScanCoach Hub" breadcrumb + "Go to Navigator" button to UEAScanCoach
+- [x] Verify Diastology Special Populations shows content (not upgrade prompt) for admin users

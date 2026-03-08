@@ -10,6 +10,7 @@ import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
+import ScanCoachNavBar from "@/components/ScanCoachNavBar";
 import {
   Droplets, ChevronDown, ChevronUp, Info, AlertTriangle,
   Target, CheckCircle, RotateCcw, ArrowRight, Stethoscope,
@@ -1699,7 +1700,8 @@ function UEAScanCoachInner() {
 export default function UEAScanCoach() {
   return (
     <Layout>
-      <UEAScanCoachInner />
+      <ScanCoachNavBar navigatorPath="/uea-navigator" navigatorLabel="UEA Navigator" />
+<UEAScanCoachInner />
     </Layout>
   );
 }

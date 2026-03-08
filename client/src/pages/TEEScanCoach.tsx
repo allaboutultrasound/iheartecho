@@ -8,6 +8,7 @@ import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
+import ScanCoachNavBar from "@/components/ScanCoachNavBar";
 import {
   Microscope, ChevronRight, ChevronDown, ChevronUp,
   Stethoscope, Zap, Info, AlertTriangle,
@@ -719,7 +720,8 @@ export default function TEEScanCoach() {
 
   return (
     <Layout>
-      {/* Main Layout */}
+      <ScanCoachNavBar navigatorPath="/tee" navigatorLabel="TEE Navigator" />
+{/* Main Layout */}
       <div className="container py-6">
         <div className="flex gap-5">
           {/* View Selector Sidebar */}

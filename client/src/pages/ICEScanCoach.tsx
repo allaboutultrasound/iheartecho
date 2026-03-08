@@ -8,6 +8,7 @@ import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
+import ScanCoachNavBar from "@/components/ScanCoachNavBar";
 import {
   Scan, ChevronDown, ChevronUp,
   Stethoscope, Zap, Info, AlertTriangle,
@@ -512,7 +513,8 @@ export default function ICEScanCoach() {
 
   return (
     <Layout>
-      {/* Main Layout */}
+      <ScanCoachNavBar navigatorPath="/ice" navigatorLabel="ICE Navigator" />
+{/* Main Layout */}
       <div className="container py-6">
         <div className="flex gap-5">
           {/* View Selector Sidebar */}
