@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — Registry Review Hub
+  iHeartEcho — Registry Review
   Displays All About Ultrasound Registry Review courses.
   Checkout links are prefilled with the logged-in user's email for fast checkout.
   Brand: Teal #189aa1, Aqua #4ad9e0
@@ -131,7 +131,7 @@ export default function RegistryReviewHub() {
               <span className="text-xs text-white/80 font-medium">Registry Exam Preparation</span>
             </div>
             <h1 className="text-3xl md:text-4xl font-black text-white leading-tight mb-2" style={{ fontFamily: "Merriweather, serif" }}>
-              Registry Review Hub
+              Registry Review
             </h1>
             <p className="text-[#4ad9e0] font-semibold text-base mb-3">All About Ultrasound — Registry Review Courses</p>
             <p className="text-white/70 text-sm leading-relaxed max-w-lg">

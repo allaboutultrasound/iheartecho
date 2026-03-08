@@ -61,7 +61,7 @@ const modules: Module[] = [
   {
     path: "/registry-review",
     icon: BookMarked,
-    title: "Registry Review Hub",
+    title: "Registry Review",
     description: "Prepare for ARDMS, CCI, and other registry exams with comprehensive review courses from All About Ultrasound.",
     badge: "Registry Prep",
     color: BRAND,

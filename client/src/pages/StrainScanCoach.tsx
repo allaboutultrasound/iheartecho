@@ -1007,44 +1007,6 @@ function StrainScanCoachInner() {
 
   return (
     <div>
-      <div className="relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${BRAND_DARK} 0%, #0e3a40 60%, ${BRAND} 100%)` }}>
-        <div className="relative container py-8 md:py-10">
-          <div className="mb-3">
-            <BackToEchoAssist className="text-white/70 hover:text-white" />
-          </div>
-          <div className="flex items-start justify-between gap-4">
-            <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-3">
-                <Camera className="w-3.5 h-3.5 text-[#4ad9e0]" />
-                <span className="text-xs text-white/80 font-medium">ScanCoach · Strain Imaging</span>
-              </div>
-              <h1 className="text-2xl md:text-3xl font-black text-white mb-2" style={{ fontFamily: "Merriweather, serif" }}>
-                Strain ScanCoach
-              </h1>
-              <p className="text-white/70 text-sm leading-relaxed mb-4">
-                Interactive bull's-eye, segmental strain curves, LV GLS calculator, and ASE 2025 acquisition guidance — all in one place.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <Link href="/strain">
-                  <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all">
-                    <Activity className="w-3.5 h-3.5" /> Strain Navigator™
-                  </button>
-                </Link>
-                <a href="/echoassist#engine-strain" className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all">
-                    <Zap className="w-3.5 h-3.5" /> EchoAssist™ Strain
-                </a>
-              </div>
-            </div>
-            <div className="hidden md:flex flex-col items-end gap-2">
-              <div className="text-right">
-                <div className="text-xs text-white/50 mb-0.5">Segments Entered</div>
-                <div className="text-2xl font-black font-mono text-[#4ad9e0]">{enteredSegs.length}/17</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div className="container py-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
 

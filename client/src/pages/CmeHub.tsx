@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — CME Hub
+  iHeartEcho — CME & E-Learning Courses
   Displays All About Ultrasound CME courses from the E-Learning & CME collection on Thinkific.
   Course data is fetched live from the Thinkific API via tRPC (cached, refreshed every 6 hours).
   Static fallback data is used if the API is unavailable.
@@ -279,7 +279,7 @@ export default function CmeHub() {
               <span className="text-xs text-white/80 font-medium">SDMS-Accredited CME Courses</span>
             </div>
             <h1 className="text-3xl md:text-4xl font-black text-white leading-tight mb-2" style={{ fontFamily: "Merriweather, serif" }}>
-              CME Hub
+              CME &amp; E-Learning Courses
             </h1>
             <p className="text-[#4ad9e0] font-semibold text-base mb-3">All About Ultrasound — E-Learning & CME</p>
             <p className="text-white/70 text-sm leading-relaxed max-w-lg">

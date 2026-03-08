@@ -1414,3 +1414,16 @@
 
 ## Content Fix (Mar 8 2026)
 - [x] Diastolic Function ScanCoach: updated pitfall to "Do not confuse the a' (late diastolic annular velocity) with the pre-systolic wave or other waves (L-waves) when present" — correct TDI notation with L-wave context
+
+## Bug Fix (Mar 8 2026 — Session 3)
+- [ ] DiastolicScanCoachContent: remove inner banner block (causes double header when embedded in ScanCoach.tsx tab)
+- [ ] DiastolicScanCoachContent: update pitfall text to a' notation (the pitfall at line 108 is inside the exported component, not the navigator page)
+
+## Bug Fix — Remove Inner Banners from All ScanCoach Embedded Components
+- [ ] DiastolicScanCoachContent (DiastolicNavigator.tsx): remove inner banner block
+- [ ] TEEIceScanCoachContent (TEEIceScanCoach.tsx): remove inner banner block
+- [ ] Any other exported ScanCoach content components embedded in ScanCoach.tsx tabs
+
+## Content Rename (Mar 8 2026)
+- [x] Renamed "Registry Review Hub" to "Registry Review" in all locations: Layout.tsx sidebar, Home.tsx module card, RegistryReviewHub.tsx page header and comment
+- [x] Updated CME page header h1 to "CME & E-Learning Courses" — sidebar nav label remains "CME Hub"
