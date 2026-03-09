@@ -1791,3 +1791,6 @@
 ## UX Enhancement (Mar 09 2026)
 - [x] Add hero banner to EchoAssist ScanCoach matching EchoAssist Navigator style
 - [x] Remove hero banner from Diastolic Function page
+
+## IQR Replacement (Mar 09 2026)
+- [x] Delete entire Image Quality Review form content, replace with placeholder (external link TBD)

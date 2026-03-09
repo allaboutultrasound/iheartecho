@@ -2115,9 +2115,7 @@ export default function AccreditationTool() {
           </div>
 
           {activeTab === "iqr" && (
-            <div className="[&_aside]:hidden [&_.min-h-screen]:min-h-0 [&_.flex.min-h-screen]:block">
-              <ImageQualityReviewTab embedded />
-            </div>
+            <ImageQualityReviewTab embedded />
           )}
           {activeTab === "echo-correlation" && <EchoCorrelationTab />}
           {activeTab === "peer" && <PhysicianPeerReview />}
