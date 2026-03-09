@@ -40,9 +40,9 @@
 - [x] Hub vitest — 16 moderation tests, all passing
 
 ## DIY Accreditation Tab Access Control
-- [ ] Remove premium gate for DIY users (DIY access should not require premium)
-- [ ] Hide Case Mix, Policy Builder, Reports & Analytics, Readiness tabs from regular users (admin-only)
-- [ ] Rename "Case Mix" label to "Case Studies" on DIY Accreditation page
+- [x] Remove premium gate for DIY users (DIY access should not require premium)
+- [x] Hide Case Mix, Policy Builder, Reports & Analytics, Readiness tabs from regular users (admin-only)
+- [x] Rename "Case Mix" label to "Case Studies" on DIY Accreditation page
 - [ ] Remove Case Mix section from the Readiness Assessment tab
 - [ ] Remove HOCM and POCUS from exam type list in Appropriate Use review form
 - [ ] Split IQR section in Reports & Analytics into Quality Review and Peer Review sub-sections based on reviewType field
@@ -54,7 +54,7 @@
 - [ ] Fix typo: "LARDS" should be "LARS" (somewhere in the app)
 - [ ] Add flashcard sorting/filtering by category: Adult Echo, Pediatric/Congenital Echo, Fetal Echo
 - [x] Generate EchoAssist hero banner background image and upload to CDN (All Files)
-- [ ] Add Flashcard Manager to admin area (create/edit/delete flashcards, assign categories)
+- [x] Add Flashcard Manager to admin area (create/edit/delete flashcards, assign categories) — exists in /admin/quickfire under Flashcard Management tab
 - [ ] Add search field in admin: Cases, Daily Challenges, and Flashcards
 - [ ] Add AI Generate option for flashcards in admin (generate by topic, produces quickReview type cards)
 - [ ] Allow AI Generator to create multiple cases, challenges, and/or flashcards at one time based on topic (bulk generation)

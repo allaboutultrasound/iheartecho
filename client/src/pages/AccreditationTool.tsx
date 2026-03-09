@@ -2011,7 +2011,10 @@ function DIYReportsTab() {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function AccreditationTool() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
+  const appRoles: string[] = (user as any)?.appRoles ?? [];
+  // diy_admin and platform_admin see all tabs; diy_user sees only IQR, Peer Review, Echo Correlations, Appropriate Use
+  const isDiyAdmin = appRoles.includes("diy_admin") || appRoles.includes("platform_admin") || (user as any)?.role === "admin";
   const searchString = useSearch();
   const params = new URLSearchParams(searchString);
   const initialTab = (params.get("tab") as "iqr" | "peer" | "echo-correlation" | "auc" | "case-mix" | "policy" | "readiness" | "reports" | null) ?? "iqr";
@@ -2080,14 +2083,20 @@ export default function AccreditationTool() {
       <div className="border-b border-gray-200 bg-[#f0fbfc]">
         <div className="container py-2">
           <div className="flex flex-wrap gap-1">
+            {/* Tabs visible to all DIY members */}
             <TabBtn active={activeTab === "iqr"} onClick={() => setActiveTab("iqr")} icon={ImageIcon} label="Image Quality Review" />
             <TabBtn active={activeTab === "peer"} onClick={() => setActiveTab("peer")} icon={Star} label="Physician Peer Review" />
             <TabBtn active={activeTab === "echo-correlation"} onClick={() => setActiveTab("echo-correlation")} icon={GitCompare} label="Echo Correlations" />
             <TabBtn active={activeTab === "auc"} onClick={() => setActiveTab("auc")} icon={BarChart2} label="Appropriate Use" />
-            <TabBtn active={activeTab === "case-mix"} onClick={() => setActiveTab("case-mix")} icon={Stethoscope} label="Case Studies" />
-            <TabBtn active={activeTab === "policy"} onClick={() => setActiveTab("policy")} icon={FileText} label="Policy Builder" />
-            <TabBtn active={activeTab === "reports"} onClick={() => setActiveTab("reports")} icon={TrendingUp} label="Reports & Analytics" />
-            <TabBtn active={activeTab === "readiness"} onClick={() => setActiveTab("readiness")} icon={CheckSquare} label="Readiness" />
+            {/* Admin-only tabs — visible to diy_admin and platform_admin only */}
+            {isDiyAdmin && (
+              <>
+                <TabBtn active={activeTab === "case-mix"} onClick={() => setActiveTab("case-mix")} icon={Stethoscope} label="Case Studies" />
+                <TabBtn active={activeTab === "policy"} onClick={() => setActiveTab("policy")} icon={FileText} label="Policy Builder" />
+                <TabBtn active={activeTab === "reports"} onClick={() => setActiveTab("reports")} icon={TrendingUp} label="Reports & Analytics" />
+                <TabBtn active={activeTab === "readiness"} onClick={() => setActiveTab("readiness")} icon={CheckSquare} label="Readiness" />
+              </>
+            )}
           </div>
         </div>
       </div>
