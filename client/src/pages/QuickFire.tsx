@@ -1363,9 +1363,6 @@ export default function QuickFire() {
                           </div>
                           <div className="text-xs text-gray-400">
                             {entry.accuracy}% accuracy · {entry.total} answered
-                            {(entry as any).city && (
-                              <span className="ml-1 text-gray-300">· {(entry as any).city}</span>
-                            )}
                           </div>
                         </div>
                         <div className="text-right flex-shrink-0">

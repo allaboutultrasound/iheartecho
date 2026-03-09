@@ -21,7 +21,7 @@ import { sdk } from "../_core/sdk";
 import { ENV } from "../_core/env";
 import { publicProcedure, router } from "../_core/trpc";
 import { getDb, ensureUserRole, markThinkificEnrolled } from "../db";
-import { sendEmail, buildWelcomeEmail } from "../_core/email";
+import { sendEmail, buildWelcomeEmail, buildVerificationEmail, buildPasswordResetEmail } from "../_core/email";
 import { enrollInFreeMembership } from "../thinkific";
 import { users } from "../../drizzle/schema";
 import { eq, or } from "drizzle-orm";
@@ -58,7 +58,7 @@ async function issueSession(
   res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 }
 
-// ─── Email sending (placeholder — wired to TinyEmail in phase 6) ─────────────
+// ─── Email sending helpers (use SendGrid via shared _core/email.ts) ──────────
 
 export type EmailPayload = {
   to: string;
@@ -66,101 +66,26 @@ export type EmailPayload = {
   html: string;
 };
 
-// TinyEmail (tinyRelay) sender — uses TINYEMAIL_API_KEY env var.
-// Falls back to console logging when the key is not set (development).
-async function emailSender(payload: EmailPayload): Promise<void> {
-  const apiKey = process.env.TINYEMAIL_API_KEY;
-  const senderEmail = process.env.TINYEMAIL_SENDER_EMAIL || "noreply@iheartecho.com";
-  const senderName = process.env.TINYEMAIL_SENDER_NAME || "iHeartEcho";
-
-  if (!apiKey) {
-    console.log(`[EmailAuth] Email to ${payload.to}: ${payload.subject}`);
-    console.log("[EmailAuth] Set TINYEMAIL_API_KEY to enable real email sending.");
-    return;
-  }
-
-  const res = await fetch("https://api.tinyemail.com/relay/v1/email/campaign", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      "X-RELAY-ACCESS-TOKEN": apiKey,
-    },
-    body: JSON.stringify({
-      subject: payload.subject,
-      body: payload.html,
-      preview: payload.subject,
-      sender: {
-        from: { name: senderName, email: senderEmail },
-        replyTo: { name: senderName, email: senderEmail },
-      },
-      recipients: {
-        to: [{ name: payload.to, email: payload.to }],
-      },
-      disableTrackingLinks: true,
-    }),
-  });
-
-  if (!res.ok) {
-    const text = await res.text();
-    console.error(`[EmailAuth] TinyEmail error ${res.status}: ${text}`);
-  }
-}
-
 async function sendVerificationEmail(to: string, token: string, name: string) {
   const appUrl = process.env.VITE_APP_URL ?? "https://app.iheartecho.com";
-  const link = `${appUrl}/verify-email?token=${token}`;
-  await emailSender({
-    to,
-    subject: "Verify your iHeartEcho account",
-    html: `
-      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
-        <div style="background:linear-gradient(135deg,#0e1e2e,#0e4a50);padding:32px;text-align:center;border-radius:12px 12px 0 0;">
-          <h1 style="color:#4ad9e0;margin:0;font-size:28px;">iHeartEcho™</h1>
-          <p style="color:#ffffff99;margin:8px 0 0;">Echocardiography Clinical Companion</p>
-        </div>
-        <div style="background:#ffffff;padding:32px;border-radius:0 0 12px 12px;border:1px solid #e5e7eb;">
-          <h2 style="color:#0e1e2e;margin:0 0 16px;">Verify your email address</h2>
-          <p style="color:#374151;">Hi ${name || "there"},</p>
-          <p style="color:#374151;">Thanks for creating your iHeartEcho account. Please verify your email address to get started.</p>
-          <div style="text-align:center;margin:32px 0;">
-            <a href="${link}" style="background:#189aa1;color:#ffffff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:16px;">Verify Email Address</a>
-          </div>
-          <p style="color:#6b7280;font-size:14px;">This link expires in 24 hours. If you didn't create an account, you can safely ignore this email.</p>
-          <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;" />
-          <p style="color:#9ca3af;font-size:12px;text-align:center;">© ${new Date().getFullYear()} iHeartEcho. All rights reserved.</p>
-        </div>
-      </div>
-    `,
-  });
+  const verificationUrl = `${appUrl}/verify-email?token=${token}`;
+  const firstName = name || "there";
+  const { subject, htmlBody, previewText } = buildVerificationEmail({ firstName, verificationUrl });
+  const sent = await sendEmail({ to: { name: firstName, email: to }, subject, htmlBody, previewText });
+  if (!sent) {
+    console.warn(`[EmailAuth] Verification email to ${to} could not be sent (SendGrid unavailable)`);
+  }
 }
 
 async function sendPasswordResetEmail(to: string, token: string, name: string) {
   const appUrl = process.env.VITE_APP_URL ?? "https://app.iheartecho.com";
-  const link = `${appUrl}/reset-password?token=${token}`;
-  await emailSender({
-    to,
-    subject: "Reset your iHeartEcho password",
-    html: `
-      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
-        <div style="background:linear-gradient(135deg,#0e1e2e,#0e4a50);padding:32px;text-align:center;border-radius:12px 12px 0 0;">
-          <h1 style="color:#4ad9e0;margin:0;font-size:28px;">iHeartEcho™</h1>
-          <p style="color:#ffffff99;margin:8px 0 0;">Echocardiography Clinical Companion</p>
-        </div>
-        <div style="background:#ffffff;padding:32px;border-radius:0 0 12px 12px;border:1px solid #e5e7eb;">
-          <h2 style="color:#0e1e2e;margin:0 0 16px;">Reset your password</h2>
-          <p style="color:#374151;">Hi ${name || "there"},</p>
-          <p style="color:#374151;">We received a request to reset your iHeartEcho password. Click the button below to choose a new password.</p>
-          <div style="text-align:center;margin:32px 0;">
-            <a href="${link}" style="background:#189aa1;color:#ffffff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:16px;">Reset Password</a>
-          </div>
-          <p style="color:#6b7280;font-size:14px;">This link expires in 1 hour. If you didn't request a password reset, you can safely ignore this email.</p>
-          <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;" />
-          <p style="color:#9ca3af;font-size:12px;text-align:center;">© ${new Date().getFullYear()} iHeartEcho. All rights reserved.</p>
-        </div>
-      </div>
-    `,
-  });
+  const resetUrl = `${appUrl}/reset-password?token=${token}`;
+  const firstName = name || "there";
+  const { subject, htmlBody, previewText } = buildPasswordResetEmail({ firstName, resetUrl });
+  const sent = await sendEmail({ to: { name: firstName, email: to }, subject, htmlBody, previewText });
+  if (!sent) {
+    console.warn(`[EmailAuth] Password reset email to ${to} could not be sent (SendGrid unavailable)`);
+  }
 }
 
 // ─── Router ───────────────────────────────────────────────────────────────────

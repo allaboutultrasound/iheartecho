@@ -1498,3 +1498,15 @@
 - [x] Hide submitter user ID from public case display (removed submitterName from CaseDetail.tsx header)
 - [x] Hide submission date from public case display (removed from CaseDetail.tsx header; kept in My Submissions tab and admin tools)
 - [x] Fix AI case generation JSON error — replaced generateObject (AI SDK structured outputs, not supported by Forge API) with raw fetch + JSON parsing matching the working quickfire router pattern
+
+## Leaderboard & Email Fixes
+- [ ] Remove location from prepopulated leaderboard profiles
+- [ ] Fix DIY Accreditation Tool emails to use SendGrid with iHeartEcho branding (not Manus notification template)
+- [ ] Ensure all emails from DIY Accreditation Tool (Lab Director response, notifications) route through SendGrid
+- [ ] Fix JSON invalid response and DOCTYPE unexpected errors in AI case/challenge generation (DOCTYPE = HTML error page being returned instead of JSON)
+
+## AI Generation Fix (Session Mar 09 2026)
+- [x] Fix AI case generation 504 Gateway Timeout — replaced createPatchedFetch with native fetch in AI SDK call (caseLibraryRouter.ts aiGenerateCase procedure)
+- [x] Remove location/city field from leaderboard display in QuickFire.tsx
+- [x] Fix emailAuthRouter.ts to use SendGrid (via _core/email.ts sendEmail + buildVerificationEmail + buildPasswordResetEmail) instead of TinyEmail for verification and password reset emails
+- [x] Test daily challenge generator — generateDailySet confirmed working (200 OK, returns date + questionCount)
