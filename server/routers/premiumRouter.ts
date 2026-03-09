@@ -73,7 +73,7 @@ export const premiumRouter = router({
       premiumGrantedAt: user.premiumGrantedAt ?? null,
       premiumSource: user.premiumSource ?? null,
       checkoutUrl: "https://member.allaboutultrasound.com/enroll/3703267?price_id=4651832",
-      manageUrl: `https://member.allaboutultrasound.com/users/sign_in`,
+      manageUrl: `https://member.allaboutultrasound.com/account/billing`,
     };
   }),
 

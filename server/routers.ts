@@ -1003,8 +1003,14 @@ export const appRouter = router({
       .mutation(async ({ ctx, input }) => {
         // Map comparableToPrevious → comparableToPreview for DB compatibility
         const { comparableToPrevious, dob: _dob, ...rest } = input;
-        const review = await createImageQualityReview({ ...rest, comparableToPreview: comparableToPrevious, userId: ctx.user.id });
-        return review;
+        try {
+          const review = await createImageQualityReview({ ...rest, comparableToPreview: comparableToPrevious, userId: ctx.user.id });
+          return review;
+        } catch (err: unknown) {
+          const e = err as { message?: string; code?: string; sqlMessage?: string };
+          console.error('[IQR Create Error]', { code: e?.code, sqlMessage: e?.sqlMessage, message: e?.message });
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: e?.sqlMessage ?? e?.message ?? 'Failed to save review' });
+        }
       }),
 
     list: protectedProcedure

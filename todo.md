@@ -1777,3 +1777,13 @@
 
 ## Bug Fix (Mar 09 2026 — EchoAssistHub crash)
 - [x] Fix ReferenceError: isPremium is not defined on /echo-assist-hub
+
+## Bug Fix (Mar 09 2026 — Quality Review Form)
+- [ ] Fix quality review form submission error
+- [ ] Remove start time and end time fields from quality review form
+
+## Fix (Mar 09 2026)
+- [x] Fix "Manage Subscription" link to point to https://member.allaboutultrasound.com/account/billing
+
+## UX Fix (Mar 09 2026)
+- [x] Scroll to top when advancing to next step in all quality forms (IQR, Echo Correlation) — PhysicianPeerReview is single-page, no fix needed

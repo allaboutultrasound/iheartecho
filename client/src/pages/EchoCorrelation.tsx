@@ -10,7 +10,7 @@
   Step 4 — Summary & PDF Export
 */
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
@@ -182,6 +182,11 @@ function BrandSelect({ value, onChange, options, placeholder }: {
 export default function EchoCorrelationTab() {
   const [step, setStep] = useState(1);
   const TOTAL_STEPS = 4;
+  const formTopRef = useRef<HTMLDivElement>(null);
+  const goToStep = (nextStep: number | ((s: number) => number)) => {
+    setStep(nextStep);
+    setTimeout(() => formTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  };
 
   // Step 1 — Header
   const [organization, setOrganization] = useState("");
@@ -396,7 +401,7 @@ export default function EchoCorrelationTab() {
   // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="py-4">
+    <div ref={formTopRef} className="py-4">
         {/* Sub-header */}
         <div className="flex items-center justify-between mb-5">
           <div>
@@ -752,7 +757,7 @@ export default function EchoCorrelationTab() {
         {/* Navigation buttons */}
         <div className="flex items-center justify-between mt-6 pt-4 border-t" style={{ borderColor: `${BRAND}20` }}>
           <button
-            onClick={() => setStep(s => Math.max(1, s - 1))}
+            onClick={() => goToStep(s => Math.max(1, s - 1))}
             disabled={step === 1}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold border transition-all disabled:opacity-40"
             style={{ color: BRAND, borderColor: `${BRAND}40` }}
@@ -764,7 +769,7 @@ export default function EchoCorrelationTab() {
 
           {step < TOTAL_STEPS ? (
             <button
-              onClick={() => setStep(s => Math.min(TOTAL_STEPS, s + 1))}
+              onClick={() => goToStep(s => Math.min(TOTAL_STEPS, s + 1))}
               className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90"
               style={{ background: BRAND }}
             >

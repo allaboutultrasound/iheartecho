@@ -3,7 +3,7 @@
   Full rebuild from Formsite IMAGE-QUALITY-REVIEW API
   6 exam types, full branching logic, auto-queried staff dropdowns from Lab Admin
 */
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import Layout from "@/components/Layout";
@@ -239,6 +239,12 @@ export default function ImageQualityReview({ embedded = false }: { embedded?: bo
   const [form, setForm] = useState<IQRFormData>({ ...EMPTY_FORM });
   const [editingId, setEditingId] = useState<number | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const formTopRef = useRef<HTMLDivElement>(null);
+
+  const goToStep = useCallback((nextStep: number | ((s: number) => number)) => {
+    setStep(nextStep);
+    setTimeout(() => formTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  }, []);
 
   // Auto-query lab staff
   const { data: labStaff, isLoading: staffLoading } = trpc.iqr.getLabStaffForReview.useQuery();
@@ -1152,7 +1158,7 @@ export default function ImageQualityReview({ embedded = false }: { embedded?: bo
   const StepIcon = currentStep.icon;
 
   const mainContent = (
-    <div className={embedded ? "" : "container py-6 max-w-3xl"}>
+    <div ref={formTopRef} className={embedded ? "" : "container py-6 max-w-3xl"}>
       {/* Header — hidden when embedded; compact action bar shown instead */}
       <div className={embedded ? "flex items-center justify-between mb-4" : "flex items-center justify-between mb-6"}>
         <div>
@@ -1196,7 +1202,7 @@ export default function ImageQualityReview({ embedded = false }: { embedded?: bo
           const isDone = step > s.id;
           const isCurrent = step === s.id;
           return (
-            <button key={s.id} onClick={() => setStep(s.id)}
+            <button key={s.id} onClick={() => goToStep(s.id)}
               className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 ${isCurrent ? "text-white" : isDone ? "text-[#189aa1] bg-[#189aa1]/10" : "text-gray-400 bg-gray-50 hover:bg-gray-100"}`}
               style={isCurrent ? { background: TEAL } : {}}>
               <Icon className="w-3 h-3" />
@@ -1225,7 +1231,7 @@ export default function ImageQualityReview({ embedded = false }: { embedded?: bo
       {/* Navigation */}
       <div className="flex items-center justify-between">
         <button
-          onClick={() => setStep(s => Math.max(1, s - 1))}
+            onClick={() => goToStep(s => Math.max(1, s - 1))}
           disabled={step === 1}
           className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
         >
@@ -1236,7 +1242,7 @@ export default function ImageQualityReview({ embedded = false }: { embedded?: bo
 
         {step < STEPS.length ? (
           <button
-            onClick={() => setStep(s => Math.min(STEPS.length, s + 1))}
+            onClick={() => goToStep(s => Math.min(STEPS.length, s + 1))}
             className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold text-white"
             style={{ background: TEAL }}
           >

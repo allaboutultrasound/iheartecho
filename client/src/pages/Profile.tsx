@@ -28,7 +28,7 @@ const ROLE_CONFIG: Record<string, {
     description: "Access to TEE, ICE, Strain & Structural Heart Navigators and premium EchoAssist™ modules.",
     color: "#189aa1",
     icon: Star,
-    manageUrl: "https://member.allaboutultrasound.com/bundles/premium",
+    manageUrl: "https://member.allaboutultrasound.com/account/billing",
     manageLabel: "Manage Premium Subscription",
   },
   diy_user: {
@@ -36,7 +36,7 @@ const ROLE_CONFIG: Record<string, {
     description: "Access to the DIY Accreditation Tool™ for lab accreditation preparation.",
     color: "#f59e0b",
     icon: Award,
-    manageUrl: "https://member.allaboutultrasound.com/bundles/diy-accreditation",
+    manageUrl: "https://member.allaboutultrasound.com/account/billing",
     manageLabel: "Manage DIY Subscription",
   },
   diy_admin: {

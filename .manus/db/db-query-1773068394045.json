@@ -1,0 +1,978 @@
+{
+  "query": "SHOW COLUMNS FROM imageQualityReviews;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mhhtxpXA9Esras.root --database etVPnUidWNWG8W4GHnRqzv --execute SHOW COLUMNS FROM imageQualityReviews;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "userId",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "reviewType",
+      "Type": "varchar(50)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "organization",
+      "Type": "varchar(200)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "dateReviewCompleted",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "examDos",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "examIdentifier",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "facilityLocation",
+      "Type": "varchar(200)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "performingSonographer",
+      "Type": "varchar(200)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "interpretingPhysician",
+      "Type": "varchar(200)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "referringPhysician",
+      "Type": "varchar(200)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "examType",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "examScope",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "stressType",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "examIndication",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "indicationAppropriateness",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "demographicsAccurate",
+      "Type": "varchar(5)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "protocolViews",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "protocolViewsOther",
+      "Type": "varchar(300)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "gainSettings",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "gainSettingsOther",
+      "Type": "varchar(200)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "depthSettings",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "depthSettingsOther",
+      "Type": "varchar(200)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "focalZoneSettings",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "focalZoneDeficiencies",
+      "Type": "varchar(200)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "colorizeSettings",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "colorizeSettingsOther",
+      "Type": "varchar(200)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "zoomSettings",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "zoomSettingsOther",
+      "Type": "varchar(200)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "ecgDisplay",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "ecgDisplayDeficiencies",
+      "Type": "varchar(200)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "contrastUseAppropriate",
+      "Type": "varchar(200)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "contrastSettingsAppropriate",
+      "Type": "varchar(10)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "onAxisImaging",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "effortSuboptimalViews",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "measurements2dComplete",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "measurements2dAccurate",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "psaxLvComplete",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "ventricularFunctionAccurate",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "efMeasurementsAccurate",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "simpsonsEfAccurate",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "laVolumeAccurate",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "dopplerMeasurementsComplete",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "dopplerMeasurementsAccurate",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "dopplerVentricularFunction",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "dopplerWaveformSettings",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "dopplerMeasurementAccuracy",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "forwardFlowSpectrum",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "pwDopplerPlacement",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "cwDopplerPlacement",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "spectralEnvelopePeaks",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "colorFlowInterrogation",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "colorDopplerIasIvs",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "diastolicFunctionEval",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "pulmonaryVeinInflow",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "rightHeartFunctionEval",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "tapseAccurate",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "tissueDopplerAdequate",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "dopplerWaveformSettingsPeer",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "dopplerSampleVolumesPeer",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "aorticValveDoppler",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "lvotDopplerPlacement",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "pedoffCwUtilized",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "pedoffCwEnvelope",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "pedoffCwLabelled",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "mitralValveDoppler",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "mrEvaluationMethods",
+      "Type": "varchar(100)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "pisaEroMeasurements",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "tricuspidValveDoppler",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "pulmonicValveDoppler",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "aorticValvePeer",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "mitralValvePeer",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "tricuspidValvePeer",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "pulmonicValvePeer",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "diastologyPeer",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "rightHeartPeer",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "additionalImagingMethods",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "strainPerformed",
+      "Type": "varchar(5)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "strainCorrect",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "threeDPerformed",
+      "Type": "varchar(5)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "imageOptimizationSummary",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "measurementAccuracySummary",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "dopplerSettingsSummary",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "protocolSequenceFollowed",
+      "Type": "varchar(200)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "pathologyDocumented",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "clinicalQuestionAnswered",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "reportConcordant",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "comparableToPreview",
+      "Type": "varchar(10)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "iacAcceptable",
+      "Type": "varchar(200)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "scanStartTime",
+      "Type": "varchar(10)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "scanEndTime",
+      "Type": "varchar(10)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "imagingTimeMinutes",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "scanningTimeType",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "qualityScore",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "reviewComments",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "reviewer",
+      "Type": "varchar(200)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "reviewerEmail",
+      "Type": "varchar(200)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "notifyAdmin",
+      "Type": "varchar(5)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "notifySonographer",
+      "Type": "varchar(5)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "createdAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    },
+    {
+      "Field": "updatedAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    },
+    {
+      "Field": "labId",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "revieweeLabMemberId",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "revieweeUserId",
+      "Type": "int",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "revieweeName",
+      "Type": "varchar(200)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "teeMeasurementsComplete",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "teeMeasurementsAccurate",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "teeVentricularFunction",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "teeDopplerSettings",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "teeDopplerSampleVolumes",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "teeAorticValve",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "teeMitralValve",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "teeTricuspidValve",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "teePulmonicValve",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "teeImageOptSummary",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "teeMeasurementSummary",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "teeDopplerSummary",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "performingSonographerId",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "performingSonographerText",
+      "Type": "varchar(200)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "interpretingPhysicianId",
+      "Type": "varchar(50)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "interpretingPhysicianText",
+      "Type": "varchar(200)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\tPRI\tNULL\tauto_increment\nuserId\tint\tNO\t\tNULL\t\nreviewType\tvarchar(50)\tNO\t\tNULL\t\norganization\tvarchar(200)\tYES\t\tNULL\t\ndateReviewCompleted\tvarchar(20)\tYES\t\tNULL\t\nexamDos\tvarchar(20)\tYES\t\tNULL\t\nexamIdentifier\tvarchar(100)\tYES\t\tNULL\t\nfacilityLocation\tvarchar(200)\tYES\t\tNULL\t\nperformingSonographer\tvarchar(200)\tYES\t\tNULL\t\ninterpretingPhysician\tvarchar(200)\tYES\t\tNULL\t\nreferringPhysician\tvarchar(200)\tYES\t\tNULL\t\nexamType\tvarchar(50)\tYES\t\tNULL\t\nexamScope\tvarchar(50)\tYES\t\tNULL\t\nstressType\tvarchar(100)\tYES\t\tNULL\t\nexamIndication\ttext\tYES\t\tNULL\t\nindicationAppropriateness\tvarchar(20)\tYES\t\tNULL\t\ndemographicsAccurate\tvarchar(5)\tYES\t\tNULL\t\nprotocolViews\ttext\tYES\t\tNULL\t\nprotocolViewsOther\tvarchar(300)\tYES\t\tNULL\t\ngainSettings\tvarchar(50)\tYES\t\tNULL\t\ngainSettingsOther\tvarchar(200)\tYES\t\tNULL\t\ndepthSettings\tvarchar(50)\tYES\t\tNULL\t\ndepthSettingsOther\tvarchar(200)\tYES\t\tNULL\t\nfocalZoneSettings\tvarchar(50)\tYES\t\tNULL\t\nfocalZoneDeficiencies\tvarchar(200)\tYES\t\tNULL\t\ncolorizeSettings\tvarchar(50)\tYES\t\tNULL\t\ncolorizeSettingsOther\tvarchar(200)\tYES\t\tNULL\t\nzoomSettings\tvarchar(50)\tYES\t\tNULL\t\nzoomSettingsOther\tvarchar(200)\tYES\t\tNULL\t\necgDisplay\tvarchar(50)\tYES\t\tNULL\t\necgDisplayDeficiencies\tvarchar(200)\tYES\t\tNULL\t\ncontrastUseAppropriate\tvarchar(200)\tYES\t\tNULL\t\ncontrastSettingsAppropriate\tvarchar(10)\tYES\t\tNULL\t\nonAxisImaging\tvarchar(100)\tYES\t\tNULL\t\neffortSuboptimalViews\tvarchar(20)\tYES\t\tNULL\t\nmeasurements2dComplete\tvarchar(100)\tYES\t\tNULL\t\nmeasurements2dAccurate\tvarchar(20)\tYES\t\tNULL\t\npsaxLvComplete\tvarchar(100)\tYES\t\tNULL\t\nventricularFunctionAccurate\tvarchar(20)\tYES\t\tNULL\t\nefMeasurementsAccurate\tvarchar(20)\tYES\t\tNULL\t\nsimpsonsEfAccurate\tvarchar(20)\tYES\t\tNULL\t\nlaVolumeAccurate\tvarchar(20)\tYES\t\tNULL\t\ndopplerMeasurementsComplete\tvarchar(100)\tYES\t\tNULL\t\ndopplerMeasurementsAccurate\tvarchar(50)\tYES\t\tNULL\t\ndopplerVentricularFunction\tvarchar(50)\tYES\t\tNULL\t\ndopplerWaveformSettings\tvarchar(50)\tYES\t\tNULL\t\ndopplerMeasurementAccuracy\tvarchar(50)\tYES\t\tNULL\t\nforwardFlowSpectrum\tvarchar(20)\tYES\t\tNULL\t\npwDopplerPlacement\tvarchar(20)\tYES\t\tNULL\t\ncwDopplerPlacement\tvarchar(20)\tYES\t\tNULL\t\nspectralEnvelopePeaks\tvarchar(20)\tYES\t\tNULL\t\ncolorFlowInterrogation\tvarchar(20)\tYES\t\tNULL\t\ncolorDopplerIasIvs\tvarchar(20)\tYES\t\tNULL\t\ndiastolicFunctionEval\ttext\tYES\t\tNULL\t\npulmonaryVeinInflow\tvarchar(20)\tYES\t\tNULL\t\nrightHeartFunctionEval\ttext\tYES\t\tNULL\t\ntapseAccurate\tvarchar(20)\tYES\t\tNULL\t\ntissueDopplerAdequate\tvarchar(20)\tYES\t\tNULL\t\ndopplerWaveformSettingsPeer\tvarchar(50)\tYES\t\tNULL\t\ndopplerSampleVolumesPeer\tvarchar(50)\tYES\t\tNULL\t\naorticValveDoppler\tvarchar(20)\tYES\t\tNULL\t\nlvotDopplerPlacement\tvarchar(20)\tYES\t\tNULL\t\npedoffCwUtilized\tvarchar(50)\tYES\t\tNULL\t\npedoffCwEnvelope\tvarchar(50)\tYES\t\tNULL\t\npedoffCwLabelled\tvarchar(50)\tYES\t\tNULL\t\nmitralValveDoppler\tvarchar(20)\tYES\t\tNULL\t\nmrEvaluationMethods\tvarchar(100)\tYES\t\tNULL\t\npisaEroMeasurements\tvarchar(50)\tYES\t\tNULL\t\ntricuspidValveDoppler\tvarchar(20)\tYES\t\tNULL\t\npulmonicValveDoppler\tvarchar(20)\tYES\t\tNULL\t\naorticValvePeer\tvarchar(50)\tYES\t\tNULL\t\nmitralValvePeer\tvarchar(50)\tYES\t\tNULL\t\ntricuspidValvePeer\tvarchar(50)\tYES\t\tNULL\t\npulmonicValvePeer\tvarchar(50)\tYES\t\tNULL\t\ndiastologyPeer\tvarchar(50)\tYES\t\tNULL\t\nrightHeartPeer\tvarchar(50)\tYES\t\tNULL\t\nadditionalImagingMethods\ttext\tYES\t\tNULL\t\nstrainPerformed\tvarchar(5)\tYES\t\tNULL\t\nstrainCorrect\tvarchar(50)\tYES\t\tNULL\t\nthreeDPerformed\tvarchar(5)\tYES\t\tNULL\t\nimageOptimizationSummary\tvarchar(50)\tYES\t\tNULL\t\nmeasurementAccuracySummary\tvarchar(50)\tYES\t\tNULL\t\ndopplerSettingsSummary\tvarchar(50)\tYES\t\tNULL\t\nprotocolSequenceFollowed\tvarchar(200)\tYES\t\tNULL\t\npathologyDocumented\tvarchar(20)\tYES\t\tNULL\t\nclinicalQuestionAnswered\tvarchar(20)\tYES\t\tNULL\t\nreportConcordant\tvarchar(50)\tYES\t\tNULL\t\ncomparableToPreview\tvarchar(10)\tYES\t\tNULL\t\niacAcceptable\tvarchar(200)\tYES\t\tNULL\t\nscanStartTime\tvarchar(10)\tYES\t\tNULL\t\nscanEndTime\tvarchar(10)\tYES\t\tNULL\t\nimagingTimeMinutes\tint\tYES\t\tNULL\t\nscanningTimeType\tvarchar(20)\tYES\t\tNULL\t\nqualityScore\tint\tYES\t\tNULL\t\nreviewComments\ttext\tYES\t\tNULL\t\nreviewer\tvarchar(200)\tYES\t\tNULL\t\nreviewerEmail\tvarchar(200)\tYES\t\tNULL\t\nnotifyAdmin\tvarchar(5)\tYES\t\tNULL\t\nnotifySonographer\tvarchar(5)\tYES\t\tNULL\t\ncreatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t\nupdatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\tDEFAULT_GENERATED on update CURRENT_TIMESTAMP\nlabId\tint\tYES\t\tNULL\t\nrevieweeLabMemberId\tint\tYES\t\tNULL\t\nrevieweeUserId\tint\tYES\t\tNULL\t\nrevieweeName\tvarchar(200)\tYES\t\tNULL\t\nteeMeasurementsComplete\tvarchar(50)\tYES\t\tNULL\t\nteeMeasurementsAccurate\tvarchar(50)\tYES\t\tNULL\t\nteeVentricularFunction\tvarchar(50)\tYES\t\tNULL\t\nteeDopplerSettings\tvarchar(50)\tYES\t\tNULL\t\nteeDopplerSampleVolumes\tvarchar(50)\tYES\t\tNULL\t\nteeAorticValve\tvarchar(50)\tYES\t\tNULL\t\nteeMitralValve\tvarchar(50)\tYES\t\tNULL\t\nteeTricuspidValve\tvarchar(50)\tYES\t\tNULL\t\nteePulmonicValve\tvarchar(50)\tYES\t\tNULL\t\nteeImageOptSummary\tvarchar(50)\tYES\t\tNULL\t\nteeMeasurementSummary\tvarchar(50)\tYES\t\tNULL\t\nteeDopplerSummary\tvarchar(50)\tYES\t\tNULL\t\nperformingSonographerId\tvarchar(50)\tYES\t\tNULL\t\nperformingSonographerText\tvarchar(200)\tYES\t\tNULL\t\ninterpretingPhysicianId\tvarchar(50)\tYES\t\tNULL\t\ninterpretingPhysicianText\tvarchar(200)\tYES\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 94
+}
