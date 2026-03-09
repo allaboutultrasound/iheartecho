@@ -1,0 +1,1 @@
+ALTER TABLE `possibleCaseStudies` MODIFY COLUMN `submissionStatus` enum('identified','under_review','submitted','accepted') NOT NULL DEFAULT 'identified';

@@ -313,16 +313,38 @@ function RadioGroup({ label, name, options, value, onChange, comments, onComment
   );
 }
 
-function CheckboxGroup({ label, options, selected, onChange, comments, onCommentsChange }: {
+function CheckboxGroup({ label, options, selected, onChange, comments, onCommentsChange, showSelectAll }: {
   label: string; options: string[]; selected: string[];
   onChange: (v: string[]) => void; comments?: string; onCommentsChange?: (v: string) => void;
+  showSelectAll?: boolean;
 }) {
   const toggle = (opt: string) => {
     onChange(selected.includes(opt) ? selected.filter(s => s !== opt) : [...selected, opt]);
   };
+  const allSelected = options.every(o => selected.includes(o));
+  const handleSelectAll = () => {
+    if (allSelected) onChange([]);
+    else onChange([...options]);
+  };
   return (
     <div className="mb-5">
-      <Label className="text-sm font-semibold text-gray-700 mb-2 block">{label}</Label>
+      <div className="flex items-center justify-between mb-2">
+        <Label className="text-sm font-semibold text-gray-700">{label}</Label>
+        {showSelectAll && (
+          <button
+            type="button"
+            onClick={handleSelectAll}
+            className="text-xs font-semibold px-2 py-0.5 rounded-md border transition-colors"
+            style={{
+              color: BRAND,
+              borderColor: BRAND + "40",
+              background: allSelected ? BRAND + "15" : "transparent",
+            }}
+          >
+            {allSelected ? "Deselect All" : "Select All"}
+          </button>
+        )}
+      </div>
       <div className="flex flex-col gap-1.5">
         {options.map(opt => (
           <label key={opt} className="flex items-center gap-2 cursor-pointer">
@@ -365,8 +387,10 @@ const STEP_TITLES = [
   "Review Summary",
 ];
 
+const TODAY_PR = new Date().toISOString().slice(0, 10);
+
 const EMPTY_FORM: PRForm = {
-  reviewDate: "", examDate: "", examIdentifier: "",
+  reviewDate: TODAY_PR, examDate: TODAY_PR, examIdentifier: "",
   examType: "", examScope: "", stressStudyType: "", examIndication: "",
   sonographerEmail: "",
   protocolViewsObtained: [], protocolViewsObtainedOther: "",
@@ -592,8 +616,8 @@ export default function SonographerPeerReview({ embedded }: { embedded?: boolean
             <Input type="date" value={form.examDate} onChange={e => set("examDate", e.target.value)} />
           </div>
           <div>
-            <Label className="text-sm font-semibold text-gray-700 mb-1.5 block">Exam Identifier (LAS, FIR, MRN)</Label>
-            <Input value={form.examIdentifier} onChange={e => set("examIdentifier", e.target.value)} placeholder="e.g. MRN123" />
+            <Label className="text-sm font-semibold text-gray-700 mb-1.5 block">Exam Identifier (LAS, FIR)</Label>
+            <Input value={form.examIdentifier} onChange={e => set("examIdentifier", e.target.value)} placeholder="e.g. LAS001 or FIR-2026" />
           </div>
           <div>
             <Label className="text-sm font-semibold text-gray-700 mb-1.5 block">Sonographer Email *</Label>
@@ -679,8 +703,29 @@ export default function SonographerPeerReview({ embedded }: { embedded?: boolean
     const hasOther = viewsList.includes("Other");
     const mainViews = hasOther ? viewsList.filter(v => v !== "Other") : viewsList;
 
+    const allMainSelected = mainViews.every(v => form.protocolViewsObtained.includes(v));
+    const handleSelectAllViews = () => {
+      if (allMainSelected) set("protocolViewsObtained", []);
+      else set("protocolViewsObtained", [...mainViews, ...(hasOther && form.protocolViewsObtained.includes("Other") ? ["Other"] : [])]);
+    };
+    const allDopplerSelected = hasDopplerSection && PETTE_PETEE_DOPPLER_VIEWS.every(v => form.protocolDopplerViewsObtained.includes(v));
+    const handleSelectAllDoppler = () => {
+      if (allDopplerSelected) set("protocolDopplerViewsObtained", []);
+      else set("protocolDopplerViewsObtained", [...PETTE_PETEE_DOPPLER_VIEWS]);
+    };
+
     return (
       <SectionCard title={sectionTitle}>
+        <div className="flex justify-end mb-2">
+          <button
+            type="button"
+            onClick={handleSelectAllViews}
+            className="text-xs font-semibold px-2 py-0.5 rounded-md border transition-colors"
+            style={{ color: BRAND, borderColor: BRAND + "40", background: allMainSelected ? BRAND + "15" : "transparent" }}
+          >
+            {allMainSelected ? "Deselect All" : "Select All"}
+          </button>
+        </div>
         <div className="space-y-2 mb-4">
           {mainViews.map(view => (
             <label key={view} className="flex items-start gap-2 cursor-pointer">
@@ -715,7 +760,17 @@ export default function SonographerPeerReview({ embedded }: { embedded?: boolean
         )}
         {hasDopplerSection && (
           <div className="mt-6 pt-4 border-t border-gray-100">
-            <h4 className="text-sm font-semibold text-gray-700 mb-3">Doppler/color flow interrogation</h4>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-semibold text-gray-700">Doppler/color flow interrogation</h4>
+              <button
+                type="button"
+                onClick={handleSelectAllDoppler}
+                className="text-xs font-semibold px-2 py-0.5 rounded-md border transition-colors"
+                style={{ color: BRAND, borderColor: BRAND + "40", background: allDopplerSelected ? BRAND + "15" : "transparent" }}
+              >
+                {allDopplerSelected ? "Deselect All" : "Select All"}
+              </button>
+            </div>
             <div className="space-y-2">
               {PETTE_PETEE_DOPPLER_VIEWS.map(view => (
                 <label key={view} className="flex items-start gap-2 cursor-pointer">

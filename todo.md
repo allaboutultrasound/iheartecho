@@ -1841,3 +1841,9 @@
 - [x] Redesign ScanCoach Hub with hero banner and clean card grid (icon + name + view count)
 - [x] Redesign ScanCoach page tab switcher to match clean card grid from screenshot
 - [x] ScanCoach: accept both images and videos for clinical media uploads (editor + viewer)
+- [ ] Add status progression (Identified → Under Review → Submitted → Accepted) to Possible Case Studies tracker
+- [ ] Remove MRN field from Quality Review form
+- [ ] Remove MRN field from Sonographer Peer Review form
+- [ ] Auto-populate DOS/date fields with today's date on all forms
+- [ ] Add Select All option to protocol sequence checklists on Quality Review form
+- [ ] Add Select All option to protocol sequence checklists on Sonographer Peer Review form

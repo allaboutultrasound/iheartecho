@@ -54,12 +54,51 @@ const EXAM_TYPE_OPTIONS = [
 ];
 
 const STATUS_OPTIONS = [
-  { value: "identified", label: "Identified", color: "#6b7280" },
-  { value: "under_review", label: "Under Review", color: "#d97706" },
-  { value: "approved", label: "Approved", color: "#2563eb" },
-  { value: "submitted", label: "Submitted", color: "#16a34a" },
-  { value: "rejected", label: "Rejected", color: "#dc2626" },
+  { value: "identified",  label: "Identified",   color: "#6b7280", step: 1 },
+  { value: "under_review",label: "Under Review", color: "#d97706", step: 2 },
+  { value: "submitted",   label: "Submitted",    color: "#2563eb", step: 3 },
+  { value: "accepted",    label: "Accepted",     color: "#16a34a", step: 4 },
 ];
+
+// Progression stepper shown inside each card
+function StatusStepper({ current }: { current: string }) {
+  const idx = STATUS_OPTIONS.findIndex(s => s.value === current);
+  return (
+    <div className="flex items-center gap-0 mt-2">
+      {STATUS_OPTIONS.map((s, i) => {
+        const done = i <= idx;
+        const active = i === idx;
+        return (
+          <div key={s.value} className="flex items-center">
+            <div
+              className="flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold border-2 transition-all"
+              style={{
+                background: done ? s.color : "transparent",
+                borderColor: done ? s.color : "#d1d5db",
+                color: done ? "white" : "#9ca3af",
+                boxShadow: active ? `0 0 0 3px ${s.color}30` : "none",
+              }}
+            >
+              {s.step}
+            </div>
+            <span
+              className="hidden sm:block text-[10px] font-medium ml-1 mr-1"
+              style={{ color: done ? s.color : "#9ca3af" }}
+            >
+              {s.label}
+            </span>
+            {i < STATUS_OPTIONS.length - 1 && (
+              <div
+                className="h-0.5 w-6 sm:w-8 mx-0.5"
+                style={{ background: i < idx ? STATUS_OPTIONS[i + 1].color : "#e5e7eb" }}
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 const ACCREDITATION_TYPE_OPTIONS = [
   "Adult Echo",
@@ -68,7 +107,7 @@ const ACCREDITATION_TYPE_OPTIONS = [
   "TEE",
 ];
 
-type SubmissionStatus = "identified" | "under_review" | "approved" | "submitted" | "rejected";
+type SubmissionStatus = "identified" | "under_review" | "submitted" | "accepted";
 
 interface CaseFormData {
   examType: string;
@@ -96,7 +135,7 @@ const EMPTY_FORM: CaseFormData = {
   interpretingPhysicianName: "",
   interpretingPhysicianEmail: "",
   accreditationType: "",
-  submissionStatus: "identified",
+  submissionStatus: "identified" as SubmissionStatus,
   submissionNotes: "",
 };
 
@@ -343,7 +382,8 @@ export default function PossibleCaseStudies() {
                       {c.diagnosis && (
                         <p className="text-sm font-semibold text-gray-800 mb-1 truncate">{c.diagnosis}</p>
                       )}
-                      <div className="flex flex-wrap gap-3 text-xs text-gray-500">
+                      <StatusStepper current={c.submissionStatus} />
+                      <div className="flex flex-wrap gap-3 text-xs text-gray-500 mt-1">
                         {c.sonographerName && (
                           <span className="flex items-center gap-1">
                             <User className="w-3 h-3" /> {c.sonographerName}

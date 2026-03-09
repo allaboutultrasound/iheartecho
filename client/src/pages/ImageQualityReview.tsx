@@ -147,8 +147,10 @@ interface IQRForm {
   notifySonographerComments: string;
 }
 
+const TODAY = new Date().toISOString().slice(0, 10);
+
 const EMPTY_FORM: IQRForm = {
-  reviewDate: "", examDate: "", examIdentifier: "", referringPhysician: "",
+  reviewDate: TODAY, examDate: TODAY, examIdentifier: "", referringPhysician: "",
   examType: "", examScope: "", stressStudyType: "", examIndication: "",
   indicationAppropriateness: "", demographicsAccurate: "", demographicsExplain: "",
   protocolViewsObtained: [], protocolViewsObtainedOther: "",
@@ -406,17 +408,39 @@ function RadioGroup({ label, name, options, value, onChange, explain, onExplainC
   );
 }
 
-function CheckboxGroup({ label, options, values, onChange, explain, onExplainChange }: {
+function CheckboxGroup({ label, options, values, onChange, explain, onExplainChange, showSelectAll }: {
   label: string; options: string[]; values: string[];
   onChange: (v: string[]) => void; explain?: string; onExplainChange?: (v: string) => void;
+  showSelectAll?: boolean;
 }) {
   const toggle = (opt: string) => {
     if (values.includes(opt)) onChange(values.filter(v => v !== opt));
     else onChange([...values, opt]);
   };
+  const allSelected = options.every(o => values.includes(o));
+  const handleSelectAll = () => {
+    if (allSelected) onChange([]);
+    else onChange([...options]);
+  };
   return (
     <div className="mb-5">
-      <Label className="text-sm font-semibold text-gray-700 mb-2 block">{label}</Label>
+      <div className="flex items-center justify-between mb-2">
+        <Label className="text-sm font-semibold text-gray-700">{label}</Label>
+        {showSelectAll && (
+          <button
+            type="button"
+            onClick={handleSelectAll}
+            className="text-xs font-semibold px-2 py-0.5 rounded-md border transition-colors"
+            style={{
+              color: BRAND,
+              borderColor: BRAND + "40",
+              background: allSelected ? BRAND + "15" : "transparent",
+            }}
+          >
+            {allSelected ? "Deselect All" : "Select All"}
+          </button>
+        )}
+      </div>
       <div className="flex flex-col gap-1.5">
         {options.map(opt => (
           <label key={opt} className="flex items-center gap-2.5 cursor-pointer group">
@@ -743,8 +767,8 @@ export default function ImageQualityReview({ embedded = false }: Props) {
             <Input type="date" value={form.examDate} onChange={e => set("examDate", e.target.value)} />
           </div>
           <div>
-            <Label className="text-sm font-semibold text-gray-700 mb-1.5 block">Exam Identifier (LAS, FIR, MRN)</Label>
-            <Input value={form.examIdentifier} onChange={e => set("examIdentifier", e.target.value)} placeholder="e.g. MRN123" />
+            <Label className="text-sm font-semibold text-gray-700 mb-1.5 block">Exam Identifier (LAS, FIR)</Label>
+            <Input value={form.examIdentifier} onChange={e => set("examIdentifier", e.target.value)} placeholder="e.g. LAS001 or FIR-2026" />
           </div>
           <div>
             <Label className="text-sm font-semibold text-gray-700 mb-1.5 block">Referring Physician</Label>
@@ -859,6 +883,7 @@ export default function ImageQualityReview({ embedded = false }: Props) {
             options={viewsList}
             values={form.protocolViewsObtained}
             onChange={v => set("protocolViewsObtained", v)}
+            showSelectAll
           />
           {hasOther && form.protocolViewsObtained.includes("Other") && (
             <div className="mt-2">
@@ -874,6 +899,7 @@ export default function ImageQualityReview({ embedded = false }: Props) {
               options={PETTE_DOPPLER_VIEWS}
               values={form.protocolDopplerViewsObtained}
               onChange={v => set("protocolDopplerViewsObtained", v)}
+              showSelectAll
             />
           </SectionCard>
         )}

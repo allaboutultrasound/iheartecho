@@ -1984,7 +1984,7 @@ export const appRouter = router({
         interpretingPhysicianName: z.string().optional(),
         interpretingPhysicianEmail: z.string().optional(),
         accreditationType: z.string().optional(),
-        submissionStatus: z.enum(["identified", "under_review", "approved", "submitted", "rejected"]).optional(),
+        submissionStatus: z.enum(["identified", "under_review", "submitted", "accepted"]).optional(),
         submissionNotes: z.string().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
@@ -2014,7 +2014,7 @@ export const appRouter = router({
         interpretingPhysicianName: z.string().optional(),
         interpretingPhysicianEmail: z.string().optional(),
         accreditationType: z.string().optional(),
-        submissionStatus: z.enum(["identified", "under_review", "approved", "submitted", "rejected"]).optional(),
+        submissionStatus: z.enum(["identified", "under_review", "submitted", "accepted"]).optional(),
         submissionNotes: z.string().optional(),
       }))
       .mutation(async ({ ctx, input }) => {

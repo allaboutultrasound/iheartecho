@@ -1329,7 +1329,7 @@ export const possibleCaseStudies = mysqlTable("possibleCaseStudies", {
   interpretingPhysicianEmail: varchar("interpretingPhysicianEmail", { length: 200 }),
   // Accreditation tracking
   accreditationType: varchar("accreditationType", { length: 100 }),  // e.g. "Adult Echo", "Pediatric/Fetal"
-  submissionStatus: mysqlEnum("submissionStatus", ["identified", "under_review", "approved", "submitted", "rejected"]).default("identified").notNull(),
+  submissionStatus: mysqlEnum("submissionStatus", ["identified", "under_review", "submitted", "accepted"]).default("identified").notNull(),
   submissionNotes: text("submissionNotes"),
   // Lab linkage
   labId: int("labId"),
