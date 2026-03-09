@@ -16,6 +16,13 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
 import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 
+// ─── Helper: render image or video based on URL extension ───────────────────
+function MediaDisplay({ src, alt, className, style }: { src: string; alt: string; className?: string; style?: React.CSSProperties }) {
+  const isVideo = /\.(mp4|webm|ogv|mov)(\?|$)/i.test(src);
+  if (isVideo) return <video src={src} controls className={className} style={style} />;
+  return <img src={src} alt={alt} className={className} style={style} />;
+}
+
 // Map TEEIceScanCoach hyphenated view IDs → registry camelCase IDs for override lookup
 const TEE_ID_TO_REGISTRY: Record<string, string> = {
   "me-4c":          "me4c",
@@ -712,7 +719,7 @@ export function TEEIceScanCoachContent() {
                   <div className="flex justify-center items-center p-3 border-r border-gray-800">
                     <div className="text-center">
                       <p className="text-xs text-gray-400 mb-1.5">Anatomy Diagram</p>
-                      <img src={(selectedViewMerged as any).anatomyImageUrl} alt={`${selectedView.name} diagram`} className="max-h-56 object-contain rounded" style={{ background: "#030712" }} />
+                      <MediaDisplay src={(selectedViewMerged as any).anatomyImageUrl} alt={`${selectedView.name} diagram`} className="max-h-56 object-contain rounded" style={{ background: "#030712" }} />
                     </div>
                   </div>
                 )}
@@ -720,7 +727,7 @@ export function TEEIceScanCoachContent() {
                   <div className="flex justify-center items-center p-3">
                     <div className="text-center">
                       <p className="text-xs text-gray-400 mb-1.5">Clinical Echo Image</p>
-                      <img src={(selectedViewMerged as any).echoImageUrl} alt={`${selectedView.name} echo`} className="max-h-56 object-contain rounded" style={{ background: "#030712" }} />
+                      <MediaDisplay src={(selectedViewMerged as any).echoImageUrl} alt={`${selectedView.name} echo`} className="max-h-56 object-contain rounded" style={{ background: "#030712" }} />
                     </div>
                   </div>
                 )}

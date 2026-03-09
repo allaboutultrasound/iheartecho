@@ -8,7 +8,7 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { useSearch, Link } from "wouter";
 import Layout from "@/components/Layout";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
-import { Scan, Heart, Info, Eye, AlertTriangle, ChevronRight, Zap, Clock, Activity, TrendingUp, CheckCircle2, XCircle, Wind, Stethoscope, Baby, Users, Wind as WindIcon } from "lucide-react";
+import { Scan, Heart, Info, Eye, AlertTriangle, ChevronRight, Zap, Clock, Activity, TrendingUp, CheckCircle2, XCircle, Wind, Stethoscope, Baby, Users, Wind as WindIcon, Microscope } from "lucide-react";
 import PedCHDCoach from "@/components/PedCHDCoach";
 import { HOCMScanCoachContent } from "@/pages/HOCMScanCoach";
 import { StrainScanCoachContent } from "@/pages/StrainScanCoach";
@@ -17,6 +17,15 @@ import { DiastolicScanCoachContent } from "@/pages/DiastolicNavigator";
 import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 import { TEEIceScanCoachContent } from "@/pages/TEEIceScanCoach";
 import { ICEScanCoachContent } from "@/pages/ICEScanCoach";
+
+// ─── Helper: render image or video based on URL extension ───────────────────
+function MediaDisplay({ src, alt, className, style }: { src: string; alt: string; className?: string; style?: React.CSSProperties }) {
+  const isVideo = /\.(mp4|webm|ogv|mov)(\?|$)/i.test(src);
+  if (isVideo) {
+    return <video src={src} controls className={className} style={style} />;
+  }
+  return <img src={src} alt={alt} className={className} style={style} />;
+}
 
 // ─── CDN image URLs (clinical images from iHeartEcho™ curriculum) ───
 const CDN = {
@@ -879,7 +888,7 @@ function PulmHTNScanCoach() {
                       <div className="flex justify-center items-center p-3 border-r border-gray-800">
                         <div className="text-center">
                           <p className="text-xs text-gray-400 mb-1.5">Anatomy Diagram</p>
-                          <img src={(selectedViewMerged as any).anatomyImageUrl} alt={`${selectedView.label} diagram`} className="max-h-56 object-contain rounded" style={{ background: "#030712" }} />
+                          <MediaDisplay src={(selectedViewMerged as any).anatomyImageUrl} alt={`${selectedView.label} diagram`} className="max-h-56 object-contain rounded" style={{ background: "#030712" }} />
                         </div>
                       </div>
                     )}
@@ -887,7 +896,7 @@ function PulmHTNScanCoach() {
                       <div className="flex justify-center items-center p-3">
                         <div className="text-center">
                           <p className="text-xs text-gray-400 mb-1.5">Clinical Echo Image</p>
-                          <img src={(selectedViewMerged as any).echoImageUrl} alt={`${selectedView.label} echo`} className="max-h-56 object-contain rounded" style={{ background: "#030712" }} />
+                          <MediaDisplay src={(selectedViewMerged as any).echoImageUrl} alt={`${selectedView.label} echo`} className="max-h-56 object-contain rounded" style={{ background: "#030712" }} />
                         </div>
                       </div>
                     )}
@@ -1125,7 +1134,7 @@ function ACHDScanCoach() {
                   <div className="flex justify-center items-center p-3 border-r border-gray-800">
                     <div className="text-center">
                       <p className="text-xs text-gray-400 mb-1.5">Anatomy Diagram</p>
-                      <img src={(selectedLesionMerged as any).anatomyImageUrl} alt={`${selectedLesion.label} diagram`} className="max-h-56 object-contain rounded" style={{ background: "#030712" }} />
+                      <MediaDisplay src={(selectedLesionMerged as any).anatomyImageUrl} alt={`${selectedLesion.label} diagram`} className="max-h-56 object-contain rounded" style={{ background: "#030712" }} />
                     </div>
                   </div>
                 )}
@@ -1133,7 +1142,7 @@ function ACHDScanCoach() {
                   <div className="flex justify-center items-center p-3">
                     <div className="text-center">
                       <p className="text-xs text-gray-400 mb-1.5">Clinical Echo Image</p>
-                      <img src={(selectedLesionMerged as any).echoImageUrl} alt={`${selectedLesion.label} echo`} className="max-h-56 object-contain rounded" style={{ background: "#030712" }} />
+                      <MediaDisplay src={(selectedLesionMerged as any).echoImageUrl} alt={`${selectedLesion.label} echo`} className="max-h-56 object-contain rounded" style={{ background: "#030712" }} />
                     </div>
                   </div>
                 )}
@@ -1259,7 +1268,7 @@ export default function ScanCoach() {
 
       <div className="max-w-7xl mx-auto px-4 py-6">
 
-        {/* Tab switcher + Go to Navigator */}
+        {/* Module Card Grid */}
         {(() => {
           const tabNavMap: Record<string, { path: string; label: string }> = {
             tte: { path: "/tte", label: "TTE Navigator" },
@@ -1274,29 +1283,58 @@ export default function ScanCoach() {
             tee: { path: "/tee", label: "TEE Navigator" },
             ice: { path: "/ice", label: "ICE Navigator" },
           };
+          const tabMeta: Array<{ key: typeof activeTab; label: string; shortLabel: string; icon: React.ElementType; views: number }> = [
+            { key: "tte",      label: "Adult TTE",          shortLabel: "Adult TTE",         icon: Stethoscope, views: 10 },
+            { key: "tee",      label: "TEE",                shortLabel: "TEE",               icon: Microscope,  views: 13 },
+            { key: "ice",      label: "ICE",                shortLabel: "ICE",               icon: Scan,        views: 9  },
+            { key: "uea",      label: "UEA",                shortLabel: "UEA",               icon: Zap,         views: 7  },
+            { key: "strain",   label: "Strain",             shortLabel: "Strain",            icon: Activity,    views: 4  },
+            { key: "hocm",     label: "HOCM",               shortLabel: "HOCM",              icon: Heart,       views: 14 },
+            { key: "chd",      label: "Pediatric CHD",      shortLabel: "Pediatric CHD",     icon: Users,       views: 14 },
+            { key: "fetal",    label: "Fetal Echo",         shortLabel: "Fetal Echo",        icon: Baby,        views: 13 },
+            { key: "achd",     label: "Adult Congenital",   shortLabel: "Adult Congenital",  icon: Heart,       views: 13 },
+            { key: "diastolic",label: "Diastolic Function", shortLabel: "Diastolic",         icon: Wind,        views: 7  },
+            { key: "pulm",     label: "Pulmonary HTN & PE", shortLabel: "Pulm HTN & PE",     icon: Wind,        views: 8  },
+          ];
           const nav = tabNavMap[activeTab];
           return (
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-              <div className="flex flex-wrap gap-2">
-                {(["tte", "chd", "fetal", "achd", "diastolic", "strain", "uea", "hocm", "pulm", "tee", "ice"] as const).map(tab => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className="px-5 py-2 rounded-lg text-sm font-semibold transition-all"
-                    style={activeTab === tab
-                      ? { background: "#189aa1", color: "white" }
-                      : { background: "white", color: "#189aa1", border: "1px solid #e2e8f0" }}
-                  >
-                    {tab === "tte" ? "Adult TTE" : tab === "fetal" ? "Fetal Echo" : tab === "achd" ? "Adult Congenital" : tab === "diastolic" ? "Diastolic Function" : tab === "strain" ? "Strain" : tab === "uea" ? "UEA" : tab === "hocm" ? "HOCM" : tab === "pulm" ? "Pulmonary HTN & PE" : tab === "tee" ? "TEE" : tab === "ice" ? "ICE" : "Pediatric CHD"}
-                  </button>
-                ))}
+            <div className="mb-6">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 mb-4">
+                {tabMeta.map(({ key, label, icon: Icon, views }) => {
+                  const isActive = activeTab === key;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setActiveTab(key)}
+                      className="flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all text-center cursor-pointer"
+                      style={isActive
+                        ? { background: "#189aa1", borderColor: "#189aa1", color: "white" }
+                        : { background: "white", borderColor: "#e2e8f0", color: "#374151" }}
+                    >
+                      <div
+                        className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                        style={isActive
+                          ? { background: "rgba(255,255,255,0.2)" }
+                          : { background: "#189aa1" + "15" }}
+                      >
+                        <Icon className="w-5 h-5" style={{ color: isActive ? "white" : "#189aa1" }} />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold leading-tight" style={{ color: isActive ? "white" : "#1f2937" }}>{label}</div>
+                        <div className="text-[10px] mt-0.5" style={{ color: isActive ? "rgba(255,255,255,0.8)" : "#9ca3af" }}>{views} views</div>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
               {nav && (
-                <Link href={nav.path}>
-                  <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold border transition-all hover:bg-[#189aa1]/5 cursor-pointer" style={{ borderColor: "#189aa1" + "40", color: "#189aa1" }}>
-                    Go to {nav.label} <Stethoscope className="w-3.5 h-3.5" />
-                  </span>
-                </Link>
+                <div className="flex justify-end">
+                  <Link href={nav.path}>
+                    <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold border transition-all hover:bg-[#189aa1]/5 cursor-pointer" style={{ borderColor: "#189aa1" + "40", color: "#189aa1" }}>
+                      Go to {nav.label} <Stethoscope className="w-3.5 h-3.5" />
+                    </span>
+                  </Link>
+                </div>
               )}
             </div>
           );
@@ -1347,8 +1385,8 @@ export default function ScanCoach() {
                 {/* Probe diagram */}
                 <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
                   <h3 className="font-bold text-sm text-gray-700 mb-3" style={{ fontFamily: "Merriweather, serif" }}>Transducer Positioning</h3>
-                  {(selectedTTEMerged as any).transducerImageUrl ? (
-                    <img
+                    {(selectedTTEMerged as any).transducerImageUrl ? (
+                    <MediaDisplay
                       src={(selectedTTEMerged as any).transducerImageUrl}
                       alt={`${selectedTTEMerged.name} transducer position`}
                       className="w-full rounded-lg object-contain"
@@ -1411,7 +1449,7 @@ export default function ScanCoach() {
                     {(selectedTTEMerged as any).echoImageUrl && (
                       <div className="flex flex-col items-center gap-1">
                         <p className="text-xs text-gray-400">Clinical Echo</p>
-                        <img
+                        <MediaDisplay
                           src={(selectedTTEMerged as any).echoImageUrl}
                           alt={`${selectedTTEMerged.name} clinical echo`}
                           className="max-h-64 object-contain rounded w-full"
@@ -1422,7 +1460,7 @@ export default function ScanCoach() {
                     {(selectedTTEMerged as any).anatomyImageUrl && (
                       <div className="flex flex-col items-center gap-1">
                         <p className="text-xs text-gray-400">Anatomy Reference</p>
-                        <img
+                        <MediaDisplay
                           src={(selectedTTEMerged as any).anatomyImageUrl}
                           alt={`${selectedTTEMerged.name} anatomy`}
                           className="max-h-64 object-contain rounded w-full"
@@ -1991,7 +2029,7 @@ export default function ScanCoach() {
                   <div className="flex justify-center items-center p-3 border-r border-gray-800">
                     <div className="text-center">
                       <p className="text-xs text-gray-400 mb-1.5">Anatomy Diagram</p>
-                      <img
+                      <MediaDisplay
                         src={(selectedFetalMerged as any).anatomyImageUrl || selectedFetal.imageUrl}
                         alt={`${selectedFetalMerged.name} diagram`}
                         className="max-h-60 object-contain rounded"
@@ -2002,7 +2040,7 @@ export default function ScanCoach() {
                   <div className="flex justify-center items-center p-3">
                     <div className="text-center">
                       <p className="text-xs text-gray-400 mb-1.5">Clinical Echo Image</p>
-                      <img
+                      <MediaDisplay
                         src={(selectedFetalMerged as any).echoImageUrl || selectedFetal.imageUrl}
                         alt={`${selectedFetalMerged.name} echo`}
                         className="max-h-60 object-contain rounded"

@@ -1832,3 +1832,12 @@
 - [ ] Add Peer Review results section to Reports & Analytics tab (separate from IQR quality reviews)
 - [ ] Create Possible Case Studies tracker tab under Case Studies (unique ID, sonographer, interpreting physician, exam info, linked from QR "IAC Acceptable" field)
 - [ ] ScanCoach: accept both images and videos for clinical media uploads
+- [x] Auto-calculate quality score on Quality Review form (Yes/Adequate/Complete/N/A = positive; No/Incomplete/Inadequate/Deficiencies = zero; IAC Acceptable = heavy weight 3pts)
+- [x] Auto-calculate quality score on Sonographer Peer Review form (same logic minus IAC field)
+- [x] Display quality score at bottom of final step, only when all fields above are complete
+- [x] Add Send Feedback button to Sonographer Peer Review form
+- [x] Add Peer Review Monthly Detail table to Reports & Analytics tab
+- [x] Create Possible Case Studies tracker tab under Case Studies (unique IDs, Sonographer + Physician fields)
+- [x] Redesign ScanCoach Hub with hero banner and clean card grid (icon + name + view count)
+- [x] Redesign ScanCoach page tab switcher to match clean card grid from screenshot
+- [x] ScanCoach: accept both images and videos for clinical media uploads (editor + viewer)

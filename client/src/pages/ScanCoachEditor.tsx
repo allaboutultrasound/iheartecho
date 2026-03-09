@@ -394,12 +394,16 @@ function ImageUploadZone({
 
   const handleFile = useCallback(
     async (file: File) => {
-      if (!file.type.startsWith("image/")) {
-        toast.error("Please upload an image file (JPEG, PNG, GIF, WebP, or SVG)");
+      const isImage = file.type.startsWith("image/");
+      const isVideo = file.type.startsWith("video/");
+      if (!isImage && !isVideo) {
+        toast.error("Please upload an image (JPEG, PNG, GIF, WebP, SVG) or video (MP4, WebM, MOV)");
         return;
       }
-      if (file.size > 8 * 1024 * 1024) {
-        toast.error("Image must be under 8 MB");
+      const maxSize = isVideo ? 100 * 1024 * 1024 : 8 * 1024 * 1024;
+      const maxLabel = isVideo ? "100 MB" : "8 MB";
+      if (file.size > maxSize) {
+        toast.error(`${isVideo ? "Video" : "Image"} must be under ${maxLabel}`);
         return;
       }
       setIsUploading(true);
@@ -439,11 +443,19 @@ function ImageUploadZone({
 
       {currentUrl && (
         <div className="relative rounded-lg overflow-hidden bg-gray-950 border border-gray-200" style={{ minHeight: 120 }}>
-          <img
-            src={currentUrl}
-            alt={slot.label}
-            className="w-full object-contain max-h-48"
-          />
+          {/\.(mp4|webm|ogv|mov)$/i.test(currentUrl) ? (
+            <video
+              src={currentUrl}
+              controls
+              className="w-full max-h-48 object-contain"
+            />
+          ) : (
+            <img
+              src={currentUrl}
+              alt={slot.label}
+              className="w-full object-contain max-h-48"
+            />
+          )}
           <a
             href={currentUrl}
             target="_blank"
@@ -477,15 +489,15 @@ function ImageUploadZone({
         ) : (
           <div className="flex flex-col items-center gap-1 text-gray-400">
             <Upload className="w-5 h-5" />
-            <span className="text-xs">{currentUrl ? "Replace image" : "Upload image"}</span>
-            <span className="text-[10px]">JPEG, PNG, GIF, WebP, SVG · max 8 MB</span>
+            <span className="text-xs">{currentUrl ? "Replace media" : "Upload image or video"}</span>
+            <span className="text-[10px]">JPEG, PNG, GIF, WebP, SVG · MP4, WebM, MOV · max 100 MB</span>
           </div>
         )}
       </div>
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept="image/*,video/mp4,video/webm,video/ogg,video/quicktime"
         className="hidden"
         onChange={(e) => {
           const file = e.target.files?.[0];

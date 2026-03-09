@@ -65,8 +65,8 @@ const imageUploadSchema = z.object({
   slot: z.enum(["echo", "anatomy", "transducer"]),
   /** Base64-encoded image data (without data: prefix) */
   base64Data: z.string(),
-  /** MIME type, e.g. image/jpeg */
-  mimeType: z.string().regex(/^image\/(jpeg|png|gif|webp|svg\+xml)$/),
+  /** MIME type, e.g. image/jpeg or video/mp4 */
+  mimeType: z.string().regex(/^(image\/(jpeg|png|gif|webp|svg\+xml)|video\/(mp4|webm|ogg|quicktime))$/),
   /** Original filename for the S3 key */
   fileName: z.string().max(128),
 });
@@ -157,7 +157,12 @@ export const scanCoachAdminRouter = router({
       const buffer = Buffer.from(input.base64Data, "base64");
 
       // Build a non-enumerable S3 key with a random suffix
-      const ext = input.mimeType.split("/")[1].replace("svg+xml", "svg");
+      const mimeToExt: Record<string, string> = {
+        "image/jpeg": "jpg", "image/png": "png", "image/gif": "gif",
+        "image/webp": "webp", "image/svg+xml": "svg",
+        "video/mp4": "mp4", "video/webm": "webm", "video/ogg": "ogv", "video/quicktime": "mov",
+      };
+      const ext = mimeToExt[input.mimeType] ?? input.mimeType.split("/")[1];
       const randomSuffix = Math.random().toString(36).slice(2, 10);
       const safeFileName = input.fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
       const key = `scancoach/${input.module}/${input.viewId}/${input.slot}-${safeFileName}-${randomSuffix}.${ext}`;
@@ -277,7 +282,12 @@ export const scanCoachAdminRouter = router({
       await assertPlatformAdmin(ctx);
 
       const buffer = Buffer.from(input.base64Data, "base64");
-      const ext = input.mimeType.split("/")[1].replace("svg+xml", "svg");
+      const mimeToExt: Record<string, string> = {
+        "image/jpeg": "jpg", "image/png": "png", "image/gif": "gif",
+        "image/webp": "webp", "image/svg+xml": "svg",
+        "video/mp4": "mp4", "video/webm": "webm", "video/ogg": "ogv", "video/quicktime": "mov",
+      };
+      const ext = mimeToExt[input.mimeType] ?? input.mimeType.split("/")[1];
       const randomSuffix = Math.random().toString(36).slice(2, 10);
       const safeFileName = input.fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
       const key = `scancoach/tee-ice/${input.viewId}/${input.mediaType}-${safeFileName}-${randomSuffix}.${ext}`;
