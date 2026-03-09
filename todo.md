@@ -1541,3 +1541,18 @@
 - [x] Add Study Mode toggle to Flashcard Deck (sequential vs spaced-repetition order — cards with more misses appear first)
 - [x] Add daily streak tracker to Daily Challenge QuickFire page — enhanced streak counter with milestone messages (3d, 7d, 14d, 30d) and amber gradient styling
 - [x] Upload sample echo images and create image-based questions — 6 PLAX/A4C image-based MCQ questions inserted (PLAX labeled, PLAX normal, A4C labeled, A4C normal)
+
+## Session Mar 09 2026 — LAP Estimation Calculator
+- [ ] Add Diastology LAP Estimation calculator to EchoAssist (ASE 2025 algorithm, Step 1 + Step 2 branches, all grade outputs)
+
+## Diastology LAP Estimation Calculator (Completed Mar 09 2026)
+- [x] LAPEstimationCalculator function added to EchoCalculator.tsx
+- [x] Step 1: Three-variable assessment (e', E/e', TR Vmax/PASP) with per-variable badges
+- [x] Step 2: Four additional LAP markers (PV S/D, LARS, LAVi, IVRT) — shown only when triggered
+- [x] E/A ratio input for grading (Grade I / II / III)
+- [x] All 5 decision branches per ASE 2025 algorithm
+- [x] Auto-average e' and E/e' from septal + lateral inputs
+- [x] Decision logic summary panel in result
+- [x] Tab entry added to calculators array (after Diastology Special Populations)
+- [x] componentMap entry added (lap_estimation)
+- [x] TypeScript: 0 errors

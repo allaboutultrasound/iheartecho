@@ -1177,6 +1177,460 @@ function SVCalculator() {
   );
 }
 
+// --- DIASTOLOGY LAP ESTIMATION -----------------------------------------------
+// Per ASE 2025 LV Diastolic Function Guidelines
+function LAPEstimationCalculator() {
+  // ── Step 1 inputs: e' (septal + lateral), E/e', TR velocity / PASP
+  const [eSeptal, setESeptal] = useState("");
+  const [eLateral, setELateral] = useState("");
+  const [eVel, setEVel] = useState("");
+  const [aVel, setAVel] = useState("");
+  const [eeRatioSep, setEeRatioSep] = useState("");
+  const [eeRatioLat, setEeRatioLat] = useState("");
+  const [trVmax, setTrVmax] = useState("");
+  const [pasp, setPasp] = useState("");
+
+  // ── Step 2 inputs: PV S/D, LARS, LAVi, IVRT
+  const [pvSD, setPvSD] = useState("");
+  const [lars, setLars] = useState("");
+  const [lavi, setLavi] = useState("");
+  const [ivrt, setIvrt] = useState("");
+
+  // ── Parse values
+  const epSep = parseFloat(eSeptal);
+  const epLat = parseFloat(eLateral);
+  const eV = parseFloat(eVel);
+  const aV = parseFloat(aVel);
+  const eeS = parseFloat(eeRatioSep);
+  const eeL = parseFloat(eeRatioLat);
+  const trV = parseFloat(trVmax);
+  const paspV = parseFloat(pasp);
+  const pvSDV = parseFloat(pvSD);
+  const larsV = parseFloat(lars);
+  const laviV = parseFloat(lavi);
+  const ivrtV = parseFloat(ivrt);
+
+  const epSepEntered = eSeptal !== "" && !isNaN(epSep) && epSep > 0;
+  const epLatEntered = eLateral !== "" && !isNaN(epLat) && epLat > 0;
+  const eEntered = eVel !== "" && !isNaN(eV) && eV > 0;
+  const aEntered = aVel !== "" && !isNaN(aV) && aV > 0;
+  const eeSepEntered = eeRatioSep !== "" && !isNaN(eeS) && eeS > 0;
+  const eeLatEntered = eeRatioLat !== "" && !isNaN(eeL) && eeL > 0;
+  const trEntered = trVmax !== "" && !isNaN(trV) && trV > 0;
+  const paspEntered = pasp !== "" && !isNaN(paspV) && paspV > 0;
+
+  // ── Auto-average e'
+  const avgEp = epSepEntered && epLatEntered
+    ? (epSep + epLat) / 2
+    : epSepEntered ? epSep : epLatEntered ? epLat : 0;
+
+  // ── Auto-average E/e'
+  let avgEeRatio = 0;
+  if (eeSepEntered && eeLatEntered) {
+    avgEeRatio = (eeS + eeL) / 2;
+  } else if (eeSepEntered) {
+    avgEeRatio = eeS;
+  } else if (eeLatEntered) {
+    avgEeRatio = eeL;
+  } else if (eEntered && avgEp > 0) {
+    avgEeRatio = eV / avgEp;
+  }
+
+  // ── E/A ratio
+  const eaRatio = eEntered && aEntered ? eV / aV : 0;
+
+  // ── Step 1: Evaluate each of the 3 variables
+  const epSepReduced = epSepEntered && epSep <= 6;
+  const epLatReduced = epLatEntered && epLat <= 7;
+  const avgEpReduced = epSepEntered && epLatEntered && avgEp <= 6.5;
+  const eReduced = epSepReduced || epLatReduced || avgEpReduced;
+  const eEntered1 = epSepEntered || epLatEntered;
+
+  const eeSepIncreased = eeSepEntered && eeS >= 15;
+  const eeLatIncreased = eeLatEntered && eeL >= 13;
+  const eeAvgIncreased = avgEeRatio > 0 && avgEeRatio >= 14;
+  const eeIncreased = eeSepIncreased || eeLatIncreased || eeAvgIncreased;
+  const eeEntered1 = eeSepEntered || eeLatEntered || (eEntered && avgEp > 0);
+
+  const trIncreased = trEntered && trV >= 2.8;
+  const paspIncreased = paspEntered && paspV >= 35;
+  const trPaspIncreased = trIncreased || paspIncreased;
+  const trPaspEntered = trEntered || paspEntered;
+
+  const step1Abnormal: boolean[] = [];
+  if (eEntered1) step1Abnormal.push(eReduced);
+  if (eeEntered1) step1Abnormal.push(eeIncreased);
+  if (trPaspEntered) step1Abnormal.push(trPaspIncreased);
+  const step1AbnormalCount = step1Abnormal.filter(Boolean).length;
+  const step1EnteredCount = step1Abnormal.length;
+
+  // ── Step 2: Evaluate markers
+  const pvSDAbnormal = pvSDV > 0 && pvSDV <= 0.67;
+  const larsAbnormal = larsV > 0 && larsV <= 18;
+  const laviAbnormal = laviV > 0 && laviV > 34;
+  const ivrtAbnormal = ivrtV > 0 && ivrtV <= 70;
+  const step2Markers = [
+    pvSDV > 0 ? pvSDAbnormal : null,
+    larsV > 0 ? larsAbnormal : null,
+    laviV > 0 ? laviAbnormal : null,
+    ivrtV > 0 ? ivrtAbnormal : null,
+  ].filter((v): v is boolean => v !== null);
+  const step2AbnormalCount = step2Markers.filter(Boolean).length;
+  const step2EnteredCount = step2Markers.length;
+  const step2HasAbnormal = step2AbnormalCount >= 1;
+
+  // ── Decision logic
+  type LAPResult = {
+    lapStatus: "normal" | "increased" | "pending";
+    grade: string;
+    gradeColor: string;
+    gradeNote: string;
+    needsStep2: boolean;
+    step2Triggered: boolean;
+  };
+
+  const result: LAPResult = {
+    lapStatus: "pending",
+    grade: "",
+    gradeColor: "#189aa1",
+    gradeNote: "",
+    needsStep2: false,
+    step2Triggered: false,
+  };
+
+  const hasAnyInput = eEntered1 || eeEntered1 || trPaspEntered || pvSDV > 0 || larsV > 0 || laviV > 0 || ivrtV > 0;
+
+  if (step1EnteredCount === 0) {
+    result.grade = "Enter Step 1 parameters to begin";
+  } else if (step1AbnormalCount === 0) {
+    result.lapStatus = "normal";
+    result.grade = "Normal LAP — Normal Diastolic Function";
+    result.gradeColor = "#16a34a";
+    result.gradeNote = "All Step 1 variables within normal limits. No diastolic dysfunction.";
+  } else if (step1AbnormalCount === 3) {
+    result.lapStatus = "increased";
+    if (eaRatio >= 2) {
+      result.grade = "Increased LAP — Grade III Diastolic Dysfunction";
+      result.gradeColor = "#dc2626";
+      result.gradeNote = "All 3 Step 1 variables abnormal + E/A ≥2 → Grade III restrictive filling, markedly elevated LAP.";
+    } else if (eaRatio > 0) {
+      result.grade = "Increased LAP — Grade II Diastolic Dysfunction";
+      result.gradeColor = "#f97316";
+      result.gradeNote = "All 3 Step 1 variables abnormal + E/A <2 → Grade II, mild-to-moderate elevated LAP.";
+    } else {
+      result.grade = "Increased LAP — Enter E/A to grade";
+      result.gradeColor = "#f97316";
+      result.gradeNote = "All 3 Step 1 variables abnormal → Increased LAP confirmed. Enter E and A velocities to determine grade.";
+    }
+  } else {
+    const eReducedOnly = eReduced && !eeIncreased && !trPaspIncreased;
+    const eeOnlyOrTrOnly = !eReduced && (eeIncreased || trPaspIncreased) && step1AbnormalCount === 1;
+    const any2Abnormal = step1AbnormalCount === 2;
+
+    if (eReducedOnly) {
+      if (eaRatio > 0 && eaRatio <= 0.8) {
+        result.lapStatus = "normal";
+        result.grade = "Normal LAP — Grade I Diastolic Dysfunction";
+        result.gradeColor = "#d97706";
+        result.gradeNote = "Reduced e\' only + E/A ≤0.8 → Grade I impaired relaxation, normal filling pressures. If symptomatic, consider diastolic exercise echo.";
+      } else {
+        result.needsStep2 = true;
+        result.step2Triggered = true;
+        if (step2EnteredCount === 0) {
+          result.grade = "Enter Step 2 parameters to classify";
+          result.gradeNote = "Reduced e\' only + E/A >0.8 → Step 2 required to determine LAP.";
+        } else if (!step2HasAbnormal) {
+          result.lapStatus = "normal";
+          result.grade = "Normal LAP — Grade I Diastolic Dysfunction";
+          result.gradeColor = "#d97706";
+          result.gradeNote = "Reduced e\' only + E/A >0.8 + no Step 2 markers → Normal LAP, Grade I.";
+        } else {
+          result.lapStatus = "increased";
+          if (eaRatio >= 2) {
+            result.grade = "Increased LAP — Grade III Diastolic Dysfunction";
+            result.gradeColor = "#dc2626";
+            result.gradeNote = "Reduced e\' + E/A >0.8 + ≥1 Step 2 marker + E/A ≥2 → Grade III.";
+          } else if (eaRatio > 0) {
+            result.grade = "Increased LAP — Grade II Diastolic Dysfunction";
+            result.gradeColor = "#f97316";
+            result.gradeNote = "Reduced e\' + E/A >0.8 + ≥1 Step 2 marker + E/A <2 → Grade II.";
+          } else {
+            result.grade = "Increased LAP — Enter E/A to grade";
+            result.gradeColor = "#f97316";
+            result.gradeNote = "≥1 Step 2 marker present → Increased LAP. Enter E and A velocities to determine grade.";
+          }
+        }
+      }
+    } else if (eeOnlyOrTrOnly || any2Abnormal) {
+      result.needsStep2 = true;
+      result.step2Triggered = true;
+      if (step2EnteredCount === 0) {
+        result.grade = "Enter Step 2 parameters to classify";
+        result.gradeNote = any2Abnormal
+          ? "2 Step 1 variables abnormal → Step 2 required to determine LAP."
+          : "Single Step 1 variable abnormal → Step 2 required to determine LAP.";
+      } else if (!step2HasAbnormal) {
+        result.lapStatus = "normal";
+        result.grade = "Normal LAP — Grade I Diastolic Dysfunction";
+        result.gradeColor = "#d97706";
+        result.gradeNote = "Step 1 abnormal + no Step 2 markers present → Normal LAP, Grade I.";
+      } else {
+        result.lapStatus = "increased";
+        if (eaRatio >= 2) {
+          result.grade = "Increased LAP — Grade III Diastolic Dysfunction";
+          result.gradeColor = "#dc2626";
+          result.gradeNote = "Step 1 abnormal + ≥1 Step 2 marker + E/A ≥2 → Grade III.";
+        } else if (eaRatio > 0) {
+          result.grade = "Increased LAP — Grade II Diastolic Dysfunction";
+          result.gradeColor = "#f97316";
+          result.gradeNote = "Step 1 abnormal + ≥1 Step 2 marker + E/A <2 → Grade II.";
+        } else {
+          result.grade = "Increased LAP — Enter E/A to grade";
+          result.gradeColor = "#f97316";
+          result.gradeNote = "≥1 Step 2 marker present → Increased LAP. Enter E and A velocities to determine grade.";
+        }
+      }
+    }
+  }
+
+  return (
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="rounded-xl p-4 text-white" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}>
+        <div className="flex items-center gap-2 mb-1">
+          <Calculator className="w-4 h-4 text-[#4ad9e0]" />
+          <span className="text-xs font-bold uppercase tracking-wider text-[#4ad9e0]">ASE 2025</span>
+        </div>
+        <div className="text-base font-bold">Diastology LAP Estimation</div>
+        <div className="text-xs text-white/70 mt-0.5">Left Atrial Pressure estimation via 3-variable algorithm</div>
+      </div>
+
+      {/* Step 1 */}
+      <div className="border border-[#189aa1]/30 rounded-xl p-4 space-y-3 bg-[#f8feff]">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-xs font-bold uppercase tracking-wider text-white bg-[#189aa1] px-2 py-0.5 rounded-full">Step 1</span>
+          <span className="text-sm font-semibold text-[#189aa1]">Three-Variable Assessment</span>
+        </div>
+        <div className="text-xs text-gray-500 mb-2">Evaluate all three variables. Count how many are abnormal.</div>
+
+        {/* Variable 1: e' */}
+        <div className="bg-white rounded-lg p-3 border border-gray-100">
+          <div className="text-xs font-bold text-gray-700 mb-2">① e\' Velocity <span className="font-normal text-gray-400">(Reduced: septal ≤6 or lateral ≤7 or avg ≤6.5 cm/s)</span></div>
+          <div className="grid grid-cols-2 gap-3">
+            <InputField label="e\' Septal" unit="cm/s" value={eSeptal} onChange={setESeptal} placeholder="e.g. 5" hint="Reduced ≤6" />
+            <InputField label="e\' Lateral" unit="cm/s" value={eLateral} onChange={setELateral} placeholder="e.g. 7" hint="Reduced ≤7" />
+          </div>
+          {epSepEntered && epLatEntered && (
+            <div className="flex items-center gap-2 mt-2">
+              <span className="text-xs text-gray-500">Average e\':</span>
+              <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${avgEp <= 6.5 ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                {avgEp.toFixed(1)} cm/s {avgEp <= 6.5 ? "↓ Reduced" : "✓ Normal"}
+              </span>
+            </div>
+          )}
+          {(epSepEntered || epLatEntered) && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {epSepEntered && (
+                <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${epSepReduced ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                  Septal {epSep} cm/s {epSepReduced ? "↓ Reduced" : "✓ Normal"}
+                </span>
+              )}
+              {epLatEntered && (
+                <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${epLatReduced ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                  Lateral {epLat} cm/s {epLatReduced ? "↓ Reduced" : "✓ Normal"}
+                </span>
+              )}
+              <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${eReduced ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                Variable 1: {eReduced ? "ABNORMAL" : "Normal"}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Variable 2: E/e' */}
+        <div className="bg-white rounded-lg p-3 border border-gray-100">
+          <div className="text-xs font-bold text-gray-700 mb-2">② E/e\' Ratio <span className="font-normal text-gray-400">(Increased: septal ≥15 or lateral ≥13 or avg ≥14)</span></div>
+          <div className="grid grid-cols-2 gap-3">
+            <InputField label="E/e\' Septal" unit="" value={eeRatioSep} onChange={setEeRatioSep} placeholder="e.g. 16" hint="Increased ≥15" />
+            <InputField label="E/e\' Lateral" unit="" value={eeRatioLat} onChange={setEeRatioLat} placeholder="e.g. 14" hint="Increased ≥13" />
+          </div>
+          <div className="text-xs text-gray-400 mt-1.5">Or enter E and A velocities below — average E/e\' will be auto-calculated from e\' above.</div>
+          {(eeSepEntered || eeLatEntered || (eEntered && avgEp > 0)) && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {eeSepEntered && (
+                <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${eeSepIncreased ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                  Septal E/e\' {eeS.toFixed(1)} {eeSepIncreased ? "↑ ≥15" : "✓ <15"}
+                </span>
+              )}
+              {eeLatEntered && (
+                <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${eeLatIncreased ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                  Lateral E/e\' {eeL.toFixed(1)} {eeLatIncreased ? "↑ ≥13" : "✓ <13"}
+                </span>
+              )}
+              {avgEeRatio > 0 && (
+                <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${eeAvgIncreased ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                  Avg E/e\' {avgEeRatio.toFixed(1)} {eeAvgIncreased ? "↑ ≥14" : "✓ <14"}
+                </span>
+              )}
+              {eeEntered1 && (
+                <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${eeIncreased ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                  Variable 2: {eeIncreased ? "ABNORMAL" : "Normal"}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Variable 3: TR Vmax / PASP */}
+        <div className="bg-white rounded-lg p-3 border border-gray-100">
+          <div className="text-xs font-bold text-gray-700 mb-2">③ TR Velocity / PASP <span className="font-normal text-gray-400">(Increased: TR Vmax ≥2.8 m/s or PASP ≥35 mmHg)</span></div>
+          <div className="grid grid-cols-2 gap-3">
+            <InputField label="TR Vmax" unit="m/s" value={trVmax} onChange={setTrVmax} placeholder="e.g. 2.9" hint="Increased ≥2.8" />
+            <InputField label="PASP" unit="mmHg" value={pasp} onChange={setPasp} placeholder="e.g. 38" hint="Increased ≥35" />
+          </div>
+          {trPaspEntered && (
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {trEntered && (
+                <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${trIncreased ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                  TR Vmax {trV} m/s {trIncreased ? "↑ ≥2.8" : "✓ <2.8"}
+                </span>
+              )}
+              {paspEntered && (
+                <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${paspIncreased ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                  PASP {paspV} mmHg {paspIncreased ? "↑ ≥35" : "✓ <35"}
+                </span>
+              )}
+              <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${trPaspIncreased ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                Variable 3: {trPaspIncreased ? "ABNORMAL" : "Normal"}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {step1EnteredCount > 0 && (
+          <div className="flex items-center gap-2 pt-1">
+            <span className="text-xs text-gray-500">Step 1 summary:</span>
+            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+              step1AbnormalCount === 0 ? "bg-green-100 text-green-700" :
+              step1AbnormalCount === 1 ? "bg-yellow-100 text-yellow-700" :
+              step1AbnormalCount === 2 ? "bg-amber-100 text-amber-700" :
+              "bg-red-100 text-red-700"
+            }`}>
+              {step1AbnormalCount}/{step1EnteredCount} variables abnormal
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* E and A velocities */}
+      <div className="border border-[#189aa1]/30 rounded-xl p-4 space-y-3 bg-[#f8feff]">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-xs font-bold uppercase tracking-wider text-white bg-[#0e4a50] px-2 py-0.5 rounded-full">E/A</span>
+          <span className="text-sm font-semibold text-[#189aa1]">Mitral Inflow (for grading)</span>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <InputField label="E velocity" unit="m/s" value={eVel} onChange={setEVel} placeholder="e.g. 0.85" hint="Mitral inflow E" />
+          <InputField label="A velocity" unit="m/s" value={aVel} onChange={setAVel} placeholder="e.g. 0.65" hint="Mitral inflow A" />
+        </div>
+        {eaRatio > 0 && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500">E/A ratio:</span>
+            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+              eaRatio <= 0.8 ? "bg-yellow-100 text-yellow-700" :
+              eaRatio >= 2 ? "bg-red-100 text-red-700" :
+              "bg-green-100 text-green-700"
+            }`}>
+              {eaRatio.toFixed(2)} {eaRatio <= 0.8 ? "↓ ≤0.8 (impaired relaxation)" : eaRatio >= 2 ? "↑ ≥2 (restrictive)" : "✓ Normal (0.8–2)"}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Step 2 — shown when triggered */}
+      {result.step2Triggered && (
+        <div className="border border-amber-300/60 rounded-xl p-4 space-y-3 bg-amber-50/40">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-white bg-amber-500 px-2 py-0.5 rounded-full">Step 2</span>
+            <span className="text-sm font-semibold text-amber-700">Additional LAP Markers</span>
+          </div>
+          <div className="text-xs text-amber-700/80 mb-2">Enter one or more of the following. Any single abnormal marker = Increased LAP.</div>
+          <div className="grid grid-cols-2 gap-3">
+            <InputField label="PV S/D ratio" unit="" value={pvSD} onChange={setPvSD} placeholder="e.g. 0.6" hint="Abnormal ≤0.67" />
+            <InputField label="LA Reservoir Strain" unit="%" value={lars} onChange={setLars} placeholder="e.g. 16" hint="Abnormal ≤18%" />
+            <InputField label="LAVi" unit="mL/m²" value={lavi} onChange={setLavi} placeholder="e.g. 38" hint="Abnormal >34" />
+            <InputField label="IVRT" unit="ms" value={ivrt} onChange={setIvrt} placeholder="e.g. 65" hint="Abnormal ≤70 ms" />
+          </div>
+          {step2EnteredCount > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-1">
+              {pvSDV > 0 && (
+                <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${pvSDAbnormal ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                  PV S/D {pvSDV.toFixed(2)} {pvSDAbnormal ? "↓ ≤0.67" : "✓ >0.67"}
+                </span>
+              )}
+              {larsV > 0 && (
+                <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${larsAbnormal ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                  LARS {larsV}% {larsAbnormal ? "↓ ≤18%" : "✓ >18%"}
+                </span>
+              )}
+              {laviV > 0 && (
+                <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${laviAbnormal ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                  LAVi {laviV} mL/m² {laviAbnormal ? "↑ >34" : "✓ ≤34"}
+                </span>
+              )}
+              {ivrtV > 0 && (
+                <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${ivrtAbnormal ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                  IVRT {ivrtV} ms {ivrtAbnormal ? "↓ ≤70 ms" : "✓ >70 ms"}
+                </span>
+              )}
+              <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${step2HasAbnormal ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                Step 2: {step2AbnormalCount}/{step2EnteredCount} markers abnormal
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Result panel */}
+      {hasAnyInput && result.grade && (
+        <ResultPanel guideline="Per ASE 2025 LV Diastolic Function Guidelines">
+          <div className={`rounded-lg p-3 mb-3 ${
+            result.lapStatus === "increased" ? "bg-red-50 border border-red-200" :
+            result.lapStatus === "normal" ? "bg-green-50 border border-green-200" :
+            "bg-gray-50 border border-gray-200"
+          }`}>
+            {result.lapStatus !== "pending" && (
+              <div className="text-xs font-bold uppercase tracking-wider mb-1" style={{
+                color: result.lapStatus === "increased" ? "#dc2626" : result.lapStatus === "normal" ? "#16a34a" : "#6b7280"
+              }}>
+                {result.lapStatus === "increased" ? "⬆ Elevated LAP" : "✓ Normal LAP"}
+              </div>
+            )}
+            <div className="text-sm font-bold mb-0.5" style={{ color: result.gradeColor }}>
+              {result.grade}
+            </div>
+            {result.gradeNote && <div className="text-xs text-gray-500 mt-0.5">{result.gradeNote}</div>}
+          </div>
+          {step1EnteredCount > 0 && (
+            <div className="text-xs text-gray-500 bg-gray-50 rounded-lg p-3 border border-gray-100 space-y-1">
+              <div className="font-semibold text-gray-600 mb-1">Decision Logic</div>
+              <div>• Step 1: <span className="font-semibold">{step1AbnormalCount}/{step1EnteredCount} variables abnormal</span></div>
+              {step1AbnormalCount === 0 && <div className="text-green-600">→ All normal → Normal LAP, Normal diastolic function</div>}
+              {step1AbnormalCount === 3 && <div className="text-red-600">→ All 3 abnormal → Increased LAP, grade by E/A</div>}
+              {result.step2Triggered && step2EnteredCount > 0 && (
+                <div>• Step 2: <span className="font-semibold">{step2AbnormalCount}/{step2EnteredCount} markers abnormal</span></div>
+              )}
+              {result.step2Triggered && step2HasAbnormal && eaRatio > 0 && (
+                <div>• E/A: <span className="font-semibold">{eaRatio.toFixed(2)}</span> → {eaRatio >= 2 ? "Grade III" : "Grade II"}</div>
+              )}
+            </div>
+          )}
+          <EchoAssistLink engine="diastolic" params={{ eVel, aVel, ePrimeSep: eSeptal, ePrimeLat: eLateral, lavi, lars }} />
+        </ResultPanel>
+      )}
+    </div>
+  );
+}
+
 // --- MAIN COMPONENT -----------------------------------------------------------
 const calculators = [
   { id: "as", label: "Aortic Stenosis", sub: "ASE/ACC/AHA 2021" },
@@ -1187,6 +1641,7 @@ const calculators = [
   { id: "rvsp", label: "RVSP / PAP", sub: "Bernoulli" },
   { id: "diastology", label: "Diastology", sub: "ASE 2025" },
   { id: "diastology_special", label: "Diastology — Special Populations", sub: "ASE 2025 · Premium" },
+  { id: "lap_estimation", label: "LAP Estimation", sub: "ASE 2025" },
   { id: "lv", label: "LV Function + GLS", sub: "ASE 2025 Strain" },
   { id: "rv", label: "RV Function + Strain", sub: "ASE 2025 Strain" },
   { id: "sv", label: "Stroke Volume / CO", sub: "LVOT Method" },
@@ -1201,6 +1656,7 @@ const componentMap: Record<string, React.ReactNode> = {
   rvsp: <RVSPCalculator />,
   diastology: <DiastologyCalculator />,
   diastology_special: <PremiumGate featureName="Diastology — Special Populations"><DiastologySpecialPopulations /></PremiumGate>,
+  lap_estimation: <LAPEstimationCalculator />,
   lv: <LVFunctionCalculator />,
   rv: <RVFunctionCalculator />,
   sv: <SVCalculator />,
