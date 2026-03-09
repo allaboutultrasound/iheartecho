@@ -25,8 +25,12 @@ import {
   BookOpen,
   Loader2,
   RotateCw,
+  Shuffle,
+  ListOrdered,
 } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
+
+type StudyMode = "sequential" | "spaced";
 
 const TOPICS = [
   "All Topics",
@@ -50,6 +54,7 @@ export default function FlashcardDeck() {
   const [flipped, setFlipped] = useState(false);
   const [sessionResults, setSessionResults] = useState<Record<number, boolean>>({});
   const [sessionComplete, setSessionComplete] = useState(false);
+  const [studyMode, setStudyMode] = useState<StudyMode>("sequential");
 
   const topicParam = selectedTopic === "All Topics" ? undefined : selectedTopic;
 
@@ -64,7 +69,27 @@ export default function FlashcardDeck() {
     },
   });
 
-  const cards = data?.cards ?? [];
+  // Apply study mode ordering
+  const rawCards = data?.cards ?? [];
+  const cards = useMemo(() => {
+    if (studyMode === "spaced") {
+      // Spaced repetition: cards with more misses appear first
+      // Backend returns gotIt + missed per card from the user's attempt history
+      return [...rawCards].sort((a, b) => {
+        const aAttempts = ((a as any).gotIt ?? 0) + ((a as any).missed ?? 0);
+        const bAttempts = ((b as any).gotIt ?? 0) + ((b as any).missed ?? 0);
+        const aGotIt = (a as any).gotIt ?? 0;
+        const bGotIt = (b as any).gotIt ?? 0;
+        // Score: ratio of misses (higher = needs more review)
+        // Never-seen cards get score 0.5 (middle priority)
+        const aScore = aAttempts === 0 ? 0.5 : 1 - aGotIt / aAttempts;
+        const bScore = bAttempts === 0 ? 0.5 : 1 - bGotIt / bAttempts;
+        return bScore - aScore; // descending: most-missed first
+      });
+    }
+    return rawCards; // sequential: as returned by server (backend already sorts by spaced rep for authenticated users)
+  }, [rawCards, studyMode]);
+
   const currentCard = cards[currentIndex];
   const totalCards = cards.length;
   const answeredCount = Object.keys(sessionResults).length;
@@ -87,6 +112,14 @@ export default function FlashcardDeck() {
 
   function handleTopicChange(topic: string) {
     setSelectedTopic(topic);
+    setCurrentIndex(0);
+    setFlipped(false);
+    setSessionResults({});
+    setSessionComplete(false);
+  }
+
+  function handleModeChange(mode: StudyMode) {
+    setStudyMode(mode);
     setCurrentIndex(0);
     setFlipped(false);
     setSessionResults({});
@@ -246,6 +279,40 @@ export default function FlashcardDeck() {
             <span>/</span>
             <span>{totalCards}</span>
           </div>
+        </div>
+
+        {/* Study Mode Toggle */}
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Study Mode:</span>
+          <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+            <button
+              onClick={() => handleModeChange("sequential")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-all ${
+                studyMode === "sequential"
+                  ? "bg-[#189aa1] text-white"
+                  : "bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <ListOrdered className="w-3.5 h-3.5" />
+              Sequential
+            </button>
+            <button
+              onClick={() => handleModeChange("spaced")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-all border-l border-gray-200 ${
+                studyMode === "spaced"
+                  ? "bg-[#189aa1] text-white"
+                  : "bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              <Shuffle className="w-3.5 h-3.5" />
+              Spaced Repetition
+            </button>
+          </div>
+          {studyMode === "spaced" && (
+            <span className="text-xs text-[#189aa1] font-medium">
+              Most-missed cards first
+            </span>
+          )}
         </div>
 
         {/* Topic Filter */}

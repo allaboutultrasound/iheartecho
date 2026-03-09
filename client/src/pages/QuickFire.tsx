@@ -360,15 +360,38 @@ export default function QuickFire() {
               </p>
             </div>
           </div>
-          {/* User stats pills */}
+          {/* Streak + Stats Panel */}
           {statsQuery.data && (
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200">
-                <Flame className="w-3.5 h-3.5 text-amber-500" />
-                <span className="text-xs font-bold text-amber-700">{statsQuery.data.streak} day streak</span>
+            <div className="flex flex-col items-end gap-2">
+              {/* Streak Counter */}
+              <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border-2 ${
+                statsQuery.data.streak >= 7
+                  ? "bg-gradient-to-r from-amber-50 to-orange-50 border-amber-300"
+                  : statsQuery.data.streak >= 3
+                  ? "bg-amber-50 border-amber-200"
+                  : "bg-gray-50 border-gray-200"
+              }`}>
+                <div className="flex flex-col items-center">
+                  <span className="text-2xl font-black leading-none" style={{ fontFamily: "JetBrains Mono, monospace", color: statsQuery.data.streak >= 3 ? "#f59e0b" : "#9ca3af" }}>
+                    {statsQuery.data.streak}
+                  </span>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: statsQuery.data.streak >= 3 ? "#92400e" : "#6b7280" }}>day streak</span>
+                </div>
+                <Flame className={`w-6 h-6 ${statsQuery.data.streak >= 3 ? "text-amber-500" : "text-gray-300"}`} />
               </div>
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#f0fbfc] border border-[#189aa1]/20">
-                <Star className="w-3.5 h-3.5 text-[#189aa1]" />
+              {/* Milestone message */}
+              {statsQuery.data.streak > 0 && (
+                <span className="text-xs font-medium" style={{ color: statsQuery.data.streak >= 30 ? "#dc2626" : statsQuery.data.streak >= 14 ? "#d97706" : statsQuery.data.streak >= 7 ? "#f59e0b" : "#9ca3af" }}>
+                  {statsQuery.data.streak >= 30 ? "🔥 30-day legend!" :
+                   statsQuery.data.streak >= 14 ? "🔥 2-week warrior!" :
+                   statsQuery.data.streak >= 7 ? "🔥 7-day streak! Keep it up!" :
+                   statsQuery.data.streak >= 3 ? `${statsQuery.data.streak} days in a row!` :
+                   "Start your streak today!"}
+                </span>
+              )}
+              {/* Correct answers pill */}
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f0fbfc] border border-[#189aa1]/20">
+                <Star className="w-3 h-3 text-[#189aa1]" />
                 <span className="text-xs font-bold text-[#189aa1]">{statsQuery.data.correct} correct</span>
               </div>
             </div>

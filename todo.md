@@ -1532,7 +1532,12 @@
 - [x] Verify free vs. premium archive access end-to-end — backend gates confirmed (getChallengeArchive returns empty for free, getArchivedChallenge throws FORBIDDEN), frontend shows premium upgrade prompt for non-premium users, admin sees full archive
 
 ## Session Mar 09 2026 — Phase 3 Features
-- [ ] Fix Diastology calculator: rename to "Diastology" (remove "LARS"), remove all Figure # references in reference text and header banner, restructure two-step workflow with correct thresholds and logic
+- [x] Fix Diastology calculator: renamed to "Diastology", removed all Figure # references, restructured two-step workflow with correct thresholds and decision logic
 - [x] Schedule daily auto-generation cron job at midnight UTC — added to challengeCron.ts in challengeCron.ts
 - [x] Add Flashcard Deck study mode — 45 flashcards generated (5 per topic × 9 topics), 3D flip card UI, topic filters, Got it/Missed it tracking, sidebar nav link (Got it / Missed it history)
-- [ ] Add image-based question infrastructure (S3 upload + AI Generate with image type)
+- [x] Add image-based question infrastructure — /api/upload-question-image endpoint, drag-and-drop upload zone in QuickFireAdmin, URL fallback
+
+## Session Mar 09 2026 — Phase 4 Follow-ups
+- [x] Add Study Mode toggle to Flashcard Deck (sequential vs spaced-repetition order — cards with more misses appear first)
+- [x] Add daily streak tracker to Daily Challenge QuickFire page — enhanced streak counter with milestone messages (3d, 7d, 14d, 30d) and amber gradient styling
+- [x] Upload sample echo images and create image-based questions — 6 PLAX/A4C image-based MCQ questions inserted (PLAX labeled, PLAX normal, A4C labeled, A4C normal)
