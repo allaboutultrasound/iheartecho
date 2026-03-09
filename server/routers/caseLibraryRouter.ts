@@ -962,7 +962,7 @@ export const caseLibraryRouter = router({
     .input(
       z.object({
         prompt: z.string().min(10).max(1000).describe("Clinical scenario description"),
-        modality: z.enum(["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "Other"]).default("TTE"),
+        modality: z.enum(["TTE", "TEE", "Stress", "Pediatric", "Fetal", "POCUS", "Other"]).default("TTE"),
         difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("intermediate"),
         questionCount: z.number().int().min(1).max(5).default(3),
       })
@@ -973,7 +973,7 @@ export const caseLibraryRouter = router({
         baseURL: `${process.env.BUILT_IN_FORGE_API_URL}/v1`,
         fetch: createPatchedFetch(fetch),
       });
-      const model = openai.chat("gemini-2.5-flash");
+      const model = openai.chat("gpt-4o");
 
       const caseSchema = z.object({
         title: z.string().describe("Concise, descriptive case title (max 100 chars)"),

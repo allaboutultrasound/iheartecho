@@ -186,13 +186,6 @@ export default function CaseDetail() {
           </h1>
           <div className="flex flex-wrap gap-4 text-xs text-gray-400">
             <span className="flex items-center gap-1">
-              <User className="w-3 h-3" /> {submitterName}
-            </span>
-            <span className="flex items-center gap-1">
-              <Calendar className="w-3 h-3" />
-              {new Date(submittedAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
-            </span>
-            <span className="flex items-center gap-1">
               <Eye className="w-3 h-3" /> {viewCount} views
             </span>
           </div>

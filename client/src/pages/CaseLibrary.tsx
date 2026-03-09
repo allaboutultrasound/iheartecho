@@ -47,7 +47,6 @@ const MODALITY_COLORS: Record<string, string> = {
   Stress: "bg-orange-100 text-orange-700",
   Pediatric: "bg-pink-100 text-pink-700",
   Fetal: "bg-rose-100 text-rose-700",
-  HOCM: "bg-red-100 text-red-700",
   POCUS: "bg-teal-100 text-teal-700",
   Other: "bg-gray-100 text-gray-600",
 };
@@ -70,7 +69,7 @@ const STATUS_ICONS: Record<string, React.ElementType> = {
   rejected: XCircle,
 };
 
-const MODALITIES = ["All", "TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "Other"];
+const MODALITIES = ["All", "TTE", "TEE", "Stress", "Pediatric", "Fetal", "POCUS", "Other"];
 const DIFFICULTIES = ["All", "beginner", "intermediate", "advanced"];
 
 type TabType = "browse" | "mySubmissions";

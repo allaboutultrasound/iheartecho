@@ -1492,6 +1492,8 @@
 - [x] Fix LinkedIn URL validation — updated regex in SubmitCase.tsx, CaseEditorDialog.tsx, and caseLibraryRouter.ts to accept /in/, /company/, and /school/ URLs
 
 ## AI Generation & Modality Fixes
-- [ ] Fix AI case study generation JSON invalid response error
-- [ ] Fix AI daily challenge generation JSON invalid response error
-- [ ] Remove HOCM from case modality list (it is a disease type, not a modality)
+- [x] Fix AI case study generation JSON invalid response error (changed model from gemini-2.5-flash to gpt-4o)
+- [x] Fix AI daily challenge generation JSON invalid response error (verified gpt-4o already used, improved JSON parsing)
+- [x] Remove HOCM from case modality list (removed from SubmitCase.tsx, CaseEditorDialog.tsx, AdminCaseManagement.tsx, CaseLibrary.tsx, caseLibraryRouter.ts)
+- [x] Hide submitter user ID from public case display (removed submitterName from CaseDetail.tsx header)
+- [x] Hide submission date from public case display (removed from CaseDetail.tsx header; kept in My Submissions tab and admin tools)

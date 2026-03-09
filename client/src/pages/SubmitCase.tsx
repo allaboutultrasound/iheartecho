@@ -59,7 +59,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-const MODALITIES = ["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "Other"] as const;
+const MODALITIES = ["TTE", "TEE", "Stress", "Pediatric", "Fetal", "POCUS", "Other"] as const;
 const DIFFICULTIES = ["beginner", "intermediate", "advanced"] as const;
 const DRAFT_KEY = "ihe_submit_case_draft";
 

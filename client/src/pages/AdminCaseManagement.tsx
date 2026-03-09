@@ -76,7 +76,6 @@ const MODALITY_COLORS: Record<string, string> = {
   Stress: "bg-orange-100 text-orange-700",
   Pediatric: "bg-pink-100 text-pink-700",
   Fetal: "bg-rose-100 text-rose-700",
-  HOCM: "bg-red-100 text-red-700",
   POCUS: "bg-teal-100 text-teal-700",
   Other: "bg-gray-100 text-gray-600",
 };
@@ -843,7 +842,7 @@ export default function AdminCaseManagement() {
                   <Select value={aiModality} onValueChange={setAiModality}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {["TTE","TEE","Stress","Pediatric","Fetal","HOCM","POCUS","Other"].map((m) => (
+                      {["TTE","TEE","Stress","Pediatric","Fetal","POCUS","Other"].map((m) => (
                         <SelectItem key={m} value={m}>{m}</SelectItem>
                       ))}
                     </SelectContent>

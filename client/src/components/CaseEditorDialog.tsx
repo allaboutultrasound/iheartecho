@@ -552,7 +552,7 @@ export default function CaseEditorDialog({ caseId, open, onClose, onSaved }: Pro
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "Other"].map((m) => (
+                          {["TTE", "TEE", "Stress", "Pediatric", "Fetal", "POCUS", "Other"].map((m) => (
                             <SelectItem key={m} value={m}>{m}</SelectItem>
                           ))}
                         </SelectContent>
