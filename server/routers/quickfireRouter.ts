@@ -859,7 +859,7 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
     return { ...challenge, questions: sanitized, userAttempts, setDate, msRemaining };
   }),
 
-  /** Get the challenge archive — free users: last 7 days; premium: all */
+  /** Get the challenge archive — premium members only; free users get no archive access */
   getChallengeArchive: publicProcedure
     .input(z.object({
       page: z.number().int().min(1).default(1),
@@ -873,15 +873,12 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
       const isPremium = (ctx.user as any)?.isPremium === true || (ctx.user as any)?.role === "admin";
+      // Free users have no archive access — return empty with flag so UI can show upgrade prompt
+      if (!isPremium) {
+        return { challenges: [], total: 0, isPremium: false, page: input.page, limit: input.limit };
+      }
       const offset = (input.page - 1) * input.limit;
       const conditions: any[] = [eq(quickfireChallenges.status, "archived")];
-      // Free users: only last 7 days
-      if (!isPremium) {
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        const cutoff = sevenDaysAgo.toISOString().slice(0, 10);
-        conditions.push(gte(quickfireChallenges.publishDate, cutoff));
-      }
       // Category filter
       if (input.category) {
         conditions.push(eq(quickfireChallenges.category, input.category));
@@ -907,7 +904,7 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
           .orderBy(desc(quickfireChallenges.publishedAt)).limit(input.limit).offset(offset),
         db.select({ count: count(quickfireChallenges.id) }).from(quickfireChallenges).where(and(...conditions)),
       ]);
-      return { challenges: rows, total: totalResult[0]?.count ?? 0, isPremium, page: input.page, limit: input.limit };
+      return { challenges: rows, total: totalResult[0]?.count ?? 0, isPremium: true, page: input.page, limit: input.limit };
     }),
 
   /** Get a single archived challenge with full questions (for replay) */
@@ -921,14 +918,10 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
         .where(and(eq(quickfireChallenges.id, input.id), eq(quickfireChallenges.status, "archived"))).limit(1);
       if (!challenge) throw new TRPCError({ code: "NOT_FOUND", message: "Challenge not found" });
 
-      // Access gate: free users only see last 7 days
+      // Access gate: archive is premium-only; free users cannot replay any archived challenge
       const isPremium = (ctx.user as any)?.isPremium === true || (ctx.user as any)?.role === "admin";
-      if (!isPremium && challenge.publishDate) {
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        if (challenge.publishDate < sevenDaysAgo.toISOString().slice(0, 10)) {
-          throw new TRPCError({ code: "FORBIDDEN", message: "Premium access required for older challenges" });
-        }
+      if (!isPremium) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Premium access required to replay archived challenges" });
       }
 
       const ids: number[] = JSON.parse(challenge.questionIds || "[]");

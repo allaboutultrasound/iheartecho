@@ -11,7 +11,7 @@
 
 import { getDb } from "../db";
 import { quickfireChallenges, users } from "../../drizzle/schema";
-import { eq, and, asc, isNull, or, lte } from "drizzle-orm";
+import { eq, and, asc, lte } from "drizzle-orm";
 import { notifyOwner } from "../_core/notification";
 import sgMail from "@sendgrid/mail";
 
@@ -114,16 +114,7 @@ export async function runChallengeCron() {
     }
 
     try {
-      // Fetch all users who have email and have opted in to quickfireReminder
-      const allUsers = await db
-        .select({ email: users.email, name: users.name, displayName: users.displayName, notificationPrefs: users.notificationPrefs })
-        .from(users)
-        .where(and(
-          // email must be set
-          isNull(users.email) // we want the opposite — filter out nulls
-        ));
-
-      // Actually fetch all users with emails
+      // Fetch all users with emails who have opted in to quickfireReminder
       const usersWithEmail = await db
         .select({ email: users.email, name: users.name, displayName: users.displayName, notificationPrefs: users.notificationPrefs })
         .from(users);
@@ -221,7 +212,7 @@ function buildEmailHtml({
                 ${challengeDescription ? `<p style="margin:0;color:#4b5563;font-size:14px;line-height:1.6;">${challengeDescription}</p>` : ""}
               </div>
               <p style="margin:0 0 8px;color:#4b5563;font-size:14px;">You have <strong>24 hours</strong> to complete this challenge and make the leaderboard.</p>
-              <p style="margin:0 0 24px;color:#4b5563;font-size:14px;">After 24 hours, the challenge is archived and a new one takes its place.</p>
+              <p style="margin:0 0 24px;color:#4b5563;font-size:14px;">After 24 hours, the challenge is archived. <strong>Premium members</strong> can replay all past challenges in the archive — free members access today's challenge only.</p>
               <!-- CTA -->
               <table cellpadding="0" cellspacing="0">
                 <tr>

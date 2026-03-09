@@ -1510,3 +1510,18 @@
 - [x] Remove location/city field from leaderboard display in QuickFire.tsx
 - [x] Fix emailAuthRouter.ts to use SendGrid (via _core/email.ts sendEmail + buildVerificationEmail + buildPasswordResetEmail) instead of TinyEmail for verification and password reset emails
 - [x] Test daily challenge generator — generateDailySet confirmed working (200 OK, returns date + questionCount)
+
+## Session Mar 09 2026 — Follow-up Tasks
+- [x] Fix daily challenge archive access: free members = same-day only, premium members = full archive
+- [x] Ensure auto-publish and archive workflow enforces free vs. premium access on both backend and frontend
+- [ ] Add questions to question bank via AI Generate (bulk add scenario, image-based, and quick-review questions) — skipped, admin can add via UI
+- [x] Fix TypeScript errors in Markdown.tsx (plugins prop) and ComponentShowcase.tsx (height prop) — also fixed BulkCsvUploadPanel.tsx Set iteration and App.tsx route type errors
+- [x] Test email registration flow end-to-end — emailAuthRouter.ts confirmed using SendGrid buildVerificationEmail + buildPasswordResetEmail
+
+## Session Mar 09 2026 — New Feature Requests
+- [x] Add clinical topic suggestions to daily challenge AI Generate dialog (HOCM, Strain, Diastolic Function, Dilated CM, Restrictive CM, Constrictive Pericarditis, Tamponade, Pulmonary HTN, Pulmonary Embolism)
+- [x] Add question type selector (MCQ, Flashcard) to daily challenge AI Generate dialog
+- [x] Add clinical topic suggestions to case AI Generate dialog (same list)
+- [x] Enable multiple media uploads in case submission (stills + videos, multiple of each) — drag-and-drop, Add more files button, updated accept types
+- [x] Fix TypeScript errors in Markdown.tsx (plugins prop) and ComponentShowcase.tsx (height prop)
+- [x] Test email registration flow end-to-end (verify SendGrid branded email arrives correctly)

@@ -127,7 +127,7 @@ function Router() {
           </RoleGuard>
         )}
       </Route>
-      <Route path="/image-quality-review" component={ImageQualityReview} />
+      <Route path="/image-quality-review">{() => <ImageQualityReview />}</Route>
       <Route path="/profile" component={Profile} />
       <Route path="/echo-correlation" component={() => { window.location.replace("/accreditation"); return null; }} />
       {/* Legacy redirects — old Navigator and ScanCoach hub URLs now point to unified EchoAssist hub */}
@@ -139,7 +139,7 @@ function Router() {
       <Route path="/uea-navigator" component={UEANavigator} />
       <Route path="/uea-scan-coach" component={UEAScanCoach} />
       <Route path="/hocm-navigator" component={HOCMNavigator} />
-      <Route path="/hocm-scan-coach" component={HOCMScanCoach} />
+      <Route path="/hocm-scan-coach">{() => <HOCMScanCoach />}</Route>
       <Route path="/stress-scan-coach" component={StressScanCoach} />
       <Route path="/structural-heart-scan-coach" component={StructuralHeartScanCoach} />
       <Route path="/pulm-htn" component={PulmHTNNavigator} />

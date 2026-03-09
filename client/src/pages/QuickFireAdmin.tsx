@@ -1248,6 +1248,15 @@ export default function QuickFireAdmin() {
                   {[
                     { label: "ACS", topic: "Echocardiographic assessment in Acute Coronary Syndrome (ACS) — RWMA, LV function, complications" },
                     { label: "Adult Echo", topic: "Adult transthoracic echocardiography — valvular disease, LV/RV function, Doppler assessment" },
+                    { label: "HOCM", topic: "Hypertrophic obstructive cardiomyopathy (HOCM) — LVOT obstruction, SAM, Doppler gradients, septal morphology, provocable obstruction" },
+                    { label: "Strain / GLS", topic: "Myocardial strain imaging and global longitudinal strain (GLS) — LV GLS, RV strain, layer-specific strain, clinical applications" },
+                    { label: "Diastolic Function", topic: "Diastolic function assessment — grading diastolic dysfunction, E/A ratio, E/e\u2019, LAVI, TR velocity, ASE 2025 guidelines" },
+                    { label: "Dilated CM", topic: "Dilated cardiomyopathy — LV dilation, reduced EF, functional MR, LV dyssynchrony, CRT criteria" },
+                    { label: "Restrictive CM", topic: "Restrictive cardiomyopathy — amyloid, sarcoid, Fabry disease, restrictive filling pattern, biatrial enlargement" },
+                    { label: "Constrictive Pericarditis", topic: "Constrictive pericarditis — respiratory variation, septal bounce, annulus reversus, hepatic vein flow, differentiation from restriction" },
+                    { label: "Tamponade", topic: "Cardiac tamponade — pericardial effusion, chamber collapse, respiratory variation, IVC plethora, equalization of pressures" },
+                    { label: "Pulmonary HTN", topic: "Pulmonary hypertension — RVSP estimation, TR velocity, RV remodeling, PA pressures, ASE 2025 PH guidelines" },
+                    { label: "Pulmonary Embolism", topic: "Pulmonary embolism — RV strain pattern, McConnell sign, D-sign, TR, IVC, risk stratification by echo" },
                     { label: "Pediatric Echo", topic: "Pediatric echocardiography — congenital heart disease, Z-scores, shunt assessment, CHD lesions" },
                     { label: "Fetal Echo", topic: "Fetal echocardiography — fetal cardiac anatomy, CHD screening, biometry, situs, arch patterns" },
                   ].map(({ label, topic }) => (

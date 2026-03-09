@@ -12,7 +12,7 @@
  * Draft auto-save: form state is persisted to localStorage so users can resume later.
  */
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useLocation, useParams } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -916,19 +916,47 @@ export default function SubmitCase() {
               <div
                 className="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center cursor-pointer hover:border-[#189aa1]/50 transition-colors"
                 onClick={() => fileInputRef.current?.click()}
+                onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add("border-[#189aa1]", "bg-[#f0fbfc]"); }}
+                onDragLeave={(e) => { e.currentTarget.classList.remove("border-[#189aa1]", "bg-[#f0fbfc]"); }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.currentTarget.classList.remove("border-[#189aa1]", "bg-[#f0fbfc]");
+                  const fakeEvent = { target: { files: e.dataTransfer.files } } as unknown as React.ChangeEvent<HTMLInputElement>;
+                  handleFileSelect(fakeEvent);
+                }}
               >
                 <Upload className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-                <p className="text-sm text-gray-500 font-medium">Click to upload images or video clips</p>
-                <p className="text-xs text-gray-400 mt-1">PNG, JPG, GIF, MP4, MOV, AVI — up to 100 MB each</p>
+                <p className="text-sm text-gray-500 font-medium">Click or drag &amp; drop to upload</p>
+                <p className="text-xs text-gray-400 mt-1">Images (PNG, JPG, GIF, WEBP) and Videos (MP4, MOV, AVI, WEBM)</p>
+                <p className="text-xs text-gray-400">Multiple files supported &mdash; up to 20 files, 100 MB each</p>
+                <div className="flex items-center justify-center gap-3 mt-3">
+                  <span className="flex items-center gap-1.5 text-xs text-[#189aa1] font-semibold">
+                    <ImageIcon className="w-3.5 h-3.5" /> Stills
+                  </span>
+                  <span className="text-gray-300">+</span>
+                  <span className="flex items-center gap-1.5 text-xs text-[#189aa1] font-semibold">
+                    <PlayCircle className="w-3.5 h-3.5" /> Video clips
+                  </span>
+                </div>
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*,video/*"
+                  accept="image/*,video/*,.webm,.mp4,.mov,.avi,.mkv"
                   multiple
                   className="hidden"
                   onChange={handleFileSelect}
                 />
               </div>
+              {/* Add more files button when files already selected */}
+              {media.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full flex items-center justify-center gap-2 py-2 text-xs font-semibold text-[#189aa1] border border-dashed border-[#189aa1]/40 rounded-lg hover:bg-[#f0fbfc] transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Add more files ({media.length}/20 uploaded)
+                </button>
+              )}
 
               {/* Media list */}
               {media.length > 0 && (

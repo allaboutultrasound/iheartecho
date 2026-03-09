@@ -428,11 +428,14 @@ export default function QuickFire() {
                   No Challenge Today Yet
                 </h2>
                 <p className="text-gray-500 text-sm">
-                  Today's challenge is being prepared. Check back soon, or browse past challenges in the archive.
+                  Today's challenge is being prepared. Check back soon.
+                  {isPremium && " In the meantime, browse past challenges in the archive."}
                 </p>
-                <Button variant="outline" onClick={() => setActiveTab("archive")}>
-                  <Archive className="w-4 h-4 mr-2" /> Browse Archive
-                </Button>
+                {isPremium && (
+                  <Button variant="outline" onClick={() => setActiveTab("archive")}>
+                    <Archive className="w-4 h-4 mr-2" /> Browse Archive
+                  </Button>
+                )}
               </div>
             )}
 
@@ -702,25 +705,35 @@ export default function QuickFire() {
         {/* ── TAB: Challenge Archive ───────────────────────────────────────── */}
         {activeTab === "archive" && (
           <>
-            {/* Archive list view */}
-            {selectedArchiveId === null && (
+            {/* Free users: show premium gate immediately — no archive access at all */}
+            {!isPremium && (
+              <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}>
+                  <Crown className="w-8 h-8 text-amber-400" />
+                </div>
+                <h2 className="text-lg font-bold text-gray-800 mb-2" style={{ fontFamily: "Merriweather, serif" }}>Challenge Archive — Premium Only</h2>
+                <p className="text-sm text-gray-500 max-w-sm mb-1">
+                  Free members can access <strong>today's daily challenge only</strong>. Upgrade to Premium for unlimited access to all past challenges.
+                </p>
+                <p className="text-xs text-gray-400 mb-6">Replay past challenges, track your improvement, and never miss a learning opportunity.</p>
+                <a href="/premium">
+                  <Button className="text-white px-6" style={{ background: "#189aa1" }}>
+                    <Crown className="w-4 h-4 mr-2" /> Upgrade to Premium
+                  </Button>
+                </a>
+                <p className="text-xs text-gray-400 mt-4">Already a premium member? <a href="/premium" className="text-[#189aa1] hover:underline">Sync your membership</a></p>
+              </div>
+            )}
+
+            {/* Premium users: show full archive */}
+            {isPremium && selectedArchiveId === null && (
               <>
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Challenge Archive</h2>
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {isPremium
-                        ? "Unlimited access — all past challenges"
-                        : "Premium members get full archive access. Upgrade to browse past challenges."}
-                    </p>
+                    <p className="text-xs text-gray-500 mt-0.5">Unlimited access — all past challenges</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    {!isPremium && (
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200">
-                        <Crown className="w-3.5 h-3.5 text-amber-500" />
-                        <span className="text-xs font-bold text-amber-700">Premium only</span>
-                      </div>
-                    )}
                     <button
                       onClick={() => setShowArchiveFilters(!showArchiveFilters)}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
@@ -845,23 +858,18 @@ export default function QuickFire() {
 
                 {archiveListQuery.data && archiveListQuery.data.challenges.length > 0 && (
                   <div className="space-y-3">
-                    {archiveListQuery.data.challenges.map((challenge: any, idx: number) => {
+                    {archiveListQuery.data.challenges.map((challenge: any) => {
                       const daysAgo = challenge.archivedAt
                         ? Math.floor((Date.now() - new Date(challenge.archivedAt).getTime()) / (1000 * 60 * 60 * 24))
                         : null;
-                      const isLocked = !isPremium;
                       return (
                         <div
                           key={challenge.id}
-                          className={`flex items-center gap-4 p-4 bg-white rounded-xl border transition-all ${
-                            isLocked
-                              ? "border-gray-100 opacity-60 cursor-not-allowed"
-                              : "border-gray-100 hover:border-[#189aa1]/40 cursor-pointer"
-                          }`}
-                          onClick={() => !isLocked && openArchiveChallenge(challenge.id)}
+                          className="flex items-center gap-4 p-4 bg-white rounded-xl border border-gray-100 hover:border-[#189aa1]/40 cursor-pointer transition-all"
+                          onClick={() => openArchiveChallenge(challenge.id)}
                         >
-                          <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: isLocked ? "#f3f4f6" : "#f0fbfc" }}>
-                            {isLocked ? <Lock className="w-5 h-5 text-gray-400" /> : <Archive className="w-5 h-5 text-[#189aa1]" />}
+                          <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "#f0fbfc" }}>
+                            <Archive className="w-5 h-5 text-[#189aa1]" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="font-semibold text-sm text-gray-800 truncate">{challenge.title}</div>
@@ -889,33 +897,10 @@ export default function QuickFire() {
                               )}
                             </div>
                           </div>
-                          {isLocked ? (
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200 flex-shrink-0">
-                              <Crown className="w-3 h-3 text-amber-500" />
-                              <span className="text-xs font-bold text-amber-600">Premium</span>
-                            </div>
-                          ) : (
-                            <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                          )}
+                          <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
                         </div>
                       );
                     })}
-
-                    {/* Premium upsell */}
-                    {!isPremium && (
-                      <div className="rounded-xl p-5 flex items-center gap-4" style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}>
-                        <Crown className="w-8 h-8 text-amber-400 flex-shrink-0" />
-                        <div className="flex-1">
-                          <div className="text-white font-bold text-sm">Unlock the Challenge Archive</div>
-                          <div className="text-white/60 text-xs mt-0.5">Premium members get full access to all past daily challenges — $9.99/month.</div>
-                        </div>
-                        <a href="/premium">
-                          <Button size="sm" className="text-white flex-shrink-0" style={{ background: "#189aa1" }}>
-                            Upgrade
-                          </Button>
-                        </a>
-                      </div>
-                    )}
                   </div>
                 )}
               </>

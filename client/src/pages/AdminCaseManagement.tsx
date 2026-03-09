@@ -828,6 +828,35 @@ export default function AdminCaseManagement() {
             <div className="space-y-3">
               <div>
                 <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Clinical Scenario <span className="text-red-500">*</span></label>
+                <p className="text-xs text-gray-400 mb-2">Quick topic starters — click to pre-fill, then customise:</p>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {[
+                    { label: "HOCM", prompt: "Patient with hypertrophic obstructive cardiomyopathy — LVOT obstruction, SAM of the mitral valve, provocable gradient, management options" },
+                    { label: "Strain / GLS", prompt: "Patient referred for LV global longitudinal strain assessment — reduced GLS in the context of preserved EF, subclinical dysfunction" },
+                    { label: "Diastolic Dysfunction", prompt: "Patient with exertional dyspnoea and preserved LVEF — grading diastolic dysfunction using ASE 2025 criteria, E/A, E/e\u2019, LAVI, TR velocity" },
+                    { label: "Dilated CM", prompt: "Patient with dilated cardiomyopathy — severely reduced EF, functional MR, LV dyssynchrony, CRT candidacy assessment" },
+                    { label: "Restrictive CM", prompt: "Patient with suspected cardiac amyloidosis — restrictive filling pattern, speckled myocardium, biatrial enlargement, low-voltage ECG" },
+                    { label: "Constrictive Pericarditis", prompt: "Patient with constrictive pericarditis — septal bounce, respiratory variation in mitral/tricuspid inflow, annulus reversus, hepatic vein expiratory diastolic reversal" },
+                    { label: "Tamponade", prompt: "Patient with large pericardial effusion and haemodynamic compromise — cardiac tamponade, chamber collapse, IVC plethora, respiratory variation" },
+                    { label: "Pulmonary HTN", prompt: "Patient with pulmonary arterial hypertension — elevated RVSP, RV remodeling, TR velocity, PA acceleration time, ASE 2025 PH guidelines" },
+                    { label: "Pulmonary Embolism", prompt: "Patient with acute massive pulmonary embolism — RV strain, McConnell sign, D-sign, IVC dilation, risk stratification by echo" },
+                    { label: "Aortic Stenosis", prompt: "Patient with severe aortic stenosis — AVA calculation, mean gradient, low-flow low-gradient AS, dobutamine stress echo, TAVR planning" },
+                    { label: "Mitral Regurgitation", prompt: "Patient with severe primary mitral regurgitation — vena contracta, EROA, regurgitant volume, LV remodeling, surgical timing" },
+                  ].map(({ label, prompt }) => (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => setAiPrompt(prompt)}
+                      className={`text-xs px-2.5 py-1 rounded-full border font-medium transition-all ${
+                        aiPrompt === prompt
+                          ? "border-purple-500 bg-purple-500 text-white"
+                          : "border-gray-200 bg-gray-50 text-gray-600 hover:border-purple-400 hover:text-purple-600"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
                 <Textarea
                   placeholder="e.g. 72-year-old male with exertional dyspnoea, systolic murmur, and syncope. Describe the echo findings and management..."
                   value={aiPrompt}

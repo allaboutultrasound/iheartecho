@@ -98,7 +98,7 @@ function parseEmails(raw: string): string[] {
   // Basic email filter (not strict — server validates)
   const emails = tokens.filter(t => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t));
   // Deduplicate preserving order
-  return [...new Set(emails)];
+  return Array.from(new Set(emails));
 }
 
 function parseCsvFile(text: string): string[] {
@@ -186,7 +186,7 @@ export default function BulkCsvUploadPanel({
       toast.error("No valid email addresses found");
       return;
     }
-    setEmails(prev => [...new Set([...prev, ...parsed])]);
+    setEmails(prev => Array.from(new Set([...prev, ...parsed])));
     setPasteText("");
     setShowPaste(false);
     setResult(null);
