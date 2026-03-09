@@ -53,4 +53,19 @@ describe("physicianOverRead.getMonthlySummary", () => {
   it("physicianPeerReview.getMonthlySummary is also registered", () => {
     expect(appRouter._def.procedures["physicianPeerReview.getMonthlySummary"]).toBeDefined();
   });
+
+  it("physicianPeerReview.getMonthlySummary accepts examType filter", async () => {
+    const { ctx } = createAuthContext();
+    const caller = appRouter.createCaller(ctx);
+    // Should accept examType without throwing a validation error
+    const result = await caller.physicianPeerReview.getMonthlySummary({ examType: "AETTE" });
+    expect(Array.isArray(result)).toBe(true);
+  });
+
+  it("physicianPeerReview.getMonthlySummary works without examType", async () => {
+    const { ctx } = createAuthContext();
+    const caller = appRouter.createCaller(ctx);
+    const result = await caller.physicianPeerReview.getMonthlySummary();
+    expect(Array.isArray(result)).toBe(true);
+  });
 });

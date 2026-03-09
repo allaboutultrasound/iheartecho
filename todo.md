@@ -1747,3 +1747,11 @@
 - [ ] Fix Flashcard AI Generator JSON error with robust extraction fallback
 - [ ] Seed 50 fetal echo flashcards into the database
 - [ ] Add exam type filter to Staff Growth Curves tab
+
+## Physician Concordance Exam Type Filter (Mar 09 2026)
+- [x] Add exam type filter dropdown to Physician Concordance tab (All, Adult TTE, Adult TEE, Stress Echo, Pediatric TTE, Pediatric TEE, Fetal Echo)
+- [x] Wire Apply/Clear buttons to update physicianExamTypeApplied state
+- [x] Update physicianPeerReview.getMonthlySummary tRPC procedure to accept examType parameter
+- [x] DB helper getPhysicianPeerReviewMonthlySummary already supported examType — confirmed working
+- [x] Fix MySQL only_full_group_by error in getPhysicianPeerReviewMonthlySummary and getPhysicianPeerReviewTrend (use unquoted table.column in sql template)
+- [x] Add 2 new vitest tests for examType filter — all 641 tests passing

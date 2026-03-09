@@ -1231,38 +1231,42 @@ export async function getPhysicianPeerReviewStaffSnapshot(labId: number) {
     .orderBy(sql`avg(${physicianPeerReviews.concordanceScore}) DESC`);
 }
 
-/** Monthly summary for Physician Peer Reviews (for Lab Admin Reports) */
-export async function getPhysicianPeerReviewMonthlySummary(labId: number) {
+//** Monthly summary of physician peer reviews for Lab Admin Analytics */
+export async function getPhysicianPeerReviewMonthlySummary(labId: number, examType?: string) {
   const db = await getDb();
   if (!db) return [];
+  const conditions = [eq(physicianPeerReviews.labId, labId)];
+  if (examType) conditions.push(eq(physicianPeerReviews.examType, examType));
   return db.select({
-    month: sql<string>`DATE_FORMAT(${physicianPeerReviews.createdAt}, '%Y-%m')`,
+    month: sql<string>`DATE_FORMAT(physicianPeerReviews.createdAt, '%Y-%m')`,
     reviewCount: count(),
     avgConcordanceScore: avg(physicianPeerReviews.concordanceScore),
-    physiciansReviewed: sql<number>`COUNT(DISTINCT ${physicianPeerReviews.revieweeLabMemberId})`,
+    physiciansReviewed: sql<number>`COUNT(DISTINCT physicianPeerReviews.revieweeLabMemberId)`,
   })
     .from(physicianPeerReviews)
-    .where(eq(physicianPeerReviews.labId, labId))
-    .groupBy(sql`DATE_FORMAT(${physicianPeerReviews.createdAt}, '%Y-%m')`)
-    .orderBy(sql`DATE_FORMAT(${physicianPeerReviews.createdAt}, '%Y-%m')`);
+    .where(and(...conditions))
+    .groupBy(sql`DATE_FORMAT(physicianPeerReviews.createdAt, '%Y-%m')`)
+    .orderBy(sql`DATE_FORMAT(physicianPeerReviews.createdAt, '%Y-%m')`);
 }
 
 /** Trend for a specific physician (for Lab Admin Analytics growth curve) */
-export async function getPhysicianPeerReviewTrend(labId: number, revieweeLabMemberId: number) {
+export async function getPhysicianPeerReviewTrend(labId: number, revieweeLabMemberId: number, examType?: string) {
   const db = await getDb();
   if (!db) return [];
+  const conditions = [
+    eq(physicianPeerReviews.labId, labId),
+    eq(physicianPeerReviews.revieweeLabMemberId, revieweeLabMemberId),
+  ];
+  if (examType) conditions.push(eq(physicianPeerReviews.examType, examType));
   return db.select({
-    month: sql<string>`DATE_FORMAT(${physicianPeerReviews.createdAt}, '%Y-%m')`,
+    month: sql<string>`DATE_FORMAT(physicianPeerReviews.createdAt, '%Y-%m')`,
     avgConcordanceScore: avg(physicianPeerReviews.concordanceScore),
     reviewCount: count(),
   })
     .from(physicianPeerReviews)
-    .where(and(
-      eq(physicianPeerReviews.labId, labId),
-      eq(physicianPeerReviews.revieweeLabMemberId, revieweeLabMemberId),
-    ))
-    .groupBy(sql`DATE_FORMAT(${physicianPeerReviews.createdAt}, '%Y-%m')`)
-    .orderBy(sql`DATE_FORMAT(${physicianPeerReviews.createdAt}, '%Y-%m')`);
+    .where(and(...conditions))
+    .groupBy(sql`DATE_FORMAT(physicianPeerReviews.createdAt, '%Y-%m')`)
+    .orderBy(sql`DATE_FORMAT(physicianPeerReviews.createdAt, '%Y-%m')`);
 }
 
 // ─── Physician Notifications ──────────────────────────────────────────────────

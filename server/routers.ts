@@ -1303,20 +1303,22 @@ export const appRouter = router({
       return getPhysicianPeerReviewStaffSnapshot(lab.id);
     }),
 
-    /** Monthly summary for Reports tab */
-    getMonthlySummary: protectedProcedure.query(async ({ ctx }) => {
-      const lab = await getLabByAdmin(ctx.user.id);
-      if (!lab) return [];
-      return getPhysicianPeerReviewMonthlySummary(lab.id);
-    }),
-
-    /** Trend for a specific physician */
-    getPhysicianTrend: protectedProcedure
-      .input(z.object({ revieweeLabMemberId: z.number() }))
+    /** Monthly summary of physician peer reviews for Analytics tab */
+    getMonthlySummary: protectedProcedure
+      .input(z.object({ examType: z.string().optional() }).optional())
       .query(async ({ ctx, input }) => {
         const lab = await getLabByAdmin(ctx.user.id);
         if (!lab) return [];
-        return getPhysicianPeerReviewTrend(lab.id, input.revieweeLabMemberId);
+        return getPhysicianPeerReviewMonthlySummary(lab.id, input?.examType);
+      }),
+
+    /** Trend for a specific physician */
+    getPhysicianTrend: protectedProcedure
+      .input(z.object({ revieweeLabMemberId: z.number(), examType: z.string().optional() }))
+      .query(async ({ ctx, input }) => {
+        const lab = await getLabByAdmin(ctx.user.id);
+        if (!lab) return [];
+        return getPhysicianPeerReviewTrend(lab.id, input.revieweeLabMemberId, input.examType);
       }),
   }),
 

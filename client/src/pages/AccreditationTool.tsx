@@ -1158,7 +1158,12 @@ function DIYReportsTab() {
   const { data: peerMonthly = [] } = trpc.lab.getIqrMonthlySummary.useQuery(
     { reviewType: "PEER REVIEW", examType: filterExamTypeQuery || undefined, dateFrom: dateFromQuery || undefined, dateTo: dateToQuery || undefined },
   );
-  const { data: physicianMonthly = [] } = trpc.physicianPeerReview.getMonthlySummary.useQuery();
+  // Physician Concordance tab: separate exam type filter
+  const [physicianExamType, setPhysicianExamType] = useState<string>("");
+  const [physicianExamTypeApplied, setPhysicianExamTypeApplied] = useState<string>("");
+  const { data: physicianMonthly = [] } = trpc.physicianPeerReview.getMonthlySummary.useQuery(
+    { examType: physicianExamTypeApplied || undefined }
+  );
   const { data: comparisonMonthly = [] } = trpc.physicianOverRead.getMonthlySummary.useQuery();
   const { data: cmeSummary = [] } = trpc.cme.getStaffSummary.useQuery();
   const { data: members = [] } = trpc.lab.getMembers.useQuery();
@@ -1897,6 +1902,40 @@ function DIYReportsTab() {
       {/* ── PHYSICIAN CONCORDANCE TAB ── */}
       {viewMode === "physician" && (
         <div className="space-y-6">
+          {/* Physician Concordance: Exam Type Filter */}
+          <div className="flex flex-wrap items-end gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-600">Exam Type</label>
+              <select
+                value={physicianExamType}
+                onChange={e => setPhysicianExamType(e.target.value)}
+                className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-[#189aa1]"
+              >
+                {EXAM_TYPE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+            </div>
+            <button
+              onClick={() => setPhysicianExamTypeApplied(physicianExamType)}
+              className="px-3 py-1.5 rounded-md text-xs font-semibold text-white"
+              style={{ background: BRAND }}
+            >
+              Apply Filter
+            </button>
+            {physicianExamTypeApplied && (
+              <button
+                onClick={() => { setPhysicianExamType(""); setPhysicianExamTypeApplied(""); }}
+                className="px-3 py-1.5 rounded-md text-xs font-semibold text-gray-600 border border-gray-200 bg-white hover:bg-gray-50"
+              >
+                Clear
+              </button>
+            )}
+            {physicianExamTypeApplied && (
+              <span className="text-xs text-[#189aa1] font-medium">
+                Filtered: {EXAM_TYPE_OPTIONS.find(o => o.value === physicianExamTypeApplied)?.label}
+              </span>
+            )}
+          </div>
+
           {/* Concordance growth curve */}
           <Card className="border border-gray-100">
             <CardHeader className="pb-2">
