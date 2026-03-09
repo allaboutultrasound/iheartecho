@@ -871,6 +871,29 @@ function PulmHTNScanCoach() {
                   </div>
                 </div>
               </div>
+              {/* Admin-uploaded reference images */}
+              {((selectedViewMerged as any).echoImageUrl || (selectedViewMerged as any).anatomyImageUrl) && (
+                <div className="border-t border-gray-100">
+                  <div className={`grid gap-0 bg-gray-950 ${ (selectedViewMerged as any).echoImageUrl && (selectedViewMerged as any).anatomyImageUrl ? 'grid-cols-2' : 'grid-cols-1' }`}>
+                    {(selectedViewMerged as any).anatomyImageUrl && (
+                      <div className="flex justify-center items-center p-3 border-r border-gray-800">
+                        <div className="text-center">
+                          <p className="text-xs text-gray-400 mb-1.5">Anatomy Diagram</p>
+                          <img src={(selectedViewMerged as any).anatomyImageUrl} alt={`${selectedView.label} diagram`} className="max-h-56 object-contain rounded" style={{ background: "#030712" }} />
+                        </div>
+                      </div>
+                    )}
+                    {(selectedViewMerged as any).echoImageUrl && (
+                      <div className="flex justify-center items-center p-3">
+                        <div className="text-center">
+                          <p className="text-xs text-gray-400 mb-1.5">Clinical Echo Image</p>
+                          <img src={(selectedViewMerged as any).echoImageUrl} alt={`${selectedView.label} echo`} className="max-h-56 object-contain rounded" style={{ background: "#030712" }} />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
               <div className="p-5 space-y-5">
                 <div>
                   <h4 className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: BRAND_LOCAL }}>Probe Positioning</h4>
@@ -1056,6 +1079,8 @@ function PulmHTNScanCoach() {
 function ACHDScanCoach() {
   const [selectedLesion, setSelectedLesion] = useState(achdLesions[0]);
   const [selectedView, setSelectedView] = useState(achdLesions[0].views[0]);
+  const { mergeView: mergeACHDView } = useScanCoachOverrides("chd");
+  const selectedLesionMerged = useMemo(() => mergeACHDView({ ...selectedLesion, id: selectedLesion.id } as any), [selectedLesion, mergeACHDView]);
   return (
     <div>
 
@@ -1092,6 +1117,29 @@ function ACHDScanCoach() {
               </div>
             </div>
           </div>
+          {/* Admin-uploaded reference images */}
+          {((selectedLesionMerged as any).echoImageUrl || (selectedLesionMerged as any).anatomyImageUrl) && (
+            <div className="border-t border-gray-100">
+              <div className={`grid gap-0 bg-gray-950 ${ (selectedLesionMerged as any).echoImageUrl && (selectedLesionMerged as any).anatomyImageUrl ? 'grid-cols-2' : 'grid-cols-1' }`}>
+                {(selectedLesionMerged as any).anatomyImageUrl && (
+                  <div className="flex justify-center items-center p-3 border-r border-gray-800">
+                    <div className="text-center">
+                      <p className="text-xs text-gray-400 mb-1.5">Anatomy Diagram</p>
+                      <img src={(selectedLesionMerged as any).anatomyImageUrl} alt={`${selectedLesion.label} diagram`} className="max-h-56 object-contain rounded" style={{ background: "#030712" }} />
+                    </div>
+                  </div>
+                )}
+                {(selectedLesionMerged as any).echoImageUrl && (
+                  <div className="flex justify-center items-center p-3">
+                    <div className="text-center">
+                      <p className="text-xs text-gray-400 mb-1.5">Clinical Echo Image</p>
+                      <img src={(selectedLesionMerged as any).echoImageUrl} alt={`${selectedLesion.label} echo`} className="max-h-56 object-contain rounded" style={{ background: "#030712" }} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           {/* View tabs */}
           <div className="px-5 pt-4 flex flex-wrap gap-2">
             {selectedLesion.views.map(v => (

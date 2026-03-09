@@ -5,7 +5,7 @@
   Covers: ME, TG, UE views for TEE; ICE views for structural procedures
   Media: Admin-uploadable reference images/clips per view; hidden from users when empty.
 */
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { Link } from "wouter";
 import {
   ChevronRight, Eye, Info, AlertTriangle, Microscope, Activity,
@@ -14,6 +14,23 @@ import {
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
+import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
+
+// Map TEEIceScanCoach hyphenated view IDs → registry camelCase IDs for override lookup
+const TEE_ID_TO_REGISTRY: Record<string, string> = {
+  "me-4c":          "me4c",
+  "me-2c":          "me2c",
+  "me-lax":         "melax",
+  "me-asc-ao-sax":  "meaorta",
+  "me-av-sax":      "meavsax",
+  "me-bicaval":     "mebicaval",
+  "me-mv-comm":     "mebicaval", // closest registry match
+  "tg-mid-sax":     "tgsax",
+  "tg-2c":          "tg2c",
+  "tg-deep-lax":    "tglax",
+  "ue-arch-lax":    "ueaorticarch",
+  "ue-arch-sax":    "ueaorticarch",
+};
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface TEEView {
@@ -612,6 +629,13 @@ export function TEEIceScanCoachContent() {
 
   const sectionViews = teeViews.filter(v => v.section === activeSection);
 
+  // Override hook — maps hyphenated IDs to registry IDs for unified image lookup
+  const { mergeView: mergeTEEView } = useScanCoachOverrides("tee");
+  const selectedViewMerged = useMemo(() => {
+    const registryId = TEE_ID_TO_REGISTRY[selectedView.id] ?? selectedView.id;
+    return mergeTEEView({ ...selectedView, id: registryId } as any);
+  }, [selectedView, mergeTEEView]);
+
   const handleViewSelect = (view: TEEView) => {
     setSelectedView(view);
     setTimeout(() => detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
@@ -670,6 +694,39 @@ export function TEEIceScanCoachContent() {
           {/* Reference media — shown only when filled; admin upload panel shown to admins */}
           <ViewMediaDisplay viewId={selectedView.id} />
           {isAdmin && <AdminMediaPanel viewId={selectedView.id} />}
+
+          {/* Override images from unified ScanCoach admin editor (registry-keyed) */}
+          {((selectedViewMerged as any).echoImageUrl || (selectedViewMerged as any).anatomyImageUrl) && (
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
+                <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2" style={{ fontFamily: "Merriweather, serif" }}>
+                  <div className="w-6 h-6 rounded-lg flex items-center justify-center text-white" style={{ background: selectedView.color }}>
+                    <Eye className="w-3.5 h-3.5" />
+                  </div>
+                  Reference Images
+                </h3>
+                <span className="text-xs text-gray-400">Diagram · Clinical Echo</span>
+              </div>
+              <div className={`grid gap-0 bg-gray-950 ${ (selectedViewMerged as any).echoImageUrl && (selectedViewMerged as any).anatomyImageUrl ? 'grid-cols-2' : 'grid-cols-1' }`}>
+                {(selectedViewMerged as any).anatomyImageUrl && (
+                  <div className="flex justify-center items-center p-3 border-r border-gray-800">
+                    <div className="text-center">
+                      <p className="text-xs text-gray-400 mb-1.5">Anatomy Diagram</p>
+                      <img src={(selectedViewMerged as any).anatomyImageUrl} alt={`${selectedView.name} diagram`} className="max-h-56 object-contain rounded" style={{ background: "#030712" }} />
+                    </div>
+                  </div>
+                )}
+                {(selectedViewMerged as any).echoImageUrl && (
+                  <div className="flex justify-center items-center p-3">
+                    <div className="text-center">
+                      <p className="text-xs text-gray-400 mb-1.5">Clinical Echo Image</p>
+                      <img src={(selectedViewMerged as any).echoImageUrl} alt={`${selectedView.name} echo`} className="max-h-56 object-contain rounded" style={{ background: "#030712" }} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Probe Maneuver */}
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">

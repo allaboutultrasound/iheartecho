@@ -353,10 +353,6 @@ export default function ImageQualityReview({ embedded = false }: { embedded?: bo
             <RadioGroup name="reviewType" options={["QUALITY REVIEW", "PEER REVIEW"]}
               value={form.reviewType} onChange={v => set("reviewType", v)} cols={2} />
           </FormField>
-          <FormField label="Organization / Facility Name">
-            <TextInput value={form.organization} onChange={v => set("organization", v)}
-              placeholder="e.g. Regional Medical Center" />
-          </FormField>
           <div className="grid grid-cols-2 gap-3">
             <FormField label="Date Review Completed" required>
               <TextInput type="date" value={form.dateReviewCompleted}
@@ -367,15 +363,10 @@ export default function ImageQualityReview({ embedded = false }: { embedded?: bo
                 onChange={v => set("examDos", v)} />
             </FormField>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <FormField label="Exam Identifier (LAS / FIR / MRN)" required>
-              <TextInput value={form.examIdentifier} onChange={v => set("examIdentifier", v)}
-                placeholder="e.g. MRN-12345" />
-            </FormField>
-            <FormField label="Patient DOB">
-              <TextInput type="date" value={form.dob} onChange={v => set("dob", v)} />
-            </FormField>
-          </div>
+          <FormField label="Exam Identifier (LAS, FIR)" required>
+            <TextInput value={form.examIdentifier} onChange={v => set("examIdentifier", v)}
+              placeholder="e.g. Smith-J" />
+          </FormField>
           <FormField label="Facility Location">
             <TextInput value={form.facilityLocation} onChange={v => set("facilityLocation", v)}
               placeholder="e.g. Main Hospital, Outpatient Center" />

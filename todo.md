@@ -1613,3 +1613,18 @@
 - [x] Add PACS link input field to lab invitation UI
 - [x] Display PACS link on physician over-read form
 - [x] Fix broken EchoAssist link in ScanCoach banner (/echoassist-hub → correct route)
+
+## ScanCoach Image Override Rollout — Remaining Modules (Mar 09 2026)
+- [ ] ScanCoach.tsx: fetal tab — add useScanCoachOverrides(module="fetal") and merge selectedFetal
+- [ ] ScanCoach.tsx: chd tab — add useScanCoachOverrides(module="chd") and merge selectedCHD
+- [ ] ScanCoach.tsx: achd tab — add useScanCoachOverrides(module="achd") and merge selectedACHD
+- [ ] ScanCoach.tsx: pulm tab — add useScanCoachOverrides(module="pulm") and merge selectedPulm
+- [ ] ScanCoach.tsx: diastolic tab — add useScanCoachOverrides(module="diastolic") and merge selectedDiastolic
+- [ ] StrainScanCoach.tsx: add image rendering section and useScanCoachOverrides(module="strain")
+- [ ] TEEIceScanCoach.tsx: migrate from per-view getMediaByView to useScanCoachOverrides hook
+
+## Image Quality Review Form Cleanup (Mar 09 2026)
+- [x] Remove Patient DOB field from image quality review form
+- [x] Remove Organization field from image quality review form
+- [x] Remove MRN field from image quality review form
+- [x] Update Exam Identifier label to "(LAS, FIR)" in image quality review form

@@ -7,6 +7,7 @@
 import { useState, useMemo, useRef, useCallback } from "react";
 import Layout from "@/components/Layout";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
+import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 import {
   Activity, ChevronDown, ChevronUp, Info, AlertCircle,
   BarChart3, CheckCircle2, Lightbulb, Target, Zap,
@@ -989,7 +990,18 @@ function StrainScanCoachInner() {
   }, []);
 
   // Left-column tab state
-  const [leftTab, setLeftTab] = useState<"patterns" | "tips">("patterns");
+  const [leftTab, setLeftTab] = useState<"patterns" | "tips" | "acquisition">("patterns");
+
+  // Strain acquisition views (registry IDs: plax, a4c, a2c, a3c)
+  const STRAIN_ACQ_VIEWS = [
+    { id: "plax", name: "PLAX (Parasternal Long Axis)", probe: "Parasternal position, 3rd–4th ICS, left sternal border. Marker at 3–4 o'clock (toward right shoulder).", anatomy: "LV long axis, posterior wall, anterior septum, MV, AV, aortic root.", tips: ["Optimize depth to include the entire LV and aortic root.", "Ensure the MV coaptation point is visible.", "Minimize foreshortening — the LV apex should not be visible in this view.", "Frame rate ≥ 40 fps (ideally 60–80 fps) for strain tracking."] },
+    { id: "a4c",  name: "Apical 4-Chamber (A4C)",      probe: "Cardiac apex, 5th–6th ICS, mid-clavicular line. Marker at 3 o'clock (toward left shoulder).", anatomy: "All four chambers, MV, TV, IAS, IVS, LV lateral and septal walls.", tips: ["True apex: rotate probe slightly counterclockwise to avoid foreshortening.", "Align the septum vertically — a tilted septum causes asymmetric strain.", "Avoid apical rocking artifact by centering the apex.", "Confirm all 17 segments are tracked before accepting."] },
+    { id: "a2c",  name: "Apical 2-Chamber (A2C)",      probe: "Same apical window as A4C. Rotate ~60° counterclockwise from A4C.", anatomy: "LV anterior and inferior walls, LA, MV. No RV or septum visible.", tips: ["Rotate until the RV and septum disappear completely.", "Anterior wall foreshortening is common — adjust tilt.", "Ensure the MV annulus is visible at the base.", "Frame rate ≥ 40 fps for strain."] },
+    { id: "a3c",  name: "Apical 3-Chamber (A3C / APLAX)", probe: "Same apical window. Rotate ~120° counterclockwise from A4C (or ~60° from A2C).", anatomy: "LV anteroseptal and inferolateral walls, LVOT, AV, aortic root, LA.", tips: ["This view provides LVOT for VTI measurement — optimize for both strain and Doppler.", "Ensure the AV is fully open and the LVOT is parallel to the beam for Doppler.", "Foreshortening is common — tilt probe toward the sternum if needed."] },
+  ];
+  const [selectedAcqView, setSelectedAcqView] = useState(STRAIN_ACQ_VIEWS[0]);
+  const { mergeView: mergeStrainView } = useScanCoachOverrides("strain");
+  const selectedAcqViewMerged = useMemo(() => mergeStrainView({ ...selectedAcqView, id: selectedAcqView.id } as any), [selectedAcqView, mergeStrainView]);
 
   // Active clinical pattern
   const [activePattern, setActivePattern] = useState<string | null>(null);
@@ -1035,6 +1047,16 @@ function StrainScanCoachInner() {
               >
                 <Lightbulb className="w-4 h-4" />
                 Tips & Tricks
+              </button>
+              <button
+                onClick={() => setLeftTab("acquisition")}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all"
+                style={leftTab === "acquisition"
+                  ? { background: BRAND, color: "#fff" }
+                  : { color: "#6b7280" }}
+              >
+                <Camera className="w-4 h-4" />
+                Acquisition Views
               </button>
             </div>
 
@@ -1279,6 +1301,97 @@ function StrainScanCoachInner() {
                 </div>
               </div>
             )}{/* end tips tab */}
+
+            {/* ── Acquisition Views Tab ── */}
+            {leftTab === "acquisition" && (
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="px-5 py-4 border-b" style={{ borderColor: BRAND + "30", background: BRAND + "08" }}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: BRAND + "18" }}>
+                      <Camera className="w-4 h-4" style={{ color: BRAND }} />
+                    </div>
+                    <div>
+                      <div className="font-bold text-sm text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Strain Acquisition Views</div>
+                      <div className="text-xs text-gray-500">Probe positioning · Anatomy · Acquisition tips · Reference images</div>
+                    </div>
+                  </div>
+                </div>
+                {/* View selector */}
+                <div className="px-5 pt-4 flex flex-wrap gap-2">
+                  {STRAIN_ACQ_VIEWS.map(v => (
+                    <button
+                      key={v.id}
+                      onClick={() => setSelectedAcqView(v)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                      style={selectedAcqView.id === v.id
+                        ? { background: BRAND, color: "white" }
+                        : { background: "#f0fbfc", color: BRAND, border: "1px solid " + BRAND + "30" }}
+                    >
+                      {v.name.split(" ")[0]}
+                    </button>
+                  ))}
+                </div>
+                {/* Admin-uploaded reference images */}
+                {((selectedAcqViewMerged as any).echoImageUrl || (selectedAcqViewMerged as any).anatomyImageUrl) && (
+                  <div className="border-t border-gray-100 mt-4">
+                    <div className={`grid gap-0 bg-gray-950 ${ (selectedAcqViewMerged as any).echoImageUrl && (selectedAcqViewMerged as any).anatomyImageUrl ? 'grid-cols-2' : 'grid-cols-1' }`}>
+                      {(selectedAcqViewMerged as any).anatomyImageUrl && (
+                        <div className="flex justify-center items-center p-3 border-r border-gray-800">
+                          <div className="text-center">
+                            <p className="text-xs text-gray-400 mb-1.5">Anatomy Diagram</p>
+                            <img src={(selectedAcqViewMerged as any).anatomyImageUrl} alt={`${selectedAcqView.name} diagram`} className="max-h-56 object-contain rounded" style={{ background: "#030712" }} />
+                          </div>
+                        </div>
+                      )}
+                      {(selectedAcqViewMerged as any).echoImageUrl && (
+                        <div className="flex justify-center items-center p-3">
+                          <div className="text-center">
+                            <p className="text-xs text-gray-400 mb-1.5">Clinical Echo Image</p>
+                            <img src={(selectedAcqViewMerged as any).echoImageUrl} alt={`${selectedAcqView.name} echo`} className="max-h-56 object-contain rounded" style={{ background: "#030712" }} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                {/* View content */}
+                <div className="p-5 space-y-4">
+                  <h3 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>{selectedAcqView.name}</h3>
+                  <div className="rounded-lg p-4" style={{ background: "#f0fbfc", border: "1px solid " + BRAND + "30" }}>
+                    <div className="flex items-start gap-2 mb-1">
+                      <Settings className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: BRAND }} />
+                      <div>
+                        <div className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: BRAND }}>Probe Positioning</div>
+                        <p className="text-sm text-gray-700 leading-relaxed">{selectedAcqView.probe}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="rounded-lg p-4" style={{ background: "#f8fffe", border: "1px solid " + BRAND + "20" }}>
+                    <div className="flex items-start gap-2 mb-1">
+                      <Eye className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: BRAND }} />
+                      <div>
+                        <div className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: BRAND }}>Key Anatomy</div>
+                        <p className="text-sm text-gray-700 leading-relaxed">{selectedAcqView.anatomy}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Lightbulb className="w-4 h-4" style={{ color: BRAND }} />
+                      <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Acquisition Tips</span>
+                    </div>
+                    <div className="space-y-2">
+                      {selectedAcqView.tips.map((tip, i) => (
+                        <div key={i} className="flex items-start gap-2 p-3 rounded-lg" style={{ background: "#f8fffe", border: "1px solid " + BRAND + "20" }}>
+                          <CheckCircle2 className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: BRAND }} />
+                          <p className="text-xs text-gray-600 leading-relaxed">{tip}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}{/* end acquisition tab */}
 
           </div>
 

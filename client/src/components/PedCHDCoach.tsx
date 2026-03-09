@@ -4,8 +4,9 @@
   Design: Teal/aqua graduated palette, Merriweather headings, Open Sans body
   Focus: CHD scanning tips, criteria, staged palliation surveillance
 */
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { AlertTriangle, ChevronRight, ChevronLeft, Heart, Activity, Eye, Info, Stethoscope } from "lucide-react";
+import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface ScanStage {
@@ -566,6 +567,10 @@ export default function PedCHDCoach() {
     setSelectedStage(stage);
   };
 
+  const { mergeView: mergeCHDView } = useScanCoachOverrides("chd");
+  // Merge admin overrides into the selected defect (for image URLs)
+  const selectedDefectMerged = useMemo(() => mergeCHDView({ ...selectedDefect, id: selectedDefect.id } as any), [selectedDefect, mergeCHDView]);
+
   const currentIndex = chdDefects.findIndex(d => d.id === selectedDefect.id);
   const handlePrev = () => {
     if (currentIndex > 0) {
@@ -652,6 +657,34 @@ export default function PedCHDCoach() {
             <p className="text-sm text-gray-600 leading-relaxed">{selectedDefect.anatomy}</p>
           </div>
         </div>
+
+        {/* Admin-uploaded reference images */}
+        {((selectedDefectMerged as any).echoImageUrl || (selectedDefectMerged as any).anatomyImageUrl) && (
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>Reference Images</h3>
+              <span className="text-xs text-gray-400">Diagram · Clinical Echo</span>
+            </div>
+            <div className={`grid gap-0 bg-gray-950 ${ (selectedDefectMerged as any).echoImageUrl && (selectedDefectMerged as any).anatomyImageUrl ? 'grid-cols-2' : 'grid-cols-1' }`}>
+              {(selectedDefectMerged as any).anatomyImageUrl && (
+                <div className="flex justify-center items-center p-3 border-r border-gray-800">
+                  <div className="text-center">
+                    <p className="text-xs text-gray-400 mb-1.5">Anatomy Diagram</p>
+                    <img src={(selectedDefectMerged as any).anatomyImageUrl} alt={`${selectedDefect.name} diagram`} className="max-h-60 object-contain rounded" style={{ background: "#030712" }} />
+                  </div>
+                </div>
+              )}
+              {(selectedDefectMerged as any).echoImageUrl && (
+                <div className="flex justify-center items-center p-3">
+                  <div className="text-center">
+                    <p className="text-xs text-gray-400 mb-1.5">Clinical Echo Image</p>
+                    <img src={(selectedDefectMerged as any).echoImageUrl} alt={`${selectedDefect.name} echo`} className="max-h-60 object-contain rounded" style={{ background: "#030712" }} />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Stage Overview */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
