@@ -9,7 +9,7 @@
     • Save changes — persisted to DB and reflected live in the ScanCoach pages
   Access: platform_admin or owner role only.
 */
-import { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import { trpc } from "@/lib/trpc";
@@ -29,8 +29,25 @@ import {
   Upload, Trash2, Save, ChevronLeft, ChevronRight,
   Image as ImageIcon, Edit3, Eye, Loader2, CheckCircle2,
   AlertCircle, ExternalLink, Layers, AlertTriangle,
-  Stethoscope, Ruler, Lightbulb,
+  Stethoscope, Ruler, Lightbulb, Activity, Heart, Baby,
+  Zap, Scan, Wind, Microscope, Users,
 } from "lucide-react";
+
+// Icon map for each ScanCoach module
+const MODULE_ICONS: Record<string, React.ReactNode> = {
+  tte:        <Stethoscope className="w-5 h-5" />,
+  tee:        <Microscope className="w-5 h-5" />,
+  ice:        <Scan className="w-5 h-5" />,
+  uea:        <Zap className="w-5 h-5" />,
+  strain:     <Activity className="w-5 h-5" />,
+  hocm:       <Heart className="w-5 h-5" />,
+  stress:     <Ruler className="w-5 h-5" />,
+  structural: <Layers className="w-5 h-5" />,
+  fetal:      <Baby className="w-5 h-5" />,
+  chd:        <Users className="w-5 h-5" />,
+  diastolic:  <Wind className="w-5 h-5" />,
+  pulm:       <Wind className="w-5 h-5" />,
+};
 
 const BRAND = "#189aa1";
 
@@ -657,12 +674,14 @@ export default function ScanCoachEditor() {
         </div>
       </div>
 
-      {/* Module tabs */}
-      <div className="border-b bg-white sticky top-0 z-10">
-        <div className="container">
-          <div className="flex gap-1 py-2 overflow-x-auto">
+      {/* Module selector grid */}
+      <div className="bg-gray-50 border-b">
+        <div className="container py-5">
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Select a Module to Edit</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
             {SCANCOACH_MODULES.map((mod) => {
               const overrideCount = overrides.filter((o: Override) => o.module === mod.key).length;
+              const isActive = selectedModule === mod.key;
               return (
                 <button
                   key={mod.key}
@@ -672,20 +691,29 @@ export default function ScanCoachEditor() {
                     setDraft(null);
                     setPreviewMode(false);
                   }}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all ${
-                    selectedModule === mod.key
-                      ? "text-white"
-                      : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                  className={`relative flex flex-col items-center gap-2 px-3 py-4 rounded-xl border-2 text-center transition-all font-semibold ${
+                    isActive
+                      ? "border-[#189aa1] bg-[#189aa1] text-white shadow-md scale-[1.02]"
+                      : "border-gray-200 bg-white text-gray-600 hover:border-[#189aa1]/50 hover:bg-[#f0fbfc] hover:text-[#189aa1] hover:shadow-sm"
                   }`}
-                  style={selectedModule === mod.key ? { background: BRAND } : {}}
                 >
-                  {mod.label}
+                  {/* Icon */}
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                    isActive ? "bg-white/20" : "bg-[#189aa1]/10"
+                  }`} style={isActive ? {} : { color: BRAND }}>
+                    {MODULE_ICONS[mod.key] ?? <Layers className="w-5 h-5" />}
+                  </div>
+                  {/* Label */}
+                  <span className="text-xs leading-tight">{mod.label.replace(" ScanCoach", "")}</span>
+                  {/* View count */}
+                  <span className={`text-[10px] ${
+                    isActive ? "text-white/70" : "text-gray-400"
+                  }`}>{mod.views.length} views</span>
+                  {/* Override badge */}
                   {overrideCount > 0 && (
-                    <span
-                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                        selectedModule === mod.key ? "bg-white/20 text-white" : "bg-[#189aa1]/10 text-[#189aa1]"
-                      }`}
-                    >
+                    <span className={`absolute top-2 right-2 text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                      isActive ? "bg-white/25 text-white" : "bg-[#189aa1] text-white"
+                    }`}>
                       {overrideCount}
                     </span>
                   )}
