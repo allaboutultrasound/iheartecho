@@ -50,6 +50,25 @@ function sampleN<T>(arr: T[], n: number): T[] {
 }
 
 /**
+ * Deterministic shuffle seeded by a string (e.g. date + userId).
+ * Uses a simple LCG so the same seed always produces the same order.
+ */
+function seededShuffle<T>(arr: T[], seed: string): T[] {
+  // Convert seed string to a numeric seed
+  let s = 0;
+  for (let i = 0; i < seed.length; i++) {
+    s = (s * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  const result = [...arr];
+  for (let i = result.length - 1; i > 0; i--) {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    const j = s % (i + 1);
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+/**
  * Ensure exactly 1 daily question exists for the given date.
  * Priority order:
  *   1. Next queued challenge (draft/scheduled) from quickfireChallenges — uses its first question
@@ -1161,7 +1180,7 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
         .where(and(...conditions))
         .limit(input.limit);
 
-      if (allCards.length === 0) return { cards: [], totalCards: 0, userStats: null };
+      if (allCards.length === 0) return { cards: [], totalCards: 0, userStats: null, dailyLimit: null, dailySeenCount: 0 };
 
       // Filter by topic if provided (legacy support)
       const filtered = input.topic
@@ -1171,15 +1190,27 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
           })
         : allCards;
 
+      // Determine premium status
+      const FREE_DAILY_LIMIT = 10;
+      const isPremium = ctx.user
+        ? ((ctx.user as any).isPremium === true || (ctx.user as any).role === "admin")
+        : false;
+      const dailyLimit = isPremium ? null : FREE_DAILY_LIMIT;
+
       // If user is authenticated, fetch their attempt history for spaced repetition
       if (ctx.user) {
+        const today = todayDateStr();
+        const deckSetDate = `deck-${today}`;
         const cardIds = filtered.map((c) => c.id);
+
+        // Fetch all-time attempts for spaced repetition stats
         const attempts = cardIds.length > 0
           ? await db
               .select({
                 questionId: quickfireAttempts.questionId,
                 selfMarkedCorrect: quickfireAttempts.selfMarkedCorrect,
                 createdAt: quickfireAttempts.createdAt,
+                setDate: quickfireAttempts.setDate,
               })
               .from(quickfireAttempts)
               .where(and(
@@ -1187,6 +1218,14 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
                 inArray(quickfireAttempts.questionId, cardIds),
               ))
           : [];
+
+        // Count how many distinct flashcards the user has reviewed TODAY
+        const todayAttemptedIds = new Set(
+          attempts
+            .filter((a) => a.setDate === deckSetDate)
+            .map((a) => a.questionId)
+        );
+        const dailySeenCount = todayAttemptedIds.size;
 
         // Build per-card stats
         const statsMap: Record<number, { gotIt: number; missed: number; lastSeen: Date | null; lastResult: boolean | null }> = {};
@@ -1203,40 +1242,46 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
           }
         }
 
-        // Spaced repetition sort:
-        // 1. Never seen (no attempts) — highest priority
-        // 2. Last result was missed — second priority, sorted by most recently missed first
-        // 3. Last result was correct — lowest priority, sorted by least recently seen first
-        const scored = filtered.map((card) => {
-          const s = statsMap[card.id];
-          let score = 0;
-          if (!s || s.gotIt + s.missed === 0) {
-            score = 0; // never seen — show first
-          } else if (s.lastResult === false) {
-            score = 1; // last missed — show second
-          } else {
-            score = 2; // last correct — show last
-          }
-          return { card, score, lastSeen: s?.lastSeen ?? null, stats: s ?? { gotIt: 0, missed: 0, lastSeen: null, lastResult: null } };
-        });
+        let orderedCards: typeof filtered;
+        if (isPremium) {
+          // Premium: spaced repetition sort
+          const scored = filtered.map((card) => {
+            const s = statsMap[card.id];
+            let score = 0;
+            if (!s || s.gotIt + s.missed === 0) {
+              score = 0;
+            } else if (s.lastResult === false) {
+              score = 1;
+            } else {
+              score = 2;
+            }
+            return { card, score, lastSeen: s?.lastSeen ?? null, stats: s ?? { gotIt: 0, missed: 0, lastSeen: null, lastResult: null } };
+          });
+          scored.sort((a, b) => {
+            if (a.score !== b.score) return a.score - b.score;
+            if (!a.lastSeen && !b.lastSeen) return 0;
+            if (!a.lastSeen) return -1;
+            if (!b.lastSeen) return 1;
+            return a.lastSeen.getTime() - b.lastSeen.getTime();
+          });
+          orderedCards = scored.map(({ card }) => card);
+        } else {
+          // Free: deterministic daily shuffle (different every day, same within a day)
+          const seed = `${today}-${ctx.user.id}`;
+          orderedCards = seededShuffle(filtered, seed);
+        }
 
-        scored.sort((a, b) => {
-          if (a.score !== b.score) return a.score - b.score;
-          // Within same score group, sort by lastSeen ascending (least recently seen first)
-          if (!a.lastSeen && !b.lastSeen) return 0;
-          if (!a.lastSeen) return -1;
-          if (!b.lastSeen) return 1;
-          return a.lastSeen.getTime() - b.lastSeen.getTime();
+        const cards = orderedCards.map((card) => {
+          const stats = statsMap[card.id] ?? { gotIt: 0, missed: 0, lastSeen: null, lastResult: null };
+          return {
+            ...card,
+            tags: card.tags ? JSON.parse(card.tags) : [],
+            gotIt: stats.gotIt,
+            missed: stats.missed,
+            lastSeen: stats.lastSeen,
+            lastResult: stats.lastResult,
+          };
         });
-
-        const cards = scored.map(({ card, stats }) => ({
-          ...card,
-          tags: card.tags ? JSON.parse(card.tags) : [],
-          gotIt: stats.gotIt,
-          missed: stats.missed,
-          lastSeen: stats.lastSeen,
-          lastResult: stats.lastResult,
-        }));
 
         // Aggregate user stats
         const totalAttempts = attempts.length;
@@ -1247,15 +1292,20 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
           cards,
           totalCards: filtered.length,
           userStats: { totalAttempts, totalGotIt, totalMissed, accuracy: totalAttempts > 0 ? Math.round((totalGotIt / totalAttempts) * 100) : null },
+          dailyLimit,
+          dailySeenCount,
         };
       }
 
-      // Unauthenticated: return in random order
-      const shuffled = sampleN(filtered, filtered.length);
+      // Unauthenticated: date-seeded daily shuffle (changes each day)
+      const anonSeed = todayDateStr();
+      const shuffled = seededShuffle(filtered, anonSeed);
       return {
         cards: shuffled.map((c) => ({ ...c, tags: c.tags ? JSON.parse(c.tags) : [], gotIt: 0, missed: 0, lastSeen: null, lastResult: null })),
         totalCards: filtered.length,
         userStats: null,
+        dailyLimit: FREE_DAILY_LIMIT,
+        dailySeenCount: 0,
       };
     }),
 

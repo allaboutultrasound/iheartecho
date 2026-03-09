@@ -537,7 +537,7 @@ function CaseMixRequirementsView() {
           <h2 className="text-lg font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
             IAC Case Studies Requirements
           </h2>
-          <p className="text-xs text-gray-500 mt-0.5">IAC Echocardiography Accreditation — Updated 6-8-2023</p>
+          <p className="text-xs text-gray-500 mt-0.5">IAC Echocardiography Accreditation</p>
         </div>
         <Link href="/accreditation?tab=case-mix&view=tracker">
           <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors hover:bg-[#f0fbfc]" style={{ color: BRAND, borderColor: BRAND + "40" }}>
@@ -663,7 +663,7 @@ function CaseMixRequirementsView() {
       </CollapsibleSection>
 
       <p className="text-xs text-gray-400 text-center pb-2">
-        Source: IAC Echocardiography Accreditation Checklist, Updated 6-8-2023 ·{" "}
+        Source: IAC Echocardiography Accreditation Checklist ·{" "}
         <a href="https://www.intersocietal.org/echo/" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">
           intersocietal.org/echo
         </a>

@@ -27,6 +27,8 @@ import {
   ListOrdered,
 } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { Link } from "wouter";
+import { Lock, Zap } from "lucide-react";
 
 type StudyMode = "sequential" | "spaced";
 type EchoCategory = "all" | "adult" | "pediatric_congenital" | "fetal";
@@ -74,10 +76,16 @@ export default function FlashcardDeck() {
 
   const submitReview = trpc.quickfire.submitFlashcardReview.useMutation();
 
-  // Apply study mode ordering
+  // Daily limit from server
+  const dailyLimit = data?.dailyLimit ?? null; // null = unlimited (premium)
+  const dailySeenCount = data?.dailySeenCount ?? 0;
+
+  // Apply study mode ordering (server already handles ordering for premium/free)
+  // For free users the server returns a date-seeded shuffle; we just use that order
   const rawCards = data?.cards ?? [];
   const cards = useMemo(() => {
-    if (studyMode === "spaced") {
+    // Only apply client-side spaced sort for premium (server handles free ordering)
+    if (studyMode === "spaced" && !dailyLimit) {
       return [...rawCards].sort((a, b) => {
         const aAttempts = ((a as any).gotIt ?? 0) + ((a as any).missed ?? 0);
         const bAttempts = ((b as any).gotIt ?? 0) + ((b as any).missed ?? 0);
@@ -89,7 +97,7 @@ export default function FlashcardDeck() {
       });
     }
     return rawCards;
-  }, [rawCards, studyMode]);
+  }, [rawCards, studyMode, dailyLimit]);
 
   const currentCard = cards[currentIndex];
   const totalCards = cards.length;
@@ -98,6 +106,11 @@ export default function FlashcardDeck() {
   const missedCount = answeredCount - gotItCount;
   const sessionAccuracy = answeredCount > 0 ? Math.round((gotItCount / answeredCount) * 100) : null;
   const progressPct = totalCards > 0 ? Math.round((answeredCount / totalCards) * 100) : 0;
+
+  // Daily limit enforcement: total seen = server-side already seen today + session answers
+  const sessionAnsweredCount = Object.keys(sessionResults).length;
+  const totalDailyUsed = dailySeenCount + sessionAnsweredCount;
+  const isDailyLimitReached = dailyLimit !== null && totalDailyUsed >= dailyLimit;
 
   function handleCategoryChange(cat: EchoCategory) {
     setSelectedCategory(cat);
@@ -251,6 +264,45 @@ export default function FlashcardDeck() {
     );
   }
 
+  // ── Render: Daily Limit Gate ─────────────────────────────────────────────
+  if (isDailyLimitReached) {
+    return (
+      <Layout>
+        <div className="container py-12 max-w-lg mx-auto text-center">
+          <div className="bg-white rounded-2xl shadow-lg p-8 border border-[#189aa1]/20">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "linear-gradient(135deg, #0e4a50, #189aa1)" }}>
+              <Lock className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="text-2xl font-black text-gray-800 mb-2" style={{ fontFamily: "Merriweather, serif" }}>
+              Daily Limit Reached
+            </h2>
+            <p className="text-gray-500 mb-2">
+              You've reviewed <strong>{dailyLimit} flashcards</strong> today — great work!
+            </p>
+            <p className="text-gray-400 text-sm mb-6">
+              Free members get {dailyLimit} flashcards per day. Come back tomorrow for a fresh set, or upgrade to Premium for unlimited access.
+            </p>
+            <div className="bg-gradient-to-br from-[#0e1e2e] to-[#0e4a50] rounded-xl p-5 mb-6 text-left">
+              <div className="flex items-center gap-2 mb-2">
+                <Zap className="w-4 h-4 text-[#4ad9e0]" />
+                <span className="text-xs font-bold text-[#4ad9e0] uppercase tracking-wider">Premium Membership</span>
+              </div>
+              <p className="text-white font-bold text-sm mb-1">Unlimited Echo Flashcards</p>
+              <p className="text-white/60 text-xs">Study as many flashcards as you want, every day — plus spaced repetition, all categories, and the full iHeartEcho clinical suite.</p>
+            </div>
+            <Link href="/premium">
+              <Button className="w-full text-white font-bold mb-3" style={{ background: "#189aa1" }}>
+                <Zap className="w-4 h-4 mr-2" />
+                Upgrade to Premium
+              </Button>
+            </Link>
+            <p className="text-xs text-gray-400">Your daily limit resets at midnight UTC. Come back tomorrow for {dailyLimit} new cards!</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   // ── Render: Main Deck ─────────────────────────────────────────────────────
   const alreadyAnswered = currentCard ? sessionResults[currentCard.id] !== undefined : false;
   const thisResult = currentCard ? sessionResults[currentCard.id] : undefined;
@@ -259,11 +311,26 @@ export default function FlashcardDeck() {
     <Layout>
       <div className="container py-4 max-w-2xl mx-auto">
         {/* Header — compact */}
-        <div className="flex items-center gap-2 mb-3">
-          <BookOpen className="w-5 h-5 text-[#189aa1]" />
-          <h1 className="text-lg font-black text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-            Echo Flashcards
-          </h1>
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <div className="flex items-center gap-2">
+            <BookOpen className="w-5 h-5 text-[#189aa1]" />
+            <h1 className="text-lg font-black text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
+              Echo Flashcards
+            </h1>
+          </div>
+          {/* Daily usage indicator for free users */}
+          {dailyLimit !== null && (
+            <div className="flex items-center gap-1.5 text-xs font-semibold">
+              <span className={totalDailyUsed >= dailyLimit * 0.8 ? "text-orange-500" : "text-gray-400"}>
+                {totalDailyUsed}/{dailyLimit} today
+              </span>
+              {totalDailyUsed >= dailyLimit * 0.8 && (
+                <Link href="/premium">
+                  <span className="text-[#189aa1] underline cursor-pointer">Upgrade</span>
+                </Link>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Category Filter */}

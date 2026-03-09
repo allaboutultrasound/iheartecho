@@ -1708,3 +1708,10 @@
 - [ ] Show checkmark on Step 1 icon when both Step 1 and Step 2 are completed in physician peer review workflow
 
 - [x] Remove all user-facing references to Thinkific from premium upgrade page and any other user-visible areas
+
+## Flashcard Daily Limit
+- [x] Free users limited to 10 flashcards per day, randomized daily so different cards each day
+- [x] Lock flashcard deck after 10 for free users with upgrade prompt
+- [x] Add "Unlimited Echo Flashcards" to Premium membership features list
+
+- [x] Remove "(2023)" year reference from IAC Accreditation Checklist in Readiness section

@@ -7,7 +7,7 @@ import { useLocation } from "wouter";
 import {
   Crown, Check, Sparkles, ArrowRight, RefreshCw,
   Stethoscope, BookOpen, Zap, Activity, Users, FileText,
-  Star, Shield, Clock
+  Star, Shield, Clock, Layers
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -64,16 +64,23 @@ const PREMIUM_FEATURES = [
     title: "Hemodynamics Lab",
     description: "Interactive PV loop simulator — adjust preload, afterload, and contractility.",
   },
+  {
+    icon: Layers,
+    title: "Unlimited Echo Flashcards",
+    description: "Study as many flashcards as you want, every day. Free members are limited to 10 per day. Premium unlocks the full deck with spaced repetition.",
+  },
 ];
 
 const FREE_FEATURES = [
   "Echo Case Library (full access)",
   "Daily Challenge (today's challenge only)",
+  "Echo Flashcards (10 per day)",
   "Basic echo reference values",
   "Community Hub access",
 ];
 
 const PREMIUM_ONLY_LABELS = [
+  "Unlimited Echo Flashcards (no daily limit)",
   "Daily Challenge Archive (full history)",
   "Report Builder",
   "All EchoNavigator protocols",

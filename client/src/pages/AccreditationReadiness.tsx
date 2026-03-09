@@ -1,6 +1,6 @@
 /*
  * Accreditation Readiness Tool
- * Full IAC Echocardiography Accreditation Checklist (2023) with per-section progress markers.
+ * Full IAC Echocardiography Accreditation Checklist with per-section progress markers.
  * Data is persisted per lab via tRPC.
  */
 import { useState, useEffect, useCallback, useMemo } from "react";
@@ -403,7 +403,7 @@ export default function AccreditationReadiness({ trpcNamespace = "accreditationR
             Accreditation Readiness Checklist
           </h2>
           <p className="text-sm text-gray-500 mt-1">
-            IAC Echocardiography Accreditation Checklist (2023) — track your lab's readiness for each requirement.
+            IAC Echocardiography Accreditation Checklist — track your lab's readiness for each requirement.
           </p>
         </div>
         <Button
