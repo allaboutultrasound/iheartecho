@@ -123,9 +123,11 @@ function StepIndicator({ step, total }: { step: number; total: number }) {
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="bg-white rounded-xl border mb-5 overflow-hidden" style={{ borderColor: `${BRAND}25` }}>
-      <div className="px-5 py-3 border-b" style={{ background: `${BRAND}08`, borderColor: `${BRAND}20` }}>
-        <h3 className="font-bold text-sm" style={{ color: BRAND, fontFamily: "Merriweather, serif" }}>{title}</h3>
-      </div>
+      {title && (
+        <div className="px-5 py-3 border-b" style={{ background: `${BRAND}08`, borderColor: `${BRAND}20` }}>
+          <h3 className="font-bold text-sm" style={{ color: BRAND, fontFamily: "Merriweather, serif" }}>{title}</h3>
+        </div>
+      )}
       <div className="p-5">{children}</div>
     </div>
   );
@@ -410,7 +412,7 @@ export default function EchoCorrelationTab() {
 
         {/* ── Step 1: Header ──────────────────────────────────────────────── */}
         {step === 1 && (
-          <SectionCard title="Step 1 — Review Header">
+          <SectionCard title="">
             <FieldRow label="Organization / Facility">
               <BrandInput value={organization} onChange={setOrganization} placeholder="e.g. All About Ultrasound" />
             </FieldRow>
@@ -429,7 +431,7 @@ export default function EchoCorrelationTab() {
         {/* ── Step 2: Exam Info ────────────────────────────────────────────── */}
         {step === 2 && (
           <>
-            <SectionCard title="Step 2 — Exam Information">
+            <SectionCard title="Exam Information">
               <FieldRow label="Exam Type">
                 <BrandSelect value={examType} onChange={setExamType} options={EXAM_TYPES} placeholder="Select exam type…" />
               </FieldRow>
@@ -481,7 +483,7 @@ export default function EchoCorrelationTab() {
         {/* ── Step 3: Parameter Comparison ────────────────────────────────── */}
         {step === 3 && (
           <>
-            <SectionCard title="Step 3 — Study Correlation Parameters">
+            <SectionCard title="Study Correlation Parameters">
               <p className="text-xs text-gray-500 mb-4">
                 Enter findings from the original echo and each correlative study. Select concordance for each parameter.
               </p>

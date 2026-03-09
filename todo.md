@@ -44,7 +44,7 @@
 - [x] Hide Case Mix, Policy Builder, Reports & Analytics, Readiness tabs from regular users (admin-only)
 - [x] Rename "Case Mix" label to "Case Studies" on DIY Accreditation page
 - [ ] Remove Case Mix section from the Readiness Assessment tab
-- [ ] Remove HOCM and POCUS from exam type list in Appropriate Use review form
+- [x] Remove HOCM and POCUS from exam type list in Appropriate Use review form
 - [ ] Split IQR section in Reports & Analytics into Quality Review and Peer Review sub-sections based on reviewType field
 - [ ] Remove "Header Info" and "Review Header" section labels from IQR form
 - [ ] Remove all tags from flashcards (overwhelming)
@@ -1767,3 +1767,7 @@
 - [x] EchoNavigatorHub: already gated correctly — verify modal works
 - [x] RoleGuard: add premium upgrade CTA screen for premium_user role gates
 - [x] Profile.tsx: fix isPremiumUser to check both DB flag and appRoles
+
+## Cosmetic Cleanup (Mar 09 2026)
+- [x] Remove "Header Info" and "Review Header" section labels from IQR form (EchoCorrelation.tsx)
+- [x] Remove HOCM and POCUS from Appropriate Use exam type list
