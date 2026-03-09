@@ -1863,3 +1863,7 @@
 - [x] Update caseStudies.create and caseStudies.update tRPC procedures to accept TD/MD fields
 - [x] Add Technical Director Case and Medical Director Case checkboxes to IQR IAC flag modal
 - [x] Add full IAC Flag modal to Sonographer Peer Review final step (same fields as IQR modal + TD/MD checkboxes)
+
+## Case Studies TD/MD Filter - Session Mar 09 2026
+- [x] Add TD/MD filter chips to Case Studies tracker (filter by Technical Director, Medical Director, or both)
+- [x] Add sort option for TD/MD cases in the tracker list

@@ -166,6 +166,8 @@ export default function PossibleCaseStudies() {
   const [search, setSearch] = useState("");
   const [filterExamType, setFilterExamType] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
+  const [filterTDMD, setFilterTDMD] = useState<"" | "td" | "md" | "both">("" );
+  const [sortBy, setSortBy] = useState<"date_desc" | "date_asc" | "status" | "td_first" | "md_first">("date_desc");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<CaseFormData>(EMPTY_FORM);
@@ -246,20 +248,50 @@ export default function PossibleCaseStudies() {
     }
   };
 
-  const filteredCases = useMemo(() =>
-    cases.filter(c => {
-      if (!search) return true;
-      const q = search.toLowerCase();
-      return (
-        c.caseStudyId?.toLowerCase().includes(q) ||
-        c.diagnosis?.toLowerCase().includes(q) ||
-        c.sonographerName?.toLowerCase().includes(q) ||
-        c.interpretingPhysicianName?.toLowerCase().includes(q) ||
-        c.patientMrn?.toLowerCase().includes(q)
-      );
-    }),
-    [cases, search]
-  );
+  const filteredCases = useMemo(() => {
+    let result = cases.filter(c => {
+      // Text search
+      if (search) {
+        const q = search.toLowerCase();
+        const matchesSearch = (
+          c.caseStudyId?.toLowerCase().includes(q) ||
+          c.diagnosis?.toLowerCase().includes(q) ||
+          c.sonographerName?.toLowerCase().includes(q) ||
+          c.interpretingPhysicianName?.toLowerCase().includes(q) ||
+          c.patientMrn?.toLowerCase().includes(q)
+        );
+        if (!matchesSearch) return false;
+      }
+      // TD/MD filter
+      if (filterTDMD === "td" && !c.isTechnicalDirectorCase) return false;
+      if (filterTDMD === "md" && !c.isMedicalDirectorCase) return false;
+      if (filterTDMD === "both" && !(c.isTechnicalDirectorCase && c.isMedicalDirectorCase)) return false;
+      return true;
+    });
+    // Sort
+    result = [...result].sort((a, b) => {
+      if (sortBy === "td_first") {
+        if (a.isTechnicalDirectorCase && !b.isTechnicalDirectorCase) return -1;
+        if (!a.isTechnicalDirectorCase && b.isTechnicalDirectorCase) return 1;
+        return 0;
+      }
+      if (sortBy === "md_first") {
+        if (a.isMedicalDirectorCase && !b.isMedicalDirectorCase) return -1;
+        if (!a.isMedicalDirectorCase && b.isMedicalDirectorCase) return 1;
+        return 0;
+      }
+      if (sortBy === "status") {
+        const order = ["identified", "under_review", "submitted", "accepted"];
+        return order.indexOf(a.submissionStatus) - order.indexOf(b.submissionStatus);
+      }
+      if (sortBy === "date_asc") {
+        return new Date(a.createdAt ?? 0).getTime() - new Date(b.createdAt ?? 0).getTime();
+      }
+      // date_desc (default)
+      return new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime();
+    });
+    return result;
+  }, [cases, search, filterTDMD, sortBy]);
 
   // Summary counts
   const statusCounts = useMemo(() => {
@@ -267,6 +299,10 @@ export default function PossibleCaseStudies() {
     cases.forEach(c => { counts[c.submissionStatus] = (counts[c.submissionStatus] ?? 0) + 1; });
     return counts;
   }, [cases]);
+
+  const tdCount = useMemo(() => cases.filter(c => c.isTechnicalDirectorCase).length, [cases]);
+  const mdCount = useMemo(() => cases.filter(c => c.isMedicalDirectorCase).length, [cases]);
+  const bothCount = useMemo(() => cases.filter(c => c.isTechnicalDirectorCase && c.isMedicalDirectorCase).length, [cases]);
 
   return (
     <div className="space-y-5">
@@ -322,6 +358,56 @@ export default function PossibleCaseStudies() {
         </div>
       )}
 
+      {/* TD/MD Filter Chips */}
+      {cases.length > 0 && (tdCount > 0 || mdCount > 0) && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold text-gray-500 mr-1">Case Mix:</span>
+          <button
+            onClick={() => setFilterTDMD(filterTDMD === "td" ? "" : "td")}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-all border"
+            style={{
+              background: filterTDMD === "td" ? "#d97706" : "#fef3c715",
+              color: filterTDMD === "td" ? "white" : "#d97706",
+              borderColor: "#d9770640",
+            }}
+          >
+            TD Cases <span className="font-bold">{tdCount}</span>
+          </button>
+          <button
+            onClick={() => setFilterTDMD(filterTDMD === "md" ? "" : "md")}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-all border"
+            style={{
+              background: filterTDMD === "md" ? "#7c3aed" : "#ede9fe15",
+              color: filterTDMD === "md" ? "white" : "#7c3aed",
+              borderColor: "#7c3aed40",
+            }}
+          >
+            MD Cases <span className="font-bold">{mdCount}</span>
+          </button>
+          {bothCount > 0 && (
+            <button
+              onClick={() => setFilterTDMD(filterTDMD === "both" ? "" : "both")}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-all border"
+              style={{
+                background: filterTDMD === "both" ? "#189aa1" : "#f0fbfc",
+                color: filterTDMD === "both" ? "white" : "#189aa1",
+                borderColor: "#189aa140",
+              }}
+            >
+              TD + MD <span className="font-bold">{bothCount}</span>
+            </button>
+          )}
+          {filterTDMD && (
+            <button
+              onClick={() => setFilterTDMD("")}
+              className="px-2.5 py-1 rounded-full text-xs text-gray-500 border border-gray-200 hover:bg-gray-50"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Filters */}
       <div className="flex flex-wrap gap-3 items-center">
         <div className="relative flex-1 min-w-[200px]">
@@ -341,6 +427,18 @@ export default function PossibleCaseStudies() {
         >
           <option value="">All Exam Types</option>
           {EXAM_TYPE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
+        <select
+          value={sortBy}
+          onChange={e => setSortBy(e.target.value as typeof sortBy)}
+          className="h-8 px-2 text-xs border border-gray-200 rounded-md bg-white focus:outline-none focus:ring-1"
+          style={{ "--tw-ring-color": BRAND } as any}
+        >
+          <option value="date_desc">Newest First</option>
+          <option value="date_asc">Oldest First</option>
+          <option value="status">By Status</option>
+          <option value="td_first">TD Cases First</option>
+          <option value="md_first">MD Cases First</option>
         </select>
       </div>
 
