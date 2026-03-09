@@ -37,9 +37,10 @@ interface IQRForm {
   indicationAppropriateness: string;
   demographicsAccurate: string;
   demographicsExplain: string;
-  // Page 2 — Protocol Sequence
-  tteViewsObtained: string[]; // AETTE only
-  tteViewsObtainedOther: string;
+  // Page 2 — Protocol Sequence (generic for all exam types)
+  protocolViewsObtained: string[];
+  protocolViewsObtainedOther: string;
+  protocolDopplerViewsObtained: string[]; // PETTE, PETEE only — separate doppler/color flow section
   // Page 3 — Basic Exam Quality
   required2dViews: string;
   required2dViewsExplain: string;
@@ -150,7 +151,8 @@ const EMPTY_FORM: IQRForm = {
   reviewDate: "", examDate: "", examIdentifier: "", referringPhysician: "",
   examType: "", examScope: "", stressStudyType: "", examIndication: "",
   indicationAppropriateness: "", demographicsAccurate: "", demographicsExplain: "",
-  tteViewsObtained: [], tteViewsObtainedOther: "",
+  protocolViewsObtained: [], protocolViewsObtainedOther: "",
+  protocolDopplerViewsObtained: [],
   required2dViews: "", required2dViewsExplain: "",
   mModeViewsObtained: "", mModeViewsObtainedOther: "",
   imageOptimized: "", imageOptimizedExplain: "",
@@ -214,9 +216,9 @@ const STEP_TITLES = [
 const TTE_VIEWS = [
   "Parasternal long axis view",
   "Parasternal long axis m-mode",
-  "Parasternal short axis views (at all levels AV/basal/mid/apical)",
-  "Right ventricular inflow view",
-  "Right ventricular outflow view",
+  "Parasternal short axis views (at all levels AV, basal, mid & apical)",
+  "Right ventricular inflow view (from anteriorly directed PLAX view)",
+  "Right ventricular outflow view (from both PLAX and PSAX with correct measurements of peak velocity and acceleration time)",
   "Apical four-chamber view",
   "Apical five-chamber view",
   "Apical two-chamber view",
@@ -229,6 +231,106 @@ const TTE_VIEWS = [
   "Right Parasternal view (when indicated)",
   "If limited exam - all components obtained or attempted",
   "Other",
+];
+const TEE_VIEWS = [
+  "Mid Esophageal - Five Chamber View",
+  "Mid Esophageal - Four Chamber View",
+  "Mid Esophageal - Mitral Commissural View",
+  "Mid Esophageal - Two Chamber View",
+  "Mid Esophageal - LAX/AV",
+  "Mid Esophageal - Asc AO/LAX",
+  "Mid Esophageal - Asc AO/SAX",
+  "Mid Esophageal - Pulm Veins",
+  "Mid Esophageal - RV inflow/outflow",
+  "Mid Esophageal - Bicaval View",
+  "Mid Esophageal - LA Appendage View",
+  "Mid Esophageal - LA Appendage Doppler",
+  "Transgastric - Basal SAX View",
+  "Transgastric - Midpapillary SAX View",
+  "Transgastric - Apical SAX View",
+  "Transgastric - RV inflow/outflow View",
+  "Deep Transgastric - Five Chamber View",
+  "Transgastric - Two Chamber View",
+  "Transgastric - LAX View",
+  "Upper Esophageal - Aortic Arch/LAX View",
+  "Upper Esophageal - Aortic Arch/SAX View",
+];
+const STRESS_VIEWS = [
+  "PRE Apical Four Chamber",
+  "PRE Apical Two Chamber",
+  "PRE PSAX at Mid Papillary Level",
+  "PRE PLAX at Mid Ventricle",
+  "IMPOST Apical Four Chamber (within 60 seconds of exercise cessation and/or peak target heart rate)",
+  "IMPOST Apical Two Chamber",
+  "IMPOST PSAX at Mid Papillary Level",
+  "IMPOST PLAX at Mid Ventricle",
+  "Side-By-Side View of PRE/IMPOST/STAGES Images",
+];
+const PETTE_VIEWS = [
+  "Right, left or single ventricular anatomy and function",
+  "Right, left or single atrial anatomy and function",
+  "Systemic/pulmonary semilunar valve anatomy and function",
+  "Ventricular and atrial septae",
+  "Mitral, tricuspid or single atrioventricular valve anatomy and function",
+  "Main pulmonary artery and proximal branches",
+  "Inferior and superior vena cavae",
+  "Hepatic veins",
+  "Pulmonary veins",
+  "Pericardium",
+  "Measurements of the cardiac chambers and ventricular function where standard measurements are available",
+  "Coronary arteries with decreased PRF/scale and measurements - when visible",
+  "Ascending, transverse and descending aorta with definition of arch sidedness",
+  "All appropriate views and clips",
+  "Other",
+];
+const PETTE_DOPPLER_VIEWS = [
+  "Atrioventricular Valves",
+  "Semilunar Valves",
+  "Great Vessels",
+  "Atrial Septum",
+  "Ventricular Septum",
+  "All identified areas of abnormality (if applicable)",
+];
+const PETEE_VIEWS = [
+  "Mid Esophageal - Five Chamber View",
+  "Mid Esophageal - Four Chamber View",
+  "Mid Esophageal - Mitral Commissural View",
+  "Mid Esophageal - Two Chamber View",
+  "Mid Esophageal - LAX/AV",
+  "Mid Esophageal - Asc AO/LAX",
+  "Mid Esophageal - Asc AO/SAX",
+  "Mid Esophageal - Pulm Veins",
+  "Mid Esophageal - RV inflow/outflow",
+  "Mid Esophageal - Bicaval View",
+  "Mid Esophageal - LA Appendage View",
+  "Transgastric - Basal SAX View",
+  "Transgastric - Midpapillary SAX View",
+  "Transgastric - Apical SAX View",
+  "Transgastric - RV inflow/outflow View",
+  "Deep Transgastric - Five Chamber View",
+  "Transgastric - Two Chamber View",
+  "Transgastric - LAX View",
+  "Upper Esophageal - Aortic Arch/LAX View",
+  "Upper Esophageal - Aortic Arch/SAX View",
+  "Other",
+];
+const FE_VIEWS = [
+  "Presence of single or multiple gestations and the locations of fetus(s) relative to mother (and each other)",
+  "Survey of fetal lie and position defining fetal orientation",
+  "Measurement of biparietal diameter (BPD), head circumference or other measures for estimation of fetal size/gestational age",
+  "Cardiac position and visceral situs",
+  "Measurement of chest and heart circumference and area for calculation of size ratios",
+  "Assessment of fetal heart rate and rhythm using appropriate M-Mode/Doppler techniques",
+  "Short axis view of fetal umbilical cord vasculature with Doppler evaluation of flow in the fetal umbilical vessels and ductus venosus",
+  "Imaging of the pericardial and pleural spaces, abdomen and skin for fluid or edema",
+  "Imaging and Doppler/color flow Doppler interrogation of the systemic veins, their course and cardiac connection",
+  "Imaging and Doppler/color flow Doppler interrogation of the pulmonary veins, their course and cardiac connection",
+  "Multiple imaging planes of the atria, atrial septum, foramen ovale, ductus arteriosus and ventricular septum, with appropriate Doppler assessment of flow direction and velocity",
+  "Multiple imaging planes of the atrioventricular (mitral and/or tricuspid) valves, with appropriate Doppler evaluation",
+  "Four-chamber or equivalent and short axis views of the heart for assessment of cardiac chamber size and function",
+  "Assessment of ventricular outflow and semilunar valves including the ventriculoarterial connections with appropriate Doppler/color flow",
+  "Short & long axis views of the ascending, descending and transverse aortic arch and ductus arteriosus with appropriate Doppler/color flow",
+  "Short & long axis views of the main pulmonary artery and proximal portions of the right and left pulmonary arteries",
 ];
 
 const DIASTOLIC_EVAL_OPTIONS = [
@@ -381,8 +483,8 @@ export default function ImageQualityReview({ embedded = false }: Props) {
   function handleSubmit() {
     const payload = {
       reviewType: "QUALITY REVIEW" as const,
-      reviewDate: form.reviewDate || undefined,
-      examDate: form.examDate || undefined,
+      dateReviewCompleted: form.reviewDate || undefined,
+      examDos: form.examDate || undefined,
       examIdentifier: form.examIdentifier || undefined,
       referringPhysician: form.referringPhysician || undefined,
       examType: form.examType || undefined,
@@ -392,7 +494,11 @@ export default function ImageQualityReview({ embedded = false }: Props) {
       indicationAppropriateness: form.indicationAppropriateness || undefined,
       demographicsAccurate: form.demographicsAccurate || undefined,
       demographicsExplain: form.demographicsExplain || undefined,
-      tteViewsObtained: form.tteViewsObtained.length ? JSON.stringify(form.tteViewsObtained) : undefined,
+      protocolViews: (() => {
+        const combined = [...form.protocolViewsObtained, ...form.protocolDopplerViewsObtained];
+        return combined.length ? JSON.stringify(combined) : undefined;
+      })(),
+      protocolViewsOther: form.protocolViewsObtainedOther || undefined,
       required2dViews: form.required2dViews || undefined,
       required2dViewsExplain: form.required2dViewsExplain || undefined,
       mModeViewsObtained: form.mModeViewsObtained || undefined,
@@ -483,7 +589,7 @@ export default function ImageQualityReview({ embedded = false }: Props) {
       concordantExplain: form.concordantExplain || undefined,
       comparableToPrevious: form.comparableToPrevious || undefined,
       iacAcceptable: form.iacAcceptable || undefined,
-      qualityScore: form.qualityScore || undefined,
+      qualityScore: form.qualityScore ? parseInt(form.qualityScore) : undefined,
       reviewComments: form.reviewComments || undefined,
       notifyAdmin: form.notifyAdmin || undefined,
       notifyAdminEmail: form.notifyAdminEmail || undefined,
@@ -561,7 +667,6 @@ export default function ImageQualityReview({ embedded = false }: Props) {
           value={form.indicationAppropriateness}
           onChange={v => set("indicationAppropriateness", v)}
         />
-
         <RadioGroup
           label="Are patient demographics, charges, reporting and charting notes entered appropriately and accurately?"
           name="demographicsAccurate"
@@ -577,28 +682,75 @@ export default function ImageQualityReview({ embedded = false }: Props) {
   }
 
   function renderStep2() {
-    if (!isAETTE(et)) {
+    if (!et) {
       return (
         <SectionCard>
-          <p className="text-sm text-gray-500 italic">Protocol sequence checklist applies to Adult TTE exams only. No items required for <strong>{et || "the selected exam type"}</strong>.</p>
+          <p className="text-sm text-gray-500 italic">Please select an exam type on Step 1 to see the protocol sequence checklist.</p>
         </SectionCard>
       );
     }
+
+    // Determine the views list and section title based on exam type
+    let viewsList: string[] = [];
+    let sectionTitle = "All required views obtained or attempted";
+    let hasDopplerSection = false;
+    let hasOther = false;
+
+    if (isAETTE(et)) {
+      viewsList = TTE_VIEWS;
+      sectionTitle = "ADULT TTE — All of the following required views were obtained or attempted";
+      hasOther = true;
+    } else if (isAETEE(et)) {
+      viewsList = TEE_VIEWS;
+      sectionTitle = "ADULT TEE — All of the following required views were obtained or attempted";
+      hasOther = false;
+    } else if (isStress(et)) {
+      viewsList = STRESS_VIEWS;
+      sectionTitle = "ADULT STRESS — All of the following required views were obtained or attempted";
+      hasOther = false;
+    } else if (isPETTE(et)) {
+      viewsList = PETTE_VIEWS;
+      sectionTitle = "PEDIATRIC TTE — All of the following required views/images were obtained or attempted";
+      hasDopplerSection = true;
+      hasOther = true;
+    } else if (isPETEE(et)) {
+      viewsList = PETEE_VIEWS;
+      sectionTitle = "PEDIATRIC TEE — All of the following required views were obtained or attempted";
+      hasDopplerSection = true;
+      hasOther = true;
+    } else if (isFE(et)) {
+      viewsList = FE_VIEWS;
+      sectionTitle = "FETAL ECHO — All of the following required images/views were obtained";
+      hasOther = false;
+    }
+
     return (
-      <SectionCard title="All required TTE views obtained or attempted">
-        <CheckboxGroup
-          label=""
-          options={TTE_VIEWS}
-          values={form.tteViewsObtained}
-          onChange={v => set("tteViewsObtained", v)}
-        />
-        {form.tteViewsObtained.includes("Other") && (
-          <div className="mt-2">
-            <Label className="text-sm font-semibold text-gray-700 mb-1.5 block">Other (specify)</Label>
-            <Input value={form.tteViewsObtainedOther} onChange={e => set("tteViewsObtainedOther", e.target.value)} />
-          </div>
+      <>
+        <SectionCard title={sectionTitle}>
+          <CheckboxGroup
+            label=""
+            options={viewsList}
+            values={form.protocolViewsObtained}
+            onChange={v => set("protocolViewsObtained", v)}
+          />
+          {hasOther && form.protocolViewsObtained.includes("Other") && (
+            <div className="mt-2">
+              <Label className="text-sm font-semibold text-gray-700 mb-1.5 block">Other (specify)</Label>
+              <Input value={form.protocolViewsObtainedOther} onChange={e => set("protocolViewsObtainedOther", e.target.value)} />
+            </div>
+          )}
+        </SectionCard>
+        {hasDopplerSection && (
+          <SectionCard title="Doppler/Color Flow Interrogation — All of the following were obtained or attempted">
+            <CheckboxGroup
+              label=""
+              options={PETTE_DOPPLER_VIEWS}
+              values={form.protocolDopplerViewsObtained}
+              onChange={v => set("protocolDopplerViewsObtained", v)}
+            />
+          </SectionCard>
         )}
-      </SectionCard>
+      </>
     );
   }
 

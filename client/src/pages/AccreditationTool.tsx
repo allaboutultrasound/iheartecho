@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import PhysicianPeerReview from "./PhysicianPeerReview";
 import ImageQualityReviewTab from "./ImageQualityReview";
+import SonographerPeerReview from "./SonographerPeerReview";
 import EchoCorrelationTab from "./EchoCorrelation";
 import AccreditationReadiness from "./AccreditationReadiness";
 import CaseMixSubmission from "./CaseMixSubmission";
@@ -2019,8 +2020,8 @@ export default function AccreditationTool() {
   const isDiyAdmin = appRoles.includes("diy_admin") || appRoles.includes("platform_admin") || (user as any)?.role === "admin";
   const searchString = useSearch();
   const params = new URLSearchParams(searchString);
-  const initialTab = (params.get("tab") as "iqr" | "peer" | "echo-correlation" | "auc" | "case-mix" | "policy" | "readiness" | "reports" | null) ?? "iqr";
-  const [activeTab, setActiveTab] = useState<"iqr" | "peer" | "echo-correlation" | "auc" | "case-mix" | "policy" | "readiness" | "reports">(initialTab);
+  const initialTab = (params.get("tab") as "iqr" | "sono-peer" | "peer" | "echo-correlation" | "auc" | "case-mix" | "policy" | "readiness" | "reports" | null) ?? "iqr";
+  const [activeTab, setActiveTab] = useState<"iqr" | "sono-peer" | "peer" | "echo-correlation" | "auc" | "case-mix" | "policy" | "readiness" | "reports">(initialTab);
 
   if (loading) {
     return (
@@ -2087,6 +2088,7 @@ export default function AccreditationTool() {
           <div className="flex flex-wrap gap-1">
             {/* Tabs visible to all DIY members */}
             <TabBtn active={activeTab === "iqr"} onClick={() => setActiveTab("iqr")} icon={ImageIcon} label="Image Quality Review" />
+            <TabBtn active={activeTab === "sono-peer"} onClick={() => setActiveTab("sono-peer")} icon={ClipboardList} label="Sonographer Peer Review" />
             <TabBtn active={activeTab === "peer"} onClick={() => setActiveTab("peer")} icon={Star} label="Physician Peer Review" />
             <TabBtn active={activeTab === "echo-correlation"} onClick={() => setActiveTab("echo-correlation")} icon={GitCompare} label="Echo Correlations" />
             <TabBtn active={activeTab === "auc"} onClick={() => setActiveTab("auc")} icon={BarChart2} label="Appropriate Use" />
@@ -2105,7 +2107,7 @@ export default function AccreditationTool() {
 
       {/* Content */}
       <div className="container py-6">
-        <div className={(activeTab === "iqr" || activeTab === "echo-correlation" || activeTab === "case-mix" || activeTab === "readiness" || activeTab === "reports") ? "" : "max-w-3xl"}>
+        <div className={(activeTab === "iqr" || activeTab === "sono-peer" || activeTab === "echo-correlation" || activeTab === "case-mix" || activeTab === "readiness" || activeTab === "reports") ? "" : "max-w-3xl"}>
           {/* Disclaimer */}
           <div className="mb-4 p-3 rounded-lg border border-amber-200 bg-amber-50 flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
@@ -2117,6 +2119,7 @@ export default function AccreditationTool() {
           {activeTab === "iqr" && (
             <ImageQualityReviewTab embedded />
           )}
+          {activeTab === "sono-peer" && <SonographerPeerReview embedded />}
           {activeTab === "echo-correlation" && <EchoCorrelationTab />}
           {activeTab === "peer" && <PhysicianPeerReview />}
           {activeTab === "policy" && <PolicyBuilderTab />}

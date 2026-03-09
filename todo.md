@@ -1808,3 +1808,19 @@
 - [x] Push DB migration
 - [x] Update tRPC iqr.create procedure schema to include all new fields
 - [x] Write vitest tests for new IQR create procedure
+
+## Peer Review Form + Analytics (Mar 09 2026)
+- [ ] Map Peer Review Formsite form (https://fs23.formsite.com/allaboutultrasound/xywdastuhm/index) with exam-type identifiers
+- [ ] Fix Quality Review form: protocol sequence views should use checkboxes (not Yes/No dropdowns)
+- [ ] Update DB schema for Peer Review form fields
+- [ ] Build Peer Review form component (multi-step, exam-type branching)
+- [ ] Wire admin email notification on Quality Review form submission
+- [ ] Wire admin email notification on Peer Review form submission
+- [ ] Add Quality Review submission count to Lab Overview analytics
+- [ ] Add Peer Review submission count to Lab Overview analytics
+- [x] Fix IQR Step 2 (Protocol Sequence): show correct view checkboxes for all 6 exam types (ADULT TTE, ADULT TEE, ADULT STRESS, PEDIATRIC TTE, PEDIATRIC TEE, FETAL ECHO) instead of showing only TTE views or 'not applicable' message
+- [ ] Revert unwanted reviewType radio button and combined-form changes from Quality Review form (keep it QR-only, hardcoded)
+- [ ] Build Peer Review as a completely separate standalone form component (PeerReview.tsx)
+- [x] Fix IQR Step 2 (Protocol Sequence): show correct view checkboxes per exam type (TTE/TEE/Stress/Pedi TTE/Pedi TEE/Fetal)
+- [x] Build Sonographer Peer Review as a separate standalone form (SonographerPeerReview.tsx)
+- [x] Add Sonographer Peer Review tab to DIY Accreditation Tool
