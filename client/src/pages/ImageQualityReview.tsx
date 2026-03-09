@@ -525,6 +525,8 @@ export default function ImageQualityReview({ embedded = false }: Props) {
     interpretingPhysicianEmail: "",
     accreditationType: "",
     submissionNotes: "",
+    isTechnicalDirectorCase: false,
+    isMedicalDirectorCase: false,
   });
 
   function openIacModal() {
@@ -568,6 +570,8 @@ export default function ImageQualityReview({ embedded = false }: Props) {
       accreditationType: iacForm.accreditationType || "Adult Echo",
       submissionStatus: "identified",
       submissionNotes: iacForm.submissionNotes || undefined,
+      isTechnicalDirectorCase: iacForm.isTechnicalDirectorCase,
+      isMedicalDirectorCase: iacForm.isMedicalDirectorCase,
     });
   }
 
@@ -1743,6 +1747,33 @@ export default function ImageQualityReview({ embedded = false }: Props) {
                   value={iacForm.submissionNotes}
                   onChange={e => setIacField("submissionNotes", e.target.value)}
                 />
+              </div>
+
+              {/* IAC Role Flags */}
+              <div className="rounded-lg p-3 space-y-2" style={{ background: "#f8f9fa", border: "1px solid #e5e7eb" }}>
+                <p className="text-xs font-semibold text-gray-600 mb-2">IAC Case Mix Requirements</p>
+                <label className="flex items-start gap-2.5 cursor-pointer group">
+                  <Checkbox
+                    checked={iacForm.isTechnicalDirectorCase}
+                    onCheckedChange={v => setIacForm(prev => ({ ...prev, isTechnicalDirectorCase: !!v }))}
+                    className="mt-0.5"
+                  />
+                  <div>
+                    <span className="text-sm font-medium text-gray-800 group-hover:text-gray-900">Technical Director Case</span>
+                    <p className="text-xs text-gray-500">This exam was performed by the lab's Technical Director (required for IAC case mix)</p>
+                  </div>
+                </label>
+                <label className="flex items-start gap-2.5 cursor-pointer group">
+                  <Checkbox
+                    checked={iacForm.isMedicalDirectorCase}
+                    onCheckedChange={v => setIacForm(prev => ({ ...prev, isMedicalDirectorCase: !!v }))}
+                    className="mt-0.5"
+                  />
+                  <div>
+                    <span className="text-sm font-medium text-gray-800 group-hover:text-gray-900">Medical Director Case</span>
+                    <p className="text-xs text-gray-500">This exam was interpreted by the lab's Medical Director (required for IAC case mix)</p>
+                  </div>
+                </label>
               </div>
             </div>
             <DialogFooter className="gap-2">

@@ -2072,6 +2072,8 @@ export const appRouter = router({
         accreditationType: z.string().optional(),
         submissionStatus: z.enum(["identified", "under_review", "submitted", "accepted"]).optional(),
         submissionNotes: z.string().optional(),
+        isTechnicalDirectorCase: z.boolean().optional(),
+        isMedicalDirectorCase: z.boolean().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
         const lab = await getLabByMemberUserId(ctx.user.id);
@@ -2102,6 +2104,8 @@ export const appRouter = router({
         accreditationType: z.string().optional(),
         submissionStatus: z.enum(["identified", "under_review", "submitted", "accepted"]).optional(),
         submissionNotes: z.string().optional(),
+        isTechnicalDirectorCase: z.boolean().optional(),
+        isMedicalDirectorCase: z.boolean().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
         const lab = await getLabByMemberUserId(ctx.user.id);

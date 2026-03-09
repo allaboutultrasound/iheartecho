@@ -1,0 +1,2 @@
+ALTER TABLE `possibleCaseStudies` ADD `isTechnicalDirectorCase` boolean DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER TABLE `possibleCaseStudies` ADD `isMedicalDirectorCase` boolean DEFAULT false NOT NULL;

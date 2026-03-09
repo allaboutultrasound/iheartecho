@@ -1857,3 +1857,9 @@
 ## IAC Flag Enhancement - Session Mar 09 2026
 - [x] Enhance IAC Flag button on Quality Review Step 7 — open modal to capture diagnosis, sonographer name, interpreting physician, accreditation type, submission notes before creating Case Study entry
 - [x] Show richer confirmation state after flagging with case study ID and link to Case Studies tracker
+
+## IAC Flag TD/MD Enhancement - Session Mar 09 2026
+- [x] Add isTechnicalDirectorCase and isMedicalDirectorCase boolean fields to possibleCaseStudies DB schema
+- [x] Update caseStudies.create and caseStudies.update tRPC procedures to accept TD/MD fields
+- [x] Add Technical Director Case and Medical Director Case checkboxes to IQR IAC flag modal
+- [x] Add full IAC Flag modal to Sonographer Peer Review final step (same fields as IQR modal + TD/MD checkboxes)

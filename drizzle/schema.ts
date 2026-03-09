@@ -1342,6 +1342,9 @@ export const possibleCaseStudies = mysqlTable("possibleCaseStudies", {
   accreditationType: varchar("accreditationType", { length: 100 }),  // e.g. "Adult Echo", "Pediatric/Fetal"
   submissionStatus: mysqlEnum("submissionStatus", ["identified", "under_review", "submitted", "accepted"]).default("identified").notNull(),
   submissionNotes: text("submissionNotes"),
+  // IAC role flags — IAC requires specific counts of TD and MD cases
+  isTechnicalDirectorCase: boolean("isTechnicalDirectorCase").default(false).notNull(),
+  isMedicalDirectorCase: boolean("isMedicalDirectorCase").default(false).notNull(),
   // Lab linkage
   labId: int("labId"),
   createdByUserId: int("createdByUserId"),

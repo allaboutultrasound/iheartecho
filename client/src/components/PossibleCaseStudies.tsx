@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Plus,
@@ -122,6 +123,8 @@ interface CaseFormData {
   accreditationType: string;
   submissionStatus: SubmissionStatus;
   submissionNotes: string;
+  isTechnicalDirectorCase: boolean;
+  isMedicalDirectorCase: boolean;
 }
 
 const EMPTY_FORM: CaseFormData = {
@@ -137,6 +140,8 @@ const EMPTY_FORM: CaseFormData = {
   accreditationType: "",
   submissionStatus: "identified" as SubmissionStatus,
   submissionNotes: "",
+  isTechnicalDirectorCase: false,
+  isMedicalDirectorCase: false,
 };
 
 function statusBadge(status: string) {
@@ -226,6 +231,8 @@ export default function PossibleCaseStudies() {
       accreditationType: c.accreditationType ?? "",
       submissionStatus: c.submissionStatus ?? "identified",
       submissionNotes: c.submissionNotes ?? "",
+      isTechnicalDirectorCase: c.isTechnicalDirectorCase ?? false,
+      isMedicalDirectorCase: c.isMedicalDirectorCase ?? false,
     });
     setDialogOpen(true);
   };
@@ -376,6 +383,16 @@ export default function PossibleCaseStudies() {
                         {c.accreditationType && (
                           <span className="text-xs text-gray-400 flex items-center gap-1">
                             <Tag className="w-3 h-3" /> {c.accreditationType}
+                          </span>
+                        )}
+                        {c.isTechnicalDirectorCase && (
+                          <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 border border-amber-200">
+                            TD Case
+                          </span>
+                        )}
+                        {c.isMedicalDirectorCase && (
+                          <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 border border-purple-200">
+                            MD Case
                           </span>
                         )}
                       </div>
@@ -635,6 +652,31 @@ export default function PossibleCaseStudies() {
                   placeholder="Notes about submission progress, reviewer feedback, etc."
                   className="text-xs min-h-[60px]"
                 />
+              </div>
+              <div className="mt-3 rounded-lg p-3 space-y-2" style={{ background: "#f8f9fa", border: "1px solid #e5e7eb" }}>
+                <p className="text-xs font-semibold text-gray-600 mb-2">IAC Case Mix Requirements</p>
+                <label className="flex items-start gap-2.5 cursor-pointer group">
+                  <Checkbox
+                    checked={form.isTechnicalDirectorCase}
+                    onCheckedChange={v => set("isTechnicalDirectorCase", !!v)}
+                    className="mt-0.5"
+                  />
+                  <div>
+                    <span className="text-sm font-medium text-gray-800">Technical Director Case</span>
+                    <p className="text-xs text-gray-500">Performed by the lab's Technical Director</p>
+                  </div>
+                </label>
+                <label className="flex items-start gap-2.5 cursor-pointer group">
+                  <Checkbox
+                    checked={form.isMedicalDirectorCase}
+                    onCheckedChange={v => set("isMedicalDirectorCase", !!v)}
+                    className="mt-0.5"
+                  />
+                  <div>
+                    <span className="text-sm font-medium text-gray-800">Medical Director Case</span>
+                    <p className="text-xs text-gray-500">Interpreted by the lab's Medical Director</p>
+                  </div>
+                </label>
               </div>
             </div>
           </div>

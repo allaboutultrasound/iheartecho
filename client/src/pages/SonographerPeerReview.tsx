@@ -18,7 +18,7 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Link } from "wouter";
 import {
-  ArrowLeft, ArrowRight, CheckCircle2, ClipboardList, ChevronRight,
+  ArrowLeft, ArrowRight, CheckCircle2, ClipboardList, ChevronRight, Flag, ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -26,6 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 const BRAND = "#189aa1";
 const TOTAL_STEPS = 6;
@@ -463,6 +464,86 @@ export default function SonographerPeerReview({ embedded }: { embedded?: boolean
     },
     onError: (e) => toast.error(e.message),
   });
+
+  // ── IAC Flag Modal State ──────────────────────────────────────────────────
+  const [iacModalOpen, setIacModalOpen] = useState(false);
+  const [iacFlagSent, setIacFlagSent] = useState(false);
+  const [iacCaseStudyId, setIacCaseStudyId] = useState("");
+
+  const sprExamTypeMap: Record<string, string> = {
+    "ADULT TTE": "AETTE",
+    "ADULT TEE": "AETEE",
+    "ADULT STRESS": "AE_STRESS",
+    "PEDIATRIC TTE": "PETTE",
+    "PEDIATRIC TEE": "PETEE",
+    "FETAL ECHO": "FE",
+  };
+
+  const sprAccreditationTypeFromExam: Record<string, string> = {
+    "ADULT TTE": "Adult Echo",
+    "ADULT TEE": "TEE",
+    "ADULT STRESS": "Stress Echo",
+    "PEDIATRIC TTE": "Pediatric/Fetal Echo",
+    "PEDIATRIC TEE": "Pediatric/Fetal Echo",
+    "FETAL ECHO": "Pediatric/Fetal Echo",
+  };
+
+  const [iacForm, setIacFormState] = useState({
+    diagnosis: "",
+    sonographerName: "",
+    sonographerEmail: "",
+    interpretingPhysicianName: "",
+    interpretingPhysicianEmail: "",
+    accreditationType: "",
+    submissionNotes: "",
+    isTechnicalDirectorCase: false,
+    isMedicalDirectorCase: false,
+  });
+
+  function setIacField<K extends keyof typeof iacForm>(key: K, val: typeof iacForm[K]) {
+    setIacFormState(prev => ({ ...prev, [key]: val }));
+  }
+
+  function openIacModal() {
+    setIacFormState(prev => ({
+      ...prev,
+      accreditationType: sprAccreditationTypeFromExam[form.examType] ?? "Adult Echo",
+      submissionNotes: form.reviewComments || "",
+    }));
+    setIacModalOpen(true);
+  }
+
+  const flagCaseStudyMutation = trpc.caseStudies.create.useMutation({
+    onSuccess: (data) => {
+      setIacFlagSent(true);
+      setIacCaseStudyId(data.caseStudyId);
+      setIacModalOpen(false);
+      toast.success(`Case flagged as IAC candidate — ID: ${data.caseStudyId}`);
+    },
+    onError: (e) => {
+      toast.error(e.message || "Failed to flag case. Please try again.");
+    },
+  });
+
+  function handleFlagForCaseStudy() {
+    if (flagCaseStudyMutation.isPending) return;
+    flagCaseStudyMutation.mutate({
+      examType: sprExamTypeMap[form.examType] ?? form.examType,
+      examDate: form.examDate || undefined,
+      patientMrn: form.examIdentifier || undefined,
+      diagnosis: iacForm.diagnosis || undefined,
+      clinicalNotes: iacForm.submissionNotes || form.reviewComments || undefined,
+      sonographerName: iacForm.sonographerName || undefined,
+      sonographerEmail: iacForm.sonographerEmail || undefined,
+      interpretingPhysicianName: iacForm.interpretingPhysicianName || undefined,
+      interpretingPhysicianEmail: iacForm.interpretingPhysicianEmail || undefined,
+      accreditationType: iacForm.accreditationType || "Adult Echo",
+      submissionStatus: "identified",
+      submissionNotes: iacForm.submissionNotes || undefined,
+      isTechnicalDirectorCase: iacForm.isTechnicalDirectorCase,
+      isMedicalDirectorCase: iacForm.isMedicalDirectorCase,
+    });
+  }
 
   function goToStep(n: number) {
     if (n < 1 || n > TOTAL_STEPS) return;
@@ -1133,6 +1214,197 @@ export default function SonographerPeerReview({ embedded }: { embedded?: boolean
         </SectionCard>
 
         <SectionCard title="Review Summary">
+          {/* IAC Case Study Flag */}
+          <div className="mb-6 rounded-xl border-2 p-4" style={{ borderColor: iacFlagSent ? "#16a34a40" : "#189aa140", background: iacFlagSent ? "#f0fdf4" : "#f0fbfc" }}>
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: iacFlagSent ? "#16a34a18" : "#189aa118" }}>
+                <Flag className="w-4 h-4" style={{ color: iacFlagSent ? "#16a34a" : "#189aa1" }} />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-bold text-gray-800 mb-0.5">Flag as IAC Case Study Candidate</p>
+                <p className="text-xs text-gray-500 mb-3">Add this case to the Possible Case Studies tracker for IAC accreditation submission consideration.</p>
+                {iacFlagSent ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-green-700 text-sm font-semibold">
+                      <CheckCircle2 className="w-4 h-4" />
+                      Case flagged and added to Case Studies tracker
+                    </div>
+                    {iacCaseStudyId && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono bg-green-100 text-green-800 px-2 py-0.5 rounded border border-green-200">
+                          {iacCaseStudyId}
+                        </span>
+                        <Link href="/accreditation?tab=case-mix">
+                          <span className="text-xs text-[#189aa1] underline flex items-center gap-1 cursor-pointer">
+                            View in Case Studies <ExternalLink className="w-3 h-3" />
+                          </span>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={openIacModal}
+                    className="text-white border-0"
+                    style={{ background: "#189aa1" }}
+                  >
+                    <span className="flex items-center gap-1.5"><Flag className="w-3.5 h-3.5" />Flag for IAC Case Studies</span>
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* IAC Flag Modal */}
+          <Dialog open={iacModalOpen} onOpenChange={setIacModalOpen}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-base">
+                  <Flag className="w-4 h-4" style={{ color: BRAND }} />
+                  Flag as IAC Case Study Candidate
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-2">
+                {/* Pre-filled read-only summary */}
+                <div className="rounded-lg p-3 text-xs space-y-1" style={{ background: BRAND + "08", border: `1px solid ${BRAND}20` }}>
+                  <div className="flex gap-4 flex-wrap">
+                    {form.examType && <span><span className="font-semibold text-gray-600">Exam Type:</span> <span className="text-gray-800">{form.examType}</span></span>}
+                    {form.examDate && <span><span className="font-semibold text-gray-600">Date:</span> <span className="text-gray-800">{form.examDate}</span></span>}
+                    {form.examIdentifier && <span><span className="font-semibold text-gray-600">ID:</span> <span className="text-gray-800">{form.examIdentifier}</span></span>}
+                  </div>
+                </div>
+
+                {/* Diagnosis */}
+                <div>
+                  <Label className="text-xs font-semibold text-gray-700 mb-1 block">Diagnosis / Primary Finding</Label>
+                  <Input
+                    className="h-8 text-sm"
+                    placeholder="e.g. Severe AS, Dilated CMP, Normal study"
+                    value={iacForm.diagnosis}
+                    onChange={e => setIacField("diagnosis", e.target.value)}
+                  />
+                </div>
+
+                {/* Accreditation Type */}
+                <div>
+                  <Label className="text-xs font-semibold text-gray-700 mb-1 block">Accreditation Category *</Label>
+                  <Select value={iacForm.accreditationType} onValueChange={v => setIacField("accreditationType", v)}>
+                    <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Select category" /></SelectTrigger>
+                    <SelectContent>
+                      {["Adult Echo", "Pediatric/Fetal Echo", "Stress Echo", "TEE"].map(t => (
+                        <SelectItem key={t} value={t}>{t}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Sonographer */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs font-semibold text-gray-700 mb-1 block">Sonographer Name</Label>
+                    <Input
+                      className="h-8 text-sm"
+                      placeholder="e.g. Jane Smith"
+                      value={iacForm.sonographerName}
+                      onChange={e => setIacField("sonographerName", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold text-gray-700 mb-1 block">Sonographer Email</Label>
+                    <Input
+                      className="h-8 text-sm"
+                      type="email"
+                      placeholder="email@lab.com"
+                      value={iacForm.sonographerEmail}
+                      onChange={e => setIacField("sonographerEmail", e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {/* Interpreting Physician */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs font-semibold text-gray-700 mb-1 block">Interpreting Physician</Label>
+                    <Input
+                      className="h-8 text-sm"
+                      placeholder="e.g. Dr. Johnson"
+                      value={iacForm.interpretingPhysicianName}
+                      onChange={e => setIacField("interpretingPhysicianName", e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold text-gray-700 mb-1 block">Physician Email</Label>
+                    <Input
+                      className="h-8 text-sm"
+                      type="email"
+                      placeholder="email@lab.com"
+                      value={iacForm.interpretingPhysicianEmail}
+                      onChange={e => setIacField("interpretingPhysicianEmail", e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {/* Submission Notes */}
+                <div>
+                  <Label className="text-xs font-semibold text-gray-700 mb-1 block">Submission Notes</Label>
+                  <Textarea
+                    className="text-sm min-h-[70px]"
+                    placeholder="Why this case is a good IAC submission candidate..."
+                    value={iacForm.submissionNotes}
+                    onChange={e => setIacField("submissionNotes", e.target.value)}
+                  />
+                </div>
+
+                {/* IAC Role Flags */}
+                <div className="rounded-lg p-3 space-y-2" style={{ background: "#f8f9fa", border: "1px solid #e5e7eb" }}>
+                  <p className="text-xs font-semibold text-gray-600 mb-2">IAC Case Mix Requirements</p>
+                  <label className="flex items-start gap-2.5 cursor-pointer group">
+                    <Checkbox
+                      checked={iacForm.isTechnicalDirectorCase}
+                      onCheckedChange={v => setIacFormState(prev => ({ ...prev, isTechnicalDirectorCase: !!v }))}
+                      className="mt-0.5"
+                    />
+                    <div>
+                      <span className="text-sm font-medium text-gray-800 group-hover:text-gray-900">Technical Director Case</span>
+                      <p className="text-xs text-gray-500">This exam was performed by the lab's Technical Director (required for IAC case mix)</p>
+                    </div>
+                  </label>
+                  <label className="flex items-start gap-2.5 cursor-pointer group">
+                    <Checkbox
+                      checked={iacForm.isMedicalDirectorCase}
+                      onCheckedChange={v => setIacFormState(prev => ({ ...prev, isMedicalDirectorCase: !!v }))}
+                      className="mt-0.5"
+                    />
+                    <div>
+                      <span className="text-sm font-medium text-gray-800 group-hover:text-gray-900">Medical Director Case</span>
+                      <p className="text-xs text-gray-500">This exam was interpreted by the lab's Medical Director (required for IAC case mix)</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+              <DialogFooter className="gap-2">
+                <Button variant="outline" onClick={() => setIacModalOpen(false)} size="sm">
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleFlagForCaseStudy}
+                  disabled={flagCaseStudyMutation.isPending || !iacForm.accreditationType}
+                  className="text-white"
+                  style={{ background: BRAND }}
+                >
+                  {flagCaseStudyMutation.isPending ? (
+                    <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />Flagging...</span>
+                  ) : (
+                    <span className="flex items-center gap-1.5"><Flag className="w-3.5 h-3.5" />Flag Case</span>
+                  )}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
           {/* Auto-calculated Quality Score */}
           <div className="mb-6 rounded-xl border-2 p-5" style={{ borderColor: qualityScoreCalc ? qualityScoreCalc.color + "40" : "#e5e7eb", background: qualityScoreCalc ? qualityScoreCalc.color + "08" : "#f9fafb" }}>
             <div className="flex items-center justify-between mb-3">
