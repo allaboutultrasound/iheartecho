@@ -350,15 +350,11 @@ export default function FlashcardDeck() {
         {/* Flip Card */}
         {currentCard && (
           <div className="mb-6">
-            <div
-              className="flashcard-container cursor-pointer"
-              onClick={handleFlip}
-              style={{ height: "280px" }}
-            >
-              <div className={`flashcard-inner ${flipped ? "flipped" : ""}`}>
-                {/* Front */}
-                <div className="flashcard-front rounded-2xl shadow-lg flex flex-col items-center justify-center p-8 text-center"
-                  style={{ background: "linear-gradient(135deg, #0e4a50 0%, #189aa1 100%)" }}>
+            {/* Scene wrapper provides the 3-D perspective */}
+            <div className="flashcard-scene cursor-pointer" onClick={handleFlip}>
+              <div className={`flashcard-card${flipped ? " is-flipped" : ""}`}>
+                {/* Front face */}
+                <div className="flashcard-face flashcard-face--front" style={{ background: "linear-gradient(135deg, #0e4a50 0%, #189aa1 100%)", border: "none" }}>
                   <div className="mb-3 flex flex-wrap gap-1 justify-center">
                     {tags.map((tag) => (
                       <Badge key={tag} className="text-xs bg-white/20 text-white border-0">{tag}</Badge>
@@ -373,9 +369,8 @@ export default function FlashcardDeck() {
                   </div>
                 </div>
 
-                {/* Back */}
-                <div className="flashcard-back rounded-2xl shadow-lg flex flex-col items-center justify-center p-8 text-center"
-                  style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 100%)" }}>
+                {/* Back face — hidden until flipped */}
+                <div className="flashcard-face flashcard-face--back" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 100%)", border: "none" }}>
                   <p className="text-[#4ad9e0] font-bold text-lg leading-snug mb-3" style={{ fontFamily: "Merriweather, serif" }}>
                     {currentCard.reviewAnswer ?? currentCard.explanation ?? "No answer provided."}
                   </p>

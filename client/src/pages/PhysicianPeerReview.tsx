@@ -1,10 +1,16 @@
 /**
- * Physician Peer Review
- * Rebuilt from the Formsite PhysVariabilityECHO form.
- * Staff dropdowns auto-query Lab Admin physician-role members.
- * Submissions link back to Lab Admin analytics via revieweeLabMemberId / reviewerLabMemberId.
+ * PhysicianPeerReview.tsx
+ * Two-step physician peer review workflow for the DIY Accreditation Tool.
+ *
+ * Step 1 — Physician Over-Read:
+ *   Lab admin fills in exam info + physician email → system sends a secure link
+ *   to the physician → physician completes a blind over-read form → lab admin notified.
+ *
+ * Step 2 — Comparison Review:
+ *   Lab admin enters the original read findings → system auto-populates the
+ *   physician's over-read findings → concordance score is calculated.
  */
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -14,20 +20,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import {
-  Loader2, Plus, ChevronDown, ChevronUp, Download, Trash2,
-  Stethoscope, User, FileText, ChevronRight, ChevronLeft,
-  CheckCircle2, AlertCircle, Send
+  Loader2, Plus, Send, CheckCircle2, AlertCircle, Clock,
+  ChevronDown, ChevronUp, Trash2, Download, Eye, RefreshCw,
+  Stethoscope, ClipboardList, GitCompare, Mail, User
 } from "lucide-react";
 import jsPDF from "jspdf";
 
 const BRAND = "#189aa1";
 
-// ─── Exam types ──────────────────────────────────────────────────────────────
+// ─── Exam types ───────────────────────────────────────────────────────────────
 const EXAM_TYPES = [
   "Adult TTE",
-  "Adult Stress Echo",
-  "Pediatric/Congenital",
-  "Fetal Echo",
+  "Adult TEE",
+  "Adult STRESS",
+  "Pediatric/Congenital TTE",
+  "Pediatric/Congenital TEE",
+  "FETAL",
 ] as const;
 type ExamType = typeof EXAM_TYPES[number];
 
@@ -47,137 +55,132 @@ const CARDIAC_POSITION = ["Levocardia", "Dextrocardia", "Mesocardia", "Not Evalu
 const FETAL_BIOMETRY = ["Appropriate for Gestational Age", "Small for Gestational Age", "Large for Gestational Age", "Not Evaluated"];
 const FETAL_POSITION = ["Cephalic", "Breech", "Transverse", "Not Evaluated"];
 const FETAL_HR = ["Normal Sinus Rhythm", "Bradycardia", "Tachycardia", "Irregular", "Not Evaluated"];
+const WALL_THICKNESS = ["Normal", "Increased (Hypertrophy)", "Decreased", "Not Evaluated"];
 
 // ─── Concordance scoring ──────────────────────────────────────────────────────
-/**
- * Compute concordance score (0–100) by comparing original vs over-read findings.
- * Fields with "Not Evaluated" / "Not Applicable" are excluded from scoring.
- */
-function computeConcordanceScore(
-  original: Record<string, string>,
-  overRead: Record<string, string>,
+function computeConcordance(
+  orig: Record<string, string>,
+  over: Record<string, string>,
   fields: string[]
-): { score: number; discordantFields: string[] } {
-  const evaluatedFields = fields.filter(f => {
-    const o = original[f] ?? "";
-    const r = overRead[f] ?? "";
+): { score: number; discordant: string[] } {
+  const evaluated = fields.filter(f => {
+    const o = orig[f] ?? "";
+    const r = over[f] ?? "";
     return o && r && o !== "Not Evaluated" && o !== "Not Applicable" && r !== "Not Evaluated" && r !== "Not Applicable";
   });
-  if (evaluatedFields.length === 0) return { score: 100, discordantFields: [] };
-  const discordantFields = evaluatedFields.filter(f => original[f] !== overRead[f]);
-  const score = Math.round(((evaluatedFields.length - discordantFields.length) / evaluatedFields.length) * 100);
-  return { score, discordantFields };
+  if (evaluated.length === 0) return { score: 100, discordant: [] };
+  const discordant = evaluated.filter(f => orig[f] !== over[f]);
+  return {
+    score: Math.round(((evaluated.length - discordant.length) / evaluated.length) * 100),
+    discordant,
+  };
 }
 
-// ─── Form state ───────────────────────────────────────────────────────────────
-type FindingsState = {
-  situs: string; cardiacPosition: string; leftHeart: string; rightHeart: string;
-  efPercent: string; lvWallThickness: string; ventricularSeptalDefect: string;
-  atrialSeptalDefect: string; patentForamenOvale: string;
-  lvChamberSize: string; laChamberSize: string; rvChamberSize: string; raChamberSize: string;
-  regionalWallMotionAbnormalities: string;
-  aorticValve: string; mitralValve: string; tricuspidValve: string; pulmonicValve: string;
-  aorticStenosis: string; aorticInsufficiency: string;
-  mitralStenosis: string; mitralRegurgitation: string;
-  tricuspidStenosis: string; tricuspidRegurgitation: string;
-  pulmonicStenosis: string; pulmonicInsufficiency: string;
-  rvspmm: string; pericardialEffusion: string;
-  // Pediatric extra
-  peripheralPulmonaryStenosis: string; pulmonaryVeins: string; coronaryAnatomy: string;
-  aorticArch: string; greatVessels: string; pdaDuctalArch: string; conotruncalAnatomy: string;
-  // Stress
-  restingEfPercent: string; postStressEfPercent: string;
-  restingRwma: string; postStressRwma: string; responseToStress: string;
-  stressAorticStenosis: string; stressAorticInsufficiency: string;
-  stressMitralStenosis: string; stressMitralRegurgitation: string;
-  stressTricuspidStenosis: string; stressTricuspidRegurgitation: string;
-  stressPulmonicStenosis: string; stressPulmonicInsufficiency: string;
-  stressRvspmm: string;
-  // Fetal
-  fetalBiometry: string; fetalPosition: string; fetalHeartRateRhythm: string;
-};
-
-const BLANK_FINDINGS: FindingsState = {
-  situs: "", cardiacPosition: "", leftHeart: "", rightHeart: "",
-  efPercent: "", lvWallThickness: "", ventricularSeptalDefect: "",
-  atrialSeptalDefect: "", patentForamenOvale: "",
-  lvChamberSize: "", laChamberSize: "", rvChamberSize: "", raChamberSize: "",
-  regionalWallMotionAbnormalities: "",
-  aorticValve: "", mitralValve: "", tricuspidValve: "", pulmonicValve: "",
-  aorticStenosis: "", aorticInsufficiency: "",
-  mitralStenosis: "", mitralRegurgitation: "",
-  tricuspidStenosis: "", tricuspidRegurgitation: "",
-  pulmonicStenosis: "", pulmonicInsufficiency: "",
-  rvspmm: "", pericardialEffusion: "",
-  peripheralPulmonaryStenosis: "", pulmonaryVeins: "", coronaryAnatomy: "",
-  aorticArch: "", greatVessels: "", pdaDuctalArch: "", conotruncalAnatomy: "",
-  restingEfPercent: "", postStressEfPercent: "",
-  restingRwma: "", postStressRwma: "", responseToStress: "",
-  stressAorticStenosis: "", stressAorticInsufficiency: "",
-  stressMitralStenosis: "", stressMitralRegurgitation: "",
-  stressTricuspidStenosis: "", stressTricuspidRegurgitation: "",
-  stressPulmonicStenosis: "", stressPulmonicInsufficiency: "",
-  stressRvspmm: "",
-  fetalBiometry: "", fetalPosition: "", fetalHeartRateRhythm: "",
-};
-
-// All scoreable finding fields per exam type
 const TTE_FIELDS = [
-  "situs","cardiacPosition","leftHeart","rightHeart","efPercent","lvWallThickness",
-  "ventricularSeptalDefect","atrialSeptalDefect","patentForamenOvale",
-  "lvChamberSize","laChamberSize","rvChamberSize","raChamberSize",
+  "situs", "cardiacPosition", "leftHeart", "rightHeart", "efPercent", "lvWallThickness",
+  "ventricularSeptalDefect", "atrialSeptalDefect", "patentForamenOvale",
+  "lvChamberSize", "laChamberSize", "rvChamberSize", "raChamberSize",
   "regionalWallMotionAbnormalities",
-  "aorticValve","mitralValve","tricuspidValve","pulmonicValve",
-  "aorticStenosis","aorticInsufficiency","mitralStenosis","mitralRegurgitation",
-  "tricuspidStenosis","tricuspidRegurgitation","pulmonicStenosis","pulmonicInsufficiency",
-  "rvspmm","pericardialEffusion",
+  "aorticValve", "mitralValve", "tricuspidValve", "pulmonicValve",
+  "aorticStenosis", "aorticInsufficiency", "mitralStenosis", "mitralRegurgitation",
+  "tricuspidStenosis", "tricuspidRegurgitation", "pulmonicStenosis", "pulmonicInsufficiency",
+  "rvspmm", "pericardialEffusion",
 ];
-const PED_EXTRA_FIELDS = [
-  "peripheralPulmonaryStenosis","pulmonaryVeins","coronaryAnatomy",
-  "aorticArch","greatVessels","pdaDuctalArch","conotruncalAnatomy",
-];
+const PED_EXTRA = ["peripheralPulmonaryStenosis", "pulmonaryVeins", "coronaryAnatomy", "aorticArch", "greatVessels", "pdaDuctalArch", "conotruncalAnatomy"];
 const STRESS_FIELDS = [
-  "restingEfPercent","postStressEfPercent","restingRwma","postStressRwma","responseToStress",
-  "stressAorticStenosis","stressAorticInsufficiency","stressMitralStenosis","stressMitralRegurgitation",
-  "stressTricuspidStenosis","stressTricuspidRegurgitation","stressPulmonicStenosis","stressPulmonicInsufficiency",
+  "restingEfPercent", "postStressEfPercent", "restingRwma", "postStressRwma", "responseToStress",
+  "stressAorticStenosis", "stressAorticInsufficiency", "stressMitralStenosis", "stressMitralRegurgitation",
+  "stressTricuspidStenosis", "stressTricuspidRegurgitation", "stressPulmonicStenosis", "stressPulmonicInsufficiency",
   "stressRvspmm",
 ];
 const FETAL_FIELDS = [
-  "fetalBiometry","fetalPosition","fetalHeartRateRhythm",
+  "fetalBiometry", "fetalPosition", "fetalHeartRateRhythm",
+  "situs", "cardiacPosition", "leftHeart", "rightHeart", "efPercent",
+  "ventricularSeptalDefect", "atrialSeptalDefect",
+  "aorticValve", "mitralValve", "tricuspidValve", "pulmonicValve",
+  "aorticArch", "greatVessels", "pulmonaryVeins", "pericardialEffusion",
 ];
 
-function getFieldsForExamType(examType: string): string[] {
-  if (examType === "Adult TTE") return TTE_FIELDS;
-  if (examType === "Adult Stress Echo") return STRESS_FIELDS;
-  if (examType === "Pediatric/Congenital") return [...TTE_FIELDS, ...PED_EXTRA_FIELDS];
-  if (examType === "Fetal Echo") return FETAL_FIELDS;
+function getFieldsForExam(examType: string): string[] {
+  if (examType === "Adult TTE" || examType === "Adult TEE") return TTE_FIELDS;
+  if (examType === "Adult STRESS") return STRESS_FIELDS;
+  if (examType === "Pediatric/Congenital TTE" || examType === "Pediatric/Congenital TEE") return [...TTE_FIELDS, ...PED_EXTRA];
+  if (examType === "FETAL") return FETAL_FIELDS;
   return TTE_FIELDS;
 }
 
+// ─── UI helpers ───────────────────────────────────────────────────────────────
+function SectionHeader({ title }: { title: string }) {
+  return (
+    <div className="flex items-center gap-2 mt-5 mb-2">
+      <div className="h-px flex-1 bg-[#189aa1]/20" />
+      <span className="text-xs font-bold text-[#189aa1] uppercase tracking-widest px-2">{title}</span>
+      <div className="h-px flex-1 bg-[#189aa1]/20" />
+    </div>
+  );
+}
+
+function ComparisonRow({
+  label, options, origValue, overValue, onOrigChange,
+}: {
+  label: string; options: string[]; origValue: string; overValue: string;
+  onOrigChange: (v: string) => void;
+}) {
+  const discordant = origValue && overValue && origValue !== "Not Evaluated" && overValue !== "Not Evaluated" && origValue !== "Not Applicable" && overValue !== "Not Applicable" && origValue !== overValue;
+  return (
+    <div className={`grid grid-cols-3 gap-2 items-center py-1.5 px-2 rounded-lg ${discordant ? "bg-red-50 border border-red-200" : "bg-gray-50"}`}>
+      <div className="text-xs font-medium text-gray-700 flex items-center gap-1">
+        {discordant && <AlertCircle className="w-3 h-3 text-red-500 flex-shrink-0" />}
+        {label}
+      </div>
+      <Select value={origValue} onValueChange={onOrigChange}>
+        <SelectTrigger className="h-7 text-xs"><SelectValue placeholder="Original read..." /></SelectTrigger>
+        <SelectContent>{options.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+      </Select>
+      <div className={`h-7 px-2 flex items-center text-xs rounded border ${discordant ? "border-red-300 bg-red-50 text-red-700 font-semibold" : "border-gray-200 bg-[#f0fbfc] text-[#0e4a50]"}`}>
+        {overValue || <span className="text-gray-400 italic">Not entered</span>}
+      </div>
+    </div>
+  );
+}
+
+// ─── Status badge ─────────────────────────────────────────────────────────────
+function StatusBadge({ status }: { status: string }) {
+  const map: Record<string, { label: string; className: string }> = {
+    pending: { label: "Pending", className: "bg-yellow-100 text-yellow-800 border-yellow-200" },
+    opened: { label: "Opened", className: "bg-blue-100 text-blue-800 border-blue-200" },
+    completed: { label: "Completed", className: "bg-green-100 text-green-800 border-green-200" },
+    expired: { label: "Expired", className: "bg-gray-100 text-gray-600 border-gray-200" },
+  };
+  const s = map[status] ?? map.pending;
+  return <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border ${s.className}`}>{s.label}</span>;
+}
+
 // ─── PDF Export ───────────────────────────────────────────────────────────────
-function exportPhysicianPeerReviewPDF(review: any) {
+function exportComparisonPDF(review: any) {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "letter" });
   const pageW = 215.9, margin = 18, contentW = pageW - margin * 2;
   let y = margin;
 
-  // Header
   doc.setFillColor(14, 74, 80); doc.rect(0, 0, pageW, 14, "F");
   doc.setTextColor(255, 255, 255); doc.setFontSize(11); doc.setFont("helvetica", "bold");
-  doc.text("iHeartEcho™ — Physician Peer Review Report", margin, 9.5);
+  doc.text("iHeartEcho™ — Physician Peer Review Comparison Report", margin, 9.5);
   doc.setFontSize(8); doc.setFont("helvetica", "normal");
   doc.text(`Generated: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`, pageW - margin, 9.5, { align: "right" });
   y = 22;
 
   const row = (label: string, value: string | null | undefined) => {
     if (!value) return;
+    if (y > 260) { doc.addPage(); y = margin; }
     doc.setTextColor(80, 80, 80); doc.setFontSize(7.5); doc.setFont("helvetica", "bold");
     doc.text(label + ":", margin, y);
     doc.setFont("helvetica", "normal"); doc.setTextColor(30, 30, 30);
-    doc.text(String(value), margin + 55, y);
+    doc.text(String(value), margin + 60, y);
     y += 5.5;
   };
 
   const section = (title: string) => {
+    if (y > 255) { doc.addPage(); y = margin; }
     y += 3;
     doc.setFillColor(240, 251, 252); doc.setDrawColor(24, 154, 161);
     doc.roundedRect(margin, y, contentW, 7, 1, 1, "FD");
@@ -187,72 +190,35 @@ function exportPhysicianPeerReviewPDF(review: any) {
   };
 
   section("Exam Information");
-  row("Organization", review.organization);
-  row("Facility Account #", review.facilityAccountNumber);
   row("Exam Identifier", review.examIdentifier);
-  row("DOB", review.dob);
-  row("Exam DOS", review.examDos);
-  row("Date Review Completed", review.dateReviewCompleted);
   row("Exam Type", review.examType);
+  row("Date of Study", review.examDos);
+  row("Date Review Completed", review.dateReviewCompleted);
+  row("Original Reading Physician", review.originalReadingPhysician);
+  row("Over-Reading Physician", review.overReadingPhysician);
 
-  section("Physicians");
-  row("Original Interpreting Physician", review.revieweeName);
-  row("Over-Reading Physician Reviewer", review.reviewerName);
-  row("Quality Review Assigned By", review.qualityReviewAssignedBy);
-  row("Reviewer Email", review.reviewerEmail);
-
-  if (review.examType === "Adult TTE" || review.examType === "Pediatric/Congenital") {
-    section("Cardiac Findings");
-    row("Situs", review.situs); row("Cardiac Position", review.cardiacPosition);
-    row("Left Heart", review.leftHeart); row("Right Heart", review.rightHeart);
-    row("EF%", review.efPercent); row("LV Wall Thickness", review.lvWallThickness);
-    row("VSD", review.ventricularSeptalDefect); row("ASD", review.atrialSeptalDefect);
-    row("PFO", review.patentForamenOvale);
-    row("LV Chamber Size", review.lvChamberSize); row("LA Chamber Size", review.laChamberSize);
-    row("RV Chamber Size", review.rvChamberSize); row("RA Chamber Size", review.raChamberSize);
-    row("RWMA", review.regionalWallMotionAbnormalities);
-    row("Aortic Valve", review.aorticValve); row("Mitral Valve", review.mitralValve);
-    row("Tricuspid Valve", review.tricuspidValve); row("Pulmonic Valve", review.pulmonicValve);
-    row("Aortic Stenosis", review.aorticStenosis); row("Aortic Insufficiency", review.aorticInsufficiency);
-    row("Mitral Stenosis", review.mitralStenosis); row("Mitral Regurgitation", review.mitralRegurgitation);
-    row("Tricuspid Stenosis", review.tricuspidStenosis); row("Tricuspid Regurgitation", review.tricuspidRegurgitation);
-    row("Pulmonic Stenosis", review.pulmonicStenosis); row("Pulmonic Insufficiency", review.pulmonicInsufficiency);
-    row("RVSP", review.rvspmm); row("Pericardial Effusion", review.pericardialEffusion);
-  }
-
-  if (review.examType === "Pediatric/Congenital") {
-    section("Congenital Findings");
-    row("Peripheral Pulmonary Stenosis", review.peripheralPulmonaryStenosis);
-    row("Pulmonary Veins", review.pulmonaryVeins); row("Coronary Anatomy", review.coronaryAnatomy);
-    row("Aortic Arch", review.aorticArch); row("Great Vessels", review.greatVessels);
-    row("PDA / Ductal Arch", review.pdaDuctalArch); row("Conotruncal Anatomy", review.conotruncalAnatomy);
-  }
-
-  if (review.examType === "Adult Stress Echo") {
-    section("Stress Echo Findings");
-    row("Post-Stress Doppler Performed", review.postStressDopplerPerformed);
-    row("Resting EF%", review.restingEfPercent); row("Post-Stress EF%", review.postStressEfPercent);
-    row("Resting RWMA", review.restingRwma); row("Post-Stress RWMA", review.postStressRwma);
-    row("Response to Stress", review.responseToStress);
-    row("Aortic Stenosis", review.stressAorticStenosis); row("Aortic Insufficiency", review.stressAorticInsufficiency);
-    row("Mitral Stenosis", review.stressMitralStenosis); row("Mitral Regurgitation", review.stressMitralRegurgitation);
-    row("Tricuspid Stenosis", review.stressTricuspidStenosis); row("Tricuspid Regurgitation", review.stressTricuspidRegurgitation);
-    row("Pulmonic Stenosis", review.stressPulmonicStenosis); row("Pulmonic Insufficiency", review.stressPulmonicInsufficiency);
-    row("RVSP", review.stressRvspmm);
-  }
-
-  if (review.examType === "Fetal Echo") {
-    section("Fetal Echo Findings");
-    row("Fetal Biometry", review.fetalBiometry);
-    row("Fetal Position", review.fetalPosition);
-    row("Fetal Heart Rate / Rhythm", review.fetalHeartRateRhythm);
-  }
-
-  if (review.otherFindings1 || review.otherFindings2 || review.otherFindings3) {
-    section("Other Findings");
-    if (review.otherFindings1) row("Finding 1", review.otherFindings1);
-    if (review.otherFindings2) row("Finding 2", review.otherFindings2);
-    if (review.otherFindings3) row("Finding 3", review.otherFindings3);
+  if (review.concordanceScore != null) {
+    y += 4;
+    if (y > 255) { doc.addPage(); y = margin; }
+    const color = review.concordanceScore >= 90 ? [22, 163, 74] : review.concordanceScore >= 75 ? [37, 99, 235] : [220, 38, 38];
+    doc.setFillColor(color[0], color[1], color[2]);
+    doc.roundedRect(margin, y, contentW, 12, 2, 2, "F");
+    doc.setTextColor(255, 255, 255); doc.setFontSize(10); doc.setFont("helvetica", "bold");
+    doc.text(`Concordance Score: ${review.concordanceScore}%`, pageW / 2, y + 7.5, { align: "center" });
+    y += 16;
+    if (review.discordantFields) {
+      try {
+        const fields = JSON.parse(review.discordantFields) as string[];
+        if (fields.length > 0) {
+          doc.setTextColor(80, 80, 80); doc.setFontSize(7.5); doc.setFont("helvetica", "bold");
+          doc.text("Discordant Fields:", margin, y);
+          doc.setFont("helvetica", "normal"); doc.setTextColor(30, 30, 30);
+          const lines = doc.splitTextToSize(fields.join(", "), contentW - 50);
+          doc.text(lines, margin + 42, y);
+          y += lines.length * 5;
+        }
+      } catch {}
+    }
   }
 
   if (review.reviewComments) {
@@ -263,717 +229,826 @@ function exportPhysicianPeerReviewPDF(review: any) {
     y += lines.length * 5;
   }
 
-  if (review.concordanceScore != null) {
-    y += 4;
-    const color = review.concordanceScore >= 90 ? [22, 163, 74] : review.concordanceScore >= 75 ? [37, 99, 235] : [220, 38, 38];
-    doc.setFillColor(color[0], color[1], color[2]);
-    doc.roundedRect(margin, y, contentW, 12, 2, 2, "F");
-    doc.setTextColor(255, 255, 255); doc.setFontSize(10); doc.setFont("helvetica", "bold");
-    doc.text(`Concordance Score: ${review.concordanceScore}%`, pageW / 2, y + 7.5, { align: "center" });
-    if (review.discordanceFields) {
-      try {
-        const fields = JSON.parse(review.discordanceFields) as string[];
-        if (fields.length > 0) {
-          y += 16;
-          doc.setTextColor(80, 80, 80); doc.setFontSize(7.5); doc.setFont("helvetica", "bold");
-          doc.text("Discordant Fields:", margin, y);
-          doc.setFont("helvetica", "normal"); doc.setTextColor(30, 30, 30);
-          doc.text(fields.join(", "), margin + 40, y);
-        }
-      } catch {}
-    }
-  }
-
   const dateTag = new Date().toISOString().slice(0, 10);
-  doc.save(`iHeartEcho™_PhysicianPeerReview_${dateTag}.pdf`);
+  doc.save(`iHeartEcho_PeerReview_Comparison_${dateTag}.pdf`);
 }
 
-// ─── StaffComboField ─────────────────────────────────────────────────────────
-function StaffComboField({
-  label, physicians, value, onSelect, freeText, onFreeText
-}: {
-  label: string;
-  physicians: Array<{ id: number; displayName: string | null; inviteEmail: string | null; credentials: string | null }>;
-  value: string;
-  onSelect: (id: number | null, name: string) => void;
-  freeText: string;
-  onFreeText: (v: string) => void;
-}) {
-  const [showFreeText, setShowFreeText] = useState(false);
-  const selectedId = physicians.find(p => (p.displayName ?? p.inviteEmail ?? "") === value)?.id ?? null;
+// ─── Step 1: Send Invitation Form ─────────────────────────────────────────────
+function Step1InvitationForm({ onCreated }: { onCreated: () => void }) {
+  const [examIdentifier, setExamIdentifier] = useState("");
+  const [examDos, setExamDos] = useState("");
+  const [examType, setExamType] = useState<ExamType | "">("");
+  const [postStressDoppler, setPostStressDoppler] = useState("");
+  const [originalPhysician, setOriginalPhysician] = useState("");
+  const [reviewerName, setReviewerName] = useState("");
+  const [reviewerEmail, setReviewerEmail] = useState("");
+
+  const createMutation = trpc.physicianOverRead.createInvitation.useMutation({
+    onSuccess: () => {
+      toast.success("Invitation sent to physician's email.");
+      setExamIdentifier(""); setExamDos(""); setExamType(""); setPostStressDoppler("");
+      setOriginalPhysician(""); setReviewerName(""); setReviewerEmail("");
+      onCreated();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const handleSubmit = () => {
+    if (!examIdentifier.trim()) { toast.error("Exam identifier is required."); return; }
+    if (!examType) { toast.error("Please select an exam type."); return; }
+    if (!reviewerEmail.trim()) { toast.error("Reviewer email is required."); return; }
+    createMutation.mutate({
+      examIdentifier,
+      examDos: examDos || undefined,
+      examType: examType as ExamType,
+      postStressDopplerPerformed: examType === "Adult STRESS" ? postStressDoppler : undefined,
+      originalInterpretingPhysician: originalPhysician || undefined,
+      reviewerName: reviewerName || undefined,
+      reviewerEmail,
+    });
+  };
+
+  const isStress = examType === "Adult STRESS";
 
   return (
-    <div className="space-y-1">
-      <label className="text-xs font-semibold text-gray-600 block">{label}</label>
-      {physicians.length > 0 && (
-        <Select
-          value={selectedId ? String(selectedId) : "__freetext__"}
-          onValueChange={(v) => {
-            if (v === "__freetext__") {
-              setShowFreeText(true);
-              onSelect(null, freeText);
-            } else {
-              setShowFreeText(false);
-              const p = physicians.find(ph => String(ph.id) === v);
-              if (p) onSelect(p.id, p.displayName ?? p.inviteEmail ?? "");
-            }
-          }}
+    <Card>
+      <CardHeader className="pb-2 pt-4">
+        <CardTitle className="text-sm font-bold text-gray-700 flex items-center gap-2">
+          <Mail className="w-4 h-4 text-[#189aa1]" />
+          Send Over-Read Invitation to Physician
+        </CardTitle>
+        <p className="text-xs text-gray-500 mt-1">
+          The physician will receive a secure email link to complete a blind over-read. You will be notified when they submit.
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-3 pb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs font-semibold text-gray-600 block mb-1">Exam Identifier <span className="text-red-500">*</span></label>
+            <Input className="h-8 text-sm" placeholder="e.g. ECHO-2025-001" value={examIdentifier} onChange={e => setExamIdentifier(e.target.value)} />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-gray-600 block mb-1">Date of Study</label>
+            <Input type="date" className="h-8 text-sm" value={examDos} onChange={e => setExamDos(e.target.value)} />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-gray-600 block mb-1">Exam Type <span className="text-red-500">*</span></label>
+            <Select value={examType} onValueChange={v => setExamType(v as ExamType)}>
+              <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select exam type..." /></SelectTrigger>
+              <SelectContent>
+                {EXAM_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          {isStress && (
+            <div>
+              <label className="text-xs font-semibold text-gray-600 block mb-1">Post-Stress Doppler Performed</label>
+              <Select value={postStressDoppler} onValueChange={setPostStressDoppler}>
+                <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select..." /></SelectTrigger>
+                <SelectContent>
+                  {["Yes", "No", "Not Applicable"].map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          <div>
+            <label className="text-xs font-semibold text-gray-600 block mb-1">Original Interpreting Physician</label>
+            <Input className="h-8 text-sm" placeholder="Dr. Jane Smith, MD" value={originalPhysician} onChange={e => setOriginalPhysician(e.target.value)} />
+          </div>
+        </div>
+
+        <div className="border-t border-gray-100 pt-3">
+          <p className="text-xs font-bold text-gray-600 mb-2 flex items-center gap-1">
+            <User className="w-3.5 h-3.5 text-[#189aa1]" />
+            Over-Reading Physician (Reviewer)
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-semibold text-gray-600 block mb-1">Reviewer Name</label>
+              <Input className="h-8 text-sm" placeholder="Dr. John Doe, MD" value={reviewerName} onChange={e => setReviewerName(e.target.value)} />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-600 block mb-1">Reviewer Email <span className="text-red-500">*</span></label>
+              <Input type="email" className="h-8 text-sm" placeholder="physician@hospital.com" value={reviewerEmail} onChange={e => setReviewerEmail(e.target.value)} />
+            </div>
+          </div>
+        </div>
+
+        <Button
+          className="w-full h-9 text-sm font-bold text-white"
+          style={{ background: "#189aa1" }}
+          onClick={handleSubmit}
+          disabled={createMutation.isPending}
         >
-          <SelectTrigger className="h-8 text-xs">
-            <SelectValue placeholder="Select physician..." />
-          </SelectTrigger>
-          <SelectContent>
-            {physicians.map(p => (
-              <SelectItem key={p.id} value={String(p.id)}>
-                {p.displayName ?? p.inviteEmail ?? `Physician #${p.id}`}
-                {p.credentials ? ` — ${p.credentials}` : ""}
-              </SelectItem>
-            ))}
-            <SelectItem value="__freetext__">Enter manually...</SelectItem>
-          </SelectContent>
-        </Select>
-      )}
-      {(showFreeText || physicians.length === 0) && (
-        <Input
-          className="h-8 text-xs"
-          placeholder={`${label} (free text)`}
-          value={freeText}
-          onChange={e => { onFreeText(e.target.value); onSelect(null, e.target.value); }}
-        />
-      )}
-    </div>
+          {createMutation.isPending
+            ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending Invitation...</>
+            : <><Send className="w-4 h-4 mr-2" />Send Over-Read Invitation</>}
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 
-// ─── FindingRow ───────────────────────────────────────────────────────────────
-function FindingRow({
-  label, options, origValue, overValue, onOrigChange, onOverChange
+// ─── Step 2: Comparison Review Form ──────────────────────────────────────────
+function Step2ComparisonForm({
+  submissionId,
+  onClose,
+  onSaved,
 }: {
-  label: string;
-  options: string[];
-  origValue: string;
-  overValue: string;
-  onOrigChange: (v: string) => void;
-  onOverChange: (v: string) => void;
+  submissionId: number;
+  onClose: () => void;
+  onSaved: () => void;
 }) {
-  const discordant = origValue && overValue && origValue !== "Not Evaluated" && overValue !== "Not Evaluated" && origValue !== overValue;
+  const { data: submission, isLoading } = trpc.physicianOverRead.getOverReadSubmission.useQuery(
+    { submissionId },
+    { enabled: !!submissionId }
+  );
+
+  const submitMutation = trpc.physicianOverRead.submitComparisonReview.useMutation({
+    onSuccess: () => {
+      toast.success("Comparison review saved.");
+      onSaved();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const [originalPhysician, setOriginalPhysician] = useState("");
+  const [dateReviewCompleted, setDateReviewCompleted] = useState(new Date().toISOString().slice(0, 10));
+  const [reviewComments, setReviewComments] = useState("");
+  const [orig, setOrig] = useState<Record<string, string>>({});
+  const setOrigField = (key: string) => (v: string) => setOrig(prev => ({ ...prev, [key]: v }));
+
+  // Build over-read map from submission
+  const overRead = useMemo<Record<string, string>>(() => {
+    if (!submission) return {};
+    const r: Record<string, string> = {
+      situs: submission.situs ?? "",
+      cardiacPosition: submission.cardiacPosition ?? "",
+      leftHeart: submission.leftHeart ?? "",
+      rightHeart: submission.rightHeart ?? "",
+      efPercent: submission.efPercent ?? "",
+      lvWallThickness: submission.lvWallThickness ?? "",
+      ventricularSeptalDefect: submission.ventricularSeptalDefect ?? "",
+      atrialSeptalDefect: submission.atrialSeptalDefect ?? "",
+      patentForamenOvale: submission.patentForamenOvale ?? "",
+      lvChamberSize: submission.lvChamberSize ?? "",
+      laChamberSize: submission.laChamberSize ?? "",
+      rvChamberSize: submission.rvChamberSize ?? "",
+      raChamberSize: submission.raChamberSize ?? "",
+      regionalWallMotionAbnormalities: submission.regionalWallMotionAbnormalities ?? "",
+      aorticValve: submission.aorticValve ?? "",
+      mitralValve: submission.mitralValve ?? "",
+      tricuspidValve: submission.tricuspidValve ?? "",
+      pulmonicValve: submission.pulmonicValve ?? "",
+      aorticStenosis: submission.aorticStenosis ?? "",
+      aorticInsufficiency: submission.aorticInsufficiency ?? "",
+      mitralStenosis: submission.mitralStenosis ?? "",
+      mitralRegurgitation: submission.mitralRegurgitation ?? "",
+      tricuspidStenosis: submission.tricuspidStenosis ?? "",
+      tricuspidRegurgitation: submission.tricuspidRegurgitation ?? "",
+      pulmonicStenosis: submission.pulmonicStenosis ?? "",
+      pulmonicInsufficiency: submission.pulmonicInsufficiency ?? "",
+      rvspmm: submission.rvspmm ?? "",
+      pericardialEffusion: submission.pericardialEffusion ?? "",
+      peripheralPulmonaryStenosis: submission.peripheralPulmonaryStenosis ?? "",
+      pulmonaryVeins: submission.pulmonaryVeins ?? "",
+      coronaryAnatomy: submission.coronaryAnatomy ?? "",
+      aorticArch: submission.aorticArch ?? "",
+      greatVessels: submission.greatVessels ?? "",
+      pdaDuctalArch: submission.pdaDuctalArch ?? "",
+      conotruncalAnatomy: submission.conotruncalAnatomy ?? "",
+      restingEfPercent: submission.restingEfPercent ?? "",
+      postStressEfPercent: submission.postStressEfPercent ?? "",
+      restingRwma: submission.restingRwma ?? "",
+      postStressRwma: submission.postStressRwma ?? "",
+      responseToStress: submission.responseToStress ?? "",
+      stressAorticStenosis: submission.stressAorticStenosis ?? "",
+      stressAorticInsufficiency: submission.stressAorticInsufficiency ?? "",
+      stressMitralStenosis: submission.stressMitralStenosis ?? "",
+      stressMitralRegurgitation: submission.stressMitralRegurgitation ?? "",
+      stressTricuspidStenosis: submission.stressTricuspidStenosis ?? "",
+      stressTricuspidRegurgitation: submission.stressTricuspidRegurgitation ?? "",
+      stressPulmonicStenosis: submission.stressPulmonicStenosis ?? "",
+      stressPulmonicInsufficiency: submission.stressPulmonicInsufficiency ?? "",
+      stressRvspmm: submission.stressRvspmm ?? "",
+      fetalBiometry: submission.fetalBiometry ?? "",
+      fetalPosition: submission.fetalPosition ?? "",
+      fetalHeartRateRhythm: submission.fetalHeartRateRhythm ?? "",
+    };
+    return r;
+  }, [submission]);
+
+  const examType = submission?.examType ?? "";
+  const isAdultTTE = examType === "Adult TTE" || examType === "Adult TEE";
+  const isPediatric = examType === "Pediatric/Congenital TTE" || examType === "Pediatric/Congenital TEE";
+  const isStress = examType === "Adult STRESS";
+  const isFetal = examType === "FETAL";
+  const showCardiac = isAdultTTE || isPediatric;
+
+  const fields = getFieldsForExam(examType);
+  const { score, discordant } = useMemo(() => computeConcordance(orig, overRead, fields), [orig, overRead, fields]);
+
+  const handleSave = () => {
+    if (!submission) return;
+    submitMutation.mutate({
+      invitationId: submission.invitationId ?? undefined,
+      overReadSubmissionId: submissionId,
+      overReadingPhysician: submission.overReadingPhysicianName ?? undefined,
+      originalReadingPhysician: originalPhysician || (submission.originalInterpretingPhysician ?? "Unknown"),
+      dateReviewCompleted,
+      examDos: submission.examDos ?? undefined,
+      examIdentifier: submission.examIdentifier ?? "",
+      examType: submission.examType ?? "",
+      // Original read fields
+      origSitus: orig.situs,
+      origCardiacPosition: orig.cardiacPosition,
+      origLeftHeart: orig.leftHeart,
+      origRightHeart: orig.rightHeart,
+      origEfPercent: orig.efPercent,
+      origLvWallThickness: orig.lvWallThickness,
+      origVentricularSeptalDefect: orig.ventricularSeptalDefect,
+      origAtrialSeptalDefect: orig.atrialSeptalDefect,
+      origPatentForamenOvale: orig.patentForamenOvale,
+      origLvChamberSize: orig.lvChamberSize,
+      origLaChamberSize: orig.laChamberSize,
+      origRvChamberSize: orig.rvChamberSize,
+      origRaChamberSize: orig.raChamberSize,
+      origRegionalWallMotionAbnormalities: orig.regionalWallMotionAbnormalities,
+      origAorticValve: orig.aorticValve,
+      origMitralValve: orig.mitralValve,
+      origTricuspidValve: orig.tricuspidValve,
+      origPulmonicValve: orig.pulmonicValve,
+      origAorticStenosis: orig.aorticStenosis,
+      origAorticInsufficiency: orig.aorticInsufficiency,
+      origMitralStenosis: orig.mitralStenosis,
+      origMitralRegurgitation: orig.mitralRegurgitation,
+      origTricuspidStenosis: orig.tricuspidStenosis,
+      origTricuspidRegurgitation: orig.tricuspidRegurgitation,
+      origPulmonicStenosis: orig.pulmonicStenosis,
+      origPulmonicInsufficiency: orig.pulmonicInsufficiency,
+      origRvspmm: orig.rvspmm,
+      origPericardialEffusion: orig.pericardialEffusion,
+      origPeripheralPulmonaryStenosis: orig.peripheralPulmonaryStenosis,
+      origPulmonaryVeins: orig.pulmonaryVeins,
+      origCoronaryAnatomy: orig.coronaryAnatomy,
+      origAorticArch: orig.aorticArch,
+      origGreatVessels: orig.greatVessels,
+      origPdaDuctalArch: orig.pdaDuctalArch,
+      origConotruncalAnatomy: orig.conotruncalAnatomy,
+      origRestingEfPercent: orig.restingEfPercent,
+      origPostStressEfPercent: orig.postStressEfPercent,
+      origRestingRwma: orig.restingRwma,
+      origPostStressRwma: orig.postStressRwma,
+      origResponseToStress: orig.responseToStress,
+      origStressAorticStenosis: orig.stressAorticStenosis,
+      origStressAorticInsufficiency: orig.stressAorticInsufficiency,
+      origStressMitralStenosis: orig.stressMitralStenosis,
+      origStressMitralRegurgitation: orig.stressMitralRegurgitation,
+      origStressTricuspidStenosis: orig.stressTricuspidStenosis,
+      origStressTricuspidRegurgitation: orig.stressTricuspidRegurgitation,
+      origStressPulmonicStenosis: orig.stressPulmonicStenosis,
+      origStressPulmonicInsufficiency: orig.stressPulmonicInsufficiency,
+      origStressRvspmm: orig.stressRvspmm,
+      origFetalBiometry: orig.fetalBiometry,
+      origFetalPosition: orig.fetalPosition,
+      origFetalHeartRateRhythm: orig.fetalHeartRateRhythm,
+      concordanceScore: score,
+      discordantFields: JSON.stringify(discordant),
+      reviewComments,
+    });
+  };
+
+  if (isLoading) return (
+    <div className="flex items-center justify-center py-12">
+      <Loader2 className="w-8 h-8 animate-spin text-[#189aa1]" />
+    </div>
+  );
+
+  if (!submission) return (
+    <div className="text-center py-8 text-gray-500">
+      <AlertCircle className="w-8 h-8 mx-auto mb-2 text-red-400" />
+      <p className="text-sm">Submission not found.</p>
+    </div>
+  );
+
   return (
-    <div className={`grid grid-cols-3 gap-2 items-center py-1.5 px-2 rounded-lg ${discordant ? "bg-red-50 border border-red-200" : "bg-gray-50"}`}>
-      <div className="text-xs font-medium text-gray-700 flex items-center gap-1">
-        {discordant && <AlertCircle className="w-3 h-3 text-red-500 flex-shrink-0" />}
-        {label}
+    <div className="space-y-4">
+      {/* Info banner */}
+      <Card className="border-[#189aa1]/30 bg-[#f0fbfc]">
+        <CardContent className="pt-4 pb-4">
+          <div className="flex items-start gap-3">
+            <GitCompare className="w-5 h-5 text-[#189aa1] flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-bold text-[#0e4a50]">Step 2: Comparison Review</p>
+              <p className="text-xs text-gray-600 mt-1">
+                The over-read column is pre-populated from <strong>{submission.overReadingPhysicianName || "the physician"}</strong>'s blind submission.
+                Enter the original read findings in the left column to calculate concordance.
+              </p>
+              <div className="flex flex-wrap gap-2 mt-2">
+                <Badge variant="outline" className="text-[#189aa1] border-[#189aa1] text-xs">{submission.examType}</Badge>
+                <Badge variant="outline" className="text-gray-600 text-xs">{submission.examIdentifier}</Badge>
+                {submission.examDos && <Badge variant="outline" className="text-gray-600 text-xs">DOS: {submission.examDos}</Badge>}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Physicians */}
+      <Card>
+        <CardHeader className="pb-2 pt-4">
+          <CardTitle className="text-sm font-bold text-gray-700">Physicians</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 pb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-semibold text-gray-600 block mb-1">Original Interpreting Physician <span className="text-red-500">*</span></label>
+              <Input
+                className="h-8 text-sm"
+                placeholder={submission.originalInterpretingPhysician || "Dr. Jane Smith, MD"}
+                value={originalPhysician}
+                onChange={e => setOriginalPhysician(e.target.value)}
+              />
+              {submission.originalInterpretingPhysician && !originalPhysician && (
+                <p className="text-xs text-gray-400 mt-1">Pre-filled: {submission.originalInterpretingPhysician}</p>
+              )}
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-600 block mb-1">Over-Reading Physician</label>
+              <div className="h-8 px-3 flex items-center text-sm bg-[#f0fbfc] border border-[#189aa1]/30 rounded text-[#0e4a50] font-medium">
+                {submission.overReadingPhysicianName || "—"}
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-600 block mb-1">Date Review Completed</label>
+              <Input type="date" className="h-8 text-sm" value={dateReviewCompleted} onChange={e => setDateReviewCompleted(e.target.value)} />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Column headers */}
+      <div className="grid grid-cols-3 gap-2 px-2">
+        <div className="text-xs font-bold text-gray-500 uppercase tracking-wider">Finding</div>
+        <div className="text-xs font-bold text-gray-700 uppercase tracking-wider flex items-center gap-1">
+          <span className="w-2 h-2 rounded-full bg-blue-500 inline-block" />
+          Original Read
+        </div>
+        <div className="text-xs font-bold text-[#189aa1] uppercase tracking-wider flex items-center gap-1">
+          <span className="w-2 h-2 rounded-full bg-[#189aa1] inline-block" />
+          Over-Read (Physician)
+        </div>
       </div>
-      <Select value={origValue} onValueChange={onOrigChange}>
-        <SelectTrigger className="h-7 text-xs"><SelectValue placeholder="Original..." /></SelectTrigger>
-        <SelectContent>{options.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
-      </Select>
-      <Select value={overValue} onValueChange={onOverChange}>
-        <SelectTrigger className={`h-7 text-xs ${discordant ? "border-red-400" : ""}`}><SelectValue placeholder="Over-read..." /></SelectTrigger>
-        <SelectContent>{options.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
-      </Select>
+
+      {/* ── Cardiac Findings ─────────────────────────────────────────────────── */}
+      {showCardiac && (
+        <Card>
+          <CardHeader className="pb-2 pt-4">
+            <CardTitle className="text-sm font-bold text-gray-700">Cardiac Findings</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1.5 pb-4">
+            <SectionHeader title="Cardiac Anatomy" />
+            <ComparisonRow label="Situs" options={SITUS_OPTIONS} origValue={orig.situs ?? ""} overValue={overRead.situs} onOrigChange={setOrigField("situs")} />
+            <ComparisonRow label="Cardiac Position" options={CARDIAC_POSITION} origValue={orig.cardiacPosition ?? ""} overValue={overRead.cardiacPosition} onOrigChange={setOrigField("cardiacPosition")} />
+            <ComparisonRow label="Left Heart" options={NORMAL_ABNORMAL} origValue={orig.leftHeart ?? ""} overValue={overRead.leftHeart} onOrigChange={setOrigField("leftHeart")} />
+            <ComparisonRow label="Right Heart" options={NORMAL_ABNORMAL} origValue={orig.rightHeart ?? ""} overValue={overRead.rightHeart} onOrigChange={setOrigField("rightHeart")} />
+
+            <SectionHeader title="Ventricular Function" />
+            <ComparisonRow label="Ejection Fraction (EF%)" options={EF_OPTIONS} origValue={orig.efPercent ?? ""} overValue={overRead.efPercent} onOrigChange={setOrigField("efPercent")} />
+            <ComparisonRow label="LV Wall Thickness" options={WALL_THICKNESS} origValue={orig.lvWallThickness ?? ""} overValue={overRead.lvWallThickness} onOrigChange={setOrigField("lvWallThickness")} />
+            <ComparisonRow label="RWMA" options={RWMA_OPTIONS} origValue={orig.regionalWallMotionAbnormalities ?? ""} overValue={overRead.regionalWallMotionAbnormalities} onOrigChange={setOrigField("regionalWallMotionAbnormalities")} />
+
+            <SectionHeader title="Chamber Sizes" />
+            <ComparisonRow label="LV Chamber Size" options={CHAMBER_SIZE} origValue={orig.lvChamberSize ?? ""} overValue={overRead.lvChamberSize} onOrigChange={setOrigField("lvChamberSize")} />
+            <ComparisonRow label="LA Chamber Size" options={CHAMBER_SIZE} origValue={orig.laChamberSize ?? ""} overValue={overRead.laChamberSize} onOrigChange={setOrigField("laChamberSize")} />
+            <ComparisonRow label="RV Chamber Size" options={CHAMBER_SIZE} origValue={orig.rvChamberSize ?? ""} overValue={overRead.rvChamberSize} onOrigChange={setOrigField("rvChamberSize")} />
+            <ComparisonRow label="RA Chamber Size" options={CHAMBER_SIZE} origValue={orig.raChamberSize ?? ""} overValue={overRead.raChamberSize} onOrigChange={setOrigField("raChamberSize")} />
+
+            <SectionHeader title="Valve Morphology" />
+            <ComparisonRow label="Aortic Valve" options={NORMAL_ABNORMAL} origValue={orig.aorticValve ?? ""} overValue={overRead.aorticValve} onOrigChange={setOrigField("aorticValve")} />
+            <ComparisonRow label="Mitral Valve" options={NORMAL_ABNORMAL} origValue={orig.mitralValve ?? ""} overValue={overRead.mitralValve} onOrigChange={setOrigField("mitralValve")} />
+            <ComparisonRow label="Tricuspid Valve" options={NORMAL_ABNORMAL} origValue={orig.tricuspidValve ?? ""} overValue={overRead.tricuspidValve} onOrigChange={setOrigField("tricuspidValve")} />
+            <ComparisonRow label="Pulmonic Valve" options={NORMAL_ABNORMAL} origValue={orig.pulmonicValve ?? ""} overValue={overRead.pulmonicValve} onOrigChange={setOrigField("pulmonicValve")} />
+
+            <SectionHeader title="Valve Stenosis" />
+            <ComparisonRow label="Aortic Stenosis" options={VALVE_STENOSIS} origValue={orig.aorticStenosis ?? ""} overValue={overRead.aorticStenosis} onOrigChange={setOrigField("aorticStenosis")} />
+            <ComparisonRow label="Mitral Stenosis" options={VALVE_STENOSIS} origValue={orig.mitralStenosis ?? ""} overValue={overRead.mitralStenosis} onOrigChange={setOrigField("mitralStenosis")} />
+            <ComparisonRow label="Tricuspid Stenosis" options={VALVE_STENOSIS} origValue={orig.tricuspidStenosis ?? ""} overValue={overRead.tricuspidStenosis} onOrigChange={setOrigField("tricuspidStenosis")} />
+            <ComparisonRow label="Pulmonic Stenosis" options={VALVE_STENOSIS} origValue={orig.pulmonicStenosis ?? ""} overValue={overRead.pulmonicStenosis} onOrigChange={setOrigField("pulmonicStenosis")} />
+
+            <SectionHeader title="Valve Regurgitation / Insufficiency" />
+            <ComparisonRow label="Aortic Insufficiency" options={VALVE_REGURG} origValue={orig.aorticInsufficiency ?? ""} overValue={overRead.aorticInsufficiency} onOrigChange={setOrigField("aorticInsufficiency")} />
+            <ComparisonRow label="Mitral Regurgitation" options={VALVE_REGURG} origValue={orig.mitralRegurgitation ?? ""} overValue={overRead.mitralRegurgitation} onOrigChange={setOrigField("mitralRegurgitation")} />
+            <ComparisonRow label="Tricuspid Regurgitation" options={VALVE_REGURG} origValue={orig.tricuspidRegurgitation ?? ""} overValue={overRead.tricuspidRegurgitation} onOrigChange={setOrigField("tricuspidRegurgitation")} />
+            <ComparisonRow label="Pulmonic Insufficiency" options={VALVE_REGURG} origValue={orig.pulmonicInsufficiency ?? ""} overValue={overRead.pulmonicInsufficiency} onOrigChange={setOrigField("pulmonicInsufficiency")} />
+
+            <SectionHeader title="Other Cardiac" />
+            <ComparisonRow label="RVSP (mmHg)" options={RVSP_OPTIONS} origValue={orig.rvspmm ?? ""} overValue={overRead.rvspmm} onOrigChange={setOrigField("rvspmm")} />
+            <ComparisonRow label="Pericardial Effusion" options={PERICARDIAL_EFF} origValue={orig.pericardialEffusion ?? ""} overValue={overRead.pericardialEffusion} onOrigChange={setOrigField("pericardialEffusion")} />
+
+            <SectionHeader title="Septal Defects / Shunts" />
+            <ComparisonRow label="VSD" options={PRESENT_ABSENT} origValue={orig.ventricularSeptalDefect ?? ""} overValue={overRead.ventricularSeptalDefect} onOrigChange={setOrigField("ventricularSeptalDefect")} />
+            <ComparisonRow label="ASD" options={PRESENT_ABSENT} origValue={orig.atrialSeptalDefect ?? ""} overValue={overRead.atrialSeptalDefect} onOrigChange={setOrigField("atrialSeptalDefect")} />
+            <ComparisonRow label="PFO" options={PRESENT_ABSENT} origValue={orig.patentForamenOvale ?? ""} overValue={overRead.patentForamenOvale} onOrigChange={setOrigField("patentForamenOvale")} />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── Pediatric Extra ───────────────────────────────────────────────────── */}
+      {isPediatric && (
+        <Card>
+          <CardHeader className="pb-2 pt-4">
+            <CardTitle className="text-sm font-bold text-gray-700">Congenital / Pediatric Findings</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1.5 pb-4">
+            <ComparisonRow label="Peripheral Pulmonary Stenosis" options={PRESENT_ABSENT} origValue={orig.peripheralPulmonaryStenosis ?? ""} overValue={overRead.peripheralPulmonaryStenosis} onOrigChange={setOrigField("peripheralPulmonaryStenosis")} />
+            <ComparisonRow label="Pulmonary Veins" options={NORMAL_ABNORMAL} origValue={orig.pulmonaryVeins ?? ""} overValue={overRead.pulmonaryVeins} onOrigChange={setOrigField("pulmonaryVeins")} />
+            <ComparisonRow label="Coronary Anatomy" options={NORMAL_ABNORMAL} origValue={orig.coronaryAnatomy ?? ""} overValue={overRead.coronaryAnatomy} onOrigChange={setOrigField("coronaryAnatomy")} />
+            <ComparisonRow label="Aortic Arch" options={NORMAL_ABNORMAL} origValue={orig.aorticArch ?? ""} overValue={overRead.aorticArch} onOrigChange={setOrigField("aorticArch")} />
+            <ComparisonRow label="Great Vessels" options={NORMAL_ABNORMAL} origValue={orig.greatVessels ?? ""} overValue={overRead.greatVessels} onOrigChange={setOrigField("greatVessels")} />
+            <ComparisonRow label="PDA / Ductal Arch" options={PRESENT_ABSENT} origValue={orig.pdaDuctalArch ?? ""} overValue={overRead.pdaDuctalArch} onOrigChange={setOrigField("pdaDuctalArch")} />
+            <ComparisonRow label="Conotruncal Anatomy" options={NORMAL_ABNORMAL} origValue={orig.conotruncalAnatomy ?? ""} overValue={overRead.conotruncalAnatomy} onOrigChange={setOrigField("conotruncalAnatomy")} />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── Stress Echo ───────────────────────────────────────────────────────── */}
+      {isStress && (
+        <Card>
+          <CardHeader className="pb-2 pt-4">
+            <CardTitle className="text-sm font-bold text-gray-700">Stress Echo Findings</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1.5 pb-4">
+            <SectionHeader title="Ventricular Function" />
+            <ComparisonRow label="Resting EF%" options={EF_OPTIONS} origValue={orig.restingEfPercent ?? ""} overValue={overRead.restingEfPercent} onOrigChange={setOrigField("restingEfPercent")} />
+            <ComparisonRow label="Post-Stress EF%" options={EF_OPTIONS} origValue={orig.postStressEfPercent ?? ""} overValue={overRead.postStressEfPercent} onOrigChange={setOrigField("postStressEfPercent")} />
+            <ComparisonRow label="Resting RWMA" options={RWMA_OPTIONS} origValue={orig.restingRwma ?? ""} overValue={overRead.restingRwma} onOrigChange={setOrigField("restingRwma")} />
+            <ComparisonRow label="Post-Stress RWMA" options={RWMA_OPTIONS} origValue={orig.postStressRwma ?? ""} overValue={overRead.postStressRwma} onOrigChange={setOrigField("postStressRwma")} />
+            <ComparisonRow label="Response to Stress" options={RESPONSE_TO_STRESS} origValue={orig.responseToStress ?? ""} overValue={overRead.responseToStress} onOrigChange={setOrigField("responseToStress")} />
+            <SectionHeader title="Valve Stenosis (Stress)" />
+            <ComparisonRow label="Aortic Stenosis" options={VALVE_STENOSIS} origValue={orig.stressAorticStenosis ?? ""} overValue={overRead.stressAorticStenosis} onOrigChange={setOrigField("stressAorticStenosis")} />
+            <ComparisonRow label="Mitral Stenosis" options={VALVE_STENOSIS} origValue={orig.stressMitralStenosis ?? ""} overValue={overRead.stressMitralStenosis} onOrigChange={setOrigField("stressMitralStenosis")} />
+            <ComparisonRow label="Tricuspid Stenosis" options={VALVE_STENOSIS} origValue={orig.stressTricuspidStenosis ?? ""} overValue={overRead.stressTricuspidStenosis} onOrigChange={setOrigField("stressTricuspidStenosis")} />
+            <ComparisonRow label="Pulmonic Stenosis" options={VALVE_STENOSIS} origValue={orig.stressPulmonicStenosis ?? ""} overValue={overRead.stressPulmonicStenosis} onOrigChange={setOrigField("stressPulmonicStenosis")} />
+            <SectionHeader title="Valve Regurgitation (Stress)" />
+            <ComparisonRow label="Aortic Insufficiency" options={VALVE_REGURG} origValue={orig.stressAorticInsufficiency ?? ""} overValue={overRead.stressAorticInsufficiency} onOrigChange={setOrigField("stressAorticInsufficiency")} />
+            <ComparisonRow label="Mitral Regurgitation" options={VALVE_REGURG} origValue={orig.stressMitralRegurgitation ?? ""} overValue={overRead.stressMitralRegurgitation} onOrigChange={setOrigField("stressMitralRegurgitation")} />
+            <ComparisonRow label="Tricuspid Regurgitation" options={VALVE_REGURG} origValue={orig.stressTricuspidRegurgitation ?? ""} overValue={overRead.stressTricuspidRegurgitation} onOrigChange={setOrigField("stressTricuspidRegurgitation")} />
+            <ComparisonRow label="Pulmonic Insufficiency" options={VALVE_REGURG} origValue={orig.stressPulmonicInsufficiency ?? ""} overValue={overRead.stressPulmonicInsufficiency} onOrigChange={setOrigField("stressPulmonicInsufficiency")} />
+            <SectionHeader title="Hemodynamics (Stress)" />
+            <ComparisonRow label="RVSP (mmHg)" options={RVSP_OPTIONS} origValue={orig.stressRvspmm ?? ""} overValue={overRead.stressRvspmm} onOrigChange={setOrigField("stressRvspmm")} />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── Fetal Echo ────────────────────────────────────────────────────────── */}
+      {isFetal && (
+        <Card>
+          <CardHeader className="pb-2 pt-4">
+            <CardTitle className="text-sm font-bold text-gray-700">Fetal Echo Findings</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1.5 pb-4">
+            <ComparisonRow label="Fetal Biometry" options={FETAL_BIOMETRY} origValue={orig.fetalBiometry ?? ""} overValue={overRead.fetalBiometry} onOrigChange={setOrigField("fetalBiometry")} />
+            <ComparisonRow label="Fetal Position" options={FETAL_POSITION} origValue={orig.fetalPosition ?? ""} overValue={overRead.fetalPosition} onOrigChange={setOrigField("fetalPosition")} />
+            <ComparisonRow label="Fetal Heart Rate / Rhythm" options={FETAL_HR} origValue={orig.fetalHeartRateRhythm ?? ""} overValue={overRead.fetalHeartRateRhythm} onOrigChange={setOrigField("fetalHeartRateRhythm")} />
+            <SectionHeader title="Cardiac Anatomy (Fetal)" />
+            <ComparisonRow label="Situs" options={SITUS_OPTIONS} origValue={orig.situs ?? ""} overValue={overRead.situs} onOrigChange={setOrigField("situs")} />
+            <ComparisonRow label="Cardiac Position" options={CARDIAC_POSITION} origValue={orig.cardiacPosition ?? ""} overValue={overRead.cardiacPosition} onOrigChange={setOrigField("cardiacPosition")} />
+            <ComparisonRow label="Left Heart" options={NORMAL_ABNORMAL} origValue={orig.leftHeart ?? ""} overValue={overRead.leftHeart} onOrigChange={setOrigField("leftHeart")} />
+            <ComparisonRow label="Right Heart" options={NORMAL_ABNORMAL} origValue={orig.rightHeart ?? ""} overValue={overRead.rightHeart} onOrigChange={setOrigField("rightHeart")} />
+            <ComparisonRow label="EF%" options={EF_OPTIONS} origValue={orig.efPercent ?? ""} overValue={overRead.efPercent} onOrigChange={setOrigField("efPercent")} />
+            <ComparisonRow label="VSD" options={PRESENT_ABSENT} origValue={orig.ventricularSeptalDefect ?? ""} overValue={overRead.ventricularSeptalDefect} onOrigChange={setOrigField("ventricularSeptalDefect")} />
+            <ComparisonRow label="ASD" options={PRESENT_ABSENT} origValue={orig.atrialSeptalDefect ?? ""} overValue={overRead.atrialSeptalDefect} onOrigChange={setOrigField("atrialSeptalDefect")} />
+            <ComparisonRow label="Aortic Valve" options={NORMAL_ABNORMAL} origValue={orig.aorticValve ?? ""} overValue={overRead.aorticValve} onOrigChange={setOrigField("aorticValve")} />
+            <ComparisonRow label="Mitral Valve" options={NORMAL_ABNORMAL} origValue={orig.mitralValve ?? ""} overValue={overRead.mitralValve} onOrigChange={setOrigField("mitralValve")} />
+            <ComparisonRow label="Tricuspid Valve" options={NORMAL_ABNORMAL} origValue={orig.tricuspidValve ?? ""} overValue={overRead.tricuspidValve} onOrigChange={setOrigField("tricuspidValve")} />
+            <ComparisonRow label="Pulmonic Valve" options={NORMAL_ABNORMAL} origValue={orig.pulmonicValve ?? ""} overValue={overRead.pulmonicValve} onOrigChange={setOrigField("pulmonicValve")} />
+            <ComparisonRow label="Aortic Arch" options={NORMAL_ABNORMAL} origValue={orig.aorticArch ?? ""} overValue={overRead.aorticArch} onOrigChange={setOrigField("aorticArch")} />
+            <ComparisonRow label="Great Vessels" options={NORMAL_ABNORMAL} origValue={orig.greatVessels ?? ""} overValue={overRead.greatVessels} onOrigChange={setOrigField("greatVessels")} />
+            <ComparisonRow label="Pulmonary Veins" options={NORMAL_ABNORMAL} origValue={orig.pulmonaryVeins ?? ""} overValue={overRead.pulmonaryVeins} onOrigChange={setOrigField("pulmonaryVeins")} />
+            <ComparisonRow label="Pericardial Effusion" options={PERICARDIAL_EFF} origValue={orig.pericardialEffusion ?? ""} overValue={overRead.pericardialEffusion} onOrigChange={setOrigField("pericardialEffusion")} />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Concordance score preview */}
+      <Card className={`border-2 ${score >= 90 ? "border-green-400 bg-green-50" : score >= 75 ? "border-blue-400 bg-blue-50" : "border-red-400 bg-red-50"}`}>
+        <CardContent className="pt-4 pb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-bold text-gray-600 uppercase tracking-wider">Concordance Score</p>
+              <p className={`text-3xl font-black mt-1 ${score >= 90 ? "text-green-700" : score >= 75 ? "text-blue-700" : "text-red-700"}`}>
+                {score}%
+              </p>
+              {discordant.length > 0 && (
+                <p className="text-xs text-gray-600 mt-1">
+                  Discordant: {discordant.join(", ")}
+                </p>
+              )}
+            </div>
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center ${score >= 90 ? "bg-green-200" : score >= 75 ? "bg-blue-200" : "bg-red-200"}`}>
+              {score >= 90 ? <CheckCircle2 className="w-8 h-8 text-green-700" /> : <AlertCircle className="w-8 h-8 text-red-700" />}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Comments */}
+      <Card>
+        <CardContent className="pt-4 pb-4">
+          <label className="text-xs font-semibold text-gray-600 block mb-1">Review Comments</label>
+          <Textarea
+            className="text-sm min-h-[80px]"
+            placeholder="Any clinical notes or observations..."
+            value={reviewComments}
+            onChange={e => setReviewComments(e.target.value)}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Actions */}
+      <div className="flex gap-3">
+        <Button variant="outline" className="flex-1 h-9 text-sm" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button
+          className="flex-1 h-9 text-sm font-bold text-white"
+          style={{ background: "#189aa1" }}
+          onClick={handleSave}
+          disabled={submitMutation.isPending}
+        >
+          {submitMutation.isPending
+            ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</>
+            : <><CheckCircle2 className="w-4 h-4 mr-2" />Save Comparison Review</>}
+        </Button>
+      </div>
     </div>
   );
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
-// ─── Send Feedback Button ─────────────────────────────────────────────────────
-function SendFeedbackButton({
-  revieweeName,
-  reviewerName,
-  examType,
-  concordanceScore,
-  discordantFields,
-}: {
-  revieweeName: string;
-  reviewerName: string;
-  examType: string;
-  concordanceScore: number | null;
-  discordantFields: string[];
-}) {
-  const notify = trpc.system.notifyOwner.useMutation({
-    onSuccess: () => toast.success("Feedback notification sent to lab director."),
-    onError: (e) => toast.error(e.message),
-  });
-
-  const handleSend = () => {
-    const concordanceText = concordanceScore != null
-      ? `Concordance Score: ${concordanceScore}%`
-      : "Concordance Score: Not calculated";
-    const discordantText = discordantFields.length > 0
-      ? `Discordant Fields: ${discordantFields.join(", ")}`
-      : "No discordant fields identified.";
-    notify.mutate({
-      title: "Physician Peer Review — Feedback Notification",
-      content: [
-        `Exam Type: ${examType || "Not specified"}`,
-        `Original Interpreting Physician: ${revieweeName || "Not specified"}`,
-        `Over-Reading Reviewer: ${reviewerName || "Not specified"}`,
-        concordanceText,
-        discordantText,
-      ].join("\n"),
-    });
-  };
-
-  return (
-    <Button
-      size="sm"
-      variant="outline"
-      onClick={handleSend}
-      disabled={notify.isPending}
-      className="w-full border-[#189aa1] text-[#189aa1] hover:bg-[#f0fbfc] gap-1.5"
-    >
-      {notify.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
-      Send Feedback to Lab Director
-    </Button>
-  );
-}
-
 export default function PhysicianPeerReview() {
   const utils = trpc.useUtils();
+  const [activeStep2SubmissionId, setActiveStep2SubmissionId] = useState<number | null>(null);
+  const [showInviteForm, setShowInviteForm] = useState(false);
+  const [expandedInvitation, setExpandedInvitation] = useState<number | null>(null);
 
-  // Staff from Lab Admin
-  const { data: staffData } = trpc.physicianPeerReview.getLabStaffForReview.useQuery();
-  const physicians = staffData?.physicians ?? [];
+  // Check URL param for step2 deep link (from notification email)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const step2 = params.get("step2");
+    if (step2) {
+      const id = parseInt(step2, 10);
+      if (!isNaN(id)) setActiveStep2SubmissionId(id);
+    }
+  }, []);
 
-  // Existing reviews
-  const { data: reviews = [], isLoading } = trpc.physicianPeerReview.list.useQuery({ limit: 50, offset: 0 });
+  const { data: invitations = [], isLoading: loadingInvitations, refetch: refetchInvitations } =
+    trpc.physicianOverRead.listInvitations.useQuery();
 
-  const createReview = trpc.physicianPeerReview.create.useMutation({
-    onSuccess: () => {
-      toast.success("Physician Peer Review saved.");
-      utils.physicianPeerReview.list.invalidate();
-      resetForm();
-      setExpanded(false);
-    },
+  const { data: comparisonReviews = [], isLoading: loadingComparisons, refetch: refetchComparisons } =
+    trpc.physicianOverRead.listComparisonReviews.useQuery();
+
+  const deleteInvitationMutation = trpc.physicianOverRead.deleteInvitation.useMutation({
+    onSuccess: () => { toast.success("Invitation deleted."); refetchInvitations(); },
     onError: (e) => toast.error(e.message),
   });
 
-  const deleteReview = trpc.physicianPeerReview.delete.useMutation({
-    onSuccess: () => { toast.success("Review deleted."); utils.physicianPeerReview.list.invalidate(); },
+  const deleteComparisonMutation = trpc.physicianOverRead.deleteComparisonReview.useMutation({
+    onSuccess: () => { toast.success("Comparison review deleted."); refetchComparisons(); },
     onError: (e) => toast.error(e.message),
   });
 
-  // ── Form state ──────────────────────────────────────────────────────────────
-  const [expanded, setExpanded] = useState(true);
-  const [step, setStep] = useState(0);
-
-  const [header, setHeader] = useState({
-    facilityAccountNumber: "", organization: "", dateReviewCompleted: "",
-    examIdentifier: "", dob: "", examDos: "", examType: "" as string,
-    postStressDopplerPerformed: "",
-    qualityReviewAssignedBy: "", reviewerEmail: "",
-  });
-
-  // Staff fields
-  const [revieweeLabMemberId, setRevieweeLabMemberId] = useState<number | null>(null);
-  const [revieweeName, setRevieweeName] = useState("");
-  const [revieweeFreeText, setRevieweeFreeText] = useState("");
-  const [reviewerLabMemberId, setReviewerLabMemberId] = useState<number | null>(null);
-  const [reviewerName, setReviewerName] = useState("");
-  const [reviewerFreeText, setReviewerFreeText] = useState("");
-
-  // Original interpreting physician findings
-  const [origFindings, setOrigFindings] = useState<FindingsState>({ ...BLANK_FINDINGS });
-  // Over-reading physician findings
-  const [overFindings, setOverFindings] = useState<FindingsState>({ ...BLANK_FINDINGS });
-
-  const [otherFindings1, setOtherFindings1] = useState("");
-  const [otherFindings2, setOtherFindings2] = useState("");
-  const [otherFindings3, setOtherFindings3] = useState("");
-  const [reviewComments, setReviewComments] = useState("");
-
-  function resetForm() {
-    setStep(0);
-    setHeader({ facilityAccountNumber: "", organization: "", dateReviewCompleted: "", examIdentifier: "", dob: "", examDos: "", examType: "", postStressDopplerPerformed: "", qualityReviewAssignedBy: "", reviewerEmail: "" });
-    setRevieweeLabMemberId(null); setRevieweeName(""); setRevieweeFreeText("");
-    setReviewerLabMemberId(null); setReviewerName(""); setReviewerFreeText("");
-    setOrigFindings({ ...BLANK_FINDINGS }); setOverFindings({ ...BLANK_FINDINGS });
-    setOtherFindings1(""); setOtherFindings2(""); setOtherFindings3(""); setReviewComments("");
+  // If Step 2 is active, show the comparison form
+  if (activeStep2SubmissionId !== null) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs"
+            onClick={() => setActiveStep2SubmissionId(null)}
+          >
+            ← Back to Peer Review
+          </Button>
+          <h2 className="text-base font-bold text-gray-800">Step 2: Comparison Review</h2>
+        </div>
+        <Step2ComparisonForm
+          submissionId={activeStep2SubmissionId}
+          onClose={() => setActiveStep2SubmissionId(null)}
+          onSaved={() => {
+            setActiveStep2SubmissionId(null);
+            refetchComparisons();
+          }}
+        />
+      </div>
+    );
   }
 
-  // ── Concordance ─────────────────────────────────────────────────────────────
-  const { concordanceScore, discordantFields } = useMemo(() => {
-    if (!header.examType) return { concordanceScore: null, discordantFields: [] };
-    const fields = getFieldsForExamType(header.examType);
-    const { score, discordantFields } = computeConcordanceScore(
-      origFindings as unknown as Record<string, string>,
-      overFindings as unknown as Record<string, string>,
-      fields
-    );
-    return { concordanceScore: score, discordantFields };
-  }, [origFindings, overFindings, header.examType]);
-
-  // ── Steps ───────────────────────────────────────────────────────────────────
-  const STEPS = [
-    "Exam Info",
-    "Physicians",
-    header.examType === "Adult Stress Echo" ? "Stress Findings" :
-    header.examType === "Fetal Echo" ? "Fetal Findings" :
-    "Cardiac Findings",
-    ...(header.examType === "Pediatric/Congenital" ? ["Congenital Findings"] : []),
-    "Other Findings",
-    "Review & Submit",
-  ];
-
-  const handleSubmit = () => {
-    if (!header.examType) { toast.error("Please select an exam type."); return; }
-    if (!revieweeName && !revieweeFreeText) { toast.error("Please enter the Original Interpreting Physician."); return; }
-    createReview.mutate({
-      ...header,
-      revieweeLabMemberId: revieweeLabMemberId ?? undefined,
-      revieweeName: revieweeName || revieweeFreeText || undefined,
-      reviewerLabMemberId: reviewerLabMemberId ?? undefined,
-      reviewerName: reviewerName || reviewerFreeText || undefined,
-      // Original findings
-      situs: origFindings.situs || undefined,
-      cardiacPosition: origFindings.cardiacPosition || undefined,
-      leftHeart: origFindings.leftHeart || undefined,
-      rightHeart: origFindings.rightHeart || undefined,
-      efPercent: origFindings.efPercent || undefined,
-      lvWallThickness: origFindings.lvWallThickness || undefined,
-      ventricularSeptalDefect: origFindings.ventricularSeptalDefect || undefined,
-      atrialSeptalDefect: origFindings.atrialSeptalDefect || undefined,
-      patentForamenOvale: origFindings.patentForamenOvale || undefined,
-      lvChamberSize: origFindings.lvChamberSize || undefined,
-      laChamberSize: origFindings.laChamberSize || undefined,
-      rvChamberSize: origFindings.rvChamberSize || undefined,
-      raChamberSize: origFindings.raChamberSize || undefined,
-      regionalWallMotionAbnormalities: origFindings.regionalWallMotionAbnormalities || undefined,
-      aorticValve: origFindings.aorticValve || undefined,
-      mitralValve: origFindings.mitralValve || undefined,
-      tricuspidValve: origFindings.tricuspidValve || undefined,
-      pulmonicValve: origFindings.pulmonicValve || undefined,
-      aorticStenosis: origFindings.aorticStenosis || undefined,
-      aorticInsufficiency: origFindings.aorticInsufficiency || undefined,
-      mitralStenosis: origFindings.mitralStenosis || undefined,
-      mitralRegurgitation: origFindings.mitralRegurgitation || undefined,
-      tricuspidStenosis: origFindings.tricuspidStenosis || undefined,
-      tricuspidRegurgitation: origFindings.tricuspidRegurgitation || undefined,
-      pulmonicStenosis: origFindings.pulmonicStenosis || undefined,
-      pulmonicInsufficiency: origFindings.pulmonicInsufficiency || undefined,
-      rvspmm: origFindings.rvspmm || undefined,
-      pericardialEffusion: origFindings.pericardialEffusion || undefined,
-      peripheralPulmonaryStenosis: origFindings.peripheralPulmonaryStenosis || undefined,
-      pulmonaryVeins: origFindings.pulmonaryVeins || undefined,
-      coronaryAnatomy: origFindings.coronaryAnatomy || undefined,
-      aorticArch: origFindings.aorticArch || undefined,
-      greatVessels: origFindings.greatVessels || undefined,
-      pdaDuctalArch: origFindings.pdaDuctalArch || undefined,
-      conotruncalAnatomy: origFindings.conotruncalAnatomy || undefined,
-      restingEfPercent: origFindings.restingEfPercent || undefined,
-      postStressEfPercent: origFindings.postStressEfPercent || undefined,
-      restingRwma: origFindings.restingRwma || undefined,
-      postStressRwma: origFindings.postStressRwma || undefined,
-      responseToStress: origFindings.responseToStress || undefined,
-      stressAorticStenosis: origFindings.stressAorticStenosis || undefined,
-      stressAorticInsufficiency: origFindings.stressAorticInsufficiency || undefined,
-      stressMitralStenosis: origFindings.stressMitralStenosis || undefined,
-      stressMitralRegurgitation: origFindings.stressMitralRegurgitation || undefined,
-      stressTricuspidStenosis: origFindings.stressTricuspidStenosis || undefined,
-      stressTricuspidRegurgitation: origFindings.stressTricuspidRegurgitation || undefined,
-      stressPulmonicStenosis: origFindings.stressPulmonicStenosis || undefined,
-      stressPulmonicInsufficiency: origFindings.stressPulmonicInsufficiency || undefined,
-      stressRvspmm: origFindings.stressRvspmm || undefined,
-      fetalBiometry: origFindings.fetalBiometry || undefined,
-      fetalPosition: origFindings.fetalPosition || undefined,
-      fetalHeartRateRhythm: origFindings.fetalHeartRateRhythm || undefined,
-      otherFindings1: otherFindings1 || undefined,
-      otherFindings2: otherFindings2 || undefined,
-      otherFindings3: otherFindings3 || undefined,
-      reviewComments: reviewComments || undefined,
-      concordanceScore: concordanceScore ?? undefined,
-      discordanceFields: discordantFields.length > 0 ? JSON.stringify(discordantFields) : undefined,
-    });
-  };
-
-  const isTTE = header.examType === "Adult TTE" || header.examType === "Pediatric/Congenital";
-  const isStress = header.examType === "Adult Stress Echo";
-  const isFetal = header.examType === "Fetal Echo";
-  const isPed = header.examType === "Pediatric/Congenital";
-
-  // ── Concordance badge ────────────────────────────────────────────────────────
-  const ConcordanceBadge = ({ score }: { score: number | null }) => {
-    if (score === null) return null;
-    const color = score >= 90 ? "#16a34a" : score >= 75 ? "#2563eb" : score >= 60 ? "#d97706" : "#dc2626";
-    const label = score >= 90 ? "High Concordance" : score >= 75 ? "Good Concordance" : score >= 60 ? "Moderate Concordance" : "Low Concordance";
-    return (
-      <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full" style={{ background: color + "18", color }}>
-        <CheckCircle2 className="w-3 h-3" />
-        {score}% — {label}
-      </span>
-    );
-  };
-
   return (
-    <div className="space-y-4">
-      {/* New Review Card */}
-      <Card className="border border-[#189aa1]/20">
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
-              <Stethoscope className="w-4 h-4" style={{ color: BRAND }} />
-              New Physician Peer Review
-              {physicians.length > 0 && (
-                <span className="text-xs font-normal text-gray-400">({physicians.length} physician{physicians.length !== 1 ? "s" : ""} in lab)</span>
-              )}
-            </CardTitle>
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-base font-bold text-gray-800 flex items-center gap-2">
+            <Stethoscope className="w-5 h-5 text-[#189aa1]" />
+            Physician Peer Review
+          </h2>
+          <p className="text-xs text-gray-500 mt-0.5">
+            Two-step workflow: send blind over-read invitation → physician completes → compare findings.
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs"
+            onClick={() => { refetchInvitations(); refetchComparisons(); }}
+          >
+            <RefreshCw className="w-3.5 h-3.5 mr-1" />
+            Refresh
+          </Button>
+          <Button
+            size="sm"
+            className="h-8 text-xs font-bold text-white"
+            style={{ background: "#189aa1" }}
+            onClick={() => setShowInviteForm(v => !v)}
+          >
+            <Plus className="w-3.5 h-3.5 mr-1" />
+            New Over-Read Request
+          </Button>
+        </div>
+      </div>
 
+      {/* Step 1 form (collapsible) */}
+      {showInviteForm && (
+        <Step1InvitationForm
+          onCreated={() => {
+            refetchInvitations();
+            setShowInviteForm(false);
+          }}
+        />
+      )}
+
+      {/* Workflow explanation */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="flex items-start gap-3 p-3 rounded-lg bg-blue-50 border border-blue-200">
+          <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0 text-white text-xs font-bold">1</div>
+          <div>
+            <p className="text-sm font-bold text-blue-900">Physician Over-Read</p>
+            <p className="text-xs text-blue-700 mt-0.5">Lab admin sends a secure email link to the over-reading physician. Physician completes a blind over-read form.</p>
           </div>
-        </CardHeader>
+        </div>
+        <div className="flex items-start gap-3 p-3 rounded-lg bg-[#f0fbfc] border border-[#189aa1]/30">
+          <div className="w-7 h-7 rounded-full bg-[#189aa1] flex items-center justify-center flex-shrink-0 text-white text-xs font-bold">2</div>
+          <div>
+            <p className="text-sm font-bold text-[#0e4a50]">Comparison Review</p>
+            <p className="text-xs text-[#0e4a50]/70 mt-0.5">Once the physician submits, lab admin enters the original read findings. Concordance score is calculated automatically.</p>
+          </div>
+        </div>
+      </div>
 
-        {expanded && (
-          <CardContent className="space-y-4">
-            {/* Step indicator */}
-            <div className="flex items-center gap-1 overflow-x-auto pb-1">
-              {STEPS.map((s, i) => (
-                <div key={s} className="flex items-center gap-1 flex-shrink-0">
-                  <button
-                    onClick={() => setStep(i)}
-                    className={`text-xs px-2.5 py-1 rounded-full font-semibold transition-all ${
-                      i === step ? "text-white" : i < step ? "bg-[#189aa1]/15 text-[#189aa1]" : "bg-gray-100 text-gray-400"
-                    }`}
-                    style={i === step ? { background: BRAND } : {}}
+      {/* ── Invitations (Step 1 Status) ───────────────────────────────────────── */}
+      <Card>
+        <CardHeader className="pb-2 pt-4">
+          <CardTitle className="text-sm font-bold text-gray-700 flex items-center gap-2">
+            <Mail className="w-4 h-4 text-[#189aa1]" />
+            Step 1 — Over-Read Invitations
+            <Badge variant="outline" className="ml-auto text-xs">{invitations.length}</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pb-4">
+          {loadingInvitations ? (
+            <div className="flex items-center justify-center py-6">
+              <Loader2 className="w-6 h-6 animate-spin text-[#189aa1]" />
+            </div>
+          ) : invitations.length === 0 ? (
+            <div className="text-center py-6 text-gray-400 text-sm">
+              No invitations sent yet. Click "New Over-Read Request" to send the first one.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {invitations.map((inv: any) => (
+                <div key={inv.id} className="border border-gray-200 rounded-lg overflow-hidden">
+                  <div
+                    className="flex items-center justify-between px-3 py-2.5 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
+                    onClick={() => setExpandedInvitation(expandedInvitation === inv.id ? null : inv.id)}
                   >
-                    {i + 1}. {s}
-                  </button>
-                  {i < STEPS.length - 1 && <ChevronRight className="w-3 h-3 text-gray-300 flex-shrink-0" />}
+                    <div className="flex items-center gap-3 min-w-0">
+                      <StatusBadge status={inv.status} />
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-gray-800 truncate">{inv.examIdentifier}</p>
+                        <p className="text-xs text-gray-500">{inv.examType} · {inv.reviewerEmail}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                      {inv.status === "completed" && (
+                        <Button
+                          size="sm"
+                          className="h-7 text-xs font-bold text-white"
+                          style={{ background: "#189aa1" }}
+                          onClick={e => {
+                            e.stopPropagation();
+                            if (inv.submissionId) setActiveStep2SubmissionId(inv.submissionId);
+                          }}
+                        >
+                          <GitCompare className="w-3 h-3 mr-1" />
+                          Step 2
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 w-7 p-0 text-red-400 hover:text-red-600 hover:bg-red-50"
+                        onClick={e => {
+                          e.stopPropagation();
+                          if (confirm("Delete this invitation?")) deleteInvitationMutation.mutate({ id: inv.id });
+                        }}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                      {expandedInvitation === inv.id ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+                    </div>
+                  </div>
+                  {expandedInvitation === inv.id && (
+                    <div className="px-3 py-3 bg-white border-t border-gray-100">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                        <div><span className="text-gray-500">Reviewer:</span> <span className="font-medium">{inv.reviewerName || inv.reviewerEmail}</span></div>
+                        <div><span className="text-gray-500">Exam Type:</span> <span className="font-medium">{inv.examType}</span></div>
+                        {inv.examDos && <div><span className="text-gray-500">DOS:</span> <span className="font-medium">{inv.examDos}</span></div>}
+                        {inv.originalInterpretingPhysician && <div><span className="text-gray-500">Original Physician:</span> <span className="font-medium">{inv.originalInterpretingPhysician}</span></div>}
+                        {inv.emailSentAt && <div><span className="text-gray-500">Email Sent:</span> <span className="font-medium">{new Date(inv.emailSentAt).toLocaleDateString()}</span></div>}
+                        {inv.completedAt && <div><span className="text-gray-500">Completed:</span> <span className="font-medium">{new Date(inv.completedAt).toLocaleDateString()}</span></div>}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
-
-            {/* ── Step 0: Exam Info ─────────────────────────────────────────── */}
-            {step === 0 && (
-              <div className="space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-semibold text-gray-600 mb-1 block">Exam Type *</label>
-                    <Select value={header.examType} onValueChange={v => setHeader(h => ({ ...h, examType: v }))}>
-                      <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select exam type" /></SelectTrigger>
-                      <SelectContent>{EXAM_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-gray-600 mb-1 block">Date Review Completed</label>
-                    <Input type="date" className="h-8 text-xs" value={header.dateReviewCompleted} onChange={e => setHeader(h => ({ ...h, dateReviewCompleted: e.target.value }))} />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label className="text-xs font-semibold text-gray-600 mb-1 block">Facility Account #</label>
-                    <Input className="h-8 text-xs" placeholder="e.g. FAC-001" value={header.facilityAccountNumber} onChange={e => setHeader(h => ({ ...h, facilityAccountNumber: e.target.value }))} />
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-gray-600 mb-1 block">Organization</label>
-                    <Input className="h-8 text-xs" placeholder="Lab / Hospital name" value={header.organization} onChange={e => setHeader(h => ({ ...h, organization: e.target.value }))} />
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-gray-600 mb-1 block">Exam Identifier</label>
-                    <Input className="h-8 text-xs" placeholder="Last, First, MRN (de-identified)" value={header.examIdentifier} onChange={e => setHeader(h => ({ ...h, examIdentifier: e.target.value }))} />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-semibold text-gray-600 mb-1 block">DOB</label>
-                    <Input type="date" className="h-8 text-xs" value={header.dob} onChange={e => setHeader(h => ({ ...h, dob: e.target.value }))} />
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-gray-600 mb-1 block">Exam Date of Service</label>
-                    <Input type="date" className="h-8 text-xs" value={header.examDos} onChange={e => setHeader(h => ({ ...h, examDos: e.target.value }))} />
-                  </div>
-                </div>
-                {isStress && (
-                  <div>
-                    <label className="text-xs font-semibold text-gray-600 mb-1 block">Post-Stress Doppler Performed?</label>
-                    <Select value={header.postStressDopplerPerformed} onValueChange={v => setHeader(h => ({ ...h, postStressDopplerPerformed: v }))}>
-                      <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Yes">Yes</SelectItem>
-                        <SelectItem value="No">No</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* ── Step 1: Physicians ────────────────────────────────────────── */}
-            {step === 1 && (
-              <div className="space-y-3">
-                {physicians.length === 0 && (
-                  <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                    No physicians found in Lab Admin. Add physician-role members in Lab Admin to enable auto-populated dropdowns. You can still enter names manually below.
-                  </div>
-                )}
-                <StaffComboField
-                  label="Original Interpreting Physician *"
-                  physicians={physicians}
-                  value={revieweeName}
-                  onSelect={(id, name) => { setRevieweeLabMemberId(id); setRevieweeName(name); }}
-                  freeText={revieweeFreeText}
-                  onFreeText={setRevieweeFreeText}
-                />
-                <StaffComboField
-                  label="Over-Reading Physician Reviewer"
-                  physicians={physicians}
-                  value={reviewerName}
-                  onSelect={(id, name) => { setReviewerLabMemberId(id); setReviewerName(name); }}
-                  freeText={reviewerFreeText}
-                  onFreeText={setReviewerFreeText}
-                />
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs font-semibold text-gray-600 mb-1 block">Quality Review Assigned By</label>
-                    <Input className="h-8 text-xs" placeholder="Name of assigning reviewer" value={header.qualityReviewAssignedBy} onChange={e => setHeader(h => ({ ...h, qualityReviewAssignedBy: e.target.value }))} />
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-gray-600 mb-1 block">Reviewer Email</label>
-                    <Input type="email" className="h-8 text-xs" placeholder="reviewer@lab.com" value={header.reviewerEmail} onChange={e => setHeader(h => ({ ...h, reviewerEmail: e.target.value }))} />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* ── Step 2: Cardiac / Stress / Fetal Findings ────────────────── */}
-            {step === 2 && (
-              <div className="space-y-2">
-                <div className="grid grid-cols-3 gap-2 items-center py-1.5 px-2 bg-[#189aa1]/10 rounded-lg">
-                  <div className="text-xs font-bold text-[#189aa1]">Finding</div>
-                  <div className="text-xs font-bold text-[#189aa1]">Original Physician</div>
-                  <div className="text-xs font-bold text-[#189aa1]">Over-Reading Reviewer</div>
-                </div>
-
-                {isTTE && (<>
-                  <FindingRow label="Situs" options={SITUS_OPTIONS} origValue={origFindings.situs} overValue={overFindings.situs} onOrigChange={v => setOrigFindings(f => ({ ...f, situs: v }))} onOverChange={v => setOverFindings(f => ({ ...f, situs: v }))} />
-                  <FindingRow label="Cardiac Position" options={CARDIAC_POSITION} origValue={origFindings.cardiacPosition} overValue={overFindings.cardiacPosition} onOrigChange={v => setOrigFindings(f => ({ ...f, cardiacPosition: v }))} onOverChange={v => setOverFindings(f => ({ ...f, cardiacPosition: v }))} />
-                  <FindingRow label="Left Heart" options={NORMAL_ABNORMAL} origValue={origFindings.leftHeart} overValue={overFindings.leftHeart} onOrigChange={v => setOrigFindings(f => ({ ...f, leftHeart: v }))} onOverChange={v => setOverFindings(f => ({ ...f, leftHeart: v }))} />
-                  <FindingRow label="Right Heart" options={NORMAL_ABNORMAL} origValue={origFindings.rightHeart} overValue={overFindings.rightHeart} onOrigChange={v => setOrigFindings(f => ({ ...f, rightHeart: v }))} onOverChange={v => setOverFindings(f => ({ ...f, rightHeart: v }))} />
-                  <FindingRow label="EF %" options={EF_OPTIONS} origValue={origFindings.efPercent} overValue={overFindings.efPercent} onOrigChange={v => setOrigFindings(f => ({ ...f, efPercent: v }))} onOverChange={v => setOverFindings(f => ({ ...f, efPercent: v }))} />
-                  <FindingRow label="LV Wall Thickness" options={NORMAL_ABNORMAL} origValue={origFindings.lvWallThickness} overValue={overFindings.lvWallThickness} onOrigChange={v => setOrigFindings(f => ({ ...f, lvWallThickness: v }))} onOverChange={v => setOverFindings(f => ({ ...f, lvWallThickness: v }))} />
-                  <FindingRow label="VSD" options={PRESENT_ABSENT} origValue={origFindings.ventricularSeptalDefect} overValue={overFindings.ventricularSeptalDefect} onOrigChange={v => setOrigFindings(f => ({ ...f, ventricularSeptalDefect: v }))} onOverChange={v => setOverFindings(f => ({ ...f, ventricularSeptalDefect: v }))} />
-                  <FindingRow label="ASD" options={PRESENT_ABSENT} origValue={origFindings.atrialSeptalDefect} overValue={overFindings.atrialSeptalDefect} onOrigChange={v => setOrigFindings(f => ({ ...f, atrialSeptalDefect: v }))} onOverChange={v => setOverFindings(f => ({ ...f, atrialSeptalDefect: v }))} />
-                  <FindingRow label="PFO" options={PRESENT_ABSENT} origValue={origFindings.patentForamenOvale} overValue={overFindings.patentForamenOvale} onOrigChange={v => setOrigFindings(f => ({ ...f, patentForamenOvale: v }))} onOverChange={v => setOverFindings(f => ({ ...f, patentForamenOvale: v }))} />
-                  <FindingRow label="LV Chamber Size" options={CHAMBER_SIZE} origValue={origFindings.lvChamberSize} overValue={overFindings.lvChamberSize} onOrigChange={v => setOrigFindings(f => ({ ...f, lvChamberSize: v }))} onOverChange={v => setOverFindings(f => ({ ...f, lvChamberSize: v }))} />
-                  <FindingRow label="LA Chamber Size" options={CHAMBER_SIZE} origValue={origFindings.laChamberSize} overValue={overFindings.laChamberSize} onOrigChange={v => setOrigFindings(f => ({ ...f, laChamberSize: v }))} onOverChange={v => setOverFindings(f => ({ ...f, laChamberSize: v }))} />
-                  <FindingRow label="RV Chamber Size" options={CHAMBER_SIZE} origValue={origFindings.rvChamberSize} overValue={overFindings.rvChamberSize} onOrigChange={v => setOrigFindings(f => ({ ...f, rvChamberSize: v }))} onOverChange={v => setOverFindings(f => ({ ...f, rvChamberSize: v }))} />
-                  <FindingRow label="RA Chamber Size" options={CHAMBER_SIZE} origValue={origFindings.raChamberSize} overValue={overFindings.raChamberSize} onOrigChange={v => setOrigFindings(f => ({ ...f, raChamberSize: v }))} onOverChange={v => setOverFindings(f => ({ ...f, raChamberSize: v }))} />
-                  <FindingRow label="RWMA" options={RWMA_OPTIONS} origValue={origFindings.regionalWallMotionAbnormalities} overValue={overFindings.regionalWallMotionAbnormalities} onOrigChange={v => setOrigFindings(f => ({ ...f, regionalWallMotionAbnormalities: v }))} onOverChange={v => setOverFindings(f => ({ ...f, regionalWallMotionAbnormalities: v }))} />
-                  <FindingRow label="Aortic Valve" options={NORMAL_ABNORMAL} origValue={origFindings.aorticValve} overValue={overFindings.aorticValve} onOrigChange={v => setOrigFindings(f => ({ ...f, aorticValve: v }))} onOverChange={v => setOverFindings(f => ({ ...f, aorticValve: v }))} />
-                  <FindingRow label="Mitral Valve" options={NORMAL_ABNORMAL} origValue={origFindings.mitralValve} overValue={overFindings.mitralValve} onOrigChange={v => setOrigFindings(f => ({ ...f, mitralValve: v }))} onOverChange={v => setOverFindings(f => ({ ...f, mitralValve: v }))} />
-                  <FindingRow label="Tricuspid Valve" options={NORMAL_ABNORMAL} origValue={origFindings.tricuspidValve} overValue={overFindings.tricuspidValve} onOrigChange={v => setOrigFindings(f => ({ ...f, tricuspidValve: v }))} onOverChange={v => setOverFindings(f => ({ ...f, tricuspidValve: v }))} />
-                  <FindingRow label="Pulmonic Valve" options={NORMAL_ABNORMAL} origValue={origFindings.pulmonicValve} overValue={overFindings.pulmonicValve} onOrigChange={v => setOrigFindings(f => ({ ...f, pulmonicValve: v }))} onOverChange={v => setOverFindings(f => ({ ...f, pulmonicValve: v }))} />
-                  <FindingRow label="Aortic Stenosis" options={VALVE_STENOSIS} origValue={origFindings.aorticStenosis} overValue={overFindings.aorticStenosis} onOrigChange={v => setOrigFindings(f => ({ ...f, aorticStenosis: v }))} onOverChange={v => setOverFindings(f => ({ ...f, aorticStenosis: v }))} />
-                  <FindingRow label="Aortic Insufficiency" options={VALVE_REGURG} origValue={origFindings.aorticInsufficiency} overValue={overFindings.aorticInsufficiency} onOrigChange={v => setOrigFindings(f => ({ ...f, aorticInsufficiency: v }))} onOverChange={v => setOverFindings(f => ({ ...f, aorticInsufficiency: v }))} />
-                  <FindingRow label="Mitral Stenosis" options={VALVE_STENOSIS} origValue={origFindings.mitralStenosis} overValue={overFindings.mitralStenosis} onOrigChange={v => setOrigFindings(f => ({ ...f, mitralStenosis: v }))} onOverChange={v => setOverFindings(f => ({ ...f, mitralStenosis: v }))} />
-                  <FindingRow label="Mitral Regurgitation" options={VALVE_REGURG} origValue={origFindings.mitralRegurgitation} overValue={overFindings.mitralRegurgitation} onOrigChange={v => setOrigFindings(f => ({ ...f, mitralRegurgitation: v }))} onOverChange={v => setOverFindings(f => ({ ...f, mitralRegurgitation: v }))} />
-                  <FindingRow label="Tricuspid Stenosis" options={VALVE_STENOSIS} origValue={origFindings.tricuspidStenosis} overValue={overFindings.tricuspidStenosis} onOrigChange={v => setOrigFindings(f => ({ ...f, tricuspidStenosis: v }))} onOverChange={v => setOverFindings(f => ({ ...f, tricuspidStenosis: v }))} />
-                  <FindingRow label="Tricuspid Regurgitation" options={VALVE_REGURG} origValue={origFindings.tricuspidRegurgitation} overValue={overFindings.tricuspidRegurgitation} onOrigChange={v => setOrigFindings(f => ({ ...f, tricuspidRegurgitation: v }))} onOverChange={v => setOverFindings(f => ({ ...f, tricuspidRegurgitation: v }))} />
-                  <FindingRow label="Pulmonic Stenosis" options={VALVE_STENOSIS} origValue={origFindings.pulmonicStenosis} overValue={overFindings.pulmonicStenosis} onOrigChange={v => setOrigFindings(f => ({ ...f, pulmonicStenosis: v }))} onOverChange={v => setOverFindings(f => ({ ...f, pulmonicStenosis: v }))} />
-                  <FindingRow label="Pulmonic Insufficiency" options={VALVE_REGURG} origValue={origFindings.pulmonicInsufficiency} overValue={overFindings.pulmonicInsufficiency} onOrigChange={v => setOrigFindings(f => ({ ...f, pulmonicInsufficiency: v }))} onOverChange={v => setOverFindings(f => ({ ...f, pulmonicInsufficiency: v }))} />
-                  <FindingRow label="RVSP" options={RVSP_OPTIONS} origValue={origFindings.rvspmm} overValue={overFindings.rvspmm} onOrigChange={v => setOrigFindings(f => ({ ...f, rvspmm: v }))} onOverChange={v => setOverFindings(f => ({ ...f, rvspmm: v }))} />
-                  <FindingRow label="Pericardial Effusion" options={PERICARDIAL_EFF} origValue={origFindings.pericardialEffusion} overValue={overFindings.pericardialEffusion} onOrigChange={v => setOrigFindings(f => ({ ...f, pericardialEffusion: v }))} onOverChange={v => setOverFindings(f => ({ ...f, pericardialEffusion: v }))} />
-                </>)}
-
-                {isStress && (<>
-                  <FindingRow label="Resting EF%" options={EF_OPTIONS} origValue={origFindings.restingEfPercent} overValue={overFindings.restingEfPercent} onOrigChange={v => setOrigFindings(f => ({ ...f, restingEfPercent: v }))} onOverChange={v => setOverFindings(f => ({ ...f, restingEfPercent: v }))} />
-                  <FindingRow label="Post-Stress EF%" options={EF_OPTIONS} origValue={origFindings.postStressEfPercent} overValue={overFindings.postStressEfPercent} onOrigChange={v => setOrigFindings(f => ({ ...f, postStressEfPercent: v }))} onOverChange={v => setOverFindings(f => ({ ...f, postStressEfPercent: v }))} />
-                  <FindingRow label="Resting RWMA" options={RWMA_OPTIONS} origValue={origFindings.restingRwma} overValue={overFindings.restingRwma} onOrigChange={v => setOrigFindings(f => ({ ...f, restingRwma: v }))} onOverChange={v => setOverFindings(f => ({ ...f, restingRwma: v }))} />
-                  <FindingRow label="Post-Stress RWMA" options={RWMA_OPTIONS} origValue={origFindings.postStressRwma} overValue={overFindings.postStressRwma} onOrigChange={v => setOrigFindings(f => ({ ...f, postStressRwma: v }))} onOverChange={v => setOverFindings(f => ({ ...f, postStressRwma: v }))} />
-                  <FindingRow label="Response to Stress" options={RESPONSE_TO_STRESS} origValue={origFindings.responseToStress} overValue={overFindings.responseToStress} onOrigChange={v => setOrigFindings(f => ({ ...f, responseToStress: v }))} onOverChange={v => setOverFindings(f => ({ ...f, responseToStress: v }))} />
-                  <FindingRow label="Aortic Stenosis" options={VALVE_STENOSIS} origValue={origFindings.stressAorticStenosis} overValue={overFindings.stressAorticStenosis} onOrigChange={v => setOrigFindings(f => ({ ...f, stressAorticStenosis: v }))} onOverChange={v => setOverFindings(f => ({ ...f, stressAorticStenosis: v }))} />
-                  <FindingRow label="Aortic Insufficiency" options={VALVE_REGURG} origValue={origFindings.stressAorticInsufficiency} overValue={overFindings.stressAorticInsufficiency} onOrigChange={v => setOrigFindings(f => ({ ...f, stressAorticInsufficiency: v }))} onOverChange={v => setOverFindings(f => ({ ...f, stressAorticInsufficiency: v }))} />
-                  <FindingRow label="Mitral Stenosis" options={VALVE_STENOSIS} origValue={origFindings.stressMitralStenosis} overValue={overFindings.stressMitralStenosis} onOrigChange={v => setOrigFindings(f => ({ ...f, stressMitralStenosis: v }))} onOverChange={v => setOverFindings(f => ({ ...f, stressMitralStenosis: v }))} />
-                  <FindingRow label="Mitral Regurgitation" options={VALVE_REGURG} origValue={origFindings.stressMitralRegurgitation} overValue={overFindings.stressMitralRegurgitation} onOrigChange={v => setOrigFindings(f => ({ ...f, stressMitralRegurgitation: v }))} onOverChange={v => setOverFindings(f => ({ ...f, stressMitralRegurgitation: v }))} />
-                  <FindingRow label="Tricuspid Stenosis" options={VALVE_STENOSIS} origValue={origFindings.stressTricuspidStenosis} overValue={overFindings.stressTricuspidStenosis} onOrigChange={v => setOrigFindings(f => ({ ...f, stressTricuspidStenosis: v }))} onOverChange={v => setOverFindings(f => ({ ...f, stressTricuspidStenosis: v }))} />
-                  <FindingRow label="Tricuspid Regurgitation" options={VALVE_REGURG} origValue={origFindings.stressTricuspidRegurgitation} overValue={overFindings.stressTricuspidRegurgitation} onOrigChange={v => setOrigFindings(f => ({ ...f, stressTricuspidRegurgitation: v }))} onOverChange={v => setOverFindings(f => ({ ...f, stressTricuspidRegurgitation: v }))} />
-                  <FindingRow label="Pulmonic Stenosis" options={VALVE_STENOSIS} origValue={origFindings.stressPulmonicStenosis} overValue={overFindings.stressPulmonicStenosis} onOrigChange={v => setOrigFindings(f => ({ ...f, stressPulmonicStenosis: v }))} onOverChange={v => setOverFindings(f => ({ ...f, stressPulmonicStenosis: v }))} />
-                  <FindingRow label="Pulmonic Insufficiency" options={VALVE_REGURG} origValue={origFindings.stressPulmonicInsufficiency} overValue={overFindings.stressPulmonicInsufficiency} onOrigChange={v => setOrigFindings(f => ({ ...f, stressPulmonicInsufficiency: v }))} onOverChange={v => setOverFindings(f => ({ ...f, stressPulmonicInsufficiency: v }))} />
-                  <FindingRow label="RVSP" options={RVSP_OPTIONS} origValue={origFindings.stressRvspmm} overValue={overFindings.stressRvspmm} onOrigChange={v => setOrigFindings(f => ({ ...f, stressRvspmm: v }))} onOverChange={v => setOverFindings(f => ({ ...f, stressRvspmm: v }))} />
-                </>)}
-
-                {isFetal && (<>
-                  <FindingRow label="Fetal Biometry" options={FETAL_BIOMETRY} origValue={origFindings.fetalBiometry} overValue={overFindings.fetalBiometry} onOrigChange={v => setOrigFindings(f => ({ ...f, fetalBiometry: v }))} onOverChange={v => setOverFindings(f => ({ ...f, fetalBiometry: v }))} />
-                  <FindingRow label="Fetal Position" options={FETAL_POSITION} origValue={origFindings.fetalPosition} overValue={overFindings.fetalPosition} onOrigChange={v => setOrigFindings(f => ({ ...f, fetalPosition: v }))} onOverChange={v => setOverFindings(f => ({ ...f, fetalPosition: v }))} />
-                  <FindingRow label="Fetal HR / Rhythm" options={FETAL_HR} origValue={origFindings.fetalHeartRateRhythm} overValue={overFindings.fetalHeartRateRhythm} onOrigChange={v => setOrigFindings(f => ({ ...f, fetalHeartRateRhythm: v }))} onOverChange={v => setOverFindings(f => ({ ...f, fetalHeartRateRhythm: v }))} />
-                </>)}
-
-                {/* Live concordance preview */}
-                {concordanceScore !== null && (
-                  <div className="flex items-center gap-2 pt-1">
-                    <span className="text-xs text-gray-500">Live Concordance:</span>
-                    <ConcordanceBadge score={concordanceScore} />
-                    {discordantFields.length > 0 && (
-                      <span className="text-xs text-red-500">{discordantFields.length} discordant field{discordantFields.length !== 1 ? "s" : ""}</span>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* ── Step 3: Congenital Findings (Ped only) ────────────────────── */}
-            {step === 3 && isPed && (
-              <div className="space-y-2">
-                <div className="grid grid-cols-3 gap-2 items-center py-1.5 px-2 bg-[#189aa1]/10 rounded-lg">
-                  <div className="text-xs font-bold text-[#189aa1]">Finding</div>
-                  <div className="text-xs font-bold text-[#189aa1]">Original Physician</div>
-                  <div className="text-xs font-bold text-[#189aa1]">Over-Reading Reviewer</div>
-                </div>
-                <FindingRow label="Peripheral Pulmonary Stenosis" options={PRESENT_ABSENT} origValue={origFindings.peripheralPulmonaryStenosis} overValue={overFindings.peripheralPulmonaryStenosis} onOrigChange={v => setOrigFindings(f => ({ ...f, peripheralPulmonaryStenosis: v }))} onOverChange={v => setOverFindings(f => ({ ...f, peripheralPulmonaryStenosis: v }))} />
-                <FindingRow label="Pulmonary Veins" options={NORMAL_ABNORMAL} origValue={origFindings.pulmonaryVeins} overValue={overFindings.pulmonaryVeins} onOrigChange={v => setOrigFindings(f => ({ ...f, pulmonaryVeins: v }))} onOverChange={v => setOverFindings(f => ({ ...f, pulmonaryVeins: v }))} />
-                <FindingRow label="Coronary Anatomy" options={NORMAL_ABNORMAL} origValue={origFindings.coronaryAnatomy} overValue={overFindings.coronaryAnatomy} onOrigChange={v => setOrigFindings(f => ({ ...f, coronaryAnatomy: v }))} onOverChange={v => setOverFindings(f => ({ ...f, coronaryAnatomy: v }))} />
-                <FindingRow label="Aortic Arch" options={NORMAL_ABNORMAL} origValue={origFindings.aorticArch} overValue={overFindings.aorticArch} onOrigChange={v => setOrigFindings(f => ({ ...f, aorticArch: v }))} onOverChange={v => setOverFindings(f => ({ ...f, aorticArch: v }))} />
-                <FindingRow label="Great Vessels" options={NORMAL_ABNORMAL} origValue={origFindings.greatVessels} overValue={overFindings.greatVessels} onOrigChange={v => setOrigFindings(f => ({ ...f, greatVessels: v }))} onOverChange={v => setOverFindings(f => ({ ...f, greatVessels: v }))} />
-                <FindingRow label="PDA / Ductal Arch" options={PRESENT_ABSENT} origValue={origFindings.pdaDuctalArch} overValue={overFindings.pdaDuctalArch} onOrigChange={v => setOrigFindings(f => ({ ...f, pdaDuctalArch: v }))} onOverChange={v => setOverFindings(f => ({ ...f, pdaDuctalArch: v }))} />
-                <FindingRow label="Conotruncal Anatomy" options={NORMAL_ABNORMAL} origValue={origFindings.conotruncalAnatomy} overValue={overFindings.conotruncalAnatomy} onOrigChange={v => setOrigFindings(f => ({ ...f, conotruncalAnatomy: v }))} onOverChange={v => setOverFindings(f => ({ ...f, conotruncalAnatomy: v }))} />
-              </div>
-            )}
-
-            {/* ── Other Findings step ───────────────────────────────────────── */}
-            {((step === 3 && !isPed) || (step === 4 && isPed)) && (
-              <div className="space-y-3">
-                <p className="text-xs text-gray-500">Enter any additional findings not captured above (free text, not tracked for concordance scoring).</p>
-                {[
-                  { label: "Other Finding 1", value: otherFindings1, set: setOtherFindings1 },
-                  { label: "Other Finding 2", value: otherFindings2, set: setOtherFindings2 },
-                  { label: "Other Finding 3", value: otherFindings3, set: setOtherFindings3 },
-                ].map(({ label, value, set }) => (
-                  <div key={label}>
-                    <label className="text-xs font-semibold text-gray-600 mb-1 block">{label}</label>
-                    <Textarea className="text-xs min-h-[56px]" placeholder={`${label}...`} value={value} onChange={e => set(e.target.value)} />
-                  </div>
-                ))}
-                <div>
-                  <label className="text-xs font-semibold text-gray-600 mb-1 block">Review Comments</label>
-                  <Textarea className="text-xs min-h-[72px]" placeholder="Overall comments, clinical context, recommendations..." value={reviewComments} onChange={e => setReviewComments(e.target.value)} />
-                </div>
-              </div>
-            )}
-
-            {/* ── Review & Submit step ──────────────────────────────────────── */}
-            {((step === 4 && !isPed) || (step === 5 && isPed)) && (
-              <div className="space-y-3">
-                <div className="rounded-lg border border-[#189aa1]/20 bg-[#f0fbfc] p-4 space-y-2">
-                  <div className="text-xs font-bold text-[#189aa1] mb-2">Review Summary</div>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                    <span className="text-gray-500">Exam Type:</span><span className="font-medium">{header.examType || "—"}</span>
-                    <span className="text-gray-500">Exam DOS:</span><span className="font-medium">{header.examDos || "—"}</span>
-                    <span className="text-gray-500">Original Physician:</span><span className="font-medium">{revieweeName || revieweeFreeText || "—"}</span>
-                    <span className="text-gray-500">Over-Reading Reviewer:</span><span className="font-medium">{reviewerName || reviewerFreeText || "—"}</span>
-                  </div>
-                  {concordanceScore !== null && (
-                    <div className="pt-2 flex items-center gap-2">
-                      <span className="text-xs text-gray-500 font-semibold">Concordance Score:</span>
-                      <ConcordanceBadge score={concordanceScore} />
-                    </div>
-                  )}
-                  {discordantFields.length > 0 && (
-                    <div className="pt-1">
-                      <span className="text-xs font-semibold text-red-600">Discordant Fields: </span>
-                      <span className="text-xs text-red-500">{discordantFields.join(", ")}</span>
-                    </div>
-                  )}
-                </div>
-                <Button
-                  size="sm"
-                  onClick={handleSubmit}
-                  disabled={createReview.isPending}
-                  className="text-white w-full"
-                  style={{ background: BRAND }}
-                >
-                  {createReview.isPending ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Plus className="w-3 h-3 mr-1" />}
-                  Save Physician Peer Review
-                </Button>
-                <SendFeedbackButton
-                  revieweeName={revieweeName || revieweeFreeText}
-                  reviewerName={reviewerName || reviewerFreeText}
-                  examType={header.examType}
-                  concordanceScore={concordanceScore}
-                  discordantFields={discordantFields}
-                />
-              </div>
-            )}
-
-            {/* Navigation */}
-            <div className="flex items-center justify-between pt-1">
-              <Button size="sm" variant="outline" onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0} className="h-7 text-xs gap-1">
-                <ChevronLeft className="w-3 h-3" /> Back
-              </Button>
-              {step < STEPS.length - 1 && (
-                <Button size="sm" onClick={() => setStep(s => Math.min(STEPS.length - 1, s + 1))} className="h-7 text-xs gap-1 text-white" style={{ background: BRAND }}>
-                  Next <ChevronRight className="w-3 h-3" />
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        )}
+          )}
+        </CardContent>
       </Card>
 
-      {/* ── Review History ─────────────────────────────────────────────────── */}
-      {isLoading ? (
-        <div className="flex items-center justify-center py-8"><Loader2 className="w-5 h-5 animate-spin" style={{ color: BRAND }} /></div>
-      ) : reviews.length > 0 ? (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between px-1 py-1.5">
-            <span className="text-xs text-gray-500 font-medium">{reviews.length} review{reviews.length !== 1 ? "s" : ""} on file</span>
-            <Button
-              size="sm" variant="outline"
-              className="h-7 text-xs gap-1.5 border-[#189aa1] text-[#189aa1] hover:bg-[#f0fbfc]"
-              onClick={() => { reviews.forEach(r => exportPhysicianPeerReviewPDF(r)); toast.success("All PDFs downloaded."); }}
-            >
-              <Download className="w-3.5 h-3.5" /> Export All as PDF
-            </Button>
-          </div>
-          {reviews.map(r => {
-            const concordance = r.concordanceScore;
-            const concordColor = concordance == null ? "#6b7280" : concordance >= 90 ? "#16a34a" : concordance >= 75 ? "#2563eb" : concordance >= 60 ? "#d97706" : "#dc2626";
-            return (
-              <Card key={r.id} className="border border-gray-100">
-                <CardContent className="p-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <span className="inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: BRAND + "15", color: BRAND }}>{r.examType ?? "Unknown"}</span>
-                        {r.revieweeName && <span className="text-xs text-gray-500 flex items-center gap-1"><User className="w-3 h-3" />{r.revieweeName}</span>}
-                        {concordance != null && (
-                          <span className="inline-flex items-center text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: concordColor + "18", color: concordColor }}>
-                            {concordance}% concordance
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex flex-wrap gap-2 text-xs text-gray-500">
-                        {r.reviewerName && <span>Reviewer: <span className="font-medium">{r.reviewerName}</span></span>}
-                        {r.examDos && <span>DOS: <span className="font-medium">{r.examDos}</span></span>}
-                        {r.examIdentifier && <span>ID: <span className="font-medium">{r.examIdentifier}</span></span>}
-                      </div>
-                      {r.reviewComments && <p className="text-xs text-gray-600 mt-1 italic line-clamp-1">"{r.reviewComments}"</p>}
+      {/* ── Comparison Reviews (Step 2 Completed) ────────────────────────────── */}
+      <Card>
+        <CardHeader className="pb-2 pt-4">
+          <CardTitle className="text-sm font-bold text-gray-700 flex items-center gap-2">
+            <GitCompare className="w-4 h-4 text-[#189aa1]" />
+            Step 2 — Completed Comparison Reviews
+            <Badge variant="outline" className="ml-auto text-xs">{comparisonReviews.length}</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pb-4">
+          {loadingComparisons ? (
+            <div className="flex items-center justify-center py-6">
+              <Loader2 className="w-6 h-6 animate-spin text-[#189aa1]" />
+            </div>
+          ) : comparisonReviews.length === 0 ? (
+            <div className="text-center py-6 text-gray-400 text-sm">
+              No comparison reviews completed yet.
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {comparisonReviews.map((review: any) => {
+                const scoreColor = review.concordanceScore >= 90 ? "text-green-700 bg-green-100" : review.concordanceScore >= 75 ? "text-blue-700 bg-blue-100" : "text-red-700 bg-red-100";
+                return (
+                  <div key={review.id} className="flex items-center justify-between px-3 py-2.5 border border-gray-200 rounded-lg bg-gray-50">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-gray-800 truncate">{review.examIdentifier}</p>
+                      <p className="text-xs text-gray-500">{review.examType} · {review.originalReadingPhysician}</p>
                     </div>
-                    <div className="flex flex-col items-end gap-1.5">
-                      <div className="text-xs text-gray-400 whitespace-nowrap">{new Date(r.createdAt).toLocaleDateString()}</div>
-                      <div className="flex gap-1">
-                        <button
-                          title="Export PDF"
-                          className="flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded border border-[#189aa1]/40 text-[#189aa1] hover:bg-[#f0fbfc] transition-colors"
-                          onClick={() => { exportPhysicianPeerReviewPDF(r); toast.success("PDF downloaded."); }}
-                        >
-                          <Download className="w-3 h-3" /> PDF
-                        </button>
-                        <button
-                          title="Delete"
-                          className="flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded border border-red-200 text-red-400 hover:bg-red-50 transition-colors"
-                          onClick={() => { if (confirm("Delete this review?")) deleteReview.mutate({ id: r.id }); }}
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
+                    <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                      {review.concordanceScore != null && (
+                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${scoreColor}`}>
+                          {review.concordanceScore}%
+                        </span>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 w-7 p-0 text-[#189aa1] hover:bg-[#f0fbfc]"
+                        onClick={() => exportComparisonPDF(review)}
+                        title="Export PDF"
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 w-7 p-0 text-red-400 hover:text-red-600 hover:bg-red-50"
+                        onClick={() => { if (confirm("Delete this comparison review?")) deleteComparisonMutation.mutate({ id: review.id }); }}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="text-center py-10 text-gray-400 text-sm">No physician peer reviews yet. Add your first review above.</div>
-      )}
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

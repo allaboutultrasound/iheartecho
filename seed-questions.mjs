@@ -944,4 +944,33 @@ const questions = [
     options: null,
     correctAnswer: null,
     explanation: null,
-    reviewAnswer: "Normal fetal cardiac axis: 45° ± 20° to the left of the midline (measured from the anterior chest wall). The heart
+    reviewAnswer: "Normal fetal cardiac axis: 45° ± 20° to the left of the midline (measured from the anterior chest wall). The heart occupies approximately 1/3 of the chest area. Apex points to the left. Levocardia with situs solitus is normal. Dextrocardia or mesocardia warrants further evaluation for CHD and heterotaxy.",
+    difficulty: "beginner",
+    tags: JSON.stringify(["Fetal Echo", "Cardiac Axis", "Normal Anatomy"]),
+  },
+];
+
+console.log(`Inserting ${questions.length} questions...`);
+
+let inserted = 0;
+for (const q of questions) {
+  await conn.execute(
+    `INSERT INTO quickfireQuestions
+      (type, difficulty, tags, question, options, correctAnswer, explanation, reviewAnswer, isActive, createdAt, updatedAt)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())`,
+    [
+      q.type,
+      q.difficulty ?? "intermediate",
+      q.tags ?? "[]",
+      q.question,
+      q.options ? JSON.stringify(q.options) : null,
+      q.correctAnswer ?? null,
+      q.explanation ?? null,
+      q.reviewAnswer ?? null,
+    ]
+  );
+  inserted++;
+}
+
+console.log(`Successfully inserted ${inserted} questions.`);
+await conn.end();

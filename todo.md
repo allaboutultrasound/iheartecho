@@ -1572,3 +1572,12 @@
 - [x] EchoCalculator: useEffect reads `#calc-{tabId}` hash on mount and hashchange → auto-selects tab
 - [x] EchoCalculator: id="echo-calculator-top" added for scroll targeting
 - [x] TypeScript: 0 errors, all HMR updates clean
+
+## Video Download Restriction
+- [x] Disable video download in Cases / Daily Challenges (CaseDetail, CaseLibrary, QuickFire)
+- [x] Disable video download in ScanCoach (all ScanCoach variants)
+
+## Case Library View Count Display
+- [ ] Add seededViewCount field to casePosts schema (deterministic seed based on caseId)
+- [ ] Member UI: display seededViewCount + actual viewCount as combined display count
+- [ ] Admin panel: show true actual viewCount separately, labeled clearly

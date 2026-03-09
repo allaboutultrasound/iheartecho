@@ -504,6 +504,60 @@ function ViewDetail({ view }: { view: typeof ICE_VIEWS[0] }) {
 }
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
+/** Embeddable ICE ScanCoach content (no Layout wrapper) — used in ScanCoach tab */
+export function ICEScanCoachContent() {
+  const [selectedViewId, setSelectedViewId] = useState<string>(ICE_VIEWS[0].id);
+  const _selectedViewRaw = ICE_VIEWS.find(v => v.id === selectedViewId) ?? ICE_VIEWS[0];
+  const { mergeView: mergeICEView } = useScanCoachOverrides("ice");
+  const selectedView = useMemo(() => mergeICEView(_selectedViewRaw as any), [_selectedViewRaw, mergeICEView]);
+  return (
+    <div className="container py-6">
+      <div className="flex gap-5">
+        {/* View Selector Sidebar */}
+        <div className="w-56 flex-shrink-0 hidden md:block">
+          <div className="sticky top-4">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1 mb-3">Select View</p>
+            <div className="space-y-0.5">
+              {ICE_VIEWS.map(view => (
+                <button
+                  key={view.id}
+                  onClick={() => setSelectedViewId(view.id)}
+                  className="w-full text-left px-3 py-2.5 rounded-lg text-xs transition-all flex items-center gap-2"
+                  style={{
+                    background: selectedViewId === view.id ? BRAND + "15" : "transparent",
+                    color: selectedViewId === view.id ? BRAND : "#374151",
+                    fontWeight: selectedViewId === view.id ? 700 : 400,
+                    borderLeft: selectedViewId === view.id ? `3px solid ${BRAND}` : "3px solid transparent",
+                  }}
+                >
+                  <ArrowRight className="w-3 h-3 flex-shrink-0" />
+                  {view.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        {/* Mobile dropdown */}
+        <div className="md:hidden mb-4 w-full">
+          <select
+            value={selectedViewId}
+            onChange={e => setSelectedViewId(e.target.value)}
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+          >
+            {ICE_VIEWS.map(view => (
+              <option key={view.id} value={view.id}>{view.name}</option>
+            ))}
+          </select>
+        </div>
+        {/* View Detail Panel */}
+        <div className="flex-1 min-w-0">
+          <ViewDetail view={selectedView} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ICEScanCoach() {
   const [selectedViewId, setSelectedViewId] = useState<string>(ICE_VIEWS[0].id);
 

@@ -8,6 +8,7 @@ import { registerChatRoutes } from "./chat";
 import { registerThinkificWebhook } from "../webhooks/thinkific";
 import { registerUploadCaseMediaRoute } from "../routes/uploadCaseMedia";
 import { registerUploadQuestionImageRoute } from "../routes/uploadQuestionImage";
+import { registerUploadQuestionMediaRoute } from "../routes/uploadQuestionMedia";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -48,6 +49,8 @@ async function startServer() {
   registerUploadCaseMediaRoute(app);
   // Question image upload endpoint (admin only)
   registerUploadQuestionImageRoute(app);
+  // Question media upload endpoint (images + videos, admin only)
+  registerUploadQuestionMediaRoute(app);
   // tRPC API
   app.use(
     "/api/trpc",

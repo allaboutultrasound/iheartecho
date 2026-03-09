@@ -775,6 +775,8 @@ export const quickfireQuestions = mysqlTable("quickfireQuestions", {
   reviewAnswer: text("reviewAnswer"),
   // For image type: CDN URL of the echo image
   imageUrl: text("imageUrl"),
+  // For video type: CDN URL of the echo video/clip
+  videoUrl: text("videoUrl"),
   difficulty: mysqlEnum("difficulty", ["beginner", "intermediate", "advanced"]).default("intermediate").notNull(),
   // JSON: string[] — topic tags (e.g. ["AS", "LV function", "TEE"])
   tags: text("tags"),
@@ -1031,3 +1033,211 @@ export const scanCoachMedia = mysqlTable("scanCoachMedia", {
 });
 export type ScanCoachMedia = typeof scanCoachMedia.$inferSelect;
 export type InsertScanCoachMedia = typeof scanCoachMedia.$inferInsert;
+
+// ─── Physician Over-Read Invitations ──────────────────────────────────────────
+// Step 1 of the new physician peer review workflow:
+//   Lab admin creates an invitation → physician receives email with a secure link
+//   → physician completes the blind over-read form (no login required)
+//   → results saved back to the lab account
+//   → lab admin is notified to complete Step 2 (comparison)
+export const physicianOverReadInvitations = mysqlTable("physicianOverReadInvitations", {
+  id: int("id").primaryKey().autoincrement(),
+  // The lab that owns this invitation
+  labId: int("labId").notNull(),
+  // The lab admin who created the invitation
+  createdByUserId: int("createdByUserId").notNull(),
+  // Exam header info (set by lab admin when creating the invitation)
+  examIdentifier: varchar("examIdentifier", { length: 100 }).notNull(),
+  examDos: varchar("examDos", { length: 20 }),
+  examType: varchar("examType", { length: 50 }).notNull(),
+  postStressDopplerPerformed: varchar("postStressDopplerPerformed", { length: 10 }),
+  originalInterpretingPhysician: varchar("originalInterpretingPhysician", { length: 255 }),
+  // Physician reviewer info
+  reviewerName: varchar("reviewerName", { length: 255 }),
+  reviewerEmail: varchar("reviewerEmail", { length: 320 }).notNull(),
+  // Secure token for the physician to access the form (no login required)
+  accessToken: varchar("accessToken", { length: 128 }).notNull().unique(),
+  accessTokenExpiry: timestamp("accessTokenExpiry"),
+  // Invitation lifecycle
+  status: mysqlEnum("status", ["pending", "opened", "completed", "expired"]).default("pending").notNull(),
+  emailSentAt: timestamp("emailSentAt"),
+  openedAt: timestamp("openedAt"),
+  completedAt: timestamp("completedAt"),
+  // The resulting over-read record (FK → physicianOverReadSubmissions.id)
+  submissionId: int("submissionId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type PhysicianOverReadInvitation = typeof physicianOverReadInvitations.$inferSelect;
+export type InsertPhysicianOverReadInvitation = typeof physicianOverReadInvitations.$inferInsert;
+
+// ─── Physician Over-Read Submissions (Step 1 results) ─────────────────────────
+// Stores the physician's blind over-read findings submitted via the invitation link.
+// These are later used to prepopulate the "Over-Read" column in Step 2.
+export const physicianOverReadSubmissions = mysqlTable("physicianOverReadSubmissions", {
+  id: int("id").primaryKey().autoincrement(),
+  // FK → physicianOverReadInvitations.id
+  invitationId: int("invitationId").notNull(),
+  labId: int("labId").notNull(),
+  // Header
+  dateReviewCompleted: varchar("dateReviewCompleted", { length: 20 }),
+  examIdentifier: varchar("examIdentifier", { length: 100 }),
+  examDos: varchar("examDos", { length: 20 }),
+  examType: varchar("examType", { length: 50 }),
+  postStressDopplerPerformed: varchar("postStressDopplerPerformed", { length: 10 }),
+  originalInterpretingPhysician: varchar("originalInterpretingPhysician", { length: 255 }),
+  overReadingPhysicianName: varchar("overReadingPhysicianName", { length: 255 }),
+  // ── Adult TTE / TEE / Pediatric shared findings ──────────────────────────────
+  situs: varchar("situs", { length: 100 }),
+  cardiacPosition: varchar("cardiacPosition", { length: 100 }),
+  leftHeart: varchar("leftHeart", { length: 100 }),
+  rightHeart: varchar("rightHeart", { length: 100 }),
+  efPercent: varchar("efPercent", { length: 50 }),
+  lvWallThickness: varchar("lvWallThickness", { length: 100 }),
+  ventricularSeptalDefect: varchar("ventricularSeptalDefect", { length: 200 }),
+  atrialSeptalDefect: varchar("atrialSeptalDefect", { length: 200 }),
+  patentForamenOvale: varchar("patentForamenOvale", { length: 200 }),
+  lvChamberSize: varchar("lvChamberSize", { length: 100 }),
+  laChamberSize: varchar("laChamberSize", { length: 100 }),
+  rvChamberSize: varchar("rvChamberSize", { length: 100 }),
+  raChamberSize: varchar("raChamberSize", { length: 100 }),
+  regionalWallMotionAbnormalities: varchar("regionalWallMotionAbnormalities", { length: 500 }),
+  aorticValve: varchar("aorticValve", { length: 100 }),
+  mitralValve: varchar("mitralValve", { length: 100 }),
+  tricuspidValve: varchar("tricuspidValve", { length: 100 }),
+  pulmonicValve: varchar("pulmonicValve", { length: 100 }),
+  aorticStenosis: varchar("aorticStenosis", { length: 100 }),
+  aorticInsufficiency: varchar("aorticInsufficiency", { length: 100 }),
+  mitralStenosis: varchar("mitralStenosis", { length: 100 }),
+  mitralRegurgitation: varchar("mitralRegurgitation", { length: 100 }),
+  tricuspidStenosis: varchar("tricuspidStenosis", { length: 100 }),
+  tricuspidRegurgitation: varchar("tricuspidRegurgitation", { length: 100 }),
+  pulmonicStenosis: varchar("pulmonicStenosis", { length: 100 }),
+  pulmonicInsufficiency: varchar("pulmonicInsufficiency", { length: 100 }),
+  rvspmm: varchar("rvspmm", { length: 50 }),
+  pericardialEffusion: varchar("pericardialEffusion", { length: 100 }),
+  // ── Pediatric/Congenital extra ────────────────────────────────────────────────
+  peripheralPulmonaryStenosis: varchar("peripheralPulmonaryStenosis", { length: 100 }),
+  pulmonaryVeins: varchar("pulmonaryVeins", { length: 100 }),
+  coronaryAnatomy: varchar("coronaryAnatomy", { length: 100 }),
+  aorticArch: varchar("aorticArch", { length: 100 }),
+  greatVessels: varchar("greatVessels", { length: 100 }),
+  pdaDuctalArch: varchar("pdaDuctalArch", { length: 100 }),
+  conotruncalAnatomy: varchar("conotruncalAnatomy", { length: 100 }),
+  // ── Stress Echo ───────────────────────────────────────────────────────────────
+  restingEfPercent: varchar("restingEfPercent", { length: 50 }),
+  postStressEfPercent: varchar("postStressEfPercent", { length: 50 }),
+  restingRwma: varchar("restingRwma", { length: 500 }),
+  postStressRwma: varchar("postStressRwma", { length: 500 }),
+  responseToStress: varchar("responseToStress", { length: 100 }),
+  stressAorticStenosis: varchar("stressAorticStenosis", { length: 100 }),
+  stressAorticInsufficiency: varchar("stressAorticInsufficiency", { length: 100 }),
+  stressMitralStenosis: varchar("stressMitralStenosis", { length: 100 }),
+  stressMitralRegurgitation: varchar("stressMitralRegurgitation", { length: 100 }),
+  stressTricuspidStenosis: varchar("stressTricuspidStenosis", { length: 100 }),
+  stressTricuspidRegurgitation: varchar("stressTricuspidRegurgitation", { length: 100 }),
+  stressPulmonicStenosis: varchar("stressPulmonicStenosis", { length: 100 }),
+  stressPulmonicInsufficiency: varchar("stressPulmonicInsufficiency", { length: 100 }),
+  stressRvspmm: varchar("stressRvspmm", { length: 50 }),
+  // ── Fetal Echo ────────────────────────────────────────────────────────────────
+  fetalBiometry: varchar("fetalBiometry", { length: 100 }),
+  fetalPosition: varchar("fetalPosition", { length: 100 }),
+  fetalHeartRateRhythm: varchar("fetalHeartRateRhythm", { length: 100 }),
+  // ── Other / comments ─────────────────────────────────────────────────────────
+  otherFindings1: text("otherFindings1"),
+  otherFindings2: text("otherFindings2"),
+  otherFindings3: text("otherFindings3"),
+  reviewComments: text("reviewComments"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type PhysicianOverReadSubmission = typeof physicianOverReadSubmissions.$inferSelect;
+export type InsertPhysicianOverReadSubmission = typeof physicianOverReadSubmissions.$inferInsert;
+
+// ─── Physician Comparison Reviews (Step 2) ────────────────────────────────────
+// Lab admin completes Step 2 after receiving the physician's over-read (Step 1).
+// The "Over-Read" column is prepopulated from the Step 1 submission.
+// The "Original Read" column is entered by the lab admin.
+// Concordance score and discordant fields are computed on save.
+export const physicianComparisonReviews = mysqlTable("physicianComparisonReviews", {
+  id: int("id").primaryKey().autoincrement(),
+  labId: int("labId").notNull(),
+  createdByUserId: int("createdByUserId").notNull(),
+  // FK → physicianOverReadInvitations.id (links back to Step 1)
+  invitationId: int("invitationId"),
+  // FK → physicianOverReadSubmissions.id (the over-read data)
+  overReadSubmissionId: int("overReadSubmissionId"),
+  // Header
+  overReadingPhysician: varchar("overReadingPhysician", { length: 255 }),
+  originalReadingPhysician: varchar("originalReadingPhysician", { length: 255 }),
+  dateReviewCompleted: varchar("dateReviewCompleted", { length: 20 }),
+  examDos: varchar("examDos", { length: 20 }),
+  examIdentifier: varchar("examIdentifier", { length: 100 }),
+  examType: varchar("examType", { length: 50 }),
+  // ── Original Read findings (entered by lab admin in Step 2) ──────────────────
+  // These mirror the over-read fields from Step 1 for side-by-side comparison
+  origSitus: varchar("origSitus", { length: 100 }),
+  origCardiacPosition: varchar("origCardiacPosition", { length: 100 }),
+  origLeftHeart: varchar("origLeftHeart", { length: 100 }),
+  origRightHeart: varchar("origRightHeart", { length: 100 }),
+  origEfPercent: varchar("origEfPercent", { length: 50 }),
+  origLvWallThickness: varchar("origLvWallThickness", { length: 100 }),
+  origVentricularSeptalDefect: varchar("origVentricularSeptalDefect", { length: 200 }),
+  origAtrialSeptalDefect: varchar("origAtrialSeptalDefect", { length: 200 }),
+  origPatentForamenOvale: varchar("origPatentForamenOvale", { length: 200 }),
+  origLvChamberSize: varchar("origLvChamberSize", { length: 100 }),
+  origLaChamberSize: varchar("origLaChamberSize", { length: 100 }),
+  origRvChamberSize: varchar("origRvChamberSize", { length: 100 }),
+  origRaChamberSize: varchar("origRaChamberSize", { length: 100 }),
+  origRegionalWallMotionAbnormalities: varchar("origRegionalWallMotionAbnormalities", { length: 500 }),
+  origAorticValve: varchar("origAorticValve", { length: 100 }),
+  origMitralValve: varchar("origMitralValve", { length: 100 }),
+  origTricuspidValve: varchar("origTricuspidValve", { length: 100 }),
+  origPulmonicValve: varchar("origPulmonicValve", { length: 100 }),
+  origAorticStenosis: varchar("origAorticStenosis", { length: 100 }),
+  origAorticInsufficiency: varchar("origAorticInsufficiency", { length: 100 }),
+  origMitralStenosis: varchar("origMitralStenosis", { length: 100 }),
+  origMitralRegurgitation: varchar("origMitralRegurgitation", { length: 100 }),
+  origTricuspidStenosis: varchar("origTricuspidStenosis", { length: 100 }),
+  origTricuspidRegurgitation: varchar("origTricuspidRegurgitation", { length: 100 }),
+  origPulmonicStenosis: varchar("origPulmonicStenosis", { length: 100 }),
+  origPulmonicInsufficiency: varchar("origPulmonicInsufficiency", { length: 100 }),
+  origRvspmm: varchar("origRvspmm", { length: 50 }),
+  origPericardialEffusion: varchar("origPericardialEffusion", { length: 100 }),
+  // Pediatric extra
+  origPeripheralPulmonaryStenosis: varchar("origPeripheralPulmonaryStenosis", { length: 100 }),
+  origPulmonaryVeins: varchar("origPulmonaryVeins", { length: 100 }),
+  origCoronaryAnatomy: varchar("origCoronaryAnatomy", { length: 100 }),
+  origAorticArch: varchar("origAorticArch", { length: 100 }),
+  origGreatVessels: varchar("origGreatVessels", { length: 100 }),
+  origPdaDuctalArch: varchar("origPdaDuctalArch", { length: 100 }),
+  origConotruncalAnatomy: varchar("origConotruncalAnatomy", { length: 100 }),
+  // Stress
+  origRestingEfPercent: varchar("origRestingEfPercent", { length: 50 }),
+  origPostStressEfPercent: varchar("origPostStressEfPercent", { length: 50 }),
+  origRestingRwma: varchar("origRestingRwma", { length: 500 }),
+  origPostStressRwma: varchar("origPostStressRwma", { length: 500 }),
+  origResponseToStress: varchar("origResponseToStress", { length: 100 }),
+  origStressAorticStenosis: varchar("origStressAorticStenosis", { length: 100 }),
+  origStressAorticInsufficiency: varchar("origStressAorticInsufficiency", { length: 100 }),
+  origStressMitralStenosis: varchar("origStressMitralStenosis", { length: 100 }),
+  origStressMitralRegurgitation: varchar("origStressMitralRegurgitation", { length: 100 }),
+  origStressTricuspidStenosis: varchar("origStressTricuspidStenosis", { length: 100 }),
+  origStressTricuspidRegurgitation: varchar("origStressTricuspidRegurgitation", { length: 100 }),
+  origStressPulmonicStenosis: varchar("origStressPulmonicStenosis", { length: 100 }),
+  origStressPulmonicInsufficiency: varchar("origStressPulmonicInsufficiency", { length: 100 }),
+  origStressRvspmm: varchar("origStressRvspmm", { length: 50 }),
+  // Fetal
+  origFetalBiometry: varchar("origFetalBiometry", { length: 100 }),
+  origFetalPosition: varchar("origFetalPosition", { length: 100 }),
+  origFetalHeartRateRhythm: varchar("origFetalHeartRateRhythm", { length: 100 }),
+  // ── Concordance result ────────────────────────────────────────────────────────
+  concordanceScore: int("concordanceScore"),
+  // JSON array of field names that differ between over-read and original read
+  discordantFields: text("discordantFields"),
+  reviewComments: text("reviewComments"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type PhysicianComparisonReview = typeof physicianComparisonReviews.$inferSelect;
+export type InsertPhysicianComparisonReview = typeof physicianComparisonReviews.$inferInsert;

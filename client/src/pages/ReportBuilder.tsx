@@ -847,7 +847,7 @@ export default function ReportBuilder() {
           <div className="space-y-4">
 
             {/* Study Info */}
-            <Section title="Study Information" comment={data.noteStudy} onCommentChange={set("noteStudy")}>
+            <Section title="Study Information" defaultOpen={false} comment={data.noteStudy} onCommentChange={set("noteStudy")}>
               <SelectField label="Study Type" span2 value={data.studyType} onChange={set("studyType")}
                 options={["Transthoracic Echocardiogram (TTE)", "Limited TTE", "Stress Echo", "Contrast Echo", "3D TTE", "TEE", "ICE"]} />
               <Field label="Indication" span2 value={data.indication} onChange={set("indication")}
@@ -862,12 +862,7 @@ export default function ReportBuilder() {
               <Field label="BMI" value={data.bmi} onChange={set("bmi")} placeholder="e.g. 27.4" />
               <Field label="Blood Pressure" value={data.bp} onChange={set("bp")} unit="mmHg" placeholder="e.g. 130/80" />
               <Field label="Heart Rate" value={data.heartRate} onChange={set("heartRate")} unit="bpm" placeholder="e.g. 72" />
-              <div className="col-span-2">
-                <label className="block text-xs font-semibold text-gray-600 mb-1">Sonographer / Technician Comments</label>
-                <textarea value={data.sonographerComments} onChange={e => set("sonographerComments")(e.target.value)}
-                  rows={2} placeholder="e.g. LAE, LVH, AV STEN, MV SCLER"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#189aa1]/30 focus:border-[#189aa1] resize-none" />
-              </div>
+
             </Section>
 
             {/* M-Mode */}
@@ -946,7 +941,7 @@ export default function ReportBuilder() {
             </Section>
 
             {/* Mitral Valve */}
-            <Section title="Mitral Valve" comment={data.noteMv} onCommentChange={set("noteMv")}>
+            <Section title="Mitral Valve" defaultOpen={false} comment={data.noteMv} onCommentChange={set("noteMv")}>
               <SelectField label="Regurgitation" value={data.mvRegurg} onChange={set("mvRegurg")} options={SEVERITY_OPTIONS} />
               <SelectField label="Stenosis" value={data.mvStenosis} onChange={set("mvStenosis")} options={SEVERITY_OPTIONS} />
               <Field label="Mitral PV" value={data.mvPeakVel} onChange={set("mvPeakVel")} unit="m/s" />
@@ -987,7 +982,7 @@ export default function ReportBuilder() {
             </Section>
 
             {/* Tricuspid Valve */}
-            <Section title="Tricuspid Valve" comment={data.noteTv} onCommentChange={set("noteTv")}>
+            <Section title="Tricuspid Valve" defaultOpen={false} comment={data.noteTv} onCommentChange={set("noteTv")}>
               <SelectField label="Regurgitation" value={data.tvRegurg} onChange={set("tvRegurg")} options={SEVERITY_OPTIONS} />
               <Field label="Peak Velocity" value={data.tvPeakVel} onChange={set("tvPeakVel")} unit="m/s" hint="(nl 0.3–0.7)" />
               <Field label="Peak Gradient" value={data.tvPeakGrad} onChange={set("tvPeakGrad")} unit="mmHg" hint="(nl ≤2)" />
@@ -1000,7 +995,7 @@ export default function ReportBuilder() {
             </Section>
 
             {/* Aortic Valve */}
-            <Section title="Aortic Valve" comment={data.noteAv} onCommentChange={set("noteAv")}>
+            <Section title="Aortic Valve" defaultOpen={false} comment={data.noteAv} onCommentChange={set("noteAv")}>
               <SelectField label="Regurgitation" value={data.avRegurg} onChange={set("avRegurg")} options={SEVERITY_OPTIONS} />
               <SelectField label="Stenosis" value={data.avStenosis} onChange={set("avStenosis")} options={SEVERITY_OPTIONS} />
               <Field label="AVA Planimetry" value={data.avaPlanimetry} onChange={set("avaPlanimetry")} unit="cm²" />
@@ -1038,7 +1033,7 @@ export default function ReportBuilder() {
             </Section>
 
             {/* Physician Review */}
-            <Section title="Physician Review — Findings by Chamber" comment={data.notePhysician} onCommentChange={set("notePhysician")}>
+            <Section title="Physician Review — Findings by Chamber" defaultOpen={false} comment={data.notePhysician} onCommentChange={set("notePhysician")}>
               {([
                 ["Left Ventricle", "findLv"],
                 ["Left Atrium", "findLa"],

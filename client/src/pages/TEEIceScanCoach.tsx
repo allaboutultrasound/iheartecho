@@ -20,7 +20,7 @@ interface TEEView {
   id: string;
   name: string;
   abbr: string;
-  section: "ME" | "TG" | "UE" | "ICE";
+  section: "ME" | "TG" | "UE" | "ICE"; // ICE kept in data for standalone page
   angle: string;
   depth: string;
   color: string;
@@ -568,7 +568,7 @@ function ViewMediaDisplay({ viewId }: { viewId: string }) {
             {m.mediaType === "image" ? (
               <img src={m.url} alt={m.caption ?? "Reference image"} className="w-full object-contain bg-gray-900 max-h-48" />
             ) : (
-              <video src={m.url} className="w-full max-h-48 bg-gray-900" controls muted />
+              <video src={m.url} className="w-full max-h-48 bg-gray-900" controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} muted />
             )}
             {m.caption && (
               <p className="text-xs text-gray-500 px-3 py-2">{m.caption}</p>
@@ -606,7 +606,7 @@ export function TEEIceScanCoachContent() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
 
-  const [activeSection, setActiveSection] = useState<"ME" | "TG" | "UE" | "ICE">("ME");
+  const [activeSection, setActiveSection] = useState<"ME" | "TG" | "UE">("ME");
   const [selectedView, setSelectedView] = useState<TEEView>(teeViews[0]);
   const detailRef = useRef<HTMLDivElement>(null);
 
@@ -619,40 +619,9 @@ export function TEEIceScanCoachContent() {
 
   return (
     <div>
-      {/* Banner */}
-      <div className="relative overflow-hidden mb-6" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}>
-        <div className="relative container py-8 md:py-10">
-          <div className="mb-3">
-            <BackToEchoAssist className="text-white/70 hover:text-white" />
-          </div>
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-3">
-              <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
-              <span className="text-xs text-white/80 font-medium">TEE & ICE Acquisition Guide</span>
-            </div>
-            <h1 className="text-2xl md:text-3xl font-black text-white mb-1" style={{ fontFamily: "Merriweather, serif" }}>
-              TEE/ICE ScanCoach
-            </h1>
-            <p className="text-[#4ad9e0] font-semibold text-sm mb-3">Transesophageal & Intracardiac Echocardiography</p>
-            <p className="text-white/70 text-sm leading-relaxed mb-3 max-w-lg">
-              View-by-view probe manipulation, anatomy, Doppler technique, and clinical pearls for ME, TG, and UE TEE views — plus ICE views for structural heart procedures including WATCHMAN, MitraClip, and LAAO leak assessment.
-            </p>
-            <p className="text-white/50 text-xs mb-4">
-              <span className="font-semibold text-white/70">Patient Positioning:</span> Left lateral decubitus for TEE; supine for ICE (catheter-based). Ensure adequate sedation/anaesthesia and bite guard in place before probe insertion.
-            </p>
-            <Link href="/tee">
-              <button className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90" style={{ background: "#189aa1" }}>
-                <Microscope className="w-4 h-4" />
-                Open TEE Navigator
-              </button>
-            </Link>
-          </div>
-        </div>
-      </div>
-
       {/* Section tabs */}
       <div className="flex flex-wrap gap-2 mb-5">
-        {(["ME", "TG", "UE", "ICE"] as const).map(s => (
+        {(["ME", "TG", "UE"] as const).map(s => (
           <button
             key={s}
             onClick={() => {

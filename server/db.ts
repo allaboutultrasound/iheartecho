@@ -39,6 +39,15 @@ import {
   type PhysicianPeerReview,
   type InsertPhysicianPeerReview,
   type PhysicianNotification,
+  physicianOverReadInvitations,
+  type PhysicianOverReadInvitation,
+  type InsertPhysicianOverReadInvitation,
+  physicianOverReadSubmissions,
+  type PhysicianOverReadSubmission,
+  type InsertPhysicianOverReadSubmission,
+  physicianComparisonReviews,
+  type PhysicianComparisonReview,
+  type InsertPhysicianComparisonReview,
   scanCoachMedia,
   type ScanCoachMedia,
   type InsertScanCoachMedia,
@@ -1921,4 +1930,147 @@ export async function deleteScanCoachMedia(id: number): Promise<void> {
   const db = await getDb();
   if (!db) return;
   await db.delete(scanCoachMedia).where(eq(scanCoachMedia.id, id));
+}
+
+// ─── Physician Over-Read Invitation Helpers ───────────────────────────────────
+
+/** Create a new over-read invitation (Step 1 trigger) */
+export async function createOverReadInvitation(data: InsertPhysicianOverReadInvitation): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const [result] = await db.insert(physicianOverReadInvitations).values(data);
+  return (result as any).insertId as number;
+}
+
+/** Get an invitation by its access token (used by the public form endpoint) */
+export async function getOverReadInvitationByToken(token: string): Promise<PhysicianOverReadInvitation | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  const [row] = await db
+    .select()
+    .from(physicianOverReadInvitations)
+    .where(eq(physicianOverReadInvitations.accessToken, token))
+    .limit(1);
+  return row;
+}
+
+/** Get all invitations for a lab */
+export async function getOverReadInvitationsByLab(labId: number): Promise<PhysicianOverReadInvitation[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(physicianOverReadInvitations)
+    .where(eq(physicianOverReadInvitations.labId, labId))
+    .orderBy(desc(physicianOverReadInvitations.createdAt));
+}
+
+/** Get a single invitation by ID */
+export async function getOverReadInvitationById(id: number): Promise<PhysicianOverReadInvitation | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  const [row] = await db
+    .select()
+    .from(physicianOverReadInvitations)
+    .where(eq(physicianOverReadInvitations.id, id))
+    .limit(1);
+  return row;
+}
+
+/** Update invitation status */
+export async function updateOverReadInvitationStatus(
+  id: number,
+  status: "pending" | "opened" | "completed" | "expired",
+  extra?: { openedAt?: Date; completedAt?: Date; submissionId?: number }
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(physicianOverReadInvitations)
+    .set({ status, ...extra, updatedAt: new Date() })
+    .where(eq(physicianOverReadInvitations.id, id));
+}
+
+/** Delete an invitation */
+export async function deleteOverReadInvitation(id: number, labId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .delete(physicianOverReadInvitations)
+    .where(and(eq(physicianOverReadInvitations.id, id), eq(physicianOverReadInvitations.labId, labId)));
+}
+
+// ─── Physician Over-Read Submission Helpers (Step 1 results) ──────────────────
+
+/** Save a physician's over-read submission */
+export async function createOverReadSubmission(data: InsertPhysicianOverReadSubmission): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const [result] = await db.insert(physicianOverReadSubmissions).values(data);
+  return (result as any).insertId as number;
+}
+
+/** Get a submission by ID */
+export async function getOverReadSubmissionById(id: number): Promise<PhysicianOverReadSubmission | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  const [row] = await db
+    .select()
+    .from(physicianOverReadSubmissions)
+    .where(eq(physicianOverReadSubmissions.id, id))
+    .limit(1);
+  return row;
+}
+
+/** Get all submissions for a lab */
+export async function getOverReadSubmissionsByLab(labId: number): Promise<PhysicianOverReadSubmission[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(physicianOverReadSubmissions)
+    .where(eq(physicianOverReadSubmissions.labId, labId))
+    .orderBy(desc(physicianOverReadSubmissions.createdAt));
+}
+
+// ─── Physician Comparison Review Helpers (Step 2) ─────────────────────────────
+
+/** Create a comparison review */
+export async function createComparisonReview(data: InsertPhysicianComparisonReview): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database unavailable");
+  const [result] = await db.insert(physicianComparisonReviews).values(data);
+  return (result as any).insertId as number;
+}
+
+/** Get all comparison reviews for a lab */
+export async function getComparisonReviewsByLab(labId: number): Promise<PhysicianComparisonReview[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(physicianComparisonReviews)
+    .where(eq(physicianComparisonReviews.labId, labId))
+    .orderBy(desc(physicianComparisonReviews.createdAt));
+}
+
+/** Get a comparison review by ID */
+export async function getComparisonReviewById(id: number): Promise<PhysicianComparisonReview | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  const [row] = await db
+    .select()
+    .from(physicianComparisonReviews)
+    .where(eq(physicianComparisonReviews.id, id))
+    .limit(1);
+  return row;
+}
+
+/** Delete a comparison review */
+export async function deleteComparisonReview(id: number, labId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .delete(physicianComparisonReviews)
+    .where(and(eq(physicianComparisonReviews.id, id), eq(physicianComparisonReviews.labId, labId)));
 }

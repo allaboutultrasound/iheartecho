@@ -246,7 +246,26 @@ export default function QuickFireAdmin() {
   }
 
   // ── Challenge Queue state ────────────────────────────────────────────────
-  const [activeAdminTab, setActiveAdminTab] = useState<"questions" | "challenges">("questions");
+  const [activeAdminTab, setActiveAdminTab] = useState<"questions" | "challenges" | "archive" | "flashcards">("questions");
+
+  // ── Challenge Archive state ──────────────────────────────────────────────
+  const archivedChallengesQuery = trpc.quickfire.adminListArchivedChallenges.useQuery();
+  const archivedChallenges = archivedChallengesQuery.data ?? [];
+
+  const cloneChallengeMutation = trpc.quickfire.adminCloneChallenge.useMutation({
+    onSuccess: () => {
+      toast.success("Challenge cloned and added to queue.");
+      archivedChallengesQuery.refetch();
+      challengeListQuery.refetch();
+    },
+    onError: (err) => toast.error(err.message || "Failed to clone challenge."),
+  });
+
+  // ── Flashcard Management state ───────────────────────────────────────────
+  const [flashcardFormOpen, setFlashcardFormOpen] = useState(false);
+  const [editingFlashcardId, setEditingFlashcardId] = useState<number | null>(null);
+  const [flashcardForm, setFlashcardForm] = useState<QuestionForm>({ ...EMPTY_FORM, type: "quickReview" });
+  const [flashcardUploadingMedia, setFlashcardUploadingMedia] = useState(false);
   const [challengeFormOpen, setChallengeFormOpen] = useState(false);
   const [editingChallengeId, setEditingChallengeId] = useState<number | null>(null);
   const [challengeForm, setChallengeForm] = useState({
@@ -630,6 +649,25 @@ export default function QuickFireAdmin() {
               <span className="ml-1 bg-green-500 text-white text-xs rounded-full px-1.5 py-0.5">LIVE</span>
             )}
           </button>
+          <button
+            onClick={() => setActiveAdminTab("archive")}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+              activeAdminTab === "archive" ? "bg-white text-[#189aa1] shadow-sm" : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            <Archive className="w-4 h-4" /> Challenge Archive
+            {archivedChallenges.length > 0 && (
+              <span className="ml-1 bg-gray-400 text-white text-xs rounded-full px-1.5 py-0.5">{archivedChallenges.length}</span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveAdminTab("flashcards")}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+              activeAdminTab === "flashcards" ? "bg-white text-[#189aa1] shadow-sm" : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            <FileText className="w-4 h-4" /> Flashcard Management
+          </button>
         </div>
 
         {/* ── CHALLENGE QUEUE TAB ──────────────────────────────────────────── */}
@@ -913,6 +951,165 @@ export default function QuickFireAdmin() {
         )}
         </div>
         )}
+
+        {/* ── CHALLENGE ARCHIVE TAB ──────────────────────────────────────────── */}
+        {activeAdminTab === "archive" && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Challenge Archive</h2>
+                <p className="text-xs text-gray-400 mt-0.5">Past challenges that have been published and archived. Push any to the queue to reuse.</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => archivedChallengesQuery.refetch()} className="gap-1.5">
+                <RefreshCw className="w-3.5 h-3.5" /> Refresh
+              </Button>
+            </div>
+
+            {archivedChallengesQuery.isLoading ? (
+              <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-[#189aa1]" /></div>
+            ) : archivedChallenges.length === 0 ? (
+              <div className="text-center py-12 text-gray-400">
+                <Archive className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                <p className="text-sm">No archived challenges yet. Challenges are archived after they go live and are replaced.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {archivedChallenges.map((challenge) => (
+                  <div key={challenge.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Archive className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                          <span className="font-semibold text-sm text-gray-800 truncate">{challenge.title}</span>
+                          {challenge.category && (
+                            <Badge variant="outline" className="text-[10px] flex-shrink-0">{challenge.category}</Badge>
+                          )}
+                        </div>
+                        {challenge.description && (
+                          <p className="text-xs text-gray-500 mb-2 line-clamp-2" dangerouslySetInnerHTML={{ __html: challenge.description }} />
+                        )}
+                        <div className="flex items-center gap-3 text-[10px] text-gray-400">
+                          <span className="flex items-center gap-1"><FileText className="w-3 h-3" />{challenge.questionIds.length} questions</span>
+                          {challenge.archivedAt && (
+                            <span className="flex items-center gap-1"><Clock className="w-3 h-3" />Archived {new Date(challenge.archivedAt).toLocaleDateString()}</span>
+                          )}
+                          {challenge.publishedAt && (
+                            <span className="flex items-center gap-1"><PlayCircle className="w-3 h-3" />Published {new Date(challenge.publishedAt).toLocaleDateString()}</span>
+                          )}
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        className="flex-shrink-0 gap-1.5 bg-[#189aa1] hover:bg-[#0e7a80] text-white"
+                        onClick={() => cloneChallengeMutation.mutate({ id: challenge.id })}
+                        disabled={cloneChallengeMutation.isPending}
+                      >
+                        {cloneChallengeMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                        Push to Queue
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── FLASHCARD MANAGEMENT TAB ──────────────────────────────────────── */}
+        {activeAdminTab === "flashcards" && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Flashcard Management</h2>
+                <p className="text-xs text-gray-400 mt-0.5">Create and manage Quick Review flashcards. Supports images and video.</p>
+              </div>
+              <Button
+                size="sm"
+                className="gap-1.5 bg-[#189aa1] hover:bg-[#0e7a80] text-white"
+                onClick={() => {
+                  setFlashcardForm({ ...EMPTY_FORM, type: "quickReview" });
+                  setEditingFlashcardId(null);
+                  setFlashcardFormOpen(true);
+                }}
+              >
+                <Plus className="w-4 h-4" /> New Flashcard
+              </Button>
+            </div>
+
+            {/* Flashcard list — reuse the questions query filtered to quickReview type */}
+            {listQuery.isLoading ? (
+              <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-[#189aa1]" /></div>
+            ) : (
+              <div className="space-y-3">
+                {(listQuery.data?.questions ?? []).filter((q: { type: string; id: number; question: string | null; reviewAnswer: string | null; explanation: string | null; imageUrl: string | null; difficulty: string | null; tags: string | null; isActive: boolean }) => q.type === "quickReview").map((q: { type: string; id: number; question: string | null; reviewAnswer: string | null; explanation: string | null; imageUrl: string | null; difficulty: string | null; tags: string | null; isActive: boolean }) => (
+                  <div key={q.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <FileText className="w-3.5 h-3.5 text-teal-500 flex-shrink-0" />
+                          <span className="font-semibold text-sm text-gray-800 truncate" dangerouslySetInnerHTML={{ __html: q.question ?? "" }} />
+                        </div>
+                        {q.reviewAnswer && (
+                          <p className="text-xs text-gray-500 mb-2 line-clamp-2" dangerouslySetInnerHTML={{ __html: q.reviewAnswer }} />
+                        )}
+                        <div className="flex items-center gap-3 text-[10px] text-gray-400">
+                          {q.imageUrl && <span className="flex items-center gap-1 text-purple-500"><ImageIcon className="w-3 h-3" />Has image</span>}
+                          {(q as any).videoUrl && <span className="flex items-center gap-1 text-blue-500"><PlayCircle className="w-3 h-3" />Has video</span>}
+                          {q.difficulty && <Badge variant="outline" className="text-[10px]">{q.difficulty}</Badge>}
+                          {!q.isActive && <Badge className="text-[10px] bg-red-100 text-red-600 border-0">Inactive</Badge>}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const tags: string[] = q.tags ? JSON.parse(q.tags) : [];
+                            setFlashcardForm({
+                              type: "quickReview",
+                              question: q.question ?? "",
+                              options: ["", "", "", ""],
+                              correctAnswer: null,
+                              explanation: q.explanation ?? "",
+                              reviewAnswer: q.reviewAnswer ?? "",
+                              imageUrl: q.imageUrl ?? "",
+                              difficulty: (q.difficulty as Difficulty) ?? "intermediate",
+                              tags: tags.join(", "),
+                            });
+                            setEditingFlashcardId(q.id);
+                            setFlashcardFormOpen(true);
+                          }}
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-red-500 border-red-200 hover:bg-red-50"
+                          onClick={() => {
+                            if (confirm("Deactivate this flashcard?")) {
+                              deleteMutation.mutate({ id: q.id });
+                            }
+                          }}
+                          disabled={deleteMutation.isPending}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {(listQuery.data?.questions ?? []).filter((q: { type: string }) => q.type === "quickReview").length === 0 && (
+                  <div className="text-center py-12 text-gray-400">
+                    <FileText className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                    <p className="text-sm">No flashcards yet. Create your first one above.</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
       </div>
       {/* ── Challenge Form Dialog ────────────────────────────────────────────── */}
       <Dialog open={challengeFormOpen} onOpenChange={(open) => { if (!open) { setChallengeFormOpen(false); setEditingChallengeId(null); } }}>
@@ -1695,6 +1892,183 @@ export default function QuickFireAdmin() {
                 )}
               </Button>
             )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* ── Flashcard Create/Edit Dialog ──────────────────────────────────── */}
+      <Dialog open={flashcardFormOpen} onOpenChange={(open) => { if (!open) { setFlashcardFormOpen(false); setEditingFlashcardId(null); } }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle style={{ fontFamily: "Merriweather, serif" }}>
+              {editingFlashcardId !== null ? "Edit Flashcard" : "New Flashcard"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            {/* Front — Question */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Front (Question / Prompt)</label>
+              <RichTextEditor
+                value={flashcardForm.question}
+                onChange={(v) => setFlashcardForm((f) => ({ ...f, question: v }))}
+                placeholder="Enter the question or prompt shown on the front of the card..."
+                minHeight="100px"
+              />
+            </div>
+
+            {/* Back — Answer */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Back (Answer / Explanation)</label>
+              <RichTextEditor
+                value={flashcardForm.reviewAnswer}
+                onChange={(v) => setFlashcardForm((f) => ({ ...f, reviewAnswer: v }))}
+                placeholder="Enter the answer shown on the back of the card..."
+                minHeight="120px"
+              />
+            </div>
+
+            {/* Image Upload */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Image (optional)</label>
+              <div className="flex gap-2 items-center">
+                <Input
+                  value={flashcardForm.imageUrl}
+                  onChange={(e) => setFlashcardForm((f) => ({ ...f, imageUrl: e.target.value }))}
+                  placeholder="Paste image URL or upload below..."
+                  className="flex-1 text-sm"
+                />
+                <label className="cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setFlashcardUploadingMedia(true);
+                      try {
+                        const fd = new FormData();
+                        fd.append("file", file);
+                        const res = await fetch("/api/upload/question-media", { method: "POST", body: fd, credentials: "include" });
+                        const data = await res.json();
+                        if (data.url) setFlashcardForm((f) => ({ ...f, imageUrl: data.url }));
+                        else toast.error("Upload failed");
+                      } catch { toast.error("Upload failed"); }
+                      finally { setFlashcardUploadingMedia(false); }
+                    }}
+                  />
+                  <Button variant="outline" size="sm" asChild disabled={flashcardUploadingMedia}>
+                    <span className="gap-1.5">
+                      {flashcardUploadingMedia ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                      Upload
+                    </span>
+                  </Button>
+                </label>
+              </div>
+              {flashcardForm.imageUrl && (
+                <img src={flashcardForm.imageUrl} alt="Preview" className="mt-2 max-h-32 rounded-lg border border-gray-200 object-contain" />
+              )}
+            </div>
+
+            {/* Video Upload */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Video (optional)</label>
+              <div className="flex gap-2 items-center">
+                <Input
+                  value={(flashcardForm as any).videoUrl ?? ""}
+                  onChange={(e) => setFlashcardForm((f) => ({ ...f, videoUrl: e.target.value } as any))}
+                  placeholder="Paste video URL or upload below..."
+                  className="flex-1 text-sm"
+                />
+                <label className="cursor-pointer">
+                  <input
+                    type="file"
+                    accept="video/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setFlashcardUploadingMedia(true);
+                      try {
+                        const fd = new FormData();
+                        fd.append("file", file);
+                        const res = await fetch("/api/upload/question-media", { method: "POST", body: fd, credentials: "include" });
+                        const data = await res.json();
+                        if (data.url) setFlashcardForm((f) => ({ ...f, videoUrl: data.url } as any));
+                        else toast.error("Upload failed");
+                      } catch { toast.error("Upload failed"); }
+                      finally { setFlashcardUploadingMedia(false); }
+                    }}
+                  />
+                  <Button variant="outline" size="sm" asChild disabled={flashcardUploadingMedia}>
+                    <span className="gap-1.5">
+                      {flashcardUploadingMedia ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                      Upload
+                    </span>
+                  </Button>
+                </label>
+              </div>
+            </div>
+
+            {/* Difficulty & Tags */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Difficulty</label>
+                <Select
+                  value={flashcardForm.difficulty}
+                  onValueChange={(v) => setFlashcardForm((f) => ({ ...f, difficulty: v as Difficulty }))}
+                >
+                  <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="beginner">Beginner</SelectItem>
+                    <SelectItem value="intermediate">Intermediate</SelectItem>
+                    <SelectItem value="advanced">Advanced</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Tags (comma-separated)</label>
+                <Input
+                  value={flashcardForm.tags}
+                  onChange={(e) => setFlashcardForm((f) => ({ ...f, tags: e.target.value }))}
+                  placeholder="e.g. AS, diastology, MR"
+                  className="text-sm"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFlashcardFormOpen(false)}>Cancel</Button>
+            <Button
+              className="bg-[#189aa1] hover:bg-[#0e7a80] text-white"
+              onClick={() => {
+                const payload = {
+                  type: "quickReview" as const,
+                  question: flashcardForm.question,
+                  options: [],
+                  correctAnswer: undefined,
+                  explanation: flashcardForm.explanation,
+                  reviewAnswer: flashcardForm.reviewAnswer,
+                  imageUrl: flashcardForm.imageUrl || undefined,
+                  videoUrl: (flashcardForm as any).videoUrl || undefined,
+                  difficulty: flashcardForm.difficulty,
+                  tags: flashcardForm.tags ? flashcardForm.tags.split(",").map((t: string) => t.trim()).filter(Boolean) : [],
+                  category: "Flashcard",
+                };
+                if (editingFlashcardId !== null) {
+                  updateMutation.mutate({ id: editingFlashcardId, ...payload }, {
+                    onSuccess: () => { setFlashcardFormOpen(false); toast.success("Flashcard updated."); },
+                  });
+                } else {
+                  createMutation.mutate(payload, {
+                    onSuccess: () => { setFlashcardFormOpen(false); setFlashcardForm({ ...EMPTY_FORM, type: "quickReview" }); toast.success("Flashcard created."); },
+                  });
+                }
+              }}
+              disabled={createMutation.isPending || updateMutation.isPending}
+            >
+              {(createMutation.isPending || updateMutation.isPending) ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+              {editingFlashcardId !== null ? "Save Changes" : "Create Flashcard"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

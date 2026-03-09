@@ -88,9 +88,13 @@ describe("quickfire.getUserStats", () => {
 });
 
 describe("quickfire.getLeaderboard", () => {
-  it("throws INTERNAL_SERVER_ERROR when DB is unavailable (public procedure)", async () => {
-    const caller = appRouter.createCaller(makeCtx());
+  it("throws INTERNAL_SERVER_ERROR when DB is unavailable (authenticated procedure)", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeUser()));
     await expect(caller.quickfire.getLeaderboard()).rejects.toThrow("DB unavailable");
+  });
+  it("rejects unauthenticated callers", async () => {
+    const caller = appRouter.createCaller(makeCtx());
+    await expect(caller.quickfire.getLeaderboard()).rejects.toThrow();
   });
 });
 

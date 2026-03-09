@@ -105,6 +105,19 @@ import {
   getUsersByRole,
   getDiyUsersForLab,
   type AppRole,
+  createOverReadInvitation,
+  getOverReadInvitationByToken,
+  getOverReadInvitationsByLab,
+  getOverReadInvitationById,
+  updateOverReadInvitationStatus,
+  deleteOverReadInvitation,
+  createOverReadSubmission,
+  getOverReadSubmissionById,
+  getOverReadSubmissionsByLab,
+  createComparisonReview,
+  getComparisonReviewsByLab,
+  getComparisonReviewById,
+  deleteComparisonReview,
 } from "./db";
 
 export const appRouter = router({
@@ -1487,6 +1500,359 @@ export const appRouter = router({
 
   // ─── ScanCoach WYSIWYG Admin ──────────────────────────────────────────────────
   scanCoachAdmin: scanCoachAdminRouter,
+
+  // ─── Physician Over-Read Workflow (Step 1 & Step 2) ──────────────────────────
+  physicianOverRead: router({
+    /** List all invitations for the current user's lab */
+    listInvitations: protectedProcedure.query(async ({ ctx }) => {
+      const lab = await getLabByMemberUserId(ctx.user.id);
+      if (!lab) return [];
+      return getOverReadInvitationsByLab(lab.id);
+    }),
+
+    /** Create a new invitation and send email to physician */
+    createInvitation: protectedProcedure
+      .input(z.object({
+        examIdentifier: z.string().min(1).max(100),
+        examDos: z.string().optional(),
+        examType: z.enum(["Adult TTE", "Adult TEE", "Adult STRESS", "Pediatric/Congenital TTE", "Pediatric/Congenital TEE", "FETAL"]),
+        postStressDopplerPerformed: z.string().optional(),
+        originalInterpretingPhysician: z.string().optional(),
+        reviewerName: z.string().optional(),
+        reviewerEmail: z.string().email(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const lab = await getLabByMemberUserId(ctx.user.id);
+        if (!lab) throw new TRPCError({ code: "NOT_FOUND", message: "No lab found" });
+        const crypto = await import("crypto");
+        const accessToken = crypto.randomBytes(48).toString("hex");
+        const expiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+        const invitationId = await createOverReadInvitation({
+          labId: lab.id,
+          createdByUserId: ctx.user.id,
+          examIdentifier: input.examIdentifier,
+          examDos: input.examDos,
+          examType: input.examType,
+          postStressDopplerPerformed: input.postStressDopplerPerformed,
+          originalInterpretingPhysician: input.originalInterpretingPhysician,
+          reviewerName: input.reviewerName,
+          reviewerEmail: input.reviewerEmail,
+          accessToken,
+          accessTokenExpiry: expiry,
+          status: "pending",
+        });
+        // Send email to physician
+        try {
+          const { sendEmail } = await import("./_core/email");
+          const appUrl = process.env.VITE_APP_URL || "https://app.iheartecho.com";
+          const formUrl = `${appUrl}/physician-review/${accessToken}`;
+          const physicianName = input.reviewerName || "Physician";
+          const labName = (lab as any).organization || "the lab";
+          await sendEmail({
+            to: { name: physicianName, email: input.reviewerEmail },
+            subject: `Physician Over-Read Request — ${input.examType} (${input.examIdentifier})`,
+            htmlBody: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <div style="background: #189aa1; padding: 24px; border-radius: 8px 8px 0 0;">
+                  <h1 style="color: white; margin: 0; font-size: 22px;">iHeartEcho&#8482; &#8212; Physician Over-Read Request</h1>
+                </div>
+                <div style="background: #f9fafb; padding: 24px; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb;">
+                  <p style="color: #374151;">Dear ${physicianName},</p>
+                  <p style="color: #374151;">You have been requested to perform a <strong>blind over-read</strong> of an echocardiography study by ${labName}.</p>
+                  <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+                    <tr><td style="padding: 8px; background: #f3f4f6; font-weight: bold; color: #374151;">Exam Type</td><td style="padding: 8px; color: #374151;">${input.examType}</td></tr>
+                    <tr><td style="padding: 8px; background: #f3f4f6; font-weight: bold; color: #374151;">Exam Identifier</td><td style="padding: 8px; color: #374151;">${input.examIdentifier}</td></tr>
+                    ${input.examDos ? `<tr><td style="padding: 8px; background: #f3f4f6; font-weight: bold; color: #374151;">Exam Date</td><td style="padding: 8px; color: #374151;">${input.examDos}</td></tr>` : ""}
+                    ${input.originalInterpretingPhysician ? `<tr><td style="padding: 8px; background: #f3f4f6; font-weight: bold; color: #374151;">Original Physician</td><td style="padding: 8px; color: #374151;">${input.originalInterpretingPhysician}</td></tr>` : ""}
+                  </table>
+                  <p style="color: #374151;"><strong>Important:</strong> Please complete this form as a <em>blind over-read</em> &#8212; do NOT view the original physician report before completing the form.</p>
+                  <div style="text-align: center; margin: 24px 0;">
+                    <a href="${formUrl}" style="background: #189aa1; color: white; padding: 14px 28px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 16px;">Complete Over-Read Form</a>
+                  </div>
+                  <p style="color: #6b7280; font-size: 13px;">This link expires in 30 days. If you have questions, please contact the lab directly.</p>
+                  <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 16px 0;" />
+                  <p style="color: #9ca3af; font-size: 12px;">Powered by iHeartEcho&#8482; DIY Accreditation Tool&#8482; | All About Ultrasound</p>
+                </div>
+              </div>
+            `,
+            previewText: `Over-read request for ${input.examType} exam ${input.examIdentifier}`,
+          });
+          // Mark email as sent
+          const { getDb } = await import("./db");
+          const { physicianOverReadInvitations } = await import("../drizzle/schema");
+          const { eq } = await import("drizzle-orm");
+          const db = await getDb();
+          if (db) await db.update(physicianOverReadInvitations).set({ emailSentAt: new Date() }).where(eq(physicianOverReadInvitations.id, invitationId));
+        } catch (emailErr) {
+          console.warn("[OverRead] Email send failed:", emailErr);
+        }
+        return { success: true, invitationId };
+      }),
+
+    /** Delete an invitation */
+    deleteInvitation: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const lab = await getLabByMemberUserId(ctx.user.id);
+        if (!lab) throw new TRPCError({ code: "NOT_FOUND", message: "No lab found" });
+        await deleteOverReadInvitation(input.id, lab.id);
+        return { success: true };
+      }),
+
+    /** Get invitation details by access token (for the physician form page) */
+    getInvitationByToken: publicProcedure
+      .input(z.object({ token: z.string().min(1) }))
+      .query(async ({ input }) => {
+        const invitation = await getOverReadInvitationByToken(input.token);
+        if (!invitation) throw new TRPCError({ code: "NOT_FOUND", message: "Invalid or expired invitation link" });
+        if (invitation.status === "expired") throw new TRPCError({ code: "BAD_REQUEST", message: "This invitation has expired" });
+        if (invitation.status === "completed") throw new TRPCError({ code: "BAD_REQUEST", message: "This over-read has already been submitted" });
+        if (invitation.status === "pending") {
+          await updateOverReadInvitationStatus(invitation.id, "opened", { openedAt: new Date() });
+        }
+        return {
+          id: invitation.id,
+          examIdentifier: invitation.examIdentifier,
+          examDos: invitation.examDos,
+          examType: invitation.examType,
+          postStressDopplerPerformed: invitation.postStressDopplerPerformed,
+          originalInterpretingPhysician: invitation.originalInterpretingPhysician,
+          reviewerName: invitation.reviewerName,
+          reviewerEmail: invitation.reviewerEmail,
+        };
+      }),
+
+    /** Submit the physician's over-read (Step 1) */
+    submitOverRead: publicProcedure
+      .input(z.object({
+        token: z.string().min(1),
+        dateReviewCompleted: z.string().optional(),
+        overReadingPhysicianName: z.string().min(1),
+        situs: z.string().optional(),
+        cardiacPosition: z.string().optional(),
+        leftHeart: z.string().optional(),
+        rightHeart: z.string().optional(),
+        efPercent: z.string().optional(),
+        lvWallThickness: z.string().optional(),
+        ventricularSeptalDefect: z.string().optional(),
+        atrialSeptalDefect: z.string().optional(),
+        patentForamenOvale: z.string().optional(),
+        lvChamberSize: z.string().optional(),
+        laChamberSize: z.string().optional(),
+        rvChamberSize: z.string().optional(),
+        raChamberSize: z.string().optional(),
+        regionalWallMotionAbnormalities: z.string().optional(),
+        aorticValve: z.string().optional(),
+        mitralValve: z.string().optional(),
+        tricuspidValve: z.string().optional(),
+        pulmonicValve: z.string().optional(),
+        aorticStenosis: z.string().optional(),
+        aorticInsufficiency: z.string().optional(),
+        mitralStenosis: z.string().optional(),
+        mitralRegurgitation: z.string().optional(),
+        tricuspidStenosis: z.string().optional(),
+        tricuspidRegurgitation: z.string().optional(),
+        pulmonicStenosis: z.string().optional(),
+        pulmonicInsufficiency: z.string().optional(),
+        rvspmm: z.string().optional(),
+        pericardialEffusion: z.string().optional(),
+        peripheralPulmonaryStenosis: z.string().optional(),
+        pulmonaryVeins: z.string().optional(),
+        coronaryAnatomy: z.string().optional(),
+        aorticArch: z.string().optional(),
+        greatVessels: z.string().optional(),
+        pdaDuctalArch: z.string().optional(),
+        conotruncalAnatomy: z.string().optional(),
+        restingEfPercent: z.string().optional(),
+        postStressEfPercent: z.string().optional(),
+        restingRwma: z.string().optional(),
+        postStressRwma: z.string().optional(),
+        responseToStress: z.string().optional(),
+        stressAorticStenosis: z.string().optional(),
+        stressAorticInsufficiency: z.string().optional(),
+        stressMitralStenosis: z.string().optional(),
+        stressMitralRegurgitation: z.string().optional(),
+        stressTricuspidStenosis: z.string().optional(),
+        stressTricuspidRegurgitation: z.string().optional(),
+        stressPulmonicStenosis: z.string().optional(),
+        stressPulmonicInsufficiency: z.string().optional(),
+        stressRvspmm: z.string().optional(),
+        fetalBiometry: z.string().optional(),
+        fetalPosition: z.string().optional(),
+        fetalHeartRateRhythm: z.string().optional(),
+        postStressDopplerPerformed: z.string().optional(),
+        otherFindings1: z.string().optional(),
+        otherFindings2: z.string().optional(),
+        otherFindings3: z.string().optional(),
+        reviewComments: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { token, ...findings } = input;
+        const invitation = await getOverReadInvitationByToken(token);
+        if (!invitation) throw new TRPCError({ code: "NOT_FOUND", message: "Invalid or expired invitation" });
+        if (invitation.status === "completed") throw new TRPCError({ code: "BAD_REQUEST", message: "Already submitted" });
+        const submissionId = await createOverReadSubmission({
+          invitationId: invitation.id,
+          labId: invitation.labId,
+          dateReviewCompleted: findings.dateReviewCompleted,
+          examIdentifier: invitation.examIdentifier,
+          examDos: invitation.examDos,
+          examType: invitation.examType,
+          postStressDopplerPerformed: invitation.postStressDopplerPerformed,
+          originalInterpretingPhysician: invitation.originalInterpretingPhysician,
+          ...findings,
+        });
+        await updateOverReadInvitationStatus(invitation.id, "completed", {
+          completedAt: new Date(),
+          submissionId,
+        });
+        // Notify lab admin
+        try {
+          const { sendEmail } = await import("./_core/email");
+          const { getUserById: getUser } = await import("./db");
+          const creator = await getUser(invitation.createdByUserId);
+          if (creator?.email) {
+            const appUrl = process.env.VITE_APP_URL || "https://app.iheartecho.com";
+            const step2Url = `${appUrl}/accreditation?tab=physician-review&step2=${submissionId}`;
+            await sendEmail({
+              to: { name: creator.displayName || creator.name || "Lab Admin", email: creator.email },
+              subject: `Over-Read Completed &#8212; ${invitation.examType} (${invitation.examIdentifier})`,
+              htmlBody: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                  <div style="background: #189aa1; padding: 24px; border-radius: 8px 8px 0 0;">
+                    <h1 style="color: white; margin: 0; font-size: 22px;">iHeartEcho&#8482; &#8212; Over-Read Completed</h1>
+                  </div>
+                  <div style="background: #f9fafb; padding: 24px; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb;">
+                    <p style="color: #374151;">The physician over-read has been completed for the following exam:</p>
+                    <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+                      <tr><td style="padding: 8px; background: #f3f4f6; font-weight: bold; color: #374151;">Exam Type</td><td style="padding: 8px; color: #374151;">${invitation.examType}</td></tr>
+                      <tr><td style="padding: 8px; background: #f3f4f6; font-weight: bold; color: #374151;">Exam Identifier</td><td style="padding: 8px; color: #374151;">${invitation.examIdentifier}</td></tr>
+                      <tr><td style="padding: 8px; background: #f3f4f6; font-weight: bold; color: #374151;">Over-Reading Physician</td><td style="padding: 8px; color: #374151;">${findings.overReadingPhysicianName}</td></tr>
+                    </table>
+                    <p style="color: #374151;">You can now complete <strong>Step 2: Comparison Review</strong> to compare the over-read with the original interpretation.</p>
+                    <div style="text-align: center; margin: 24px 0;">
+                      <a href="${step2Url}" style="background: #189aa1; color: white; padding: 14px 28px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 16px;">Complete Step 2 Comparison</a>
+                    </div>
+                    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 16px 0;" />
+                    <p style="color: #9ca3af; font-size: 12px;">Powered by iHeartEcho&#8482; DIY Accreditation Tool&#8482; | All About Ultrasound</p>
+                  </div>
+                </div>
+              `,
+              previewText: `Over-read completed for ${invitation.examType} &#8212; ${invitation.examIdentifier}`,
+            });
+          }
+        } catch (notifErr) {
+          console.warn("[OverRead] Lab admin notification failed:", notifErr);
+        }
+        return { success: true, submissionId };
+      }),
+
+    /** List all comparison reviews for the current user's lab */
+    listComparisonReviews: protectedProcedure.query(async ({ ctx }) => {
+      const lab = await getLabByMemberUserId(ctx.user.id);
+      if (!lab) return [];
+      return getComparisonReviewsByLab(lab.id);
+    }),
+
+    /** Get a specific over-read submission to prepopulate Step 2 */
+    getOverReadSubmission: protectedProcedure
+      .input(z.object({ submissionId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const lab = await getLabByMemberUserId(ctx.user.id);
+        if (!lab) throw new TRPCError({ code: "NOT_FOUND", message: "No lab found" });
+        const submission = await getOverReadSubmissionById(input.submissionId);
+        if (!submission || submission.labId !== lab.id) throw new TRPCError({ code: "NOT_FOUND", message: "Submission not found" });
+        return submission;
+      }),
+
+    /** Submit the comparison review (Step 2) */
+    submitComparisonReview: protectedProcedure
+      .input(z.object({
+        invitationId: z.number().optional(),
+        overReadSubmissionId: z.number().optional(),
+        overReadingPhysician: z.string().optional(),
+        originalReadingPhysician: z.string().min(1),
+        dateReviewCompleted: z.string().optional(),
+        examDos: z.string().optional(),
+        examIdentifier: z.string().min(1),
+        examType: z.string().min(1),
+        origSitus: z.string().optional(),
+        origCardiacPosition: z.string().optional(),
+        origLeftHeart: z.string().optional(),
+        origRightHeart: z.string().optional(),
+        origEfPercent: z.string().optional(),
+        origLvWallThickness: z.string().optional(),
+        origVentricularSeptalDefect: z.string().optional(),
+        origAtrialSeptalDefect: z.string().optional(),
+        origPatentForamenOvale: z.string().optional(),
+        origLvChamberSize: z.string().optional(),
+        origLaChamberSize: z.string().optional(),
+        origRvChamberSize: z.string().optional(),
+        origRaChamberSize: z.string().optional(),
+        origRegionalWallMotionAbnormalities: z.string().optional(),
+        origAorticValve: z.string().optional(),
+        origMitralValve: z.string().optional(),
+        origTricuspidValve: z.string().optional(),
+        origPulmonicValve: z.string().optional(),
+        origAorticStenosis: z.string().optional(),
+        origAorticInsufficiency: z.string().optional(),
+        origMitralStenosis: z.string().optional(),
+        origMitralRegurgitation: z.string().optional(),
+        origTricuspidStenosis: z.string().optional(),
+        origTricuspidRegurgitation: z.string().optional(),
+        origPulmonicStenosis: z.string().optional(),
+        origPulmonicInsufficiency: z.string().optional(),
+        origRvspmm: z.string().optional(),
+        origPericardialEffusion: z.string().optional(),
+        origPeripheralPulmonaryStenosis: z.string().optional(),
+        origPulmonaryVeins: z.string().optional(),
+        origCoronaryAnatomy: z.string().optional(),
+        origAorticArch: z.string().optional(),
+        origGreatVessels: z.string().optional(),
+        origPdaDuctalArch: z.string().optional(),
+        origConotruncalAnatomy: z.string().optional(),
+        origRestingEfPercent: z.string().optional(),
+        origPostStressEfPercent: z.string().optional(),
+        origRestingRwma: z.string().optional(),
+        origPostStressRwma: z.string().optional(),
+        origResponseToStress: z.string().optional(),
+        origStressAorticStenosis: z.string().optional(),
+        origStressAorticInsufficiency: z.string().optional(),
+        origStressMitralStenosis: z.string().optional(),
+        origStressMitralRegurgitation: z.string().optional(),
+        origStressTricuspidStenosis: z.string().optional(),
+        origStressTricuspidRegurgitation: z.string().optional(),
+        origStressPulmonicStenosis: z.string().optional(),
+        origStressPulmonicInsufficiency: z.string().optional(),
+        origStressRvspmm: z.string().optional(),
+        origFetalBiometry: z.string().optional(),
+        origFetalPosition: z.string().optional(),
+        origFetalHeartRateRhythm: z.string().optional(),
+        concordanceScore: z.number().optional(),
+        discordantFields: z.string().optional(),
+        reviewComments: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const lab = await getLabByMemberUserId(ctx.user.id);
+        if (!lab) throw new TRPCError({ code: "NOT_FOUND", message: "No lab found" });
+        const reviewId = await createComparisonReview({
+          labId: lab.id,
+          createdByUserId: ctx.user.id,
+          ...input,
+        });
+        return { success: true, reviewId };
+      }),
+
+    /** Delete a comparison review */
+    deleteComparisonReview: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const lab = await getLabByMemberUserId(ctx.user.id);
+        if (!lab) throw new TRPCError({ code: "NOT_FOUND", message: "No lab found" });
+        await deleteComparisonReview(input.id, lab.id);
+        return { success: true };
+      }),
+  }),
 });
 export type AppRouter = typeof appRouter;
 

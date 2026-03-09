@@ -403,6 +403,7 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
         explanation: z.string().max(2000).optional(),
         reviewAnswer: z.string().max(2000).optional(),
         imageUrl: z.string().url().optional(),
+        videoUrl: z.string().url().optional(),
         difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("intermediate"),
         tags: z.array(z.string()).default([]),
       })
@@ -418,6 +419,7 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
         explanation: input.explanation ?? null,
         reviewAnswer: input.reviewAnswer ?? null,
         imageUrl: input.imageUrl ?? null,
+        videoUrl: input.videoUrl ?? null,
         difficulty: input.difficulty,
         tags: JSON.stringify(input.tags),
         isActive: true,
@@ -437,6 +439,7 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
         explanation: z.string().max(2000).optional(),
         reviewAnswer: z.string().max(2000).optional(),
         imageUrl: z.string().url().optional().nullable(),
+        videoUrl: z.string().url().optional().nullable(),
         difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
         tags: z.array(z.string()).optional(),
         isActive: z.boolean().optional(),
@@ -1250,5 +1253,38 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       });
 
       return { success: true };
+    }),
+
+  /** Clone an archived challenge back into the queue (push-to-queue) */
+  adminCloneChallenge: adminProcedure
+    .input(z.object({ id: z.number().int().positive() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const [original] = await db.select().from(quickfireChallenges).where(eq(quickfireChallenges.id, input.id)).limit(1);
+      if (!original) throw new TRPCError({ code: "NOT_FOUND", message: "Challenge not found" });
+      await db.insert(quickfireChallenges).values({
+        title: original.title,
+        description: original.description,
+        questionIds: original.questionIds,
+        priority: 100,
+        category: original.category,
+        status: "draft",
+        publishDate: null,
+        publishedAt: null,
+        archivedAt: null,
+      });
+      return { success: true };
+    }),
+
+  /** List only archived challenges for the archive tab */
+  adminListArchivedChallenges: adminProcedure
+    .query(async () => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const rows = await db.select().from(quickfireChallenges)
+        .where(eq(quickfireChallenges.status, "archived"))
+        .orderBy(desc(quickfireChallenges.archivedAt));
+      return rows.map((r) => ({ ...r, questionIds: JSON.parse(r.questionIds || "[]") as number[] }));
     }),
 });

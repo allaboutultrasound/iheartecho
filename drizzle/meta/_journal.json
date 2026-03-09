@@ -288,6 +288,20 @@
       "when": 1772988868491,
       "tag": "0040_wonderful_molten_man",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "5",
+      "when": 1773033333115,
+      "tag": "0041_faithful_patriot",
+      "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "5",
+      "when": 1773034896605,
+      "tag": "0042_polite_roxanne_simpson",
+      "breakpoints": true
     }
   ]
 }

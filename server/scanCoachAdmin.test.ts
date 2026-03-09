@@ -54,18 +54,17 @@ function makeUnauthCtx(): TrpcContext {
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe("scanCoachAdmin.listOverrides", () => {
-  it("rejects unauthenticated callers", async () => {
+  // listOverrides is a publicProcedure — accessible by all users including unauthenticated
+  it("allows unauthenticated callers (public procedure)", async () => {
     const caller = appRouter.createCaller(makeUnauthCtx());
-    await expect(
-      caller.scanCoachAdmin.listOverrides({ module: "tte" })
-    ).rejects.toThrow();
+    const result = await caller.scanCoachAdmin.listOverrides({ module: "tte" });
+    expect(Array.isArray(result)).toBe(true);
   });
 
-  it("rejects non-admin users (role=user, no DB roles)", async () => {
+  it("allows non-admin users to read overrides (public procedure)", async () => {
     const caller = appRouter.createCaller(makeUserCtx());
-    await expect(
-      caller.scanCoachAdmin.listOverrides({ module: "tte" })
-    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    const result = await caller.scanCoachAdmin.listOverrides({ module: "tte" });
+    expect(Array.isArray(result)).toBe(true);
   });
 
   it("returns an array for admin users", async () => {

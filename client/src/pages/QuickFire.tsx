@@ -617,6 +617,15 @@ export default function QuickFire() {
                           className="w-full rounded-lg object-cover max-h-64 mb-3"
                         />
                       )}
+                      {(currentQ as any).videoUrl && (
+                        <video
+                          src={(currentQ as any).videoUrl}
+                          controls
+                          controlsList="nodownload"
+                          onContextMenu={(e) => e.preventDefault()}
+                          className="w-full rounded-lg max-h-64 bg-black mb-3"
+                        />
+                      )}
 
                       {isQuickReview ? (
                         <>
@@ -1060,6 +1069,15 @@ export default function QuickFire() {
                         <CardContent className="space-y-2 pb-3">
                           {archiveCurrentQ.imageUrl && (
                             <img src={archiveCurrentQ.imageUrl} alt="Question" className="w-full rounded-lg object-cover max-h-64 mb-3" />
+                          )}
+                          {(archiveCurrentQ as any).videoUrl && (
+                            <video
+                              src={(archiveCurrentQ as any).videoUrl}
+                              controls
+                              controlsList="nodownload"
+                              onContextMenu={(e) => e.preventDefault()}
+                              className="w-full rounded-lg max-h-64 bg-black mb-3"
+                            />
                           )}
 
                           {isQuickReview ? (

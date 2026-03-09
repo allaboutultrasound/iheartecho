@@ -71,6 +71,7 @@ import StructuralHeartScanCoach from "./pages/StructuralHeartScanCoach";
 import PulmHTNNavigator from "./pages/PulmHTNNavigator";
 import DiastolicNavigator from "./pages/DiastolicNavigator";
 import ThinkificWebhookAdmin from "./pages/ThinkificWebhookAdmin";
+import PhysicianOverReadForm from "./pages/PhysicianOverReadForm";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -160,6 +161,8 @@ function Router() {
       {/* ── Premium Access ──────────────────────────────────────────────── */}
       <Route path="/premium" component={Premium} />
       <Route path="/upgrade-success" component={UpgradeSuccess} />
+      {/* ── Physician Over-Read (public, token-based) ─────────────────── */}
+      <Route path="/physician-review/:token" component={PhysicianOverReadForm} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
