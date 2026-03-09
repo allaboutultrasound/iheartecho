@@ -54,6 +54,7 @@ import {
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import CaseEditorDialog from "@/components/CaseEditorDialog";
+import { formatViewCount } from "@/lib/caseViewCount";
 
 type TabType = "pending" | "all";
 
@@ -544,6 +545,14 @@ export default function AdminCaseManagement() {
               <span>·</span>
               <span className="flex items-center gap-0.5">
                 <ImageIcon className="w-3 h-3" /> {c.mediaCount}
+              </span>
+            </>
+          )}
+          {c.status === "approved" && (
+            <>
+              <span>·</span>
+              <span className="flex items-center gap-0.5 text-[#189aa1]/80" title="Actual views (true count)">
+                <Eye className="w-3 h-3" /> {formatViewCount(c.viewCount ?? 0)} actual views
               </span>
             </>
           )}

@@ -39,6 +39,7 @@ import {
   Link2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { formatViewCount, getDisplayViewCount } from "@/lib/caseViewCount";
 
 const MODALITY_COLORS: Record<string, string> = {
   TTE: "bg-blue-100 text-blue-700",
@@ -186,7 +187,7 @@ export default function CaseDetail() {
           </h1>
           <div className="flex flex-wrap gap-4 text-xs text-gray-400">
             <span className="flex items-center gap-1">
-              <Eye className="w-3 h-3" /> {viewCount} views
+              <Eye className="w-3 h-3" /> {formatViewCount(getDisplayViewCount(caseData.id, viewCount ?? 0, submittedAt))} views
             </span>
           </div>
         </div>

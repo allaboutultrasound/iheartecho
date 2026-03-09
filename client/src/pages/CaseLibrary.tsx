@@ -40,6 +40,7 @@ import {
 } from "lucide-react";
 import { getLoginUrl } from "@/const";
 import { formatDistanceToNow } from "date-fns";
+import { formatViewCount, getDisplayViewCount } from "@/lib/caseViewCount";
 
 const MODALITY_COLORS: Record<string, string> = {
   TTE: "bg-blue-100 text-blue-700",
@@ -299,7 +300,7 @@ export default function CaseLibrary() {
                         <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-50">
                           <div className="flex items-center gap-1 text-xs text-gray-400">
                             <Eye className="w-3 h-3" />
-                            {c.viewCount ?? 0}
+                            {formatViewCount(getDisplayViewCount(c.id, c.viewCount ?? 0, c.submittedAt))} views
                           </div>
                           <div className="flex items-center gap-1 text-xs font-semibold text-[#189aa1] group-hover:gap-2 transition-all">
                             View Case <ChevronRight className="w-3 h-3" />

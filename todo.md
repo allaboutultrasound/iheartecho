@@ -1578,6 +1578,6 @@
 - [x] Disable video download in ScanCoach (all ScanCoach variants)
 
 ## Case Library View Count Display
-- [ ] Add seededViewCount field to casePosts schema (deterministic seed based on caseId)
-- [ ] Member UI: display seededViewCount + actual viewCount as combined display count
-- [ ] Admin panel: show true actual viewCount separately, labeled clearly
+- [x] Add seededViewCount utility (deterministic seed based on caseId, no schema change needed)
+- [x] Member UI: display seededViewCount + actual viewCount as combined display count
+- [x] Admin panel: show true actual viewCount separately, labeled clearly
