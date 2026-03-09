@@ -37,8 +37,6 @@ import { eq, and, desc, sql, count, like, or } from "drizzle-orm";
 import { storagePut } from "../storage";
 import { sendEmail, buildCaseApprovedEmail, buildCaseRejectedEmail, buildNewCaseSubmissionAdminEmail } from "../_core/email";
 import { notifyOwner } from "../_core/notification";
-import { generateObject } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
 import { createPatchedFetch } from "../_core/patchedFetch";
 
 // ─── Admin guard ─────────────────────────────────────────────────────────────
@@ -968,53 +966,112 @@ export const caseLibraryRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      const openai = createOpenAI({
-        apiKey: process.env.BUILT_IN_FORGE_API_KEY,
-        baseURL: `${process.env.BUILT_IN_FORGE_API_URL}/v1`,
-        fetch: createPatchedFetch(fetch),
-      });
-      const model = openai.chat("gpt-4o");
+      const forgeBaseUrl = (process.env.BUILT_IN_FORGE_API_URL ?? "").replace(/\/+$/, "");
+      const forgeApiKey = process.env.BUILT_IN_FORGE_API_KEY ?? "";
 
-      const caseSchema = z.object({
-        title: z.string().describe("Concise, descriptive case title (max 100 chars)"),
-        summary: z.string().describe("2-3 sentence case overview for the library card"),
-        clinicalHistory: z.string().describe("Detailed clinical history: age, sex, symptoms, relevant history, reason for echo"),
-        diagnosis: z.string().describe("Primary diagnosis or key finding (max 100 chars)"),
-        teachingPoints: z.array(z.string()).min(2).max(5).describe("2-5 concise clinical teaching points"),
-        tags: z.array(z.string()).min(2).max(8).describe("2-8 relevant clinical tags"),
-        questions: z.array(
-          z.object({
-            question: z.string().describe("MCQ question text"),
-            options: z.array(z.string()).length(4).describe("Exactly 4 answer options"),
-            correctAnswer: z.number().int().min(0).max(3).describe("0-indexed correct answer"),
-            explanation: z.string().describe("Explanation of the correct answer with clinical reasoning"),
-          })
-        ).min(1).max(5).describe("MCQ questions for this case"),
-      });
+      if (!forgeBaseUrl || !forgeApiKey) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "AI service not configured. Missing Forge API credentials.",
+        });
+      }
 
-      const { object } = await generateObject({
-        model,
-        schema: caseSchema,
-        prompt: `You are an expert echocardiography educator creating a ${input.difficulty} ${input.modality} echo case.
+      const promptText = `You are an expert echocardiography educator creating a ${input.difficulty} ${input.modality} echo case.
 
 Clinical scenario: "${input.prompt}"
 
-Generate a complete, educationally rich echo case with:
-1. A concise, descriptive title
-2. A 2-3 sentence summary suitable for a case library card
-3. Detailed clinical history (age, sex, presenting symptoms, relevant past history, reason for echo)
-4. Primary diagnosis or key finding
-5. ${input.questionCount} MCQ questions testing key concepts from this case
-6. 2-5 concise teaching points that highlight the educational value
-7. 2-8 relevant clinical tags
+Generate a complete, educationally rich echo case. Return ONLY a valid JSON object with NO markdown, NO code fences, NO explanation — just the raw JSON.
+
+Required JSON format:
+{"title":"...","summary":"...","clinicalHistory":"...","diagnosis":"...","teachingPoints":["...","..."],"tags":["...","..."],"questions":[{"question":"...","options":["A","B","C","D"],"correctAnswer":0,"explanation":"..."}]}
+
+Field requirements:
+- title: concise descriptive case title (max 100 chars)
+- summary: 2-3 sentence overview for the library card
+- clinicalHistory: detailed history (age, sex, presenting symptoms, relevant past history, reason for echo)
+- diagnosis: primary diagnosis or key finding (max 100 chars)
+- teachingPoints: array of 2-5 concise clinical teaching points
+- tags: array of 2-8 relevant clinical tags
+- questions: array of exactly ${input.questionCount} MCQ questions, each with exactly 4 options, a 0-indexed correctAnswer (0, 1, 2, or 3), and a clear explanation
 
 Guidelines:
 - Use accurate ASE/AHA/ACC guidelines where applicable
-- Clinical history should be realistic and detailed enough to be educational
+- Clinical history should be realistic and educational
 - MCQ distractors should be plausible but clearly distinguishable
 - Teaching points should be actionable clinical pearls
-- Difficulty: ${input.difficulty} (beginner=basic concepts, intermediate=clinical application, advanced=complex interpretation)`,
-      });
+- Difficulty: ${input.difficulty} (beginner=basic concepts, intermediate=clinical application, advanced=complex interpretation)`;
+
+      let text: string;
+      try {
+        const patchedFetch = createPatchedFetch(fetch);
+        const aiResp = await patchedFetch(`${forgeBaseUrl}/v1/chat/completions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${forgeApiKey}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-4o",
+            messages: [{ role: "user", content: promptText }],
+            temperature: 0.7,
+          }),
+        });
+        if (!aiResp.ok) {
+          const errBody = await aiResp.text();
+          throw new Error(`Forge API returned ${aiResp.status}: ${errBody.substring(0, 200)}`);
+        }
+        const aiData = await aiResp.json() as {
+          choices?: { message?: { content?: string } }[];
+          error?: { message?: string };
+        };
+        if (aiData.error) {
+          throw new Error(`Forge API error: ${aiData.error.message ?? JSON.stringify(aiData.error)}`);
+        }
+        text = aiData.choices?.[0]?.message?.content ?? "";
+        if (!text) throw new Error("Forge API returned empty content");
+      } catch (aiErr) {
+        const errMsg = aiErr instanceof Error ? aiErr.message : String(aiErr);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `AI generation failed: ${errMsg.substring(0, 300)}`,
+        });
+      }
+
+      // Parse the JSON response — handle multiple formats the model may return
+      let object: {
+        title: string;
+        summary: string;
+        clinicalHistory: string;
+        diagnosis: string;
+        teachingPoints: string[];
+        tags: string[];
+        questions: Array<{
+          question: string;
+          options: string[];
+          correctAnswer: number;
+          explanation: string;
+        }>;
+      };
+      try {
+        // Strip markdown code fences if present
+        let cleaned = text
+          .replace(/^```(?:json)?\s*/im, "")
+          .replace(/\s*```\s*$/im, "")
+          .trim();
+        // Extract first JSON object from text (handles prose before/after)
+        const jsonMatch = cleaned.match(/({[\s\S]*})/); 
+        if (jsonMatch) cleaned = jsonMatch[1].trim();
+        object = JSON.parse(cleaned);
+        if (!object.title || !object.questions || !Array.isArray(object.questions)) {
+          throw new Error("Response missing required fields (title, questions)");
+        }
+      } catch (parseErr) {
+        const preview = text?.substring(0, 300) ?? "(empty)";
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `AI returned invalid JSON: ${parseErr instanceof Error ? parseErr.message : String(parseErr)} | Raw preview: ${preview}`,
+        });
+      }
 
       return {
         ...object,

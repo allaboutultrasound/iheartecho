@@ -1497,3 +1497,4 @@
 - [x] Remove HOCM from case modality list (removed from SubmitCase.tsx, CaseEditorDialog.tsx, AdminCaseManagement.tsx, CaseLibrary.tsx, caseLibraryRouter.ts)
 - [x] Hide submitter user ID from public case display (removed submitterName from CaseDetail.tsx header)
 - [x] Hide submission date from public case display (removed from CaseDetail.tsx header; kept in My Submissions tab and admin tools)
+- [x] Fix AI case generation JSON error — replaced generateObject (AI SDK structured outputs, not supported by Forge API) with raw fetch + JSON parsing matching the working quickfire router pattern
