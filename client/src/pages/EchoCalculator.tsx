@@ -7,7 +7,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
-import { Calculator, Info, ChevronDown, ChevronUp, Zap } from "lucide-react";
+import { Calculator, Info, ChevronDown, ChevronUp, Zap, Lock } from "lucide-react";
 import DiastologySpecialPopulations from "@/pages/DiastologySpecialPopulations";
 import { PremiumGate } from "@/components/PremiumGate";
 
@@ -1693,7 +1693,7 @@ export default function EchoCalculator() {
             Echo Severity Calculator
           </h1>
           <p className="text-sm text-gray-500">
-            Guideline-based interpretation per ASE/ACC/AHA 2021 VHD, ASE 2025 Diastology, and ASE 2025 Strain Guidelines.
+            Guideline-based interpretation.
           </p>
         </div>
 
@@ -1720,7 +1720,10 @@ export default function EchoCalculator() {
                 active === c.id ? "text-white shadow-sm" : "bg-white text-gray-600 border border-gray-200 hover:border-[#189aa1] hover:text-[#189aa1]"
               }`}
               style={active === c.id ? { background: "#189aa1" } : {}}>
-              <div>{c.label}</div>
+              <div className="flex items-center gap-1">
+                {c.sub?.includes("Premium") && <Lock className={`w-2.5 h-2.5 flex-shrink-0 ${active === c.id ? "text-white/80" : "text-amber-500"}`} />}
+                {c.label}
+              </div>
               <div className={`text-xs font-normal ${active === c.id ? "text-white/70" : "text-gray-400"}`}>{c.sub}</div>
             </button>
           ))}

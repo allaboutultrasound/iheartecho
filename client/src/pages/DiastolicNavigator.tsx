@@ -11,7 +11,7 @@ import BackToEchoAssist from "@/components/BackToEchoAssist";
 import {
   ChevronDown, ChevronRight, Activity, AlertTriangle,
   CheckCircle, Info, BarChart3, Stethoscope, BookOpen,
-  TrendingUp, TrendingDown, Zap, Heart, ArrowRight
+  TrendingUp, TrendingDown, Zap, Heart, ArrowRight, Calculator, Lock
 } from "lucide-react";
 
 const BRAND = "#189aa1";
@@ -691,6 +691,30 @@ export default function DiastolicNavigator() {
                 ))}
               </div>
             </SectionCard>
+
+            {/* Calculator deep-links */}
+            <div className="flex items-center justify-between bg-[#f0fbfc] border border-[#b2e8ec] rounded-xl px-5 py-3 mt-2">
+              <div className="flex items-center gap-3">
+                <Calculator className="w-4 h-4 text-[#189aa1] flex-shrink-0" />
+                <p className="text-xs text-[#0e7490]">
+                  <strong>Echo Severity Calculators</strong> — run guideline-based grading and LAP estimation directly.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 ml-4 flex-shrink-0">
+                <Link href="/calculator#calc-diastology"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90"
+                  style={{ background: "#189aa1" }}>
+                  <Calculator className="w-3 h-3" />
+                  Diastology
+                </Link>
+                <Link href="/calculator#calc-lap_estimation"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all hover:bg-[#189aa1]/5"
+                  style={{ borderColor: "#189aa1", color: "#189aa1" }}>
+                  <Lock className="w-3 h-3 text-amber-500" />
+                  LAP Estimation
+                </Link>
+              </div>
+            </div>
 
           </div>
         )}
