@@ -6,12 +6,14 @@
   Free: Adult Echo, Pediatric Echo, Fetal Echo, Strain, UEA
   Premium: Stress Echo, HOCM, Pulmonary HTN & PE, Structural Heart, TEE, ICE
 */
+import { useState } from "react";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import {
   Stethoscope, Microscope, Zap, Users, Baby, Heart,
   Cpu, BarChart3, ArrowRight, Droplets, Activity, Wind, Crown, Lock
 } from "lucide-react";
+import { usePremium } from "@/hooks/usePremium";
 
 const BRAND = "#189aa1";
 
@@ -56,6 +58,8 @@ const badgeColors: Record<string, string> = {
 };
 
 export default function EchoAssistHub() {
+  const { isPremium } = usePremium();
+  const [upgradeModal, setUpgradeModal] = useState<{ title: string } | null>(null);
   const freeCount = specialties.filter(s => s.free).length;
   const premiumCount = specialties.filter(s => !s.free).length;
 
