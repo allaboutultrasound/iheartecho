@@ -1145,9 +1145,19 @@ function scoreColor(score: number) {
 const PIE_COLORS = ["#16a34a", "#2563eb", "#d97706", "#dc2626"];
 
 function DIYReportsTab() {
-  const { data: iqrSnapshot = [] } = trpc.lab.getIqrStaffSnapshot.useQuery();
-  const { data: qualityMonthly = [] } = trpc.lab.getIqrMonthlySummary.useQuery({ reviewType: "QUALITY REVIEW" });
-  const { data: peerMonthly = [] } = trpc.lab.getIqrMonthlySummary.useQuery({ reviewType: "PEER REVIEW" });
+  const [filterExamTypeQuery, setFilterExamTypeQuery] = useState<string>("");
+  const [dateFromQuery, setDateFromQuery] = useState<string>("");
+  const [dateToQuery, setDateToQuery] = useState<string>("");
+
+  const { data: iqrSnapshot = [] } = trpc.lab.getIqrStaffSnapshot.useQuery(
+    { examType: filterExamTypeQuery || undefined, dateFrom: dateFromQuery || undefined, dateTo: dateToQuery || undefined },
+  );
+  const { data: qualityMonthly = [] } = trpc.lab.getIqrMonthlySummary.useQuery(
+    { reviewType: "QUALITY REVIEW", examType: filterExamTypeQuery || undefined, dateFrom: dateFromQuery || undefined, dateTo: dateToQuery || undefined },
+  );
+  const { data: peerMonthly = [] } = trpc.lab.getIqrMonthlySummary.useQuery(
+    { reviewType: "PEER REVIEW", examType: filterExamTypeQuery || undefined, dateFrom: dateFromQuery || undefined, dateTo: dateToQuery || undefined },
+  );
   const { data: physicianMonthly = [] } = trpc.physicianPeerReview.getMonthlySummary.useQuery();
   const { data: comparisonMonthly = [] } = trpc.physicianOverRead.getMonthlySummary.useQuery();
   const { data: cmeSummary = [] } = trpc.cme.getStaffSummary.useQuery();
@@ -1172,13 +1182,21 @@ function DIYReportsTab() {
   // View mode
   const [viewMode, setViewMode] = useState<"overview" | "staff" | "physician">("overview");
 
-  // Date range filter
-  const now = useMemo(() => new Date(), []);
+  // Date range + exam type filters
   const [startDate, setStartDate] = useState(() => {
     const d = new Date(); d.setMonth(d.getMonth() - 6);
     return d.toISOString().slice(0, 7);
   });
   const [endDate, setEndDate] = useState(() => new Date().toISOString().slice(0, 7));
+  const EXAM_TYPE_OPTIONS = [
+    { value: "", label: "All Exam Types" },
+    { value: "AETTE", label: "Adult TTE" },
+    { value: "AETEE", label: "Adult TEE" },
+    { value: "AE_STRESS", label: "Stress Echo" },
+    { value: "PETTE", label: "Pediatric TTE" },
+    { value: "PETEE", label: "Pediatric TEE" },
+    { value: "FE", label: "Fetal Echo" },
+  ];
 
   const filteredQualityMonthly = useMemo(() =>
     qualityMonthly.filter(m => { const mo = m.month ?? ""; return mo >= startDate && mo <= endDate; }),
@@ -1366,13 +1384,29 @@ function DIYReportsTab() {
 
   return (
     <div className="space-y-6">
-      {/* Toolbar: date range + view mode + export */}
+      {/* Toolbar: date range + exam type filter + view mode + export */}
       <div className="flex flex-wrap items-center gap-3 p-3 rounded-lg border border-[#189aa1]/20 bg-[#f0fbfc]">
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold text-gray-600">Date Range:</span>
           <input type="month" className="h-8 px-2 text-xs border border-gray-200 rounded-md bg-white" value={startDate} onChange={e => setStartDate(e.target.value)} />
           <span className="text-xs text-gray-400">to</span>
           <input type="month" className="h-8 px-2 text-xs border border-gray-200 rounded-md bg-white" value={endDate} onChange={e => setEndDate(e.target.value)} />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-gray-600">Exam Type:</span>
+          <select
+            className="h-8 px-2 text-xs border border-gray-200 rounded-md bg-white"
+            value={filterExamTypeQuery}
+            onChange={e => {
+              setFilterExamTypeQuery(e.target.value);
+              setDateFromQuery(startDate ? `${startDate}-01` : "");
+              setDateToQuery(endDate ? `${endDate}-31` : "");
+            }}
+          >
+            {EXAM_TYPE_OPTIONS.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
         </div>
         <div className="flex gap-1.5">
           {["3M", "6M", "12M", "YTD"].map(preset => (
@@ -1382,12 +1416,33 @@ function DIYReportsTab() {
               else if (preset === "6M") d.setMonth(d.getMonth() - 6);
               else if (preset === "12M") d.setMonth(d.getMonth() - 12);
               else if (preset === "YTD") d.setMonth(0);
-              setStartDate(d.toISOString().slice(0, 7));
-              setEndDate(new Date().toISOString().slice(0, 7));
+              const newStart = d.toISOString().slice(0, 7);
+              const newEnd = new Date().toISOString().slice(0, 7);
+              setStartDate(newStart);
+              setEndDate(newEnd);
+              setDateFromQuery(`${newStart}-01`);
+              setDateToQuery(`${newEnd}-31`);
             }} className="px-2.5 py-1 text-xs rounded-md border border-[#189aa1]/30 text-[#189aa1] hover:bg-[#189aa1] hover:text-white transition-colors">
               {preset}
             </button>
           ))}
+          <button
+            onClick={() => {
+              setDateFromQuery(startDate ? `${startDate}-01` : "");
+              setDateToQuery(endDate ? `${endDate}-31` : "");
+            }}
+            className="px-2.5 py-1 text-xs rounded-md bg-[#189aa1] text-white hover:bg-[#147f85] transition-colors font-semibold"
+          >
+            Apply
+          </button>
+          {(filterExamTypeQuery || dateFromQuery) && (
+            <button
+              onClick={() => { setFilterExamTypeQuery(""); setDateFromQuery(""); setDateToQuery(""); }}
+              className="px-2.5 py-1 text-xs rounded-md border border-gray-300 text-gray-500 hover:bg-gray-100 transition-colors"
+            >
+              Clear
+            </button>
+          )}
         </div>
         <div className="flex gap-1.5 ml-auto">
           <button onClick={exportPDF} className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md bg-[#189aa1] text-white hover:bg-[#147f85] transition-colors">

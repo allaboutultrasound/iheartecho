@@ -774,22 +774,43 @@ export async function getIqrStats(userId: number) {
 // ─── Lab IQR Analytics ─────────────────────────────────────────────────────────
 
 /** Get all IQR reviews for a lab, optionally filtered by reviewee */
-export async function getIQRReviewsByLab(labId: number, revieweeLabMemberId?: number) {
+export async function getIQRReviewsByLab(
+  labId: number,
+  revieweeLabMemberId?: number,
+  examType?: string,
+  dateFrom?: string,
+  dateTo?: string,
+) {
   const db = await getDb();
   if (!db) return [];
   const conditions: ReturnType<typeof eq>[] = [eq(imageQualityReviews.labId, labId)];
   if (revieweeLabMemberId !== undefined) {
     conditions.push(eq(imageQualityReviews.revieweeLabMemberId, revieweeLabMemberId));
   }
+  if (examType) conditions.push(eq(imageQualityReviews.examType, examType));
+  if (dateFrom) conditions.push(sql`${imageQualityReviews.createdAt} >= ${dateFrom}`);
+  if (dateTo) conditions.push(sql`${imageQualityReviews.createdAt} <= ${dateTo}`);
   return db.select().from(imageQualityReviews)
     .where(and(...conditions))
     .orderBy(desc(imageQualityReviews.createdAt));
 }
 
 /** Aggregate per-staff Quality Score stats for a lab */
-export async function getLabStaffIQRStats(labId: number) {
+export async function getLabStaffIQRStats(
+  labId: number,
+  examType?: string,
+  dateFrom?: string,
+  dateTo?: string,
+) {
   const db = await getDb();
   if (!db) return [];
+  const conditions: ReturnType<typeof eq>[] = [
+    eq(imageQualityReviews.labId, labId),
+    sql`${imageQualityReviews.revieweeLabMemberId} IS NOT NULL`,
+  ];
+  if (examType) conditions.push(eq(imageQualityReviews.examType, examType));
+  if (dateFrom) conditions.push(sql`${imageQualityReviews.createdAt} >= ${dateFrom}`);
+  if (dateTo) conditions.push(sql`${imageQualityReviews.createdAt} <= ${dateTo}`);
   return db.select({
     revieweeLabMemberId: imageQualityReviews.revieweeLabMemberId,
     revieweeName: imageQualityReviews.revieweeName,
@@ -802,10 +823,7 @@ export async function getLabStaffIQRStats(labId: number) {
     needsImprovementCount: sql<number>`SUM(CASE WHEN ${imageQualityReviews.qualityScore} < 60 THEN 1 ELSE 0 END)`,
   })
     .from(imageQualityReviews)
-    .where(and(
-      eq(imageQualityReviews.labId, labId),
-      sql`${imageQualityReviews.revieweeLabMemberId} IS NOT NULL`
-    ))
+    .where(and(...conditions))
     .groupBy(imageQualityReviews.revieweeLabMemberId, imageQualityReviews.revieweeName)
     .orderBy(desc(avg(imageQualityReviews.qualityScore)));
 }
@@ -852,10 +870,20 @@ export async function getStaffIQRDomainBreakdown(labId: number, revieweeLabMembe
 }
 
 /** Lab-wide monthly summary for the Reports tab */
-export async function getLabIQRMonthlySummary(labId: number, reviewType?: string) {
+export async function getLabIQRMonthlySummary(
+  labId: number,
+  reviewType?: string,
+  examType?: string,
+  dateFrom?: string,
+  dateTo?: string,
+) {
   const db = await getDb();
   if (!db) return [];
-  const conditions = [eq(imageQualityReviews.labId, labId), ...(reviewType ? [eq(imageQualityReviews.reviewType, reviewType)] : [])];
+  const conditions: ReturnType<typeof eq>[] = [eq(imageQualityReviews.labId, labId)];
+  if (reviewType) conditions.push(eq(imageQualityReviews.reviewType, reviewType));
+  if (examType) conditions.push(eq(imageQualityReviews.examType, examType));
+  if (dateFrom) conditions.push(sql`${imageQualityReviews.createdAt} >= ${dateFrom}`);
+  if (dateTo) conditions.push(sql`${imageQualityReviews.createdAt} <= ${dateTo}`);
   return db.select({
     month: sql<string>`DATE_FORMAT(${imageQualityReviews.createdAt}, '%Y-%m')`,
     reviewCount: count(),

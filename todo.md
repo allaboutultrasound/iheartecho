@@ -1735,3 +1735,9 @@
 - [x] DIY Analytics: Lab Overview tab with KPI cards, growth curve, pie chart
 - [x] DIY Analytics: Staff Growth Curves tab with per-staff selector, trend chart, exam type bar chart
 - [x] DIY Analytics: Physician Concordance tab with concordance growth curve
+
+## DIY Analytics Filtering
+- [ ] Add exam type filter to Lab Overview tab (All, Adult TTE, Adult TEE, Stress, Pediatric TTE, Pediatric TEE, Fetal)
+- [ ] Add date range filter to Lab Overview tab (Last 30 days, Last 90 days, Last 6 months, Last year, All time, Custom range)
+- [ ] Update backend procedures to accept examType and date range parameters
+- [ ] Apply same filters to growth curve, pie chart, and KPI cards

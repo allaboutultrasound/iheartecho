@@ -701,11 +701,17 @@ export const appRouter = router({
     // ─── IQR Analytics (real data from imageQualityReviews) ──────────────────
 
     /** Lab-wide IQR snapshot: avg score + review count per staff member */
-    getIqrStaffSnapshot: protectedProcedure.query(async ({ ctx }) => {
-      const lab = await getLabByAdmin(ctx.user.id);
-      if (!lab) return [];
-      return getLabStaffIQRStats(lab.id);
-    }),
+    getIqrStaffSnapshot: protectedProcedure
+      .input(z.object({
+        examType: z.string().optional(),
+        dateFrom: z.string().optional(),
+        dateTo: z.string().optional(),
+      }).optional())
+      .query(async ({ ctx, input }) => {
+        const lab = await getLabByAdmin(ctx.user.id);
+        if (!lab) return [];
+        return getLabStaffIQRStats(lab.id, input?.examType, input?.dateFrom, input?.dateTo);
+      }),
 
     /** Monthly IQR quality score trend for a specific staff member */
     getIqrStaffTrend: protectedProcedure
@@ -725,13 +731,18 @@ export const appRouter = router({
         return getStaffIQRDomainBreakdown(lab.id, input.revieweeLabMemberId);
       }),
 
-    /** Monthly lab-wide IQR summary for the Reports tab, optionally filtered by reviewType */
+    /** Monthly lab-wide IQR summary for the Reports tab, optionally filtered by reviewType/examType/date */
     getIqrMonthlySummary: protectedProcedure
-      .input(z.object({ reviewType: z.string().optional() }))
+      .input(z.object({
+        reviewType: z.string().optional(),
+        examType: z.string().optional(),
+        dateFrom: z.string().optional(),
+        dateTo: z.string().optional(),
+      }).optional())
       .query(async ({ ctx, input }) => {
         const lab = await getLabByAdmin(ctx.user.id);
         if (!lab) return [];
-        return getLabIQRMonthlySummary(lab.id, input.reviewType);
+        return getLabIQRMonthlySummary(lab.id, input?.reviewType, input?.examType, input?.dateFrom, input?.dateTo);
       }),
 
     /** Lab members enriched with IQR stats (for Staff tab) */
@@ -741,13 +752,18 @@ export const appRouter = router({
       return getLabMembersWithIQRStats(lab.id);
     }),
 
-    /** Drill-down: all IQR reviews for a lab, optionally filtered by staff member */
+    /** Drill-down: all IQR reviews for a lab, optionally filtered by staff member/examType/date */
     getIqrDrilldown: protectedProcedure
-      .input(z.object({ revieweeLabMemberId: z.number().optional() }))
+      .input(z.object({
+        revieweeLabMemberId: z.number().optional(),
+        examType: z.string().optional(),
+        dateFrom: z.string().optional(),
+        dateTo: z.string().optional(),
+      }).optional())
       .query(async ({ ctx, input }) => {
         const lab = await getLabByAdmin(ctx.user.id);
         if (!lab) return [];
-        return getIQRReviewsByLab(lab.id, input.revieweeLabMemberId);
+        return getIQRReviewsByLab(lab.id, input?.revieweeLabMemberId, input?.examType, input?.dateFrom, input?.dateTo);
       }),
   }),
   // ─── Strain Navigator ────────────────────────────────────────────────────────
