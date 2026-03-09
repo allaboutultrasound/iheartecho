@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — Dashboard Home
+  iHeartEcho™ — Dashboard Home
   Brand: Teal #189aa1, Aqua #4ad9e0
   Fonts: Merriweather headings, Open Sans body
 */
@@ -21,7 +21,7 @@ const modules: Module[] = [
   {
     path: "/echo-assist-hub",
     icon: Stethoscope,
-    title: "EchoAssist",
+    title: "EchoAssist™",
     description: "Echo protocol + scan coach for all 11 specialties — Adult Echo, Pediatric, Fetal, Stress, Strain, UEA, HOCM, Pulmonary HTN & PE, Structural Heart, TEE, and ICE. View-by-view checklists, reference values, and probe guidance.",
     badge: "11 Specialties",
     color: BRAND,
@@ -77,7 +77,7 @@ const modules: Module[] = [
   {
     path: "/accreditation-navigator",
     icon: Award,
-    title: "EchoAccreditation Navigator",
+    title: "EchoAccreditation Navigator™",
     description: "Free IAC standards guide — search case mix requirements, CME, staff qualifications, policies, and common deficiencies for TTE, TEE, Stress, Pediatric, Fetal, and HOCM.",
     badge: "Free · IAC",
     color: BRAND,
@@ -85,7 +85,7 @@ const modules: Module[] = [
   {
     path: "/accreditation",
     icon: ClipboardList,
-    title: "DIY Accreditation Tool",
+    title: "DIY Accreditation Tool™",
     description: "Quality reviews, peer review tracking, policy builder, and appropriate use monitoring — everything your lab needs for IAC accreditation.",
     badge: "Accreditation",
     color: BRAND,
@@ -95,8 +95,8 @@ const modules: Module[] = [
   {
     path: "https://member.allaboutultrasound.com/products/communities/allaboutultrasound-community",
     icon: MessageCircle,
-    title: "iHeartEcho Community",
-    description: "Join the All About Ultrasound | iHeartEcho community on Thinkific — case discussions, peer learning, and specialty hubs for echo professionals.",
+    title: "iHeartEcho™ Community",
+    description: "Join the All About Ultrasound | iHeartEcho™ community on Thinkific — case discussions, peer learning, and specialty hubs for echo professionals.",
     badge: "Community",
     color: BRAND,
     external: true,
@@ -147,12 +147,12 @@ export default function Home() {
             <div className="flex items-center gap-4 mb-3">
               <img
                 src="https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/TTSqgyHlTBmxeODV.png?Expires=1804183007&Signature=tWUrD-cUfgsk0u97qoBm0zB3mj75cGUW2F-hh-3aepkHA9QlDWUbfY2eqgxrIpyY2Zp3wTFpuBC7DXxtNjAMv5Ju2HBWLLcCgaGJrEB5X2wKLtoJQKscrbUUOXFV7xdwiJWP5zeVe7QNQaBw5zHqqyN6EYc6a0WovYLeHtUnM~vCz5pDvUh0L43UEpwlSVUZnU9ULfYO~ML9cpjCX-M~Uwb1QHUU2IxD7Qa9wMXw3nUhLxhbrUVdc-byWsUfQg5~PCwxH3jjLLq-4hlrBvFgkyB5QJJiqv6f~GM6bMh8jFE1GfWCAPzQVdcY97tgqT4GBExpYMkQ-K7AK83Fvd5zEg__&Key-Pair-Id=K2HSFNDJXOU9YS"
-                alt="iHeartEcho Logo"
+                alt="iHeartEcho™ Logo"
                 className="w-20 h-20 object-contain drop-shadow-lg"
               />
               <div>
                 <h1 className="text-3xl md:text-4xl font-black text-white leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
-                  iHeartEcho
+                  iHeartEcho™
                 </h1>
                 <p className="text-lg text-[#4ad9e0] font-semibold">Echocardiography Clinical Companion</p>
               </div>
@@ -165,7 +165,7 @@ export default function Home() {
                 <button className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90 hover:scale-105"
                   style={{ background: "#189aa1" }}>
                   <Stethoscope className="w-4 h-4" />
-                  Open EchoAssist
+                  Open EchoAssist™
                 </button>
               </Link>
               <Link href="/quickfire">

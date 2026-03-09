@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — Echo Case Lab
+  iHeartEcho™ — Echo Case Lab
   Gamified daily echo cases
   Brand: Teal #189aa1, Aqua #4ad9e0
 */

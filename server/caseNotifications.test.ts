@@ -48,9 +48,9 @@ describe("buildCaseApprovedEmail", () => {
     expect(htmlBody.trim().toLowerCase()).toMatch(/^<!doctype html>/);
   });
 
-  it("should include iHeartEcho branding in the HTML body", () => {
+  it("should include iHeartEcho™ branding in the HTML body", () => {
     const { htmlBody } = buildCaseApprovedEmail(opts);
-    expect(htmlBody).toContain("iHeartEcho");
+    expect(htmlBody).toContain("iHeartEcho™");
   });
 });
 
@@ -102,9 +102,9 @@ describe("buildCaseRejectedEmail", () => {
     expect(htmlBody.trim().toLowerCase()).toMatch(/^<!doctype html>/);
   });
 
-  it("should include iHeartEcho branding in the HTML body", () => {
+  it("should include iHeartEcho™ branding in the HTML body", () => {
     const { htmlBody } = buildCaseRejectedEmail(opts);
-    expect(htmlBody).toContain("iHeartEcho");
+    expect(htmlBody).toContain("iHeartEcho™");
   });
 
   it("should include a support contact email", () => {
@@ -173,8 +173,8 @@ describe("buildNewCaseSubmissionAdminEmail", () => {
     expect(htmlBody.toLowerCase()).toContain("hipaa");
   });
 
-  it("should include iHeartEcho branding", () => {
+  it("should include iHeartEcho™ branding", () => {
     const { htmlBody } = buildNewCaseSubmissionAdminEmail(opts);
-    expect(htmlBody).toContain("iHeartEcho");
+    expect(htmlBody).toContain("iHeartEcho™");
   });
 });

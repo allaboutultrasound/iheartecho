@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — App Router
+  iHeartEcho™ — App Router
   Design: All About Ultrasound brand (Teal #189aa1, Aqua #4ad9e0)
   Fonts: Merriweather (headings), Open Sans (body), JetBrains Mono (data)
 */
@@ -100,7 +100,7 @@ function Router() {
       <Route path="/report" component={ReportBuilder} />
       <Route path="/cme" component={CmeHub} />
       <Route path="/registry-review" component={RegistryReviewHub} />
-      <Route path="/echoassist" component={EchoAssist} />
+      <Route path="/echoassist" component={ EchoAssist } />
       <Route path="/hub">{() => { window.location.replace("https://member.allaboutultrasound.com/products/communities/allaboutultrasound-community"); return null; }}</Route>
       <Route path="/cardiac-pocus" component={CardiacPOCUS} />
       <Route path="/lung-pocus" component={LungPOCUS} />
@@ -131,7 +131,7 @@ function Router() {
       <Route path="/image-quality-review">{() => <ImageQualityReview />}</Route>
       <Route path="/profile" component={Profile} />
       <Route path="/echo-correlation" component={() => { window.location.replace("/accreditation"); return null; }} />
-      {/* Legacy redirects — old Navigator and ScanCoach hub URLs now point to unified EchoAssist hub */}
+      {/* Legacy redirects — old Navigator and ScanCoach hub URLs now point to unified EchoAssist™ hub */}
       <Route path="/echo-navigators">{() => { window.location.replace("/echo-assist-hub"); return null; }}</Route>
       <Route path="/scan-coach-hub">{() => { window.location.replace("/echo-assist-hub"); return null; }}</Route>
       <Route path="/strain-scan-coach" component={StrainScanCoach} />

@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — Stress Echo Navigator
+  iHeartEcho™ — Stress Echo Navigator
   Covers: Exercise stress echo, Dobutamine stress echo (DSE), Vasodilator stress echo
   Wall motion scoring (WMSI), target HR, interpretation criteria, low-dose DSE for viability
   Brand: Teal #189aa1, Aqua #4ad9e0
@@ -441,7 +441,7 @@ export default function StressNavigator() {
                 <Link href="/echoassist#engine-stress">
                   <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/25 text-white hover:bg-white/20 transition-all">
                     <Zap className="w-3.5 h-3.5 text-[#4ad9e0]" />
-                    WMSI in Stress EchoAssist
+                    WMSI in Stress EchoAssist™
                   </button>
                 </Link>
               </div>

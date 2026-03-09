@@ -14,7 +14,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import RichTextEditor from "@/components/RichTextEditor";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -934,12 +934,11 @@ export default function QuickFireAdmin() {
             </div>
             <div>
               <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Description <span className="text-gray-400 font-normal">(optional)</span></label>
-              <Textarea
+              <RichTextEditor
                 value={challengeForm.description}
-                onChange={(e) => setChallengeForm((f) => ({ ...f, description: e.target.value }))}
+                onChange={(v) => setChallengeForm((f) => ({ ...f, description: v }))}
                 placeholder="Brief description shown to users before they start…"
-                rows={2}
-                maxLength={2000}
+                minHeight="70px"
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -1135,9 +1134,9 @@ export default function QuickFireAdmin() {
               <label className="text-xs font-semibold text-gray-600 mb-1.5 block">
                 Question Text <span className="text-red-500">*</span>
               </label>
-              <Textarea
+              <RichTextEditor
                 value={form.question}
-                onChange={(e) => setForm((f) => ({ ...f, question: e.target.value }))}
+                onChange={(v) => setForm((f) => ({ ...f, question: v }))}
                 placeholder={
                   form.type === "quickReview"
                     ? "e.g. What is the normal range for LV ejection fraction?"
@@ -1145,10 +1144,8 @@ export default function QuickFireAdmin() {
                     ? "e.g. Based on this echo image, what is the most likely diagnosis?"
                     : "e.g. A 65-year-old presents with dyspnea. TTE shows LVEF 35%, E/e' ratio 18. What is the most likely diagnosis?"
                 }
-                rows={3}
-                maxLength={2000}
+                minHeight="90px"
               />
-              <p className="text-xs text-gray-400 mt-1">{form.question.length}/2000</p>
             </div>
 
             {/* MCQ Options (scenario + image) */}
@@ -1206,27 +1203,24 @@ export default function QuickFireAdmin() {
                 <label className="text-xs font-semibold text-gray-600 mb-1.5 block">
                   Answer / Flashcard Back <span className="text-red-500">*</span>
                 </label>
-                <Textarea
+                <RichTextEditor
                   value={form.reviewAnswer}
-                  onChange={(e) => setForm((f) => ({ ...f, reviewAnswer: e.target.value }))}
-                  placeholder="e.g. Normal LVEF is 52–72% (men) and 54–74% (women) per ASE 2015 guidelines."
-                  rows={3}
-                  maxLength={2000}
+                  onChange={(v) => setForm((f) => ({ ...f, reviewAnswer: v }))}
+                  placeholder="e.g. Normal LVEF is 52–72% (men) and 54–74% (women) per ASE guidelines."
+                   minHeight="90px"
                 />
               </div>
             )}
-
             {/* Explanation */}
             <div>
               <label className="text-xs font-semibold text-gray-600 mb-1.5 block">
                 Explanation <span className="text-gray-400 font-normal">(shown after answer)</span>
               </label>
-              <Textarea
+              <RichTextEditor
                 value={form.explanation}
-                onChange={(e) => setForm((f) => ({ ...f, explanation: e.target.value }))}
+                onChange={(v) => setForm((f) => ({ ...f, explanation: v }))}
                 placeholder="Brief teaching point or guideline reference…"
-                rows={2}
-                maxLength={2000}
+                minHeight="70px"
               />
             </div>
 
@@ -1346,12 +1340,11 @@ export default function QuickFireAdmin() {
                     </button>
                   ))}
                 </div>
-                <Textarea
-                  placeholder="e.g. Aortic stenosis severity grading by Doppler, diastolic dysfunction assessment, TAPSE and RV function..."
+                <RichTextEditor
                   value={aiTopic}
-                  onChange={(e) => setAiTopic(e.target.value)}
-                  rows={2}
-                  className="resize-none"
+                  onChange={setAiTopic}
+                  placeholder="e.g. Aortic stenosis severity grading by Doppler, diastolic dysfunction assessment, TAPSE and RV function..."
+                  minHeight="70px"
                 />
               </div>
               <div className="grid grid-cols-3 gap-3">

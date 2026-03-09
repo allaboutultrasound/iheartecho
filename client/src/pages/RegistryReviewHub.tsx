@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — Registry Review
+  iHeartEcho™ — Registry Review
   Displays All About Ultrasound Registry Review courses.
   Checkout links are prefilled with the logged-in user's email for fast checkout.
   Brand: Teal #189aa1, Aqua #4ad9e0
@@ -342,7 +342,7 @@ export default function RegistryReviewHub() {
           <Clock className="w-4 h-4 text-[#189aa1] flex-shrink-0 mt-0.5 sm:mt-0" />
           <p className="text-xs text-gray-600 leading-relaxed">
             All courses are from <strong>All About Ultrasound</strong>. "Learn More" opens the course details page; "Enroll" opens the checkout page
-            {user?.email ? ` with your email (${user.email}) pre-filled` : " — log in to iHeartEcho to have your email pre-filled automatically"}.
+            {user?.email ? ` with your email (${user.email}) pre-filled` : " — log in to iHeartEcho™ to have your email pre-filled automatically"}.
           </p>
           <a
             href="https://member.allaboutultrasound.com/collections/registry-review"

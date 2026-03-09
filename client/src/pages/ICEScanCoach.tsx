@@ -1,5 +1,5 @@
 /*
-  ICE ScanCoach — iHeartEcho
+  ICE ScanCoach — iHeartEcho™
   Interactive view-by-view ICE (Intracardiac Echocardiography) acquisition guide
   Brand: Teal #189aa1, Aqua #4ad9e0
 */

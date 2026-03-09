@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — Cardiac POCUS Navigator
+  iHeartEcho™ — Cardiac POCUS Navigator
   RUSH Protocol · Goal-directed cardiac ultrasound · Hemodynamic assessment
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
@@ -270,7 +270,7 @@ export default function CardiacPOCUS() {
             href="/echoassist#engine-cardiac-pocus"
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-white border border-gray-200 text-gray-600 hover:border-[#189aa1] hover:text-[#189aa1] transition-all"
           >
-            <Zap className="w-3.5 h-3.5" /> EchoAssist POCUS
+            <Zap className="w-3.5 h-3.5" /> EchoAssist™ POCUS
           </a>
         </div>
 
@@ -379,7 +379,7 @@ export default function CardiacPOCUS() {
           <p>• <a href="https://www.asecho.org/guideline/guidelines-for-performing-a-comprehensive-transthoracic-echocardiographic-examination/" target="_blank" rel="noopener noreferrer" className="text-[#189aa1] hover:underline">ASE Guidelines for Comprehensive TTE</a></p>
           <p>• <a href="https://pubmed.ncbi.nlm.nih.gov/25637381/" target="_blank" rel="noopener noreferrer" className="text-[#189aa1] hover:underline">Spencer KT, et al. FOCUS Guidelines. JASE 2013</a></p>
           <p>• <a href="https://www.sccm.org/Communications/Critical-Connections/Archives/2014/Focused-Cardiac-Ultrasound-in-the-ICU" target="_blank" rel="noopener noreferrer" className="text-[#189aa1] hover:underline">SCCM Focused Cardiac Ultrasound in the ICU</a></p>
-          <p className="pt-1">© All About Ultrasound — iHeartEcho | www.iheartecho.com</p>
+          <p className="pt-1">© All About Ultrasound — iHeartEcho™ | www.iheartecho.com</p>
         </div>
       </div>
     </Layout>

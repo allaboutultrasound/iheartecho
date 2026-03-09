@@ -1,5 +1,5 @@
 /*
-  Platform Admin — iHeartEcho
+  Platform Admin — iHeartEcho™
   Accessible only to users with role === "admin" (owner) or "platform_admin" role.
   Features:
   - Add user by email (search → preview → assign role)
@@ -73,13 +73,13 @@ const ROLE_META: Record<AppRole, { label: string; color: string; icon: React.Ele
     label: "DIY Admin",
     color: "bg-teal-100 text-teal-700",
     icon: ClipboardList,
-    description: "Manages the DIY Accreditation Tool and assigns seats",
+    description: "Manages the DIY Accreditation Tool™ and assigns seats",
   },
   diy_user: {
     label: "DIY User",
     color: "bg-blue-100 text-blue-700",
     icon: Stethoscope,
-    description: "Seat-assigned access to the DIY Accreditation Tool",
+    description: "Seat-assigned access to the DIY Accreditation Tool™",
   },
   platform_admin: {
     label: "Platform Admin",

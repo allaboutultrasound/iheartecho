@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — Pediatric CHD Scan Coach
+  iHeartEcho™ — Pediatric CHD Scan Coach
   Brand: Teal #189aa1, Aqua #4ad9e0
   Design: Teal/aqua graduated palette, Merriweather headings, Open Sans body
   Focus: CHD scanning tips, criteria, staged palliation surveillance

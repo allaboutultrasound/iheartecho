@@ -124,7 +124,7 @@ function UpgradePrompt({
         {featureName ? `${featureName} requires Premium Access` : "Premium Access Required"}
       </h3>
       <p className="text-gray-500 text-sm mb-5 max-w-sm mx-auto">
-        Unlock the full iHeartEcho clinical suite for <strong>$9.99/month</strong> — including advanced
+        Unlock the full iHeartEcho™ clinical suite for <strong>$9.99/month</strong> — including advanced
         protocols, 500+ echo cases, and all premium tools.
       </p>
       <div className="flex flex-col sm:flex-row gap-3 justify-center">

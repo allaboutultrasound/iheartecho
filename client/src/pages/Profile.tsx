@@ -1,5 +1,5 @@
 /*
-  Profile Page — iHeartEcho
+  Profile Page — iHeartEcho™
   Allows logged-in users to edit their display name, email, bio, credentials,
   specialty, years of experience, location, website, and change their password.
   Also shows active subscriptions with links to manage them.
@@ -25,7 +25,7 @@ const ROLE_CONFIG: Record<string, {
 }> = {
   premium_user: {
     label: "Premium",
-    description: "Access to TEE, ICE, Strain & Structural Heart Navigators and premium EchoAssist modules.",
+    description: "Access to TEE, ICE, Strain & Structural Heart Navigators and premium EchoAssist™ modules.",
     color: "#189aa1",
     icon: Star,
     manageUrl: "https://member.allaboutultrasound.com/bundles/premium",
@@ -33,7 +33,7 @@ const ROLE_CONFIG: Record<string, {
   },
   diy_user: {
     label: "DIY Accreditation",
-    description: "Access to the DIY Accreditation Tool for lab accreditation preparation.",
+    description: "Access to the DIY Accreditation Tool™ for lab accreditation preparation.",
     color: "#f59e0b",
     icon: Award,
     manageUrl: "https://member.allaboutultrasound.com/bundles/diy-accreditation",
@@ -471,7 +471,7 @@ export default function Profile() {
                               <CheckCircle className="w-2.5 h-2.5" /> Active
                             </span>
                           </div>
-                          <p className="text-xs text-gray-500 leading-relaxed">Full access to all iHeartEcho premium features — $9.99/month.</p>
+                          <p className="text-xs text-gray-500 leading-relaxed">Full access to all iHeartEcho™ premium features — $9.99/month.</p>
                           <a
                             href="https://member.allaboutultrasound.com/enroll/3703267?price_id=4651832"
                             target="_blank"
@@ -947,7 +947,7 @@ export default function Profile() {
                   <h2 className="text-sm font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
                     Notification Preferences
                   </h2>
-                  <p className="text-xs text-gray-500 mt-0.5">Control when iHeartEcho sends you email reminders.</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Control when iHeartEcho™ sends you email reminders.</p>
                 </div>
                 <div className="p-6 space-y-6">
                   {notifLoading ? (

@@ -21,7 +21,7 @@ interface SendEmailOptions {
 export async function sendEmail(opts: SendEmailOptions): Promise<boolean> {
   const apiKey = process.env.SENDGRID_API_KEY;
   const senderEmail = process.env.SENDGRID_FROM_EMAIL || "noreply@iheartecho.com";
-  const senderName = process.env.SENDGRID_FROM_NAME || "iHeartEcho";
+  const senderName = process.env.SENDGRID_FROM_NAME || "iHeartEcho™";
 
   if (!apiKey) {
     console.warn("[email] SENDGRID_API_KEY not set — skipping email send");
@@ -84,7 +84,7 @@ function emailWrapper(content: string): string {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>iHeartEcho</title>
+  <title>iHeartEcho™</title>
 </head>
 <body style="margin:0;padding:0;background:#f0fbfc;font-family:Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fbfc;padding:32px 16px;">
@@ -95,7 +95,7 @@ function emailWrapper(content: string): string {
           <tr>
             <td style="background:linear-gradient(135deg,${brandDark} 0%,#0e4a50 60%,${brandColor} 100%);padding:28px 32px;text-align:center;">
               <img src="https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/tMerpTNEMefRhZwO.png?Expires=1804389585&Signature=WUUmbeKd6gRL-5YievLbV1CH3uu0nlv-Re4ouPNZeR8Uaa5fZGvIpyzCfN4GeYzdNVN-L2Dfhpb6wP3tKMLML8tU2MU77LZNA0Db1Qt~FgBKmBrDM8f98IhyhaIIh3mcPdLcoP5aezbNBOluLkAKxGF1onaa3LNS33jvn6RdWOARg3rQF-iGyCG8t~MaJrqXCHCHnEQWkv8ww0KFZrIE6cKq-EgnS6NZ6Ugc~9fSwQmMSgxfKiJuZdqcca1LwferRwRh3oNdounneCfHfE~QI00U4T7~b0DybwkrOKG0VWDKwXiSGd2AgO7up05Jcgsq7v8V58dmlV9XRRUqXN~soA__&Key-Pair-Id=K2HSFNDJXOU9YS"
-                alt="iHeartEcho" width="80" height="80"
+                alt="iHeartEcho™" width="80" height="80"
                 style="border-radius:50%;display:block;margin:0 auto 12px;" />
               <div style="font-size:22px;font-weight:700;color:#ffffff;font-family:Georgia,serif;">iHeartEcho™</div>
               <div style="font-size:12px;color:#4ad9e0;margin-top:4px;">Echocardiography Clinical Companion</div>
@@ -114,7 +114,7 @@ function emailWrapper(content: string): string {
                 © All About Ultrasound · <a href="https://www.iheartecho.com" style="color:${brandColor};text-decoration:none;">www.iheartecho.com</a>
               </p>
               <p style="margin:8px 0 0;font-size:11px;color:#cbd5e1;">
-                You received this email because an account was created for you on iHeartEcho.
+                You received this email because an account was created for you on iHeartEcho™.
               </p>
             </td>
           </tr>
@@ -176,11 +176,11 @@ export function buildVerificationEmail(opts: {
   firstName: string;
   verificationUrl: string;
 }): { subject: string; htmlBody: string; previewText: string } {
-  const subject = "Verify your iHeartEcho account";
+  const subject = "Verify your iHeartEcho™ account";
   const previewText = "Click to verify your email and activate your account";
   const htmlBody = emailWrapper(`
     <h2 style="margin:0 0 8px;font-size:20px;color:${brandDark};font-family:Georgia,serif;">
-      Welcome to iHeartEcho™, ${opts.firstName}!
+      Welcome to iHeartEcho, ${opts.firstName}!
     </h2>
     <p style="margin:0 0 20px;font-size:15px;color:#475569;line-height:1.6;">
       Thank you for registering. Please verify your email address to activate your account and access all clinical tools.
@@ -206,14 +206,14 @@ export function buildPasswordResetEmail(opts: {
   firstName: string;
   resetUrl: string;
 }): { subject: string; htmlBody: string; previewText: string } {
-  const subject = "Reset your iHeartEcho password";
+  const subject = "Reset your iHeartEcho™ password";
   const previewText = "Click to reset your password — link expires in 1 hour";
   const htmlBody = emailWrapper(`
     <h2 style="margin:0 0 8px;font-size:20px;color:${brandDark};font-family:Georgia,serif;">
       Password Reset Request
     </h2>
     <p style="margin:0 0 20px;font-size:15px;color:#475569;line-height:1.6;">
-      Hi ${opts.firstName}, we received a request to reset your iHeartEcho password.
+      Hi ${opts.firstName}, we received a request to reset your iHeartEcho™ password.
       Click the button below to choose a new password.
     </p>
     <div style="text-align:center;margin:28px 0;">
@@ -238,14 +238,14 @@ export function buildEmailChangeVerificationEmail(opts: {
   newEmail: string;
   verificationUrl: string;
 }): { subject: string; htmlBody: string; previewText: string } {
-  const subject = "Confirm your new email address — iHeartEcho";
-  const previewText = "Click to confirm your new email address for iHeartEcho";
+  const subject = "Confirm your new email address — iHeartEcho™";
+  const previewText = "Click to confirm your new email address for iHeartEcho™";
   const htmlBody = emailWrapper(`
     <h2 style="margin:0 0 8px;font-size:20px;color:${brandDark};font-family:Georgia,serif;">
       Confirm Your New Email Address
     </h2>
     <p style="margin:0 0 16px;font-size:15px;color:#475569;line-height:1.6;">
-      Hi ${opts.firstName}, you recently requested to change your iHeartEcho email address to:
+      Hi ${opts.firstName}, you recently requested to change your iHeartEcho™ email address to:
     </p>
     <div style="background:#f0fbfc;border-left:3px solid ${brandColor};padding:12px 16px;border-radius:0 8px 8px 0;margin:0 0 20px;">
       <p style="margin:0;font-size:15px;font-weight:700;color:${brandColor};">${opts.newEmail}</p>
@@ -274,8 +274,8 @@ export function buildMagicLinkEmail(opts: {
   firstName: string;
   magicUrl: string;
 }): { subject: string; htmlBody: string; previewText: string } {
-  const subject = "Your iHeartEcho sign-in link";
-  const previewText = "Click to sign in to iHeartEcho — link expires in 15 minutes";
+  const subject = "Your iHeartEcho™ sign-in link";
+  const previewText = "Click to sign in to iHeartEcho™ — link expires in 15 minutes";
   const htmlBody = emailWrapper(`
     <h2 style="margin:0 0 8px;font-size:20px;color:${brandDark};font-family:Georgia,serif;">
       Sign in to iHeartEcho™
@@ -286,7 +286,7 @@ export function buildMagicLinkEmail(opts: {
     <div style="text-align:center;margin:28px 0;">
       <a href="${opts.magicUrl}"
         style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;">
-        Sign In to iHeartEcho
+        Sign In to iHeartEcho™
       </a>
     </div>
     <div style="background:#fff8ed;border-left:3px solid #f59e0b;padding:12px 16px;border-radius:0 8px 8px 0;margin:0 0 20px;">
@@ -322,7 +322,7 @@ export function buildNewCaseSubmissionAdminEmail(opts: {
       New Case Submission Awaiting Review
     </h2>
     <p style="margin:0 0 16px;font-size:15px;color:#475569;line-height:1.6;">
-      A user has submitted a new echo case to the iHeartEcho Echo Case Library.
+      A user has submitted a new echo case to the iHeartEcho™ Echo Case Library.
       Please review it and approve or reject it from the Case Management panel.
     </p>
     <div style="background:#f0fbfc;border-left:3px solid ${brandColor};padding:16px;border-radius:0 8px 8px 0;margin:0 0 24px;">
@@ -352,7 +352,7 @@ export function buildNewCaseSubmissionAdminEmail(opts: {
       </a>
     </div>
     <p style="margin:0;font-size:13px;color:#94a3b8;line-height:1.5;">
-      This is an automated notification from iHeartEcho. The submitter has acknowledged the HIPAA/PHI policy.
+      This is an automated notification from iHeartEcho™. The submitter has acknowledged the HIPAA/PHI policy.
     </p>
   `);
   return { subject, htmlBody, previewText };
@@ -371,14 +371,14 @@ export function buildCaseApprovedEmail(opts: {
     </h2>
     <p style="margin:0 0 16px;font-size:15px;color:#475569;line-height:1.6;">
       Hi ${opts.firstName}, great news — your submitted echo case has been reviewed and <strong style="color:#16a34a;">approved</strong>.
-      It is now live in the iHeartEcho Echo Case Library and available to the community.
+      It is now live in the iHeartEcho™ Echo Case Library and available to the community.
     </p>
     <div style="background:#f0fbfc;border-left:3px solid ${brandColor};padding:12px 16px;border-radius:0 8px 8px 0;margin:0 0 20px;">
       <p style="margin:0;font-size:14px;font-weight:700;color:${brandDark};">${opts.caseTitle}</p>
       <p style="margin:4px 0 0;font-size:13px;color:#64748b;">Now live in the Echo Case Library</p>
     </div>
     <p style="margin:0 0 20px;font-size:15px;color:#475569;line-height:1.6;">
-      Thank you for contributing to the iHeartEcho learning community. Your case will help sonographers and cardiologists sharpen their echo interpretation skills.
+      Thank you for contributing to the iHeartEcho™ learning community. Your case will help sonographers and cardiologists sharpen their echo interpretation skills.
     </p>
     <div style="text-align:center;margin:28px 0;">
       <a href="${opts.caseUrl}"
@@ -406,7 +406,7 @@ export function buildCaseRejectedEmail(opts: {
       Case Submission Update
     </h2>
     <p style="margin:0 0 16px;font-size:15px;color:#475569;line-height:1.6;">
-      Hi ${opts.firstName}, thank you for submitting a case to the iHeartEcho Echo Case Library.
+      Hi ${opts.firstName}, thank you for submitting a case to the iHeartEcho™ Echo Case Library.
       After review, our team was unable to approve the following submission at this time:
     </p>
     <div style="background:#fef2f2;border-left:3px solid #ef4444;padding:12px 16px;border-radius:0 8px 8px 0;margin:0 0 20px;">
@@ -441,7 +441,7 @@ export function buildWelcomeEmail(opts: {
   loginUrl: string;
   roles: string[];
 }): { subject: string; htmlBody: string; previewText: string } {
-  const subject = "Your iHeartEcho account is ready";
+  const subject = "Your iHeartEcho™ account is ready";
   const previewText = "Your account has been set up — sign in to get started";
   const roleLabels: Record<string, string> = {
     premium_user: "Premium Access",
@@ -456,10 +456,10 @@ export function buildWelcomeEmail(opts: {
 
   const htmlBody = emailWrapper(`
     <h2 style="margin:0 0 8px;font-size:20px;color:${brandDark};font-family:Georgia,serif;">
-      Welcome to iHeartEcho™, ${opts.firstName}!
+      Welcome to iHeartEcho, ${opts.firstName}!
     </h2>
     <p style="margin:0 0 16px;font-size:15px;color:#475569;line-height:1.6;">
-      Your account has been set up by an administrator. You now have access to the iHeartEcho clinical platform.
+      Your account has been set up by an administrator. You now have access to the iHeartEcho™ clinical platform.
     </p>
     ${roleList ? `
     <div style="background:#f0fbfc;border-left:3px solid ${brandColor};padding:12px 16px;border-radius:0 8px 8px 0;margin:0 0 20px;">
@@ -471,7 +471,7 @@ export function buildWelcomeEmail(opts: {
     <div style="text-align:center;margin:28px 0;">
       <a href="${opts.loginUrl}"
         style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;">
-        Sign In to iHeartEcho
+        Sign In to iHeartEcho™
       </a>
     </div>
     <p style="margin:0;font-size:13px;color:#94a3b8;line-height:1.5;">

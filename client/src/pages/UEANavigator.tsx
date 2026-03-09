@@ -1,5 +1,5 @@
 /*
-  UEA Navigator — iHeartEcho
+  UEA Navigator — iHeartEcho™
   Ultrasound Enhancing Agents (Contrast Echo) protocol navigator
   Covers: safety screening, indications, agent prep, view-by-view enhancement,
   LVO/myocardial perfusion assessment, and reporting guidance.

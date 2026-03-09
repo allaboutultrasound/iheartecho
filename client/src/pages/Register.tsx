@@ -1,5 +1,5 @@
 /**
- * Register.tsx — iHeartEcho branded sign-up page (email/password)
+ * Register.tsx — iHeartEcho™ branded sign-up page (email/password)
  * Fully white-labelled — no Manus/Meta branding.
  */
 import { useEffect, useState } from "react";
@@ -100,14 +100,14 @@ export default function Register() {
       >
         <div className="relative flex items-center gap-3 mb-10">
           {LOGO ? (
-            <img src={LOGO} alt="iHeartEcho" className="w-12 h-12 object-contain drop-shadow-lg" />
+            <img src={LOGO} alt="iHeartEcho™" className="w-12 h-12 object-contain drop-shadow-lg" />
           ) : (
             <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: "#189aa1" }}>
               <Heart className="w-6 h-6 text-white" />
             </div>
           )}
           <div>
-            <div className="text-2xl font-black text-white" style={{ fontFamily: "Merriweather, serif" }}>iHeartEcho</div>
+            <div className="text-2xl font-black text-white" style={{ fontFamily: "Merriweather, serif" }}>iHeartEcho™</div>
             <div className="text-xs font-medium" style={{ color: "#4ad9e0" }}>Echocardiography Clinical Companion</div>
           </div>
         </div>
@@ -117,7 +117,7 @@ export default function Register() {
         <p className="text-white/70 text-sm leading-relaxed max-w-sm">
           Get instant access to guideline-based calculators, structured protocols, CME courses, and accreditation tools.
         </p>
-        <div className="mt-8 text-white/30 text-xs">© {new Date().getFullYear()} iHeartEcho · All About Ultrasound</div>
+        <div className="mt-8 text-white/30 text-xs">© {new Date().getFullYear()} iHeartEcho™ · All About Ultrasound</div>
       </div>
 
       {/* ── Right form panel ── */}
@@ -125,12 +125,12 @@ export default function Register() {
         <div className="w-full max-w-sm">
           {/* Mobile logo */}
           <div className="flex items-center gap-3 mb-8 lg:hidden">
-            {LOGO ? <img src={LOGO} alt="iHeartEcho" className="w-10 h-10 object-contain" /> : <Heart className="w-8 h-8" style={{ color: "#189aa1" }} />}
-            <div className="text-xl font-black" style={{ fontFamily: "Merriweather, serif", color: "#0e1e2e" }}>iHeartEcho</div>
+            {LOGO ? <img src={LOGO} alt="iHeartEcho™" className="w-10 h-10 object-contain" /> : <Heart className="w-8 h-8" style={{ color: "#189aa1" }} />}
+            <div className="text-xl font-black" style={{ fontFamily: "Merriweather, serif", color: "#0e1e2e" }}>iHeartEcho™</div>
           </div>
 
           <h2 className="text-2xl font-black mb-2" style={{ fontFamily: "Merriweather, serif", color: "#0e1e2e" }}>Create your account</h2>
-          <p className="text-sm text-gray-500 mb-8">Join iHeartEcho and access your clinical toolkit.</p>
+          <p className="text-sm text-gray-500 mb-8">Join iHeartEcho™ and access your clinical toolkit.</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-3">

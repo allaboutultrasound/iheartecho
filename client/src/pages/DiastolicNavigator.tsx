@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — Diastolic Function Navigator
+  iHeartEcho™ — Diastolic Function Navigator
   Protocol + Scan Coach for LV Diastolic Function Assessment
   Brand: Teal #189aa1, Aqua #4ad9e0
   Guideline: ASE 2025 LV Diastolic Function Guidelines (Nagueh et al., JASE Vol 38 No 7, July 2025)

@@ -1,7 +1,7 @@
 /**
  * Premium Access Router
  *
- * Handles premium membership status for the iHeartEcho App Premium Access
+ * Handles premium membership status for the iHeartEcho™ App Premium Access
  * membership ($9.99/month) sold via Thinkific at:
  * https://member.allaboutultrasound.com/enroll/3703267?price_id=4651832
  *
@@ -22,13 +22,13 @@ import {
   IHEARTECHO_PREMIUM_PRODUCT_ID,
 } from "../thinkific";
 
-/** The Thinkific membership product slug for iHeartEcho Premium Access */
+/** The Thinkific membership product slug for iHeartEcho™ Premium Access */
 export const PREMIUM_MEMBERSHIP_SLUG = "iheartecho-app-premium-access";
 
 /**
- * Check if a user has a completed order for the iHeartEcho Premium Access product on Thinkific.
+ * Check if a user has a completed order for the iHeartEcho™ Premium Access product on Thinkific.
  *
- * The premium product is sold as a subscription (product_id=3703267, "iHeartEcho App - Premium Access").
+ * The premium product is sold as a subscription (product_id=3703267, "iHeartEcho™ App - Premium Access").
  * It does NOT appear in the enrollments endpoint — we query the orders endpoint directly by email.
  *
  * We query by email directly (not by user lookup) because the /users?query= endpoint
@@ -133,7 +133,7 @@ export const premiumRouter = router({
           isPremium: false,
           premiumOnThinkific: hasPremiumOnThinkific,
           message: hasPremiumOnThinkific
-            ? "Purchase confirmed on Thinkific. Create your iHeartEcho account with this email to activate premium."
+            ? "Purchase confirmed on Thinkific. Create your iHeartEcho™ account with this email to activate premium."
             : "No premium membership found for this email on Thinkific.",
         };
       }
@@ -213,7 +213,7 @@ export const premiumRouter = router({
         resource: "order",
         action: "created",
         payload: {
-          product_name: "iHeartEcho App - Premium Access",
+          product_name: "iHeartEcho™ App - Premium Access",
           status: "Complete",
           user_email: input.email,
           user_name: "Test User (Admin)",

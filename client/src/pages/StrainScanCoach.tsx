@@ -1,5 +1,5 @@
 /*
-  Strain ScanCoach — iHeartEcho
+  Strain ScanCoach — iHeartEcho™
   Bull's-Eye · Segmental Strain Curves · LV GLS Calculator · Tips & Tricks
   ASE 2025 Strain Guideline · Acquisition Best Practices
   Brand: Teal #189aa1, Aqua #4ad9e0
@@ -178,30 +178,30 @@ function interpretLvGls(val: number) {
   if (val <= -20) return {
     severity: "Normal LV GLS",
     color: "#15803d",
-    suggests: `EchoAssist Suggests: LV GLS = ${val}% — within normal limits (≤ −20%). LV longitudinal function is preserved. No evidence of subclinical systolic dysfunction by strain.`,
-    note: "EchoAssist Note: Normal GLS does not exclude diastolic dysfunction, hypertrophic cardiomyopathy, or early infiltrative disease. Correlate with clinical context, wall thickness, and diastolic parameters.",
-    tip: "EchoAssist Tip: Serial GLS monitoring is recommended in cardio-oncology patients receiving potentially cardiotoxic therapy. A relative decrease ≥ 15% from baseline is the ASE 2022 threshold for cancer therapy-related cardiac dysfunction (CTRCD).",
+    suggests: `EchoAssist™ Suggests: LV GLS = ${val}% — within normal limits (≤ −20%). LV longitudinal function is preserved. No evidence of subclinical systolic dysfunction by strain.`,
+    note: "EchoAssist™ Note: Normal GLS does not exclude diastolic dysfunction, hypertrophic cardiomyopathy, or early infiltrative disease. Correlate with clinical context, wall thickness, and diastolic parameters.",
+    tip: "EchoAssist™ Tip: Serial GLS monitoring is recommended in cardio-oncology patients receiving potentially cardiotoxic therapy. A relative decrease ≥ 15% from baseline is the ASE 2022 threshold for cancer therapy-related cardiac dysfunction (CTRCD).",
   };
   if (val <= -16) return {
     severity: "Mildly Reduced LV GLS",
     color: "#ca8a04",
-    suggests: `EchoAssist Suggests: LV GLS = ${val}% — mildly reduced (−16 to −20%). Subclinical systolic dysfunction is possible. Consider serial monitoring and clinical correlation.`,
-    note: "EchoAssist Note: Mildly reduced GLS with preserved EF (LVEF ≥ 50%) may represent early HFpEF, hypertensive heart disease, or subclinical cardiomyopathy. Diastolic parameters and wall thickness should be assessed.",
-    tip: "EchoAssist Tip: In cardio-oncology, GLS −16 to −20% with a relative drop ≥ 15% from baseline meets ASE 2022 CTRCD criteria even with preserved LVEF. Prompt cardiology referral is recommended.",
+    suggests: `EchoAssist™ Suggests: LV GLS = ${val}% — mildly reduced (−16 to −20%). Subclinical systolic dysfunction is possible. Consider serial monitoring and clinical correlation.`,
+    note: "EchoAssist™ Note: Mildly reduced GLS with preserved EF (LVEF ≥ 50%) may represent early HFpEF, hypertensive heart disease, or subclinical cardiomyopathy. Diastolic parameters and wall thickness should be assessed.",
+    tip: "EchoAssist™ Tip: In cardio-oncology, GLS −16 to −20% with a relative drop ≥ 15% from baseline meets ASE 2022 CTRCD criteria even with preserved LVEF. Prompt cardiology referral is recommended.",
   };
   if (val <= -12) return {
     severity: "Moderately Reduced LV GLS",
     color: "#ea580c",
-    suggests: `EchoAssist Suggests: LV GLS = ${val}% — moderately reduced (−12 to −16%). Significant longitudinal dysfunction is present. LVEF may still be preserved or mildly reduced.`,
-    note: "EchoAssist Note: GLS in this range is associated with increased risk of adverse cardiovascular events. Consider evaluation for ischemic cardiomyopathy, infiltrative disease (amyloidosis, sarcoidosis), or dilated cardiomyopathy.",
-    tip: "EchoAssist Tip: Regional patterns of reduced GLS can help differentiate ischemic (coronary territory) from non-ischemic (diffuse or apical-sparing) etiologies. Review the segmental bull's-eye for distribution.",
+    suggests: `EchoAssist™ Suggests: LV GLS = ${val}% — moderately reduced (−12 to −16%). Significant longitudinal dysfunction is present. LVEF may still be preserved or mildly reduced.`,
+    note: "EchoAssist™ Note: GLS in this range is associated with increased risk of adverse cardiovascular events. Consider evaluation for ischemic cardiomyopathy, infiltrative disease (amyloidosis, sarcoidosis), or dilated cardiomyopathy.",
+    tip: "EchoAssist™ Tip: Regional patterns of reduced GLS can help differentiate ischemic (coronary territory) from non-ischemic (diffuse or apical-sparing) etiologies. Review the segmental bull's-eye for distribution.",
   };
   return {
     severity: "Severely Reduced LV GLS",
     color: "#dc2626",
-    suggests: `EchoAssist Suggests: LV GLS = ${val}% — severely reduced (> −12%). Marked longitudinal dysfunction. LVEF is likely reduced or severely impaired. Urgent clinical evaluation is warranted.`,
-    note: "EchoAssist Note: GLS > −12% is associated with poor prognosis in heart failure, post-MI, and cardio-oncology populations. Comprehensive evaluation including 3D volumetrics, diastolic assessment, and biomarkers is recommended.",
-    tip: "EchoAssist Tip: In the setting of severely reduced GLS with preserved EF, consider cardiac amyloidosis (check RAS > 1.0, wall thickness, ECG voltage), HCM, or Fabry disease. Multimodality imaging may be required.",
+    suggests: `EchoAssist™ Suggests: LV GLS = ${val}% — severely reduced (> −12%). Marked longitudinal dysfunction. LVEF is likely reduced or severely impaired. Urgent clinical evaluation is warranted.`,
+    note: "EchoAssist™ Note: GLS > −12% is associated with poor prognosis in heart failure, post-MI, and cardio-oncology populations. Comprehensive evaluation including 3D volumetrics, diastolic assessment, and biomarkers is recommended.",
+    tip: "EchoAssist™ Tip: In the setting of severely reduced GLS with preserved EF, consider cardiac amyloidosis (check RAS > 1.0, wall thickness, ECG voltage), HCM, or Fabry disease. Multimodality imaging may be required.",
   };
 }
 

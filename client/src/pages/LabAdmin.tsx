@@ -1,5 +1,5 @@
 /*
-  Lab Admin Portal — iHeartEcho DIY Accreditation Tool
+  Lab Admin Portal — iHeartEcho™ DIY Accreditation Tool™
   Tabs: Overview | Staff | Analytics | Reports | Subscription
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
@@ -956,7 +956,7 @@ function ReportsTab({ lab, members }: { lab: any; members: any[] }) {
     doc.rect(0, 0, pageW, 30, "F");
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(16); doc.setFont("helvetica", "bold");
-    doc.text("iHeartEcho — Lab Accreditation Report", margin, 13);
+    doc.text("iHeartEcho™ — Lab Accreditation Report", margin, 13);
     doc.setFontSize(9); doc.setFont("helvetica", "normal");
     doc.text(`${lab.labName}  |  ${lab.plan.charAt(0).toUpperCase() + lab.plan.slice(1)} Plan`, margin, 20);
     doc.text(`Generated: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`, margin, 26);
@@ -1040,12 +1040,12 @@ function ReportsTab({ lab, members }: { lab: any; members: any[] }) {
     for (let p = 1; p <= totalPages; p++) {
       doc.setPage(p);
       doc.setFontSize(7); doc.setTextColor(150, 150, 150); doc.setFont("helvetica", "normal");
-      doc.text("iHeartEcho DIY Accreditation Tool  |  For IAC accreditation preparation use only", margin, pageH - 8);
+      doc.text("iHeartEcho™ DIY Accreditation Tool™  |  For IAC accreditation preparation use only", margin, pageH - 8);
       doc.text(`Page ${p} of ${totalPages}`, pageW - margin - 20, pageH - 8);
     }
 
     const dateTag = new Date().toISOString().slice(0, 10);
-    doc.save(`iHeartEcho_Lab_Report_${lab.labName.replace(/\s+/g, "_")}_${dateTag}.pdf`);
+    doc.save(`iHeartEcho™_Lab_Report_${lab.labName.replace(/\s+/g, "_")}_${dateTag}.pdf`);
     toast.success("Lab report PDF downloaded.");
   };
 
@@ -1276,7 +1276,7 @@ function SeatsTab({ lab }: { lab: any }) {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>DIY Accreditation User Seats</h2>
-          <p className="text-xs text-gray-500 mt-0.5">Assign seats to give users access to the DIY Accreditation Tool.</p>
+          <p className="text-xs text-gray-500 mt-0.5">Assign seats to give users access to the DIY Accreditation Tool™.</p>
         </div>
         <div className="text-right">
           <div className="text-xs text-gray-500">Seats used</div>
@@ -1335,7 +1335,7 @@ function SeatsTab({ lab }: { lab: any }) {
           ) : seats.length === 0 ? (
             <div className="text-center py-8">
               <Shield className="w-8 h-8 text-gray-200 mx-auto mb-2" />
-              <p className="text-xs text-gray-400">No seats assigned yet. Add users above to give them DIY Accreditation Tool access.</p>
+              <p className="text-xs text-gray-400">No seats assigned yet. Add users above to give them DIY Accreditation Tool™ access.</p>
             </div>
           ) : (
             <div className="space-y-2">

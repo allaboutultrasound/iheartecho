@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — TEE Navigator
+  iHeartEcho™ — TEE Navigator
   Comprehensive transesophageal echo protocol:
   ME, TG, Deep TG, UE views with angle guidance, clinical applications
   Brand: Teal #189aa1, Aqua #4ad9e0
@@ -215,7 +215,7 @@ export default function TEENavigator() {
   const handleExport = () => {
     const now = new Date().toLocaleString();
     const lines: string[] = [
-      "=== iHeartEcho — TEE Protocol Checklist ===",
+      "=== iHeartEcho™ — TEE Protocol Checklist ===",
       `Generated: ${now}`,
       `Progress: ${checked.size}/${totalItems} items (${progress}%)`,
       "",
@@ -231,7 +231,7 @@ export default function TEENavigator() {
       });
     });
     lines.push("\n" + "=".repeat(50));
-    lines.push("Per ASE/SCA TEE Guidelines | iHeartEcho Clinical Companion");
+    lines.push("Per ASE/SCA TEE Guidelines | iHeartEcho™ Clinical Companion");
     const blob = new Blob([lines.join("\n")], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

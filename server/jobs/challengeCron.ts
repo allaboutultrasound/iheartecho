@@ -17,7 +17,7 @@ import sgMail from "@sendgrid/mail";
 
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY ?? "";
 const SENDGRID_FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL ?? "noreply@iheartecho.com";
-const SENDGRID_FROM_NAME = process.env.SENDGRID_FROM_NAME ?? "iHeartEcho";
+const SENDGRID_FROM_NAME = process.env.SENDGRID_FROM_NAME ?? "iHeartEcho™";
 const APP_URL = process.env.VITE_APP_URL ?? "https://app.iheartecho.com";
 
 if (SENDGRID_API_KEY) {

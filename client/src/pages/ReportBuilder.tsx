@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — Echo Report Builder
+  iHeartEcho™ — Echo Report Builder
   Structure based on UltraLinq clinical echo report template
   Brand: Teal #189aa1, Aqua #4ad9e0
   Fonts: Merriweather headings, Open Sans body, JetBrains Mono data
@@ -716,7 +716,7 @@ function generateReport(d: ReportData): string {
   lines.push(sep);
   lines.push(`Interpreted by: ___________________________`);
   lines.push(`Date: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`);
-  lines.push("© All About Ultrasound — iHeartEcho | www.iheartecho.com");
+  lines.push("© All About Ultrasound — iHeartEcho™ | www.iheartecho.com");
 
   return lines.join("\n");
 }

@@ -1,5 +1,5 @@
 /*
-  StressScanCoach.tsx — iHeartEcho
+  StressScanCoach.tsx — iHeartEcho™
   Stress Echo ScanCoach: view-by-view acquisition guide for exercise and
   pharmacological (DSE) stress echocardiography.
   Covers: rest baseline, peak stress, recovery, and DSE-specific views.

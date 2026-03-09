@@ -1,5 +1,5 @@
 /*
-  UEA ScanCoach — iHeartEcho
+  UEA ScanCoach — iHeartEcho™
   Ultrasound Enhancing Agents — Contrast Echo Acquisition Guide
   View-by-view probe guidance, machine optimization, injection technique,
   artifact recognition, and pitfall avoidance.

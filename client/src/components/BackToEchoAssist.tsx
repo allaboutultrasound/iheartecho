@@ -1,6 +1,6 @@
 /*
-  BackToEchoAssist — Reusable breadcrumb/back link
-  Renders a small "← EchoAssist" link that returns the user to the EchoAssist hub
+  BackToEchoAssist™ — Reusable breadcrumb/back link
+  Renders a small "← EchoAssist™" link that returns the user to the EchoAssist™ hub
   (the branded landing page that holds all navigators and ScanCoach entries)
 */
 import { Link } from "wouter";
@@ -19,7 +19,7 @@ export default function BackToEchoAssist({ className = "" }: BackToEchoAssistPro
         style={{ color: "#4ad9e0" }}
       >
         <ChevronLeft className="w-3.5 h-3.5" />
-        EchoAssist Hub
+        EchoAssist™ Hub
       </span>
     </Link>
   );

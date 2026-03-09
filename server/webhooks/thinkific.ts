@@ -7,13 +7,13 @@
  *    → Triggers a background CME catalog re-sync.
  *
  * 2. order.created
- *    → Grants iHeartEcho Premium Access when a user purchases the
- *      "iHeartEcho App - Premium Access" membership.
- *    → If the user has no iHeartEcho account yet, creates a pending account
+ *    → Grants iHeartEcho™ Premium Access when a user purchases the
+ *      "iHeartEcho™ App - Premium Access" membership.
+ *    → If the user has no iHeartEcho™ account yet, creates a pending account
  *      with isPremium=true so premium is granted immediately on first login.
  *
  * 3. subscription.cancelled
- *    → Revokes iHeartEcho Premium Access when the user's subscription
+ *    → Revokes iHeartEcho™ Premium Access when the user's subscription
  *      is cancelled.
  *
  * Every event (including ignored ones) is logged to the webhookEvents table
@@ -32,8 +32,8 @@ import { syncCatalogToDb } from "../routers/cmeRouter";
 import { getUserByEmail, setPremiumStatus, createPendingUser } from "../db";
 
 /**
- * Returns true if the Thinkific product name matches the iHeartEcho Premium Access membership.
- * The actual product name in Thinkific is: "iHeartEcho App - Premium Access"
+ * Returns true if the Thinkific product name matches the iHeartEcho™ Premium Access membership.
+ * The actual product name in Thinkific is: "iHeartEcho™ App - Premium Access"
  * We match broadly on any variant to be resilient to minor name changes.
  */
 function isPremiumProduct(productName: string | null | undefined): boolean {
@@ -107,7 +107,7 @@ export function registerThinkificWebhook(app: Router) {
         return res.status(200).json({ ok: true, message: msg, productId: p?.id });
       }
 
-      // ── 2. Order created → grant premium if it's the iHeartEcho membership ─
+      // ── 2. Order created → grant premium if it's the iHeartEcho™ membership ─
       if (resource === "order" && action === "created") {
         const p = payload as {
           product_name?: string;

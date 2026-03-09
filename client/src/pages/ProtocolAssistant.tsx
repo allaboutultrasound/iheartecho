@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — Protocol Assistant
+  iHeartEcho™ — Protocol Assistant
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
 import { useState } from "react";

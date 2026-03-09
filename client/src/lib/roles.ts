@@ -1,18 +1,18 @@
 /**
- * Shared role-check helpers for iHeartEcho.
+ * Shared role-check helpers for iHeartEcho™.
  *
  * Role hierarchy:
  *   platform_admin  – full access to everything
  *   diy_admin       – Lab Admin + all premium features
- *   diy_user        – DIY Accreditation Tool + all premium features
+ *   diy_user        – DIY Accreditation Tool™ + all premium features
  *   premium_user    – premium clinical features only (no DIY tool)
  *   user            – free tier (base clinical tools only)
  */
 
-/** Roles that grant access to premium clinical features (Navigator TEE/ICE/Strain/Device, EchoAssist engines) */
+/** Roles that grant access to premium clinical features (Navigator TEE/ICE/Strain/Device, EchoAssist™ engines) */
 const PREMIUM_ROLES = new Set(["premium_user", "diy_user", "diy_admin", "platform_admin"]);
 
-/** Roles that grant access to the DIY Accreditation Tool */
+/** Roles that grant access to the DIY Accreditation Tool™ */
 const DIY_ROLES = new Set(["diy_user", "diy_admin", "platform_admin"]);
 
 /** Roles that grant access to the Lab Admin dashboard */

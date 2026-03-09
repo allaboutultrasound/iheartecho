@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — Pulmonary HTN & PE Navigator
+  iHeartEcho™ — Pulmonary HTN & PE Navigator
   Pulmonary Hypertension and Pulmonary Embolism Echo Assessment
   Brand: Teal #189aa1, Aqua #4ad9e0
   Fonts: Merriweather headings, Open Sans body
@@ -751,7 +751,7 @@ export default function PulmHTNNavigator() {
 
         {/* Copyright */}
         <div className="text-xs text-gray-400 text-center py-4 border-t border-gray-100 mt-2">
-          Clinical content © All About Ultrasound, Inc. / iHeartEcho. Educational use only. Based on ASE 2025, ESC/ERS 2022, and ESC 2019 PE guidelines.
+          Clinical content © All About Ultrasound, Inc. / iHeartEcho™. Educational use only. Based on ASE 2025, ESC/ERS 2022, and ESC 2019 PE guidelines.
         </div>
       </div>
     </Layout>

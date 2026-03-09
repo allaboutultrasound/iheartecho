@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — TEE/ICE ScanCoach
+  iHeartEcho™ — TEE/ICE ScanCoach
   Brand: Teal #189aa1, Aqua #4ad9e0
   Fonts: Merriweather headings, Open Sans body
   Covers: ME, TG, UE views for TEE; ICE views for structural procedures
@@ -805,7 +805,7 @@ export function TEEIceScanCoachContent() {
 
           {/* Copyright */}
           <div className="text-xs text-gray-400 text-center py-2">
-            Clinical content © All About Ultrasound, Inc. / iHeartEcho. Educational use only. Based on ASE/SCA/EACVI TEE guidelines.
+            Clinical content © All About Ultrasound, Inc. / iHeartEcho™. Educational use only. Based on ASE/SCA/EACVI TEE guidelines.
           </div>
         </div>
 

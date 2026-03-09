@@ -293,7 +293,7 @@ export type { ChecklistItem, ChecklistSection, ChecklistStep };
 const BRAND = "#189aa1";
 
 /**
- * Props for embedding in other contexts (e.g. EchoAccreditation Navigator).
+ * Props for embedding in other contexts (e.g. EchoAccreditation Navigator™).
  * When `trpcProcedure` is provided, uses that instead of the default DIY tool procedure.
  */
 interface AccreditationReadinessProps {

@@ -56,7 +56,7 @@ const PREMIUM_FEATURES = [
   },
   {
     icon: Zap,
-    title: "EchoAssist AI",
+    title: "EchoAssist™ AI",
     description: "Enter measurements and get instant guideline-based severity classification.",
   },
   {
@@ -77,7 +77,7 @@ const PREMIUM_ONLY_LABELS = [
   "Daily Challenge Archive (full history)",
   "Report Builder",
   "All EchoNavigator protocols",
-  "EchoAssist clinical engines",
+  "EchoAssist™ clinical engines",
   "Hemodynamics Lab",
   "Diastology in Special Populations",
 ];
@@ -143,7 +143,7 @@ export default function Premium() {
           <div className="max-w-2xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 mb-5">
               <Crown className="w-4 h-4 text-amber-400" />
-              <span className="text-sm text-white/90 font-medium">iHeartEcho Premium Access</span>
+              <span className="text-sm text-white/90 font-medium">iHeartEcho™ Premium Access</span>
             </div>
             <h1
               className="text-3xl md:text-5xl font-black text-white leading-tight mb-4"

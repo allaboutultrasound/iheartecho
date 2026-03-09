@@ -1,19 +1,29 @@
 /**
- * RichTextEditor — Tiptap-based rich text editor
- * Supports: Bold, Italic, Underline, H2/H3, Bullet list, Ordered list, Blockquote, Clear
- * Brand: Teal #189aa1
+ * RichTextEditor — Tiptap-based WYSIWYG editor with a STICKY toolbar.
+ *
+ * The toolbar uses `position: sticky; top: 0` so it stays visible as the
+ * user types long content inside a scrollable parent container.
+ *
+ * Exports:
+ *   default  RichTextEditor   — controlled editor (value / onChange)
+ *   named    RichTextDisplay  — read-only HTML renderer
  */
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
-import Placeholder from "@tiptap/extension-placeholder";
+import Link from "@tiptap/extension-link";
 import TextAlign from "@tiptap/extension-text-align";
+import Placeholder from "@tiptap/extension-placeholder";
+import { useEffect, useCallback } from "react";
 import {
-  Bold, Italic, Underline as UnderlineIcon,
-  Heading2, Heading3, List, ListOrdered,
-  Quote, Undo, Redo, AlignLeft, AlignCenter
+  Bold, Italic, Underline as UnderlineIcon, Strikethrough,
+  List, ListOrdered, AlignLeft, AlignCenter, AlignRight,
+  Link as LinkIcon, Undo, Redo, Heading2, Heading3, Quote,
+  Minus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface RichTextEditorProps {
   value: string;
@@ -32,25 +42,35 @@ interface ToolbarButtonProps {
   children: React.ReactNode;
 }
 
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
 function ToolbarButton({ onClick, active, disabled, title, children }: ToolbarButtonProps) {
   return (
     <button
       type="button"
       title={title}
       disabled={disabled}
-      onClick={onClick}
+      // Use onMouseDown + preventDefault to prevent editor blur on toolbar click
+      onMouseDown={(e) => {
+        e.preventDefault();
+        if (!disabled) onClick();
+      }}
       className={cn(
-        "p-1.5 rounded transition-colors text-sm",
-        active
-          ? "bg-[#189aa1] text-white"
-          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
-        disabled && "opacity-40 cursor-not-allowed"
+        "p-1.5 rounded transition-colors text-sm flex items-center justify-center",
+        active ? "bg-[#189aa1] text-white" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
+        disabled && "opacity-35 cursor-not-allowed pointer-events-none",
       )}
     >
       {children}
     </button>
   );
 }
+
+function Sep() {
+  return <div className="w-px h-4 bg-gray-200 mx-0.5 self-center flex-shrink-0" />;
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
 
 export default function RichTextEditor({
   value,
@@ -62,10 +82,12 @@ export default function RichTextEditor({
 }: RichTextEditorProps) {
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({
-        heading: { levels: [2, 3] },
-      }),
+      StarterKit.configure({ heading: { levels: [2, 3] } }),
       Underline,
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: { class: "text-[#189aa1] underline cursor-pointer" },
+      }),
       Placeholder.configure({ placeholder }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
     ],
@@ -73,16 +95,37 @@ export default function RichTextEditor({
     editable: !disabled,
     onUpdate({ editor }) {
       const html = editor.getHTML();
-      // Treat empty editor as empty string
       onChange(html === "<p></p>" ? "" : html);
     },
   });
 
-  // Sync external value changes (e.g. loading draft)
-  const prevValue = editor?.getHTML();
-  if (editor && value !== prevValue && value !== (prevValue === "<p></p>" ? "" : prevValue)) {
-    editor.commands.setContent(value || "");
-  }
+  // Sync external value changes (e.g. form reset / loading draft)
+  useEffect(() => {
+    if (!editor) return;
+    const current = editor.getHTML();
+    const normalised = current === "<p></p>" ? "" : current;
+    if (normalised !== value) {
+      editor.commands.setContent(value || "");
+    }
+  }, [value, editor]);
+
+  // Sync editable flag
+  useEffect(() => {
+    if (!editor) return;
+    editor.setEditable(!disabled);
+  }, [disabled, editor]);
+
+  const handleSetLink = useCallback(() => {
+    if (!editor) return;
+    const prev = editor.getAttributes("link").href ?? "";
+    const url = window.prompt("Enter URL (leave blank to remove):", prev);
+    if (url === null) return; // cancelled
+    if (url === "") {
+      editor.chain().focus().extendMarkRange("link").unsetLink().run();
+    } else {
+      editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+    }
+  }, [editor]);
 
   if (!editor) return null;
 
@@ -91,143 +134,124 @@ export default function RichTextEditor({
       className={cn(
         "border border-gray-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#189aa1]/40 focus-within:border-[#189aa1] transition-all",
         disabled && "opacity-60 pointer-events-none bg-gray-50",
-        className
+        className,
       )}
     >
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-0.5 px-2 py-1.5 border-b border-gray-100 bg-gray-50">
-        <ToolbarButton
-          title="Bold (Ctrl+B)"
-          active={editor.isActive("bold")}
-          onClick={() => editor.chain().focus().toggleBold().run()}
-        >
-          <Bold className="w-3.5 h-3.5" />
-        </ToolbarButton>
-        <ToolbarButton
-          title="Italic (Ctrl+I)"
-          active={editor.isActive("italic")}
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-        >
-          <Italic className="w-3.5 h-3.5" />
-        </ToolbarButton>
-        <ToolbarButton
-          title="Underline (Ctrl+U)"
-          active={editor.isActive("underline")}
-          onClick={() => editor.chain().focus().toggleUnderline().run()}
-        >
-          <UnderlineIcon className="w-3.5 h-3.5" />
-        </ToolbarButton>
+      {/* ── Sticky toolbar ── */}
+      {!disabled && (
+        <div className="sticky top-0 z-10 flex flex-wrap items-center gap-0.5 px-2 py-1.5 bg-white border-b border-gray-100 shadow-sm">
+          {/* History */}
+          <ToolbarButton title="Undo (Ctrl+Z)" disabled={!editor.can().undo()} onClick={() => editor.chain().focus().undo().run()}>
+            <Undo className="w-3.5 h-3.5" />
+          </ToolbarButton>
+          <ToolbarButton title="Redo (Ctrl+Shift+Z)" disabled={!editor.can().redo()} onClick={() => editor.chain().focus().redo().run()}>
+            <Redo className="w-3.5 h-3.5" />
+          </ToolbarButton>
 
-        <div className="w-px h-4 bg-gray-200 mx-1" />
+          <Sep />
 
-        <ToolbarButton
-          title="Heading 2"
-          active={editor.isActive("heading", { level: 2 })}
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-        >
-          <Heading2 className="w-3.5 h-3.5" />
-        </ToolbarButton>
-        <ToolbarButton
-          title="Heading 3"
-          active={editor.isActive("heading", { level: 3 })}
-          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-        >
-          <Heading3 className="w-3.5 h-3.5" />
-        </ToolbarButton>
+          {/* Headings */}
+          <ToolbarButton title="Heading 2" active={editor.isActive("heading", { level: 2 })} onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}>
+            <Heading2 className="w-3.5 h-3.5" />
+          </ToolbarButton>
+          <ToolbarButton title="Heading 3" active={editor.isActive("heading", { level: 3 })} onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}>
+            <Heading3 className="w-3.5 h-3.5" />
+          </ToolbarButton>
 
-        <div className="w-px h-4 bg-gray-200 mx-1" />
+          <Sep />
 
-        <ToolbarButton
-          title="Bullet list"
-          active={editor.isActive("bulletList")}
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-        >
-          <List className="w-3.5 h-3.5" />
-        </ToolbarButton>
-        <ToolbarButton
-          title="Ordered list"
-          active={editor.isActive("orderedList")}
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        >
-          <ListOrdered className="w-3.5 h-3.5" />
-        </ToolbarButton>
-        <ToolbarButton
-          title="Blockquote"
-          active={editor.isActive("blockquote")}
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-        >
-          <Quote className="w-3.5 h-3.5" />
-        </ToolbarButton>
+          {/* Inline marks */}
+          <ToolbarButton title="Bold (Ctrl+B)" active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()}>
+            <Bold className="w-3.5 h-3.5" />
+          </ToolbarButton>
+          <ToolbarButton title="Italic (Ctrl+I)" active={editor.isActive("italic")} onClick={() => editor.chain().focus().toggleItalic().run()}>
+            <Italic className="w-3.5 h-3.5" />
+          </ToolbarButton>
+          <ToolbarButton title="Underline (Ctrl+U)" active={editor.isActive("underline")} onClick={() => editor.chain().focus().toggleUnderline().run()}>
+            <UnderlineIcon className="w-3.5 h-3.5" />
+          </ToolbarButton>
+          <ToolbarButton title="Strikethrough" active={editor.isActive("strike")} onClick={() => editor.chain().focus().toggleStrike().run()}>
+            <Strikethrough className="w-3.5 h-3.5" />
+          </ToolbarButton>
 
-        <div className="w-px h-4 bg-gray-200 mx-1" />
+          <Sep />
 
-        <ToolbarButton
-          title="Align left"
-          active={editor.isActive({ textAlign: "left" })}
-          onClick={() => editor.chain().focus().setTextAlign("left").run()}
-        >
-          <AlignLeft className="w-3.5 h-3.5" />
-        </ToolbarButton>
-        <ToolbarButton
-          title="Align center"
-          active={editor.isActive({ textAlign: "center" })}
-          onClick={() => editor.chain().focus().setTextAlign("center").run()}
-        >
-          <AlignCenter className="w-3.5 h-3.5" />
-        </ToolbarButton>
+          {/* Lists & blocks */}
+          <ToolbarButton title="Bullet List" active={editor.isActive("bulletList")} onClick={() => editor.chain().focus().toggleBulletList().run()}>
+            <List className="w-3.5 h-3.5" />
+          </ToolbarButton>
+          <ToolbarButton title="Numbered List" active={editor.isActive("orderedList")} onClick={() => editor.chain().focus().toggleOrderedList().run()}>
+            <ListOrdered className="w-3.5 h-3.5" />
+          </ToolbarButton>
+          <ToolbarButton title="Blockquote" active={editor.isActive("blockquote")} onClick={() => editor.chain().focus().toggleBlockquote().run()}>
+            <Quote className="w-3.5 h-3.5" />
+          </ToolbarButton>
+          <ToolbarButton title="Horizontal Rule" onClick={() => editor.chain().focus().setHorizontalRule().run()}>
+            <Minus className="w-3.5 h-3.5" />
+          </ToolbarButton>
 
-        <div className="w-px h-4 bg-gray-200 mx-1" />
+          <Sep />
 
-        <ToolbarButton
-          title="Undo (Ctrl+Z)"
-          disabled={!editor.can().undo()}
-          onClick={() => editor.chain().focus().undo().run()}
-        >
-          <Undo className="w-3.5 h-3.5" />
-        </ToolbarButton>
-        <ToolbarButton
-          title="Redo (Ctrl+Shift+Z)"
-          disabled={!editor.can().redo()}
-          onClick={() => editor.chain().focus().redo().run()}
-        >
-          <Redo className="w-3.5 h-3.5" />
-        </ToolbarButton>
-      </div>
+          {/* Alignment */}
+          <ToolbarButton title="Align Left" active={editor.isActive({ textAlign: "left" })} onClick={() => editor.chain().focus().setTextAlign("left").run()}>
+            <AlignLeft className="w-3.5 h-3.5" />
+          </ToolbarButton>
+          <ToolbarButton title="Align Center" active={editor.isActive({ textAlign: "center" })} onClick={() => editor.chain().focus().setTextAlign("center").run()}>
+            <AlignCenter className="w-3.5 h-3.5" />
+          </ToolbarButton>
+          <ToolbarButton title="Align Right" active={editor.isActive({ textAlign: "right" })} onClick={() => editor.chain().focus().setTextAlign("right").run()}>
+            <AlignRight className="w-3.5 h-3.5" />
+          </ToolbarButton>
 
-      {/* Editor area */}
+          <Sep />
+
+          {/* Link */}
+          <ToolbarButton title="Insert / Edit Link" active={editor.isActive("link")} onClick={handleSetLink}>
+            <LinkIcon className="w-3.5 h-3.5" />
+          </ToolbarButton>
+        </div>
+      )}
+
+      {/* ── Editor content area ── */}
       <EditorContent
         editor={editor}
-        className="prose prose-sm max-w-none px-3 py-2.5 text-gray-800 focus:outline-none"
+        className="rte-content px-3 py-2.5 text-sm text-gray-800 focus:outline-none"
         style={{ minHeight }}
       />
 
+      {/* ── Scoped styles ── */}
       <style>{`
-        .tiptap p.is-editor-empty:first-child::before {
+        .rte-content .tiptap { outline: none; }
+        .rte-content .tiptap p.is-editor-empty:first-child::before {
           content: attr(data-placeholder);
           float: left;
           color: #9ca3af;
           pointer-events: none;
           height: 0;
         }
-        .tiptap h2 { font-size: 1.1rem; font-weight: 700; margin: 0.6em 0 0.3em; color: #0e1e2e; }
-        .tiptap h3 { font-size: 0.95rem; font-weight: 600; margin: 0.5em 0 0.25em; color: #0e4a50; }
-        .tiptap ul { list-style: disc; padding-left: 1.4em; margin: 0.4em 0; }
-        .tiptap ol { list-style: decimal; padding-left: 1.4em; margin: 0.4em 0; }
-        .tiptap li { margin: 0.15em 0; }
-        .tiptap blockquote { border-left: 3px solid #189aa1; padding-left: 0.8em; color: #475569; font-style: italic; margin: 0.5em 0; }
-        .tiptap strong { font-weight: 700; }
-        .tiptap em { font-style: italic; }
-        .tiptap u { text-decoration: underline; }
-        .tiptap p { margin: 0.3em 0; }
-        .tiptap:focus { outline: none; }
+        .rte-content .tiptap h2 { font-size: 1.05rem; font-weight: 700; margin: 0.6em 0 0.3em; color: #0e1e2e; }
+        .rte-content .tiptap h3 { font-size: 0.95rem; font-weight: 600; margin: 0.5em 0 0.25em; color: #0e4a50; }
+        .rte-content .tiptap ul { list-style: disc; padding-left: 1.4em; margin: 0.4em 0; }
+        .rte-content .tiptap ol { list-style: decimal; padding-left: 1.4em; margin: 0.4em 0; }
+        .rte-content .tiptap li { margin: 0.15em 0; }
+        .rte-content .tiptap blockquote { border-left: 3px solid #189aa1; padding-left: 0.8em; color: #475569; font-style: italic; margin: 0.5em 0; }
+        .rte-content .tiptap hr { border: none; border-top: 1px solid #e5e7eb; margin: 0.75em 0; }
+        .rte-content .tiptap strong { font-weight: 700; }
+        .rte-content .tiptap em { font-style: italic; }
+        .rte-content .tiptap u { text-decoration: underline; }
+        .rte-content .tiptap s { text-decoration: line-through; }
+        .rte-content .tiptap p { margin: 0.3em 0; }
+        .rte-content .tiptap a { color: #189aa1; text-decoration: underline; cursor: pointer; }
       `}</style>
     </div>
   );
 }
 
+// ─── Read-only display ────────────────────────────────────────────────────────
+
 /**
- * Read-only renderer for rich text HTML content (sanitized via dangerouslySetInnerHTML)
- * Use this wherever rich text content is displayed (case detail, admin preview, etc.)
+ * RichTextDisplay — renders saved HTML from RichTextEditor in read-only mode.
+ * Use wherever rich text content is displayed (case detail, admin preview, etc.)
  */
 export function RichTextDisplay({
   html,
@@ -247,11 +271,14 @@ export function RichTextDisplay({
         "[&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-1",
         "[&_li]:my-0.5",
         "[&_blockquote]:border-l-[3px] [&_blockquote]:border-[#189aa1] [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-gray-500 [&_blockquote]:my-2",
+        "[&_hr]:border-t [&_hr]:border-gray-200 [&_hr]:my-2",
         "[&_strong]:font-bold",
         "[&_em]:italic",
         "[&_u]:underline",
+        "[&_s]:line-through",
+        "[&_a]:text-[#189aa1] [&_a]:underline",
         "[&_p]:my-1",
-        className
+        className,
       )}
       dangerouslySetInnerHTML={{ __html: html }}
     />

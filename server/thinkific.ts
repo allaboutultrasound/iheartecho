@@ -241,7 +241,7 @@ export async function getOrdersByEmail(
 }
 
 /**
- * The Thinkific product ID for the iHeartEcho App - Premium Access subscription.
+ * The Thinkific product ID for the iHeartEcho™ App - Premium Access subscription.
  * Confirmed from the Thinkific orders API on 2026-03-07.
  */
 export const IHEARTECHO_PREMIUM_PRODUCT_ID = 3703267;

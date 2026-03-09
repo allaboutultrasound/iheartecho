@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — EchoAssist
+  iHeartEcho™ — EchoAssist™
   Instant ASE-guideline severity classification from raw measurements.
   Domains: AS, MS, AR, MR, LV Systolic, Diastolic, Strain (LV/RV/LA), RV Function, PA Pressure
   Brand: Teal #189aa1, Aqua #4ad9e0
@@ -154,7 +154,7 @@ function EchoAssistPanel({ output }: { output: EchoAssistOutput | null }) {
         <MessageSquare className="w-4 h-4 text-[#189aa1] flex-shrink-0 mt-0.5" />
         <div>
           <span className="text-[10px] font-bold uppercase tracking-widest text-[#0e7490] block mb-0.5">
-            EchoAssist Suggests
+            EchoAssist™ Suggests
           </span>
           <p className="text-sm text-[#0e7490] font-medium leading-snug">{output.suggests}</p>
         </div>
@@ -165,7 +165,7 @@ function EchoAssistPanel({ output }: { output: EchoAssistOutput | null }) {
           <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
             <span className="text-[10px] font-bold uppercase tracking-widest text-amber-700 block mb-0.5">
-              EchoAssist Note
+              EchoAssist™ Note
             </span>
             <p className="text-sm text-amber-800 leading-snug">{output.note}</p>
           </div>
@@ -177,7 +177,7 @@ function EchoAssistPanel({ output }: { output: EchoAssistOutput | null }) {
           <Lightbulb className="w-4 h-4 text-[#189aa1] flex-shrink-0 mt-0.5" />
           <div>
             <span className="text-[10px] font-bold uppercase tracking-widest text-[#189aa1] block mb-0.5">
-              EchoAssist Tip
+              EchoAssist™ Tip
             </span>
             <p className="text-sm text-gray-600 leading-snug">{output.tip}</p>
           </div>
@@ -906,33 +906,33 @@ function DiastolicEngine() {
   const getDiastEchoAssist = (): EchoAssistOutput | null => {
     if (result.sev === "indeterminate" && result.label === "Insufficient data") return null;
     if (result.sev === "normal") return {
-      suggests: `EchoAssist Suggests: Normal diastolic function. All ASE 2025 grading variables within normal limits. LAP is estimated to be normal. No evidence of diastolic dysfunction.${ePrimeAvg ? " Average e' " + ePrimeAvg.toFixed(1) + " cm/s." : ""}${eeRatio ? " E/e' " + eeRatio.toFixed(1) + "." : ""}`,
-      tip: "EchoAssist Tip: Ensure e' velocities are sampled at the septal and lateral mitral annulus using TDI with a low wall filter and high gain. Angle of incidence should be <20° for accurate velocity measurement."
+      suggests: `EchoAssist™ Suggests: Normal diastolic function. All ASE 2025 grading variables within normal limits. LAP is estimated to be normal. No evidence of diastolic dysfunction.${ePrimeAvg ? " Average e' " + ePrimeAvg.toFixed(1) + " cm/s." : ""}${eeRatio ? " E/e' " + eeRatio.toFixed(1) + "." : ""}`,
+      tip: "EchoAssist™ Tip: Ensure e' velocities are sampled at the septal and lateral mitral annulus using TDI with a low wall filter and high gain. Angle of incidence should be <20° for accurate velocity measurement."
     };
     if (result.label.includes("Grade I")) return {
-      suggests: `EchoAssist Suggests: Grade I diastolic dysfunction (impaired relaxation pattern). e' is reduced indicating impaired LV relaxation.${eaRatio !== null ? " E/A " + eaRatio.toFixed(2) + "." : ""} LAP is estimated to be normal. LVEDP is not elevated at rest.`,
-      note: `EchoAssist Note: Grade I is common in aging and hypertension. It reflects impaired active LV relaxation with normal filling pressures. ${result.lap === "Normal LAP" && eaRatio !== null && eaRatio > 0.8 ? "If symptomatic with unexplained dyspnea, consider Diastolic Exercise Echo — a rise in E/e' >14 or TR >2.8 m/s with exercise confirms exercise-induced elevated filling pressures." : ""}`,
-      tip: "EchoAssist Tip: Valsalva maneuver may reveal a pseudonormal pattern converting to E/A <0.8, confirming Grade I rather than Grade II. Obtain PV S/D and LARS if not yet done."
+      suggests: `EchoAssist™ Suggests: Grade I diastolic dysfunction (impaired relaxation pattern). e' is reduced indicating impaired LV relaxation.${eaRatio !== null ? " E/A " + eaRatio.toFixed(2) + "." : ""} LAP is estimated to be normal. LVEDP is not elevated at rest.`,
+      note: `EchoAssist™ Note: Grade I is common in aging and hypertension. It reflects impaired active LV relaxation with normal filling pressures. ${result.lap === "Normal LAP" && eaRatio !== null && eaRatio > 0.8 ? "If symptomatic with unexplained dyspnea, consider Diastolic Exercise Echo — a rise in E/e' >14 or TR >2.8 m/s with exercise confirms exercise-induced elevated filling pressures." : ""}`,
+      tip: "EchoAssist™ Tip: Valsalva maneuver may reveal a pseudonormal pattern converting to E/A <0.8, confirming Grade I rather than Grade II. Obtain PV S/D and LARS if not yet done."
     };
     if (result.label.includes("Grade II")) return {
-      suggests: `EchoAssist Suggests: Grade II diastolic dysfunction (pseudonormal filling pattern). LAP is estimated to be elevated.${eeRatio ? " E/e' " + eeRatio.toFixed(1) + (eeElevated ? " (elevated ≥14)." : ".") : ""}${has(lars) ? " LARS " + lars + "%." : ""}${has(lavi) ? " LAVI " + lavi + " mL/m²." : ""} Mean LAP is elevated — consistent with HFpEF physiology.`,
-      note: "EchoAssist Note: Grade II is associated with increased risk of HF hospitalization and AF. Evaluate for underlying hypertension, diabetes, obesity, or HFpEF. Valsalva maneuver should show E/A reversal to <0.8 (pseudonormal pattern).",
-      tip: "EchoAssist Tip: Confirm with PV S/D ≤0.67 (blunted systolic filling), LARS ≤18%, or IVRT ≤70 ms. These secondary markers strengthen the diagnosis of elevated LAP."
+      suggests: `EchoAssist™ Suggests: Grade II diastolic dysfunction (pseudonormal filling pattern). LAP is estimated to be elevated.${eeRatio ? " E/e' " + eeRatio.toFixed(1) + (eeElevated ? " (elevated ≥14)." : ".") : ""}${has(lars) ? " LARS " + lars + "%." : ""}${has(lavi) ? " LAVI " + lavi + " mL/m²." : ""} Mean LAP is elevated — consistent with HFpEF physiology.`,
+      note: "EchoAssist™ Note: Grade II is associated with increased risk of HF hospitalization and AF. Evaluate for underlying hypertension, diabetes, obesity, or HFpEF. Valsalva maneuver should show E/A reversal to <0.8 (pseudonormal pattern).",
+      tip: "EchoAssist™ Tip: Confirm with PV S/D ≤0.67 (blunted systolic filling), LARS ≤18%, or IVRT ≤70 ms. These secondary markers strengthen the diagnosis of elevated LAP."
     };
     if (result.label.includes("Grade III")) return {
-      suggests: `EchoAssist Suggests: Grade III diastolic dysfunction (restrictive filling pattern). LAP is markedly elevated.${eaRatio !== null ? " E/A " + eaRatio.toFixed(2) + " (≥2.0 — restrictive)." : ""} This represents advanced diastolic impairment with significantly elevated LV filling pressures.`,
-      note: "EchoAssist Note: Grade III carries a poor prognosis and is associated with advanced HF, cardiac amyloidosis, and constrictive pericarditis. Assess reversibility with Valsalva — if E/A remains ≥2 (irreversible restriction), this indicates more advanced disease and higher mortality risk.",
-      tip: "EchoAssist Tip: In Grade III, IVRT is typically very short (<60 ms) and DT <160 ms. Cardiac amyloidosis should be excluded — check for apical-sparing strain pattern (RAS >1.0) and increased wall thickness."
+      suggests: `EchoAssist™ Suggests: Grade III diastolic dysfunction (restrictive filling pattern). LAP is markedly elevated.${eaRatio !== null ? " E/A " + eaRatio.toFixed(2) + " (≥2.0 — restrictive)." : ""} This represents advanced diastolic impairment with significantly elevated LV filling pressures.`,
+      note: "EchoAssist™ Note: Grade III carries a poor prognosis and is associated with advanced HF, cardiac amyloidosis, and constrictive pericarditis. Assess reversibility with Valsalva — if E/A remains ≥2 (irreversible restriction), this indicates more advanced disease and higher mortality risk.",
+      tip: "EchoAssist™ Tip: In Grade III, IVRT is typically very short (<60 ms) and DT <160 ms. Cardiac amyloidosis should be excluded — check for apical-sparing strain pattern (RAS >1.0) and increased wall thickness."
     };
     if (result.label.includes("not applicable")) return {
-      suggests: "EchoAssist Suggests: Standard ASE 2025 diastolic grading algorithm is not applicable due to an exclusion criterion (AF, MAC, significant MR/MS, LVAD, non-cardiac PH, HTX, or pericardial constriction).",
-      note: "EchoAssist Note: In these conditions, standard E/e' thresholds and grading criteria are unreliable. Use clinical judgment, invasive hemodynamics, or condition-specific assessment protocols.",
-      tip: "EchoAssist Tip: In AF, use averaged measurements over ≥5 beats. In significant MR, E/e' overestimates filling pressures. In constrictive pericarditis, look for respiratory variation in E velocity and annulus reversus (lateral e' > septal e')."
+      suggests: "EchoAssist™ Suggests: Standard ASE 2025 diastolic grading algorithm is not applicable due to an exclusion criterion (AF, MAC, significant MR/MS, LVAD, non-cardiac PH, HTX, or pericardial constriction).",
+      note: "EchoAssist™ Note: In these conditions, standard E/e' thresholds and grading criteria are unreliable. Use clinical judgment, invasive hemodynamics, or condition-specific assessment protocols.",
+      tip: "EchoAssist™ Tip: In AF, use averaged measurements over ≥5 beats. In significant MR, E/e' overestimates filling pressures. In constrictive pericarditis, look for respiratory variation in E velocity and annulus reversus (lateral e' > septal e')."
     };
     return {
-      suggests: "EchoAssist Suggests: Diastolic function assessment is indeterminate. Additional parameters are needed to complete the ASE 2025 grading algorithm.",
-      note: "EchoAssist Note: Enter PV S/D (normal >0.67), LARS (normal >18%), LAVI (normal ≤34 mL/m²), or IVRT (normal >70 ms) to determine LAP and complete grading.",
-      tip: "EchoAssist Tip: If TR is absent or not measurable, LARS ≤18% or PV S/D ≤0.67 can substitute as surrogate markers of elevated filling pressures per ASE 2025 supplementary methods."
+      suggests: "EchoAssist™ Suggests: Diastolic function assessment is indeterminate. Additional parameters are needed to complete the ASE 2025 grading algorithm.",
+      note: "EchoAssist™ Note: Enter PV S/D (normal >0.67), LARS (normal >18%), LAVI (normal ≤34 mL/m²), or IVRT (normal >70 ms) to determine LAP and complete grading.",
+      tip: "EchoAssist™ Tip: If TR is absent or not measurable, LARS ≤18% or PV S/D ≤0.67 can substitute as surrogate markers of elevated filling pressures per ASE 2025 supplementary methods."
     };
   };
 
@@ -1016,8 +1016,8 @@ function StrainEngine() {
     : null;
   const rasInterpretation = rasValue !== null
     ? rasValue > 1.0
-      ? { label: "Apical-Sparing Pattern", color: "#dc2626", text: `EchoAssist Suggests: RAS = ${rasValue.toFixed(2)} (> 1.0). This apical-sparing longitudinal strain pattern is a hallmark of cardiac amyloidosis (sensitivity ~80%, specificity ~80% vs. HCM). Prompt further evaluation with T1 mapping, nuclear scintigraphy (PYP/DPD), or serum/urine protein electrophoresis.`, note: "EchoAssist Note: Apical-sparing strain is defined as relatively preserved apical GLS with disproportionate reduction in basal and mid-ventricular segments. This pattern reflects the characteristic base-to-apex amyloid deposition gradient.", tip: "EchoAssist Tip: RAS > 1.0 combined with increased LV wall thickness (≥ 12 mm), low-voltage ECG, and diastolic dysfunction should trigger a comprehensive amyloidosis workup. Transthyretin (ATTR) amyloidosis is treatable with tafamidis." }
-      : { label: "Non-Apical-Sparing Pattern", color: "#15803d", text: `EchoAssist Suggests: RAS = ${rasValue.toFixed(2)} (≤ 1.0). No apical-sparing pattern identified. This does not exclude amyloidosis but makes it less likely. Diffuse or ischemic patterns should be considered based on clinical context.`, note: "EchoAssist Note: RAS ≤ 1.0 with reduced GLS is more consistent with ischemic cardiomyopathy, dilated cardiomyopathy, or HCM. Regional wall motion abnormalities and coronary territory correlation are recommended.", tip: "EchoAssist Tip: In HCM, strain is typically reduced in the hypertrophied segments (often septal/basal) with relatively preserved apical strain — RAS may approach but usually does not exceed 1.0 as prominently as in amyloidosis." }
+      ? { label: "Apical-Sparing Pattern", color: "#dc2626", text: `EchoAssist™ Suggests: RAS = ${rasValue.toFixed(2)} (> 1.0). This apical-sparing longitudinal strain pattern is a hallmark of cardiac amyloidosis (sensitivity ~80%, specificity ~80% vs. HCM). Prompt further evaluation with T1 mapping, nuclear scintigraphy (PYP/DPD), or serum/urine protein electrophoresis.`, note: "EchoAssist™ Note: Apical-sparing strain is defined as relatively preserved apical GLS with disproportionate reduction in basal and mid-ventricular segments. This pattern reflects the characteristic base-to-apex amyloid deposition gradient.", tip: "EchoAssist™ Tip: RAS > 1.0 combined with increased LV wall thickness (≥ 12 mm), low-voltage ECG, and diastolic dysfunction should trigger a comprehensive amyloidosis workup. Transthyretin (ATTR) amyloidosis is treatable with tafamidis." }
+      : { label: "Non-Apical-Sparing Pattern", color: "#15803d", text: `EchoAssist™ Suggests: RAS = ${rasValue.toFixed(2)} (≤ 1.0). No apical-sparing pattern identified. This does not exclude amyloidosis but makes it less likely. Diffuse or ischemic patterns should be considered based on clinical context.`, note: "EchoAssist™ Note: RAS ≤ 1.0 with reduced GLS is more consistent with ischemic cardiomyopathy, dilated cardiomyopathy, or HCM. Regional wall motion abnormalities and coronary territory correlation are recommended.", tip: "EchoAssist™ Tip: In HCM, strain is typically reduced in the hypertrophied segments (often septal/basal) with relatively preserved apical strain — RAS may approach but usually does not exceed 1.0 as prominently as in amyloidosis." }
     : null;
 
   const getLvGlsSeverity = (): { sev: Severity; label: string; criteria: string[] } => {
@@ -1625,23 +1625,23 @@ function FrankStarlingEngine() {
 
   const suggests =
     fsParams.contractility < 25
-      ? `EchoAssist\u2122 Suggests: Severely depressed contractility with Starling failure. The Frank-Starling curve is flat — further preload augmentation will not improve stroke volume. Consider inotropic support, afterload reduction, or mechanical circulatory support.`
+      ? `EchoAssist™\u2122 Suggests: Severely depressed contractility with Starling failure. The Frank-Starling curve is flat — further preload augmentation will not improve stroke volume. Consider inotropic support, afterload reduction, or mechanical circulatory support.`
       : fsParams.contractility < 45
-      ? `EchoAssist\u2122 Suggests: Reduced contractility shifts the Frank-Starling curve downward. Stroke volume is diminished at any given preload. Optimize preload, reduce afterload (vasodilators), and consider guideline-directed medical therapy.`
+      ? `EchoAssist™\u2122 Suggests: Reduced contractility shifts the Frank-Starling curve downward. Stroke volume is diminished at any given preload. Optimize preload, reduce afterload (vasodilators), and consider guideline-directed medical therapy.`
       : fsParams.contractility >= 70
-      ? `EchoAssist\u2122 Suggests: Hyperdynamic state — steep ascending limb. The ventricle is highly preload-responsive. Assess for high-output states: sepsis, anemia, thyrotoxicosis, AV fistula, or severe MR/AR.`
-      : `EchoAssist\u2122 Suggests: Normal contractility. The ascending limb of the Frank-Starling curve is intact — preload augmentation will increase stroke volume up to the plateau. Maintain euvolemia and optimize heart rate.`;
+      ? `EchoAssist™\u2122 Suggests: Hyperdynamic state — steep ascending limb. The ventricle is highly preload-responsive. Assess for high-output states: sepsis, anemia, thyrotoxicosis, AV fistula, or severe MR/AR.`
+      : `EchoAssist™\u2122 Suggests: Normal contractility. The ascending limb of the Frank-Starling curve is intact — preload augmentation will increase stroke volume up to the plateau. Maintain euvolemia and optimize heart rate.`;
 
   const note =
     fsParams.afterload >= 70
-      ? "EchoAssist\u2122 Note: High afterload depresses the Frank-Starling curve — the same preload generates less stroke volume. Afterload reduction (ACE inhibitors, ARBs, hydralazine, nitroprusside) can restore SV without increasing preload."
+      ? "EchoAssist™\u2122 Note: High afterload depresses the Frank-Starling curve — the same preload generates less stroke volume. Afterload reduction (ACE inhibitors, ARBs, hydralazine, nitroprusside) can restore SV without increasing preload."
       : fsParams.preload >= 75
-      ? "EchoAssist\u2122 Note: Operating on the plateau of the Frank-Starling curve. Further volume loading is unlikely to improve stroke volume and may worsen pulmonary congestion. Consider diuresis if filling pressures are elevated."
+      ? "EchoAssist™\u2122 Note: Operating on the plateau of the Frank-Starling curve. Further volume loading is unlikely to improve stroke volume and may worsen pulmonary congestion. Consider diuresis if filling pressures are elevated."
       : fsParams.preload <= 25
-      ? "EchoAssist\u2122 Note: Operating on the steep ascending limb — the ventricle is preload-dependent. Fluid resuscitation will increase stroke volume. Assess IVC collapsibility and passive leg raise response."
-      : "EchoAssist\u2122 Note: Operating in the mid-range of the Frank-Starling curve. Both preload augmentation and contractility enhancement can improve stroke volume.";
+      ? "EchoAssist™\u2122 Note: Operating on the steep ascending limb — the ventricle is preload-dependent. Fluid resuscitation will increase stroke volume. Assess IVC collapsibility and passive leg raise response."
+      : "EchoAssist™\u2122 Note: Operating in the mid-range of the Frank-Starling curve. Both preload augmentation and contractility enhancement can improve stroke volume.";
 
-  const tip = "EchoAssist\u2122 Tip: The Frank-Starling relationship is the physiologic basis for fluid responsiveness testing (passive leg raise, fluid challenge). A >10% increase in SV or VTI with PLR predicts fluid responsiveness. Correlate with IVC collapsibility, E/e\u2019, and LVOT VTI trends.";
+  const tip = "EchoAssist™\u2122 Tip: The Frank-Starling relationship is the physiologic basis for fluid responsiveness testing (passive leg raise, fluid challenge). A >10% increase in SV or VTI with PLR predicts fluid responsiveness. Correlate with IVC collapsibility, E/e\u2019, and LVOT VTI trends.";
 
   return (
     <div id="engine-frank-starling" ref={ref} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
@@ -1709,7 +1709,7 @@ function FrankStarlingEngine() {
           {/* Graph */}
           <FrankStarlingGraph params={fsParams} showReferenceCurves height={260} />
 
-          {/* EchoAssist output */}
+          {/* EchoAssist™ output */}
           <div className="mt-4 space-y-2">
             <div className="flex items-start gap-2 bg-[#f0fbfc] border border-[#b2e8ec] rounded-lg px-4 py-3">
               <Zap className="w-3.5 h-3.5 text-[#189aa1] flex-shrink-0 mt-0.5" />
@@ -1848,7 +1848,7 @@ function StressEchoAssistEngine() {
   const target85 = maxHR ? Math.round(maxHR * 0.85) : 0;
   const target80 = maxHR ? Math.round(maxHR * 0.80) : 0;
 
-  // EchoAssist interpretation
+  // EchoAssist™ interpretation
   const hasNewWMA = newAbnormal.length > 0;
   const wmsiNum = wmsi ? parseFloat(wmsi) : null;
   const getInterpretation = () => {
@@ -1857,22 +1857,22 @@ function StressEchoAssistEngine() {
       const terrs = territoryAbnormal.map(t => `${t.territory} (${t.segments.map(s => s.label).join(", ")})`).join("; ");
       return {
         suggests: `Positive Stress Echo — Inducible ischemia identified. WMSI = ${wmsi}. New wall motion abnormalities at stress in: ${terrs}.`,
-        note: "EchoAssist Note: New or worsening regional wall motion abnormalities at peak stress in ≥2 adjacent segments are the primary criterion for a positive stress echo. Transient LV dilation and EF drop ≥5% are additional positive markers.",
-        tip: "EchoAssist Tip: Correlate with the coronary territory distribution of the new WMAs to guide catheterization planning. LAD territory involvement carries higher risk than isolated RCA or LCx disease.",
+        note: "EchoAssist™ Note: New or worsening regional wall motion abnormalities at peak stress in ≥2 adjacent segments are the primary criterion for a positive stress echo. Transient LV dilation and EF drop ≥5% are additional positive markers.",
+        tip: "EchoAssist™ Tip: Correlate with the coronary territory distribution of the new WMAs to guide catheterization planning. LAD territory involvement carries higher risk than isolated RCA or LCx disease.",
       };
     }
     if (stage === "stress" && wmsiNum !== null && wmsiNum <= 1.0) {
       return {
         suggests: `Negative Stress Echo — No new wall motion abnormalities at stress. WMSI = ${wmsi} (normal = 1.0). All 17 segments normal or hyperkinetic at peak stress.`,
-        note: "EchoAssist Note: A negative stress echo with adequate heart rate response (≥85% MPHR) has a high negative predictive value for significant obstructive CAD.",
-        tip: "EchoAssist Tip: Confirm target HR was achieved. A suboptimal HR response (<80% MPHR without atropine augmentation) renders the study inconclusive regardless of wall motion findings.",
+        note: "EchoAssist™ Note: A negative stress echo with adequate heart rate response (≥85% MPHR) has a high negative predictive value for significant obstructive CAD.",
+        tip: "EchoAssist™ Tip: Confirm target HR was achieved. A suboptimal HR response (<80% MPHR without atropine augmentation) renders the study inconclusive regardless of wall motion findings.",
       };
     }
     if (stage === "rest") {
       return {
         suggests: `Resting WMSI = ${wmsi}. ${wmsiNum && wmsiNum > 1.0 ? "Resting wall motion abnormality present — consider prior MI, cardiomyopathy, or LBBB." : "Normal resting wall motion."}`,
-        note: "EchoAssist Note: Switch to Stress stage and enter peak stress scores to generate a full stress echo interpretation.",
-        tip: "EchoAssist Tip: Document resting WMSI before stress to identify baseline abnormalities that may confound stress interpretation.",
+        note: "EchoAssist™ Note: Switch to Stress stage and enter peak stress scores to generate a full stress echo interpretation.",
+        tip: "EchoAssist™ Tip: Document resting WMSI before stress to identify baseline abnormalities that may confound stress interpretation.",
       };
     }
     return null;
@@ -1895,7 +1895,7 @@ function StressEchoAssistEngine() {
   };
 
   return (
-    <EngineSection id="engine-stress" title="Stress Echo EchoAssist" subtitle="17-Segment WMSI · Target HR · Protocol Dosing · Interpretation · Save as Case">
+    <EngineSection id="engine-stress" title="Stress Echo EchoAssist™" subtitle="17-Segment WMSI · Target HR · Protocol Dosing · Interpretation · Save as Case">
       <div>
             <div className="flex flex-wrap gap-2 mb-5">
               {(["wmsi", "target_hr", "interpretation"] as const).map(t => (
@@ -1980,7 +1980,7 @@ function StressEchoAssistEngine() {
                         <div className="flex items-start gap-3 px-4 py-3 bg-[#f0fbfc] border-b border-[#189aa1]/20">
                           <MessageSquare className="w-4 h-4 text-[#189aa1] flex-shrink-0 mt-0.5" />
                           <div>
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-[#0e7490] block mb-0.5">EchoAssist Suggests</span>
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-[#0e7490] block mb-0.5">EchoAssist™ Suggests</span>
                             <p className="text-sm text-[#0e7490] font-medium leading-snug">{interpretation.suggests}</p>
                           </div>
                         </div>
@@ -1988,7 +1988,7 @@ function StressEchoAssistEngine() {
                           <div className="flex items-start gap-3 px-4 py-3 bg-amber-50 border-b border-amber-100">
                             <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
                             <div>
-                              <span className="text-[10px] font-bold uppercase tracking-widest text-amber-700 block mb-0.5">EchoAssist Note</span>
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-amber-700 block mb-0.5">EchoAssist™ Note</span>
                               <p className="text-xs text-amber-700 leading-snug">{interpretation.note}</p>
                             </div>
                           </div>
@@ -1997,7 +1997,7 @@ function StressEchoAssistEngine() {
                           <div className="flex items-start gap-3 px-4 py-3 bg-sky-50">
                             <Lightbulb className="w-4 h-4 text-sky-600 flex-shrink-0 mt-0.5" />
                             <div>
-                              <span className="text-[10px] font-bold uppercase tracking-widest text-sky-700 block mb-0.5">EchoAssist Tip</span>
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-sky-700 block mb-0.5">EchoAssist™ Tip</span>
                               <p className="text-xs text-sky-700 leading-snug">{interpretation.tip}</p>
                             </div>
                           </div>
@@ -2168,7 +2168,7 @@ export default function EchoAssist() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-              EchoAssist
+              EchoAssist™
             </h1>
             <p className="text-sm text-gray-500 mt-0.5">
               Enter raw measurements — get instant ASE/AHA/ACC guideline-based severity classifications, calculated values, and the specific criteria met. Domains: Frank-Starling, AS, MS, AR, MR, TR, LV, Diastology, Strain, RV, PA Pressure.
@@ -2190,7 +2190,7 @@ export default function EchoAssist() {
           <DiastolicEngine />
           <DiastologySpecialPopulations />
           <StrainEngine />
-          <PremiumGate featureName="Stress Echo EchoAssist">
+          <PremiumGate featureName="Stress Echo EchoAssist™">
             <StressEchoAssistEngine />
           </PremiumGate>
           <AorticStenosisEngine />
@@ -2211,7 +2211,7 @@ export default function EchoAssist() {
           <p>• ASE 2025 Special Populations Diastology (Nagueh et al.) — MAC (Fig. 4), Heart Transplant (Fig. 5), Pulmonary HTN (Fig. 6), Constriction vs Restriction (Fig. 7), Atrial Fibrillation (Fig. 8)</p>
           <p>• AHA/ACC 2021 Valvular Heart Disease Guidelines | ASE/EACVI 2017 Valve Regurgitation (Zoghbi et al.) | Hahn et al. JACC 2019 TR Grading</p>
           <p>• ESC/ERS 2022 PH Guidelines | AHA/ACC 2022 Heart Failure Guidelines</p>
-          <p className="pt-1">© All About Ultrasound — iHeartEcho | www.iheartecho.com</p>
+          <p className="pt-1">© All About Ultrasound — iHeartEcho™ | www.iheartecho.com</p>
         </div>
       </div>
     </Layout>

@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — Adult TTE Navigator
+  iHeartEcho™ — Adult TTE Navigator
   Structured step-by-step TTE protocol with view-by-view checklist,
   normal reference values, and clinical decision support
   Brand: Teal #189aa1, Aqua #4ad9e0
@@ -179,7 +179,7 @@ export default function TTENavigator() {
   const handleExport = () => {
     const now = new Date().toLocaleString();
     const lines: string[] = [
-      "=== iHeartEcho — Adult TTE Protocol Checklist ===",
+      "=== iHeartEcho™ — Adult TTE Protocol Checklist ===",
       `Generated: ${now}`,
       `Progress: ${checked.size}/${totalItems} items (${progress}%) | Critical: ${checkedCritical}/${criticalItems}`,
       "",
@@ -195,7 +195,7 @@ export default function TTENavigator() {
       });
     });
     lines.push("\n" + "=".repeat(50));
-    lines.push("Per ASE/ACC/AHA Guidelines | iHeartEcho Clinical Companion");
+    lines.push("Per ASE/ACC/AHA Guidelines | iHeartEcho™ Clinical Companion");
     const blob = new Blob([lines.join("\n")], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -387,13 +387,13 @@ export default function TTENavigator() {
               <p>Right Heart & PH: <a href='https://www.asecho.org/wp-content/uploads/2025/03/PIIS0894731725000379.pdf' target='_blank' rel='noopener noreferrer' className='underline hover:text-[#189aa1]'>ASE 2025 Right Heart & Pulmonary Hypertension Guidelines</a></p>
             </div>
 
-            {/* Quick links to EchoAssist and Strain Navigator */}
+            {/* Quick links to EchoAssist™ and Strain Navigator */}
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Open in Clinical Tools</p>
               <div className="flex flex-wrap gap-2">
                 <a href="/echoassist#engine-strain" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
                   style={{ background: "#189aa1", color: "white" }}>
-                  ↗ Strain Analysis — EchoAssist
+                  ↗ Strain Analysis — EchoAssist™
                 </a>
                 <a href="/strain" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-90"
                   style={{ background: "#0e4a50", color: "white" }}>
@@ -401,19 +401,19 @@ export default function TTENavigator() {
                 </a>
                 <a href="/echoassist#engine-lv" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:bg-gray-50"
                   style={{ color: "#189aa1", borderColor: "#189aa140" }}>
-                  ↗ LV Systolic Function — EchoAssist
+                  ↗ LV Systolic Function — EchoAssist™
                 </a>
                 <a href="/echoassist#engine-diastolic" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:bg-gray-50"
                   style={{ color: "#189aa1", borderColor: "#189aa140" }}>
-                  ↗ Diastolic Function — EchoAssist
+                  ↗ Diastolic Function — EchoAssist™
                 </a>
                 <a href="/echoassist#engine-rv" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:bg-gray-50"
                   style={{ color: "#189aa1", borderColor: "#189aa140" }}>
-                  ↗ RV Function — EchoAssist
+                  ↗ RV Function — EchoAssist™
                 </a>
                 <a href="/echoassist#engine-ph" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all hover:bg-gray-50"
                   style={{ color: "#189aa1", borderColor: "#189aa140" }}>
-                  ↗ Pulmonary Hypertension — EchoAssist
+                  ↗ Pulmonary Hypertension — EchoAssist™
                 </a>
               </div>
             </div>

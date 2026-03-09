@@ -1,5 +1,5 @@
 /*
-  iHeartEcho -- Hemodynamics Lab
+  iHeartEcho™ -- Hemodynamics Lab
   Interactive Wiggers Diagram + PV Loop synchronized to hemodynamic sliders
   Brand: Teal #189aa1, Aqua #4ad9e0
   Fonts: Merriweather headings, Open Sans body, JetBrains Mono data

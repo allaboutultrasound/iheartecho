@@ -1,5 +1,5 @@
 /*
-  DiastologySpecialPopulations.tsx — iHeartEcho
+  DiastologySpecialPopulations.tsx — iHeartEcho™
   Five guideline-specific diastolic function calculators for special populations.
   Each engine implements the exact ASE 2025 algorithm from the guideline figures.
 

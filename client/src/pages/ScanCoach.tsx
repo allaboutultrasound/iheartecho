@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — Scan Coach
+  iHeartEcho™ — Scan Coach
   Adult TTE (with SVG probe angle diagrams) + Fetal Echo (with CDN clinical images)
   Brand: Teal #189aa1, Aqua #4ad9e0
   Fonts: Merriweather headings, Open Sans body
@@ -17,7 +17,7 @@ import { DiastolicScanCoachContent } from "@/pages/DiastolicNavigator";
 import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 import { TEEIceScanCoachContent } from "@/pages/TEEIceScanCoach";
 
-// ─── CDN image URLs (clinical images from iHeartEcho curriculum) ───
+// ─── CDN image URLs (clinical images from iHeartEcho™ curriculum) ───
 const CDN = {
   sweep:        "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/pwtXDnxySsEwDrgH.png?Expires=1804217678&Signature=RjLvt9Fs6sbCplyJuBgyeMa3moRHLqXSn5sgXkxbmEMk4zq8JyWJ3uhIlW4xlIMySe1iUKmIoWUsxw9p9gF96ayg9wsQylH0Nf9uugH4tvoyJl4HQcDNZU~eh1UNmWKF2MXx7bp9FDJAKsHla8WuCu6j7rQv50qEaNFCJOqs3cRpoGZNyQhABCzpMPopJJR-V7rzIrebcwNPvB8Zg8J5g2gIr3FW1OVQhuO8G4zOKG2u69c~yiQEdqnxcUd5JeBGdxlMIR5wvaKUn384nUBMhSO1rhEq6WN2eHyFtVZNVnWb0ZPPPP-zYaA5Y8tzPs70r~IuAvDl8uPMxmtIWx8elw__&Key-Pair-Id=K2HSFNDJXOU9YS",
   fourChamber:  "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/CLtSxqdZHBcCumkP.png?Expires=1804217683&Signature=VOxwYTn3wPLwSAG0YLL5zwY5flGx68Jw1pRhxySaq219-kolUuyAnCsaARBvuiZ0EdFnpZjTg-9ikyzFAcXWaog7l~T17sj9zDG5p7bVmBDBQckRWNOCxJW4emBzz-qlyvSMpyXcBBLAPXas~OB5TV2R7GJwN86IbGuYujQnAlR5WsY2lnCC9DTrIjsqdXZS1C-EOjS8X3Gzj5gim6FQYDTRr4U-B28fH0~gbJxskTbEZpuXG20W9U-J9jtvnUHhK2GG-amhyQ13s4M82UX7Le~~JrGHXMjrdhM73ZLNyxJVgiYETzpPyj9GiTwu~Q2sr6mWZA5HjnRWKLfCnX1mww__&Key-Pair-Id=K2HSFNDJXOU9YS",
@@ -1041,7 +1041,7 @@ function PulmHTNScanCoach() {
             </div>
           </div>
           <div className="text-xs text-gray-400 text-center py-2">
-            Clinical content © All About Ultrasound, Inc. / iHeartEcho. Educational use only. Based on ASE 2025, ESC/ERS 2022, and ESC 2019 PE guidelines.
+            Clinical content © All About Ultrasound, Inc. / iHeartEcho™. Educational use only. Based on ASE 2025, ESC/ERS 2022, and ESC 2019 PE guidelines.
           </div>
         </div>
       )}
@@ -1604,7 +1604,7 @@ export default function ScanCoach() {
 
             {/* Copyright */}
             <div className="text-xs text-gray-400 text-center py-2">
-              Clinical content © All About Ultrasound, Inc. / iHeartEcho. Educational use only. Based on ASE/AHA/ACC 2021 guidelines.
+              Clinical content © All About Ultrasound, Inc. / iHeartEcho™. Educational use only. Based on ASE/AHA/ACC 2021 guidelines.
             </div>
             </div>}{/* end mrExpanded */}
           </div>{/* end MR section */}
@@ -1830,7 +1830,7 @@ export default function ScanCoach() {
 
             {/* Copyright */}
             <div className="text-xs text-gray-400 text-center py-2">
-              Clinical content © All About Ultrasound, Inc. / iHeartEcho. Educational use only. Based on ASE/AHA/ACC 2021 guidelines.
+              Clinical content © All About Ultrasound, Inc. / iHeartEcho™. Educational use only. Based on ASE/AHA/ACC 2021 guidelines.
             </div>
             </div>}{/* end arExpanded */}
           </div>{/* end AR section */}
@@ -1994,7 +1994,7 @@ export default function ScanCoach() {
 
               {/* Copyright */}
               <div className="text-xs text-gray-400 text-center py-2">
-                Clinical images © All About Ultrasound, Inc. / iHeartEcho. Educational use only.
+                Clinical images © All About Ultrasound, Inc. / iHeartEcho™. Educational use only.
               </div>
             </div>
             {/* View list sidebar — sticky on desktop */}

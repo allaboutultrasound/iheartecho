@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — Echo Severity Calculator
+  iHeartEcho™ — Echo Severity Calculator
   Updated per: ASE 2021 VHD Guidelines, ASE 2016 Diastology (+ LARS), ASE 2025 Strain Guideline
   Modules: AS, MR (PISA), TR, AR, MVA (PHT), RVSP, Diastology+LARS, LV Function+GLS/SR, RV Function+Strain/SR, SV/CO
   Brand: Teal #189aa1, Aqua #4ad9e0
@@ -19,7 +19,7 @@ function EchoAssistLink({ engine, params }: { engine: string; params: Record<str
       className="inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all hover:opacity-90 active:scale-95"
       style={{ background: "linear-gradient(135deg, #189aa1, #0e7490)" }}>
       <Zap className="w-3 h-3" />
-      Analyse in EchoAssist →
+      Analyse in EchoAssist™ →
     </Link>
   );
 }
@@ -1697,19 +1697,19 @@ export default function EchoCalculator() {
           </p>
         </div>
 
-        {/* EchoAssist link banner */}
+        {/* EchoAssist™ link banner */}
         <div className="flex items-center justify-between bg-[#f0fbfc] border border-[#b2e8ec] rounded-xl px-5 py-3 mb-5">
           <div className="flex items-center gap-3">
             <Zap className="w-4 h-4 text-[#189aa1] flex-shrink-0" />
             <p className="text-xs text-[#0e7490]">
-              <strong>Need full guideline-based interpretation?</strong> EchoAssist provides instant severity classification with clinical narrative for all domains.
+              <strong>Need full guideline-based interpretation?</strong> EchoAssist™ provides instant severity classification with clinical narrative for all domains.
             </p>
           </div>
           <Link href="/echoassist"
             className="flex-shrink-0 ml-4 flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90"
             style={{ background: "#189aa1" }}>
             <Zap className="w-3.5 h-3.5" />
-            Open EchoAssist
+            Open EchoAssist™
           </Link>
         </div>
 

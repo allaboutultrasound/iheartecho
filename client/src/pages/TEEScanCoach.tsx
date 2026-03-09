@@ -1,5 +1,5 @@
 /*
-  TEE ScanCoach — iHeartEcho
+  TEE ScanCoach — iHeartEcho™
   Interactive view-by-view TEE acquisition guide
   Brand: Teal #189aa1, Aqua #4ad9e0
 */

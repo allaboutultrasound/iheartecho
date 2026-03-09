@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — Pediatric Echo Navigator
+  iHeartEcho™ — Pediatric Echo Navigator
   Covers: Neonatal/Infant/Child CHD findings, Z-score calculator (BSA-based),
           Segmental analysis, Shunt estimation (Qp/Qs), Neonatal RVSP, Common CHD checklist
   Brand: Teal #189aa1, Aqua #4ad9e0

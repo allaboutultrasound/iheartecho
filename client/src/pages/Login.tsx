@@ -1,5 +1,5 @@
 /**
- * Login.tsx — iHeartEcho branded sign-in page (email/password)
+ * Login.tsx — iHeartEcho™ branded sign-in page (email/password)
  * Fully white-labelled — no Manus/Meta branding.
  * Brand: Teal #189aa1, Aqua #4ad9e0, Dark navy #0e1e2e
  */
@@ -17,7 +17,7 @@ const LOGO = import.meta.env.VITE_APP_LOGO as string;
 
 const FEATURES = [
   { icon: Stethoscope, title: "Clinical Navigators", desc: "TTE, TEE, Stress, Fetal, Pediatric, ACHD protocols" },
-  { icon: Activity, title: "EchoAssist & Calculators", desc: "Guideline-based severity grading across 9 domains" },
+  { icon: Activity, title: "EchoAssist™ & Calculators", desc: "Guideline-based severity grading across 9 domains" },
   { icon: BookOpen, title: "CME & Registry Review", desc: "Accredited courses, registry prep, 500+ echo cases" },
   { icon: Shield, title: "Accreditation Tools", desc: "Peer review, IQR, echo correlation, lab analytics" },
 ];
@@ -78,11 +78,11 @@ export default function Login() {
         <div className="relative flex items-center gap-3">
           <img
             src={LOGO || "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/tMerpTNEMefRhZwO.png?Expires=1804389585&Signature=WUUmbeKd6gRL-5YievLbV1CH3uu0nlv-Re4ouPNZeR8Uaa5fZGvIpyzCfN4GeYzdNVN-L2Dfhpb6wP3tKMLML8tU2MU77LZNA0Db1Qt~FgBKmBrDM8f98IhyhaIIh3mcPdLcoP5aezbNBOluLkAKxGF1onaa3LNS33jvn6RdWOARg3rQF-iGyCG8t~MaJrqXCHCHnEQWkv8ww0KFZrIE6cKq-EgnS6NZ6Ugc~9fSwQmMSgxfKiJuZdqcca1LwferRwRh3oNdounneCfHfE~QI00U4T7~b0DybwkrOKG0VWDKwXiSGd2AgO7up05Jcgsq7v8V58dmlV9XRRUqXN~soA__&Key-Pair-Id=K2HSFNDJXOU9YS"}
-            alt="iHeartEcho"
+            alt="iHeartEcho™"
             className="w-20 h-20 object-contain drop-shadow-lg"
           />
           <div>
-            <div className="text-2xl font-black text-white" style={{ fontFamily: "Merriweather, serif" }}>iHeartEcho</div>
+            <div className="text-2xl font-black text-white" style={{ fontFamily: "Merriweather, serif" }}>iHeartEcho™</div>
             <div className="text-xs font-medium" style={{ color: "#4ad9e0" }}>Echocardiography Clinical Companion</div>
           </div>
         </div>
@@ -113,7 +113,7 @@ export default function Login() {
             </div>
           ))}
         </div>
-        <div className="relative mt-8 lg:mt-0 text-white/30 text-xs">© {new Date().getFullYear()} iHeartEcho · All About Ultrasound</div>
+        <div className="relative mt-8 lg:mt-0 text-white/30 text-xs">© {new Date().getFullYear()} iHeartEcho™ · All About Ultrasound</div>
       </div>
 
       {/* ── Right panel: form ── */}
@@ -121,8 +121,8 @@ export default function Login() {
         <div className="w-full max-w-sm">
           {/* Mobile logo */}
           <div className="flex items-center gap-3 mb-8 lg:hidden">
-            <img src={LOGO || "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/tMerpTNEMefRhZwO.png?Expires=1804389585&Signature=WUUmbeKd6gRL-5YievLbV1CH3uu0nlv-Re4ouPNZeR8Uaa5fZGvIpyzCfN4GeYzdNVN-L2Dfhpb6wP3tKMLML8tU2MU77LZNA0Db1Qt~FgBKmBrDM8f98IhyhaIIh3mcPdLcoP5aezbNBOluLkAKxGF1onaa3LNS33jvn6RdWOARg3rQF-iGyCG8t~MaJrqXCHCHnEQWkv8ww0KFZrIE6cKq-EgnS6NZ6Ugc~9fSwQmMSgxfKiJuZdqcca1LwferRwRh3oNdounneCfHfE~QI00U4T7~b0DybwkrOKG0VWDKwXiSGd2AgO7up05Jcgsq7v8V58dmlV9XRRUqXN~soA__&Key-Pair-Id=K2HSFNDJXOU9YS"} alt="iHeartEcho" className="w-10 h-10 object-contain" />
-            <div className="text-xl font-black" style={{ fontFamily: "Merriweather, serif", color: "#0e1e2e" }}>iHeartEcho</div>
+            <img src={LOGO || "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/tMerpTNEMefRhZwO.png?Expires=1804389585&Signature=WUUmbeKd6gRL-5YievLbV1CH3uu0nlv-Re4ouPNZeR8Uaa5fZGvIpyzCfN4GeYzdNVN-L2Dfhpb6wP3tKMLML8tU2MU77LZNA0Db1Qt~FgBKmBrDM8f98IhyhaIIh3mcPdLcoP5aezbNBOluLkAKxGF1onaa3LNS33jvn6RdWOARg3rQF-iGyCG8t~MaJrqXCHCHnEQWkv8ww0KFZrIE6cKq-EgnS6NZ6Ugc~9fSwQmMSgxfKiJuZdqcca1LwferRwRh3oNdounneCfHfE~QI00U4T7~b0DybwkrOKG0VWDKwXiSGd2AgO7up05Jcgsq7v8V58dmlV9XRRUqXN~soA__&Key-Pair-Id=K2HSFNDJXOU9YS"} alt="iHeartEcho™" className="w-10 h-10 object-contain" />
+            <div className="text-xl font-black" style={{ fontFamily: "Merriweather, serif", color: "#0e1e2e" }}>iHeartEcho™</div>
           </div>
 
           <h2 className="text-2xl font-black mb-2" style={{ fontFamily: "Merriweather, serif", color: "#0e1e2e" }}>Welcome back</h2>
@@ -185,7 +185,7 @@ export default function Login() {
 
           <div className="flex items-center gap-3 my-6">
             <div className="flex-1 h-px bg-gray-100" />
-            <span className="text-xs text-gray-400">New to iHeartEcho?</span>
+            <span className="text-xs text-gray-400">New to iHeartEcho™?</span>
             <div className="flex-1 h-px bg-gray-100" />
           </div>
 

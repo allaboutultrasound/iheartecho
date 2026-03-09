@@ -1,5 +1,5 @@
 /*
-  iHeartEcho Layout — Sidebar Navigation
+  iHeartEcho™ Layout — Sidebar Navigation
   Brand: Teal #189aa1, Aqua #4ad9e0, Dark sidebar
   Fonts: Merriweather headings, Open Sans body
 */
@@ -58,7 +58,7 @@ const navGroups = [
   {
     label: "Clinical Tools",
     items: [
-      { path: "/echo-assist-hub", label: "EchoAssist", icon: Stethoscope },
+      { path: "/echo-assist-hub", label: "EchoAssist™", icon: Stethoscope },
       { path: "/hemodynamics", label: "Hemodynamics Lab", icon: Activity },
       { path: "/calculator", label: "Echo Calculators", icon: Calculator },
       { path: "/report", label: "Report Builder", icon: FileText },
@@ -79,14 +79,14 @@ const navGroups = [
   {
     label: "Accreditation",
     items: [
-      { path: "/accreditation-navigator", label: "EchoAccreditation Navigator", icon: Award },
-      { path: "/accreditation", label: "DIY Accreditation Tool", icon: ClipboardList },
+      { path: "/accreditation-navigator", label: "EchoAccreditation Navigator™", icon: Award },
+      { path: "/accreditation", label: "DIY Accreditation Tool™", icon: ClipboardList },
     ],
   },
   {
     label: "Community",
     items: [
-      { path: "https://member.allaboutultrasound.com/products/communities/allaboutultrasound-community", label: "iHeartEcho Community", icon: MessageCircle, external: true },
+      { path: "https://member.allaboutultrasound.com/products/communities/allaboutultrasound-community", label: "iHeartEcho™ Community", icon: MessageCircle, external: true },
     ],
   },
   {
@@ -105,8 +105,8 @@ const hiddenNavItems = [
   { path: "/admin/cases", label: "Case Management" },
   { path: "/admin/quickfire", label: "Daily Challenge Admin" },
   { path: "/admin/thinkific-webhook", label: "Thinkific Webhook" },
-  { path: "/echo-assist-hub", label: "EchoAssist" },
-  { path: "/scan-coach", label: "EchoAssist — Scan Coach" },
+  { path: "/echo-assist-hub", label: "EchoAssist™" },
+  { path: "/scan-coach", label: "EchoAssist™ — Scan Coach" },
 ];
 const navItems = [...navGroups.flatMap(g => g.items), ...hiddenNavItems];
 
@@ -139,12 +139,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <div className="flex items-center gap-2 px-4 py-4 border-b border-white/10">
           <img
             src="https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/TTSqgyHlTBmxeODV.png?Expires=1804183007&Signature=tWUrD-cUfgsk0u97qoBm0zB3mj75cGUW2F-hh-3aepkHA9QlDWUbfY2eqgxrIpyY2Zp3wTFpuBC7DXxtNjAMv5Ju2HBWLLcCgaGJrEB5X2wKLtoJQKscrbUUOXFV7xdwiJWP5zeVe7QNQaBw5zHqqyN6EYc6a0WovYLeHtUnM~vCz5pDvUh0L43UEpwlSVUZnU9ULfYO~ML9cpjCX-M~Uwb1QHUU2IxD7Qa9wMXw3nUhLxhbrUVdc-byWsUfQg5~PCwxH3jjLLq-4hlrBvFgkyB5QJJiqv6f~GM6bMh8jFE1GfWCAPzQVdcY97tgqT4GBExpYMkQ-K7AK83Fvd5zEg__&Key-Pair-Id=K2HSFNDJXOU9YS"
-            alt="iHeartEcho"
+            alt="iHeartEcho™"
             className="w-12 h-12 object-contain flex-shrink-0"
           />
           <div className="flex-1 min-w-0">
             <div className="font-bold text-white text-base leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
-              iHeartEcho
+              iHeartEcho™
             </div>
             <div className="text-xs md:text-sm text-[#4ad9e0] leading-tight">Echocardiography Clinical Companion</div>
           </div>
@@ -239,7 +239,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
             <span className="text-sm font-semibold text-[#189aa1]" style={{ fontFamily: "Merriweather, serif" }}>
-              {navItems.find(n => n.path === location)?.label ?? "iHeartEcho"}
+              {navItems.find(n => n.path === location)?.label ?? "iHeartEcho™"}
             </span>
           </div>
           <div className="ml-auto flex items-center gap-2">
@@ -376,7 +376,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                             <button onClick={() => setAccountOpen(false)}
                               className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-all text-left">
                               <Award className="w-3.5 h-3.5 text-orange-500" />
-                              DIY Accreditation Tool
+                              DIY Accreditation Tool™
                             </button>
                           </WouterLink>
                         </div>

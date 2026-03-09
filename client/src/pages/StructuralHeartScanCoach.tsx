@@ -1,5 +1,5 @@
 /*
-  StructuralHeartScanCoach.tsx — iHeartEcho
+  StructuralHeartScanCoach.tsx — iHeartEcho™
   Structural Heart ScanCoach: procedure-specific TEE and ICE acquisition guide
   for transcatheter structural heart interventions.
   Covers: TAVR, TEER/MitraClip, LAAO (Watchman/Amulet), ASD/PFO closure,

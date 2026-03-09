@@ -42,8 +42,8 @@ const ROLE_LABELS: Record<AppRole, string> = {
 };
 
 const ROLE_DESCRIPTIONS: Record<string, string> = {
-  diy_admin: "Lab Admin access to the DIY Accreditation Tool",
-  diy_user: "Seat-based access to the DIY Accreditation Tool",
+  diy_admin: "Lab Admin access to the DIY Accreditation Tool™",
+  diy_user: "Seat-based access to the DIY Accreditation Tool™",
   premium_user: "Premium subscription access",
   platform_admin: "Platform administrator access",
 };

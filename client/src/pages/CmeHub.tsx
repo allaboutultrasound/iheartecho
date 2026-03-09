@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — CME & E-Learning Courses
+  iHeartEcho™ — CME & E-Learning Courses
   Displays All About Ultrasound CME courses from the E-Learning & CME collection on Thinkific.
   Course data is fetched live from the Thinkific API via tRPC (cached, refreshed every 6 hours).
   Static fallback data is used if the API is unavailable.
@@ -491,7 +491,7 @@ export default function CmeHub() {
           <Clock className="w-4 h-4 text-[#189aa1] flex-shrink-0 mt-0.5 sm:mt-0" />
           <p className="text-xs text-gray-600 leading-relaxed">
             All courses are from <strong>All About Ultrasound</strong>. "Learn More" opens the course details page; "Enroll" opens the checkout page
-            {user?.email ? ` with your email (${user.email}) pre-filled` : " — log in to iHeartEcho to have your email pre-filled automatically"}.
+            {user?.email ? ` with your email (${user.email}) pre-filled` : " — log in to iHeartEcho™ to have your email pre-filled automatically"}.
             SDMS CME credits are awarded upon course completion and post-test.
           </p>
           <a

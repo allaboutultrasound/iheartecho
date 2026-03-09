@@ -37,7 +37,7 @@ async function sendPreRegistrationWelcome(email: string, roles: string[]): Promi
 }
 
 // ─── Platform Admin Router ────────────────────────────────────────────────────
-// Manages user roles and seat assignments for the iHeartEcho platform.
+// Manages user roles and seat assignments for the iHeartEcho™ platform.
 // Access: platform_admin role or owner (role === "admin")
 
 export const platformAdminRouter = router({
@@ -298,7 +298,7 @@ export const platformAdminRouter = router({
 });
 
 // ─── Lab Seat Management Router ───────────────────────────────────────────────
-// DIY Accreditation Tool seat management — controlled by diy_admin role
+// DIY Accreditation Tool™ seat management — controlled by diy_admin role
 
 export const labSeatsRouter = router({
   /** List DIY users for the current admin's lab */

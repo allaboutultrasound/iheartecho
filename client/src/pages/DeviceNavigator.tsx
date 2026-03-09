@@ -1,5 +1,5 @@
 /*
-  iHeartEcho — Structural Heart Navigator
+  iHeartEcho™ — Structural Heart Navigator
   Structural Heart Device Assessment Navigator
   Brand: Teal #189aa1, Aqua #4ad9e0
   Fonts: Merriweather headings, Open Sans body
@@ -297,7 +297,7 @@ export default function DeviceNavigator() {
           <p>• AHA/ACC 2021 Valvular Heart Disease Guidelines | ASE/EACVI 2019 Prosthetic Valve Guidelines (Zoghbi et al.)</p>
           <p>• ESC/EACTS 2021 Valvular Heart Disease Guidelines | WATCHMAN FLX IFU | MitraClip NTR/XTR IFU</p>
           <p>• ASE 2022 ICE Guidelines (Enriquez et al.) | ACC/AHA 2014 ASD/PFO Guidelines</p>
-          <p className="pt-1">© All About Ultrasound — iHeartEcho | www.iheartecho.com</p>
+          <p className="pt-1">© All About Ultrasound — iHeartEcho™ | www.iheartecho.com</p>
         </div>
       </div>
     </Layout>

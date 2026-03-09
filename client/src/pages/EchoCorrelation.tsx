@@ -281,7 +281,7 @@ export default function EchoCorrelationTab() {
     doc.text("Echo Correlation Review", 14, 12);
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    doc.text("iHeartEcho — Echocardiography Clinical Companion", 14, 19);
+    doc.text("iHeartEcho™ — Echocardiography Clinical Companion", 14, 19);
     doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 25);
     y = 36;
 
@@ -384,7 +384,7 @@ export default function EchoCorrelationTab() {
       doc.setPage(p);
       doc.setFontSize(7);
       doc.setTextColor(150, 150, 150);
-      doc.text(`iHeartEcho Echo Correlation Review — Page ${p} of ${pageCount} — Confidential`, 14, 290);
+      doc.text(`iHeartEcho™ Echo Correlation Review — Page ${p} of ${pageCount} — Confidential`, 14, 290);
     }
 
     doc.save(`echo-correlation-${organization || "review"}-${dateReviewCompleted || "draft"}.pdf`);

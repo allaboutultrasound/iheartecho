@@ -11,10 +11,9 @@ import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import Layout from "@/components/Layout";
-import { RichTextDisplay } from "@/components/RichTextEditor";
+import RichTextEditor, { RichTextDisplay } from "@/components/RichTextEditor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -857,12 +856,11 @@ export default function AdminCaseManagement() {
                     </button>
                   ))}
                 </div>
-                <Textarea
-                  placeholder="e.g. 72-year-old male with exertional dyspnoea, systolic murmur, and syncope. Describe the echo findings and management..."
+                <RichTextEditor
                   value={aiPrompt}
-                  onChange={(e) => setAiPrompt(e.target.value)}
-                  rows={3}
-                  className="resize-none"
+                  onChange={setAiPrompt}
+                  placeholder="e.g. 72-year-old male with exertional dyspnea, systolic murmur, and syncope. Describe the echo findings and management..."
+                  minHeight="80px"
                 />
               </div>
               <div className="grid grid-cols-3 gap-3">
@@ -1038,14 +1036,12 @@ export default function AdminCaseManagement() {
               <label className="text-xs font-semibold text-gray-600 mb-1.5 block">
                 Rejection Reason <span className="text-red-500">*</span>
               </label>
-              <Textarea
+              <RichTextEditor
                 value={rejectReason}
-                onChange={(e) => setRejectReason(e.target.value)}
+                onChange={setRejectReason}
                 placeholder="Explain why this case is being rejected (e.g. contains PHI, insufficient de-identification, incomplete information)…"
-                rows={3}
-                maxLength={1000}
+                minHeight="80px"
               />
-              <p className="text-xs text-gray-400 mt-1">{rejectReason.length}/1000</p>
             </div>
           </div>
           <DialogFooter>
