@@ -1741,3 +1741,9 @@
 - [ ] Add date range filter to Lab Overview tab (Last 30 days, Last 90 days, Last 6 months, Last year, All time, Custom range)
 - [ ] Update backend procedures to accept examType and date range parameters
 - [ ] Apply same filters to growth curve, pie chart, and KPI cards
+
+## Pending Items (Mar 9 Session)
+- [ ] Fix flashcard card overlapping tracking/scoring buttons (layout fix - still persisting)
+- [ ] Fix Flashcard AI Generator JSON error with robust extraction fallback
+- [ ] Seed 50 fetal echo flashcards into the database
+- [ ] Add exam type filter to Staff Growth Curves tab

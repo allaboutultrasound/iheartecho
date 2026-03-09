@@ -1166,16 +1166,19 @@ function DIYReportsTab() {
   // Per-staff drill-down state
   const [selectedStaffId, setSelectedStaffId] = useState<number | null>(null);
   const [drilldownOpen, setDrilldownOpen] = useState(false);
+  // Staff Growth Curves tab: separate exam type filter
+  const [staffExamType, setStaffExamType] = useState<string>("");
+  const [staffExamTypeApplied, setStaffExamTypeApplied] = useState<string>("");
   const { data: staffTrend = [] } = trpc.lab.getIqrStaffTrend.useQuery(
-    { revieweeLabMemberId: selectedStaffId! },
+    { revieweeLabMemberId: selectedStaffId!, examType: staffExamTypeApplied || undefined },
     { enabled: selectedStaffId !== null }
   );
   const { data: staffDomainBreakdown = [] } = trpc.lab.getIqrDomainBreakdown.useQuery(
-    { revieweeLabMemberId: selectedStaffId! },
+    { revieweeLabMemberId: selectedStaffId!, examType: staffExamTypeApplied || undefined },
     { enabled: selectedStaffId !== null }
   );
   const { data: drilldownReviews = [] } = trpc.lab.getIqrDrilldown.useQuery(
-    { revieweeLabMemberId: selectedStaffId ?? undefined },
+    { revieweeLabMemberId: selectedStaffId ?? undefined, examType: staffExamTypeApplied || undefined },
     { enabled: drilldownOpen }
   );
 
@@ -1637,6 +1640,40 @@ function DIYReportsTab() {
       {/* ── STAFF GROWTH CURVES TAB ── */}
       {viewMode === "staff" && (
         <div className="space-y-6">
+          {/* Staff Growth Curves: Exam Type Filter */}
+          <div className="flex flex-wrap items-end gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-gray-600">Exam Type</label>
+              <select
+                value={staffExamType}
+                onChange={e => setStaffExamType(e.target.value)}
+                className="text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white focus:outline-none focus:ring-1 focus:ring-[#189aa1]"
+              >
+                {EXAM_TYPE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+            </div>
+            <button
+              onClick={() => setStaffExamTypeApplied(staffExamType)}
+              className="px-3 py-1.5 rounded-md text-xs font-semibold text-white"
+              style={{ background: BRAND }}
+            >
+              Apply Filter
+            </button>
+            {staffExamTypeApplied && (
+              <button
+                onClick={() => { setStaffExamType(""); setStaffExamTypeApplied(""); }}
+                className="px-3 py-1.5 rounded-md text-xs font-semibold text-gray-600 border border-gray-200 bg-white hover:bg-gray-50"
+              >
+                Clear
+              </button>
+            )}
+            {staffExamTypeApplied && (
+              <span className="text-xs text-[#189aa1] font-medium">
+                Filtered: {EXAM_TYPE_OPTIONS.find(o => o.value === staffExamTypeApplied)?.label}
+              </span>
+            )}
+          </div>
+
           {/* Staff selector */}
           <div className="flex flex-wrap gap-2">
             {iqrSnapshot.length === 0 ? (

@@ -639,6 +639,7 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
             model: "gpt-4o",
             messages: [{ role: "user", content: promptText }],
             temperature: 0.7,
+            response_format: { type: "json_object" }, // force JSON mode — eliminates markdown fences and prose
           }),
         });
         if (!aiResp.ok) {
@@ -681,10 +682,30 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
           .replace(/\s*```\s*$/im, "")
           .trim();
 
-        // Step 2: extract the first JSON value (object or array) from the text
-        // This handles cases where the model adds prose before/after the JSON
-        const jsonMatch = cleaned.match(/([\[\{][\s\S]*[\]\}])/);
-        if (jsonMatch) cleaned = jsonMatch[1].trim();
+        // Step 2: extract the outermost balanced JSON object or array
+        // (avoids greedy regex capturing trailing prose after the JSON)
+        const extractOutermostJson = (s: string): string => {
+          const startObj = s.indexOf('{');
+          const startArr = s.indexOf('[');
+          if (startObj === -1 && startArr === -1) return s;
+          const start = (startObj === -1) ? startArr : (startArr === -1) ? startObj : Math.min(startObj, startArr);
+          const openChar = s[start];
+          const closeChar = openChar === '{' ? '}' : ']';
+          let depth = 0;
+          let inString = false;
+          let escape = false;
+          for (let i = start; i < s.length; i++) {
+            const c = s[i];
+            if (escape) { escape = false; continue; }
+            if (c === '\\' && inString) { escape = true; continue; }
+            if (c === '"') { inString = !inString; continue; }
+            if (inString) continue;
+            if (c === openChar) depth++;
+            else if (c === closeChar) { depth--; if (depth === 0) return s.slice(start, i + 1); }
+          }
+          return s.slice(start); // fallback: return from start to end
+        };
+        cleaned = extractOutermostJson(cleaned);
 
         const raw = JSON.parse(cleaned);
 

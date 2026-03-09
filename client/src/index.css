@@ -265,8 +265,9 @@ textarea,
   width: 100%;
 }
 
+/* Grid-stacking flip card — both faces in the same cell so container grows naturally */
 .flashcard-card {
-  position: relative;
+  display: grid;
   width: 100%;
   min-height: 220px;
   transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
@@ -278,11 +279,8 @@ textarea,
 }
 
 .flashcard-face {
-  position: absolute;
-  top: 0;
-  left: 0;
+  grid-area: 1 / 1; /* both faces occupy the same grid cell */
   width: 100%;
-  /* height is set via inline style to match the taller face */
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   border-radius: 0.75rem;

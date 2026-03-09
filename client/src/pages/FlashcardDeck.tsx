@@ -49,23 +49,8 @@ export default function FlashcardDeck() {
   const [sessionComplete, setSessionComplete] = useState(false);
   const [studyMode, setStudyMode] = useState<StudyMode>("sequential");
 
-  // Dynamic card height: measure both faces and use the taller one
   const frontRef = useRef<HTMLDivElement>(null);
   const backRef = useRef<HTMLDivElement>(null);
-  const [cardHeight, setCardHeight] = useState(220);
-
-  useEffect(() => {
-    const updateHeight = () => {
-      const frontH = frontRef.current?.scrollHeight ?? 0;
-      const backH = backRef.current?.scrollHeight ?? 0;
-      const newH = Math.max(frontH, backH, 220);
-      setCardHeight(newH);
-    };
-    updateHeight();
-    // Re-measure when card changes
-    const timer = setTimeout(updateHeight, 50);
-    return () => clearTimeout(timer);
-  }, [currentIndex, flipped]);
 
   const echoCategoryParam = selectedCategory === "all" ? undefined : selectedCategory;
 
@@ -385,13 +370,12 @@ export default function FlashcardDeck() {
             <div className="flashcard-scene cursor-pointer" onClick={handleFlip}>
               <div
                 className={`flashcard-card${flipped ? " is-flipped" : ""}`}
-                style={{ minHeight: `${cardHeight}px` }}
               >
                 {/* Front face */}
                 <div
                   ref={frontRef}
                   className="flashcard-face flashcard-face--front"
-                  style={{ background: "linear-gradient(135deg, #0e4a50 0%, #189aa1 100%)", border: "none", minHeight: `${cardHeight}px` }}
+                  style={{ background: "linear-gradient(135deg, #0e4a50 0%, #189aa1 100%)", border: "none" }}
                 >
                   <p className="text-white font-bold text-lg leading-snug mb-4" style={{ fontFamily: "Merriweather, serif" }}>
                     {currentCard.question}
@@ -406,7 +390,7 @@ export default function FlashcardDeck() {
                 <div
                   ref={backRef}
                   className="flashcard-face flashcard-face--back"
-                  style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 100%)", border: "none", minHeight: `${cardHeight}px` }}
+                  style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 100%)", border: "none" }}
                 >
                   <p className="text-[#4ad9e0] font-bold text-lg leading-snug mb-3" style={{ fontFamily: "Merriweather, serif" }}>
                     {currentCard.reviewAnswer ?? currentCard.explanation ?? "No answer provided."}
