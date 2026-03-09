@@ -7,8 +7,9 @@
 */
 import { useState, useEffect, useRef } from "react";
 import { useSearch } from "wouter";
+import { Link } from "wouter";
 import Layout from "@/components/Layout";
-import { Zap, ChevronDown, ChevronUp, Info, Lightbulb, MessageSquare, AlertCircle, TrendingUp, Activity, Save, CheckCircle2 } from "lucide-react";
+import { Zap, ChevronDown, ChevronUp, Info, Lightbulb, MessageSquare, AlertCircle, TrendingUp, Activity, Save, CheckCircle2, Calculator } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import FrankStarlingGraph, { type FrankStarlingParams } from "@/components/FrankStarlingGraph";
@@ -186,6 +187,20 @@ function EchoAssistPanel({ output }: { output: EchoAssistOutput | null }) {
   );
 }
 
+// ─── CALCULATOR DEEP-LINK BUTTON ─────────────────────────────────────────────
+
+function CalcLink({ tabId, label }: { tabId: string; label: string }) {
+  return (
+    <Link
+      href={`/calculator#calc-${tabId}`}
+      className="inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 rounded-lg text-xs font-semibold border border-[#189aa1] text-[#189aa1] bg-white transition-all hover:bg-[#f0fbfc] hover:border-[#0e7490] active:scale-95"
+    >
+      <Calculator className="w-3 h-3" />
+      {label} Calculator →
+    </Link>
+  );
+}
+
 // ─── CALCULATION HELPERS ──────────────────────────────────────────────────────
 
 const n = (v: string) => parseFloat(v);
@@ -321,6 +336,9 @@ function AorticStenosisEngine() {
         note={result.note}
       />
       <EchoAssistPanel output={getEchoAssistOutput()} />
+      <div className="flex flex-wrap gap-2 mt-1">
+        <CalcLink tabId="as" label="Aortic Stenosis" />
+      </div>
       <p className="text-xs text-gray-400 mt-3">Reference: AHA/ACC 2021 Valvular Heart Disease Guidelines; ASE 2017 Valve Stenosis Guidelines</p>
     </EngineSection>
   );
@@ -403,6 +421,9 @@ function MitraStenosisEngine() {
       {mvaPht && <p className="text-xs text-gray-400 mt-2">MVA by PHT (220/PHT): {mvaPht.toFixed(2)} cm²</p>}
       <ResultCard severity={result.sev} title="Mitral Stenosis Severity" value={result.label} criteria={result.criteria} />
       <EchoAssistPanel output={getMsEchoAssist()} />
+      <div className="flex flex-wrap gap-2 mt-1">
+        <CalcLink tabId="mva" label="MVA (PHT)" />
+      </div>
       <p className="text-xs text-gray-400 mt-3">Reference: AHA/ACC 2021; ASE 2009 Echocardiographic Assessment of Valve Stenosis</p>
     </EngineSection>
   );
@@ -495,6 +516,9 @@ function AorticRegurgEngine() {
       </div>
       <ResultCard severity={result.sev} title="Aortic Regurgitation Severity" value={result.label} criteria={result.criteria} />
       <EchoAssistPanel output={getArEchoAssist()} />
+      <div className="flex flex-wrap gap-2 mt-1">
+        <CalcLink tabId="ar" label="Aortic Regurgitation" />
+      </div>
       <p className="text-xs text-gray-400 mt-3">Reference: AHA/ACC 2021; ASE/EACVI 2017 AR Guidelines (Zoghbi et al.)</p>
     </EngineSection>
   );
@@ -589,6 +613,9 @@ function MitralRegurgEngine() {
       {pisaEroa && <p className="text-xs text-gray-400 mt-2">PISA-derived EROA: {pisaEroa.toFixed(2)} cm²</p>}
       <ResultCard severity={result.sev} title="Mitral Regurgitation Severity" value={result.label} criteria={result.criteria} />
       <EchoAssistPanel output={getMrEchoAssist()} />
+      <div className="flex flex-wrap gap-2 mt-1">
+        <CalcLink tabId="mr" label="Mitral Regurgitation" />
+      </div>
       <p className="text-xs text-gray-400 mt-3">Reference: AHA/ACC 2021; ASE/EACVI 2017 MR Guidelines (Zoghbi et al.)</p>
     </EngineSection>
   );
@@ -692,6 +719,10 @@ function LVSystolicEngine() {
       {fsCalc !== null && <p className="text-xs text-gray-400 mt-2">Calculated FS: {fsCalc.toFixed(1)}%</p>}
       <ResultCard severity={result.sev} title="LV Systolic Function" value={result.label} criteria={result.criteria} />
       <EchoAssistPanel output={getLvEchoAssist()} />
+      <div className="flex flex-wrap gap-2 mt-1">
+        <CalcLink tabId="lv" label="LV Function + GLS" />
+        <CalcLink tabId="sv" label="Stroke Volume / CO" />
+      </div>
       <p className="text-xs text-gray-400 mt-3">Reference: <a href='https://asecho.org/wp-content/uploads/2018/08/WFTF-Chamber-Quantification-Summary-Doc-Final-July-18.pdf' target='_blank' rel='noopener noreferrer' className='underline hover:text-[#189aa1]'>ASE/WFTF 2018 Chamber Quantification</a>; AHA/ACC HF Classification 2022</p>
     </EngineSection>
   );
@@ -956,6 +987,10 @@ function DiastolicEngine() {
       </div>
 
       <EchoAssistPanel output={getDiastEchoAssist()} />
+      <div className="flex flex-wrap gap-2 mt-1">
+        <CalcLink tabId="diastology" label="Diastology Grading" />
+        <CalcLink tabId="lap_estimation" label="LAP Estimation" />
+      </div>
       <p className="text-xs text-gray-400 mt-3">Reference: <a href="https://www.asecho.org/wp-content/uploads/2025/07/Left-Ventricular-Diastolic-Function.pdf" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#189aa1] transition-colors">ASE 2025 Left Ventricular Diastolic Function Guidelines (Nagueh et al., JASE 2025)</a></p>
     </EngineSection>
   );
@@ -1126,6 +1161,10 @@ function StrainEngine() {
         </a>
       </div>
 
+      <div className="flex flex-wrap gap-2 mt-1">
+        <CalcLink tabId="lv" label="LV Function + GLS" />
+        <CalcLink tabId="rv" label="RV Function + Strain" />
+      </div>
       <p className="text-xs text-gray-400 mt-3">Reference: ASE 2025 Strain Guideline (Thomas et al.); ASE 2015 LARS/RARS recommendations</p>
     </EngineSection>
   );
@@ -1219,6 +1258,10 @@ function RVFunctionEngine() {
         };
       })()}
       />
+      <div className="flex flex-wrap gap-2 mt-1">
+        <CalcLink tabId="rv" label="RV Function + Strain" />
+        <CalcLink tabId="rvsp" label="RVSP / PAP" />
+      </div>
       <p className="text-xs text-gray-400 mt-3">Reference: <a href='https://www.asecho.org/wp-content/uploads/2025/03/PIIS0894731725000379.pdf' target='_blank' rel='noopener noreferrer' className='underline hover:text-[#189aa1]'>ASE 2025 Right Heart & PH Guidelines</a>; ASE 2025 Strain Guideline</p>
     </EngineSection>
   );
@@ -1440,6 +1483,10 @@ function TricuspidRegurgEngine() {
 
       <ResultCard severity={result.sev} title="Tricuspid Regurgitation Severity" value={result.label} criteria={result.criteria} />
       <EchoAssistPanel output={getTrEchoAssist()} />
+      <div className="flex flex-wrap gap-2 mt-1">
+        <CalcLink tabId="tr" label="Tricuspid Regurgitation" />
+        <CalcLink tabId="rvsp" label="RVSP / PAP" />
+      </div>
       <p className="text-xs text-gray-400 mt-3">Reference: AHA/ACC 2021 Valvular Heart Disease Guidelines; ASE/EACVI 2017 (Zoghbi et al.); Hahn et al. JACC 2019 TR Grading</p>
     </EngineSection>
   );
@@ -1534,6 +1581,9 @@ function PulmonaryHTNEngine() {
         };
       })()}
       />
+      <div className="flex flex-wrap gap-2 mt-1">
+        <CalcLink tabId="rvsp" label="RVSP / PAP" />
+      </div>
       <p className="text-xs text-gray-400 mt-3">Reference: ASE 2025 Pulmonary Hypertension Guidelines (<a href='https://www.asecho.org/wp-content/uploads/2025/03/PIIS0894731725000379.pdf' target='_blank' rel='noopener noreferrer' className='underline hover:text-[#189aa1]'>ASE 2025 PH Guideline PDF</a>); ESC/ERS 2022 PH Guidelines</p>
     </EngineSection>
   );

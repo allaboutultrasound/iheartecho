@@ -1556,3 +1556,19 @@
 - [x] Tab entry added to calculators array (after Diastology Special Populations)
 - [x] componentMap entry added (lap_estimation)
 - [x] TypeScript: 0 errors
+
+## EchoAssist ↔ EchoCalculator Deep Links (Completed Mar 09 2026)
+- [x] CalcLink component added to EchoAssist.tsx (outline teal button with Calculator icon)
+- [x] Aortic Stenosis engine → CalcLink to `as` tab
+- [x] Mitral Stenosis engine → CalcLink to `mva` (MVA PHT) tab
+- [x] Aortic Regurgitation engine → CalcLink to `ar` tab
+- [x] Mitral Regurgitation engine → CalcLink to `mr` tab
+- [x] LV Systolic Function engine → CalcLink to `lv` and `sv` tabs
+- [x] Diastolic Function engine → CalcLink to `diastology` and `lap_estimation` tabs
+- [x] Strain engine → CalcLink to `lv` and `rv` tabs
+- [x] RV Function engine → CalcLink to `rv` and `rvsp` tabs
+- [x] Tricuspid Regurgitation engine → CalcLink to `tr` and `rvsp` tabs
+- [x] Pulmonary Hypertension engine → CalcLink to `rvsp` tab
+- [x] EchoCalculator: useEffect reads `#calc-{tabId}` hash on mount and hashchange → auto-selects tab
+- [x] EchoCalculator: id="echo-calculator-top" added for scroll targeting
+- [x] TypeScript: 0 errors, all HMR updates clean

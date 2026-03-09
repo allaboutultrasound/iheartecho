@@ -4,7 +4,7 @@
   Modules: AS, MR (PISA), TR, AR, MVA (PHT), RVSP, Diastology+LARS, LV Function+GLS/SR, RV Function+Strain/SR, SV/CO
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import { Calculator, Info, ChevronDown, ChevronUp, Zap } from "lucide-react";
@@ -1409,9 +1409,7 @@ function LAPEstimationCalculator() {
       <div className="border border-[#189aa1]/30 rounded-xl p-4 space-y-3 bg-[#f8feff]">
         <div className="flex items-center gap-2 mb-1">
           <span className="text-xs font-bold uppercase tracking-wider text-white bg-[#189aa1] px-2 py-0.5 rounded-full">Step 1</span>
-          <span className="text-sm font-semibold text-[#189aa1]">Three-Variable Assessment</span>
         </div>
-        <div className="text-xs text-gray-500 mb-2">Evaluate all three variables. Count how many are abnormal.</div>
 
         {/* Variable 1: e' */}
         <div className="bg-white rounded-lg p-3 border border-gray-100">
@@ -1640,8 +1638,8 @@ const calculators = [
   { id: "mva", label: "MVA (PHT)", sub: "Pressure Half-Time" },
   { id: "rvsp", label: "RVSP / PAP", sub: "Bernoulli" },
   { id: "diastology", label: "Diastology", sub: "ASE 2025" },
+  { id: "lap_estimation", label: "LAP Estimation", sub: "ASE 2025 · Premium" },
   { id: "diastology_special", label: "Diastology — Special Populations", sub: "ASE 2025 · Premium" },
-  { id: "lap_estimation", label: "LAP Estimation", sub: "ASE 2025" },
   { id: "lv", label: "LV Function + GLS", sub: "ASE 2025 Strain" },
   { id: "rv", label: "RV Function + Strain", sub: "ASE 2025 Strain" },
   { id: "sv", label: "Stroke Volume / CO", sub: "LVOT Method" },
@@ -1656,7 +1654,7 @@ const componentMap: Record<string, React.ReactNode> = {
   rvsp: <RVSPCalculator />,
   diastology: <DiastologyCalculator />,
   diastology_special: <PremiumGate featureName="Diastology — Special Populations"><DiastologySpecialPopulations /></PremiumGate>,
-  lap_estimation: <LAPEstimationCalculator />,
+  lap_estimation: <PremiumGate featureName="LAP Estimation"><LAPEstimationCalculator /></PremiumGate>,
   lv: <LVFunctionCalculator />,
   rv: <RVFunctionCalculator />,
   sv: <SVCalculator />,
@@ -1665,9 +1663,31 @@ const componentMap: Record<string, React.ReactNode> = {
 export default function EchoCalculator() {
   const [active, setActive] = useState("as");
 
+  // Auto-select tab when navigated via anchor hash e.g. /calculator#calc-mr
+  useEffect(() => {
+    const readHash = () => {
+      const hash = window.location.hash.replace("#", "");
+      if (hash.startsWith("calc-")) {
+        const tabId = hash.replace("calc-", "");
+        const valid = calculators.find(c => c.id === tabId);
+        if (valid) {
+          setActive(tabId);
+          // Scroll to top of calculator section
+          setTimeout(() => {
+            const el = document.getElementById("echo-calculator-top");
+            if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+          }, 100);
+        }
+      }
+    };
+    readHash();
+    window.addEventListener("hashchange", readHash);
+    return () => window.removeEventListener("hashchange", readHash);
+  }, []);
+
   return (
     <Layout>
-      <div className="container py-6">
+      <div id="echo-calculator-top" className="container py-6">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-800 mb-1" style={{ fontFamily: "Merriweather, serif" }}>
             Echo Severity Calculator
