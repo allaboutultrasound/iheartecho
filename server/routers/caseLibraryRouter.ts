@@ -901,6 +901,9 @@ export const caseLibraryRouter = router({
         limit: z.number().int().min(1).max(100).default(20),
         status: z.enum(["pending", "approved", "rejected"]).optional(),
         search: z.string().max(100).optional(),
+        tag: z.string().max(100).optional(),
+        modality: z.enum(["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "Other"]).optional(),
+        difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
       })
     )
     .query(async ({ input }) => {
@@ -911,13 +914,20 @@ export const caseLibraryRouter = router({
       const conditions: any[] = [];
 
       if (input.status) conditions.push(eq(echoLibraryCases.status, input.status));
+      if (input.modality) conditions.push(eq(echoLibraryCases.modality, input.modality));
+      if (input.difficulty) conditions.push(eq(echoLibraryCases.difficulty, input.difficulty));
       if (input.search) {
         conditions.push(
           or(
             like(echoLibraryCases.title, `%${input.search}%`),
-            like(echoLibraryCases.diagnosis, `%${input.search}%`)
+            like(echoLibraryCases.diagnosis, `%${input.search}%`),
+            like(echoLibraryCases.tags, `%${input.search}%`)
           )
         );
+      }
+      // Tag filter: search within JSON tags array
+      if (input.tag) {
+        conditions.push(like(echoLibraryCases.tags, `%${input.tag}%`));
       }
 
       const where = conditions.length > 0 ? and(...conditions) : undefined;

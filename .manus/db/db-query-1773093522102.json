@@ -1,0 +1,490 @@
+{
+  "query": "SELECT tags, echoCategory, difficulty, COUNT(*) as cnt FROM quickfireQuestions WHERE isActive = 1 AND tags IS NOT NULL GROUP BY tags, echoCategory, difficulty ORDER BY cnt DESC LIMIT 80;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mhhtxpXA9Esras.root --database etVPnUidWNWG8W4GHnRqzv --execute SELECT tags, echoCategory, difficulty, COUNT(*) as cnt FROM quickfireQuestions WHERE isActive = 1 AND tags IS NOT NULL GROUP BY tags, echoCategory, difficulty ORDER BY cnt DESC LIMIT 80;",
+  "rows": [
+    {
+      "tags": "[\"Strain\",\"GLS\",\"Speckle Tracking\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "5"
+    },
+    {
+      "tags": "[\"Pulmonary HTN\",\"RV Function\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "5"
+    },
+    {
+      "tags": "[\"Restrictive CM\",\"Amyloid\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "5"
+    },
+    {
+      "tags": "[\"strain\",\"GLS\",\"speckle tracking\",\"LV function\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "5"
+    },
+    {
+      "tags": "[\"Tamponade\",\"Pericardial Effusion\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "5"
+    },
+    {
+      "tags": "[\"Dilated CM\",\"DCM\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "5"
+    },
+    {
+      "tags": "[\"HOCM\",\"Cardiomyopathy\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "5"
+    },
+    {
+      "tags": "[\"Constrictive Pericarditis\",\"Pericardium\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "5"
+    },
+    {
+      "tags": "[\"Diastolic Function\",\"Diastology\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "5"
+    },
+    {
+      "tags": "[\"Pulmonary Embolism\",\"PE\",\"RV Strain\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "5"
+    },
+    {
+      "tags": "[\"diastolic function\",\"E/e'\",\"LA volume\",\"filling pressures\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "3"
+    },
+    {
+      "tags": "[\"HOCM\",\"LVOT obstruction\",\"Doppler\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "3"
+    },
+    {
+      "tags": "[\"four-chamber view\",\"atria\",\"ventricles\"]",
+      "echoCategory": "fetal",
+      "difficulty": "beginner",
+      "cnt": "2"
+    },
+    {
+      "tags": "[\"diastolic function\",\"E/e'\",\"filling pressures\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "2"
+    },
+    {
+      "tags": "[\"AV valves\",\"tricuspid valve\",\"mitral valve\",\"four-chamber view\"]",
+      "echoCategory": "fetal",
+      "difficulty": "beginner",
+      "cnt": "2"
+    },
+    {
+      "tags": "[\"cardiac position\",\"chest cavity\",\"apex\"]",
+      "echoCategory": "fetal",
+      "difficulty": "beginner",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"constrictive pericarditis\",\"annulus reversus\",\"tissue Doppler\",\"differentiating from restriction\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"Diastolic Function\",\"Grade 2\",\"Grade 3\",\"ASE 2025\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"systemic venous return\",\"right atrium\",\"IVC\",\"SVC\",\"heterotaxy\"]",
+      "echoCategory": "fetal",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"CoA\",\"LV dysfunction\",\"antenatal management\",\"fetal heart failure\"]",
+      "echoCategory": "fetal",
+      "difficulty": "advanced",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"MR\",\"Surgery\",\"Mitral Repair\",\"Adult Echo\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"Adult Echo\",\"A4C\",\"Anatomy\",\"Chamber Identification\"]",
+      "echoCategory": "adult",
+      "difficulty": "beginner",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"AS\",\"Continuity Equation\",\"AVA\",\"Adult Echo\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"VSD\",\"PPHN\",\"Neonatal Echo\",\"Pediatric Echo\"]",
+      "echoCategory": "adult",
+      "difficulty": "advanced",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"Z-score\",\"Pediatric Echo\",\"BSA\",\"CHD\"]",
+      "echoCategory": "pediatric_congenital",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"outflow tracts\",\"great arteries\",\"crossover view\"]",
+      "echoCategory": "fetal",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"Tetralogy of Fallot\",\"Pulmonary Atresia\",\"VSD\",\"Differential Diagnosis\"]",
+      "echoCategory": "fetal",
+      "difficulty": "advanced",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"dilated cardiomyopathy\",\"DCM\",\"functional MR\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"cardiac tamponade\",\"pericardial effusion\",\"RV collapse\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"AS\",\"Aortic Stenosis\",\"Adult Echo\",\"Severity Grading\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"TAPVR\",\"Pulmonary Veins\",\"Pediatric Echo\",\"CHD\"]",
+      "echoCategory": "pediatric_congenital",
+      "difficulty": "advanced",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"Glenn Shunt\",\"Single Ventricle\",\"Fontan\",\"Pediatric Echo\"]",
+      "echoCategory": "pediatric_congenital",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"HLHS\",\"Aortic Atresia\",\"Left Ventricle\",\"Fetal Biometry\"]",
+      "echoCategory": "fetal",
+      "difficulty": "advanced",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"cardiac axis\",\"four-chamber view\",\"normal range\"]",
+      "echoCategory": "fetal",
+      "difficulty": "beginner",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"CoA\",\"LV hypoplasia\",\"aortic flow\",\"prognosis\"]",
+      "echoCategory": "fetal",
+      "difficulty": "advanced",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"Adult Echo\",\"A4C\",\"Anatomy\",\"Tricuspid Valve\"]",
+      "echoCategory": "adult",
+      "difficulty": "beginner",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"AS\",\"Surveillance\",\"Moderate AS\",\"Adult Echo\"]",
+      "echoCategory": "adult",
+      "difficulty": "beginner",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"constrictive pericarditis\",\"respiratory variation\",\"differentiating from restriction\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"Pericardial Effusion\",\"Tamponade\",\"Structural\",\"Adult Echo\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"TGA\",\"D-TGA\",\"L-TGA\",\"great artery relationship\"]",
+      "echoCategory": "fetal",
+      "difficulty": "advanced",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"Diastolic Function\",\"LA Stiffness\",\"HFpEF\",\"Adult Echo\"]",
+      "echoCategory": "adult",
+      "difficulty": "advanced",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"TOF\",\"RVOT obstruction\",\"pulmonary artery Doppler\",\"ductus arteriosus\"]",
+      "echoCategory": "fetal",
+      "difficulty": "advanced",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"Bicuspid Aortic Valve\",\"Aortopathy\",\"AS\",\"Adult Echo\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"HOCM\",\"LVOT obstruction\",\"SAM\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"dilated cardiomyopathy\",\"DCM\",\"echo criteria\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"MR\",\"Regurgitant Fraction\",\"Severity Grading\",\"Adult Echo\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"MR\",\"Etiology\",\"MVP\",\"Adult Echo\"]",
+      "echoCategory": "adult",
+      "difficulty": "beginner",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"AS\",\"Mild AS\",\"Adult Echo\",\"Severity Grading\"]",
+      "echoCategory": "adult",
+      "difficulty": "beginner",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"Diastolic Function\",\"Normal\",\"ASE 2025\",\"Adult Echo\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"Aortic Regurgitation\",\"PHT\",\"Severity\",\"Adult Echo\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"restrictive cardiomyopathy\",\"hemochromatosis\",\"diastolic dysfunction\",\"infiltrative\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"Diastolic Function\",\"Grade 3\",\"Restrictive Filling\",\"Adult Echo\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"Tetralogy of Fallot\",\"Pulmonary Regurgitation\",\"Post-repair\",\"Pediatric Echo\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"Fetal Echo\",\"Cardiac Axis\",\"Normal Anatomy\"]",
+      "echoCategory": "fetal",
+      "difficulty": "beginner",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"pulmonary veins\",\"four-chamber view\",\"left atrium\",\"TAPVC\"]",
+      "echoCategory": "fetal",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"AVSD\",\"Doppler\",\"Regurgitation\",\"Fetal Hydrops\"]",
+      "echoCategory": "fetal",
+      "difficulty": "advanced",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"AVSD\",\"Trisomy 21\",\"Extracardiac Anomalies\",\"Genetic Screening\"]",
+      "echoCategory": "fetal",
+      "difficulty": "advanced",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"pulmonary artery\",\"aorta\",\"outflow tract diameter\"]",
+      "echoCategory": "fetal",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"AVSD\",\"common AV valve\",\"inlet VSD\",\"primum ASD\"]",
+      "echoCategory": "fetal",
+      "difficulty": "advanced",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"MR\",\"Acute MR\",\"Papillary Muscle Rupture\",\"Adult Echo\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"RV Function\",\"RVSP\",\"PASP\",\"Adult Echo\"]",
+      "echoCategory": "adult",
+      "difficulty": "beginner",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"aortic arch\",\"color Doppler\",\"arch anomalies\"]",
+      "echoCategory": "fetal",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"levocardia\",\"normal position\",\"apex\"]",
+      "echoCategory": "fetal",
+      "difficulty": "beginner",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"TGA\",\"great artery identification\",\"RVOT\"]",
+      "echoCategory": "fetal",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"cardiac axis\",\"four-chamber view\",\"normal findings\"]",
+      "echoCategory": "fetal",
+      "difficulty": "beginner",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"four-chamber view\",\"cardiac apex\",\"levocardia\"]",
+      "echoCategory": "fetal",
+      "difficulty": "beginner",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"four-chamber view\",\"screening view\",\"cardiac assessment\"]",
+      "echoCategory": "fetal",
+      "difficulty": "beginner",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"Endocarditis\",\"Vegetation\",\"Adult Echo\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"dilated cardiomyopathy\",\"DCM\",\"prognosis markers\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"CoA\",\"d-TGA\",\"postnatal presentation\",\"cyanosis\"]",
+      "echoCategory": "fetal",
+      "difficulty": "advanced",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"TGA\",\"D-TGA\",\"L-TGA\",\"Pediatric Echo\",\"CHD\"]",
+      "echoCategory": "pediatric_congenital",
+      "difficulty": "advanced",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"Diastolic Function\",\"Loading Conditions\",\"E-wave\",\"Adult Echo\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"SVC\",\"IVC\",\"right atrium\"]",
+      "echoCategory": "fetal",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"Mitral Stenosis\",\"Wilkins Score\",\"BMV\",\"Adult Echo\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"ventricular morphology\",\"right ventricle\",\"left ventricle\"]",
+      "echoCategory": "fetal",
+      "difficulty": "beginner",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"pulmonary hypertension\",\"RV size and function\",\"TR velocity\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"E/e' ratio\",\"LAVI\",\"TR velocity\",\"Diastolic Dysfunction\"]",
+      "echoCategory": "adult",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"cardiothoracic ratio\",\"measurement\",\"four-chamber view\"]",
+      "echoCategory": "fetal",
+      "difficulty": "beginner",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"TGA\",\"parallel great arteries\",\"PGE1\",\"ASO\"]",
+      "echoCategory": "fetal",
+      "difficulty": "advanced",
+      "cnt": "1"
+    },
+    {
+      "tags": "[\"outflow tracts\",\"great arteries\",\"spatial relationship\"]",
+      "echoCategory": "fetal",
+      "difficulty": "intermediate",
+      "cnt": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "tags\techoCategory\tdifficulty\tcnt\n[\"Strain\",\"GLS\",\"Speckle Tracking\"]\tadult\tintermediate\t5\n[\"Pulmonary HTN\",\"RV Function\"]\tadult\tintermediate\t5\n[\"Restrictive CM\",\"Amyloid\"]\tadult\tintermediate\t5\n[\"strain\",\"GLS\",\"speckle tracking\",\"LV function\"]\tadult\tintermediate\t5\n[\"Tamponade\",\"Pericardial Effusion\"]\tadult\tintermediate\t5\n[\"Dilated CM\",\"DCM\"]\tadult\tintermediate\t5\n[\"HOCM\",\"Cardiomyopathy\"]\tadult\tintermediate\t5\n[\"Constrictive Pericarditis\",\"Pericardium\"]\tadult\tintermediate\t5\n[\"Diastolic Function\",\"Diastology\"]\tadult\tintermediate\t5\n[\"Pulmonary Embolism\",\"PE\",\"RV Strain\"]\tadult\tintermediate\t5\n[\"diastolic function\",\"E/e'\",\"LA volume\",\"filling pressures\"]\tadult\tintermediate\t3\n[\"HOCM\",\"LVOT obstruction\",\"Doppler\"]\tadult\tintermediate\t3\n[\"four-chamber view\",\"atria\",\"ventricles\"]\tfetal\tbeginner\t2\n[\"diastolic function\",\"E/e'\",\"filling pressures\"]\tadult\tintermediate\t2\n[\"AV valves\",\"tricuspid valve\",\"mitral valve\",\"four-chamber view\"]\tfetal\tbeginner\t2\n[\"cardiac position\",\"chest cavity\",\"apex\"]\tfetal\tbeginner\t1\n[\"constrictive pericarditis\",\"annulus reversus\",\"tissue Doppler\",\"differentiating from restriction\"]\tadult\tintermediate\t1\n[\"Diastolic Function\",\"Grade 2\",\"Grade 3\",\"ASE 2025\"]\tadult\tintermediate\t1\n[\"systemic venous return\",\"right atrium\",\"IVC\",\"SVC\",\"heterotaxy\"]\tfetal\tintermediate\t1\n[\"CoA\",\"LV dysfunction\",\"antenatal management\",\"fetal heart failure\"]\tfetal\tadvanced\t1\n[\"MR\",\"Surgery\",\"Mitral Repair\",\"Adult Echo\"]\tadult\tintermediate\t1\n[\"Adult Echo\",\"A4C\",\"Anatomy\",\"Chamber Identification\"]\tadult\tbeginner\t1\n[\"AS\",\"Continuity Equation\",\"AVA\",\"Adult Echo\"]\tadult\tintermediate\t1\n[\"VSD\",\"PPHN\",\"Neonatal Echo\",\"Pediatric Echo\"]\tadult\tadvanced\t1\n[\"Z-score\",\"Pediatric Echo\",\"BSA\",\"CHD\"]\tpediatric_congenital\tintermediate\t1\n[\"outflow tracts\",\"great arteries\",\"crossover view\"]\tfetal\tintermediate\t1\n[\"Tetralogy of Fallot\",\"Pulmonary Atresia\",\"VSD\",\"Differential Diagnosis\"]\tfetal\tadvanced\t1\n[\"dilated cardiomyopathy\",\"DCM\",\"functional MR\"]\tadult\tintermediate\t1\n[\"cardiac tamponade\",\"pericardial effusion\",\"RV collapse\"]\tadult\tintermediate\t1\n[\"AS\",\"Aortic Stenosis\",\"Adult Echo\",\"Severity Grading\"]\tadult\tintermediate\t1\n[\"TAPVR\",\"Pulmonary Veins\",\"Pediatric Echo\",\"CHD\"]\tpediatric_congenital\tadvanced\t1\n[\"Glenn Shunt\",\"Single Ventricle\",\"Fontan\",\"Pediatric Echo\"]\tpediatric_congenital\tintermediate\t1\n[\"HLHS\",\"Aortic Atresia\",\"Left Ventricle\",\"Fetal Biometry\"]\tfetal\tadvanced\t1\n[\"cardiac axis\",\"four-chamber view\",\"normal range\"]\tfetal\tbeginner\t1\n[\"CoA\",\"LV hypoplasia\",\"aortic flow\",\"prognosis\"]\tfetal\tadvanced\t1\n[\"Adult Echo\",\"A4C\",\"Anatomy\",\"Tricuspid Valve\"]\tadult\tbeginner\t1\n[\"AS\",\"Surveillance\",\"Moderate AS\",\"Adult Echo\"]\tadult\tbeginner\t1\n[\"constrictive pericarditis\",\"respiratory variation\",\"differentiating from restriction\"]\tadult\tintermediate\t1\n[\"Pericardial Effusion\",\"Tamponade\",\"Structural\",\"Adult Echo\"]\tadult\tintermediate\t1\n[\"TGA\",\"D-TGA\",\"L-TGA\",\"great artery relationship\"]\tfetal\tadvanced\t1\n[\"Diastolic Function\",\"LA Stiffness\",\"HFpEF\",\"Adult Echo\"]\tadult\tadvanced\t1\n[\"TOF\",\"RVOT obstruction\",\"pulmonary artery Doppler\",\"ductus arteriosus\"]\tfetal\tadvanced\t1\n[\"Bicuspid Aortic Valve\",\"Aortopathy\",\"AS\",\"Adult Echo\"]\tadult\tintermediate\t1\n[\"HOCM\",\"LVOT obstruction\",\"SAM\"]\tadult\tintermediate\t1\n[\"dilated cardiomyopathy\",\"DCM\",\"echo criteria\"]\tadult\tintermediate\t1\n[\"MR\",\"Regurgitant Fraction\",\"Severity Grading\",\"Adult Echo\"]\tadult\tintermediate\t1\n[\"MR\",\"Etiology\",\"MVP\",\"Adult Echo\"]\tadult\tbeginner\t1\n[\"AS\",\"Mild AS\",\"Adult Echo\",\"Severity Grading\"]\tadult\tbeginner\t1\n[\"Diastolic Function\",\"Normal\",\"ASE 2025\",\"Adult Echo\"]\tadult\tintermediate\t1\n[\"Aortic Regurgitation\",\"PHT\",\"Severity\",\"Adult Echo\"]\tadult\tintermediate\t1\n[\"restrictive cardiomyopathy\",\"hemochromatosis\",\"diastolic dysfunction\",\"infiltrative\"]\tadult\tintermediate\t1\n[\"Diastolic Function\",\"Grade 3\",\"Restrictive Filling\",\"Adult Echo\"]\tadult\tintermediate\t1\n[\"Tetralogy of Fallot\",\"Pulmonary Regurgitation\",\"Post-repair\",\"Pediatric Echo\"]\tadult\tintermediate\t1\n[\"Fetal Echo\",\"Cardiac Axis\",\"Normal Anatomy\"]\tfetal\tbeginner\t1\n[\"pulmonary veins\",\"four-chamber view\",\"left atrium\",\"TAPVC\"]\tfetal\tintermediate\t1\n[\"AVSD\",\"Doppler\",\"Regurgitation\",\"Fetal Hydrops\"]\tfetal\tadvanced\t1\n[\"AVSD\",\"Trisomy 21\",\"Extracardiac Anomalies\",\"Genetic Screening\"]\tfetal\tadvanced\t1\n[\"pulmonary artery\",\"aorta\",\"outflow tract diameter\"]\tfetal\tintermediate\t1\n[\"AVSD\",\"common AV valve\",\"inlet VSD\",\"primum ASD\"]\tfetal\tadvanced\t1\n[\"MR\",\"Acute MR\",\"Papillary Muscle Rupture\",\"Adult Echo\"]\tadult\tintermediate\t1\n[\"RV Function\",\"RVSP\",\"PASP\",\"Adult Echo\"]\tadult\tbeginner\t1\n[\"aortic arch\",\"color Doppler\",\"arch anomalies\"]\tfetal\tintermediate\t1\n[\"levocardia\",\"normal position\",\"apex\"]\tfetal\tbeginner\t1\n[\"TGA\",\"great artery identification\",\"RVOT\"]\tfetal\tintermediate\t1\n[\"cardiac axis\",\"four-chamber view\",\"normal findings\"]\tfetal\tbeginner\t1\n[\"four-chamber view\",\"cardiac apex\",\"levocardia\"]\tfetal\tbeginner\t1\n[\"four-chamber view\",\"screening view\",\"cardiac assessment\"]\tfetal\tbeginner\t1\n[\"Endocarditis\",\"Vegetation\",\"Adult Echo\"]\tadult\tintermediate\t1\n[\"dilated cardiomyopathy\",\"DCM\",\"prognosis markers\"]\tadult\tintermediate\t1\n[\"CoA\",\"d-TGA\",\"postnatal presentation\",\"cyanosis\"]\tfetal\tadvanced\t1\n[\"TGA\",\"D-TGA\",\"L-TGA\",\"Pediatric Echo\",\"CHD\"]\tpediatric_congenital\tadvanced\t1\n[\"Diastolic Function\",\"Loading Conditions\",\"E-wave\",\"Adult Echo\"]\tadult\tintermediate\t1\n[\"SVC\",\"IVC\",\"right atrium\"]\tfetal\tintermediate\t1\n[\"Mitral Stenosis\",\"Wilkins Score\",\"BMV\",\"Adult Echo\"]\tadult\tintermediate\t1\n[\"ventricular morphology\",\"right ventricle\",\"left ventricle\"]\tfetal\tbeginner\t1\n[\"pulmonary hypertension\",\"RV size and function\",\"TR velocity\"]\tadult\tintermediate\t1\n[\"E/e' ratio\",\"LAVI\",\"TR velocity\",\"Diastolic Dysfunction\"]\tadult\tintermediate\t1\n[\"cardiothoracic ratio\",\"measurement\",\"four-chamber view\"]\tfetal\tbeginner\t1\n[\"TGA\",\"parallel great arteries\",\"PGE1\",\"ASO\"]\tfetal\tadvanced\t1\n[\"outflow tracts\",\"great arteries\",\"spatial relationship\"]\tfetal\tintermediate\t1\n",
+  "stderr": "",
+  "execution_time_ms": 64
+}

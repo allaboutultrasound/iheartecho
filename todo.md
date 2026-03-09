@@ -1870,3 +1870,10 @@
 
 ## Case Studies CSV Export - Session Mar 09 2026
 - [x] Add CSV export button to Case Studies tracker that exports the currently filtered/sorted list
+
+## 500 Case Studies + Tag Search - Session Mar 09 2026
+- [x] Generate 500 echo case studies across all topics with rich tags
+- [x] Seed 500 cases into the database
+- [x] Add tag search/filter to case management admin panel
+- [x] Add clickable tag chips on case rows to instantly filter by tag
+- [x] Add modality and difficulty filters to case management admin panel

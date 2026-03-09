@@ -549,6 +549,10 @@ export default function AdminCaseManagement() {
   const [statusFilter, setStatusFilter] = useState<"pending" | "approved" | "rejected" | "all">("all");
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [tagFilter, setTagFilter] = useState("");
+  const [tagInput, setTagInput] = useState("");
+  const [modalityFilter, setModalityFilter] = useState<string>("all");
+  const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
 
   // Preview dialog
   const [previewCaseId, setPreviewCaseId] = useState<number | null>(null);
@@ -582,6 +586,9 @@ export default function AdminCaseManagement() {
       limit: 20,
       status: statusFilter === "all" ? undefined : statusFilter,
       search: search || undefined,
+      tag: tagFilter || undefined,
+      modality: (modalityFilter === "all" ? undefined : modalityFilter) as any,
+      difficulty: (difficultyFilter === "all" ? undefined : difficultyFilter) as any,
     },
     { enabled: tab === "all" }
   );
@@ -666,8 +673,22 @@ export default function AdminCaseManagement() {
 
   const handleSearch = () => {
     setSearch(searchInput);
+    setTagFilter(tagInput);
     setPage(1);
   };
+
+  const handleClearFilters = () => {
+    setSearch("");
+    setSearchInput("");
+    setTagFilter("");
+    setTagInput("");
+    setModalityFilter("all");
+    setDifficultyFilter("all");
+    setStatusFilter("all");
+    setPage(1);
+  };
+
+  const hasActiveFilters = search || tagFilter || modalityFilter !== "all" || difficultyFilter !== "all" || statusFilter !== "all";
 
   const CaseRow = ({ c, showActions = true }: { c: any; showActions?: boolean }) => (
     <div className="flex items-start gap-3 p-4 bg-white rounded-xl border border-gray-100 hover:border-[#189aa1]/30 transition-all">
@@ -702,6 +723,32 @@ export default function AdminCaseManagement() {
           </div>
         </div>
         <p className="text-xs text-gray-500 mt-1 line-clamp-2">{c.summary}</p>
+        {/* Clickable tag chips */}
+        {Array.isArray(c.tags) && c.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-1.5">
+            {c.tags.slice(0, 6).map((tag: string) => (
+              <button
+                key={tag}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setTagInput(tag);
+                  setTagFilter(tag);
+                  setPage(1);
+                }}
+                className={`text-xs px-1.5 py-0.5 rounded-full border transition-colors cursor-pointer ${
+                  tagFilter === tag
+                    ? "bg-[#189aa1] text-white border-[#189aa1]"
+                    : "bg-[#189aa1]/5 text-[#189aa1]/80 border-[#189aa1]/20 hover:bg-[#189aa1]/15 hover:border-[#189aa1]/40"
+                }`}
+              >
+                {tag}
+              </button>
+            ))}
+            {c.tags.length > 6 && (
+              <span className="text-xs text-gray-400 self-center">+{c.tags.length - 6} more</span>
+            )}
+          </div>
+        )}
         <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-400">
           <span>By {c.submitterName}</span>
           <span>·</span>
@@ -896,39 +943,93 @@ export default function AdminCaseManagement() {
         {tab === "all" && (
           <div>
             {/* Filters */}
-            <div className="flex gap-2 mb-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                  placeholder="Search by title or diagnosis…"
-                  className="pl-9"
-                />
+            <div className="space-y-2 mb-4">
+              {/* Row 1: Search + Tag + Search button */}
+              <div className="flex gap-2">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                    placeholder="Search by title, diagnosis, or tag…"
+                    className="pl-9"
+                  />
+                </div>
+                <div className="relative w-48">
+                  <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                    placeholder="Filter by tag…"
+                    className="pl-9"
+                  />
+                </div>
+                <Button variant="outline" onClick={handleSearch} className="gap-1.5">
+                  <Search className="w-4 h-4" /> Search
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => utils.caseLibrary.listAllCases.invalidate()}
+                  title="Refresh"
+                >
+                  <RefreshCw className="w-4 h-4 text-gray-400" />
+                </Button>
               </div>
-              <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v as any); setPage(1); }}>
-                <SelectTrigger className="w-36">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="approved">Approved</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button variant="outline" onClick={handleSearch} className="gap-1.5">
-                <Search className="w-4 h-4" /> Search
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => utils.caseLibrary.listAllCases.invalidate()}
-                title="Refresh"
-              >
-                <RefreshCw className="w-4 h-4 text-gray-400" />
-              </Button>
+              {/* Row 2: Status + Modality + Difficulty + Clear */}
+              <div className="flex gap-2 flex-wrap">
+                <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v as any); setPage(1); }}>
+                  <SelectTrigger className="w-36">
+                    <SelectValue placeholder="All Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="approved">Approved</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={modalityFilter} onValueChange={(v) => { setModalityFilter(v); setPage(1); }}>
+                  <SelectTrigger className="w-36">
+                    <SelectValue placeholder="All Modalities" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Modalities</SelectItem>
+                    <SelectItem value="TTE">TTE</SelectItem>
+                    <SelectItem value="TEE">TEE</SelectItem>
+                    <SelectItem value="Stress">Stress</SelectItem>
+                    <SelectItem value="Pediatric">Pediatric</SelectItem>
+                    <SelectItem value="Fetal">Fetal</SelectItem>
+                    <SelectItem value="HOCM">HOCM</SelectItem>
+                    <SelectItem value="POCUS">POCUS</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={difficultyFilter} onValueChange={(v) => { setDifficultyFilter(v); setPage(1); }}>
+                  <SelectTrigger className="w-36">
+                    <SelectValue placeholder="All Levels" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Levels</SelectItem>
+                    <SelectItem value="beginner">Beginner</SelectItem>
+                    <SelectItem value="intermediate">Intermediate</SelectItem>
+                    <SelectItem value="advanced">Advanced</SelectItem>
+                  </SelectContent>
+                </Select>
+                {hasActiveFilters && (
+                  <Button variant="ghost" size="sm" onClick={handleClearFilters} className="text-gray-400 hover:text-gray-600 gap-1">
+                    <XCircle className="w-3.5 h-3.5" /> Clear filters
+                  </Button>
+                )}
+                {(tagFilter) && (
+                  <div className="flex items-center gap-1 text-xs bg-[#189aa1]/10 text-[#189aa1] px-2 py-1 rounded-full">
+                    <Tag className="w-3 h-3" />
+                    Tag: <span className="font-semibold">{tagFilter}</span>
+                  </div>
+                )}
+              </div>
             </div>
 
             {allQuery.isLoading ? (
