@@ -1725,3 +1725,13 @@
 - [ ] Add missing fetal echo (FE_) specific fields to imageQualityReviews schema and IQR save procedure
 
 - [x] Fix TEE ScanCoach color scheme to brand colors: Teal #189aa1, Aqua #4ad9e0, dark navy background
+
+## DIY Analytics Enhancements (Completed)
+- [x] DIY Analytics: add growth curves (quality trends per staff member over time)
+- [x] DIY Analytics: add pie charts (score distribution - lab overall and per staff)
+- [x] DIY Analytics: add drill-down tables per staff member with individual review history
+- [x] DIY Analytics: CSV export for all tables
+- [x] DIY Analytics: PDF export for full analytics report
+- [x] DIY Analytics: Lab Overview tab with KPI cards, growth curve, pie chart
+- [x] DIY Analytics: Staff Growth Curves tab with per-staff selector, trend chart, exam type bar chart
+- [x] DIY Analytics: Physician Concordance tab with concordance growth curve

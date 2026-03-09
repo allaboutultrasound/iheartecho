@@ -1169,285 +1169,710 @@ function DIYReportsTab() {
     { enabled: drilldownOpen }
   );
 
-  // View mode: overview | staff
+  // View mode
   const [viewMode, setViewMode] = useState<"overview" | "staff" | "physician">("overview");
 
-  // Date range filter state
-  const now = new Date();
+  // Date range filter
+  const now = useMemo(() => new Date(), []);
   const [startDate, setStartDate] = useState(() => {
-    const d = new Date(now); d.setMonth(d.getMonth() - 6);
-    return d.toISOString().slice(0, 7); // YYYY-MM
+    const d = new Date(); d.setMonth(d.getMonth() - 6);
+    return d.toISOString().slice(0, 7);
   });
-  const [endDate, setEndDate] = useState(() => now.toISOString().slice(0, 7));
+  const [endDate, setEndDate] = useState(() => new Date().toISOString().slice(0, 7));
 
-  const filteredQualityMonthly = qualityMonthly.filter(m => {
-    const mo = (m.month ?? "");
-    return mo >= startDate && mo <= endDate;
-  });
-  const filteredPeerMonthly = peerMonthly.filter(m => {
-    const mo = (m.month ?? "");
-    return mo >= startDate && mo <= endDate;
-  });
+  const filteredQualityMonthly = useMemo(() =>
+    qualityMonthly.filter(m => { const mo = m.month ?? ""; return mo >= startDate && mo <= endDate; }),
+    [qualityMonthly, startDate, endDate]
+  );
+  const filteredPeerMonthly = useMemo(() =>
+    peerMonthly.filter(m => { const mo = m.month ?? ""; return mo >= startDate && mo <= endDate; }),
+    [peerMonthly, startDate, endDate]
+  );
 
-  // Merge both peer review sources: old standalone form + new over-read workflow
-  const allPhysicianMonthly = [...physicianMonthly, ...comparisonMonthly].reduce((acc: any[], m: any) => {
-    const existing = acc.find(e => e.month === m.month);
-    if (existing) {
-      existing.reviewCount = Number(existing.reviewCount ?? 0) + Number(m.reviewCount ?? 0);
-      // Weighted average of concordance scores
-      const totalCount = Number(existing.reviewCount);
-      const prevCount = totalCount - Number(m.reviewCount ?? 0);
-      const prevScore = Number(existing.avgConcordanceScore ?? 0);
-      const newScore = Number(m.avgConcordanceScore ?? 0);
-      existing.avgConcordanceScore = totalCount > 0
-        ? ((prevScore * prevCount) + (newScore * Number(m.reviewCount ?? 0))) / totalCount
-        : 0;
-    } else {
-      acc.push({ ...m });
-    }
-    return acc;
-  }, []).sort((a: any, b: any) => (a.month ?? "").localeCompare(b.month ?? ""));
+  const allPhysicianMonthly = useMemo(() =>
+    [...physicianMonthly, ...comparisonMonthly].reduce((acc: any[], m: any) => {
+      const existing = acc.find(e => e.month === m.month);
+      if (existing) {
+        const prevCount = Number(existing.reviewCount ?? 0);
+        const addCount = Number(m.reviewCount ?? 0);
+        const total = prevCount + addCount;
+        existing.avgConcordanceScore = total > 0
+          ? ((Number(existing.avgConcordanceScore ?? 0) * prevCount) + (Number(m.avgConcordanceScore ?? 0) * addCount)) / total
+          : 0;
+        existing.reviewCount = total;
+      } else { acc.push({ ...m }); }
+      return acc;
+    }, []).sort((a: any, b: any) => (a.month ?? "").localeCompare(b.month ?? "")),
+    [physicianMonthly, comparisonMonthly]
+  );
 
-  const filteredPhysician = allPhysicianMonthly.filter((m: any) => {
-    const mo = (m.month ?? "");
-    return mo >= startDate && mo <= endDate;
-  });
+  const filteredPhysician = useMemo(() =>
+    allPhysicianMonthly.filter((m: any) => { const mo = m.month ?? ""; return mo >= startDate && mo <= endDate; }),
+    [allPhysicianMonthly, startDate, endDate]
+  );
 
   const TRIENNIUM_CREDITS = 30;
+  const cmeByMember = useMemo(() => new Map(cmeSummary.map(c => [c.labMemberId, Number(c.totalCredits ?? 0)])), [cmeSummary]);
 
-  const cmeByMember = new Map(cmeSummary.map(c => [c.labMemberId, Number(c.totalCredits ?? 0)]));
+  // Aggregate pie chart data from filtered quality monthly
+  const labPieData = useMemo(() => {
+    const excellent = filteredQualityMonthly.reduce((s, m) => s + Number(m.excellentCount ?? 0), 0);
+    const good = filteredQualityMonthly.reduce((s, m) => s + Number(m.goodCount ?? 0), 0);
+    const adequate = filteredQualityMonthly.reduce((s, m) => s + Number(m.adequateCount ?? 0), 0);
+    const needsImpr = filteredQualityMonthly.reduce((s, m) => s + Number(m.needsImprovementCount ?? 0), 0);
+    return [
+      { name: "Excellent (≥90)", value: excellent, color: "#16a34a" },
+      { name: "Good (75–89)", value: good, color: BRAND },
+      { name: "Adequate (60–74)", value: adequate, color: "#d97706" },
+      { name: "Needs Improvement (<60)", value: needsImpr, color: "#dc2626" },
+    ].filter(d => d.value > 0);
+  }, [filteredQualityMonthly]);
+
+  // Staff pie data for selected staff
+  const staffPieData = useMemo(() => {
+    if (!staffDomainBreakdown.length) return [];
+    const totals = staffDomainBreakdown.reduce((acc, d) => ({
+      excellent: acc.excellent + Number(d.excellentCount ?? 0),
+      good: acc.good + Number(d.goodCount ?? 0),
+      adequate: acc.adequate + Number(d.adequateCount ?? 0),
+      needsImpr: acc.needsImpr + Number(d.needsImprovementCount ?? 0),
+    }), { excellent: 0, good: 0, adequate: 0, needsImpr: 0 });
+    return [
+      { name: "Excellent (≥90)", value: totals.excellent, color: "#16a34a" },
+      { name: "Good (75–89)", value: totals.good, color: BRAND },
+      { name: "Adequate (60–74)", value: totals.adequate, color: "#d97706" },
+      { name: "Needs Improvement (<60)", value: totals.needsImpr, color: "#dc2626" },
+    ].filter(d => d.value > 0);
+  }, [staffDomainBreakdown]);
+
+  // Multi-staff growth curves: one line per staff member using iqrSnapshot + staffTrend
+  // For the overview chart, we use the lab-wide monthly data
+  const labGrowthData = useMemo(() =>
+    filteredQualityMonthly.map(m => ({
+      month: m.month,
+      "Avg Quality Score": m.avgScore != null ? Math.round(Number(m.avgScore)) : null,
+      reviews: Number(m.reviewCount ?? 0),
+    })),
+    [filteredQualityMonthly]
+  );
+
+  const physicianGrowthData = useMemo(() =>
+    filteredPhysician.map((m: any) => ({
+      month: m.month,
+      "Concordance %": m.avgConcordanceScore != null ? Math.round(Number(m.avgConcordanceScore)) : null,
+      reviews: Number(m.reviewCount ?? 0),
+    })),
+    [filteredPhysician]
+  );
+
+  const staffGrowthData = useMemo(() =>
+    staffTrend.map(m => ({
+      month: m.month,
+      "Avg Score": m.avgScore != null ? Math.round(Number(m.avgScore)) : null,
+      reviews: Number(m.reviewCount ?? 0),
+    })),
+    [staffTrend]
+  );
+
+  // CSV export helper
+  const exportCSV = (rows: Record<string, any>[], filename: string) => {
+    if (!rows.length) return;
+    const headers = Object.keys(rows[0]);
+    const csv = [headers.join(","), ...rows.map(r => headers.map(h => JSON.stringify(r[h] ?? "")).join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // PDF export
+  const exportPDF = () => {
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    const pageW = doc.internal.pageSize.getWidth();
+    let y = 18;
+    // Header
+    doc.setFillColor(24, 154, 161);
+    doc.rect(0, 0, pageW, 14, "F");
+    doc.setFontSize(11); doc.setFont("helvetica", "bold"); doc.setTextColor(255, 255, 255);
+    doc.text("iHeartEcho\u2122 EchoAccreditation Navigator\u2122", 10, 9);
+    doc.setFontSize(8); doc.setFont("helvetica", "normal");
+    doc.text(`Analytics Report — ${startDate} to ${endDate}`, pageW - 10, 9, { align: "right" });
+    y = 22;
+    doc.setTextColor(30, 30, 30);
+    // Summary section
+    doc.setFontSize(10); doc.setFont("helvetica", "bold");
+    doc.text("Lab Quality Summary", 10, y); y += 7;
+    doc.setFontSize(8); doc.setFont("helvetica", "normal");
+    const totalReviews = [...filteredQualityMonthly, ...filteredPeerMonthly].reduce((s, m) => s + Number(m.reviewCount ?? 0), 0);
+    const avgQS = filteredQualityMonthly.length > 0 ? Math.round(filteredQualityMonthly.reduce((s, m) => s + Number(m.avgScore ?? 0), 0) / filteredQualityMonthly.length) : 0;
+    doc.text(`Total IQR Reviews: ${totalReviews}   Avg Quality Score: ${avgQS}/100   Staff Tracked: ${members.length}`, 10, y); y += 8;
+    // Quality monthly table
+    if (filteredQualityMonthly.length > 0) {
+      doc.setFontSize(9); doc.setFont("helvetica", "bold");
+      doc.text("Quality Review — Monthly Trend", 10, y); y += 5;
+      doc.setFontSize(7.5); doc.setFont("helvetica", "normal");
+      const qHeaders = ["Month", "Reviews", "Avg QS", "Excellent", "Good", "Adequate", "Needs Impr."];
+      const qColW = [28, 18, 16, 20, 16, 20, 22];
+      let x = 10;
+      doc.setFont("helvetica", "bold");
+      qHeaders.forEach((h, i) => { doc.text(h, x, y); x += qColW[i]; }); y += 4;
+      doc.setFont("helvetica", "normal");
+      filteredQualityMonthly.forEach(m => {
+        if (y > 270) { doc.addPage(); y = 15; }
+        x = 10;
+        const row = [m.month ?? "", String(m.reviewCount ?? 0), String(m.avgScore != null ? Math.round(Number(m.avgScore)) : "—"),
+          String(m.excellentCount ?? 0), String(m.goodCount ?? 0), String(m.adequateCount ?? 0), String(m.needsImprovementCount ?? 0)];
+        row.forEach((v, i) => { doc.text(v, x, y); x += qColW[i]; }); y += 4;
+      }); y += 4;
+    }
+    // Staff leaderboard
+    if (iqrSnapshot.length > 0) {
+      if (y > 240) { doc.addPage(); y = 15; }
+      doc.setFontSize(9); doc.setFont("helvetica", "bold");
+      doc.text("Staff IQR Quality Score Leaderboard", 10, y); y += 5;
+      doc.setFontSize(7.5); doc.setFont("helvetica", "normal");
+      [...iqrSnapshot].sort((a, b) => Number(b.avgScore ?? 0) - Number(a.avgScore ?? 0)).forEach((s, i) => {
+        if (y > 270) { doc.addPage(); y = 15; }
+        const qs = Math.round(Number(s.avgScore ?? 0));
+        doc.text(`${i + 1}. ${s.revieweeName ?? `Member #${s.revieweeLabMemberId}`} — ${qs}/100 (${s.reviewCount} reviews)`, 10, y); y += 4;
+      }); y += 4;
+    }
+    // Physician peer review
+    if (filteredPhysician.length > 0) {
+      if (y > 240) { doc.addPage(); y = 15; }
+      doc.setFontSize(9); doc.setFont("helvetica", "bold");
+      doc.text("Physician Peer Review — Monthly Concordance", 10, y); y += 5;
+      doc.setFontSize(7.5); doc.setFont("helvetica", "normal");
+      filteredPhysician.forEach((m: any) => {
+        if (y > 270) { doc.addPage(); y = 15; }
+        doc.text(`${m.month} — ${m.reviewCount} reviews, Concordance: ${m.avgConcordanceScore != null ? Math.round(Number(m.avgConcordanceScore)) + "%" : "—"}`, 10, y); y += 4;
+      }); y += 4;
+    }
+    // Footer
+    const pageCount = (doc.internal as any).getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(7); doc.setTextColor(150);
+      doc.text(`iHeartEcho\u2122 EchoAccreditation Navigator\u2122 — Confidential — Page ${i} of ${pageCount}`, pageW / 2, 290, { align: "center" });
+    }
+    doc.save(`iHeartEcho-Analytics-${startDate}-${endDate}.pdf`);
+  };
+
+  const selectedStaffName = useMemo(() => {
+    if (!selectedStaffId) return "";
+    const snap = iqrSnapshot.find(s => Number(s.revieweeLabMemberId) === selectedStaffId);
+    return snap?.revieweeName ?? `Member #${selectedStaffId}`;
+  }, [selectedStaffId, iqrSnapshot]);
 
   return (
     <div className="space-y-6">
-      {/* Date Range Filter */}
+      {/* Toolbar: date range + view mode + export */}
       <div className="flex flex-wrap items-center gap-3 p-3 rounded-lg border border-[#189aa1]/20 bg-[#f0fbfc]">
-        <span className="text-xs font-semibold text-gray-600">Date Range:</span>
         <div className="flex items-center gap-2">
-          <input type="month" className="h-8 px-2 text-xs border border-gray-200 rounded-md" value={startDate} onChange={e => setStartDate(e.target.value)} />
+          <span className="text-xs font-semibold text-gray-600">Date Range:</span>
+          <input type="month" className="h-8 px-2 text-xs border border-gray-200 rounded-md bg-white" value={startDate} onChange={e => setStartDate(e.target.value)} />
           <span className="text-xs text-gray-400">to</span>
-          <input type="month" className="h-8 px-2 text-xs border border-gray-200 rounded-md" value={endDate} onChange={e => setEndDate(e.target.value)} />
+          <input type="month" className="h-8 px-2 text-xs border border-gray-200 rounded-md bg-white" value={endDate} onChange={e => setEndDate(e.target.value)} />
         </div>
-        <div className="flex gap-2 ml-auto">
+        <div className="flex gap-1.5">
           {["3M", "6M", "12M", "YTD"].map(preset => (
             <button key={preset} onClick={() => {
-              const d = new Date(now);
+              const d = new Date();
               if (preset === "3M") d.setMonth(d.getMonth() - 3);
               else if (preset === "6M") d.setMonth(d.getMonth() - 6);
               else if (preset === "12M") d.setMonth(d.getMonth() - 12);
               else if (preset === "YTD") d.setMonth(0);
               setStartDate(d.toISOString().slice(0, 7));
-              setEndDate(now.toISOString().slice(0, 7));
+              setEndDate(new Date().toISOString().slice(0, 7));
             }} className="px-2.5 py-1 text-xs rounded-md border border-[#189aa1]/30 text-[#189aa1] hover:bg-[#189aa1] hover:text-white transition-colors">
               {preset}
             </button>
           ))}
         </div>
+        <div className="flex gap-1.5 ml-auto">
+          <button onClick={exportPDF} className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md bg-[#189aa1] text-white hover:bg-[#147f85] transition-colors">
+            <FileDown className="w-3.5 h-3.5" /> Export PDF
+          </button>
+          <button onClick={() => exportCSV(filteredQualityMonthly.map(m => ({ Month: m.month, Reviews: m.reviewCount, AvgQS: m.avgScore != null ? Math.round(Number(m.avgScore)) : "", Excellent: m.excellentCount ?? 0, Good: m.goodCount ?? 0, Adequate: m.adequateCount ?? 0, NeedsImprovement: m.needsImprovementCount ?? 0 })), `quality-monthly-${startDate}-${endDate}.csv`)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border border-[#189aa1]/40 text-[#189aa1] hover:bg-[#189aa1]/10 transition-colors">
+            <FileDown className="w-3.5 h-3.5" /> CSV
+          </button>
+        </div>
       </div>
 
-      {/* IQR Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { label: "Total IQR Reviews", value: [...filteredQualityMonthly, ...filteredPeerMonthly].reduce((s, m) => s + Number(m.reviewCount ?? 0), 0), icon: Activity, color: BRAND },
-          { label: "Avg Quality Score", value: filteredQualityMonthly.length > 0 ? Math.round(filteredQualityMonthly.reduce((s, m) => s + Number(m.avgScore ?? 0), 0) / filteredQualityMonthly.length) + "/100" : "—", icon: BarChart, color: "#16a34a" },
-          { label: "Peer Reviews", value: filteredPhysician.reduce((s: number, m: any) => s + Number(m.reviewCount ?? 0), 0), icon: Users, color: "#7c3aed" },
-          { label: "Staff Tracked", value: members.length, icon: Users, color: "#d97706" },
-        ].map(({ label, value, icon: Icon, color }) => (
-          <Card key={label} className="border border-gray-100">
-            <CardContent className="p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <Icon className="w-4 h-4" style={{ color }} />
-                <span className="text-xs text-gray-500">{label}</span>
-              </div>
-              <div className="text-xl font-black" style={{ color }}>{value}</div>
-            </CardContent>
-          </Card>
+      {/* View mode tabs */}
+      <div className="flex gap-2 border-b border-gray-200 pb-0">
+        {(["overview", "staff", "physician"] as const).map(mode => (
+          <button key={mode} onClick={() => setViewMode(mode)}
+            className={`px-4 py-2 text-xs font-semibold border-b-2 transition-colors capitalize ${
+              viewMode === mode ? "border-[#189aa1] text-[#189aa1]" : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}>
+            {mode === "overview" ? "Lab Overview" : mode === "staff" ? "Staff Growth Curves" : "Physician Concordance"}
+          </button>
         ))}
       </div>
 
-      {/* Quality Review Monthly Trend */}
-      {filteredQualityMonthly.length > 0 && (
-        <Card className="border border-gray-100">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
-              <Activity className="w-4 h-4" style={{ color: BRAND }} />
-              Quality Review — Monthly Trend
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b border-gray-100">
-                    <th className="text-left py-1.5 text-gray-500 font-semibold">Month</th>
-                    <th className="text-right py-1.5 text-gray-500 font-semibold">Reviews</th>
-                    <th className="text-right py-1.5 text-gray-500 font-semibold">Avg QS</th>
-                    <th className="text-right py-1.5 text-gray-500 font-semibold">Excellent</th>
-                    <th className="text-right py-1.5 text-gray-500 font-semibold">Good</th>
-                    <th className="text-right py-1.5 text-gray-500 font-semibold">Adequate</th>
-                    <th className="text-right py-1.5 text-gray-500 font-semibold">Needs Impr.</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredQualityMonthly.map((m, i) => (
-                    <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
-                      <td className="py-1.5 font-medium text-gray-700">{m.month}</td>
-                      <td className="py-1.5 text-right text-gray-600">{m.reviewCount}</td>
-                      <td className="py-1.5 text-right font-bold" style={{ color: BRAND }}>{m.avgScore != null ? Math.round(Number(m.avgScore)) : "—"}</td>
-                      <td className="py-1.5 text-right text-green-600">{m.excellentCount ?? 0}</td>
-                      <td className="py-1.5 text-right text-blue-600">{m.goodCount ?? 0}</td>
-                      <td className="py-1.5 text-right text-amber-600">{m.adequateCount ?? 0}</td>
-                      <td className="py-1.5 text-right text-red-600">{m.needsImprovementCount ?? 0}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Peer Review (IQR) Monthly Trend */}
-      {filteredPeerMonthly.length > 0 && (
-        <Card className="border border-gray-100">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
-              <Activity className="w-4 h-4" style={{ color: "#0ea5e9" }} />
-              Peer Review — Monthly Trend
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b border-gray-100">
-                    <th className="text-left py-1.5 text-gray-500 font-semibold">Month</th>
-                    <th className="text-right py-1.5 text-gray-500 font-semibold">Reviews</th>
-                    <th className="text-right py-1.5 text-gray-500 font-semibold">Avg QS</th>
-                    <th className="text-right py-1.5 text-gray-500 font-semibold">Excellent</th>
-                    <th className="text-right py-1.5 text-gray-500 font-semibold">Good</th>
-                    <th className="text-right py-1.5 text-gray-500 font-semibold">Adequate</th>
-                    <th className="text-right py-1.5 text-gray-500 font-semibold">Needs Impr.</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredPeerMonthly.map((m, i) => (
-                    <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
-                      <td className="py-1.5 font-medium text-gray-700">{m.month}</td>
-                      <td className="py-1.5 text-right text-gray-600">{m.reviewCount}</td>
-                      <td className="py-1.5 text-right font-bold" style={{ color: "#0ea5e9" }}>{m.avgScore != null ? Math.round(Number(m.avgScore)) : "—"}</td>
-                      <td className="py-1.5 text-right text-green-600">{m.excellentCount ?? 0}</td>
-                      <td className="py-1.5 text-right text-blue-600">{m.goodCount ?? 0}</td>
-                      <td className="py-1.5 text-right text-amber-600">{m.adequateCount ?? 0}</td>
-                      <td className="py-1.5 text-right text-red-600">{m.needsImprovementCount ?? 0}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Physician Peer Review Monthly Trend */}
-      {filteredPhysician.length > 0 && (
-        <Card className="border border-gray-100">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
-              <Users className="w-4 h-4" style={{ color: "#7c3aed" }} />
-              Physician Peer Review Monthly Trend
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b border-gray-100">
-                    <th className="text-left py-1.5 text-gray-500 font-semibold">Month</th>
-                    <th className="text-right py-1.5 text-gray-500 font-semibold">Reviews</th>
-                    <th className="text-right py-1.5 text-gray-500 font-semibold">Avg Concordance</th>
-                    <th className="text-right py-1.5 text-gray-500 font-semibold">Physicians Reviewed</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredPhysician.map((m: any, i: number) => (
-                    <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
-                      <td className="py-1.5 font-medium text-gray-700">{m.month}</td>
-                      <td className="py-1.5 text-right text-gray-600">{m.reviewCount}</td>
-                      <td className="py-1.5 text-right font-bold" style={{ color: "#7c3aed" }}>
-                        {m.avgConcordanceScore != null ? Math.round(Number(m.avgConcordanceScore)) + "%" : "—"}
-                      </td>
-                      <td className="py-1.5 text-right text-gray-600">{m.physiciansReviewed ?? "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* CME Tracker Summary */}
-      <Card className="border border-gray-100">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
-            <BookOpen className="w-4 h-4" style={{ color: BRAND }} />
-            CME Credit Progress (Triennium — 30 Credits Required)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {members.length === 0 ? (
-            <div className="text-xs text-gray-400 py-4 text-center">No staff members found. Add staff in Lab Admin to track CME credits.</div>
-          ) : (
-            <div className="space-y-2">
-              {members.map(m => {
-                const credits = cmeByMember.get(m.id) ?? 0;
-                const pct = Math.min(100, Math.round((credits / TRIENNIUM_CREDITS) * 100));
-                const color = pct >= 100 ? "#16a34a" : pct >= 60 ? "#d97706" : "#dc2626";
-                return (
-                  <div key={m.id} className="flex items-center gap-3">
-                    <div className="w-28 text-xs font-medium text-gray-700 truncate">{m.displayName ?? m.credentials ?? `Member #${m.id}`}</div>
-                    <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
-                    </div>
-                    <div className="text-xs font-bold w-16 text-right" style={{ color }}>{credits}/{TRIENNIUM_CREDITS} hrs</div>
-                    {pct >= 100 && <CheckCircle className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />}
+      {/* ── OVERVIEW TAB ── */}
+      {viewMode === "overview" && (
+        <div className="space-y-6">
+          {/* KPI Cards */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { label: "Total IQR Reviews", value: [...filteredQualityMonthly, ...filteredPeerMonthly].reduce((s, m) => s + Number(m.reviewCount ?? 0), 0), icon: Activity, color: BRAND },
+              { label: "Avg Quality Score", value: filteredQualityMonthly.length > 0 ? Math.round(filteredQualityMonthly.reduce((s, m) => s + Number(m.avgScore ?? 0), 0) / filteredQualityMonthly.length) + "/100" : "—", icon: BarChart, color: "#16a34a" },
+              { label: "Physician Reviews", value: filteredPhysician.reduce((s: number, m: any) => s + Number(m.reviewCount ?? 0), 0), icon: Users, color: "#7c3aed" },
+              { label: "Staff Tracked", value: members.length, icon: Users, color: "#d97706" },
+            ].map(({ label, value, icon: Icon, color }) => (
+              <Card key={label} className="border border-gray-100">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Icon className="w-4 h-4" style={{ color }} />
+                    <span className="text-xs text-gray-500">{label}</span>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                  <div className="text-xl font-black" style={{ color }}>{value}</div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
 
-      {/* Staff IQR Leaderboard */}
-      {iqrSnapshot.length > 0 && (
-        <Card className="border border-gray-100">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
-              <BarChart className="w-4 h-4" style={{ color: BRAND }} />
-              Staff IQR Quality Score Leaderboard
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {[...iqrSnapshot].sort((a, b) => Number(b.avgScore ?? 0) - Number(a.avgScore ?? 0)).map((s, i) => {
+          {/* Lab Quality Growth Curve + Pie Chart side by side */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Growth Curve */}
+            <Card className="lg:col-span-2 border border-gray-100">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                  <LineChartIcon className="w-4 h-4" style={{ color: BRAND }} />
+                  Lab Quality Score — Growth Curve
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {labGrowthData.length === 0 ? (
+                  <div className="text-xs text-gray-400 py-8 text-center">No data for selected period</div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={220}>
+                    <LineChart data={labGrowthData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+                      <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} />
+                      <Tooltip formatter={(v: any) => [`${v}/100`, "Avg Quality Score"]} />
+                      <Line type="monotone" dataKey="Avg Quality Score" stroke={BRAND} strokeWidth={2.5} dot={{ r: 4, fill: BRAND }} activeDot={{ r: 6 }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Pie Chart */}
+            <Card className="border border-gray-100">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                  <PieChartIcon className="w-4 h-4" style={{ color: BRAND }} />
+                  Score Distribution
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {labPieData.length === 0 ? (
+                  <div className="text-xs text-gray-400 py-8 text-center">No data</div>
+                ) : (
+                  <>
+                    <ResponsiveContainer width="100%" height={160}>
+                      <PieChart>
+                        <Pie data={labPieData} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={3} dataKey="value">
+                          {labPieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                        </Pie>
+                        <Tooltip formatter={(v: any, name: string) => [v, name]} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="space-y-1 mt-1">
+                      {labPieData.map((d, i) => (
+                        <div key={i} className="flex items-center gap-2 text-xs">
+                          <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: d.color }} />
+                          <span className="text-gray-600 flex-1 truncate">{d.name}</span>
+                          <span className="font-bold" style={{ color: d.color }}>{d.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Monthly Quality Table with CSV export */}
+          {filteredQualityMonthly.length > 0 && (
+            <Card className="border border-gray-100">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                    <Activity className="w-4 h-4" style={{ color: BRAND }} />
+                    Quality Review — Monthly Detail
+                  </CardTitle>
+                  <button onClick={() => exportCSV(filteredQualityMonthly.map(m => ({ Month: m.month, Reviews: m.reviewCount, AvgQS: m.avgScore != null ? Math.round(Number(m.avgScore)) : "", Excellent: m.excellentCount ?? 0, Good: m.goodCount ?? 0, Adequate: m.adequateCount ?? 0, NeedsImprovement: m.needsImprovementCount ?? 0 })), `quality-monthly.csv`)} className="flex items-center gap-1 text-xs text-[#189aa1] hover:underline">
+                    <FileDown className="w-3.5 h-3.5" /> CSV
+                  </button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-gray-100">
+                        <th className="text-left py-1.5 text-gray-500 font-semibold">Month</th>
+                        <th className="text-right py-1.5 text-gray-500 font-semibold">Reviews</th>
+                        <th className="text-right py-1.5 text-gray-500 font-semibold">Avg QS</th>
+                        <th className="text-right py-1.5 text-gray-500 font-semibold">Excellent</th>
+                        <th className="text-right py-1.5 text-gray-500 font-semibold">Good</th>
+                        <th className="text-right py-1.5 text-gray-500 font-semibold">Adequate</th>
+                        <th className="text-right py-1.5 text-gray-500 font-semibold">Needs Impr.</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredQualityMonthly.map((m, i) => (
+                        <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
+                          <td className="py-1.5 font-medium text-gray-700">{m.month}</td>
+                          <td className="py-1.5 text-right text-gray-600">{m.reviewCount}</td>
+                          <td className="py-1.5 text-right font-bold" style={{ color: BRAND }}>{m.avgScore != null ? Math.round(Number(m.avgScore)) : "—"}</td>
+                          <td className="py-1.5 text-right text-green-600">{m.excellentCount ?? 0}</td>
+                          <td className="py-1.5 text-right text-blue-600">{m.goodCount ?? 0}</td>
+                          <td className="py-1.5 text-right text-amber-600">{m.adequateCount ?? 0}</td>
+                          <td className="py-1.5 text-right text-red-600">{m.needsImprovementCount ?? 0}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* CME Progress */}
+          <Card className="border border-gray-100">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                <BookOpen className="w-4 h-4" style={{ color: BRAND }} />
+                CME Credit Progress (Triennium — 30 Credits Required)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {members.length === 0 ? (
+                <div className="text-xs text-gray-400 py-4 text-center">No staff members found. Add staff in Lab Admin to track CME credits.</div>
+              ) : (
+                <div className="space-y-2">
+                  {members.map(m => {
+                    const credits = cmeByMember.get(m.id) ?? 0;
+                    const pct = Math.min(100, Math.round((credits / TRIENNIUM_CREDITS) * 100));
+                    const color = pct >= 100 ? "#16a34a" : pct >= 60 ? "#d97706" : "#dc2626";
+                    return (
+                      <div key={m.id} className="flex items-center gap-3">
+                        <div className="w-28 text-xs font-medium text-gray-700 truncate">{m.displayName ?? m.credentials ?? `Member #${m.id}`}</div>
+                        <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                          <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
+                        </div>
+                        <div className="text-xs font-bold w-16 text-right" style={{ color }}>{credits}/{TRIENNIUM_CREDITS} hrs</div>
+                        {pct >= 100 && <CheckCircle className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* ── STAFF GROWTH CURVES TAB ── */}
+      {viewMode === "staff" && (
+        <div className="space-y-6">
+          {/* Staff selector */}
+          <div className="flex flex-wrap gap-2">
+            {iqrSnapshot.length === 0 ? (
+              <div className="text-xs text-gray-400">No staff IQR data available yet.</div>
+            ) : (
+              iqrSnapshot.map(s => {
+                const isSelected = selectedStaffId === Number(s.revieweeLabMemberId);
                 const qs = Math.round(Number(s.avgScore ?? 0));
                 const color = qs >= 85 ? "#16a34a" : qs >= 70 ? "#d97706" : "#dc2626";
                 return (
-                  <div key={i} className="flex items-center gap-3">
-                    <span className="text-xs text-gray-400 w-4">{i + 1}.</span>
-                    <div className="w-28 text-xs font-medium text-gray-700 truncate">{s.revieweeName ?? `Member #${s.revieweeLabMemberId}`}</div>
-                    <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full" style={{ width: `${qs}%`, background: color }} />
-                    </div>
-                    <span className="text-xs font-bold w-12 text-right" style={{ color }}>{qs}/100</span>
-                    <span className="text-xs text-gray-400 w-16 text-right">{s.reviewCount} reviews</span>
-                  </div>
+                  <button key={s.revieweeLabMemberId}
+                    onClick={() => { setSelectedStaffId(Number(s.revieweeLabMemberId)); setDrilldownOpen(false); }}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-semibold transition-all ${
+                      isSelected ? "text-white border-transparent" : "text-gray-700 border-gray-200 hover:border-[#189aa1]/50"
+                    }`}
+                    style={isSelected ? { background: BRAND } : {}}>
+                    <span>{s.revieweeName ?? `Member #${s.revieweeLabMemberId}`}</span>
+                    <span className="font-black" style={{ color: isSelected ? "white" : color }}>{qs}/100</span>
+                  </button>
                 );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+              })
+            )}
+          </div>
+
+          {selectedStaffId === null && iqrSnapshot.length > 0 && (
+            <div className="text-xs text-gray-400 text-center py-8">Select a staff member above to view their growth curve and drill-down data.</div>
+          )}
+
+          {selectedStaffId !== null && (
+            <>
+              {/* Staff growth curve + pie side by side */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <Card className="lg:col-span-2 border border-gray-100">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4" style={{ color: BRAND }} />
+                      {selectedStaffName} — Quality Score Growth Curve
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {staffGrowthData.length === 0 ? (
+                      <div className="text-xs text-gray-400 py-8 text-center">No trend data yet for this staff member.</div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height={220}>
+                        <LineChart data={staffGrowthData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                          <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+                          <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} />
+                          <Tooltip formatter={(v: any) => [`${v}/100`, "Avg Score"]} />
+                          <Line type="monotone" dataKey="Avg Score" stroke={BRAND} strokeWidth={2.5} dot={{ r: 4, fill: BRAND }} activeDot={{ r: 6 }} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card className="border border-gray-100">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                      <PieChartIcon className="w-4 h-4" style={{ color: BRAND }} />
+                      Score Distribution
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {staffPieData.length === 0 ? (
+                      <div className="text-xs text-gray-400 py-8 text-center">No data</div>
+                    ) : (
+                      <>
+                        <ResponsiveContainer width="100%" height={160}>
+                          <PieChart>
+                            <Pie data={staffPieData} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={3} dataKey="value">
+                              {staffPieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                            </Pie>
+                            <Tooltip />
+                          </PieChart>
+                        </ResponsiveContainer>
+                        <div className="space-y-1 mt-1">
+                          {staffPieData.map((d, i) => (
+                            <div key={i} className="flex items-center gap-2 text-xs">
+                              <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: d.color }} />
+                              <span className="text-gray-600 flex-1 truncate">{d.name}</span>
+                              <span className="font-bold" style={{ color: d.color }}>{d.value}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Exam type breakdown bar chart */}
+              {staffDomainBreakdown.length > 0 && (
+                <Card className="border border-gray-100">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                      <BarChart className="w-4 h-4" style={{ color: BRAND }} />
+                      Quality by Exam Type
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={180}>
+                      <ReBarChart data={staffDomainBreakdown.map(d => ({ examType: d.examType ?? "Unknown", avgScore: d.avgScore != null ? Math.round(Number(d.avgScore)) : 0, reviews: Number(d.reviewCount ?? 0) }))} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                        <XAxis dataKey="examType" tick={{ fontSize: 10 }} />
+                        <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} />
+                        <Tooltip formatter={(v: any, name: string) => [name === "avgScore" ? `${v}/100` : v, name === "avgScore" ? "Avg Score" : "Reviews"]} />
+                        <Bar dataKey="avgScore" fill={BRAND} radius={[4, 4, 0, 0]} />
+                      </ReBarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Drill-down reviews table */}
+              <Card className="border border-gray-100">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                      <ClipboardList className="w-4 h-4" style={{ color: BRAND }} />
+                      Individual Reviews — {selectedStaffName}
+                    </CardTitle>
+                    <div className="flex gap-2">
+                      <button onClick={() => setDrilldownOpen(o => !o)} className="flex items-center gap-1 text-xs text-[#189aa1] hover:underline">
+                        {drilldownOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                        {drilldownOpen ? "Hide" : "Show"} Reviews
+                      </button>
+                      {drilldownOpen && drilldownReviews.length > 0 && (
+                        <button onClick={() => exportCSV(drilldownReviews.map((r: any) => ({ Date: r.dateReviewCompleted ?? r.createdAt, ExamType: r.examType, Identifier: r.examIdentifier, QualityScore: r.qualityScore, Reviewer: r.reviewer, Comments: r.reviewComments })), `${selectedStaffName}-reviews.csv`)} className="flex items-center gap-1 text-xs text-[#189aa1] hover:underline">
+                          <FileDown className="w-3.5 h-3.5" /> CSV
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </CardHeader>
+                {drilldownOpen && (
+                  <CardContent>
+                    {drilldownReviews.length === 0 ? (
+                      <div className="text-xs text-gray-400 py-4 text-center">No reviews found.</div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-xs">
+                          <thead>
+                            <tr className="border-b border-gray-100">
+                              <th className="text-left py-1.5 text-gray-500 font-semibold">Date</th>
+                              <th className="text-left py-1.5 text-gray-500 font-semibold">Exam Type</th>
+                              <th className="text-left py-1.5 text-gray-500 font-semibold">Identifier</th>
+                              <th className="text-right py-1.5 text-gray-500 font-semibold">QS</th>
+                              <th className="text-left py-1.5 text-gray-500 font-semibold">Reviewer</th>
+                              <th className="text-left py-1.5 text-gray-500 font-semibold">Comments</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {(drilldownReviews as any[]).map((r, i) => {
+                              const qs = Number(r.qualityScore ?? 0);
+                              const qsColor = qs >= 90 ? "#16a34a" : qs >= 75 ? BRAND : qs >= 60 ? "#d97706" : "#dc2626";
+                              return (
+                                <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
+                                  <td className="py-1.5 text-gray-600">{r.dateReviewCompleted ?? (r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "—")}</td>
+                                  <td className="py-1.5 text-gray-600">{r.examType ?? "—"}</td>
+                                  <td className="py-1.5 text-gray-600 font-mono">{r.examIdentifier ?? "—"}</td>
+                                  <td className="py-1.5 text-right font-bold" style={{ color: qsColor }}>{r.qualityScore ?? "—"}</td>
+                                  <td className="py-1.5 text-gray-600">{r.reviewer ?? "—"}</td>
+                                  <td className="py-1.5 text-gray-500 max-w-xs truncate">{r.reviewComments ?? "—"}</td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </CardContent>
+                )}
+              </Card>
+            </>
+          )}
+
+          {/* All-staff leaderboard */}
+          {iqrSnapshot.length > 0 && (
+            <Card className="border border-gray-100">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                    <BarChart className="w-4 h-4" style={{ color: BRAND }} />
+                    Staff IQR Quality Score Leaderboard
+                  </CardTitle>
+                  <button onClick={() => exportCSV([...iqrSnapshot].sort((a, b) => Number(b.avgScore ?? 0) - Number(a.avgScore ?? 0)).map((s, i) => ({ Rank: i + 1, Name: s.revieweeName ?? `Member #${s.revieweeLabMemberId}`, AvgScore: Math.round(Number(s.avgScore ?? 0)), Reviews: s.reviewCount })), "staff-leaderboard.csv")} className="flex items-center gap-1 text-xs text-[#189aa1] hover:underline">
+                    <FileDown className="w-3.5 h-3.5" /> CSV
+                  </button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {[...iqrSnapshot].sort((a, b) => Number(b.avgScore ?? 0) - Number(a.avgScore ?? 0)).map((s, i) => {
+                    const qs = Math.round(Number(s.avgScore ?? 0));
+                    const color = qs >= 85 ? "#16a34a" : qs >= 70 ? "#d97706" : "#dc2626";
+                    const isSelected = selectedStaffId === Number(s.revieweeLabMemberId);
+                    return (
+                      <button key={i} onClick={() => { setSelectedStaffId(Number(s.revieweeLabMemberId)); setDrilldownOpen(false); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                        className={`w-full flex items-center gap-3 p-2 rounded-lg transition-colors text-left ${
+                          isSelected ? "bg-[#f0fbfc] border border-[#189aa1]/30" : "hover:bg-gray-50"
+                        }`}>
+                        <span className="text-xs text-gray-400 w-4">{i + 1}.</span>
+                        <div className="w-28 text-xs font-medium text-gray-700 truncate">{s.revieweeName ?? `Member #${s.revieweeLabMemberId}`}</div>
+                        <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                          <div className="h-full rounded-full" style={{ width: `${qs}%`, background: color }} />
+                        </div>
+                        <span className="text-xs font-bold w-12 text-right" style={{ color }}>{qs}/100</span>
+                        <span className="text-xs text-gray-400 w-16 text-right">{s.reviewCount} reviews</span>
+                        <ChevronRight className="w-3.5 h-3.5 text-gray-300" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {/* ── PHYSICIAN CONCORDANCE TAB ── */}
+      {viewMode === "physician" && (
+        <div className="space-y-6">
+          {/* Concordance growth curve */}
+          <Card className="border border-gray-100">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                  <LineChartIcon className="w-4 h-4" style={{ color: "#7c3aed" }} />
+                  Physician Concordance — Growth Curve
+                </CardTitle>
+                <button onClick={() => exportCSV(filteredPhysician.map((m: any) => ({ Month: m.month, Reviews: m.reviewCount, AvgConcordance: m.avgConcordanceScore != null ? Math.round(Number(m.avgConcordanceScore)) : "" })), "physician-concordance.csv")} className="flex items-center gap-1 text-xs text-[#189aa1] hover:underline">
+                  <FileDown className="w-3.5 h-3.5" /> CSV
+                </button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {physicianGrowthData.length === 0 ? (
+                <div className="text-xs text-gray-400 py-8 text-center">No physician peer review data for selected period.</div>
+              ) : (
+                <ResponsiveContainer width="100%" height={240}>
+                  <LineChart data={physicianGrowthData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+                    <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} tickFormatter={v => `${v}%`} />
+                    <Tooltip formatter={(v: any) => [`${v}%`, "Concordance"]} />
+                    <Line type="monotone" dataKey="Concordance %" stroke="#7c3aed" strokeWidth={2.5} dot={{ r: 4, fill: "#7c3aed" }} activeDot={{ r: 6 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Physician monthly detail table */}
+          {filteredPhysician.length > 0 && (
+            <Card className="border border-gray-100">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                  <Users className="w-4 h-4" style={{ color: "#7c3aed" }} />
+                  Physician Peer Review — Monthly Detail
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-gray-100">
+                        <th className="text-left py-1.5 text-gray-500 font-semibold">Month</th>
+                        <th className="text-right py-1.5 text-gray-500 font-semibold">Reviews</th>
+                        <th className="text-right py-1.5 text-gray-500 font-semibold">Avg Concordance</th>
+                        <th className="text-right py-1.5 text-gray-500 font-semibold">Physicians Reviewed</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredPhysician.map((m: any, i: number) => (
+                        <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
+                          <td className="py-1.5 font-medium text-gray-700">{m.month}</td>
+                          <td className="py-1.5 text-right text-gray-600">{m.reviewCount}</td>
+                          <td className="py-1.5 text-right font-bold" style={{ color: "#7c3aed" }}>
+                            {m.avgConcordanceScore != null ? Math.round(Number(m.avgConcordanceScore)) + "%" : "—"}
+                          </td>
+                          <td className="py-1.5 text-right text-gray-600">{m.physiciansReviewed ?? "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       )}
     </div>
   );
