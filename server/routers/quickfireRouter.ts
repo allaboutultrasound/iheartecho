@@ -573,8 +573,8 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
 
       let text: string;
       try {
-        const patchedFetch = createPatchedFetch(fetch);
-        const aiResp = await patchedFetch(`${forgeBaseUrl}/v1/chat/completions`, {
+        // Use native fetch (not createPatchedFetch) — patchedFetch is for SSE streaming only
+        const aiResp = await fetch(`${forgeBaseUrl}/v1/chat/completions`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

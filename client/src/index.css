@@ -255,3 +255,51 @@ textarea,
   -ms-user-select: text;
   user-select: text;
 }
+
+/* ─── Flashcard Flip Card ─────────────────────────────────────────────────────
+   Used in QuickFire Daily Challenge for quickReview-type questions.
+   The card flips 180° on the Y axis to reveal the answer on the back.
+*/
+.flashcard-scene {
+  perspective: 1000px;
+  width: 100%;
+}
+
+.flashcard-card {
+  position: relative;
+  width: 100%;
+  min-height: 200px;
+  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.flashcard-card.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.flashcard-face {
+  position: absolute;
+  width: 100%;
+  min-height: 200px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.flashcard-face--front {
+  background: linear-gradient(135deg, #f0fbfc 0%, #e6f7f8 100%);
+  border: 2px solid #4ad9e0;
+}
+
+.flashcard-face--back {
+  background: linear-gradient(135deg, #0e4a50 0%, #189aa1 100%);
+  color: white;
+  transform: rotateY(180deg);
+  border: 2px solid #189aa1;
+}

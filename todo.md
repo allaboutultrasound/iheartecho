@@ -1525,3 +1525,8 @@
 - [x] Enable multiple media uploads in case submission (stills + videos, multiple of each) — drag-and-drop, Add more files button, updated accept types
 - [x] Fix TypeScript errors in Markdown.tsx (plugins prop) and ComponentShowcase.tsx (height prop)
 - [x] Test email registration flow end-to-end (verify SendGrid branded email arrives correctly)
+
+## Session Mar 09 2026 — Phase 2 Features
+- [x] Bulk-generate questions via AI across key clinical topics — 46 questions inserted (5 per topic × 9 topics), daily set regenerated with 5 questions
+- [x] Add Flashcard display mode to Daily Challenge QuickFire UI — 3D CSS flip card with teal front / dark teal back, Got it / Missed it buttons, Flip Back button, applied to both daily challenge and archive sections
+- [x] Verify free vs. premium archive access end-to-end — backend gates confirmed (getChallengeArchive returns empty for free, getArchivedChallenge throws FORBIDDEN), frontend shows premium upgrade prompt for non-premium users, admin sees full archive

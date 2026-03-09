@@ -597,41 +597,64 @@ export default function QuickFire() {
 
                       {isQuickReview ? (
                         <>
-                          {!flipped ? (
-                            <div className="text-center py-6">
-                              <p className="text-sm text-gray-500 mb-4">Think about your answer, then reveal the explanation.</p>
-                              <Button
-                                className="text-white"
-                                style={{ background: "#189aa1" }}
-                                onClick={() => setFlipped(true)}
-                              >
-                                Reveal Answer
-                              </Button>
-                            </div>
-                          ) : (
-                            <>
-                              <div className="p-4 rounded-lg bg-[#189aa1]/8 border border-[#189aa1]/20 mb-3">
-                                <p className="text-xs font-semibold text-[#189aa1] mb-1">Answer</p>
-                                <p className="text-sm text-gray-700 leading-relaxed">{currentQ.reviewAnswer}</p>
-                              </div>
-                              {!answered && (
-                                <div className="flex gap-3">
-                                  <Button
-                                    className="flex-1 bg-green-500 hover:bg-green-600 text-white"
-                                    onClick={() => handleSelfMark(true)}
-                                  >
-                                    <ThumbsUp className="w-4 h-4 mr-2" /> Got it
-                                  </Button>
-                                  <Button
-                                    className="flex-1 bg-red-400 hover:bg-red-500 text-white"
-                                    onClick={() => handleSelfMark(false)}
-                                  >
-                                    <ThumbsDown className="w-4 h-4 mr-2" /> Missed it
-                                  </Button>
+                          {/* 3D Flip Card for Flashcard/QuickReview questions */}
+                          <div className="flashcard-scene mb-4" style={{ minHeight: 200 }}>
+                            <div className={`flashcard-card ${flipped ? "is-flipped" : ""}`} style={{ minHeight: 200 }}>
+                              {/* Front face — question prompt */}
+                              <div className="flashcard-face flashcard-face--front">
+                                <div className="mb-3">
+                                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-[#189aa1]/15 text-[#189aa1] mb-3">
+                                    ⚡ Flashcard
+                                  </span>
                                 </div>
-                              )}
-                            </>
-                          )}
+                                <p className="text-sm font-medium text-gray-600 mb-4">Think about your answer, then flip the card.</p>
+                                <Button
+                                  className="text-white shadow-md"
+                                  style={{ background: "#189aa1" }}
+                                  onClick={() => setFlipped(true)}
+                                >
+                                  Flip Card →
+                                </Button>
+                              </div>
+                              {/* Back face — answer */}
+                              <div className="flashcard-face flashcard-face--back">
+                                <div className="mb-3">
+                                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-white/20 text-white mb-2">
+                                    ✓ Answer
+                                  </span>
+                                </div>
+                                <p className="text-sm leading-relaxed text-white/95 mb-4">{currentQ.reviewAnswer}</p>
+                                {!answered && (
+                                  <div className="flex gap-3 mt-2">
+                                    <Button
+                                      size="sm"
+                                      className="bg-green-400 hover:bg-green-500 text-white border-0"
+                                      onClick={() => handleSelfMark(true)}
+                                    >
+                                      <ThumbsUp className="w-3.5 h-3.5 mr-1.5" /> Got it
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      className="bg-red-400 hover:bg-red-500 text-white border-0"
+                                      onClick={() => handleSelfMark(false)}
+                                    >
+                                      <ThumbsDown className="w-3.5 h-3.5 mr-1.5" /> Missed it
+                                    </Button>
+                                  </div>
+                                )}
+                                {answered && (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-white/40 text-white hover:bg-white/10 mt-2"
+                                    onClick={() => setFlipped(false)}
+                                  >
+                                    ← Flip Back
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
                         </>
                       ) : (
                         options.map((opt, idx) => {
@@ -1018,31 +1041,64 @@ export default function QuickFire() {
 
                           {isQuickReview ? (
                             <>
-                              {!archiveFlipped ? (
-                                <div className="text-center py-6">
-                                  <p className="text-sm text-gray-500 mb-4">Think about your answer, then reveal the explanation.</p>
-                                  <Button className="text-white" style={{ background: "#189aa1" }} onClick={() => setArchiveFlipped(true)}>
-                                    Reveal Answer
-                                  </Button>
-                                </div>
-                              ) : (
-                                <>
-                                  <div className="p-4 rounded-lg bg-[#189aa1]/8 border border-[#189aa1]/20 mb-3">
-                                    <p className="text-xs font-semibold text-[#189aa1] mb-1">Answer</p>
-                                    <p className="text-sm text-gray-700 leading-relaxed">{archiveCurrentQ.reviewAnswer}</p>
-                                  </div>
-                                  {!archiveAnswered && (
-                                    <div className="flex gap-3">
-                                      <Button className="flex-1 bg-green-500 hover:bg-green-600 text-white" onClick={() => handleArchiveSelfMark(true)}>
-                                        <ThumbsUp className="w-4 h-4 mr-2" /> Got it
-                                      </Button>
-                                      <Button className="flex-1 bg-red-400 hover:bg-red-500 text-white" onClick={() => handleArchiveSelfMark(false)}>
-                                        <ThumbsDown className="w-4 h-4 mr-2" /> Missed it
-                                      </Button>
+                              {/* 3D Flip Card for Flashcard/QuickReview questions — archive */}
+                              <div className="flashcard-scene mb-4" style={{ minHeight: 200 }}>
+                                <div className={`flashcard-card ${archiveFlipped ? "is-flipped" : ""}`} style={{ minHeight: 200 }}>
+                                  {/* Front face — question prompt */}
+                                  <div className="flashcard-face flashcard-face--front">
+                                    <div className="mb-3">
+                                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-[#189aa1]/15 text-[#189aa1] mb-3">
+                                        ⚡ Flashcard
+                                      </span>
                                     </div>
-                                  )}
-                                </>
-                              )}
+                                    <p className="text-sm font-medium text-gray-600 mb-4">Think about your answer, then flip the card.</p>
+                                    <Button
+                                      className="text-white shadow-md"
+                                      style={{ background: "#189aa1" }}
+                                      onClick={() => setArchiveFlipped(true)}
+                                    >
+                                      Flip Card →
+                                    </Button>
+                                  </div>
+                                  {/* Back face — answer */}
+                                  <div className="flashcard-face flashcard-face--back">
+                                    <div className="mb-3">
+                                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-white/20 text-white mb-2">
+                                        ✓ Answer
+                                      </span>
+                                    </div>
+                                    <p className="text-sm leading-relaxed text-white/95 mb-4">{archiveCurrentQ.reviewAnswer}</p>
+                                    {!archiveAnswered && (
+                                      <div className="flex gap-3 mt-2">
+                                        <Button
+                                          size="sm"
+                                          className="bg-green-400 hover:bg-green-500 text-white border-0"
+                                          onClick={() => handleArchiveSelfMark(true)}
+                                        >
+                                          <ThumbsUp className="w-3.5 h-3.5 mr-1.5" /> Got it
+                                        </Button>
+                                        <Button
+                                          size="sm"
+                                          className="bg-red-400 hover:bg-red-500 text-white border-0"
+                                          onClick={() => handleArchiveSelfMark(false)}
+                                        >
+                                          <ThumbsDown className="w-3.5 h-3.5 mr-1.5" /> Missed it
+                                        </Button>
+                                      </div>
+                                    )}
+                                    {archiveAnswered && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="border-white/40 text-white hover:bg-white/10 mt-2"
+                                        onClick={() => setArchiveFlipped(false)}
+                                      >
+                                        ← Flip Back
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
                             </>
                           ) : (
                             options.map((opt, idx) => {
