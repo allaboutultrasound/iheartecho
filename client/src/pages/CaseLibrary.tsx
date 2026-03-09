@@ -37,6 +37,8 @@ import {
   RefreshCw,
   UserCheck,
   Link2,
+  TrendingUp,
+  ArrowUpDown,
 } from "lucide-react";
 import { getLoginUrl } from "@/const";
 import { formatDistanceToNow } from "date-fns";
@@ -81,6 +83,7 @@ export default function CaseLibrary() {
   const [search, setSearch] = useState("");
   const [modality, setModality] = useState("All");
   const [difficulty, setDifficulty] = useState("All");
+  const [sortBy, setSortBy] = useState<"newest" | "mostViewed">("newest");
   const [page, setPage] = useState(1);
   const limit = 12;
 
@@ -90,6 +93,7 @@ export default function CaseLibrary() {
       modality: modality !== "All" ? (modality as any) : undefined,
       difficulty: difficulty !== "All" ? (difficulty as any) : undefined,
       search: search.trim() || undefined,
+      sortBy,
       page,
       limit,
     },
@@ -118,6 +122,11 @@ export default function CaseLibrary() {
 
   const handleDifficulty = (val: string) => {
     setDifficulty(val);
+    setPage(1);
+  };
+
+  const handleSortBy = (val: string) => {
+    setSortBy(val as "newest" | "mostViewed");
     setPage(1);
   };
 
@@ -217,6 +226,24 @@ export default function CaseLibrary() {
                       {d === "All" ? "All Levels" : d.charAt(0).toUpperCase() + d.slice(1)}
                     </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+              <Select value={sortBy} onValueChange={handleSortBy}>
+                <SelectTrigger className="w-full sm:w-44">
+                  <ArrowUpDown className="w-3.5 h-3.5 mr-1.5 text-gray-400" />
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">
+                    <span className="flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5" /> Newest First
+                    </span>
+                  </SelectItem>
+                  <SelectItem value="mostViewed">
+                    <span className="flex items-center gap-1.5">
+                      <TrendingUp className="w-3.5 h-3.5" /> Most Viewed
+                    </span>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>

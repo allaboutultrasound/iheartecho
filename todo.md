@@ -1581,3 +1581,13 @@
 - [x] Add seededViewCount utility (deterministic seed based on caseId, no schema change needed)
 - [x] Member UI: display seededViewCount + actual viewCount as combined display count
 - [x] Admin panel: show true actual viewCount separately, labeled clearly
+
+## Sort & Analytics Features
+- [ ] Case Library: add "Most Viewed" sort option (backend sortBy param + frontend UI)
+- [ ] AdminCaseManagement: add weekly view trend analytics chart per case
+- [ ] Daily Challenge: remove filters from active challenge view, keep filters only in Archives
+
+## ICE ScanCoach New Views
+- [ ] Add Esophagus view to ICE ScanCoach
+- [ ] Add Left Pulmonary Veins view to ICE ScanCoach
+- [ ] Add Right Pulmonary Veins view to ICE ScanCoach

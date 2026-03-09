@@ -6,7 +6,7 @@
  * approve, or reject with a reason — all from within the preview modal.
  */
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -50,13 +50,27 @@ import {
   Pencil,
   UserCheck,
   Link2,
+  BarChart3,
+  TrendingUp,
 } from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  Legend,
+  CartesianGrid,
+} from "recharts";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import CaseEditorDialog from "@/components/CaseEditorDialog";
 import { formatViewCount } from "@/lib/caseViewCount";
 
-type TabType = "pending" | "all";
+type TabType = "pending" | "all" | "analytics";
 
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-amber-100 text-amber-700 border-amber-200",
@@ -373,6 +387,158 @@ function CasePreviewModal({
   );
 }
 
+// ─── Analytics Component ─────────────────────────────────────────────────────
+function CaseViewAnalytics() {
+  const [weeks, setWeeks] = useState<12 | 26 | 52>(12);
+  const { data, isLoading } = trpc.caseLibrary.getViewTrends.useQuery({ weeks });
+
+  // Build chart data: one row per week
+  const chartData = useMemo(() => {
+    if (!data) return [];
+    return data.weekLabels.map((label, i) => ({
+      week: label,
+      total: data.totalByWeek[i],
+    }));
+  }, [data]);
+
+  // Per-case line chart data
+  const lineData = useMemo(() => {
+    if (!data) return [];
+    return data.weekLabels.map((label, i) => {
+      const row: Record<string, string | number> = { week: label };
+      for (const c of data.cases) {
+        row[c.title.length > 28 ? c.title.slice(0, 28) + "…" : c.title] = c.viewsByWeek[i];
+      }
+      return row;
+    });
+  }, [data]);
+
+  const COLORS = [
+    "#189aa1", "#4ad9e0", "#f59e0b", "#6366f1", "#ec4899",
+    "#10b981", "#f97316", "#8b5cf6", "#14b8a6", "#ef4444",
+  ];
+
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <TrendingUp className="w-5 h-5" style={{ color: "#189aa1" }} />
+          <h2 className="text-lg font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
+            Case View Analytics
+          </h2>
+        </div>
+        <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+          {([12, 26, 52] as const).map((w) => (
+            <button
+              key={w}
+              onClick={() => setWeeks(w)}
+              className={`px-3 py-1 rounded-md text-xs font-medium transition-all ${
+                weeks === w ? "bg-white text-[#189aa1] shadow-sm" : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              {w === 12 ? "12 wks" : w === 26 ? "6 mo" : "1 yr"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-24">
+          <Loader2 className="w-6 h-6 animate-spin" style={{ color: "#189aa1" }} />
+        </div>
+      ) : !data || data.cases.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <BarChart3 className="w-12 h-12 text-gray-300 mb-3" />
+          <p className="text-gray-500 font-medium">No view data yet</p>
+          <p className="text-gray-400 text-sm mt-1">
+            View events are recorded when members open a case. Data will appear here as cases are viewed.
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* Total views bar chart */}
+          <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
+            <p className="text-sm font-semibold text-gray-700 mb-4">Total Case Views per Week</p>
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={chartData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="week" tick={{ fontSize: 11, fill: "#9ca3af" }} />
+                <YAxis tick={{ fontSize: 11, fill: "#9ca3af" }} allowDecimals={false} />
+                <RechartsTooltip
+                  contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e5e7eb" }}
+                />
+                <Bar dataKey="total" fill="#189aa1" radius={[4, 4, 0, 0]} name="Views" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Per-case line chart */}
+          <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
+            <p className="text-sm font-semibold text-gray-700 mb-4">
+              Views by Case — Top {data.cases.length} (last {weeks} weeks)
+            </p>
+            <ResponsiveContainer width="100%" height={280}>
+              <LineChart data={lineData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="week" tick={{ fontSize: 11, fill: "#9ca3af" }} />
+                <YAxis tick={{ fontSize: 11, fill: "#9ca3af" }} allowDecimals={false} />
+                <RechartsTooltip
+                  contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid #e5e7eb" }}
+                />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+                {data.cases.map((c, i) => (
+                  <Line
+                    key={c.id}
+                    type="monotone"
+                    dataKey={c.title.length > 28 ? c.title.slice(0, 28) + "…" : c.title}
+                    stroke={COLORS[i % COLORS.length]}
+                    strokeWidth={2}
+                    dot={false}
+                    activeDot={{ r: 4 }}
+                  />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Per-case summary table */}
+          <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
+            <p className="text-sm font-semibold text-gray-700 mb-3">Case View Summary</p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-100">
+                    <th className="text-left py-2 pr-4 text-xs font-semibold text-gray-500">Case</th>
+                    <th className="text-right py-2 px-2 text-xs font-semibold text-gray-500">Views (period)</th>
+                    <th className="text-right py-2 pl-2 text-xs font-semibold text-gray-500">Avg / week</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.cases.map((c, i) => (
+                    <tr key={c.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                      <td className="py-2 pr-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
+                          <span className="text-gray-700 font-medium line-clamp-1">{c.title}</span>
+                        </div>
+                      </td>
+                      <td className="text-right py-2 px-2 text-gray-600 font-mono">{c.totalViews.toLocaleString()}</td>
+                      <td className="text-right py-2 pl-2 text-gray-500 font-mono">
+                        {(c.totalViews / weeks).toFixed(1)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function AdminCaseManagement() {
   const [, navigate] = useLocation();
   const { user, isAuthenticated } = useAuth();
@@ -681,15 +847,17 @@ export default function AdminCaseManagement() {
 
         {/* Tabs */}
         <div className="flex gap-1 mb-6 bg-gray-100 rounded-lg p-1 w-fit">
-          {(["pending", "all"] as TabType[]).map((t) => (
+          {(["pending", "all", "analytics"] as TabType[]).map((t) => (
             <button
               key={t}
               onClick={() => { setTab(t); setPage(1); }}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
                 tab === t ? "bg-white text-[#189aa1] shadow-sm" : "text-gray-500 hover:text-gray-700"
               }`}
             >
-              {t === "pending" ? "Pending Review" : "All Cases"}
+              {t === "pending" && "Pending Review"}
+              {t === "all" && "All Cases"}
+              {t === "analytics" && <><BarChart3 className="w-3.5 h-3.5" /> Analytics</>}
               {t === "pending" && pendingCases.length > 0 && (
                 <span className="ml-1.5 bg-amber-500 text-white text-xs rounded-full px-1.5 py-0.5">
                   {pendingCases.length}
@@ -809,8 +977,9 @@ export default function AdminCaseManagement() {
             )}
           </div>
         )}
+         {/* -- Analytics Tab --------------------------------------------------- */}
+        {tab === "analytics" && <CaseViewAnalytics />}
       </div>
-
       {/* -- Full Case Preview Modal -------------------------------------------- */}
       <CasePreviewModal
         caseId={previewCaseId}

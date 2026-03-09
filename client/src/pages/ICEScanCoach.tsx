@@ -230,44 +230,133 @@ const ICE_VIEWS = [
     criticalFindings: ["LAA thrombus (procedure contraindicated)", "LAA ostium >31 mm (outside WATCHMAN range)", "Peridevice leak ≥5 mm"],
   },
   {
-    id: "pvview",
+    id: "esophagusview",
     group: "Standard ICE Views",
     groupColor: "#189aa1",
-    name: "Pulmonary Vein View",
-    catheterPosition: "Right atrium, posterior tilt + counterclockwise rotation",
-    rotation: "Counterclockwise (CCW) rotation from transseptal view",
-    patientPosition: "Supine; same RA position",
-    description: "Visualises the pulmonary vein ostia for ablation guidance and post-procedure assessment. Used to confirm catheter/balloon position at PV ostia during ablation and to assess for PV stenosis post-ablation.",
+    name: "Esophagus View",
+    catheterPosition: "Right atrium, posterior tilt with slight clockwise rotation",
+    rotation: "Slight clockwise rotation from home view; posterior flexion",
+    patientPosition: "Supine; standard RA position",
+    description: "The esophagus view identifies the esophagus in relation to the posterior left atrium. Critical for ablation procedures to avoid esophageal injury (atrio-esophageal fistula). Used to monitor esophageal proximity during posterior LA ablation and to guide esophageal temperature monitoring catheter placement.",
     howToGet: [
-      "From transseptal view, apply counterclockwise rotation",
-      "The left superior PV (LSPV) will appear first — it enters the LA at the upper left",
-      "Continue CCW rotation to visualise LIPV, then RSPV, RIPV",
+      "From the home view, apply slight clockwise rotation and posterior flexion",
+      "The esophagus appears as a round, hyperechoic structure posterior to the LA",
+      "Use color Doppler to distinguish from vascular structures (no flow in esophagus)",
+      "Note the distance between the LA posterior wall and the esophagus",
+      "Mark esophageal position relative to planned ablation lines",
+    ],
+    structures: [
+      "Esophagus (posterior to LA)",
+      "LA posterior wall",
+      "Descending thoracic aorta",
+      "Posterior pericardium",
+    ],
+    doppler: [
+      { label: "Color Doppler", detail: "No color signal in esophagus — confirms it is not a vascular structure" },
+    ],
+    tips: [
+      "Esophagus is typically posterior and slightly left of midline relative to the LA",
+      "Distance <5 mm from LA posterior wall = high risk for esophageal injury during ablation",
+      "Esophageal temperature probe placement: confirm probe is within the esophageal lumen",
+      "The esophagus moves with swallowing — observe for peristalsis to confirm identification",
+    ],
+    pitfalls: [
+      "Do not confuse the descending aorta with the esophagus — aorta has color Doppler flow",
+      "Esophageal position varies between patients and can shift during the procedure",
+      "Posterior pericardial fat can mimic esophageal tissue",
+    ],
+    measurements: ["LA posterior wall to esophagus distance (mm)", "Esophageal diameter (mm)"],
+    criticalFindings: ["Esophagus <5 mm from LA posterior wall (high injury risk)", "Esophageal temperature probe malposition"],
+  },
+  {
+    id: "leftpvview",
+    group: "Standard ICE Views",
+    groupColor: "#189aa1",
+    name: "Left Pulmonary Veins View",
+    catheterPosition: "Right atrium, counterclockwise rotation from transseptal view",
+    rotation: "Counterclockwise (CCW) rotation — LSPV appears first, then LIPV with further CCW",
+    patientPosition: "Supine; same RA position as transseptal view",
+    description: "Visualises the left-sided pulmonary vein ostia (LSPV and LIPV) for ablation guidance and post-procedure assessment. Used to confirm catheter/balloon position at left PV ostia during ablation and to assess for left PV stenosis post-ablation.",
+    howToGet: [
+      "From the transseptal view, apply counterclockwise (CCW) rotation",
+      "The left superior pulmonary vein (LSPV) will appear first — it enters the LA at the upper left",
+      "Continue CCW rotation to bring the left inferior pulmonary vein (LIPV) into view",
       "Use color Doppler to confirm PV flow direction (into LA)",
-      "Measure PV ostium diameter at baseline for post-ablation comparison",
+      "Measure LSPV and LIPV ostium diameters at baseline for post-ablation comparison",
+      "Note the left PV carina (ridge between LSPV and LIPV)",
     ],
     structures: [
       "Left superior pulmonary vein (LSPV)",
       "Left inferior pulmonary vein (LIPV)",
-      "Right superior pulmonary vein (RSPV)",
-      "Right inferior pulmonary vein (RIPV)",
-      "LA posterior wall",
+      "Left PV carina",
+      "LA posterior wall (left side)",
+      "Left atrial appendage (LAA) — adjacent landmark",
     ],
     doppler: [
-      { label: "PV Color Doppler", detail: "Confirm PV flow into LA. Post-ablation: turbulent flow suggests stenosis" },
-      { label: "PV PW Doppler", detail: "PV velocity. Normal <1.0 m/s. >1.2 m/s post-ablation = stenosis" },
+      { label: "Left PV Color Doppler", detail: "Confirm PV flow into LA. Post-ablation: turbulent or aliased flow suggests stenosis" },
+      { label: "Left PV PW Doppler", detail: "PV velocity. Normal <1.0 m/s. >1.2 m/s post-ablation = significant stenosis" },
     ],
     tips: [
-      "LSPV is the easiest to find — start here and rotate to find others",
-      "Post-ablation: compare PV diameters to baseline — >50% reduction = significant stenosis",
-      "Ablation catheter position: confirm tip is at PV ostium, not inside the vein",
+      "LSPV is the easiest left-sided PV to find — start here",
+      "The LAA is a useful adjacent landmark when searching for the left PVs",
+      "Post-ablation: compare left PV diameters to baseline — >50% reduction = significant stenosis",
+      "Ablation catheter position: confirm tip is at left PV ostium, not inside the vein",
+      "Left PV carina ablation requires careful monitoring — narrow ridge increases injury risk",
     ],
     pitfalls: [
-      "RSPV is hardest to visualise — may need probe advancement or rotation",
-      "PV stenosis can develop weeks to months post-ablation — not always immediate",
+      "LIPV can be difficult to visualise if the catheter is not advanced far enough",
+      "Left PV stenosis can develop weeks to months post-ablation — not always immediate",
+      "Do not confuse the LAA with the LSPV — LAA has a trabeculated appearance",
     ],
-    measurements: ["PV ostium diameter (baseline and post-ablation)", "PV peak velocity (post-ablation)"],
-    criticalFindings: ["PV stenosis post-ablation (velocity >1.2 m/s)", "Ablation catheter inside PV (not at ostium)", "PV occlusion"],
+    measurements: ["LSPV ostium diameter (baseline and post-ablation)", "LIPV ostium diameter (baseline and post-ablation)", "Left PV peak velocity (post-ablation)"],
+    criticalFindings: ["Left PV stenosis post-ablation (velocity >1.2 m/s)", "Ablation catheter inside left PV (not at ostium)", "Left PV occlusion"],
   },
+  {
+    id: "rightpvview",
+    group: "Standard ICE Views",
+    groupColor: "#189aa1",
+    name: "Right Pulmonary Veins View",
+    catheterPosition: "Right atrium, clockwise rotation from transseptal view",
+    rotation: "Clockwise (CW) rotation from transseptal view — RSPV appears first, then RIPV with further CW",
+    patientPosition: "Supine; same RA position as transseptal view",
+    description: "Visualises the right-sided pulmonary vein ostia (RSPV and RIPV) for ablation guidance and post-procedure assessment. The right PVs are typically more challenging to visualise than the left PVs due to their posterior-lateral position. Used to confirm catheter/balloon position at right PV ostia and to assess for right PV stenosis post-ablation.",
+    howToGet: [
+      "From the transseptal view, apply clockwise (CW) rotation",
+      "The right superior pulmonary vein (RSPV) will appear first",
+      "Continue CW rotation to bring the right inferior pulmonary vein (RIPV) into view",
+      "Slight probe advancement may be needed to optimise right PV visualisation",
+      "Use color Doppler to confirm PV flow direction (into LA)",
+      "Measure RSPV and RIPV ostium diameters at baseline for post-ablation comparison",
+    ],
+    structures: [
+      "Right superior pulmonary vein (RSPV)",
+      "Right inferior pulmonary vein (RIPV)",
+      "Right PV carina",
+      "LA posterior wall (right side)",
+      "Right atrium (adjacent)",
+      "Superior vena cava (SVC) — adjacent landmark for RSPV",
+    ],
+    doppler: [
+      { label: "Right PV Color Doppler", detail: "Confirm PV flow into LA. Post-ablation: turbulent or aliased flow suggests stenosis" },
+      { label: "Right PV PW Doppler", detail: "PV velocity. Normal <1.0 m/s. >1.2 m/s post-ablation = significant stenosis" },
+    ],
+    tips: [
+      "RSPV is adjacent to the SVC — use the SVC as a landmark to locate RSPV",
+      "The RIPV is the most posterior and can be the hardest right PV to visualise",
+      "Post-ablation: compare right PV diameters to baseline — >50% reduction = significant stenosis",
+      "Ablation catheter position: confirm tip is at right PV ostium, not inside the vein",
+      "Slight probe advancement combined with CW rotation often improves RIPV visualisation",
+    ],
+    pitfalls: [
+      "RSPV is hardest to visualise — may need probe advancement or additional rotation",
+      "Do not confuse the SVC with the RSPV — SVC is more superior and drains into the RA",
+      "Right PV stenosis can develop weeks to months post-ablation — not always immediate",
+      "RIPV occlusion is the most common post-ablation PV stenosis — monitor carefully",
+    ],
+    measurements: ["RSPV ostium diameter (baseline and post-ablation)", "RIPV ostium diameter (baseline and post-ablation)", "Right PV peak velocity (post-ablation)"],
+    criticalFindings: ["Right PV stenosis post-ablation (velocity >1.2 m/s)", "Ablation catheter inside right PV (not at ostium)", "Right PV occlusion"],
+  },
+
   {
     id: "pericardialview",
     group: "Standard ICE Views",
@@ -349,6 +438,56 @@ function ViewDetail({ view }: { view: typeof ICE_VIEWS[0] }) {
         </div>
       </div>
 
+      {/* Reference Images — shown when admin has uploaded via ScanCoach Editor */}
+      {((view as any).echoImageUrl || (view as any).anatomyImageUrl || (view as any).transducerImageUrl) && (
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="px-5 py-3 border-b border-gray-50">
+            <p className="text-sm font-bold text-gray-800">Reference Images</p>
+          </div>
+          <div className={`bg-gray-950 grid gap-2 p-4 ${
+            [(view as any).echoImageUrl, (view as any).anatomyImageUrl, (view as any).transducerImageUrl].filter(Boolean).length > 1
+              ? 'grid-cols-2'
+              : 'grid-cols-1'
+          }`}>
+            {(view as any).echoImageUrl && (
+              <div>
+                <p className="text-[10px] text-gray-400 mb-1 font-medium">Echo Image</p>
+                <img
+                  src={(view as any).echoImageUrl}
+                  alt="Echo reference"
+                  className="w-full rounded-lg object-contain"
+                  style={{ maxHeight: 220 }}
+                  onContextMenu={e => e.preventDefault()}
+                />
+              </div>
+            )}
+            {(view as any).anatomyImageUrl && (
+              <div>
+                <p className="text-[10px] text-gray-400 mb-1 font-medium">Anatomy Diagram</p>
+                <img
+                  src={(view as any).anatomyImageUrl}
+                  alt="Anatomy diagram"
+                  className="w-full rounded-lg object-contain"
+                  style={{ maxHeight: 220 }}
+                  onContextMenu={e => e.preventDefault()}
+                />
+              </div>
+            )}
+            {(view as any).transducerImageUrl && (
+              <div>
+                <p className="text-[10px] text-gray-400 mb-1 font-medium">Probe Position</p>
+                <img
+                  src={(view as any).transducerImageUrl}
+                  alt="Probe position"
+                  className="w-full rounded-lg object-contain"
+                  style={{ maxHeight: 220 }}
+                  onContextMenu={e => e.preventDefault()}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       {/* How to Get This View */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
         <button onClick={() => toggle("howToGet")} className="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-gray-50 transition-colors">

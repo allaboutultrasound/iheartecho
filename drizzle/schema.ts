@@ -1241,3 +1241,13 @@ export const physicianComparisonReviews = mysqlTable("physicianComparisonReviews
 });
 export type PhysicianComparisonReview = typeof physicianComparisonReviews.$inferSelect;
 export type InsertPhysicianComparisonReview = typeof physicianComparisonReviews.$inferInsert;
+
+// ─── Case View Events ─────────────────────────────────────────────────────────
+// Lightweight event log: one row per case view, used for weekly trend analytics.
+// viewedAt is indexed for efficient range queries.
+export const caseViewEvents = mysqlTable("caseViewEvents", {
+  id: int("id").autoincrement().primaryKey(),
+  caseId: int("caseId").notNull(),
+  viewedAt: timestamp("viewedAt").defaultNow().notNull(),
+});
+export type CaseViewEvent = typeof caseViewEvents.$inferSelect;

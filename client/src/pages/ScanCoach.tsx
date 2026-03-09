@@ -1171,7 +1171,7 @@ export default function ScanCoach() {
       <div className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}>
         <div className="container py-6 md:py-8">
           <div className="mb-3">
-            <BackToEchoAssist className="text-white/70 hover:text-white" />
+            <BackToEchoAssist href="/scan-coach-hub" label="ScanCoach Hub" className="text-white/70 hover:text-white" />
           </div>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(255,255,255,0.1)" }}>

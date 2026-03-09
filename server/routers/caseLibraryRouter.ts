@@ -31,9 +31,10 @@ import {
   echoLibraryCaseMedia,
   echoLibraryCaseQuestions,
   echoLibraryCaseAttempts,
+  caseViewEvents,
   users,
 } from "../../drizzle/schema";
-import { eq, and, desc, sql, count, like, or } from "drizzle-orm";
+import { eq, and, desc, sql, count, like, or, gte } from "drizzle-orm";
 import { storagePut } from "../storage";
 import { sendEmail, buildCaseApprovedEmail, buildCaseRejectedEmail, buildNewCaseSubmissionAdminEmail } from "../_core/email";
 import { notifyOwner } from "../_core/notification";
@@ -111,6 +112,7 @@ export const caseLibraryRouter = router({
           .optional(),
         difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
         search: z.string().max(100).optional(),
+        sortBy: z.enum(["newest", "mostViewed"]).default("newest").optional(),
       })
     )
     .query(async ({ input }) => {
@@ -150,7 +152,11 @@ export const caseLibraryRouter = router({
           })
           .from(echoLibraryCases)
           .where(where)
-          .orderBy(desc(echoLibraryCases.submittedAt))
+          .orderBy(
+            input.sortBy === "mostViewed"
+              ? desc(echoLibraryCases.viewCount)
+              : desc(echoLibraryCases.submittedAt)
+          )
           .limit(input.limit)
           .offset(offset),
         db
@@ -208,10 +214,13 @@ export const caseLibraryRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Case not found" });
       }
 
-      // Increment view count (fire-and-forget)
+      // Increment view count and log event (fire-and-forget)
       db.update(echoLibraryCases)
         .set({ viewCount: sql`${echoLibraryCases.viewCount} + 1` })
         .where(eq(echoLibraryCases.id, input.id))
+        .catch(() => {});
+      db.insert(caseViewEvents)
+        .values({ caseId: input.id })
         .catch(() => {});
 
       const [media, questions] = await Promise.all([
@@ -1205,5 +1214,106 @@ Guidelines:
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
       await db.delete(echoLibraryCaseQuestions).where(eq(echoLibraryCaseQuestions.id, input.id));
       return { success: true };
+    }),
+
+  /**
+   * Weekly view trends for admin analytics.
+   * Returns the last N weeks of view counts aggregated per case.
+   */
+  getViewTrends: adminProcedure
+    .input(
+      z.object({
+        weeks: z.number().int().min(4).max(52).default(12),
+      })
+    )
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+
+      // Cutoff date
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - input.weeks * 7);
+
+      // Fetch all view events in the window
+      const events = await db
+        .select({ caseId: caseViewEvents.caseId, viewedAt: caseViewEvents.viewedAt })
+        .from(caseViewEvents)
+        .where(gte(caseViewEvents.viewedAt, cutoff));
+
+      // Build week labels (ISO week strings: YYYY-Www)
+      const getWeekKey = (date: Date): string => {
+        const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+        d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+        const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+        const weekNo = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
+        return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
+      };
+
+      // Generate ordered week keys for the window
+      const weekKeys: string[] = [];
+      const weekLabels: string[] = [];
+      for (let i = input.weeks - 1; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i * 7);
+        const key = getWeekKey(d);
+        if (!weekKeys.includes(key)) {
+          weekKeys.push(key);
+          weekLabels.push(
+            d.toLocaleDateString("en-US", { month: "short", day: "numeric" })
+          );
+        }
+      }
+
+      // Aggregate events by week
+      const weeklyTotals: Record<string, number> = {};
+      for (const key of weekKeys) weeklyTotals[key] = 0;
+      for (const ev of events) {
+        const key = getWeekKey(new Date(ev.viewedAt));
+        if (key in weeklyTotals) weeklyTotals[key]++;
+      }
+
+      // Per-case breakdown (top 10 by total views in window)
+      const caseTotals: Record<number, number> = {};
+      for (const ev of events) {
+        caseTotals[ev.caseId] = (caseTotals[ev.caseId] ?? 0) + 1;
+      }
+      const topCaseIds = Object.entries(caseTotals)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10)
+        .map(([id]) => Number(id));
+
+      // Fetch case titles
+      const caseTitles: Record<number, string> = {};
+      if (topCaseIds.length > 0) {
+        const rows = await db
+          .select({ id: echoLibraryCases.id, title: echoLibraryCases.title })
+          .from(echoLibraryCases)
+          .where(sql`${echoLibraryCases.id} IN (${topCaseIds.join(",")})`);
+        for (const r of rows) caseTitles[r.id] = r.title;
+      }
+
+      // Per-case weekly series
+      const caseWeekly: Record<number, Record<string, number>> = {};
+      for (const id of topCaseIds) {
+        caseWeekly[id] = {};
+        for (const key of weekKeys) caseWeekly[id][key] = 0;
+      }
+      for (const ev of events) {
+        if (!topCaseIds.includes(ev.caseId)) continue;
+        const key = getWeekKey(new Date(ev.viewedAt));
+        if (key in caseWeekly[ev.caseId]) caseWeekly[ev.caseId][key]++;
+      }
+
+      return {
+        weekLabels,
+        weekKeys,
+        totalByWeek: weekKeys.map((k) => weeklyTotals[k]),
+        cases: topCaseIds.map((id) => ({
+          id,
+          title: caseTitles[id] ?? `Case #${id}`,
+          totalViews: caseTotals[id],
+          viewsByWeek: weekKeys.map((k) => caseWeekly[id][k]),
+        })),
+      };
     }),
 });

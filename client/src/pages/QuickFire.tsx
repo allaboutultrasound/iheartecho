@@ -546,36 +546,7 @@ export default function QuickFire() {
 
               return (
                 <>
-                  {/* Category filter chips */}
-                  {presentTags.length > 0 && (
-                    <div className="flex gap-2 flex-wrap mb-4">
-                      <button
-                        onClick={() => handleTagFilter(null)}
-                        className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
-                          activeTagFilter === null
-                            ? "text-white border-transparent"
-                            : "bg-white text-gray-600 border-gray-200 hover:border-[#189aa1]"
-                        }`}
-                        style={activeTagFilter === null ? { background: "#189aa1" } : {}}
-                      >
-                        All
-                      </button>
-                      {presentTags.map((tag) => (
-                        <button
-                          key={tag}
-                          onClick={() => handleTagFilter(tag)}
-                          className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
-                            activeTagFilter === tag
-                              ? "text-white border-transparent"
-                              : "bg-white text-gray-600 border-gray-200 hover:border-[#189aa1]"
-                          }`}
-                          style={activeTagFilter === tag ? { background: "#189aa1" } : {}}
-                        >
-                          {tag}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  {/* Category filter chips removed — filters are available in Archives only */}
 
                   {/* Progress bar */}
                   <div className="mb-4">

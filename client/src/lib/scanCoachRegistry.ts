@@ -5,7 +5,19 @@
  * to know which fields are editable per module.
  */
 
-export type ScanCoachModule = "tte" | "tee" | "ice" | "uea" | "strain" | "hocm";
+export type ScanCoachModule =
+  | "tte"
+  | "tee"
+  | "ice"
+  | "uea"
+  | "strain"
+  | "hocm"
+  | "stress"
+  | "structural"
+  | "fetal"
+  | "chd"
+  | "diastolic"
+  | "pulm";
 
 export interface ScanCoachViewMeta {
   id: string;
@@ -21,10 +33,11 @@ export interface ScanCoachModuleMeta {
 }
 
 export const SCANCOACH_MODULES: ScanCoachModuleMeta[] = [
+  // ─── Adult TTE ────────────────────────────────────────────────────────────
   {
     key: "tte",
     label: "Adult TTE ScanCoach",
-    path: "/scan-coach",
+    path: "/scan-coach?tab=tte",
     views: [
       { id: "plax",        name: "Parasternal Long Axis",                   group: "Parasternal" },
       { id: "psax_av",     name: "PSAX — Aortic Valve Level",               group: "Parasternal" },
@@ -38,6 +51,7 @@ export const SCANCOACH_MODULES: ScanCoachModuleMeta[] = [
       { id: "suprasternal",name: "Suprasternal",                            group: "Other" },
     ],
   },
+  // ─── TEE ──────────────────────────────────────────────────────────────────
   {
     key: "tee",
     label: "TEE ScanCoach",
@@ -58,6 +72,7 @@ export const SCANCOACH_MODULES: ScanCoachModuleMeta[] = [
       { id: "uepv",         name: "UE Pulmonary Veins",                     group: "Upper Esophageal" },
     ],
   },
+  // ─── ICE ──────────────────────────────────────────────────────────────────
   {
     key: "ice",
     label: "ICE ScanCoach",
@@ -66,12 +81,15 @@ export const SCANCOACH_MODULES: ScanCoachModuleMeta[] = [
       { id: "home",           name: "Home View",                            group: "Standard Views" },
       { id: "avview",         name: "Aortic Valve View",                    group: "Standard Views" },
       { id: "mvlhview",       name: "Mitral Valve / Left Heart View",       group: "Standard Views" },
+      { id: "esophagusview",  name: "Esophagus View",                       group: "Standard Views" },
+      { id: "leftpvview",     name: "Left Pulmonary Veins View",            group: "Standard Views" },
+      { id: "rightpvview",    name: "Right Pulmonary Veins View",           group: "Standard Views" },
+      { id: "pericardialview",name: "Pericardial Monitoring View",          group: "Standard Views" },
       { id: "transseptal",    name: "Transseptal View",                     group: "Procedural" },
       { id: "laaview",        name: "Left Atrial Appendage View",           group: "Procedural" },
-      { id: "pvview",         name: "Pulmonary Vein View",                  group: "Standard Views" },
-      { id: "pericardialview",name: "Pericardial Monitoring View",          group: "Standard Views" },
     ],
   },
+  // ─── UEA (Contrast Echo) ──────────────────────────────────────────────────
   {
     key: "uea",
     label: "UEA ScanCoach",
@@ -86,6 +104,7 @@ export const SCANCOACH_MODULES: ScanCoachModuleMeta[] = [
       { id: "subcostal",name: "Subcostal 4-Chamber",                        group: "Standard Views" },
     ],
   },
+  // ─── Strain ───────────────────────────────────────────────────────────────
   {
     key: "strain",
     label: "Strain ScanCoach",
@@ -97,6 +116,7 @@ export const SCANCOACH_MODULES: ScanCoachModuleMeta[] = [
       { id: "a3c",      name: "Apical 3-Chamber (APLAX)",                   group: "Acquisition" },
     ],
   },
+  // ─── HOCM ─────────────────────────────────────────────────────────────────
   {
     key: "hocm",
     label: "HOCM ScanCoach",
@@ -116,6 +136,119 @@ export const SCANCOACH_MODULES: ScanCoachModuleMeta[] = [
       { id: "mr_jet",        name: "MR Jet — CW Doppler",                  group: "Doppler / LVOT" },
       { id: "sam_plax",      name: "SAM — PLAX M-Mode",                    group: "SAM Assessment" },
       { id: "sam_zoom",      name: "SAM — Zoomed PLAX",                    group: "SAM Assessment" },
+    ],
+  },
+  // ─── Stress Echo ──────────────────────────────────────────────────────────
+  {
+    key: "stress",
+    label: "Stress Echo ScanCoach",
+    path: "/stress-scan-coach",
+    views: [
+      { id: "rest-plax",         name: "PLAX (Rest)",                       group: "Baseline — Rest" },
+      { id: "rest-psax-mv",      name: "PSAX — Mitral Valve Level (Rest)",  group: "Baseline — Rest" },
+      { id: "rest-psax-pm",      name: "PSAX — Papillary Muscle Level (Rest)", group: "Baseline — Rest" },
+      { id: "rest-a4c",          name: "Apical 4-Chamber (Rest)",           group: "Baseline — Rest" },
+      { id: "rest-a2c",          name: "Apical 2-Chamber (Rest)",           group: "Baseline — Rest" },
+      { id: "rest-a3c",          name: "Apical 3-Chamber / APLAX (Rest)",   group: "Baseline — Rest" },
+      { id: "peak-psax-pm",      name: "PSAX — PM Level (Peak)",            group: "Peak Stress" },
+      { id: "peak-a4c",          name: "Apical 4-Chamber (Peak)",           group: "Peak Stress" },
+      { id: "peak-a2c",          name: "Apical 2-Chamber (Peak)",           group: "Peak Stress" },
+      { id: "recovery-a4c",      name: "Apical 4-Chamber (Recovery)",       group: "Recovery" },
+      { id: "dse-low-dose",      name: "DSE — Low-Dose Dobutamine",         group: "DSE Protocol" },
+      { id: "dse-peak",          name: "DSE — Peak Dose",                   group: "DSE Protocol" },
+      { id: "diastolic-stress",  name: "Diastolic Stress Assessment",       group: "Diastolic" },
+    ],
+  },
+  // ─── Structural Heart ─────────────────────────────────────────────────────
+  {
+    key: "structural",
+    label: "Structural Heart ScanCoach",
+    path: "/structural-heart-scan-coach",
+    views: [
+      { id: "tavr-sizing",       name: "TAVR — Annulus Sizing (ME LAX)",    group: "TAVR" },
+      { id: "tavr-deployment",   name: "TAVR — Valve Deployment Guidance",  group: "TAVR" },
+      { id: "teer-iasn",         name: "TEER — Transseptal Puncture Guidance", group: "TEER / MitraClip" },
+      { id: "teer-guidance",     name: "TEER — Clip Delivery and Grasping", group: "TEER / MitraClip" },
+      { id: "laao-sizing",       name: "LAAO — LAA Sizing",                 group: "LAAO (Watchman / Amulet)" },
+      { id: "laao-deployment",   name: "LAAO — Device Deployment and Assessment", group: "LAAO (Watchman / Amulet)" },
+      { id: "asd-sizing",        name: "ASD / PFO — Sizing and Rims",       group: "ASD / PFO Closure" },
+      { id: "asd-deployment",    name: "ASD / PFO — Device Deployment",     group: "ASD / PFO Closure" },
+      { id: "tteer-guidance",    name: "Tricuspid TEER — Clip Guidance",    group: "Tricuspid TEER" },
+      { id: "tmvr-sizing",       name: "TMVR — Sizing and LVOTO Assessment",group: "TMVR" },
+    ],
+  },
+  // ─── Fetal Echo ───────────────────────────────────────────────────────────
+  {
+    key: "fetal",
+    label: "Fetal Echo ScanCoach",
+    path: "/scan-coach?tab=fetal",
+    views: [
+      { id: "abdominal-situs",   name: "Abdominal Situs",                   group: "Fetal Protocol" },
+      { id: "4cv",               name: "4-Chamber View (4CV)",              group: "Fetal Protocol" },
+      { id: "lvot",              name: "LVOT View",                         group: "Fetal Protocol" },
+      { id: "rvot",              name: "RVOT View",                         group: "Fetal Protocol" },
+      { id: "rvot-bifurcation",  name: "RVOT Bifurcation",                  group: "Fetal Protocol" },
+      { id: "3vv-ductal",        name: "3-Vessel View / Ductal Arch",       group: "Fetal Protocol" },
+      { id: "3vt",               name: "3-Vessel Trachea (3VT)",            group: "Fetal Protocol" },
+      { id: "lbvc",              name: "Long-Axis Bicaval View (LBVC)",     group: "Fetal Protocol" },
+      { id: "lv-short-axis",     name: "LV Short Axis",                     group: "Fetal Protocol" },
+      { id: "rvot-short-axis",   name: "RVOT Short Axis",                   group: "Fetal Protocol" },
+      { id: "bicaval",           name: "Bicaval View",                      group: "Fetal Protocol" },
+      { id: "aortic-arch",       name: "Aortic Arch",                       group: "Fetal Protocol" },
+      { id: "ductal-arch",       name: "Ductal Arch",                       group: "Fetal Protocol" },
+    ],
+  },
+  // ─── Pediatric / CHD ──────────────────────────────────────────────────────
+  {
+    key: "chd",
+    label: "Pediatric CHD ScanCoach",
+    path: "/scan-coach?tab=chd",
+    views: [
+      { id: "asd",               name: "ASD Assessment",                    group: "CHD Lesions" },
+      { id: "vsd",               name: "VSD Assessment",                    group: "CHD Lesions" },
+      { id: "tof",               name: "Tetralogy of Fallot",               group: "CHD Lesions" },
+      { id: "coa",               name: "Coarctation of the Aorta",          group: "CHD Lesions" },
+      { id: "tga",               name: "Transposition of Great Arteries",   group: "CHD Lesions" },
+      { id: "fontan",            name: "Fontan Circulation",                group: "CHD Lesions" },
+      { id: "psax-av",           name: "PSAX — Aortic Valve Level",         group: "Views" },
+      { id: "a4ch-rv",           name: "Apical 4-Chamber — RV Focus",       group: "Views" },
+      { id: "a5ch-cw",           name: "Apical 5-Chamber — CW Doppler",     group: "Views" },
+      { id: "psax-pap",          name: "PSAX — Papillary Muscle Level",     group: "Views" },
+      { id: "subcostal-ivc",     name: "Subcostal — IVC",                   group: "Views" },
+      { id: "subcostal-rv",      name: "Subcostal — RV",                    group: "Views" },
+      { id: "plax-rv",           name: "PLAX — RV Focus",                   group: "Views" },
+      { id: "suprasternal",      name: "Suprasternal",                      group: "Views" },
+    ],
+  },
+  // ─── Diastolic Function ───────────────────────────────────────────────────
+  {
+    key: "diastolic",
+    label: "Diastolic Function ScanCoach",
+    path: "/scan-coach?tab=diastolic",
+    views: [
+      { id: "tdi-e-prime",       name: "TDI — e' Velocity (A4C)",           group: "TDI" },
+      { id: "mitral-inflow",     name: "Mitral Inflow — E/A Ratio",         group: "Mitral Inflow" },
+      { id: "e-e-prime-ratio",   name: "E/e' Ratio",                        group: "Filling Pressures" },
+      { id: "tr-velocity",       name: "TR Velocity (CW Doppler)",          group: "Filling Pressures" },
+      { id: "lavi",              name: "LA Volume Index (LAVI)",             group: "LA Assessment" },
+      { id: "pulm-venous",       name: "Pulmonary Venous Flow",             group: "Advanced" },
+      { id: "la-strain",         name: "LA Strain (LARS)",                  group: "Advanced" },
+    ],
+  },
+  // ─── Pulmonary HTN & PE ───────────────────────────────────────────────────
+  {
+    key: "pulm",
+    label: "Pulmonary HTN & PE ScanCoach",
+    path: "/scan-coach?tab=pulm",
+    views: [
+      { id: "psax-av",           name: "PSAX — Aortic Valve Level",         group: "RV Assessment" },
+      { id: "a4ch-rv",           name: "Apical 4-Chamber — RV Focus",       group: "RV Assessment" },
+      { id: "a5ch-cw",           name: "Apical 5-Chamber — TR CW",          group: "RV Assessment" },
+      { id: "psax-pap",          name: "PSAX — Papillary Muscle Level",     group: "RV Assessment" },
+      { id: "subcostal-ivc",     name: "Subcostal — IVC",                   group: "RV Assessment" },
+      { id: "subcostal-rv",      name: "Subcostal — RV",                    group: "RV Assessment" },
+      { id: "plax-rv",           name: "PLAX — RV Focus",                   group: "RV Assessment" },
+      { id: "suprasternal",      name: "Suprasternal — PA Flow",            group: "RV Assessment" },
     ],
   },
 ];

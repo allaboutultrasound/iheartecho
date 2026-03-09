@@ -27,7 +27,7 @@ export default function ScanCoachNavBar({
       className={`flex items-center justify-between px-4 py-2.5 border-b border-gray-100 bg-white ${className}`}
     >
       {/* Back to ScanCoach Hub */}
-      <Link href="/echo-assist-hub">
+      <Link href="/scan-coach-hub">
         <span
           className="inline-flex items-center gap-1.5 text-xs font-semibold cursor-pointer hover:opacity-75 transition-opacity"
           style={{ color: BRAND }}
