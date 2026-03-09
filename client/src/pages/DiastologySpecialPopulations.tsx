@@ -4,11 +4,11 @@
   Each engine implements the exact ASE 2025 algorithm from the guideline figures.
 
   Engines:
-  1. MAC (Figure 4)         — E/A ratio → IVRT branch
-  2. Heart Transplant (Fig 5) — Average E/e' → E/SR_IVR or TR velocity
-  3. Pulmonary HTN (Fig 6)  — E/A + E velocity → LARS → lateral E/e'
-  4. Atrial Fibrillation (Fig 8) — 4-criteria count → LARS/PV S/D/BMI secondary
-  5. Constrictive vs Restrictive (Fig 7) — E/A + IVC → respirophasic VSM → medial e' → annulus reversus → hepatic vein
+  1. MAC — E/A ratio → IVRT branch
+  2. Heart Transplant — Average E/e' → E/SR_IVR or TR velocity
+  3. Pulmonary HTN — E/A + E velocity → LARS → lateral E/e'
+  4. Atrial Fibrillation — 4-criteria count → LARS/PV S/D/BMI secondary
+  5. Constrictive vs Restrictive — E/A + IVC → respirophasic VSM → medial e' → annulus reversus → hepatic vein
 
   Reference: ASE 2025 LV Diastolic Function Guidelines (Nagueh et al.)
   https://www.asecho.org/wp-content/uploads/2025/07/Left-Ventricular-Diastolic-Function.pdf
@@ -151,7 +151,7 @@ function EngineSection({
 const n = (v: string) => parseFloat(v);
 const has = (...vals: string[]) => vals.every(v => v !== "" && !isNaN(parseFloat(v)));
 
-// ─── 1. MAC ENGINE (Figure 4) ─────────────────────────────────────────────────
+// ─── 1. MAC ENGINE ─────────────────────────────────────────────────────────────
 // Algorithm for estimation of mean LAP in patients with moderate or severe MAC
 // E/A ratio → IVRT branch
 function MACEngine() {
@@ -210,7 +210,7 @@ function MACEngine() {
   return (
     <EngineSection
       id="engine-mac"
-      title="MAC — LAP Estimation (Figure 4)"
+      title="MAC — LAP Estimation"
       subtitle="Algorithm for moderate or severe mitral annular calcification"
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
@@ -221,7 +221,7 @@ function MACEngine() {
       <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 mb-3 flex items-start gap-2">
         <Info className="w-3.5 h-3.5 text-blue-500 flex-shrink-0 mt-0.5" />
         <p className="text-xs text-blue-700">
-          <strong>Algorithm (ASE 2025 Figure 4):</strong> E/A &lt; 0.8 → Normal LAP. E/A &gt; 1.8 → Elevated LAP. E/A 0.8–1.8 → use IVRT: ≥ 80 ms = Normal, &lt; 80 ms = Elevated.
+          <strong>Algorithm (ASE 2025):</strong> E/A &lt; 0.8 → Normal LAP. E/A &gt; 1.8 → Elevated LAP. E/A 0.8–1.8 → use IVRT: ≥ 80 ms = Normal, &lt; 80 ms = Elevated.
         </p>
       </div>
 
@@ -234,12 +234,12 @@ function MACEngine() {
           tip={result.tip}
         />
       )}
-      <p className="text-xs text-gray-400 mt-3">Reference: ASE 2025 LV Diastolic Function Guidelines, Figure 4 (Nagueh et al.)</p>
+      <p className="text-xs text-gray-400 mt-3">Reference: ASE 2025 LV Diastolic Function Guidelines (Nagueh et al.)</p>
     </EngineSection>
   );
 }
 
-// ─── 2. HEART TRANSPLANT ENGINE (Figure 5) ────────────────────────────────────
+// ─── 2. HEART TRANSPLANT ENGINE ────────────────────────────────────────────────
 // Algorithm for estimation of mean LAP in heart transplant recipients in sinus rhythm
 // Average E/e' → E/SR_IVR or TR velocity branch
 function HeartTransplantEngine() {
@@ -328,7 +328,7 @@ function HeartTransplantEngine() {
   return (
     <EngineSection
       id="engine-htx"
-      title="Heart Transplant — LAP Estimation (Figure 5)"
+      title="Heart Transplant — LAP Estimation"
       subtitle="Sinus rhythm recipients — Average E/e' → E/SR_IVR or TR velocity"
     >
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
@@ -340,7 +340,7 @@ function HeartTransplantEngine() {
       <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 mb-3 flex items-start gap-2">
         <Info className="w-3.5 h-3.5 text-blue-500 flex-shrink-0 mt-0.5" />
         <p className="text-xs text-blue-700">
-          <strong>Algorithm (ASE 2025 Figure 5):</strong> E/e' &lt; 7 → LAP &lt; 15 mmHg. E/e' &gt; 14 → LAP ≥ 15 mmHg. E/e' 7–14 → E/SR_IVR: ≤ 200 cm = normal, &gt; 200 cm = elevated. If E/SR_IVR unavailable: TR ≤ 2.8 m/s = normal, TR absent/incomplete = indeterminate, TR &gt; 2.8 m/s = elevated.
+          <strong>Algorithm (ASE 2025):</strong> E/e' &lt; 7 → LAP &lt; 15 mmHg. E/e' &gt; 14 → LAP ≥ 15 mmHg. E/e' 7–14 → E/SR_IVR: ≤ 200 cm = normal, &gt; 200 cm = elevated. If E/SR_IVR unavailable: TR ≤ 2.8 m/s = normal, TR absent/incomplete = indeterminate, TR &gt; 2.8 m/s = elevated.
         </p>
       </div>
 
@@ -360,12 +360,12 @@ function HeartTransplantEngine() {
           tip={result.tip}
         />
       )}
-      <p className="text-xs text-gray-400 mt-3">Reference: ASE 2025 LV Diastolic Function Guidelines, Figure 5 (Nagueh et al.)</p>
+      <p className="text-xs text-gray-400 mt-3">Reference: ASE 2025 LV Diastolic Function Guidelines (Nagueh et al.)</p>
     </EngineSection>
   );
 }
 
-// ─── 3. PULMONARY HYPERTENSION ENGINE (Figure 6) ─────────────────────────────
+// ─── 3. PULMONARY HYPERTENSION ENGINE ───────────────────────────────────────
 // Algorithm for estimation of mean LAP in patients with PH
 // E/A + E velocity → LARS → lateral E/e' branch
 function PulmonaryHTNDiastolicEngine() {
@@ -486,7 +486,7 @@ function PulmonaryHTNDiastolicEngine() {
   return (
     <EngineSection
       id="engine-ph-diastolic"
-      title="Pulmonary Hypertension — LAP Estimation (Figure 6)"
+      title="Pulmonary Hypertension — LAP Estimation"
       subtitle="E/A + E velocity → LARS → Lateral E/e' algorithm"
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
@@ -500,7 +500,7 @@ function PulmonaryHTNDiastolicEngine() {
       <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 mb-3 flex items-start gap-2">
         <Info className="w-3.5 h-3.5 text-blue-500 flex-shrink-0 mt-0.5" />
         <p className="text-xs text-blue-700">
-          <strong>Algorithm (ASE 2025 Figure 6):</strong> E/A ≤ 0.8 + E ≤ 50 cm/s → Normal. E/A ≥ 2 + reduced e' → Elevated. Intermediate: LARS &gt; 18% = Normal, LARS ≤ 18% = Elevated. If LARS unavailable: lateral E/e' &lt; 8 = Normal, &gt; 13 = Elevated, 8–13 = Indeterminate.
+          <strong>Algorithm (ASE 2025):</strong> E/A ≤ 0.8 + E ≤ 50 cm/s → Normal. E/A ≥ 2 + reduced e' → Elevated. Intermediate: LARS &gt; 18% = Normal, LARS ≤ 18% = Elevated. If LARS unavailable: lateral E/e' &lt; 8 = Normal, &gt; 13 = Elevated, 8–13 = Indeterminate.
         </p>
       </div>
 
@@ -513,12 +513,12 @@ function PulmonaryHTNDiastolicEngine() {
           tip={result.tip}
         />
       )}
-      <p className="text-xs text-gray-400 mt-3">Reference: ASE 2025 LV Diastolic Function Guidelines, Figure 6 (Nagueh et al.)</p>
+      <p className="text-xs text-gray-400 mt-3">Reference: ASE 2025 LV Diastolic Function Guidelines (Nagueh et al.)</p>
     </EngineSection>
   );
 }
 
-// ─── 4. ATRIAL FIBRILLATION ENGINE (Figure 8) ────────────────────────────────
+// ─── 4. ATRIAL FIBRILLATION ENGINE ────────────────────────────────────────────
 // Algorithm for estimation of mean LAP with atrial fibrillation
 // 4-criteria count → LARS/PV S/D/BMI secondary branch
 function AFibDiastolicEngine() {
@@ -646,7 +646,7 @@ function AFibDiastolicEngine() {
   return (
     <EngineSection
       id="engine-afib"
-      title="Atrial Fibrillation — LAP Estimation (Figure 8)"
+      title="Atrial Fibrillation — LAP Estimation"
       subtitle="4-criteria count → LARS / PV S/D / BMI secondary assessment"
     >
       <div className="mb-3">
@@ -672,7 +672,7 @@ function AFibDiastolicEngine() {
       <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 mb-3 flex items-start gap-2">
         <Info className="w-3.5 h-3.5 text-blue-500 flex-shrink-0 mt-0.5" />
         <p className="text-xs text-blue-700">
-          <strong>Algorithm (ASE 2025 Figure 8):</strong> 0–1 criteria → Normal LAP. 3–4 criteria → Elevated LAP. 2 criteria → secondary assessment: 0 secondary = Normal, 1 or unavailable = Indeterminate, 2–3 secondary = Elevated.
+          <strong>Algorithm (ASE 2025):</strong> 0–1 criteria → Normal LAP. 3–4 criteria → Elevated LAP. 2 criteria → secondary assessment: 0 secondary = Normal, 1 or unavailable = Indeterminate, 2–3 secondary = Elevated.
         </p>
       </div>
 
@@ -685,12 +685,12 @@ function AFibDiastolicEngine() {
           tip={result.tip}
         />
       )}
-      <p className="text-xs text-gray-400 mt-3">Reference: ASE 2025 LV Diastolic Function Guidelines, Figure 8 (Nagueh et al.)</p>
+      <p className="text-xs text-gray-400 mt-3">Reference: ASE 2025 LV Diastolic Function Guidelines (Nagueh et al.)</p>
     </EngineSection>
   );
 }
 
-// ─── 5. CONSTRICTIVE vs RESTRICTIVE ENGINE (Figure 7) ────────────────────────
+// ─── 5. CONSTRICTIVE vs RESTRICTIVE ENGINE ────────────────────────────────────
 // Algorithm for differentiation of pericardial constriction from restrictive cardiomyopathy
 function ConstrictiveRestrictiveEngine() {
   const [ea, setEa] = useState("");
@@ -865,7 +865,7 @@ function ConstrictiveRestrictiveEngine() {
   return (
     <EngineSection
       id="engine-constrictive"
-      title="Constrictive vs Restrictive Cardiomyopathy (Figure 7)"
+      title="Constrictive vs Restrictive Cardiomyopathy"
       subtitle="Differentiation algorithm — E/A + IVC → Respirophasic VSM → Medial e' → Annulus reversus → Hepatic vein"
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
@@ -961,7 +961,7 @@ function ConstrictiveRestrictiveEngine() {
       <div className="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 mb-3 flex items-start gap-2">
         <Info className="w-3.5 h-3.5 text-blue-500 flex-shrink-0 mt-0.5" />
         <p className="text-xs text-blue-700">
-          <strong>Algorithm (ASE 2025 Figure 7, Klein et al.):</strong> Entry: E/A &gt; 0.8 + dilated IVC. Step 1: Respirophasic VSM (Sn 94%, Sp 73%). Step 2: Medial e' (&gt;8 = CP, 6–8 = mixed, &lt;6 = RCM). Step 3: Annulus reversus (Sn 71%, Sp 91%). Step 4: Hepatic vein expiratory reversal ≥ 0.8 (Sn 73%, Sp 66%). Step 5: SVC augmentation → lung disease/obesity.
+          <strong>Algorithm (ASE 2025, Klein et al.):</strong> Entry: E/A &gt; 0.8 + dilated IVC. Step 1: Respirophasic VSM (Sn 94%, Sp 73%). Step 2: Medial e' (&gt;8 = CP, 6–8 = mixed, &lt;6 = RCM). Step 3: Annulus reversus (Sn 71%, Sp 91%). Step 4: Hepatic vein expiratory reversal ≥ 0.8 (Sn 73%, Sp 66%). Step 5: SVC augmentation → lung disease/obesity.
         </p>
       </div>
 
@@ -1007,7 +1007,7 @@ function ConstrictiveRestrictiveEngine() {
           </tbody>
         </table>
       </div>
-      <p className="text-xs text-gray-400 mt-3">Reference: ASE 2025 LV Diastolic Function Guidelines, Figure 7 (Klein et al., Nagueh et al.)</p>
+      <p className="text-xs text-gray-400 mt-3">Reference: ASE 2025 LV Diastolic Function Guidelines (Klein et al., Nagueh et al.)</p>
     </EngineSection>
   );
 }

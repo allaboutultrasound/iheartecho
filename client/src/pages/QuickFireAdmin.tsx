@@ -118,6 +118,31 @@ export default function QuickFireAdmin() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<QuestionForm>(EMPTY_FORM);
+  const [imageUploading, setImageUploading] = useState(false);
+
+  async function handleImageUpload(file: File) {
+    setImageUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload-question-image", {
+        method: "POST",
+        credentials: "include",
+        body: fd,
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error ?? "Upload failed");
+      }
+      const { url } = await res.json();
+      setForm((f) => ({ ...f, imageUrl: url }));
+      toast.success("Image uploaded successfully");
+    } catch (err: any) {
+      toast.error(err.message ?? "Image upload failed");
+    } finally {
+      setImageUploading(false);
+    }
+  }
 
   // Daily set generator
   const [genDate, setGenDate] = useState(new Date().toISOString().slice(0, 10));
@@ -1042,19 +1067,66 @@ export default function QuickFireAdmin() {
             {form.type === "image" && (
               <div>
                 <label className="text-xs font-semibold text-gray-600 mb-1.5 block">
-                  Image URL <span className="text-red-500">*</span>
+                  Echo Image <span className="text-red-500">*</span>
                 </label>
-                <Input
-                  value={form.imageUrl}
-                  onChange={(e) => setForm((f) => ({ ...f, imageUrl: e.target.value }))}
-                  placeholder="https://example.com/echo-image.jpg"
+
+                {/* Upload zone */}
+                <div
+                  className="border-2 border-dashed border-purple-200 rounded-xl p-4 text-center cursor-pointer hover:border-purple-400 hover:bg-purple-50 transition-all"
+                  onClick={() => document.getElementById('question-image-input')?.click()}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const file = e.dataTransfer.files[0];
+                    if (file) handleImageUpload(file);
+                  }}
+                >
+                  {imageUploading ? (
+                    <div className="flex items-center justify-center gap-2 text-purple-600">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span className="text-sm">Uploading…</span>
+                    </div>
+                  ) : form.imageUrl ? (
+                    <div className="relative">
+                      <img src={form.imageUrl} alt="Preview" className="w-full max-h-48 object-contain rounded-lg" />
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setForm((f) => ({ ...f, imageUrl: "" })); }}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                      >
+                        ×
+                      </button>
+                      <p className="text-xs text-purple-600 mt-1">Click to replace</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-1 py-2">
+                      <ImageIcon className="w-8 h-8 text-purple-300" />
+                      <p className="text-sm text-gray-600 font-medium">Click or drag to upload echo image</p>
+                      <p className="text-xs text-gray-400">JPEG, PNG, WEBP · Max 20 MB</p>
+                    </div>
+                  )}
+                </div>
+                <input
+                  id="question-image-input"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleImageUpload(file);
+                    e.target.value = "";
+                  }}
                 />
-                {form.imageUrl && (
-                  <div className="mt-2 rounded-lg overflow-hidden bg-gray-100 max-h-48">
-                    <img src={form.imageUrl} alt="Preview" className="w-full max-h-48 object-contain" onError={() => {}} />
-                  </div>
-                )}
-                <p className="text-xs text-gray-400 mt-1">Use a publicly accessible URL. Upload images via the media upload endpoint first.</p>
+
+                {/* Manual URL fallback */}
+                <div className="mt-2">
+                  <Input
+                    value={form.imageUrl}
+                    onChange={(e) => setForm((f) => ({ ...f, imageUrl: e.target.value }))}
+                    placeholder="Or paste a public image URL…"
+                    className="text-xs"
+                  />
+                </div>
               </div>
             )}
 

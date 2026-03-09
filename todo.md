@@ -1530,3 +1530,9 @@
 - [x] Bulk-generate questions via AI across key clinical topics — 46 questions inserted (5 per topic × 9 topics), daily set regenerated with 5 questions
 - [x] Add Flashcard display mode to Daily Challenge QuickFire UI — 3D CSS flip card with teal front / dark teal back, Got it / Missed it buttons, Flip Back button, applied to both daily challenge and archive sections
 - [x] Verify free vs. premium archive access end-to-end — backend gates confirmed (getChallengeArchive returns empty for free, getArchivedChallenge throws FORBIDDEN), frontend shows premium upgrade prompt for non-premium users, admin sees full archive
+
+## Session Mar 09 2026 — Phase 3 Features
+- [ ] Fix Diastology calculator: rename to "Diastology" (remove "LARS"), remove all Figure # references in reference text and header banner, restructure two-step workflow with correct thresholds and logic
+- [x] Schedule daily auto-generation cron job at midnight UTC — added to challengeCron.ts in challengeCron.ts
+- [x] Add Flashcard Deck study mode — 45 flashcards generated (5 per topic × 9 topics), 3D flip card UI, topic filters, Got it/Missed it tracking, sidebar nav link (Got it / Missed it history)
+- [ ] Add image-based question infrastructure (S3 upload + AI Generate with image type)

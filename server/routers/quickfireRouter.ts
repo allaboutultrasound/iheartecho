@@ -1091,4 +1091,164 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
         .where(and(eq(quickfireChallenges.id, input.id), eq(quickfireChallenges.status, "live")));
       return { success: true };
     }),
+
+  // ─── Flashcard Deck ─────────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Returns all active quickReview-type flashcards, ordered by spaced-repetition priority.
+   * Cards the user has missed most recently appear first.
+   * Unauthenticated users get a random order.
+   */
+  getFlashcardDeck: publicProcedure
+    .input(z.object({
+      topic: z.string().optional(),
+      limit: z.number().int().min(1).max(200).default(50),
+    }))
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+
+      // Fetch all active flashcard questions
+      const allCards = await db
+        .select()
+        .from(quickfireQuestions)
+        .where(and(
+          eq(quickfireQuestions.isActive, true),
+          eq(quickfireQuestions.type, "quickReview"),
+        ))
+        .limit(input.limit);
+
+      if (allCards.length === 0) return { cards: [], totalCards: 0, userStats: null };
+
+      // Filter by topic if provided
+      const filtered = input.topic
+        ? allCards.filter((c) => {
+            const tags: string[] = c.tags ? JSON.parse(c.tags) : [];
+            return tags.some((t) => t.toLowerCase().includes(input.topic!.toLowerCase()));
+          })
+        : allCards;
+
+      // If user is authenticated, fetch their attempt history for spaced repetition
+      if (ctx.user) {
+        const cardIds = filtered.map((c) => c.id);
+        const attempts = cardIds.length > 0
+          ? await db
+              .select({
+                questionId: quickfireAttempts.questionId,
+                selfMarkedCorrect: quickfireAttempts.selfMarkedCorrect,
+                createdAt: quickfireAttempts.createdAt,
+              })
+              .from(quickfireAttempts)
+              .where(and(
+                eq(quickfireAttempts.userId, ctx.user.id),
+                inArray(quickfireAttempts.questionId, cardIds),
+              ))
+          : [];
+
+        // Build per-card stats
+        const statsMap: Record<number, { gotIt: number; missed: number; lastSeen: Date | null; lastResult: boolean | null }> = {};
+        for (const a of attempts) {
+          if (!statsMap[a.questionId]) {
+            statsMap[a.questionId] = { gotIt: 0, missed: 0, lastSeen: null, lastResult: null };
+          }
+          const s = statsMap[a.questionId];
+          if (a.selfMarkedCorrect === true) s.gotIt++;
+          else if (a.selfMarkedCorrect === false) s.missed++;
+          if (!s.lastSeen || a.createdAt > s.lastSeen) {
+            s.lastSeen = a.createdAt;
+            s.lastResult = a.selfMarkedCorrect;
+          }
+        }
+
+        // Spaced repetition sort:
+        // 1. Never seen (no attempts) — highest priority
+        // 2. Last result was missed — second priority, sorted by most recently missed first
+        // 3. Last result was correct — lowest priority, sorted by least recently seen first
+        const scored = filtered.map((card) => {
+          const s = statsMap[card.id];
+          let score = 0;
+          if (!s || s.gotIt + s.missed === 0) {
+            score = 0; // never seen — show first
+          } else if (s.lastResult === false) {
+            score = 1; // last missed — show second
+          } else {
+            score = 2; // last correct — show last
+          }
+          return { card, score, lastSeen: s?.lastSeen ?? null, stats: s ?? { gotIt: 0, missed: 0, lastSeen: null, lastResult: null } };
+        });
+
+        scored.sort((a, b) => {
+          if (a.score !== b.score) return a.score - b.score;
+          // Within same score group, sort by lastSeen ascending (least recently seen first)
+          if (!a.lastSeen && !b.lastSeen) return 0;
+          if (!a.lastSeen) return -1;
+          if (!b.lastSeen) return 1;
+          return a.lastSeen.getTime() - b.lastSeen.getTime();
+        });
+
+        const cards = scored.map(({ card, stats }) => ({
+          ...card,
+          tags: card.tags ? JSON.parse(card.tags) : [],
+          gotIt: stats.gotIt,
+          missed: stats.missed,
+          lastSeen: stats.lastSeen,
+          lastResult: stats.lastResult,
+        }));
+
+        // Aggregate user stats
+        const totalAttempts = attempts.length;
+        const totalGotIt = attempts.filter((a) => a.selfMarkedCorrect === true).length;
+        const totalMissed = attempts.filter((a) => a.selfMarkedCorrect === false).length;
+
+        return {
+          cards,
+          totalCards: filtered.length,
+          userStats: { totalAttempts, totalGotIt, totalMissed, accuracy: totalAttempts > 0 ? Math.round((totalGotIt / totalAttempts) * 100) : null },
+        };
+      }
+
+      // Unauthenticated: return in random order
+      const shuffled = sampleN(filtered, filtered.length);
+      return {
+        cards: shuffled.map((c) => ({ ...c, tags: c.tags ? JSON.parse(c.tags) : [], gotIt: 0, missed: 0, lastSeen: null, lastResult: null })),
+        totalCards: filtered.length,
+        userStats: null,
+      };
+    }),
+
+  /**
+   * Record a flashcard deck self-assessment (Got it / Missed it).
+   * Uses a special setDate of 'deck-YYYY-MM-DD' to distinguish from daily challenge attempts.
+   */
+  submitFlashcardReview: protectedProcedure
+    .input(z.object({
+      questionId: z.number().int().positive(),
+      gotIt: z.boolean(),
+      timeMs: z.number().int().min(0).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+
+      // Verify the question exists and is a quickReview type
+      const [q] = await db
+        .select({ id: quickfireQuestions.id, type: quickfireQuestions.type })
+        .from(quickfireQuestions)
+        .where(and(eq(quickfireQuestions.id, input.questionId), eq(quickfireQuestions.isActive, true)))
+        .limit(1);
+      if (!q) throw new TRPCError({ code: "NOT_FOUND", message: "Question not found" });
+
+      const setDate = `deck-${todayDateStr()}`;
+      await db.insert(quickfireAttempts).values({
+        userId: ctx.user.id,
+        questionId: input.questionId,
+        setDate,
+        selectedAnswer: null,
+        selfMarkedCorrect: input.gotIt,
+        isCorrect: input.gotIt,
+        timeMs: input.timeMs ?? null,
+      });
+
+      return { success: true };
+    }),
 });

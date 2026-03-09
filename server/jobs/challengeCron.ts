@@ -10,7 +10,7 @@
  */
 
 import { getDb } from "../db";
-import { quickfireChallenges, users } from "../../drizzle/schema";
+import { quickfireChallenges, quickfireDailySets, quickfireQuestions, users } from "../../drizzle/schema";
 import { eq, and, asc, lte } from "drizzle-orm";
 import { notifyOwner } from "../_core/notification";
 import sgMail from "@sendgrid/mail";
@@ -25,6 +25,83 @@ if (SENDGRID_API_KEY) {
 }
 
 let cronRunning = false;
+let lastAutoGenDate = ""; // tracks the last date we auto-generated a daily set
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function todayUTC(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function sampleN<T>(arr: T[], n: number): T[] {
+  const shuffled = [...arr].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, n);
+}
+
+/**
+ * Ensures a daily question set exists for the given date.
+ * Mirrors the logic in quickfireRouter.ts ensureTodaySet.
+ */
+async function ensureDailySet(db: NonNullable<Awaited<ReturnType<typeof getDb>>>, date: string) {
+  const existing = await db
+    .select()
+    .from(quickfireDailySets)
+    .where(eq(quickfireDailySets.setDate, date))
+    .limit(1);
+
+  if (existing.length > 0) return existing[0];
+
+  const allQuestions = await db
+    .select({ id: quickfireQuestions.id, type: quickfireQuestions.type })
+    .from(quickfireQuestions)
+    .where(eq(quickfireQuestions.isActive, true));
+
+  if (allQuestions.length === 0) {
+    const [inserted] = await db.insert(quickfireDailySets).values({ setDate: date, questionIds: "[]" });
+    return { setDate: date, questionIds: "[]", id: (inserted as any).insertId };
+  }
+
+  const scenarios = allQuestions.filter((q) => q.type === "scenario");
+  const images = allQuestions.filter((q) => q.type === "image");
+  const reviews = allQuestions.filter((q) => q.type === "quickReview");
+
+  const picked = [
+    ...sampleN(scenarios, Math.min(2, scenarios.length)),
+    ...sampleN(images, Math.min(2, images.length)),
+    ...sampleN(reviews, Math.min(1, reviews.length)),
+  ];
+
+  if (picked.length < 5) {
+    const remaining = allQuestions.filter((q) => !picked.find((p) => p.id === q.id));
+    picked.push(...sampleN(remaining, 5 - picked.length));
+  }
+
+  const finalIds = sampleN(picked, picked.length).map((q) => q.id);
+
+  await db.insert(quickfireDailySets).values({
+    setDate: date,
+    questionIds: JSON.stringify(finalIds),
+  });
+
+  console.log(`[ChallengeCron] Auto-generated daily set for ${date} with ${finalIds.length} questions.`);
+  return { setDate: date, questionIds: JSON.stringify(finalIds) };
+}
+
+/**
+ * Auto-generates the daily question set for today if not already done.
+ * Runs once per UTC day.
+ */
+async function runDailyAutoGenerate() {
+  const today = todayUTC();
+  if (lastAutoGenDate === today) return; // already done today
+  try {
+    const db = await getDb();
+    if (!db) return;
+    await ensureDailySet(db, today);
+    lastAutoGenDate = today;
+  } catch (err) {
+    console.error("[ChallengeCron] Auto-generate error:", err);
+  }
+}
 
 export async function runChallengeCron() {
   if (cronRunning) return; // prevent overlapping runs
@@ -245,13 +322,16 @@ function buildEmailHtml({
 
 /**
  * Start the cron job — runs every 5 minutes.
+ * Also runs daily auto-generation at midnight UTC.
  */
 export function startChallengeCron() {
   const INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
   console.log("[ChallengeCron] Started — checking every 5 minutes.");
-  // Run immediately on startup to catch any missed publishes
+  // Run immediately on startup to catch any missed publishes and generate today's set
   runChallengeCron().catch(console.error);
+  runDailyAutoGenerate().catch(console.error);
   setInterval(() => {
     runChallengeCron().catch(console.error);
+    runDailyAutoGenerate().catch(console.error);
   }, INTERVAL_MS);
 }

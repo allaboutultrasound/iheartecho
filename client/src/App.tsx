@@ -53,6 +53,7 @@ import MagicLinkRequest from "./pages/MagicLinkRequest";
 import MagicLinkCallback from "./pages/MagicLinkCallback";
 // New LMS engines
 import QuickFire from "./pages/QuickFire";
+import FlashcardDeck from "./pages/FlashcardDeck";
 import CaseLibrary from "./pages/CaseLibrary";
 import CaseDetail from "./pages/CaseDetail";
 import SubmitCase from "./pages/SubmitCase";
@@ -147,6 +148,7 @@ function Router() {
       <Route path="/echo-assist-hub" component={EchoAssistHub} />
       {/* ── LMS Engines ──────────────────────────────────────────────────── */}
       <Route path="/quickfire" component={QuickFire} />
+      <Route path="/flashcards" component={FlashcardDeck} />
       <Route path="/case-library" component={CaseLibrary} />
       <Route path="/case-library/submit" component={SubmitCase} />
       <Route path="/case-library/edit/:id" component={SubmitCase} />
