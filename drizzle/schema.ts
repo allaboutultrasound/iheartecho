@@ -406,6 +406,40 @@ export const imageQualityReviews = mysqlTable("imageQualityReviews", {
   reviewerEmail: varchar("reviewerEmail", { length: 200 }),
   notifyAdmin: varchar("notifyAdmin", { length: 5 }),
   notifySonographer: varchar("notifySonographer", { length: 5 }),
+  // New Formsite fields
+  // Page 3 — Basic Exam Quality
+  mModeViewsObtained: varchar("mModeViewsObtained", { length: 50 }),          // AETTE, PETTE
+  mModeViewsObtainedOther: varchar("mModeViewsObtainedOther", { length: 300 }),
+  harmonicImagingAppropriate: varchar("harmonicImagingAppropriate", { length: 50 }),
+  harmonicImagingOther: varchar("harmonicImagingOther", { length: 300 }),
+  contrastUtilized: varchar("contrastUtilized", { length: 50 }),               // AETTE, PETTE, FE
+  contrastUtilizedOther: varchar("contrastUtilizedOther", { length: 300 }),
+  patientPositioned: varchar("patientPositioned", { length: 50 }),
+  patientPositionedOther: varchar("patientPositionedOther", { length: 300 }),
+  // Page 4 — Measurements
+  psaxLvCompleteness: varchar("psaxLvCompleteness", { length: 100 }),          // AETTE, PETTE
+  psaxLvCompletenessOther: varchar("psaxLvCompletenessOther", { length: 300 }),
+  simpsonsEfObtained: varchar("simpsonsEfObtained", { length: 50 }),           // AETTE, PETTE
+  simpsonsEfObtainedOther: varchar("simpsonsEfObtainedOther", { length: 300 }),
+  biplaneLaVolume: varchar("biplaneLaVolume", { length: 50 }),                 // AETTE only
+  biplaneLaVolumeOther: varchar("biplaneLaVolumeOther", { length: 300 }),
+  // Page 5 — Doppler
+  diastolicFunctionEvalOther: varchar("diastolicFunctionEvalOther", { length: 300 }),
+  rightHeartFunctionEvalOther: varchar("rightHeartFunctionEvalOther", { length: 300 }),
+  // Page 6 — Cardiac Evaluation
+  pedoffCwUtilizedOther: varchar("pedoffCwUtilizedOther", { length: 300 }),
+  pedoffCwEnvelopeOther: varchar("pedoffCwEnvelopeOther", { length: 300 }),
+  pedoffCwLabelledOther: varchar("pedoffCwLabelledOther", { length: 300 }),
+  pisaEroMeasurementsOther: varchar("pisaEroMeasurementsOther", { length: 300 }),
+  additionalImagingMethods: text("additionalImagingMethods"),                  // JSON array: None, 2D Strain, 3D Imaging, 3D EF, Other
+  additionalImagingMethodsOther: varchar("additionalImagingMethodsOther", { length: 300 }),
+  strainCorrectOther: varchar("strainCorrectOther", { length: 300 }),
+  // Page 7 — Review Summary notification fields
+  notifyAdminEmail: varchar("notifyAdminEmail", { length: 200 }),
+  notifyAdminComments: text("notifyAdminComments"),
+  notifySonographerEmail: varchar("notifySonographerEmail", { length: 200 }),
+  notifySonographerComments: text("notifySonographerComments"),
+
   // TEE-specific fields
   teeMeasurementsComplete: varchar("teeMeasurementsComplete", { length: 50 }),
   teeMeasurementsAccurate: varchar("teeMeasurementsAccurate", { length: 50 }),

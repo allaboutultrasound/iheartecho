@@ -1794,3 +1794,17 @@
 
 ## IQR Replacement (Mar 09 2026)
 - [x] Delete entire Image Quality Review form content, replace with placeholder (external link TBD)
+
+## IQR Form Rebuild (Mar 09 2026)
+- [ ] Visit and map Formsite form fields with exam-type identifier prefixes
+- [ ] Build new IQR form component with identifier-based exam type branching
+- [ ] Update DB schema and tRPC router if new fields needed
+
+## IQR Form Rebuild (Mar 09 2026)
+- [x] Delete entire Image Quality Review form content, replace with placeholder (external link TBD)
+- [x] Rebuild IQR form mapped from Formsite (https://fs23.formsite.com/allaboutultrasound/hmrmdywgzj/index) with exam-type-specific fields
+- [x] Remove Review Type field (all submissions = QUALITY REVIEW)
+- [x] Add new DB schema columns for Formsite fields not in previous schema
+- [x] Push DB migration
+- [x] Update tRPC iqr.create procedure schema to include all new fields
+- [x] Write vitest tests for new IQR create procedure

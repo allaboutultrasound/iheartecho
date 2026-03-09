@@ -1,0 +1,26 @@
+ALTER TABLE `imageQualityReviews` ADD `mModeViewsObtained` varchar(50);--> statement-breakpoint
+ALTER TABLE `imageQualityReviews` ADD `mModeViewsObtainedOther` varchar(300);--> statement-breakpoint
+ALTER TABLE `imageQualityReviews` ADD `harmonicImagingAppropriate` varchar(50);--> statement-breakpoint
+ALTER TABLE `imageQualityReviews` ADD `harmonicImagingOther` varchar(300);--> statement-breakpoint
+ALTER TABLE `imageQualityReviews` ADD `contrastUtilized` varchar(50);--> statement-breakpoint
+ALTER TABLE `imageQualityReviews` ADD `contrastUtilizedOther` varchar(300);--> statement-breakpoint
+ALTER TABLE `imageQualityReviews` ADD `patientPositioned` varchar(50);--> statement-breakpoint
+ALTER TABLE `imageQualityReviews` ADD `patientPositionedOther` varchar(300);--> statement-breakpoint
+ALTER TABLE `imageQualityReviews` ADD `psaxLvCompleteness` varchar(100);--> statement-breakpoint
+ALTER TABLE `imageQualityReviews` ADD `psaxLvCompletenessOther` varchar(300);--> statement-breakpoint
+ALTER TABLE `imageQualityReviews` ADD `simpsonsEfObtained` varchar(50);--> statement-breakpoint
+ALTER TABLE `imageQualityReviews` ADD `simpsonsEfObtainedOther` varchar(300);--> statement-breakpoint
+ALTER TABLE `imageQualityReviews` ADD `biplaneLaVolume` varchar(50);--> statement-breakpoint
+ALTER TABLE `imageQualityReviews` ADD `biplaneLaVolumeOther` varchar(300);--> statement-breakpoint
+ALTER TABLE `imageQualityReviews` ADD `diastolicFunctionEvalOther` varchar(300);--> statement-breakpoint
+ALTER TABLE `imageQualityReviews` ADD `rightHeartFunctionEvalOther` varchar(300);--> statement-breakpoint
+ALTER TABLE `imageQualityReviews` ADD `pedoffCwUtilizedOther` varchar(300);--> statement-breakpoint
+ALTER TABLE `imageQualityReviews` ADD `pedoffCwEnvelopeOther` varchar(300);--> statement-breakpoint
+ALTER TABLE `imageQualityReviews` ADD `pedoffCwLabelledOther` varchar(300);--> statement-breakpoint
+ALTER TABLE `imageQualityReviews` ADD `pisaEroMeasurementsOther` varchar(300);--> statement-breakpoint
+ALTER TABLE `imageQualityReviews` ADD `additionalImagingMethodsOther` varchar(300);--> statement-breakpoint
+ALTER TABLE `imageQualityReviews` ADD `strainCorrectOther` varchar(300);--> statement-breakpoint
+ALTER TABLE `imageQualityReviews` ADD `notifyAdminEmail` varchar(200);--> statement-breakpoint
+ALTER TABLE `imageQualityReviews` ADD `notifyAdminComments` text;--> statement-breakpoint
+ALTER TABLE `imageQualityReviews` ADD `notifySonographerEmail` varchar(200);--> statement-breakpoint
+ALTER TABLE `imageQualityReviews` ADD `notifySonographerComments` text;
