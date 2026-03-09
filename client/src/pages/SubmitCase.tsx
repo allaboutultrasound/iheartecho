@@ -492,7 +492,7 @@ export default function SubmitCase() {
     return true;
   };
 
-  const LINKEDIN_REGEX = /^https:\/\/(www\.)?linkedin\.com\/in\/[\w\-%.]+\/?$/i;
+  const LINKEDIN_REGEX = /^https:\/\/(www\.)?linkedin\.com\/(in|company|school)\/[\w\-%.]+\/?$/i;
 
   const buildPayload = () => ({
     title: title.trim(),

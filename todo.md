@@ -1489,4 +1489,9 @@
 - [x] Add "Go to Navigator" link on each ScanCoach module card in EchoAssist Hub (updated labels to Go to Navigator / Go to ScanCoach)
 
 ## Case Submission Bug Fixes
-- [ ] Fix LinkedIn URL validation — currently rejects valid company URLs like https://www.linkedin.com/company/all-about-ultrasound/
+- [x] Fix LinkedIn URL validation — updated regex in SubmitCase.tsx, CaseEditorDialog.tsx, and caseLibraryRouter.ts to accept /in/, /company/, and /school/ URLs
+
+## AI Generation & Modality Fixes
+- [ ] Fix AI case study generation JSON invalid response error
+- [ ] Fix AI daily challenge generation JSON invalid response error
+- [ ] Remove HOCM from case modality list (it is a disease type, not a modality)

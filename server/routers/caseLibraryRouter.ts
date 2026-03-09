@@ -67,8 +67,8 @@ const caseInputSchema = z.object({
     .max(500)
     .optional()
     .refine(
-      (val) => !val || /^https:\/\/(www\.)?linkedin\.com\/in\/[\w\-%.]+\/?$/i.test(val),
-      { message: "Must be a valid LinkedIn profile URL (e.g. https://www.linkedin.com/in/yourname)" }
+      (val) => !val || /^https:\/\/(www\.)?linkedin\.com\/(in|company|school)\/[\w\-%.]+\/?$/i.test(val),
+      { message: "Must be a valid LinkedIn URL (e.g. https://www.linkedin.com/in/yourname or https://www.linkedin.com/company/name)" }
     ),
   // Embedded media (already uploaded to S3)
   media: z
@@ -848,8 +848,8 @@ export const caseLibraryRouter = router({
           .optional()
           .nullable()
           .refine(
-            (v) => !v || v.toLowerCase().includes("linkedin.com/in/"),
-            { message: "Only LinkedIn profile URLs are accepted." }
+            (v) => !v || /^https?:\/\/(www\.)?linkedin\.com\/(in|company|school)\/[\w\-%.]+\/?$/i.test(v),
+            { message: "Please enter a valid LinkedIn URL (linkedin.com/in/name or linkedin.com/company/name)." }
           ),
       })
     )

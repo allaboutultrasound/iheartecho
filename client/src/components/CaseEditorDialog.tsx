@@ -305,8 +305,9 @@ export default function CaseEditorDialog({ caseId, open, onClose, onSaved }: Pro
   const validateLinkedIn = (url: string) => {
     if (!url) return "";
     const clean = url.trim().toLowerCase();
-    if (!clean.includes("linkedin.com/in/")) {
-      return "Only LinkedIn profile URLs (linkedin.com/in/…) are accepted.";
+    const valid = /^https?:\/\/(www\.)?linkedin\.com\/(in|company|school)\/[\w\-%.]+\/?$/i.test(clean);
+    if (!valid) {
+      return "Please enter a valid LinkedIn URL (e.g. linkedin.com/in/name or linkedin.com/company/name).";
     }
     return "";
   };
