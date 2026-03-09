@@ -518,12 +518,12 @@ function generateMitralInflowPath(p: Params, W: number, H: number): {
   // Pattern classification
   let pattern = "Normal";
   if (p.msInflow) pattern = "Mitral Stenosis";
-  else if (eaRatio < 0.8 && eVel < 0.7) pattern = "Impaired Relaxation (Grade I)";
+  else if (eaRatio < 0.8 && eVel < 0.7) pattern = "Grade I Diastolic Dysfunction";
   else if (eaRatio >= 0.8 && eaRatio <= 1.5 && eVel >= 0.7 && eVel <= 1.2) {
-    if (preload > 65) pattern = "Pseudonormal (Grade II)";
+    if (preload > 65) pattern = "Grade II Diastolic Dysfunction";
     else pattern = "Normal";
   } else if (eaRatio > 1.5 || (eVel > 1.2 && decTime < 160)) pattern = "Restrictive (Grade III)";
-  else if (eaRatio < 0.8) pattern = "Impaired Relaxation (Grade I)";
+  else if (eaRatio < 0.8) pattern = "Grade I Diastolic Dysfunction";
 
   // Generate SVG path for 2 cycles
   const maxVelDisplay = Math.max(eVel, aVel) * 1.25; // auto-scale to fill canvas

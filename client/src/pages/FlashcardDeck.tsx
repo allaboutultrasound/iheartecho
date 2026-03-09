@@ -1,18 +1,16 @@
 /**
  * FlashcardDeck.tsx
  *
- * Standalone Flashcard Deck study mode.
- * - Shows all quickReview-type questions as flip cards
+ * Standalone Echo Flashcards study mode.
+ * - Category filter: Adult Echo, Pediatric/Congenital Echo, Fetal Echo
  * - Spaced repetition: missed cards appear first
- * - Topic filter chips
- * - Progress bar + accuracy stats
+ * - Scoring/tracking displayed below the card
  */
 
 import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
   RotateCcw,
@@ -31,63 +29,48 @@ import {
 import { useAuth } from "@/_core/hooks/useAuth";
 
 type StudyMode = "sequential" | "spaced";
+type EchoCategory = "all" | "adult" | "pediatric_congenital" | "fetal";
 
-const TOPICS = [
-  "All Topics",
-  "HOCM",
-  "Strain",
-  "Diastolic Function",
-  "Dilated CM",
-  "Restrictive CM",
-  "Constrictive Pericarditis",
-  "Tamponade",
-  "Pulmonary HTN",
-  "Pulmonary Embolism",
-  "Aortic Stenosis",
-  "Mitral Regurgitation",
+const CATEGORIES: { value: EchoCategory; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "adult", label: "Adult Echo" },
+  { value: "pediatric_congenital", label: "Pediatric / Congenital Echo" },
+  { value: "fetal", label: "Fetal Echo" },
 ];
 
 export default function FlashcardDeck() {
   const { isAuthenticated } = useAuth();
-  const [selectedTopic, setSelectedTopic] = useState("All Topics");
+  const [selectedCategory, setSelectedCategory] = useState<EchoCategory>("all");
   const [currentIndex, setCurrentIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [sessionResults, setSessionResults] = useState<Record<number, boolean>>({});
   const [sessionComplete, setSessionComplete] = useState(false);
   const [studyMode, setStudyMode] = useState<StudyMode>("sequential");
 
-  const topicParam = selectedTopic === "All Topics" ? undefined : selectedTopic;
+  const echoCategoryParam = selectedCategory === "all" ? undefined : selectedCategory;
 
   const { data, isLoading, refetch } = trpc.quickfire.getFlashcardDeck.useQuery(
-    { topic: topicParam, limit: 100 },
+    { echoCategory: echoCategoryParam, limit: 100 },
     { staleTime: 30_000 }
   );
 
-  const submitReview = trpc.quickfire.submitFlashcardReview.useMutation({
-    onSuccess: () => {
-      // Refetch to update spaced repetition order after session
-    },
-  });
+  const submitReview = trpc.quickfire.submitFlashcardReview.useMutation();
 
   // Apply study mode ordering
   const rawCards = data?.cards ?? [];
   const cards = useMemo(() => {
     if (studyMode === "spaced") {
-      // Spaced repetition: cards with more misses appear first
-      // Backend returns gotIt + missed per card from the user's attempt history
       return [...rawCards].sort((a, b) => {
         const aAttempts = ((a as any).gotIt ?? 0) + ((a as any).missed ?? 0);
         const bAttempts = ((b as any).gotIt ?? 0) + ((b as any).missed ?? 0);
         const aGotIt = (a as any).gotIt ?? 0;
         const bGotIt = (b as any).gotIt ?? 0;
-        // Score: ratio of misses (higher = needs more review)
-        // Never-seen cards get score 0.5 (middle priority)
         const aScore = aAttempts === 0 ? 0.5 : 1 - aGotIt / aAttempts;
         const bScore = bAttempts === 0 ? 0.5 : 1 - bGotIt / bAttempts;
-        return bScore - aScore; // descending: most-missed first
+        return bScore - aScore;
       });
     }
-    return rawCards; // sequential: as returned by server (backend already sorts by spaced rep for authenticated users)
+    return rawCards;
   }, [rawCards, studyMode]);
 
   const currentCard = cards[currentIndex];
@@ -96,22 +79,10 @@ export default function FlashcardDeck() {
   const gotItCount = Object.values(sessionResults).filter(Boolean).length;
   const missedCount = answeredCount - gotItCount;
   const sessionAccuracy = answeredCount > 0 ? Math.round((gotItCount / answeredCount) * 100) : null;
-
   const progressPct = totalCards > 0 ? Math.round((answeredCount / totalCards) * 100) : 0;
 
-  // Aggregate topic list from all cards
-  const availableTopics = useMemo(() => {
-    if (!data?.cards) return TOPICS;
-    const tagSet = new Set<string>();
-    for (const c of data.cards) {
-      const tags: string[] = Array.isArray(c.tags) ? c.tags : [];
-      tags.forEach((t) => tagSet.add(t));
-    }
-    return ["All Topics", ...Array.from(tagSet).sort()];
-  }, [data?.cards]);
-
-  function handleTopicChange(topic: string) {
-    setSelectedTopic(topic);
+  function handleCategoryChange(cat: EchoCategory) {
+    setSelectedCategory(cat);
     setCurrentIndex(0);
     setFlipped(false);
     setSessionResults({});
@@ -141,17 +112,14 @@ export default function FlashcardDeck() {
 
     setFlipped(false);
 
-    // Advance to next unanswered card
     const nextIndex = cards.findIndex((c, i) => i > currentIndex && !newResults[c.id]);
     if (nextIndex !== -1) {
       setCurrentIndex(nextIndex);
     } else {
-      // Check if all cards have been answered
       const allAnswered = cards.every((c) => newResults[c.id] !== undefined);
       if (allAnswered) {
         setSessionComplete(true);
       } else {
-        // Find the first unanswered card from the beginning
         const firstUnanswered = cards.findIndex((c) => !newResults[c.id]);
         if (firstUnanswered !== -1) {
           setCurrentIndex(firstUnanswered);
@@ -202,10 +170,17 @@ export default function FlashcardDeck() {
       <Layout>
         <div className="container py-16 flex flex-col items-center gap-4 text-center">
           <Layers className="w-12 h-12 text-gray-300" />
-          <h2 className="text-xl font-bold text-gray-700">No flashcards yet</h2>
+          <h2 className="text-xl font-bold text-gray-700">No flashcards available</h2>
           <p className="text-gray-500 max-w-sm">
-            Flashcards are added by admins via the AI Generate tool. Check back soon!
+            {selectedCategory !== "all"
+              ? "No flashcards found for this category. Try selecting a different one."
+              : "Flashcards are added by admins via the AI Generate tool. Check back soon!"}
           </p>
+          {selectedCategory !== "all" && (
+            <Button variant="outline" onClick={() => handleCategoryChange("all")}>
+              View All Categories
+            </Button>
+          )}
         </div>
       </Layout>
     );
@@ -221,7 +196,7 @@ export default function FlashcardDeck() {
             <h2 className="text-2xl font-black text-gray-800 mb-2" style={{ fontFamily: "Merriweather, serif" }}>
               Session Complete!
             </h2>
-            <p className="text-gray-500 mb-6">You reviewed all {totalCards} flashcards.</p>
+            <p className="text-gray-500 mb-6">You reviewed all the flashcards.</p>
 
             <div className="grid grid-cols-3 gap-4 mb-8">
               <div className="bg-green-50 rounded-xl p-4">
@@ -261,29 +236,38 @@ export default function FlashcardDeck() {
   // ── Render: Main Deck ─────────────────────────────────────────────────────
   const alreadyAnswered = currentCard ? sessionResults[currentCard.id] !== undefined : false;
   const thisResult = currentCard ? sessionResults[currentCard.id] : undefined;
-  const tags: string[] = currentCard && Array.isArray(currentCard.tags) ? currentCard.tags : [];
 
   return (
     <Layout>
-      <div className="container py-6 max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-[#189aa1]" />
-            <h1 className="text-lg font-black text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-              Flashcard Deck
-            </h1>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <span className="font-semibold text-[#189aa1]">{currentIndex + 1}</span>
-            <span>/</span>
-            <span>{totalCards}</span>
-          </div>
+      <div className="container py-4 max-w-2xl mx-auto">
+        {/* Header — compact */}
+        <div className="flex items-center gap-2 mb-3">
+          <BookOpen className="w-5 h-5 text-[#189aa1]" />
+          <h1 className="text-lg font-black text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
+            Echo Flashcards
+          </h1>
+        </div>
+
+        {/* Category Filter */}
+        <div className="flex flex-wrap gap-2 mb-3">
+          {CATEGORIES.map(({ value, label }) => (
+            <button
+              key={value}
+              onClick={() => handleCategoryChange(value)}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                selectedCategory === value
+                  ? "bg-[#189aa1] text-white border-[#189aa1]"
+                  : "bg-white text-gray-600 border-gray-200 hover:border-[#189aa1] hover:text-[#189aa1]"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
 
         {/* Study Mode Toggle */}
         <div className="flex items-center gap-2 mb-4">
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Study Mode:</span>
+          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Mode:</span>
           <div className="flex rounded-lg border border-gray-200 overflow-hidden">
             <button
               onClick={() => handleModeChange("sequential")}
@@ -305,61 +289,18 @@ export default function FlashcardDeck() {
               }`}
             >
               <Shuffle className="w-3.5 h-3.5" />
-              Spaced Repetition
+              Spaced
             </button>
           </div>
-          {studyMode === "spaced" && (
-            <span className="text-xs text-[#189aa1] font-medium">
-              Most-missed cards first
-            </span>
-          )}
-        </div>
-
-        {/* Topic Filter */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          {availableTopics.map((topic) => (
-            <button
-              key={topic}
-              onClick={() => handleTopicChange(topic)}
-              className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
-                selectedTopic === topic
-                  ? "bg-[#189aa1] text-white border-[#189aa1]"
-                  : "bg-white text-gray-600 border-gray-200 hover:border-[#189aa1] hover:text-[#189aa1]"
-              }`}
-            >
-              {topic}
-            </button>
-          ))}
-        </div>
-
-        {/* Progress Bar */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
-            <span>{answeredCount} of {totalCards} reviewed</span>
-            <div className="flex items-center gap-3">
-              <span className="text-green-600 font-semibold">✓ {gotItCount}</span>
-              <span className="text-red-500 font-semibold">✗ {missedCount}</span>
-              {sessionAccuracy !== null && (
-                <span className="text-[#189aa1] font-semibold">{sessionAccuracy}%</span>
-              )}
-            </div>
-          </div>
-          <Progress value={progressPct} className="h-2" />
         </div>
 
         {/* Flip Card */}
         {currentCard && (
-          <div className="mb-6">
-            {/* Scene wrapper provides the 3-D perspective */}
+          <div className="mb-4">
             <div className="flashcard-scene cursor-pointer" onClick={handleFlip}>
               <div className={`flashcard-card${flipped ? " is-flipped" : ""}`}>
                 {/* Front face */}
                 <div className="flashcard-face flashcard-face--front" style={{ background: "linear-gradient(135deg, #0e4a50 0%, #189aa1 100%)", border: "none" }}>
-                  <div className="mb-3 flex flex-wrap gap-1 justify-center">
-                    {tags.map((tag) => (
-                      <Badge key={tag} className="text-xs bg-white/20 text-white border-0">{tag}</Badge>
-                    ))}
-                  </div>
                   <p className="text-white font-bold text-lg leading-snug mb-4" style={{ fontFamily: "Merriweather, serif" }}>
                     {currentCard.question}
                   </p>
@@ -369,7 +310,7 @@ export default function FlashcardDeck() {
                   </div>
                 </div>
 
-                {/* Back face — hidden until flipped */}
+                {/* Back face */}
                 <div className="flashcard-face flashcard-face--back" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 100%)", border: "none" }}>
                   <p className="text-[#4ad9e0] font-bold text-lg leading-snug mb-3" style={{ fontFamily: "Merriweather, serif" }}>
                     {currentCard.reviewAnswer ?? currentCard.explanation ?? "No answer provided."}
@@ -421,6 +362,26 @@ export default function FlashcardDeck() {
           </div>
         )}
 
+        {/* Scoring / Progress — below the card */}
+        {answeredCount > 0 && (
+          <div className="mb-4 bg-white rounded-xl border border-gray-100 p-3">
+            <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
+              <div className="flex items-center gap-4">
+                <span className="text-green-600 font-semibold flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> {gotItCount} Got It
+                </span>
+                <span className="text-red-500 font-semibold flex items-center gap-1">
+                  <XCircle className="w-3.5 h-3.5" /> {missedCount} Missed
+                </span>
+              </div>
+              {sessionAccuracy !== null && (
+                <span className="text-[#189aa1] font-bold">{sessionAccuracy}% accuracy</span>
+              )}
+            </div>
+            <Progress value={progressPct} className="h-1.5" />
+          </div>
+        )}
+
         {/* Navigation */}
         <div className="flex items-center justify-between">
           <Button
@@ -456,9 +417,9 @@ export default function FlashcardDeck() {
           </Button>
         </div>
 
-        {/* User Stats (if authenticated) */}
+        {/* User All-Time Stats (if authenticated) */}
         {data?.userStats && (
-          <div className="mt-6 bg-[#f0fbfc] rounded-xl p-4 border border-[#189aa1]/20">
+          <div className="mt-5 bg-[#f0fbfc] rounded-xl p-4 border border-[#189aa1]/20">
             <h3 className="text-xs font-bold text-[#189aa1] uppercase tracking-wider mb-2">Your All-Time Stats</h3>
             <div className="grid grid-cols-3 gap-3 text-center">
               <div>

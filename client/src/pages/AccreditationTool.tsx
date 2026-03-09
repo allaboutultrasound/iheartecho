@@ -1041,7 +1041,7 @@ function AppropriateUseTab() {
                 <label className="text-xs font-semibold text-gray-600 mb-1 block">Modality *</label>
                 <Select value={form.modality} onValueChange={(v) => setForm(f => ({ ...f, modality: v }))}>
                   <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select" /></SelectTrigger>
-                  <SelectContent>{MODALITIES.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
+                  <SelectContent>{AUC_MODALITIES.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div>
@@ -1050,7 +1050,7 @@ function AppropriateUseTab() {
               </div>
             </div>
             <div>
-              <label className="text-xs font-semibold text-gray-600 mb-1 block">Clinical Indication *</label>
+                <label className="text-xs font-semibold text-gray-600 mb-1 block">Clinical Indication *</label>
               <Input className="h-8 text-xs" placeholder="e.g. Evaluation of new murmur" value={form.indication} onChange={e => setForm(f => ({ ...f, indication: e.target.value }))} />
             </div>
             <div>
@@ -1461,7 +1461,7 @@ export default function AccreditationTool() {
 
           {activeTab === "iqr" && (
             <div className="[&_aside]:hidden [&_.min-h-screen]:min-h-0 [&_.flex.min-h-screen]:block">
-              <ImageQualityReviewTab />
+              <ImageQualityReviewTab embedded />
             </div>
           )}
           {activeTab === "echo-correlation" && <EchoCorrelationTab />}

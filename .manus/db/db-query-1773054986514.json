@@ -1,0 +1,15 @@
+{
+  "query": "SELECT id, type, question FROM quickfireQuestions WHERE question LIKE '%LARDS%' OR explanation LIKE '%LARDS%' OR reviewAnswer LIKE '%LARDS%' LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mhhtxpXA9Esras.root --database etVPnUidWNWG8W4GHnRqzv --execute SELECT id, type, question FROM quickfireQuestions WHERE question LIKE '%LARDS%' OR explanation LIKE '%LARDS%' OR reviewAnswer LIKE '%LARDS%' LIMIT 20;",
+  "rows": [
+    {
+      "id": "7",
+      "type": "quickReview",
+      "question": "What is the normal left atrial reservoir strain value?"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttype\tquestion\n7\tquickReview\tWhat is the normal left atrial reservoir strain value?\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

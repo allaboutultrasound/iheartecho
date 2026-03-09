@@ -178,7 +178,7 @@ const CATEGORY_CONFIG: Record<Category, { label: string; color: string; icon: Re
   facility: { label: "Facility", color: "#0e7a80", icon: Stethoscope },
   equipment: { label: "Equipment", color: "#2ab8bf", icon: Activity },
   procedures: { label: "Procedures & Protocols", color: "#189aa1", icon: ClipboardListIcon },
-  case_mix: { label: "Case Mix", color: "#0e6b70", icon: FileText },
+  case_mix: { label: "Case Studies", color: "#0e6b70", icon: FileText },
   cme: { label: "CME / Education", color: "#4ad9e0", icon: GraduationCap },
   quality: { label: "Quality Assurance", color: "#0e4a50", icon: Award },
   policies: { label: "Policies", color: "#3ab5bc", icon: FileText },
@@ -535,7 +535,7 @@ function CaseMixRequirementsView() {
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <div className="flex-1">
           <h2 className="text-lg font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-            IAC Case Mix Requirements
+            IAC Case Studies Requirements
           </h2>
           <p className="text-xs text-gray-500 mt-0.5">IAC Echocardiography Accreditation — Updated 6-8-2023</p>
         </div>

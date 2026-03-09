@@ -1,0 +1,1 @@
+ALTER TABLE `quickfireQuestions` ADD `echoCategory` enum('adult','pediatric_congenital','fetal') DEFAULT 'adult';

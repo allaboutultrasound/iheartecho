@@ -39,6 +39,29 @@
 - [x] Hub card — Added to Home dashboard module grid
 - [x] Hub vitest — 16 moderation tests, all passing
 
+## DIY Accreditation Tab Access Control
+- [ ] Remove premium gate for DIY users (DIY access should not require premium)
+- [ ] Hide Case Mix, Policy Builder, Reports & Analytics, Readiness tabs from regular users (admin-only)
+- [ ] Rename "Case Mix" label to "Case Studies" on DIY Accreditation page
+- [ ] Remove Case Mix section from the Readiness Assessment tab
+- [ ] Remove HOCM and POCUS from exam type list in Appropriate Use review form
+- [ ] Split IQR section in Reports & Analytics into Quality Review and Peer Review sub-sections based on reviewType field
+- [ ] Remove "Header Info" and "Review Header" section labels from IQR form
+- [ ] Remove all tags from flashcards (overwhelming)
+- [ ] Fix flashcard layout — cards are halfway down the page, should appear near the top
+- [ ] Hide flashcard count from UI (don't show how many are available)
+- [ ] Move scoring/tracking display below the flashcard (currently overlapping the card)
+- [ ] Fix typo: "LARDS" should be "LARS" (somewhere in the app)
+- [ ] Add flashcard sorting/filtering by category: Adult Echo, Pediatric/Congenital Echo, Fetal Echo
+- [x] Generate EchoAssist hero banner background image and upload to CDN (All Files)
+- [ ] Add Flashcard Manager to admin area (create/edit/delete flashcards, assign categories)
+- [ ] Add search field in admin: Cases, Daily Challenges, and Flashcards
+- [ ] Add AI Generate option for flashcards in admin (generate by topic, produces quickReview type cards)
+- [ ] Allow AI Generator to create multiple cases, challenges, and/or flashcards at one time based on topic (bulk generation)
+- [ ] Rename "Flashcard Deck" to "Echo Flashcards" throughout the app
+- [ ] Separate Flashcards from Daily Challenge (own route, own nav entry, own admin section)
+- [ ] Add echoCategory field to quickfireQuestions schema (Adult Echo, Pediatric/Congenital Echo, Fetal Echo)
+
 ## Physician Peer Review Analytics Fix
 - [x] Fix: physician comparison reviews (over-read workflow) not appearing in DIY Reports analytics
 - [x] Add getComparisonReviewsMonthlySummary DB function querying physicianComparisonReviews table

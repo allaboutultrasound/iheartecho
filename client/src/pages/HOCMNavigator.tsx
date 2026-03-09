@@ -386,7 +386,7 @@ const reportingItems = [
       "Mitral inflow: E __ cm/s, A __ cm/s, E/A __, DT __ ms",
       "Tissue Doppler: septal e' __ cm/s, lateral e' __ cm/s, E/e' avg __",
       "LA volume index: __ mL/m²",
-      "Diastolic function grade: normal / impaired relaxation / pseudonormal / restrictive",
+      "Diastolic function grade: normal / Grade I / Grade II / Grade III (restrictive)",
     ],
   },
   {

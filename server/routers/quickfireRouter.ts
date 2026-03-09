@@ -406,6 +406,7 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
         videoUrl: z.string().url().optional(),
         difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("intermediate"),
         tags: z.array(z.string()).default([]),
+        echoCategory: z.enum(["adult", "pediatric_congenital", "fetal"]).default("adult"),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -422,6 +423,7 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
         videoUrl: input.videoUrl ?? null,
         difficulty: input.difficulty,
         tags: JSON.stringify(input.tags),
+        echoCategory: input.echoCategory,
         isActive: true,
         createdByUserId: ctx.user.id,
       });
@@ -443,6 +445,7 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
         difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
         tags: z.array(z.string()).optional(),
         isActive: z.boolean().optional(),
+        echoCategory: z.enum(["adult", "pediatric_congenital", "fetal"]).optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -479,6 +482,8 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
         limit: z.number().int().min(1).max(100).default(20),
         type: z.enum(["scenario", "image", "quickReview"]).optional(),
         includeInactive: z.boolean().default(false),
+        search: z.string().max(200).optional(),
+        echoCategory: z.enum(["adult", "pediatric_congenital", "fetal"]).optional(),
       })
     )
     .query(async ({ input }) => {
@@ -486,12 +491,19 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
       const offset = (input.page - 1) * input.limit;
 
-      const conditions = [];
+      const conditions: any[] = [];
       if (!input.includeInactive) {
         conditions.push(eq(quickfireQuestions.isActive, true));
       }
       if (input.type) {
         conditions.push(eq(quickfireQuestions.type, input.type));
+      }
+      if (input.echoCategory) {
+        conditions.push(eq(quickfireQuestions.echoCategory, input.echoCategory));
+      }
+      if (input.search) {
+        const term = `%${input.search}%`;
+        conditions.push(sql`(${quickfireQuestions.question} LIKE ${term} OR ${quickfireQuestions.reviewAnswer} LIKE ${term} OR ${quickfireQuestions.explanation} LIKE ${term})`);
       }
 
       const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
@@ -1105,25 +1117,32 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
   getFlashcardDeck: publicProcedure
     .input(z.object({
       topic: z.string().optional(),
+      echoCategory: z.enum(["adult", "pediatric_congenital", "fetal"]).optional(),
       limit: z.number().int().min(1).max(200).default(50),
     }))
     .query(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
 
+      // Build conditions
+      const conditions: any[] = [
+        eq(quickfireQuestions.isActive, true),
+        eq(quickfireQuestions.type, "quickReview"),
+      ];
+      if (input.echoCategory) {
+        conditions.push(eq(quickfireQuestions.echoCategory, input.echoCategory));
+      }
+
       // Fetch all active flashcard questions
       const allCards = await db
         .select()
         .from(quickfireQuestions)
-        .where(and(
-          eq(quickfireQuestions.isActive, true),
-          eq(quickfireQuestions.type, "quickReview"),
-        ))
+        .where(and(...conditions))
         .limit(input.limit);
 
       if (allCards.length === 0) return { cards: [], totalCards: 0, userStats: null };
 
-      // Filter by topic if provided
+      // Filter by topic if provided (legacy support)
       const filtered = input.topic
         ? allCards.filter((c) => {
             const tags: string[] = c.tags ? JSON.parse(c.tags) : [];

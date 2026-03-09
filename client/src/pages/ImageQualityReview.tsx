@@ -39,7 +39,7 @@ const TEAL = "#189aa1";
 
 // ─── Step definitions ─────────────────────────────────────────────────────────
 const STEPS = [
-  { id: 1, label: "Header Info",        shortLabel: "Header",    icon: FileText },
+  { id: 1, label: "Review Info",        shortLabel: "Review",    icon: FileText },
   { id: 2, label: "Exam Info",          shortLabel: "Exam",      icon: ClipboardList },
   { id: 3, label: "Required Views",     shortLabel: "Views",     icon: Eye },
   { id: 4, label: "Image Quality",      shortLabel: "Image",     icon: Eye },
@@ -357,8 +357,7 @@ export default function ImageQualityReview({ embedded = false }: { embedded?: bo
   function renderStep1() {
     return (
       <>
-        <FormSection title="Review Header">
-          <FormField label="Review Type" required>
+        <FormField label="Review Type" required>
             <RadioGroup name="reviewType" options={["QUALITY REVIEW", "PEER REVIEW"]}
               value={form.reviewType} onChange={v => set("reviewType", v)} cols={2} />
           </FormField>
@@ -379,8 +378,7 @@ export default function ImageQualityReview({ embedded = false }: { embedded?: bo
           <FormField label="Facility Location">
             <TextInput value={form.facilityLocation} onChange={v => set("facilityLocation", v)}
               placeholder="e.g. Main Hospital, Outpatient Center" />
-          </FormField>
-        </FormSection>
+        </FormField>
 
         <FormSection title="Staff">
           {staffLoading && (

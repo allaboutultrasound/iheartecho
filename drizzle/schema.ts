@@ -780,6 +780,8 @@ export const quickfireQuestions = mysqlTable("quickfireQuestions", {
   difficulty: mysqlEnum("difficulty", ["beginner", "intermediate", "advanced"]).default("intermediate").notNull(),
   // JSON: string[] — topic tags (e.g. ["AS", "LV function", "TEE"])
   tags: text("tags"),
+  // Echo specialty category for flashcard filtering
+  echoCategory: mysqlEnum("echoCategory", ["adult", "pediatric_congenital", "fetal"]).default("adult"),
   // Whether this question is active and eligible for daily sets
   isActive: boolean("isActive").default(true).notNull(),
   createdByUserId: int("createdByUserId"),

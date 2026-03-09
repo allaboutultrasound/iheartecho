@@ -1052,11 +1052,17 @@ export async function getIqrStaffTrend(labId: number, revieweeLabMemberId: numbe
  * Monthly lab-wide IQR summary: avg score, review count, tier breakdown.
  * Used for the Reports tab monthly chart.
  */
-export async function getIqrLabMonthlySummary(labId: number, months = 12) {
+export async function getIqrLabMonthlySummary(labId: number, months = 12, reviewType?: string) {
   const db = await getDb();
   if (!db) return [];
   const cutoff = new Date();
   cutoff.setMonth(cutoff.getMonth() - months);
+  const conditions = [
+    eq(imageQualityReviews.labId, labId),
+    sql`${imageQualityReviews.qualityScore} IS NOT NULL`,
+    gte(imageQualityReviews.createdAt, cutoff),
+    ...(reviewType ? [eq(imageQualityReviews.reviewType, reviewType)] : []),
+  ];
   const rows = await db.select({
     reviewMonth: sql<string>`DATE_FORMAT(${imageQualityReviews.createdAt}, '%Y-%m')`,
     avgScore: avg(imageQualityReviews.qualityScore),
@@ -1067,13 +1073,7 @@ export async function getIqrLabMonthlySummary(labId: number, months = 12) {
     needsImprovementCount: sql<number>`SUM(CASE WHEN ${imageQualityReviews.qualityScore} < 60 THEN 1 ELSE 0 END)`,
   })
     .from(imageQualityReviews)
-    .where(
-      and(
-        eq(imageQualityReviews.labId, labId),
-        sql`${imageQualityReviews.qualityScore} IS NOT NULL`,
-        gte(imageQualityReviews.createdAt, cutoff),
-      )
-    )
+    .where(and(...conditions))
     .groupBy(sql`DATE_FORMAT(${imageQualityReviews.createdAt}, '%Y-%m')`)
     .orderBy(sql`DATE_FORMAT(${imageQualityReviews.createdAt}, '%Y-%m')`);
   return rows;

@@ -68,7 +68,7 @@ const navGroups = [
     label: "Learning",
     items: [
       { path: "/quickfire", label: "Daily Challenge", icon: Zap },
-      { path: "/flashcards", label: "Flashcard Deck", icon: Layers },
+      { path: "/flashcards", label: "Echo Flashcards", icon: Layers },
       { path: "/case-library", label: "Echo Case Library", icon: Library },
       { path: "/cme", label: "CME Hub", icon: GraduationCap },
       { path: "/registry-review", label: "Registry Review", icon: BookMarked },

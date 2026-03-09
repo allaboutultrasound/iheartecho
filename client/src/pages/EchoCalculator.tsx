@@ -760,7 +760,7 @@ function DiastologyCalculator() {
         ddPresent = true;
         grade = "Diastolic Dysfunction — Grade I";
         gradeColor = "#d97706";
-        gradeNote = "Reduced e' + no Step 2 markers elevated → Grade I impaired relaxation, normal filling pressures.";
+        gradeNote = "Reduced e' + no Step 2 markers elevated → Grade I, normal filling pressures.";
       }
     } else {
       // e' preserved
@@ -1332,7 +1332,7 @@ function LAPEstimationCalculator() {
         result.lapStatus = "normal";
         result.grade = "Normal LAP — Grade I Diastolic Dysfunction";
         result.gradeColor = "#d97706";
-        result.gradeNote = "Reduced e\' only + E/A ≤0.8 → Grade I impaired relaxation, normal filling pressures. If symptomatic, consider diastolic exercise echo.";
+        result.gradeNote = "Reduced e\' only + E/A ≤0.8 → Grade I, normal filling pressures. If symptomatic, consider diastolic exercise echo.";
       } else {
         result.needsStep2 = true;
         result.step2Triggered = true;
@@ -1538,7 +1538,7 @@ function LAPEstimationCalculator() {
               eaRatio >= 2 ? "bg-red-100 text-red-700" :
               "bg-green-100 text-green-700"
             }`}>
-              {eaRatio.toFixed(2)} {eaRatio <= 0.8 ? "↓ ≤0.8 (impaired relaxation)" : eaRatio >= 2 ? "↑ ≥2 (restrictive)" : "✓ Normal (0.8–2)"}
+              {eaRatio.toFixed(2)} {eaRatio <= 0.8 ? "↓ ≤0.8 (Grade I pattern)" : eaRatio >= 2 ? "↑ ≥2 (restrictive)" : "✓ Normal (0.8–2)"}
             </span>
           </div>
         )}

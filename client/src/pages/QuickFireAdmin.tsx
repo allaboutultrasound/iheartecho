@@ -113,6 +113,17 @@ export default function QuickFireAdmin() {
   const [page, setPage] = useState(1);
   const [typeFilter, setTypeFilter] = useState<QuestionType | "all">("all");
   const [includeInactive, setIncludeInactive] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [challengeSearch, setChallengeSearch] = useState("");
+  const [flashcardSearch, setFlashcardSearch] = useState("");
+  const [flashcardEchoCategory, setFlashcardEchoCategory] = useState<"all" | "adult" | "pediatric_congenital" | "fetal">("all");
+  const [flashcardAiOpen, setFlashcardAiOpen] = useState(false);
+  const [flashcardAiTopic, setFlashcardAiTopic] = useState("");
+  const [flashcardAiDifficulty, setFlashcardAiDifficulty] = useState<Difficulty>("intermediate");
+  const [flashcardAiCount, setFlashcardAiCount] = useState(5);
+  const [flashcardAiPreview, setFlashcardAiPreview] = useState<any[]>([]);
+  const [flashcardAiSelected, setFlashcardAiSelected] = useState<Set<number>>(new Set());
+  const [flashcardAiImporting, setFlashcardAiImporting] = useState(false);
 
   // Form state
   const [formOpen, setFormOpen] = useState(false);
@@ -407,6 +418,16 @@ export default function QuickFireAdmin() {
     limit: 20,
     type: typeFilter === "all" ? undefined : typeFilter,
     includeInactive,
+    search: searchQuery.trim() || undefined,
+  });
+
+  const flashcardListQuery = trpc.quickfire.listAllQuestions.useQuery({
+    page: 1,
+    limit: 100,
+    type: "quickReview",
+    includeInactive: false,
+    search: flashcardSearch.trim() || undefined,
+    echoCategory: flashcardEchoCategory === "all" ? undefined : flashcardEchoCategory,
   });
 
   const createMutation = trpc.quickfire.createQuestion.useMutation({
@@ -440,9 +461,14 @@ export default function QuickFireAdmin() {
 
   const aiGenerateMutation = trpc.quickfire.aiGenerateQuestions.useMutation({
     onSuccess: (data: any) => {
-      setAiPreview(data.questions);
-      setAiSelected(new Set(data.questions.map((_: any, i: number) => i)));
-      toast.success(`Generated ${data.questions.length} questions — review and import below.`);
+      if (flashcardAiOpen) {
+        setFlashcardAiPreview(data.questions);
+        setFlashcardAiSelected(new Set(data.questions.map((_: any, i: number) => i)));
+      } else {
+        setAiPreview(data.questions);
+        setAiSelected(new Set(data.questions.map((_: any, i: number) => i)));
+      }
+      toast.success(`Generated ${data.questions.length} ${flashcardAiOpen ? "flashcard" : "question"}${data.questions.length !== 1 ? "s" : ""} — review and import below.`);
     },
     onError: (err: any) => toast.error(err.message || "AI generation failed."),
   });
@@ -674,11 +700,17 @@ export default function QuickFireAdmin() {
         {activeAdminTab === "challenges" && (
           <div className="space-y-4">
             {/* Queue header */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-2">
               <div>
                 <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Challenge Queue</h2>
                 <p className="text-xs text-gray-400 mt-0.5">Build challenges from your question bank and schedule them for daily auto-publish.</p>
               </div>
+              <Input
+                value={challengeSearch}
+                onChange={(e) => setChallengeSearch(e.target.value)}
+                placeholder="Search challenges…"
+                className="w-52"
+              />
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
@@ -720,7 +752,7 @@ export default function QuickFireAdmin() {
               </div>
             ) : (
               <div className="space-y-2">
-                {challenges.map((c: any, idx: number) => {
+                {challenges.filter((c: any) => !challengeSearch.trim() || c.title?.toLowerCase().includes(challengeSearch.toLowerCase()) || c.description?.toLowerCase().includes(challengeSearch.toLowerCase())).map((c: any, idx: number) => {
                   const isLive = c.status === "live";
                   const isScheduled = c.status === "scheduled";
                   const isDraft = c.status === "draft";
@@ -828,9 +860,15 @@ export default function QuickFireAdmin() {
         </div>
 
         {/* Filters */}
-        <div className="flex gap-2 mb-4">
+        <div className="flex gap-2 mb-4 flex-wrap">
+          <Input
+            value={searchQuery}
+            onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
+            placeholder="Search questions…"
+            className="w-56"
+          />
           <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v as any); setPage(1); }}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-44">
               <SelectValue placeholder="All Types" />
             </SelectTrigger>
             <SelectContent>
@@ -1018,30 +1056,65 @@ export default function QuickFireAdmin() {
         {/* ── FLASHCARD MANAGEMENT TAB ──────────────────────────────────────── */}
         {activeAdminTab === "flashcards" && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-2">
               <div>
-                <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Flashcard Management</h2>
-                <p className="text-xs text-gray-400 mt-0.5">Create and manage Quick Review flashcards. Supports images and video.</p>
+                <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Echo Flashcard Manager</h2>
+                <p className="text-xs text-gray-400 mt-0.5">Create and manage Echo Flashcards by category. Supports AI generation.</p>
               </div>
-              <Button
-                size="sm"
-                className="gap-1.5 bg-[#189aa1] hover:bg-[#0e7a80] text-white"
-                onClick={() => {
-                  setFlashcardForm({ ...EMPTY_FORM, type: "quickReview" });
-                  setEditingFlashcardId(null);
-                  setFlashcardFormOpen(true);
-                }}
-              >
-                <Plus className="w-4 h-4" /> New Flashcard
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 border-purple-400 text-purple-600"
+                  onClick={() => { setFlashcardAiPreview([]); setFlashcardAiTopic(""); setFlashcardAiOpen(true); }}
+                >
+                  <Sparkles className="w-4 h-4" /> AI Generate
+                </Button>
+                <Button
+                  size="sm"
+                  className="gap-1.5 bg-[#189aa1] hover:bg-[#0e7a80] text-white"
+                  onClick={() => {
+                    setFlashcardForm({ ...EMPTY_FORM, type: "quickReview" });
+                    setEditingFlashcardId(null);
+                    setFlashcardFormOpen(true);
+                  }}
+                >
+                  <Plus className="w-4 h-4" /> New Flashcard
+                </Button>
+              </div>
             </div>
 
-            {/* Flashcard list — reuse the questions query filtered to quickReview type */}
-            {listQuery.isLoading ? (
+            {/* Search + Category filter */}
+            <div className="flex gap-2 flex-wrap">
+              <Input
+                value={flashcardSearch}
+                onChange={(e) => setFlashcardSearch(e.target.value)}
+                placeholder="Search flashcards…"
+                className="w-56"
+              />
+              <div className="flex gap-1 flex-wrap">
+                {(["all", "adult", "pediatric", "fetal"] as const).map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setFlashcardEchoCategory(cat)}
+                    className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-all ${
+                      flashcardEchoCategory === cat
+                        ? "border-[#189aa1] bg-[#189aa1] text-white"
+                        : "border-gray-200 bg-gray-50 text-gray-600 hover:border-[#189aa1] hover:text-[#189aa1]"
+                    }`}
+                  >
+                    {cat === "all" ? "All" : cat === "adult" ? "Adult Echo" : cat === "pediatric" ? "Pediatric/Congenital" : "Fetal Echo"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Flashcard list */}
+            {flashcardListQuery.isLoading ? (
               <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-[#189aa1]" /></div>
             ) : (
               <div className="space-y-3">
-                {(listQuery.data?.questions ?? []).filter((q: { type: string; id: number; question: string | null; reviewAnswer: string | null; explanation: string | null; imageUrl: string | null; difficulty: string | null; tags: string | null; isActive: boolean }) => q.type === "quickReview").map((q: { type: string; id: number; question: string | null; reviewAnswer: string | null; explanation: string | null; imageUrl: string | null; difficulty: string | null; tags: string | null; isActive: boolean }) => (
+                {(flashcardListQuery.data?.questions ?? []).map((q: any) => (
                   <div key={q.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
@@ -1099,10 +1172,10 @@ export default function QuickFireAdmin() {
                     </div>
                   </div>
                 ))}
-                {(listQuery.data?.questions ?? []).filter((q: { type: string }) => q.type === "quickReview").length === 0 && (
+                {(flashcardListQuery.data?.questions ?? []).length === 0 && (
                   <div className="text-center py-12 text-gray-400">
                     <FileText className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                    <p className="text-sm">No flashcards yet. Create your first one above.</p>
+                    <p className="text-sm">No flashcards found. Create your first one or use AI Generate.</p>
                   </div>
                 )}
               </div>
@@ -1670,6 +1743,162 @@ export default function QuickFireAdmin() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => { setAiOpen(false); setAiPreview([]); setAiTopic(""); }}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Flashcard AI Generator Dialog ─────────────────────────────────── */}
+      <Dialog open={flashcardAiOpen} onOpenChange={(o) => { setFlashcardAiOpen(o); if (!o) { setFlashcardAiPreview([]); setFlashcardAiTopic(""); } }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-purple-500" /> AI Flashcard Generator
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-gray-500">
+              Describe a clinical topic and the AI will generate ready-to-use Echo Flashcards with concise answers and explanations.
+            </p>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Clinical Topic <span className="text-red-500">*</span></label>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {[
+                    { label: "Adult Echo", topic: "Adult transthoracic echocardiography — valvular disease, LV/RV function, Doppler assessment" },
+                    { label: "Diastolic Function", topic: "Diastolic function assessment — grading diastolic dysfunction, E/A ratio, E/e\u2019, LAVI, TR velocity, ASE 2025 guidelines" },
+                    { label: "Aortic Stenosis", topic: "Aortic stenosis severity grading — AVA, mean gradient, peak velocity, low-flow low-gradient AS, dobutamine stress echo" },
+                    { label: "Mitral Valve", topic: "Mitral valve disease — MR severity, MS area, MVA by PHT and planimetry, mitral valve anatomy" },
+                    { label: "HOCM", topic: "Hypertrophic obstructive cardiomyopathy (HOCM) — LVOT obstruction, SAM, Doppler gradients, septal morphology" },
+                    { label: "Strain / GLS", topic: "Myocardial strain imaging and global longitudinal strain (GLS) — LV GLS, RV strain, clinical applications" },
+                    { label: "Pediatric Echo", topic: "Pediatric echocardiography — congenital heart disease, Z-scores, shunt assessment, CHD lesions" },
+                    { label: "Fetal Echo", topic: "Fetal echocardiography — fetal cardiac anatomy, CHD screening, biometry, situs, arch patterns" },
+                    { label: "Pulmonary HTN", topic: "Pulmonary hypertension — RVSP estimation, TR velocity, RV remodeling, PA pressures" },
+                    { label: "Pericardial Disease", topic: "Pericardial disease — tamponade, constrictive pericarditis, pericardial effusion, respiratory variation" },
+                  ].map(({ label, topic }) => (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() => setFlashcardAiTopic(topic)}
+                      className={`text-xs px-2.5 py-1 rounded-full border font-medium transition-all ${
+                        flashcardAiTopic === topic
+                          ? "border-[#189aa1] bg-[#189aa1] text-white"
+                          : "border-gray-200 bg-gray-50 text-gray-600 hover:border-[#189aa1] hover:text-[#189aa1]"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <Input
+                  value={flashcardAiTopic}
+                  onChange={(e) => setFlashcardAiTopic(e.target.value)}
+                  placeholder="e.g. Aortic stenosis severity grading, diastolic dysfunction, TAPSE and RV function..."
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Difficulty</label>
+                  <Select value={flashcardAiDifficulty} onValueChange={(v) => setFlashcardAiDifficulty(v as Difficulty)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="beginner">Beginner</SelectItem>
+                      <SelectItem value="intermediate">Intermediate</SelectItem>
+                      <SelectItem value="advanced">Advanced</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Count (1–20)</label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={20}
+                    value={flashcardAiCount}
+                    onChange={(e) => setFlashcardAiCount(Math.min(20, Math.max(1, parseInt(e.target.value) || 1)))}
+                  />
+                </div>
+              </div>
+            </div>
+            <Button
+              className="w-full gap-2 text-white"
+              style={{ background: "#7c3aed" }}
+              onClick={() => aiGenerateMutation.mutate({ topic: flashcardAiTopic, type: "quickReview", difficulty: flashcardAiDifficulty, count: flashcardAiCount, insertImmediately: false })}
+              disabled={!flashcardAiTopic.trim() || aiGenerateMutation.isPending}
+            >
+              {aiGenerateMutation.isPending
+                ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating\u2026</>
+                : <><Sparkles className="w-4 h-4" /> Generate {flashcardAiCount} Flashcard{flashcardAiCount !== 1 ? "s" : ""}</>}
+            </Button>
+            {flashcardAiPreview.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-gray-700">{flashcardAiPreview.length} flashcards — select which to import:</p>
+                  <div className="flex gap-2">
+                    <button className="text-xs text-[#189aa1] hover:underline" onClick={() => setFlashcardAiSelected(new Set(flashcardAiPreview.map((_: any, i: number) => i)))}>All</button>
+                    <button className="text-xs text-gray-400 hover:underline" onClick={() => setFlashcardAiSelected(new Set())}>None</button>
+                  </div>
+                </div>
+                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                  {flashcardAiPreview.map((q: any, i: number) => (
+                    <div
+                      key={i}
+                      className={`flex gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
+                        flashcardAiSelected.has(i) ? "border-purple-300 bg-purple-50" : "border-gray-100 bg-white opacity-60"
+                      }`}
+                      onClick={() => setFlashcardAiSelected((prev) => { const next = new Set(prev); if (next.has(i)) next.delete(i); else next.add(i); return next; })}
+                    >
+                      <div className="flex-shrink-0 mt-0.5">
+                        {flashcardAiSelected.has(i) ? <CheckSquare className="w-4 h-4 text-purple-500" /> : <Square className="w-4 h-4 text-gray-300" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-800 leading-snug">{q.question}</p>
+                        {q.reviewAnswer && <p className="text-xs text-green-700 font-semibold mt-1">Answer: {q.reviewAnswer}</p>}
+                        {q.explanation && <p className="text-xs text-gray-400 mt-1 italic">{q.explanation}</p>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  className="w-full gap-2 text-white"
+                  style={{ background: "#189aa1" }}
+                  disabled={flashcardAiSelected.size === 0 || flashcardAiImporting}
+                  onClick={async () => {
+                    const selectedQs = flashcardAiPreview.filter((_: any, i: number) => flashcardAiSelected.has(i));
+                    setFlashcardAiImporting(true);
+                    try {
+                      await Promise.all(
+                        selectedQs.map((q: any) =>
+                          createMutation.mutateAsync({
+                            type: "quickReview",
+                            question: q.question,
+                            reviewAnswer: q.reviewAnswer,
+                            explanation: q.explanation,
+                            difficulty: flashcardAiDifficulty,
+                            tags: q.tags ?? [],
+                          } as any)
+                        )
+                      );
+                      toast.success(`${selectedQs.length} flashcard${selectedQs.length !== 1 ? "s" : ""} imported.`);
+                      flashcardListQuery.refetch();
+                      setFlashcardAiOpen(false);
+                      setFlashcardAiPreview([]);
+                      setFlashcardAiTopic("");
+                    } catch (err: any) {
+                      toast.error(err.message || "Import failed.");
+                    } finally {
+                      setFlashcardAiImporting(false);
+                    }
+                  }}
+                >
+                  {flashcardAiImporting
+                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Importing\u2026</>
+                    : <><CheckCircle2 className="w-4 h-4" /> Import {flashcardAiSelected.size} Flashcard{flashcardAiSelected.size !== 1 ? "s" : ""}</>}
+                </Button>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setFlashcardAiOpen(false); setFlashcardAiPreview([]); setFlashcardAiTopic(""); }}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

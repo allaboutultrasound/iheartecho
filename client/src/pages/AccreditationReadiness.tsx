@@ -1,10 +1,7 @@
-/**
+/*
  * Accreditation Readiness Tool
  * Full IAC Echocardiography Accreditation Checklist (2023) with per-section progress markers.
  * Data is persisted per lab via tRPC.
- *
- * NOTE: Case Mix Requirements items are clickable/trackable but do NOT count toward
- * overall readiness progress — they are tracked separately as "acknowledged" items.
  */
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
@@ -255,33 +252,6 @@ const IAC_CHECKLIST: ChecklistStep[] = [
       },
     ],
   },
-  // ─── Case Mix Requirements — standalone category, items do NOT count toward readiness % ───
-  {
-    id: "step6",
-    step: 5,
-    title: "Case Mix Requirements",
-    description: "Minimum case volumes per modality must be documented before application. These items are tracked separately and do not affect your overall readiness score.",
-    caseMixStep: true,
-    sections: [
-      {
-        id: "s6-casemix",
-        title: "Case Volume Documentation",
-        subtitle: "Check off each modality once minimum required cases are documented. These are tracked for awareness only.",
-        items: [
-          { id: "s6-cm-1", text: "ATTE: Minimum required cases documented (per IAC volume requirements)", caseMixItem: true, note: "IAC requires a representative case mix including LV RWMA and Aortic Stenosis" },
-          { id: "s6-cm-2", text: "ATEE: Minimum required TEE cases documented (if applying)", caseMixItem: true },
-          { id: "s6-cm-3", text: "STRESS: Minimum required stress echo cases documented (if applying)", caseMixItem: true },
-          { id: "s6-cm-4", text: "ACTE: Minimum required adult congenital cases documented (if applying)", caseMixItem: true },
-          { id: "s6-cm-5", text: "PTTE: Minimum required pediatric TTE cases documented (if applying)", caseMixItem: true },
-          { id: "s6-cm-6", text: "PTEE: Minimum required pediatric TEE cases documented (if applying)", caseMixItem: true },
-          { id: "s6-cm-7", text: "FETAL: Minimum required fetal echo cases documented (if applying)", caseMixItem: true },
-          { id: "s6-cm-8", text: "Case mix reflects variety of pathology and clinical indications", caseMixItem: true },
-          { id: "s6-cm-9", text: "Technical Director cases included in case mix (required by IAC)", caseMixItem: true },
-          { id: "s6-cm-10", text: "Medical Director cases included in case mix (required by IAC)", caseMixItem: true },
-        ],
-      },
-    ],
-  },
 ];
 
 // ─── Shared checklist data export for free-tier Navigator use ─────────────────
@@ -361,18 +331,13 @@ export default function AccreditationReadiness({ trpcNamespace = "accreditationR
     return merged;
   }, [checklistProgress, autoChecks]);
 
-  // ── Progress calculations — exclude caseMixStep/caseMixItem from readiness % ──
-  const readinessSteps = IAC_CHECKLIST.filter(s => !s.caseMixStep);
-  const allReadinessItems = readinessSteps.flatMap(s => s.sections.flatMap(sec => sec.items));
+  // ── Progress calculations ──
+  const allReadinessItems = IAC_CHECKLIST.flatMap(s => s.sections.flatMap(sec => sec.items));
   const requiredItems = allReadinessItems.filter(i => i.required !== false);
   const checkedTotal = allReadinessItems.filter(i => effectiveProgress[i.id]).length;
   const checkedRequired = requiredItems.filter(i => effectiveProgress[i.id]).length;
   const overallPct = allReadinessItems.length > 0 ? Math.round((checkedTotal / allReadinessItems.length) * 100) : 0;
   const requiredPct = requiredItems.length > 0 ? Math.round((checkedRequired / requiredItems.length) * 100) : 0;
-
-  // Case mix acknowledged count (separate from readiness %)
-  const caseMixItems = IAC_CHECKLIST.filter(s => s.caseMixStep).flatMap(s => s.sections.flatMap(sec => sec.items));
-  const caseMixAcknowledged = caseMixItems.filter(i => effectiveProgress[i.id]).length;
 
   const handleCheck = useCallback((itemId: string, checked: boolean) => {
     // If auto-checked, don't allow unchecking — the data needs to be removed from the source
@@ -455,7 +420,7 @@ export default function AccreditationReadiness({ trpcNamespace = "accreditationR
       {/* Overall Progress Card */}
       <Card className="border border-[#189aa1]/20 bg-gradient-to-r from-[#f0fbfc] to-white">
         <CardContent className="pt-5 pb-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
               <div className="flex items-center gap-2 mb-2">
                 {status.icon}
@@ -469,14 +434,6 @@ export default function AccreditationReadiness({ trpcNamespace = "accreditationR
               <div className="text-2xl font-bold text-gray-800">{checkedRequired}<span className="text-base font-normal text-gray-400">/{requiredItems.length}</span></div>
               <Progress value={requiredPct} className="mt-2 h-2" />
               <div className="text-xs text-gray-500 mt-1">{requiredPct}% of required items complete</div>
-            </div>
-            <div>
-              <div className="text-sm font-semibold text-gray-700 mb-2">Case Mix Acknowledged</div>
-              <div className="text-2xl font-bold text-gray-800">{caseMixAcknowledged}<span className="text-base font-normal text-gray-400">/{caseMixItems.length}</span></div>
-              <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-                <ClipboardCheck className="w-3 h-3" />
-                Tracked separately — not included in readiness %
-              </div>
             </div>
           </div>
         </CardContent>

@@ -822,8 +822,8 @@ function DiastolicEngine() {
     if (has(lavi)) criteria.push(`LAVI = ${lavi} mL/m²${laviAbnGrade ? " → Dilated (>34)" : " → Normal (≤34)"}`);
     if (has(pvSD)) criteria.push(`PV S/D = ${pvSD}${pvSDAbn ? " → Abnormal (≤0.67)" : " → Normal (>0.67)"}`);
     if (has(ivrt)) criteria.push(`IVRT = ${ivrt} ms${ivrtAbn ? " → Short (≤70 ms, elevated LAP)" : " → Normal (>70 ms)"}`);
-    if (eaRatio !== null) criteria.push(`E/A = ${eaRatio.toFixed(2)}${eaRatio < 0.8 ? " → Impaired relaxation" : eaRatio >= 2 ? " → Restrictive" : " → Normal/pseudonormal"}`);
-    if (has(ddt)) criteria.push(`E DT = ${ddt} ms${n(ddt) < 160 ? " → Short (restrictive)" : n(ddt) > 240 ? " → Prolonged (impaired relaxation)" : " → Normal"}`);
+    if (eaRatio !== null) criteria.push(`E/A = ${eaRatio.toFixed(2)}${eaRatio < 0.8 ? " → ≤0.8 (Grade I pattern)" : eaRatio >= 2 ? " → ≥2 (restrictive)" : " → Normal (0.8–2)"}`);
+    if (has(ddt)) criteria.push(`E DT = ${ddt} ms${n(ddt) < 160 ? " → Short (restrictive)" : n(ddt) > 240 ? " → Prolonged (Grade I pattern)" : " → Normal"}`);
 
     if (!ePrimeEntered && !has(trVmax) && !eeRatio && !has(lavi)) {
       return { sev: "indeterminate", label: "Insufficient data", lap: "—", criteria: ["Enter e' (septal/lateral), E velocity, TR Vmax, and LAVI to apply ASE 2025 algorithms"] };
@@ -842,7 +842,7 @@ function DiastolicEngine() {
     // Only e' reduced (Variable 1 only)
     if (ePrimeEntered && ePrimeReduced && !eeElevated && !trAbn) {
       if (eaRatio !== null && eaRatio <= 0.8) {
-        return { sev: "mild", label: "Grade I Diastolic Dysfunction", lap: "Normal LAP", criteria, note: "Reduced e' with E/A ≤0.8 and no other elevated filling pressure markers = Grade I (impaired relaxation, normal LVEDP).", ddDetected: true };
+        return { sev: "mild", label: "Grade I Diastolic Dysfunction", lap: "Normal LAP", criteria, note: "Reduced e' with E/A ≤0.8 and no other elevated filling pressure markers = Grade I, normal LVEDP.", ddDetected: true };
       }
       if (eaRatio !== null && eaRatio > 0.8) {
         if (!secondaryEntered) {
@@ -855,7 +855,7 @@ function DiastolicEngine() {
         if (ea !== null && ea >= 2) {
           return { sev: "severe", label: "Grade III Diastolic Dysfunction", lap: "Increased LAP", criteria, note: `Reduced e', E/A ≥2, and ≥1 secondary LAP marker present (${secondaryPositive} of 4). Grade III — restrictive filling pattern with markedly elevated filling pressures.`, ddDetected: true };
         }
-        return { sev: "moderate", label: "Grade II Diastolic Dysfunction", lap: "Increased LAP", criteria, note: `Reduced e', E/A >0.8, and ≥1 secondary LAP marker present (${secondaryPositive} of 4). Grade II — pseudonormal pattern with elevated filling pressures.`, ddDetected: true };
+        return { sev: "moderate", label: "Grade II Diastolic Dysfunction", lap: "Increased LAP", criteria, note: `Reduced e', E/A >0.8, and ≥1 secondary LAP marker present (${secondaryPositive} of 4). Grade II — elevated filling pressures.`, ddDetected: true };
       }
     }
 
@@ -864,7 +864,7 @@ function DiastolicEngine() {
       if (eaRatio !== null && eaRatio >= 2) {
         return { sev: "severe", label: "Grade III Diastolic Dysfunction", lap: "Increased LAP", criteria, note: "All 3 grading variables abnormal with E/A ≥2 = Grade III (restrictive, markedly elevated LAP).", ddDetected: true };
       }
-      return { sev: "moderate", label: "Grade II Diastolic Dysfunction", lap: "Increased LAP", criteria, note: "All 3 grading variables abnormal with E/A <2 = Grade II (pseudonormal, elevated LAP).", ddDetected: true };
+      return { sev: "moderate", label: "Grade II Diastolic Dysfunction", lap: "Increased LAP", criteria, note: "All 3 grading variables abnormal with E/A <2 = Grade II, elevated LAP.", ddDetected: true };
     }
 
     // Increased TR/PASP only OR Increased E/e' only OR any 2 abnormal → secondary branch
@@ -883,7 +883,7 @@ function DiastolicEngine() {
       if (eaRatio !== null && eaRatio >= 2) {
         return { sev: "severe", label: "Grade III Diastolic Dysfunction", lap: "Increased LAP", criteria, note: `${gradingVarsAbn} grading variable(s) abnormal, ${secondaryPositive} secondary LAP marker(s) present, E/A ≥2 = Grade III (restrictive, markedly elevated LAP).`, ddDetected: true };
       }
-      return { sev: "moderate", label: "Grade II Diastolic Dysfunction", lap: "Increased LAP", criteria, note: `${gradingVarsAbn} grading variable(s) abnormal, ${secondaryPositive} secondary LAP marker(s) present, E/A <2 = Grade II (pseudonormal, elevated LAP).`, ddDetected: true };
+      return { sev: "moderate", label: "Grade II Diastolic Dysfunction", lap: "Increased LAP", criteria, note: `${gradingVarsAbn} grading variable(s) abnormal, ${secondaryPositive} secondary LAP marker(s) present, E/A <2 = Grade II, elevated LAP.`, ddDetected: true };
     }
 
     return { sev: "indeterminate", label: "Indeterminate — enter more parameters", lap: "—", criteria, ddDetected: null };
@@ -910,13 +910,13 @@ function DiastolicEngine() {
       tip: "EchoAssist™ Tip: Ensure e' velocities are sampled at the septal and lateral mitral annulus using TDI with a low wall filter and high gain. Angle of incidence should be <20° for accurate velocity measurement."
     };
     if (result.label.includes("Grade I")) return {
-      suggests: `EchoAssist™ Suggests: Grade I diastolic dysfunction (impaired relaxation pattern). e' is reduced indicating impaired LV relaxation.${eaRatio !== null ? " E/A " + eaRatio.toFixed(2) + "." : ""} LAP is estimated to be normal. LVEDP is not elevated at rest.`,
-      note: `EchoAssist™ Note: Grade I is common in aging and hypertension. It reflects impaired active LV relaxation with normal filling pressures. ${result.lap === "Normal LAP" && eaRatio !== null && eaRatio > 0.8 ? "If symptomatic with unexplained dyspnea, consider Diastolic Exercise Echo — a rise in E/e' >14 or TR >2.8 m/s with exercise confirms exercise-induced elevated filling pressures." : ""}`,
-      tip: "EchoAssist™ Tip: Valsalva maneuver may reveal a pseudonormal pattern converting to E/A <0.8, confirming Grade I rather than Grade II. Obtain PV S/D and LARS if not yet done."
+      suggests: `EchoAssist™ Suggests: Grade I diastolic dysfunction. e' is reduced.${eaRatio !== null ? " E/A " + eaRatio.toFixed(2) + "." : ""} LAP is estimated to be normal. LVEDP is not elevated at rest.`,
+      note: `EchoAssist™ Note: Grade I is common in aging and hypertension. Normal filling pressures at rest. ${result.lap === "Normal LAP" && eaRatio !== null && eaRatio > 0.8 ? "If symptomatic with unexplained dyspnea, consider Diastolic Exercise Echo — a rise in E/e' >14 or TR >2.8 m/s with exercise confirms exercise-induced elevated filling pressures." : ""}`,
+      tip: "EchoAssist™ Tip: Valsalva maneuver may show E/A reversal to <0.8, helping distinguish Grade I from Grade II. Obtain PV S/D and LARS if not yet done."
     };
     if (result.label.includes("Grade II")) return {
-      suggests: `EchoAssist™ Suggests: Grade II diastolic dysfunction (pseudonormal filling pattern). LAP is estimated to be elevated.${eeRatio ? " E/e' " + eeRatio.toFixed(1) + (eeElevated ? " (elevated ≥14)." : ".") : ""}${has(lars) ? " LARS " + lars + "%." : ""}${has(lavi) ? " LAVI " + lavi + " mL/m²." : ""} Mean LAP is elevated — consistent with HFpEF physiology.`,
-      note: "EchoAssist™ Note: Grade II is associated with increased risk of HF hospitalization and AF. Evaluate for underlying hypertension, diabetes, obesity, or HFpEF. Valsalva maneuver should show E/A reversal to <0.8 (pseudonormal pattern).",
+      suggests: `EchoAssist™ Suggests: Grade II diastolic dysfunction. LAP is estimated to be elevated.${eeRatio ? " E/e' " + eeRatio.toFixed(1) + (eeElevated ? " (elevated ≥14)." : ".") : ""}${has(lars) ? " LARS " + lars + "%." : ""}${has(lavi) ? " LAVI " + lavi + " mL/m²." : ""} Mean LAP is elevated — consistent with HFpEF physiology.`,
+      note: "EchoAssist™ Note: Grade II is associated with increased risk of HF hospitalization and AF. Evaluate for underlying hypertension, diabetes, obesity, or HFpEF. Valsalva maneuver may show E/A reversal to <0.8.",
       tip: "EchoAssist™ Tip: Confirm with PV S/D ≤0.67 (blunted systolic filling), LARS ≤18%, or IVRT ≤70 ms. These secondary markers strengthen the diagnosis of elevated LAP."
     };
     if (result.label.includes("Grade III")) return {
