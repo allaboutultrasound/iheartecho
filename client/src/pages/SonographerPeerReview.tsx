@@ -714,78 +714,105 @@ export default function SonographerPeerReview({ embedded }: { embedded?: boolean
       else set("protocolDopplerViewsObtained", [...PETTE_PETEE_DOPPLER_VIEWS]);
     };
 
+    // Protocol progress indicator
+    const totalViews = mainViews.length;
+    const checkedViews = form.protocolViewsObtained.filter(v => mainViews.includes(v)).length;
+    const totalDoppler = hasDopplerSection ? PETTE_PETEE_DOPPLER_VIEWS.length : 0;
+    const checkedDoppler = hasDopplerSection ? form.protocolDopplerViewsObtained.filter(v => PETTE_PETEE_DOPPLER_VIEWS.includes(v)).length : 0;
+    const totalAll = totalViews + totalDoppler;
+    const checkedAll = checkedViews + checkedDoppler;
+    const progressPct = totalAll > 0 ? Math.round((checkedAll / totalAll) * 100) : 0;
+    const progressColor = progressPct === 100 ? "#16a34a" : progressPct >= 50 ? "#d97706" : "#189aa1";
+
     return (
-      <SectionCard title={sectionTitle}>
-        <div className="flex justify-end mb-2">
-          <button
-            type="button"
-            onClick={handleSelectAllViews}
-            className="text-xs font-semibold px-2 py-0.5 rounded-md border transition-colors"
-            style={{ color: BRAND, borderColor: BRAND + "40", background: allMainSelected ? BRAND + "15" : "transparent" }}
+      <>
+        {/* Progress indicator */}
+        <div className="mb-3 flex items-center gap-3">
+          <div className="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{ width: `${progressPct}%`, background: progressColor }}
+            />
+          </div>
+          <span
+            className="text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0"
+            style={{ background: progressColor + "18", color: progressColor }}
           >
-            {allMainSelected ? "Deselect All" : "Select All"}
-          </button>
+            {checkedAll} / {totalAll} views
+          </span>
         </div>
-        <div className="space-y-2 mb-4">
-          {mainViews.map(view => (
-            <label key={view} className="flex items-start gap-2 cursor-pointer">
-              <Checkbox
-                checked={form.protocolViewsObtained.includes(view)}
-                onCheckedChange={() => toggleView(view)}
-                className="mt-0.5 data-[state=checked]:bg-[#189aa1] data-[state=checked]:border-[#189aa1]"
-              />
-              <span className="text-sm text-gray-700 leading-snug">{view}</span>
-            </label>
-          ))}
-        </div>
-        {hasOther && (
-          <div className="mb-4">
-            <label className="flex items-start gap-2 cursor-pointer mb-2">
-              <Checkbox
-                checked={form.protocolViewsObtained.includes("Other")}
-                onCheckedChange={() => toggleView("Other")}
-                className="mt-0.5 data-[state=checked]:bg-[#189aa1] data-[state=checked]:border-[#189aa1]"
-              />
-              <span className="text-sm text-gray-700">Other</span>
-            </label>
-            {form.protocolViewsObtained.includes("Other") && (
-              <Input
-                className="text-sm"
-                placeholder="Specify other views..."
-                value={form.protocolViewsObtainedOther}
-                onChange={e => set("protocolViewsObtainedOther", e.target.value)}
-              />
-            )}
+        <SectionCard title={sectionTitle}>
+          <div className="flex justify-end mb-2">
+            <button
+              type="button"
+              onClick={handleSelectAllViews}
+              className="text-xs font-semibold px-2 py-0.5 rounded-md border transition-colors"
+              style={{ color: BRAND, borderColor: BRAND + "40", background: allMainSelected ? BRAND + "15" : "transparent" }}
+            >
+              {allMainSelected ? "Deselect All" : "Select All"}
+            </button>
           </div>
-        )}
-        {hasDopplerSection && (
-          <div className="mt-6 pt-4 border-t border-gray-100">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm font-semibold text-gray-700">Doppler/color flow interrogation</h4>
-              <button
-                type="button"
-                onClick={handleSelectAllDoppler}
-                className="text-xs font-semibold px-2 py-0.5 rounded-md border transition-colors"
-                style={{ color: BRAND, borderColor: BRAND + "40", background: allDopplerSelected ? BRAND + "15" : "transparent" }}
-              >
-                {allDopplerSelected ? "Deselect All" : "Select All"}
-              </button>
-            </div>
-            <div className="space-y-2">
-              {PETTE_PETEE_DOPPLER_VIEWS.map(view => (
-                <label key={view} className="flex items-start gap-2 cursor-pointer">
-                  <Checkbox
-                    checked={form.protocolDopplerViewsObtained.includes(view)}
-                    onCheckedChange={() => toggleDopplerView(view)}
-                    className="mt-0.5 data-[state=checked]:bg-[#189aa1] data-[state=checked]:border-[#189aa1]"
-                  />
-                  <span className="text-sm text-gray-700 leading-snug">{view}</span>
-                </label>
-              ))}
-            </div>
+          <div className="space-y-2 mb-4">
+            {mainViews.map(view => (
+              <label key={view} className="flex items-start gap-2 cursor-pointer">
+                <Checkbox
+                  checked={form.protocolViewsObtained.includes(view)}
+                  onCheckedChange={() => toggleView(view)}
+                  className="mt-0.5 data-[state=checked]:bg-[#189aa1] data-[state=checked]:border-[#189aa1]"
+                />
+                <span className="text-sm text-gray-700 leading-snug">{view}</span>
+              </label>
+            ))}
           </div>
-        )}
-      </SectionCard>
+          {hasOther && (
+            <div className="mb-4">
+              <label className="flex items-start gap-2 cursor-pointer mb-2">
+                <Checkbox
+                  checked={form.protocolViewsObtained.includes("Other")}
+                  onCheckedChange={() => toggleView("Other")}
+                  className="mt-0.5 data-[state=checked]:bg-[#189aa1] data-[state=checked]:border-[#189aa1]"
+                />
+                <span className="text-sm text-gray-700">Other</span>
+              </label>
+              {form.protocolViewsObtained.includes("Other") && (
+                <Input
+                  className="text-sm"
+                  placeholder="Specify other views..."
+                  value={form.protocolViewsObtainedOther}
+                  onChange={e => set("protocolViewsObtainedOther", e.target.value)}
+                />
+              )}
+            </div>
+          )}
+          {hasDopplerSection && (
+            <div className="mt-6 pt-4 border-t border-gray-100">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-sm font-semibold text-gray-700">Doppler/color flow interrogation</h4>
+                <button
+                  type="button"
+                  onClick={handleSelectAllDoppler}
+                  className="text-xs font-semibold px-2 py-0.5 rounded-md border transition-colors"
+                  style={{ color: BRAND, borderColor: BRAND + "40", background: allDopplerSelected ? BRAND + "15" : "transparent" }}
+                >
+                  {allDopplerSelected ? "Deselect All" : "Select All"}
+                </button>
+              </div>
+              <div className="space-y-2">
+                {PETTE_PETEE_DOPPLER_VIEWS.map(view => (
+                  <label key={view} className="flex items-start gap-2 cursor-pointer">
+                    <Checkbox
+                      checked={form.protocolDopplerViewsObtained.includes(view)}
+                      onCheckedChange={() => toggleDopplerView(view)}
+                      className="mt-0.5 data-[state=checked]:bg-[#189aa1] data-[state=checked]:border-[#189aa1]"
+                    />
+                    <span className="text-sm text-gray-700 leading-snug">{view}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+        </SectionCard>
+      </>
     );
   }
 

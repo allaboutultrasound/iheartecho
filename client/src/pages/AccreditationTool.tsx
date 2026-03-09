@@ -964,65 +964,178 @@ function PolicyBuilderTab() {
   );
 }
 
-// ─── Appropriate Use Monitor Tab ──────────────────────────────────────────────
+// ─── Appropriate Use Criteria Tab — Formsite form269 ─────────────────────────
+// Appropriateness rating helper
+function AucRatingBadge({ rating }: { rating?: string | null }) {
+  if (!rating) return <span className="text-gray-400 text-xs">—</span>;
+  const isAppropriate = rating.startsWith("A");
+  const isUncertain = rating.startsWith("U");
+  const isInappropriate = rating.startsWith("I");
+  const color = isAppropriate ? "#16a34a" : isUncertain ? "#d97706" : isInappropriate ? "#dc2626" : "#6b7280";
+  const label = isAppropriate ? "Appropriate" : isUncertain ? "Uncertain" : isInappropriate ? "Inappropriate" : "Unknown";
+  return (
+    <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: color + "18", color }}>
+      {label} {rating}
+    </span>
+  );
+}
+
+const AUC_EXAM_TYPES = [
+  { value: "Adult TTE", label: "Adult Transthoracic Echocardiogram (TTE)" },
+  { value: "Adult STE", label: "Adult Stress Echocardiogram (STE)" },
+  { value: "Adult TEE", label: "Adult Transesophageal Echocardiogram (TEE)" },
+];
+
+const AUC_APPROPRIATENESS_OPTIONS = [
+  { value: "A9", label: "Appropriate A9" },
+  { value: "A8", label: "Appropriate A8" },
+  { value: "A7", label: "Appropriate A7" },
+  { value: "U6", label: "Uncertain U6" },
+  { value: "U5", label: "Uncertain U5" },
+  { value: "U4", label: "Uncertain U4" },
+  { value: "I3", label: "Inappropriate I3" },
+  { value: "I2", label: "Inappropriate I2" },
+  { value: "I1", label: "Inappropriate I1" },
+];
+
+const EMPTY_AUC_FORM = {
+  dateReviewCompleted: new Date().toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" }),
+  studyDate: "",
+  examIdentifier: "",
+  referringPhysician: "",
+  examTypes: [] as string[],
+  limitedOrComplete: "",
+  indicationAppropriateness: "",
+  reviewComments: "",
+};
+
 function AppropriateUseTab() {
-  
-  const [form, setForm] = useState({
-    studyDate: "",
-    modality: "" as string,
-    indication: "",
-    appropriatenessRating: "" as string,
-    clinicalScenario: "",
-    outcome: "",
-    notes: "",
-    flagged: false,
-  });
+  const [step, setStep] = useState(1);
+  const [form, setForm] = useState(EMPTY_AUC_FORM);
+  const [submitted, setSubmitted] = useState(false);
 
   const utils = trpc.useUtils();
-  const { data: entries, isLoading } = trpc.accreditation.getAucEntries.useQuery({ limit: 30, offset: 0 });
+  const { data: entries, isLoading } = trpc.accreditation.getAucEntries.useQuery({ limit: 50, offset: 0 });
   const createEntry = trpc.accreditation.createAucEntry.useMutation({
     onSuccess: () => {
-      toast.success("AUC entry saved.");
+      toast.success("Appropriate Use entry saved.");
       utils.accreditation.getAucEntries.invalidate();
-      setForm({ studyDate: "", modality: "", indication: "", appropriatenessRating: "", clinicalScenario: "", outcome: "", notes: "", flagged: false });
+      setForm(EMPTY_AUC_FORM);
+      setStep(1);
+      setSubmitted(true);
     },
     onError: (e) => toast.error(e.message),
   });
 
-  const handleSubmit = () => {
-    if (!form.modality || !form.indication) {
-      toast.error("Please fill in modality and indication.");
+  function setField<K extends keyof typeof EMPTY_AUC_FORM>(key: K, val: (typeof EMPTY_AUC_FORM)[K]) {
+    setForm(f => ({ ...f, [key]: val }));
+  }
+
+  function toggleExamType(val: string) {
+    setForm(f => ({
+      ...f,
+      examTypes: f.examTypes.includes(val)
+        ? f.examTypes.filter(v => v !== val)
+        : [...f.examTypes, val],
+    }));
+  }
+
+  function handleNext() {
+    if (!form.studyDate || !form.examIdentifier || !form.referringPhysician) {
+      toast.error("Please complete all required fields before continuing.");
+      return;
+    }
+    setStep(2);
+  }
+
+  function handleSubmit() {
+    if (form.examTypes.length === 0) {
+      toast.error("Please select at least one exam type.");
+      return;
+    }
+    if (!form.limitedOrComplete) {
+      toast.error("Please select Limited or Complete Exam.");
+      return;
+    }
+    if (!form.indicationAppropriateness) {
+      toast.error("Please select the Indication Appropriateness rating.");
       return;
     }
     createEntry.mutate({
-      studyDate: form.studyDate || undefined,
-      modality: form.modality as typeof MODALITIES[number],
-      indication: form.indication,
-      appropriatenessRating: (form.appropriatenessRating as "appropriate" | "may_be_appropriate" | "rarely_appropriate" | "unknown") || undefined,
-      clinicalScenario: form.clinicalScenario || undefined,
-      outcome: form.outcome || undefined,
-      notes: form.notes || undefined,
-      flagged: form.flagged,
+      dateReviewCompleted: form.dateReviewCompleted,
+      studyDate: form.studyDate,
+      examIdentifier: form.examIdentifier,
+      referringPhysician: form.referringPhysician,
+      examTypes: form.examTypes.join(", "),
+      limitedOrComplete: form.limitedOrComplete,
+      indicationAppropriateness: form.indicationAppropriateness,
+      reviewComments: form.reviewComments || undefined,
     });
-  };
+  }
 
-  // Stats
+  // Stats from entries
   const total = entries?.length ?? 0;
-  const appropriate = entries?.filter(e => e.appropriatenessRating === "appropriate").length ?? 0;
-  const mayBe = entries?.filter(e => e.appropriatenessRating === "may_be_appropriate").length ?? 0;
-  const rarely = entries?.filter(e => e.appropriatenessRating === "rarely_appropriate").length ?? 0;
-  const flagged = entries?.filter(e => e.flagged).length ?? 0;
+  const appropriate = entries?.filter(e => e.indicationAppropriateness?.startsWith("A")).length ?? 0;
+  const uncertain = entries?.filter(e => e.indicationAppropriateness?.startsWith("U")).length ?? 0;
+  const inappropriate = entries?.filter(e => e.indicationAppropriateness?.startsWith("I")).length ?? 0;
+
+  // Progress bar
+  const progress = step === 1 ? 50 : 100;
+
+  if (submitted) {
+    return (
+      <div className="space-y-4">
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <div className="w-14 h-14 rounded-full flex items-center justify-center mb-4" style={{ background: BRAND + "18" }}>
+            <CheckCircle className="w-7 h-7" style={{ color: BRAND }} />
+          </div>
+          <h3 className="text-lg font-bold text-gray-800 mb-1" style={{ fontFamily: "Merriweather, serif" }}>Entry Submitted!</h3>
+          <p className="text-sm text-gray-500 mb-6">Your Appropriate Use Criteria entry has been saved.</p>
+          <div className="flex gap-3">
+            <Button onClick={() => setSubmitted(false)} style={{ background: BRAND }} className="text-white">
+              <Plus className="w-4 h-4 mr-1" /> Add Another Entry
+            </Button>
+          </div>
+        </div>
+
+        {/* Entries list */}
+        {total > 0 && (
+          <div className="space-y-2">
+            <h4 className="text-sm font-bold text-gray-700 mb-2">Recent Entries</h4>
+            {entries?.slice(0, 10).map((e) => (
+              <Card key={e.id} className="border border-gray-100">
+                <CardContent className="p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <AucRatingBadge rating={e.indicationAppropriateness} />
+                        {e.examTypes && <span className="text-xs text-gray-500">{e.examTypes}</span>}
+                        {e.limitedOrComplete && <span className="text-xs text-gray-400">{e.limitedOrComplete}</span>}
+                      </div>
+                      {e.examIdentifier && <p className="text-xs font-medium text-gray-800">ID: {e.examIdentifier}</p>}
+                      {e.referringPhysician && <p className="text-xs text-gray-500">Referring: {e.referringPhysician}</p>}
+                      {e.reviewComments && <p className="text-xs text-gray-500 mt-0.5 italic">{e.reviewComments}</p>}
+                    </div>
+                    <div className="text-xs text-gray-400 whitespace-nowrap">{e.studyDate ?? new Date(e.createdAt).toLocaleDateString()}</div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-2xl">
       {/* Stats */}
       {total > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-3 gap-3 mb-2">
           {[
             { label: "Appropriate", value: appropriate, color: "#16a34a" },
-            { label: "May Be Appropriate", value: mayBe, color: "#d97706" },
-            { label: "Rarely Appropriate", value: rarely, color: "#dc2626" },
-            { label: "Flagged", value: flagged, color: "#7c3aed" },
+            { label: "Uncertain", value: uncertain, color: "#d97706" },
+            { label: "Inappropriate", value: inappropriate, color: "#dc2626" },
           ].map(s => (
             <div key={s.label} className="bg-white rounded-lg p-3 border border-gray-100 text-center">
               <div className="text-xl font-bold" style={{ color: s.color }}>{s.value}</div>
@@ -1033,96 +1146,189 @@ function AppropriateUseTab() {
         </div>
       )}
 
-      <Card className="border border-[#189aa1]/20">
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
+      {/* Progress bar */}
+      <div className="mb-2">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-xs font-semibold text-gray-500">Appropriate Use Criteria — Step {step} of 2</span>
+          <span className="text-xs text-gray-400">{progress}% Complete</span>
+        </div>
+        <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
+          <div className="h-full rounded-full transition-all duration-500" style={{ width: `${progress}%`, background: BRAND }} />
+        </div>
+      </div>
+
+      {step === 1 && (
+        <Card className="border border-[#189aa1]/20">
+          <CardHeader className="pb-2">
             <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
               <BarChart2 className="w-4 h-4" style={{ color: BRAND }} />
-              New AUC Entry
+              Basic Information
             </CardTitle>
-          </div>
-        </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-semibold text-gray-600 mb-1 block">Modality *</label>
-                <Select value={form.modality} onValueChange={(v) => setForm(f => ({ ...f, modality: v }))}>
-                  <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select" /></SelectTrigger>
-                  <SelectContent>{AUC_MODALITIES.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
-                </Select>
+                <label className="text-xs font-semibold text-gray-600 mb-1 block">Date Review Completed *</label>
+                <Input
+                  className="h-8 text-xs"
+                  placeholder="mm/dd/yyyy"
+                  value={form.dateReviewCompleted}
+                  onChange={e => setField("dateReviewCompleted", e.target.value)}
+                />
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-600 mb-1 block">Study Date</label>
-                <Input type="date" className="h-8 text-xs" value={form.studyDate} onChange={e => setForm(f => ({ ...f, studyDate: e.target.value }))} />
+                <label className="text-xs font-semibold text-gray-600 mb-1 block">Exam DOS *</label>
+                <Input
+                  type="date"
+                  className="h-8 text-xs"
+                  value={form.studyDate}
+                  onChange={e => setField("studyDate", e.target.value)}
+                />
               </div>
             </div>
             <div>
-                <label className="text-xs font-semibold text-gray-600 mb-1 block">Clinical Indication *</label>
-              <Input className="h-8 text-xs" placeholder="e.g. Evaluation of new murmur" value={form.indication} onChange={e => setForm(f => ({ ...f, indication: e.target.value }))} />
+              <label className="text-xs font-semibold text-gray-600 mb-1 block">Exam Identifier (NO PHI) *</label>
+              <Input
+                className="h-8 text-xs"
+                placeholder="e.g. ECHO-2026-001"
+                value={form.examIdentifier}
+                onChange={e => setField("examIdentifier", e.target.value)}
+              />
+              <p className="text-[10px] text-gray-400 mt-1">Do not enter any patient-identifiable information.</p>
             </div>
             <div>
-              <label className="text-xs font-semibold text-gray-600 mb-1 block">Appropriateness Rating</label>
-              <Select value={form.appropriatenessRating} onValueChange={(v) => setForm(f => ({ ...f, appropriatenessRating: v }))}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select rating" /></SelectTrigger>
+              <label className="text-xs font-semibold text-gray-600 mb-1 block">Referring Physician *</label>
+              <Input
+                className="h-8 text-xs"
+                placeholder="e.g. Dr. Smith"
+                value={form.referringPhysician}
+                onChange={e => setField("referringPhysician", e.target.value)}
+              />
+            </div>
+            <div className="flex justify-end pt-2">
+              <Button onClick={handleNext} style={{ background: BRAND }} className="text-white">
+                Next <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {step === 2 && (
+        <Card className="border border-[#189aa1]/20">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                <BarChart2 className="w-4 h-4" style={{ color: BRAND }} />
+                Order / Indication Information
+              </CardTitle>
+              <button onClick={() => setStep(1)} className="text-xs text-gray-400 hover:text-gray-600 underline">← Back</button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            {/* Exam Type */}
+            <div>
+              <label className="text-xs font-semibold text-gray-700 mb-2 block">Exam Type *</label>
+              <div className="space-y-2">
+                {AUC_EXAM_TYPES.map(et => (
+                  <label key={et.value} className="flex items-center gap-2 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 rounded accent-[#189aa1]"
+                      checked={form.examTypes.includes(et.value)}
+                      onChange={() => toggleExamType(et.value)}
+                    />
+                    <span className="text-sm text-gray-700 group-hover:text-gray-900">{et.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Limited/Complete */}
+            <div>
+              <label className="text-xs font-semibold text-gray-700 mb-1.5 block">Limited/Complete Exam *</label>
+              <Select value={form.limitedOrComplete} onValueChange={v => setField("limitedOrComplete", v)}>
+                <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Select exam scope" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="appropriate">Appropriate</SelectItem>
-                  <SelectItem value="may_be_appropriate">May Be Appropriate</SelectItem>
-                  <SelectItem value="rarely_appropriate">Rarely Appropriate</SelectItem>
-                  <SelectItem value="unknown">Unknown / Not Assessed</SelectItem>
+                  <SelectItem value="Complete Exam">Complete Exam</SelectItem>
+                  <SelectItem value="Limited/Follow Up Exam">Limited/Follow Up Exam</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <label className="text-xs font-semibold text-gray-600 mb-1 block">Clinical Scenario</label>
-              <Textarea className="text-xs min-h-[60px]" placeholder="Describe the clinical context..." value={form.clinicalScenario} onChange={e => setForm(f => ({ ...f, clinicalScenario: e.target.value }))} />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-semibold text-gray-600 mb-1 block">Outcome</label>
-                <Input className="h-8 text-xs" placeholder="e.g. Findings changed management" value={form.outcome} onChange={e => setForm(f => ({ ...f, outcome: e.target.value }))} />
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-gray-600 mb-1 block">Notes</label>
-                <Input className="h-8 text-xs" placeholder="Additional notes" value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} />
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <input type="checkbox" id="flagged" checked={form.flagged} onChange={e => setForm(f => ({ ...f, flagged: e.target.checked }))} className="w-4 h-4" />
-              <label htmlFor="flagged" className="text-xs text-gray-600">Flag for review (rarely appropriate or questionable indication)</label>
-            </div>
-            <Button size="sm" onClick={handleSubmit} disabled={createEntry.isPending} className="text-white" style={{ background: BRAND }}>
-              {createEntry.isPending ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Plus className="w-3 h-3 mr-1" />}
-              Save Entry
-            </Button>
-          </CardContent>
-      </Card>
 
-      {isLoading ? (
-        <div className="flex items-center justify-center py-8"><Loader2 className="w-5 h-5 animate-spin" style={{ color: BRAND }} /></div>
-      ) : (entries && entries.length > 0) ? (
-        <div className="space-y-2">
-          {entries.map((e) => (
-            <Card key={e.id} className={`border ${e.flagged ? "border-red-200" : "border-gray-100"}`}>
-              <CardContent className="p-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className="inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "#189aa1" + "15", color: "#189aa1" }}>{e.modality}</span>
-                      <AucBadge rating={e.appropriatenessRating} />
-                      {e.flagged && <span className="text-xs font-semibold text-red-600 flex items-center gap-0.5"><AlertTriangle className="w-3 h-3" />Flagged</span>}
+            {/* Indication Appropriateness */}
+            <div>
+              <label className="text-xs font-semibold text-gray-700 mb-2 block">Enter Indication Appropriateness *</label>
+              <div className="space-y-1.5">
+                {AUC_APPROPRIATENESS_OPTIONS.map(opt => {
+                  const isAppropriate = opt.value.startsWith("A");
+                  const isUncertain = opt.value.startsWith("U");
+                  const isInappropriate = opt.value.startsWith("I");
+                  const color = isAppropriate ? "#16a34a" : isUncertain ? "#d97706" : "#dc2626";
+                  return (
+                    <label key={opt.value} className="flex items-center gap-2 cursor-pointer group">
+                      <input
+                        type="radio"
+                        name="indicationAppropriateness"
+                        className="w-4 h-4"
+                        style={{ accentColor: color }}
+                        checked={form.indicationAppropriateness === opt.value}
+                        onChange={() => setField("indicationAppropriateness", opt.value)}
+                      />
+                      <span className="text-sm text-gray-700 group-hover:text-gray-900">{opt.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Review Comments */}
+            <div>
+              <label className="text-xs font-semibold text-gray-700 mb-1.5 block">Review Comments</label>
+              <Textarea
+                className="text-sm min-h-[80px]"
+                placeholder="Optional comments about this review..."
+                value={form.reviewComments}
+                onChange={e => setField("reviewComments", e.target.value)}
+              />
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
+              <button onClick={() => setStep(1)} className="text-xs text-gray-500 hover:text-gray-700 underline">← Previous</button>
+              <Button onClick={handleSubmit} disabled={createEntry.isPending} style={{ background: BRAND }} className="text-white">
+                {createEntry.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <CheckCircle className="w-4 h-4 mr-1" />}
+                Submit
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Recent entries preview */}
+      {!submitted && entries && entries.length > 0 && (
+        <div className="mt-4">
+          <h4 className="text-sm font-bold text-gray-700 mb-2">Recent Entries</h4>
+          <div className="space-y-2">
+            {entries.slice(0, 5).map((e) => (
+              <Card key={e.id} className="border border-gray-100">
+                <CardContent className="p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <AucRatingBadge rating={e.indicationAppropriateness} />
+                        {e.examTypes && <span className="text-xs text-gray-500">{e.examTypes}</span>}
+                        {e.limitedOrComplete && <span className="text-xs text-gray-400">{e.limitedOrComplete}</span>}
+                      </div>
+                      {e.examIdentifier && <p className="text-xs font-medium text-gray-800">ID: {e.examIdentifier}</p>}
+                      {e.referringPhysician && <p className="text-xs text-gray-500">Referring: {e.referringPhysician}</p>}
                     </div>
-                    <p className="text-xs font-medium text-gray-800 mb-0.5">{e.indication}</p>
-                    {e.clinicalScenario && <p className="text-xs text-gray-500">{e.clinicalScenario}</p>}
-                    {e.outcome && <p className="text-xs text-green-700 mt-0.5"><span className="font-semibold">Outcome:</span> {e.outcome}</p>}
+                    <div className="text-xs text-gray-400 whitespace-nowrap">{e.studyDate ?? new Date(e.createdAt).toLocaleDateString()}</div>
                   </div>
-                  <div className="text-xs text-gray-400 whitespace-nowrap">{e.studyDate ?? new Date(e.createdAt).toLocaleDateString()}</div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
-      ) : (
-        <div className="text-center py-10 text-gray-400 text-sm">No AUC entries yet. Add your first entry above.</div>
       )}
     </div>
   );

@@ -385,9 +385,18 @@ export async function getQaLogs(userId: number, limit = 30, offset = 0) {
 
 export async function createAucEntry(data: {
   userId: number;
+  // New Formsite form269 fields
+  dateReviewCompleted?: string;
   studyDate?: string;
-  modality: "TTE" | "TEE" | "Stress" | "Pediatric" | "Fetal" | "HOCM" | "POCUS";
-  indication: string;
+  examIdentifier?: string;
+  referringPhysician?: string;
+  examTypes?: string;
+  limitedOrComplete?: string;
+  indicationAppropriateness?: string;
+  reviewComments?: string;
+  // Legacy fields
+  modality?: "TTE" | "TEE" | "Stress" | "Pediatric" | "Fetal" | "HOCM" | "POCUS";
+  indication?: string;
   appropriatenessRating?: "appropriate" | "may_be_appropriate" | "rarely_appropriate" | "unknown";
   clinicalScenario?: string;
   outcome?: string;
@@ -396,7 +405,12 @@ export async function createAucEntry(data: {
 }) {
   const db = await getDb();
   if (!db) throw new Error("DB unavailable");
-  const [row] = await db.insert(appropriateUseCases).values(data).$returningId();
+  const [row] = await db.insert(appropriateUseCases).values({
+    ...data,
+    // Ensure required fields have defaults
+    indication: data.indication ?? data.examTypes ?? "",
+    modality: data.modality ?? "TTE",
+  }).$returningId();
   return row;
 }
 

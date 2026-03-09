@@ -1847,3 +1847,9 @@
 - [ ] Auto-populate DOS/date fields with today's date on all forms
 - [ ] Add Select All option to protocol sequence checklists on Quality Review form
 - [ ] Add Select All option to protocol sequence checklists on Sonographer Peer Review form
+
+## New Features - Session Mar 09 2026
+- [x] Rebuild Appropriate Use Criteria form to match Formsite form269 (2-step: basic info + exam type/indication appropriateness)
+- [x] Add peer review email notification to sonographer when Sonographer Peer Review is submitted
+- [x] Add IAC Flag button on Quality Review final step to push case to Possible Case Studies tracker
+- [x] Add protocol checklist progress indicator badge on Step 2 (e.g. "14 / 17 views")

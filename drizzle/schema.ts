@@ -140,9 +140,20 @@ export type InsertPolicy = typeof policies.$inferInsert;
 export const appropriateUseCases = mysqlTable("appropriateUseCases", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
+  // Formsite form269 fields
+  dateReviewCompleted: varchar("dateReviewCompleted", { length: 20 }),
   studyDate: varchar("studyDate", { length: 20 }),
-  modality: mysqlEnum("modality", ["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS"]).notNull(),
-  indication: text("indication").notNull(),
+  examIdentifier: varchar("examIdentifier", { length: 100 }),
+  referringPhysician: varchar("referringPhysician", { length: 200 }),
+  // Exam type (comma-separated: Adult TTE, Adult STE, Adult TEE)
+  examTypes: text("examTypes"),
+  limitedOrComplete: varchar("limitedOrComplete", { length: 50 }),
+  // Indication appropriateness — A9/A8/A7/U6/U5/U4/I3/I2/I1
+  indicationAppropriateness: varchar("indicationAppropriateness", { length: 20 }),
+  reviewComments: text("reviewComments"),
+  // Legacy fields kept for backward compatibility
+  modality: mysqlEnum("modality", ["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS"]),
+  indication: text("indication"),
   appropriatenessRating: mysqlEnum("appropriatenessRating", ["appropriate", "may_be_appropriate", "rarely_appropriate", "unknown"]).default("unknown").notNull(),
   clinicalScenario: text("clinicalScenario"),
   outcome: text("outcome"),

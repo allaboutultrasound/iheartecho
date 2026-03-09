@@ -532,9 +532,18 @@ export const appRouter = router({
   // Appropriate Use Cases
   createAucEntry: protectedProcedure
     .input(z.object({
+      // New Formsite form269 fields
+      dateReviewCompleted: z.string().optional(),
       studyDate: z.string().optional(),
-      modality: z.enum(["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS"]),
-      indication: z.string().min(1),
+      examIdentifier: z.string().optional(),
+      referringPhysician: z.string().optional(),
+      examTypes: z.string().optional(),
+      limitedOrComplete: z.string().optional(),
+      indicationAppropriateness: z.string().optional(),
+      reviewComments: z.string().optional(),
+      // Legacy fields
+      modality: z.enum(["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS"]).optional(),
+      indication: z.string().optional(),
       appropriatenessRating: z.enum(["appropriate", "may_be_appropriate", "rarely_appropriate", "unknown"]).optional(),
       clinicalScenario: z.string().optional(),
       outcome: z.string().optional(),
@@ -1037,6 +1046,83 @@ export const appRouter = router({
         const { comparableToPrevious, dob: _dob, ...rest } = input;
         try {
           const review = await createImageQualityReview({ ...rest, comparableToPreview: comparableToPrevious, userId: ctx.user.id });
+
+          // ── Send email feedback to sonographer if requested ─────────────────
+          if (input.notifySonographer === "Yes" && input.notifySonographerEmail) {
+            try {
+              const { sendEmail, buildPeerReviewFeedbackEmail } = await import('./_core/email');
+              const appUrl = process.env.VITE_APP_URL ?? "https://iheartecho.com";
+              const reviewerName = ctx.user.name ?? ctx.user.email ?? "Your reviewer";
+              const examType = input.examType ?? "Echo Study";
+              const examDate = input.examDos ?? input.dateReviewCompleted ?? new Date().toLocaleDateString();
+              const examIdentifier = input.examIdentifier ?? "";
+
+              // Compute quality score tier label from score
+              const score = input.qualityScore;
+              const tier = score != null
+                ? score >= 90 ? "Excellent" : score >= 75 ? "Good" : score >= 60 ? "Adequate" : "Needs Improvement"
+                : undefined;
+
+              const emailPayload = buildPeerReviewFeedbackEmail({
+                sonographerName: "Sonographer",
+                reviewerName,
+                examType,
+                examDate,
+                examIdentifier,
+                qualityScore: score,
+                qualityTier: tier,
+                comments: input.notifySonographerComments,
+                appUrl,
+              });
+
+              await sendEmail({
+                to: { name: "Sonographer", email: input.notifySonographerEmail },
+                subject: emailPayload.subject,
+                htmlBody: emailPayload.htmlBody,
+                previewText: emailPayload.previewText,
+              });
+            } catch (emailErr) {
+              // Email failure should not block review creation
+              console.warn('[IQR] Sonographer email failed:', emailErr);
+            }
+          }
+
+          // ── Send email feedback to admin if requested ───────────────────────
+          if (input.notifyAdmin === "Yes" && input.notifyAdminEmail) {
+            try {
+              const { sendEmail, buildPeerReviewFeedbackEmail } = await import('./_core/email');
+              const appUrl = process.env.VITE_APP_URL ?? "https://iheartecho.com";
+              const reviewerName = ctx.user.name ?? ctx.user.email ?? "A reviewer";
+              const examType = input.examType ?? "Echo Study";
+              const examDate = input.examDos ?? input.dateReviewCompleted ?? new Date().toLocaleDateString();
+              const score = input.qualityScore;
+              const tier = score != null
+                ? score >= 90 ? "Excellent" : score >= 75 ? "Good" : score >= 60 ? "Adequate" : "Needs Improvement"
+                : undefined;
+
+              const emailPayload = buildPeerReviewFeedbackEmail({
+                sonographerName: "Administrator",
+                reviewerName,
+                examType,
+                examDate,
+                examIdentifier: input.examIdentifier ?? "",
+                qualityScore: score,
+                qualityTier: tier,
+                comments: input.notifyAdminComments,
+                appUrl,
+              });
+
+              await sendEmail({
+                to: { name: "Administrator", email: input.notifyAdminEmail },
+                subject: emailPayload.subject,
+                htmlBody: emailPayload.htmlBody,
+                previewText: emailPayload.previewText,
+              });
+            } catch (emailErr) {
+              console.warn('[IQR] Admin email failed:', emailErr);
+            }
+          }
+
           return review;
         } catch (err: unknown) {
           const e = err as { message?: string; code?: string; sqlMessage?: string };

@@ -596,3 +596,80 @@ export function buildOverReadCompletedEmail(opts: {
   `);
   return { subject, htmlBody, previewText };
 }
+
+// ─── Sonographer Peer Review Feedback Email ───────────────────────────────────
+export function buildPeerReviewFeedbackEmail(opts: {
+  sonographerName: string;
+  reviewerName: string;
+  examType: string;
+  examDate: string;
+  examIdentifier: string;
+  qualityScore?: number;
+  qualityTier?: string;
+  comments?: string;
+  appUrl: string;
+}): { subject: string; htmlBody: string; previewText: string } {
+  const subject = `Peer Review Feedback — ${opts.examType} (${opts.examDate})`;
+  const previewText = `${opts.reviewerName} has completed a peer review of your ${opts.examType} study. View your feedback.`;
+
+  const tierColor =
+    (opts.qualityTier ?? "").toLowerCase().includes("excellent") ? "#16a34a" :
+    (opts.qualityTier ?? "").toLowerCase().includes("good") ? "#2563eb" :
+    (opts.qualityTier ?? "").toLowerCase().includes("adequate") ? "#d97706" : "#dc2626";
+
+  const scoreBlock = opts.qualityScore != null ? `
+    <div style="background:#f0fbfc;border:1px solid #b2e8eb;border-radius:8px;padding:16px 20px;margin:0 0 20px;text-align:center;">
+      <div style="font-size:36px;font-weight:900;color:${tierColor};">${opts.qualityScore}%</div>
+      ${opts.qualityTier ? `<div style="font-size:13px;font-weight:700;color:${tierColor};margin-top:4px;">${opts.qualityTier}</div>` : ""}
+      <div style="font-size:12px;color:#64748b;margin-top:4px;">Quality Score</div>
+    </div>
+  ` : "";
+
+  const commentsBlock = opts.comments ? `
+    <div style="background:#f8fafc;border-left:3px solid ${brandColor};padding:12px 16px;border-radius:0 8px 8px 0;margin:0 0 20px;">
+      <p style="margin:0 0 4px;font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">Reviewer Comments</p>
+      <p style="margin:0;font-size:14px;color:#0e1e2e;line-height:1.6;">${opts.comments}</p>
+    </div>
+  ` : "";
+
+  const htmlBody = emailWrapper(`
+    <h2 style="margin:0 0 8px;font-size:20px;color:${brandDark};font-family:Georgia,serif;">
+      Peer Review Feedback
+    </h2>
+    <p style="margin:0 0 16px;font-size:15px;color:#475569;line-height:1.6;">
+      Hi ${opts.sonographerName}, a peer review has been completed for one of your studies.
+    </p>
+    <div style="background:#f0fbfc;border:1px solid #b2e8eb;border-radius:8px;padding:16px 20px;margin:0 0 20px;">
+      <table style="width:100%;border-collapse:collapse;font-size:14px;">
+        <tr>
+          <td style="padding:5px 0;color:#64748b;font-weight:600;width:45%;">Exam Type</td>
+          <td style="padding:5px 0;color:#0e1e2e;font-weight:700;">${opts.examType}</td>
+        </tr>
+        <tr>
+          <td style="padding:5px 0;color:#64748b;font-weight:600;">Exam Date</td>
+          <td style="padding:5px 0;color:#0e1e2e;">${opts.examDate}</td>
+        </tr>
+        <tr>
+          <td style="padding:5px 0;color:#64748b;font-weight:600;">Exam Identifier</td>
+          <td style="padding:5px 0;color:#0e1e2e;">${opts.examIdentifier || "—"}</td>
+        </tr>
+        <tr>
+          <td style="padding:5px 0;color:#64748b;font-weight:600;">Reviewed By</td>
+          <td style="padding:5px 0;color:#0e1e2e;">${opts.reviewerName}</td>
+        </tr>
+      </table>
+    </div>
+    ${scoreBlock}
+    ${commentsBlock}
+    <div style="text-align:center;margin:28px 0;">
+      <a href="${opts.appUrl}/diy-accreditation?tab=sono-peer"
+        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;">
+        View Full Review
+      </a>
+    </div>
+    <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.5;text-align:center;">
+      This is an automated notification from iHeartEcho™ DIY Accreditation Tool.
+    </p>
+  `);
+  return { subject, htmlBody, previewText };
+}

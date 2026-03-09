@@ -351,6 +351,13 @@
       "when": 1773079144945,
       "tag": "0049_rapid_zeigeist",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "5",
+      "when": 1773079715061,
+      "tag": "0050_wide_crusher_hogan",
+      "breakpoints": true
     }
   ]
 }

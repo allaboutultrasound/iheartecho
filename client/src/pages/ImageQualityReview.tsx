@@ -10,7 +10,7 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Link } from "wouter";
 import {
-  ArrowLeft, ArrowRight, CheckCircle2, ClipboardList, ChevronRight,
+  ArrowLeft, ArrowRight, CheckCircle2, ClipboardList, ChevronRight, Flag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -493,6 +493,39 @@ export default function ImageQualityReview({ embedded = false }: Props) {
     onError: (e) => { toast.error(e.message || "Failed to submit review. Please try again."); },
   });
 
+  const [iacFlagged, setIacFlagged] = useState(false);
+  const [iacFlagSent, setIacFlagSent] = useState(false);
+
+  const flagCaseStudyMutation = trpc.caseStudies.create.useMutation({
+    onSuccess: (data) => {
+      setIacFlagSent(true);
+      toast.success(`Case flagged as IAC candidate — ID: ${data.caseStudyId}`);
+    },
+    onError: (e) => {
+      toast.error(e.message || "Failed to flag case. Please try again.");
+    },
+  });
+
+  function handleFlagForCaseStudy() {
+    if (flagCaseStudyMutation.isPending) return;
+    const examTypeMap: Record<string, string> = {
+      "ADULT TTE": "AETTE",
+      "ADULT TEE": "AETEE",
+      "ADULT STRESS": "AE_STRESS",
+      "PEDIATRIC TTE": "PETTE",
+      "PEDIATRIC TEE": "PETEE",
+      "FETAL ECHO": "FE",
+    };
+    flagCaseStudyMutation.mutate({
+      examType: examTypeMap[form.examType] ?? form.examType,
+      examDate: form.examDate || undefined,
+      patientMrn: form.examIdentifier || undefined,
+      clinicalNotes: form.reviewComments || undefined,
+      submissionStatus: "identified",
+      accreditationType: "IAC",
+    });
+  }
+
   const et = form.examType;
 
   function set<K extends keyof IQRForm>(key: K, value: IQRForm[K]) {
@@ -875,8 +908,34 @@ export default function ImageQualityReview({ embedded = false }: Props) {
       hasOther = false;
     }
 
+    // Protocol progress counts
+    const totalViews = viewsList.length;
+    const checkedViews = form.protocolViewsObtained.filter(v => viewsList.includes(v)).length;
+    const totalDoppler = hasDopplerSection ? PETTE_DOPPLER_VIEWS.length : 0;
+    const checkedDoppler = hasDopplerSection ? form.protocolDopplerViewsObtained.filter(v => PETTE_DOPPLER_VIEWS.includes(v)).length : 0;
+    const totalAll = totalViews + totalDoppler;
+    const checkedAll = checkedViews + checkedDoppler;
+    const progressPct = totalAll > 0 ? Math.round((checkedAll / totalAll) * 100) : 0;
+    const progressColor = progressPct === 100 ? "#16a34a" : progressPct >= 50 ? "#d97706" : "#189aa1";
+
     return (
       <>
+        {/* Progress indicator */}
+        <div className="mb-3 flex items-center gap-3">
+          <div className="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{ width: `${progressPct}%`, background: progressColor }}
+            />
+          </div>
+          <span
+            className="text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0"
+            style={{ background: progressColor + "18", color: progressColor }}
+          >
+            {checkedAll} / {totalAll} views
+          </span>
+        </div>
+
         <SectionCard title={sectionTitle}>
           <CheckboxGroup
             label=""
@@ -1498,6 +1557,40 @@ export default function ImageQualityReview({ embedded = false }: Props) {
   function renderStep7() {
     return (
       <SectionCard title="Review Summary">
+        {/* IAC Case Study Flag */}
+        <div className="mb-6 rounded-xl border-2 p-4" style={{ borderColor: iacFlagSent ? "#16a34a40" : "#189aa140", background: iacFlagSent ? "#f0fdf4" : "#f0fbfc" }}>
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: iacFlagSent ? "#16a34a18" : "#189aa118" }}>
+              <Flag className="w-4 h-4" style={{ color: iacFlagSent ? "#16a34a" : "#189aa1" }} />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-bold text-gray-800 mb-0.5">Flag as IAC Case Study Candidate</p>
+              <p className="text-xs text-gray-500 mb-3">Add this case to the Possible Case Studies tracker for IAC accreditation submission consideration.</p>
+              {iacFlagSent ? (
+                <div className="flex items-center gap-2 text-green-700 text-sm font-semibold">
+                  <CheckCircle2 className="w-4 h-4" />
+                  Case flagged and added to Case Studies tracker
+                </div>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleFlagForCaseStudy}
+                  disabled={flagCaseStudyMutation.isPending}
+                  className="text-white border-0"
+                  style={{ background: "#189aa1" }}
+                >
+                  {flagCaseStudyMutation.isPending ? (
+                    <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />Flagging...</span>
+                  ) : (
+                    <span className="flex items-center gap-1.5"><Flag className="w-3.5 h-3.5" />Flag for IAC Case Studies</span>
+                  )}
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+
         {/* Auto-calculated Quality Score */}
         <div className="mb-6 rounded-xl border-2 p-5" style={{ borderColor: qualityScoreCalc ? qualityScoreCalc.color + "40" : "#e5e7eb", background: qualityScoreCalc ? qualityScoreCalc.color + "08" : "#f9fafb" }}>
           <div className="flex items-center justify-between mb-3">
