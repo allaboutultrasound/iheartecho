@@ -108,7 +108,9 @@ function ActivityBar({ date, correct, total }: { date: string; correct: number; 
 
 export default function QuickFire() {
   const { isAuthenticated, user } = useAuth();
-  const isPremium = (user as any)?.role === "admin" || (user as any)?.isPremium === true;
+  const appRoles: string[] = (user as any)?.appRoles ?? [];
+  const PREMIUM_ROLES_SET = new Set(["premium_user", "diy_user", "diy_admin", "platform_admin"]);
+  const isPremium = (user as any)?.isPremium === true || appRoles.some(r => PREMIUM_ROLES_SET.has(r)) || (user as any)?.role === "admin";
 
   // Top-level tab
   const [activeTab, setActiveTab] = useState<"challenge" | "archive" | "performance" | "leaderboard">("challenge");

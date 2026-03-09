@@ -6,8 +6,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import PremiumModal from "@/components/PremiumModal";
-import { useAuth } from "@/_core/hooks/useAuth";
-import { hasPremiumAccess } from "@/lib/roles";
+import { usePremium } from "@/hooks/usePremium";
 import {
   Stethoscope, Microscope, Zap, Users, Baby, Heart,
   Cpu, FlaskConical, BarChart3, ArrowRight, Scan, Lock, Droplets, Activity, Wind
@@ -122,9 +121,7 @@ const badgeColors: Record<string, string> = {
 };
 
 export default function EchoNavigatorHub() {
-  const { user } = useAuth();
-  const appRoles: string[] = (user as any)?.appRoles ?? [];
-  const isPremium = hasPremiumAccess(appRoles);
+  const { isPremium } = usePremium();
   const [premiumModal, setPremiumModal] = useState<{ name: string; description: string } | null>(null);
   return (
     <Layout>

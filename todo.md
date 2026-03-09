@@ -1755,3 +1755,15 @@
 - [x] DB helper getPhysicianPeerReviewMonthlySummary already supported examType — confirmed working
 - [x] Fix MySQL only_full_group_by error in getPhysicianPeerReviewMonthlySummary and getPhysicianPeerReviewTrend (use unquoted table.column in sql template)
 - [x] Add 2 new vitest tests for examType filter — all 641 tests passing
+
+## Premium Gating Audit & Enforcement (Mar 09 2026)
+- [x] auth.me: include isPremium from DB in returned user object so frontend checks work
+- [x] Create shared usePremium() hook that reads appRoles + isPremium for consistent gating
+- [x] EchoAssistHub: gate premium specialty cards — free users see upgrade modal instead of navigating
+- [x] App.tsx: wrap premium navigator routes (TEE, ICE, Stress, Device, HOCM, PulmHTN) with RoleGuard
+- [x] App.tsx: wrap premium ScanCoach routes (TEE, ICE, Stress, Structural, HOCM, UEA) with RoleGuard
+- [x] QuickFire.tsx: fix isPremium check to use appRoles instead of (user as any).isPremium
+- [x] FlashcardDeck: verify daily limit gating uses correct premium check
+- [x] EchoNavigatorHub: already gated correctly — verify modal works
+- [x] RoleGuard: add premium upgrade CTA screen for premium_user role gates
+- [x] Profile.tsx: fix isPremiumUser to check both DB flag and appRoles

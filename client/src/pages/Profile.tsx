@@ -217,7 +217,8 @@ export default function Profile() {
 
   const u = user as any;
   const roles = (u.appRoles as string[] | undefined) ?? [];
-  const isPremiumUser = u.isPremium === true;
+  const PREMIUM_ROLE_SET = new Set(["premium_user", "diy_user", "diy_admin", "platform_admin"]);
+  const isPremiumUser = u.isPremium === true || roles.some((r: string) => PREMIUM_ROLE_SET.has(r));
   // Filter out 'premium_user' Thinkific role since we now track isPremium from DB
   const activeSubscriptions = roles.filter((r: string) => ROLE_CONFIG[r] && r !== "premium_user");
 

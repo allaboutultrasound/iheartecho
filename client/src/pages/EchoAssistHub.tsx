@@ -216,23 +216,35 @@ export default function EchoAssistHub() {
                   </h3>
                   <p className="text-sm text-gray-500 leading-relaxed mb-4 flex-1">{description}</p>
                   <div className="flex items-center gap-2 mt-auto">
-                    <Link href={path} className="flex-1">
+                    {isPremium ? (
+                      <>
+                        <Link href={path} className="flex-1">
+                          <button
+                            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90"
+                            style={{ background: BRAND }}
+                          >
+                            Go to Navigator <ArrowRight className="w-3.5 h-3.5" />
+                          </button>
+                        </Link>
+                        {scanCoachPath && (
+                          <Link href={scanCoachPath} className="flex-1">
+                            <button
+                              className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border transition-all hover:bg-[#189aa1]/5"
+                              style={{ borderColor: BRAND + "40", color: BRAND }}
+                            >
+                              Go to ScanCoach
+                            </button>
+                          </Link>
+                        )}
+                      </>
+                    ) : (
                       <button
                         className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90"
-                        style={{ background: BRAND }}
+                        style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}
+                        onClick={() => setUpgradeModal({ title })}
                       >
-                        Go to Navigator <ArrowRight className="w-3.5 h-3.5" />
+                        <Crown className="w-3.5 h-3.5" /> Upgrade to Unlock
                       </button>
-                    </Link>
-                    {scanCoachPath && (
-                      <Link href={scanCoachPath} className="flex-1">
-                        <button
-                          className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border transition-all hover:bg-[#189aa1]/5"
-                          style={{ borderColor: BRAND + "40", color: BRAND }}
-                        >
-                          Go to ScanCoach
-                        </button>
-                      </Link>
                     )}
                   </div>
                 </div>
@@ -240,7 +252,8 @@ export default function EchoAssistHub() {
             })}
           </div>
 
-          {/* Upgrade CTA */}
+          {/* Upgrade CTA — only shown to free users */}
+          {!isPremium && (
           <div
             className="mt-6 rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4"
             style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}
@@ -270,8 +283,51 @@ export default function EchoAssistHub() {
               </button>
             </Link>
           </div>
+          )}
         </div>
       </div>
+
+      {/* Upgrade modal */}
+      {upgradeModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.5)" }}
+          onClick={() => setUpgradeModal(null)}
+        >
+          <div
+            className="bg-white rounded-2xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex justify-center">
+              <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}>
+                <Crown className="w-8 h-8 text-white" />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900" style={{ fontFamily: "Merriweather, serif" }}>Premium Feature</h3>
+              <p className="text-sm text-gray-500 mt-1">
+                <strong>{upgradeModal.title}</strong> requires a Premium membership.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Link href="/premium" onClick={() => setUpgradeModal(null)}>
+                <button
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-semibold text-sm text-white"
+                  style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}
+                >
+                  <Crown className="w-4 h-4" /> Upgrade to Premium
+                </button>
+              </Link>
+              <button
+                className="w-full px-4 py-2 rounded-lg text-sm font-medium text-gray-500 hover:bg-gray-50 border border-gray-200"
+                onClick={() => setUpgradeModal(null)}
+              >
+                Maybe Later
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }

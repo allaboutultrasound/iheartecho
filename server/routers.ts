@@ -128,12 +128,17 @@ export const appRouter = router({
     me: publicProcedure.query(async opts => {
       if (!opts.ctx.user) return null;
       const roles = await getUserRoles(opts.ctx.user.id);
-      // Fetch full user row to expose pendingEmail for the profile UI
+      // Fetch full user row to expose pendingEmail and isPremium for the profile UI
       const fullUser = await getUserById(opts.ctx.user.id);
+      // Derive isPremium from both the DB flag and role-based premium access
+      const PREMIUM_ROLES = new Set(["premium_user", "diy_user", "diy_admin", "platform_admin"]);
+      const isPremiumByRole = roles.some(r => PREMIUM_ROLES.has(r));
+      const isPremium = (fullUser?.isPremium ?? false) || isPremiumByRole;
       return {
         ...opts.ctx.user,
         pendingEmail: fullUser?.pendingEmail ?? null,
         appRoles: roles,
+        isPremium,
       };
     }),
     logout: publicProcedure.mutation(({ ctx }) => {

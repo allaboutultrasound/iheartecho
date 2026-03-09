@@ -18,7 +18,7 @@ import { getLoginUrl } from "@/const";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Link, useLocation } from "wouter";
-import { Loader2, ShieldAlert, ArrowLeft, CheckCircle2, Send } from "lucide-react";
+import { Loader2, ShieldAlert, ArrowLeft, CheckCircle2, Send, Crown } from "lucide-react";
 import { useEffect, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -102,10 +102,59 @@ export function RoleGuard({ roles, allowAdmin = true, children }: RoleGuardProps
   const hasRequiredRole = roles.some(r => userRoles.includes(r));
   const isAuthorised = hasRequiredRole || (allowAdmin && isPlatformAdmin);
 
-  if (isAuthorised) {
+   if (isAuthorised) {
     return <>{children}</>;
   }
-
+  // If the required role is premium_user, show a premium upgrade CTA instead of the generic access-denied page
+  const isPremiumGate = roles.includes("premium_user") && !roles.some(r => ["diy_admin", "diy_user", "platform_admin"].includes(r));
+  if (isPremiumGate) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="max-w-md w-full text-center space-y-6">
+          <div className="flex justify-center">
+            <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}>
+              <Crown className="w-10 h-10 text-white" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: "Merriweather, serif" }}>Premium Feature</h1>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              This feature requires a <strong>Premium membership</strong>. Upgrade to unlock all clinical protocols, ScanCoach guides, EchoAssist™ engines, and more.
+            </p>
+          </div>
+          <div className="rounded-xl p-4 text-left space-y-2 border" style={{ borderColor: "#f59e0b30", background: "#f59e0b08" }}>
+            <p className="text-xs font-semibold text-amber-600 uppercase tracking-wider">Included with Premium</p>
+            <ul className="space-y-1 text-sm text-foreground">
+              {["All EchoNavigator protocols (TEE, ICE, Stress, HOCM, Structural, PulmHTN)", "All EchoAssist™ clinical engines", "Unlimited Echo Flashcards", "Daily Challenge Archive", "Report Builder"].map(f => (
+                <li key={f} className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full flex-shrink-0 bg-amber-500" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="flex flex-col gap-3">
+            <Link href="/premium">
+              <Button className="w-full font-semibold gap-2" style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)", color: "white" }}>
+                <Crown className="w-4 h-4" />
+                Upgrade to Premium
+              </Button>
+            </Link>
+            <Link href="/">
+              <Button variant="outline" className="w-full gap-2">
+                <ArrowLeft className="w-4 h-4" />
+                Back to Dashboard
+              </Button>
+            </Link>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Already a member?{" "}
+            <a href="/premium" className="underline" style={{ color: "#189aa1" }}>Sync your subscription</a>
+          </p>
+        </div>
+      </div>
+    );
+  }
   // Access denied — show clear message with contact CTA
   const requiredRoleLabels = roles.map(r => ROLE_LABELS[r]).join(" or ");
   const description = roles.map(r => ROLE_DESCRIPTIONS[r] ?? ROLE_LABELS[r]).join(" or ");
