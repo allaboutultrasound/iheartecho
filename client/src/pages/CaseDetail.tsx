@@ -71,6 +71,13 @@ export default function CaseDetail() {
     { enabled: !!caseId }
   );
 
+  // Related cases — only query once we have the current case's tags
+  const caseTags: string[] = caseData ? (caseData as any).tags ?? [] : [];
+  const { data: relatedCases } = trpc.caseLibrary.getRelatedCases.useQuery(
+    { caseId, tags: caseTags, limit: 4 },
+    { enabled: !!caseId && caseTags.length > 0 }
+  );
+
   const submitAttemptMutation = trpc.caseLibrary.submitAttempt.useMutation({
     onSuccess: () => {
       utils.caseLibrary.getCase.invalidate({ id: caseId });
@@ -487,6 +494,59 @@ export default function CaseDetail() {
             )}
           </div>
         </div>
+
+        {/* Related Cases */}
+        {relatedCases && relatedCases.length > 0 && (
+          <div className="mt-10">
+            <h2 className="font-bold text-gray-800 text-base mb-4 flex items-center gap-2" style={{ fontFamily: "Merriweather, serif" }}>
+              <BookOpen className="w-4 h-4 text-[#189aa1]" />
+              Related Cases
+              <span className="text-xs font-normal text-gray-400 ml-1">based on shared tags</span>
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {relatedCases.map((rc: any) => (
+                <Link key={rc.id} href={`/case-library/${rc.id}`}>
+                  <div className="group bg-white rounded-xl border border-gray-100 hover:border-[#189aa1]/40 hover:shadow-md transition-all p-4 h-full flex flex-col cursor-pointer">
+                    {/* Modality + difficulty badges */}
+                    <div className="flex items-center gap-1.5 mb-2 flex-wrap">
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${MODALITY_COLORS[rc.modality] ?? "bg-gray-100 text-gray-600"}`}>
+                        {rc.modality}
+                      </span>
+                      <span className={`text-xs px-1.5 py-0.5 rounded ${DIFFICULTY_COLORS[rc.difficulty] ?? ""}`}>
+                        {rc.difficulty}
+                      </span>
+                    </div>
+                    {/* Title */}
+                    <h3 className="text-sm font-semibold text-gray-800 leading-snug mb-2 group-hover:text-[#189aa1] transition-colors line-clamp-2" style={{ fontFamily: "Merriweather, serif" }}>
+                      {rc.title}
+                    </h3>
+                    {/* Summary */}
+                    <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 flex-1">{rc.summary}</p>
+                    {/* Shared tags */}
+                    <div className="mt-3 flex flex-wrap gap-1">
+                      {rc.tags
+                        .filter((t: string) => caseTags.map((ct) => ct.toLowerCase()).includes(t.toLowerCase()))
+                        .slice(0, 3)
+                        .map((t: string) => (
+                          <span key={t} className="text-xs bg-[#189aa1]/10 text-[#189aa1] px-1.5 py-0.5 rounded-full">
+                            {t}
+                          </span>
+                        ))}
+                      {rc.matchCount > 3 && (
+                        <span className="text-xs text-gray-400">+{rc.matchCount - 3} more</span>
+                      )}
+                    </div>
+                    {/* View count */}
+                    <div className="mt-2 flex items-center gap-1 text-xs text-gray-400">
+                      <Eye className="w-3 h-3" />
+                      {formatViewCount(rc.viewCount)} views
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );

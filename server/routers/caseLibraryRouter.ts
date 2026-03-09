@@ -1326,4 +1326,70 @@ Guidelines:
         })),
       };
     }),
+
+  /**
+   * getRelatedCases — returns up to 4 approved cases that share at least one
+   * tag with the given case, ordered by number of matching tags then by view
+   * count descending. Excludes the current case.
+   */
+  getRelatedCases: publicProcedure
+    .input(
+      z.object({
+        caseId: z.number().int().positive(),
+        tags: z.array(z.string()).min(1).max(20),
+        limit: z.number().int().min(1).max(8).default(4),
+      })
+    )
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+
+      // Fetch a broader pool of approved cases (excluding current)
+      // We'll filter by tag overlap in JS since tags are stored as JSON strings
+      const candidates = await db
+        .select({
+          id: echoLibraryCases.id,
+          title: echoLibraryCases.title,
+          summary: echoLibraryCases.summary,
+          modality: echoLibraryCases.modality,
+          difficulty: echoLibraryCases.difficulty,
+          tags: echoLibraryCases.tags,
+          viewCount: echoLibraryCases.viewCount,
+          submittedAt: echoLibraryCases.submittedAt,
+        })
+        .from(echoLibraryCases)
+        .where(
+          and(
+            eq(echoLibraryCases.status, "approved"),
+            sql`${echoLibraryCases.id} != ${input.caseId}`
+          )
+        )
+        .orderBy(desc(echoLibraryCases.viewCount))
+        .limit(200);
+
+      const inputTagSet = new Set(input.tags.map((t) => t.toLowerCase()));
+
+      // Score each candidate by number of matching tags
+      const scored = candidates
+        .map((c) => {
+          const caseTags: string[] = c.tags ? JSON.parse(c.tags) : [];
+          const matchCount = caseTags.filter((t) => inputTagSet.has(t.toLowerCase())).length;
+          return { ...c, tags: caseTags, matchCount };
+        })
+        .filter((c) => c.matchCount > 0)
+        .sort((a, b) => b.matchCount - a.matchCount || (b.viewCount ?? 0) - (a.viewCount ?? 0))
+        .slice(0, input.limit);
+
+      return scored.map((c) => ({
+        id: c.id,
+        title: c.title,
+        summary: c.summary,
+        modality: c.modality,
+        difficulty: c.difficulty,
+        tags: c.tags,
+        viewCount: c.viewCount ?? 0,
+        submittedAt: c.submittedAt,
+        matchCount: c.matchCount,
+      }));
+    }),
 });

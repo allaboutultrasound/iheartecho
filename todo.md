@@ -1877,3 +1877,7 @@
 - [x] Add tag search/filter to case management admin panel
 - [x] Add clickable tag chips on case rows to instantly filter by tag
 - [x] Add modality and difficulty filters to case management admin panel
+
+## Related Cases Section - Session Mar 09 2026
+- [x] Add getRelatedCases tRPC procedure that queries by shared tags, excluding the current case
+- [x] Add Related Cases section to the case detail page showing 3-4 cases with shared tags
