@@ -1221,19 +1221,37 @@ export default function ScanCoach() {
 
   return (
     <Layout>
-      {/* Page header — no hero banner */}
-      <div className="border-b border-[#189aa1]/15 bg-white">
-        <div className="container py-4">
-          <div className="mb-1">
+      {/* Hero Banner */}
+      <div
+        className="relative overflow-hidden"
+        style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}
+      >
+        <div className="container py-10 md:py-12">
+          <div className="mb-2">
             <BackToEchoAssist href="/scan-coach-hub" label="ScanCoach Hub" />
           </div>
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "#189aa1" + "18" }}>
-              <Scan className="w-4 h-4" style={{ color: "#189aa1" }} />
+          <div className="flex items-start gap-4">
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 mt-1"
+              style={{ background: "rgba(255,255,255,0.1)" }}
+            >
+              <Scan className="w-6 h-6 text-[#4ad9e0]" />
             </div>
             <div>
-              <h1 className="text-xl font-black text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>EchoAssist™ — ScanCoach</h1>
-              <p className="text-gray-500 text-xs">View-by-view scanning guides with probe positioning, anatomy, and clinical pearls</p>
+              <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-3">
+                <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
+                <span className="text-sm text-white/80 font-medium">11 Specialties · View-by-View Probe Guidance</span>
+              </div>
+              <h1
+                className="text-2xl md:text-3xl font-black text-white leading-tight"
+                style={{ fontFamily: "Merriweather, serif" }}
+              >
+                EchoAssist™ — ScanCoach
+              </h1>
+              <p className="text-[#4ad9e0] font-semibold text-base mt-0.5">Probe Positioning · Anatomy · Clinical Pearls</p>
+              <p className="text-white/70 text-sm md:text-base mt-2 max-w-xl leading-relaxed">
+                View-by-view scanning guides with transducer positioning, normal anatomy, Doppler setup, and clinical pearls — for every modality and patient population.
+              </p>
             </div>
           </div>
         </div>

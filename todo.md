@@ -1787,3 +1787,7 @@
 
 ## UX Fix (Mar 09 2026)
 - [x] Scroll to top when advancing to next step in all quality forms (IQR, Echo Correlation) — PhysicianPeerReview is single-page, no fix needed
+
+## UX Enhancement (Mar 09 2026)
+- [x] Add hero banner to EchoAssist ScanCoach matching EchoAssist Navigator style
+- [x] Remove hero banner from Diastolic Function page

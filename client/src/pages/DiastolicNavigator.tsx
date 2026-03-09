@@ -21,42 +21,6 @@ const AQUA = "#4ad9e0";
 export function DiastolicScanCoachContent() {
   return (
     <div>
-      {/* ─── Banner ─── */}
-      <div
-        className="relative overflow-hidden mb-6"
-        style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}
-      >
-        <div className="container py-8">
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-3">
-              <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
-              <span className="text-xs text-white/80 font-medium">ASE 2025 Guidelines</span>
-            </div>
-            <h2
-              className="text-2xl font-black text-white leading-tight mb-1"
-              style={{ fontFamily: "Merriweather, serif" }}
-            >
-              Diastolic Function ScanCoach
-            </h2>
-            <p className="text-[#4ad9e0] font-semibold text-sm mb-2">LV Diastolic Assessment Protocol · LARS Included</p>
-            <p className="text-white/70 text-xs leading-relaxed mb-3">
-              Stepwise acquisition of mitral inflow, TDI, LA strain, pulmonary venous flow, and LA volume — with the ASE 2025 two-step grading algorithm and LARS thresholds.
-            </p>
-            <p className="text-white/50 text-xs mb-4">
-              <span className="font-semibold text-white/70">Patient Position:</span> Left lateral decubitus for apical windows; supine for parasternal views.
-            </p>
-            <Link href="/diastolic">
-              <button
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90"
-                style={{ background: BRAND }}
-              >
-                Open Diastolic Navigator <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </Link>
-          </div>
-        </div>
-      </div>
-
       <div className="max-w-4xl">
 
         <SectionCard title="Tissue Doppler Imaging (TDI) — e' Velocity" icon={Activity} defaultOpen>
