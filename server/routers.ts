@@ -119,6 +119,11 @@ import {
   getComparisonReviewById,
   deleteComparisonReview,
   getComparisonReviewsMonthlySummary,
+  generateCaseStudyId,
+  createPossibleCaseStudy,
+  getPossibleCaseStudies,
+  updatePossibleCaseStudy,
+  deletePossibleCaseStudy,
 } from "./db";
 
 export const appRouter = router({
@@ -1020,7 +1025,6 @@ export const appRouter = router({
         pedoffCwEnvelopeOther: z.string().optional(),
         pedoffCwLabelledOther: z.string().optional(),
         pisaEroMeasurementsOther: z.string().optional(),
-        additionalImagingMethods: z.string().optional(),
         additionalImagingMethodsOther: z.string().optional(),
         strainCorrectOther: z.string().optional(),
         notifyAdminEmail: z.string().optional(),
@@ -1948,6 +1952,86 @@ export const appRouter = router({
         const lab = await getLabByMemberUserId(ctx.user.id);
         if (!lab) throw new TRPCError({ code: "NOT_FOUND", message: "No lab found" });
         await deleteComparisonReview(input.id, lab.id);
+        return { success: true };
+      }),
+  }),
+
+  // ─── Possible Case Studies ──────────────────────────────────────────────────
+  caseStudies: router({
+    /** List all possible case studies for the lab */
+    list: protectedProcedure
+      .input(z.object({
+        examType: z.string().optional(),
+        status: z.string().optional(),
+      }))
+      .query(async ({ ctx, input }) => {
+        const lab = await getLabByMemberUserId(ctx.user.id);
+        if (!lab) return [];
+        return getPossibleCaseStudies(lab.id, input);
+      }),
+
+    /** Create a new possible case study */
+    create: protectedProcedure
+      .input(z.object({
+        sourceIqrId: z.number().optional(),
+        examType: z.string().optional(),
+        examDate: z.string().optional(),
+        patientMrn: z.string().optional(),
+        diagnosis: z.string().optional(),
+        clinicalNotes: z.string().optional(),
+        sonographerName: z.string().optional(),
+        sonographerEmail: z.string().optional(),
+        interpretingPhysicianName: z.string().optional(),
+        interpretingPhysicianEmail: z.string().optional(),
+        accreditationType: z.string().optional(),
+        submissionStatus: z.enum(["identified", "under_review", "approved", "submitted", "rejected"]).optional(),
+        submissionNotes: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const lab = await getLabByMemberUserId(ctx.user.id);
+        if (!lab) throw new TRPCError({ code: "NOT_FOUND", message: "No lab found" });
+        const caseStudyId = await generateCaseStudyId(lab.id);
+        await createPossibleCaseStudy({
+          ...input,
+          caseStudyId,
+          labId: lab.id,
+          createdByUserId: ctx.user.id,
+        });
+        return { success: true, caseStudyId };
+      }),
+
+    /** Update a possible case study */
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        examType: z.string().optional(),
+        examDate: z.string().optional(),
+        patientMrn: z.string().optional(),
+        diagnosis: z.string().optional(),
+        clinicalNotes: z.string().optional(),
+        sonographerName: z.string().optional(),
+        sonographerEmail: z.string().optional(),
+        interpretingPhysicianName: z.string().optional(),
+        interpretingPhysicianEmail: z.string().optional(),
+        accreditationType: z.string().optional(),
+        submissionStatus: z.enum(["identified", "under_review", "approved", "submitted", "rejected"]).optional(),
+        submissionNotes: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const lab = await getLabByMemberUserId(ctx.user.id);
+        if (!lab) throw new TRPCError({ code: "NOT_FOUND", message: "No lab found" });
+        const { id, ...data } = input;
+        await updatePossibleCaseStudy(id, lab.id, data);
+        return { success: true };
+      }),
+
+    /** Delete a possible case study */
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const lab = await getLabByMemberUserId(ctx.user.id);
+        if (!lab) throw new TRPCError({ code: "NOT_FOUND", message: "No lab found" });
+        await deletePossibleCaseStudy(input.id, lab.id);
         return { success: true };
       }),
   }),

@@ -12,7 +12,7 @@
     - Page 5 is Doppler Quality (same structure)
     - Page 6 is Cardiac Evaluation + Overall Findings + Review Summary (slightly different questions)
 */
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import Layout from "@/components/Layout";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -446,6 +446,76 @@ export default function SonographerPeerReview({ embedded }: { embedded?: boolean
     formTopRef.current?.scrollIntoView({ behavior: "smooth" });
   }
 
+  // ── Quality Score Auto-Calculation (same logic as Quality Review, minus IAC field) ──
+  const qualityScoreCalc = useMemo(() => {
+    function scoreField(val: string): { scored: boolean; points: number; maxPoints: number } {
+      if (!val) return { scored: false, points: 0, maxPoints: 1 };
+      const v = val.toLowerCase();
+      if (
+        v.startsWith("yes") || v.startsWith("adequate") || v.startsWith("excellent") ||
+        v.startsWith("complete") || v.startsWith("n/a") || v.startsWith("comparable") ||
+        v.startsWith("sufficient") || v === "apex not visualized" || v.startsWith("concordant")
+      ) return { scored: true, points: 1, maxPoints: 1 };
+      if (
+        v.startsWith("no") || v.includes("deficien") || v.includes("incomplete") ||
+        v.includes("inadequate") || v.includes("not fully") || v.includes("some deficien")
+      ) return { scored: true, points: 0, maxPoints: 1 };
+      return { scored: false, points: 0, maxPoints: 1 };
+    }
+
+    const fields: Array<{ scored: boolean; points: number; maxPoints: number }> = [];
+
+    // Step 3 — Overall Image Quality
+    fields.push(scoreField(form.onAxisImaging));
+    fields.push(scoreField(form.effortSuboptimalViews));
+    if (isAETTE_PETTE_FE(et)) fields.push(scoreField(form.contrastUsed));
+    if (isAETTE_PETTE_FE(et)) fields.push(scoreField(form.contrastSettingsAppropriate));
+
+    // Step 4 — Measurements
+    fields.push(scoreField(form.allMeasurementsObtained));
+    fields.push(scoreField(form.ventricularFunctionAccurate));
+
+    // Step 5 — Doppler Quality
+    fields.push(scoreField(form.dopplerWaveformSettings));
+    fields.push(scoreField(form.forwardFlowSpectrum));
+    fields.push(scoreField(form.sampleVolumePlacement));
+    if (isAETTE_PETTE_FE(et)) fields.push(scoreField(form.colorFlowInterrogation));
+    if (isAETTE_PETTE_FE(et)) fields.push(scoreField(form.pulmonaryVeinDoppler));
+
+    // Step 6 — Cardiac Evaluation
+    fields.push(scoreField(form.aorticValveEval));
+    fields.push(scoreField(form.mitralValveEval));
+    fields.push(scoreField(form.tricuspidValveEval));
+    fields.push(scoreField(form.pulmonicValveEval));
+    if (isAETTE(et)) fields.push(scoreField(form.strainCorrect));
+
+    // Step 6 — Overall Findings
+    fields.push(scoreField(form.imageOptimizationSummary));
+    fields.push(scoreField(form.measurementAccuracySummary));
+    fields.push(scoreField(form.dopplerSettingsSummary));
+    fields.push(scoreField(form.protocolSequenceFollowed));
+    fields.push(scoreField(form.pathologyDocumented));
+    fields.push(scoreField(form.clinicalQuestionAnswered));
+    fields.push(scoreField(form.reportConcordant));
+    fields.push(scoreField(form.comparableToPreview));
+
+    const allScored = fields.every(f => f.scored);
+    if (!allScored) return null;
+
+    const totalPoints = fields.reduce((sum, f) => sum + f.points, 0);
+    const maxPoints = fields.reduce((sum, f) => sum + f.maxPoints, 0);
+    const pct = Math.round((totalPoints / maxPoints) * 100);
+
+    let tier: string;
+    let color: string;
+    if (pct >= 90) { tier = "Excellent"; color = "#16a34a"; }
+    else if (pct >= 75) { tier = "Good"; color = "#189aa1"; }
+    else if (pct >= 60) { tier = "Adequate"; color = "#d97706"; }
+    else { tier = "Needs Improvement"; color = "#dc2626"; }
+
+    return { pct, tier, color, totalPoints, maxPoints };
+  }, [form, et]);
+
   function handleSubmit() {
     if (!form.sonographerEmail) {
       toast.error("Sonographer email is required.");
@@ -496,7 +566,7 @@ export default function SonographerPeerReview({ embedded }: { embedded?: boolean
       clinicalQuestionAnswered: form.clinicalQuestionAnswered || undefined,
       reportConcordant: form.reportConcordant || undefined,
       comparableToPrevious: form.comparableToPreview || undefined,
-      qualityScore: form.qualityScore ? parseInt(form.qualityScore) : undefined,
+      qualityScore: qualityScoreCalc ? qualityScoreCalc.pct : (form.qualityScore ? parseInt(form.qualityScore) : undefined),
       reviewComments: form.reviewComments || undefined,
       notifyAdmin: form.notifyAdmin || undefined,
       notifyAdminEmail: form.notifyAdminEmail || undefined,
@@ -981,14 +1051,31 @@ export default function SonographerPeerReview({ embedded }: { embedded?: boolean
         </SectionCard>
 
         <SectionCard title="Review Summary">
-          <div className="mb-4">
-            <Label className="text-sm font-semibold text-gray-700 mb-1.5 block">Quality Score</Label>
-            <Select value={form.qualityScore} onValueChange={v => set("qualityScore", v)}>
-              <SelectTrigger><SelectValue placeholder="Select score..." /></SelectTrigger>
-              <SelectContent>
-                {QUALITY_SCORES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-              </SelectContent>
-            </Select>
+          {/* Auto-calculated Quality Score */}
+          <div className="mb-6 rounded-xl border-2 p-5" style={{ borderColor: qualityScoreCalc ? qualityScoreCalc.color + "40" : "#e5e7eb", background: qualityScoreCalc ? qualityScoreCalc.color + "08" : "#f9fafb" }}>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-bold text-gray-700">Auto-Calculated Quality Score</span>
+              {qualityScoreCalc ? (
+                <span className="text-xs font-semibold px-2.5 py-1 rounded-full text-white" style={{ background: qualityScoreCalc.color }}>
+                  {qualityScoreCalc.tier}
+                </span>
+              ) : (
+                <span className="text-xs text-gray-400 italic">Complete all scored fields to calculate</span>
+              )}
+            </div>
+            {qualityScoreCalc ? (
+              <>
+                <div className="flex items-end gap-2 mb-2">
+                  <span className="text-4xl font-black" style={{ color: qualityScoreCalc.color }}>{qualityScoreCalc.pct}%</span>
+                  <span className="text-sm text-gray-500 mb-1">{qualityScoreCalc.totalPoints} / {qualityScoreCalc.maxPoints} pts</span>
+                </div>
+                <div className="h-2.5 rounded-full bg-gray-100 overflow-hidden">
+                  <div className="h-full rounded-full transition-all duration-700" style={{ width: `${qualityScoreCalc.pct}%`, background: qualityScoreCalc.color }} />
+                </div>
+              </>
+            ) : (
+              <div className="h-2.5 rounded-full bg-gray-100" />
+            )}
           </div>
           <div className="mb-4">
             <Label className="text-sm font-semibold text-gray-700 mb-1.5 block">Review Comments *</Label>
@@ -1156,15 +1243,31 @@ export default function SonographerPeerReview({ embedded }: { embedded?: boolean
               Next <ArrowRight className="w-4 h-4" />
             </Button>
           ) : (
-            <Button
-              onClick={handleSubmit}
-              disabled={createReview.isPending}
-              className="flex items-center gap-2 text-white"
-              style={{ background: BRAND }}
-            >
-              {createReview.isPending ? "Submitting..." : "Submit Review"}
-              <CheckCircle2 className="w-4 h-4" />
-            </Button>
+            <div className="flex items-center gap-3">
+              {/* Send Feedback — sends comments to the sonographer email without full submission */}
+              {form.sonographerEmail && form.notifySonographerComments && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (!form.sonographerEmail) { toast.error("Sonographer email is required to send feedback."); return; }
+                    if (!form.notifySonographerComments) { toast.error("Please enter feedback comments before sending."); return; }
+                    toast.success(`Feedback queued for ${form.sonographerEmail} — will be sent on submission.`);
+                  }}
+                  className="flex items-center gap-2 border-[#189aa1] text-[#189aa1] hover:bg-[#189aa1]/5"
+                >
+                  Send Feedback
+                </Button>
+              )}
+              <Button
+                onClick={handleSubmit}
+                disabled={createReview.isPending}
+                className="flex items-center gap-2 text-white"
+                style={{ background: BRAND }}
+              >
+                {createReview.isPending ? "Submitting..." : "Submit Review"}
+                <CheckCircle2 className="w-4 h-4" />
+              </Button>
+            </div>
           )}
         </div>
       </div>

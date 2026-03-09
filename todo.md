@@ -1824,3 +1824,11 @@
 - [x] Fix IQR Step 2 (Protocol Sequence): show correct view checkboxes per exam type (TTE/TEE/Stress/Pedi TTE/Pedi TEE/Fetal)
 - [x] Build Sonographer Peer Review as a separate standalone form (SonographerPeerReview.tsx)
 - [x] Add Sonographer Peer Review tab to DIY Accreditation Tool
+
+## Quality Score Auto-Calculation & Peer Review Analytics
+- [ ] Auto-calculate quality score on Quality Review form (positive: Yes/Adequate/Complete/N/A; zero: No/Incomplete/Inadequate/Deficiencies Noted; heavy negative weight for "Not IAC Acceptable"; only calculate when all scored fields are complete; display at bottom)
+- [ ] Auto-calculate quality score on Sonographer Peer Review form (same scoring logic)
+- [ ] Add Send Feedback button to Sonographer Peer Review form
+- [ ] Add Peer Review results section to Reports & Analytics tab (separate from IQR quality reviews)
+- [ ] Create Possible Case Studies tracker tab under Case Studies (unique ID, sonographer, interpreting physician, exam info, linked from QR "IAC Acceptable" field)
+- [ ] ScanCoach: accept both images and videos for clinical media uploads

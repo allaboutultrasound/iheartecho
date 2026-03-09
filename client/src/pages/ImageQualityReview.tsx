@@ -4,7 +4,7 @@
   Fields without a prefix apply to all exam types.
   Review Type is hardcoded as "QUALITY REVIEW".
 */
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import Layout from "@/components/Layout";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
@@ -480,6 +480,133 @@ export default function ImageQualityReview({ embedded = false }: Props) {
     setTimeout(() => formTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
   }
 
+  // ── Quality Score Auto-Calculation ─────────────────────────────────────────
+  // Positive answers (1 pt each): Yes, Adequate, Excellent, Complete, N/A (any variant),
+  //   Comparable, Concordant, Sufficient, Apex Not Visualized (partial credit)
+  // Zero answers (0 pts): No, Deficiencies Noted, Some Deficiencies, Incomplete, Inadequate,
+  //   Not Fully Visualized, Minor/Moderate/Major Deficiencies
+  // IAC Acceptable (3 pts weight): anything except "Not IAC Acceptable" = 3 pts; "Not IAC Acceptable" = 0 pts
+  // Score only shown when all applicable scored fields are answered.
+  const qualityScoreCalc = useMemo(() => {
+    function scoreField(val: string): { scored: boolean; points: number; maxPoints: number } {
+      if (!val) return { scored: false, points: 0, maxPoints: 1 };
+      const v = val.toLowerCase();
+      // Positive patterns
+      if (
+        v.startsWith("yes") ||
+        v.startsWith("adequate") ||
+        v.startsWith("excellent") ||
+        v.startsWith("complete") ||
+        v.startsWith("n/a") ||
+        v.startsWith("comparable") ||
+        v.startsWith("sufficient") ||
+        v === "apex not visualized" ||
+        v.startsWith("concordant")
+      ) return { scored: true, points: 1, maxPoints: 1 };
+      // Zero patterns
+      if (
+        v.startsWith("no") ||
+        v.includes("deficien") ||
+        v.includes("incomplete") ||
+        v.includes("inadequate") ||
+        v.includes("not fully") ||
+        v.includes("some deficien")
+      ) return { scored: true, points: 0, maxPoints: 1 };
+      // Unknown/unanswered
+      return { scored: false, points: 0, maxPoints: 1 };
+    }
+
+    function scoreIac(val: string): { scored: boolean; points: number; maxPoints: number } {
+      if (!val) return { scored: false, points: 0, maxPoints: 3 };
+      // "Not IAC Acceptable" = 0; anything else = 3
+      if (val.toLowerCase().includes("not iac acceptable")) return { scored: true, points: 0, maxPoints: 3 };
+      return { scored: true, points: 3, maxPoints: 3 };
+    }
+
+    // Build list of applicable fields based on exam type
+    const fields: Array<{ scored: boolean; points: number; maxPoints: number }> = [];
+
+    // Step 3 — Basic Exam Quality (all exam types)
+    fields.push(scoreField(form.required2dViews));
+    fields.push(scoreField(form.imageOptimized));
+    fields.push(scoreField(form.harmonicImagingAppropriate));
+    fields.push(scoreField(form.patientPositioned));
+    if (isAETTE_PETTE(et)) fields.push(scoreField(form.mModeViewsObtained));
+    if (isAETTE_PETTE_FE(et)) fields.push(scoreField(form.contrastUtilized));
+
+    // Step 4 — Measurements (all exam types)
+    fields.push(scoreField(form.allMeasurementsObtained));
+    fields.push(scoreField(form.measurements2dAccurate));
+    fields.push(scoreField(form.measurementPlacementSummary));
+    fields.push(scoreField(form.ventricularFunctionAccurate));
+    if (isAETTE_PETTE(et)) {
+      fields.push(scoreField(form.psaxLvCompleteness));
+      fields.push(scoreField(form.efMeasurementsAccurate));
+      fields.push(scoreField(form.simpsonsEfObtained));
+    }
+    if (isAETTE(et)) fields.push(scoreField(form.biplaneLaVolume));
+
+    // Step 5 — Doppler Quality (all exam types)
+    fields.push(scoreField(form.dopplerWaveformSettings));
+    fields.push(scoreField(form.forwardFlowSpectrum));
+    fields.push(scoreField(form.dopplerSampleVolumes));
+    fields.push(scoreField(form.spectralEnvelopePeaks));
+    if (isAETTE_PETTE_FE(et)) {
+      fields.push(scoreField(form.colorFlowInterrogation));
+      fields.push(scoreField(form.colorDopplerIasIvs));
+      fields.push(scoreField(form.pulmonaryVeinInflow));
+    }
+    if (isAETTE_PETTE(et)) {
+      fields.push(scoreField(form.tissueDopplerAdequate));
+    }
+    if (isAETTE(et)) fields.push(scoreField(form.tapseAccurate));
+
+    // Step 6 — Cardiac Evaluation (all exam types)
+    fields.push(scoreField(form.aorticValveEval));
+    fields.push(scoreField(form.lvotSampleVolume));
+    fields.push(scoreField(form.mitralValveEval));
+    fields.push(scoreField(form.tricuspidValveEval));
+    fields.push(scoreField(form.pulmonicValveEval));
+    if (isAETTE(et)) {
+      fields.push(scoreField(form.pedoffCwUtilized));
+      fields.push(scoreField(form.pedoffCwEnvelope));
+      fields.push(scoreField(form.pedoffCwLabelled));
+      fields.push(scoreField(form.pisaEroEval));
+      fields.push(scoreField(form.pisaEroMeasurements));
+      fields.push(scoreField(form.strainCorrect));
+    }
+
+    // Step 6 — Overall Findings (all exam types)
+    fields.push(scoreField(form.images2dOptimized));
+    fields.push(scoreField(form.measurementsAccurateSummary));
+    fields.push(scoreField(form.dopplerSettingsSummary));
+    fields.push(scoreField(form.protocolSequence));
+    fields.push(scoreField(form.pathologyDocumented));
+    fields.push(scoreField(form.clinicalQuestionAnswered));
+    fields.push(scoreField(form.concordantWithPhysician));
+    fields.push(scoreField(form.comparableToPrevious));
+
+    // IAC Acceptable — heavy weight (3 pts)
+    fields.push(scoreIac(form.iacAcceptable));
+
+    // Only calculate if ALL fields are scored
+    const allScored = fields.every(f => f.scored);
+    if (!allScored) return null;
+
+    const totalPoints = fields.reduce((sum, f) => sum + f.points, 0);
+    const maxPoints = fields.reduce((sum, f) => sum + f.maxPoints, 0);
+    const pct = Math.round((totalPoints / maxPoints) * 100);
+
+    let tier: string;
+    let color: string;
+    if (pct >= 90) { tier = "Excellent"; color = "#16a34a"; }
+    else if (pct >= 75) { tier = "Good"; color = "#189aa1"; }
+    else if (pct >= 60) { tier = "Adequate"; color = "#d97706"; }
+    else { tier = "Needs Improvement"; color = "#dc2626"; }
+
+    return { pct, tier, color, totalPoints, maxPoints };
+  }, [form, et]);
+
   function handleSubmit() {
     const payload = {
       reviewType: "QUALITY REVIEW" as const,
@@ -589,7 +716,7 @@ export default function ImageQualityReview({ embedded = false }: Props) {
       concordantExplain: form.concordantExplain || undefined,
       comparableToPrevious: form.comparableToPrevious || undefined,
       iacAcceptable: form.iacAcceptable || undefined,
-      qualityScore: form.qualityScore ? parseInt(form.qualityScore) : undefined,
+      qualityScore: qualityScoreCalc ? qualityScoreCalc.pct : (form.qualityScore ? parseInt(form.qualityScore) : undefined),
       reviewComments: form.reviewComments || undefined,
       notifyAdmin: form.notifyAdmin || undefined,
       notifyAdminEmail: form.notifyAdminEmail || undefined,
@@ -1345,16 +1472,34 @@ export default function ImageQualityReview({ embedded = false }: Props) {
   function renderStep7() {
     return (
       <SectionCard title="Review Summary">
-        <div className="mb-5">
-          <Label className="text-sm font-semibold text-gray-700 mb-1.5 block">Quality Score (1–10)</Label>
-          <Select value={form.qualityScore} onValueChange={v => set("qualityScore", v)}>
-            <SelectTrigger><SelectValue placeholder="Select score..." /></SelectTrigger>
-            <SelectContent>
-              {Array.from({ length: 10 }, (_, i) => String(i + 1)).map(n => (
-                <SelectItem key={n} value={n}>{n}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        {/* Auto-calculated Quality Score */}
+        <div className="mb-6 rounded-xl border-2 p-5" style={{ borderColor: qualityScoreCalc ? qualityScoreCalc.color + "40" : "#e5e7eb", background: qualityScoreCalc ? qualityScoreCalc.color + "08" : "#f9fafb" }}>
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm font-bold text-gray-700">Auto-Calculated Quality Score</span>
+            {qualityScoreCalc ? (
+              <span className="text-xs font-semibold px-2.5 py-1 rounded-full text-white" style={{ background: qualityScoreCalc.color }}>
+                {qualityScoreCalc.tier}
+              </span>
+            ) : (
+              <span className="text-xs text-gray-400 italic">Complete all scored fields to calculate</span>
+            )}
+          </div>
+          {qualityScoreCalc ? (
+            <>
+              <div className="flex items-end gap-2 mb-2">
+                <span className="text-4xl font-black" style={{ color: qualityScoreCalc.color }}>{qualityScoreCalc.pct}%</span>
+                <span className="text-sm text-gray-500 mb-1">{qualityScoreCalc.totalPoints} / {qualityScoreCalc.maxPoints} pts</span>
+              </div>
+              <div className="h-2.5 rounded-full bg-gray-100 overflow-hidden">
+                <div className="h-full rounded-full transition-all duration-700" style={{ width: `${qualityScoreCalc.pct}%`, background: qualityScoreCalc.color }} />
+              </div>
+              {form.iacAcceptable.toLowerCase().includes("not iac acceptable") && (
+                <p className="mt-2 text-xs font-semibold" style={{ color: "#dc2626" }}>⚠ Case marked as Not IAC Acceptable — this significantly impacts the quality score.</p>
+              )}
+            </>
+          ) : (
+            <div className="h-2.5 rounded-full bg-gray-100" />
+          )}
         </div>
 
         <div className="mb-5">

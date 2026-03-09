@@ -1610,6 +1610,76 @@ function DIYReportsTab() {
             </Card>
           )}
 
+          {/* Peer Review Monthly Detail */}
+          {filteredPeerMonthly.length > 0 && (
+            <Card className="border border-gray-100">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                    <Users className="w-4 h-4" style={{ color: "#7c3aed" }} />
+                    Sonographer Peer Review — Monthly Detail
+                  </CardTitle>
+                  <button onClick={() => exportCSV(filteredPeerMonthly.map(m => ({ Month: m.month, Reviews: m.reviewCount, AvgQS: m.avgScore != null ? Math.round(Number(m.avgScore)) : "", Excellent: m.excellentCount ?? 0, Good: m.goodCount ?? 0, Adequate: m.adequateCount ?? 0, NeedsImprovement: m.needsImprovementCount ?? 0 })), `peer-review-monthly.csv`)} className="flex items-center gap-1 text-xs text-[#189aa1] hover:underline">
+                    <FileDown className="w-3.5 h-3.5" /> CSV
+                  </button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-gray-100">
+                        <th className="text-left py-1.5 text-gray-500 font-semibold">Month</th>
+                        <th className="text-right py-1.5 text-gray-500 font-semibold">Reviews</th>
+                        <th className="text-right py-1.5 text-gray-500 font-semibold">Avg QS</th>
+                        <th className="text-right py-1.5 text-gray-500 font-semibold">Excellent</th>
+                        <th className="text-right py-1.5 text-gray-500 font-semibold">Good</th>
+                        <th className="text-right py-1.5 text-gray-500 font-semibold">Adequate</th>
+                        <th className="text-right py-1.5 text-gray-500 font-semibold">Needs Impr.</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredPeerMonthly.map((m, i) => (
+                        <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
+                          <td className="py-1.5 font-medium text-gray-700">{m.month}</td>
+                          <td className="py-1.5 text-right text-gray-600">{m.reviewCount}</td>
+                          <td className="py-1.5 text-right font-bold" style={{ color: "#7c3aed" }}>{m.avgScore != null ? Math.round(Number(m.avgScore)) : "—"}</td>
+                          <td className="py-1.5 text-right text-green-600">{m.excellentCount ?? 0}</td>
+                          <td className="py-1.5 text-right text-blue-600">{m.goodCount ?? 0}</td>
+                          <td className="py-1.5 text-right text-amber-600">{m.adequateCount ?? 0}</td>
+                          <td className="py-1.5 text-right text-red-600">{m.needsImprovementCount ?? 0}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Peer Review Growth Curve */}
+          {filteredPeerMonthly.length > 0 && (
+            <Card className="border border-gray-100">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                  <LineChartIcon className="w-4 h-4" style={{ color: "#7c3aed" }} />
+                  Sonographer Peer Review — Quality Score Trend
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={200}>
+                  <LineChart data={filteredPeerMonthly.map(m => ({ month: m.month, "Avg Peer Score": m.avgScore != null ? Math.round(Number(m.avgScore)) : null }))} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+                    <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} />
+                    <Tooltip formatter={(v: any) => [`${v}%`, "Avg Peer Score"]} />
+                    <Line type="monotone" dataKey="Avg Peer Score" stroke="#7c3aed" strokeWidth={2.5} dot={{ r: 4, fill: "#7c3aed" }} activeDot={{ r: 6 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
+
           {/* CME Progress */}
           <Card className="border border-gray-100">
             <CardHeader className="pb-2">

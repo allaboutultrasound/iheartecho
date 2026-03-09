@@ -431,7 +431,6 @@ export const imageQualityReviews = mysqlTable("imageQualityReviews", {
   pedoffCwEnvelopeOther: varchar("pedoffCwEnvelopeOther", { length: 300 }),
   pedoffCwLabelledOther: varchar("pedoffCwLabelledOther", { length: 300 }),
   pisaEroMeasurementsOther: varchar("pisaEroMeasurementsOther", { length: 300 }),
-  additionalImagingMethods: text("additionalImagingMethods"),                  // JSON array: None, 2D Strain, 3D Imaging, 3D EF, Other
   additionalImagingMethodsOther: varchar("additionalImagingMethodsOther", { length: 300 }),
   strainCorrectOther: varchar("strainCorrectOther", { length: 300 }),
   // Page 7 — Review Summary notification fields
@@ -1307,3 +1306,36 @@ export const caseViewEvents = mysqlTable("caseViewEvents", {
   viewedAt: timestamp("viewedAt").defaultNow().notNull(),
 });
 export type CaseViewEvent = typeof caseViewEvents.$inferSelect;
+
+// ─── Possible Case Studies (IAC Submission Candidates) ───────────────────────
+// Tracks echo cases identified during quality reviews as potential IAC case
+// submissions. Each record gets a unique human-readable case study ID.
+export const possibleCaseStudies = mysqlTable("possibleCaseStudies", {
+  id: int("id").autoincrement().primaryKey(),
+  // Unique human-readable ID, e.g. "CS-2026-001"
+  caseStudyId: varchar("caseStudyId", { length: 20 }).notNull().unique(),
+  // Source quality review (optional link back to the IQR)
+  sourceIqrId: int("sourceIqrId"),
+  // Exam info
+  examType: varchar("examType", { length: 20 }),         // AETTE, AETEE, AE_STRESS, PETTE, PETEE, FE
+  examDate: varchar("examDate", { length: 20 }),
+  patientMrn: varchar("patientMrn", { length: 50 }),     // optional / de-identified
+  diagnosis: text("diagnosis"),
+  clinicalNotes: text("clinicalNotes"),
+  // Staff
+  sonographerName: varchar("sonographerName", { length: 150 }),
+  sonographerEmail: varchar("sonographerEmail", { length: 200 }),
+  interpretingPhysicianName: varchar("interpretingPhysicianName", { length: 150 }),
+  interpretingPhysicianEmail: varchar("interpretingPhysicianEmail", { length: 200 }),
+  // Accreditation tracking
+  accreditationType: varchar("accreditationType", { length: 100 }),  // e.g. "Adult Echo", "Pediatric/Fetal"
+  submissionStatus: mysqlEnum("submissionStatus", ["identified", "under_review", "approved", "submitted", "rejected"]).default("identified").notNull(),
+  submissionNotes: text("submissionNotes"),
+  // Lab linkage
+  labId: int("labId"),
+  createdByUserId: int("createdByUserId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type PossibleCaseStudy = typeof possibleCaseStudies.$inferSelect;
+export type InsertPossibleCaseStudy = typeof possibleCaseStudies.$inferInsert;

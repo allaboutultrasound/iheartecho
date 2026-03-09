@@ -51,6 +51,9 @@ import {
   scanCoachMedia,
   type ScanCoachMedia,
   type InsertScanCoachMedia,
+  possibleCaseStudies,
+  type PossibleCaseStudy,
+  type InsertPossibleCaseStudy,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -2122,4 +2125,65 @@ export async function getComparisonReviewsMonthlySummary(labId: number) {
     .where(eq(physicianComparisonReviews.labId, labId))
     .groupBy(sql`DATE_FORMAT(createdAt, '%Y-%m')`)
     .orderBy(sql`DATE_FORMAT(createdAt, '%Y-%m')`);
+}
+
+// ─── Possible Case Studies ────────────────────────────────────────────────────
+
+/** Generate next sequential case study ID for a lab, e.g. "CS-2026-001" */
+export async function generateCaseStudyId(labId: number): Promise<string> {
+  const db = await getDb();
+  if (!db) return `CS-${new Date().getFullYear()}-001`;
+  const year = new Date().getFullYear();
+  const existing = await db
+    .select({ caseStudyId: possibleCaseStudies.caseStudyId })
+    .from(possibleCaseStudies)
+    .where(
+      and(
+        eq(possibleCaseStudies.labId, labId),
+        sql`YEAR(createdAt) = ${year}`
+      )
+    );
+  const maxSeq = existing.reduce((max, r) => {
+    const match = r.caseStudyId?.match(/CS-\d{4}-(\d+)/);
+    if (match) return Math.max(max, parseInt(match[1], 10));
+    return max;
+  }, 0);
+  return `CS-${year}-${String(maxSeq + 1).padStart(3, "0")}`;
+}
+
+export async function createPossibleCaseStudy(data: InsertPossibleCaseStudy) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  const [result] = await db.insert(possibleCaseStudies).values(data);
+  return result;
+}
+
+export async function getPossibleCaseStudies(labId: number, filters?: { examType?: string; status?: string }) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions = [eq(possibleCaseStudies.labId, labId)];
+  if (filters?.examType) conditions.push(eq(possibleCaseStudies.examType, filters.examType));
+  if (filters?.status) conditions.push(eq(possibleCaseStudies.submissionStatus, filters.status as any));
+  return db
+    .select()
+    .from(possibleCaseStudies)
+    .where(and(...conditions))
+    .orderBy(desc(possibleCaseStudies.createdAt));
+}
+
+export async function updatePossibleCaseStudy(id: number, labId: number, data: Partial<InsertPossibleCaseStudy>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  await db
+    .update(possibleCaseStudies)
+    .set({ ...data, updatedAt: new Date() })
+    .where(and(eq(possibleCaseStudies.id, id), eq(possibleCaseStudies.labId, labId)));
+}
+
+export async function deletePossibleCaseStudy(id: number, labId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  await db
+    .delete(possibleCaseStudies)
+    .where(and(eq(possibleCaseStudies.id, id), eq(possibleCaseStudies.labId, labId)));
 }

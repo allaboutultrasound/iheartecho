@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import PossibleCaseStudies from "@/components/PossibleCaseStudies";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -1049,10 +1050,10 @@ function CaseTracker({ tier }: { tier: StaffTier }) {
 }
 
 // ─── Main Component ────────────────────────────────────────────────────────────
-export default function CaseMixSubmission({ initialView }: { initialView?: "requirements" | "tracker" }) {
+export default function CaseMixSubmission({ initialView }: { initialView?: "requirements" | "tracker" | "possible-cases" }) {
   const { isAuthenticated } = useAuth();
   const [tier, setTier] = useState<StaffTier>("le5");
-  const [view, setView] = useState<"requirements" | "tracker">(initialView ?? "requirements");
+  const [view, setView] = useState<"requirements" | "tracker" | "possible-cases">(initialView ?? "requirements");
 
   // Fetch lab info to get accreditation types for filtering
   const { data: labData } = trpc.lab.getMyLab.useQuery(undefined, { enabled: isAuthenticated });
@@ -1094,6 +1095,14 @@ export default function CaseMixSubmission({ initialView }: { initialView?: "requ
           >
             <ClipboardList className="w-3.5 h-3.5" />
             Case Tracker
+          </button>
+          <button
+            onClick={() => setView("possible-cases")}
+            className={`px-4 py-2 flex items-center gap-1.5 transition-colors border-l border-gray-200 ${view === "possible-cases" ? "text-white" : "text-gray-500 hover:bg-gray-50"}`}
+            style={view === "possible-cases" ? { background: BRAND } : {}}
+          >
+            <Stethoscope className="w-3.5 h-3.5" />
+            Possible Cases
           </button>
         </div>
       </div>
@@ -1260,8 +1269,10 @@ export default function CaseMixSubmission({ initialView }: { initialView?: "requ
             </a>
           </p>
         </div>
-      ) : (
+      ) : view === "tracker" ? (
         <CaseTracker tier={tier} />
+      ) : (
+        <PossibleCaseStudies />
       )}
     </div>
   );
