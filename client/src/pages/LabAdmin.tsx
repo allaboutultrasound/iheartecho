@@ -956,7 +956,7 @@ function ReportsTab({ lab, members }: { lab: any; members: any[] }) {
     doc.rect(0, 0, pageW, 30, "F");
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(16); doc.setFont("helvetica", "bold");
-    doc.text("iHeartEcho™ — Lab Accreditation Report", margin, 13);
+    doc.text("iHeartEcho™ EchoAccreditation Navigator™ — Lab Report", margin, 13);
     doc.setFontSize(9); doc.setFont("helvetica", "normal");
     doc.text(`${lab.labName}  |  ${lab.plan.charAt(0).toUpperCase() + lab.plan.slice(1)} Plan`, margin, 20);
     doc.text(`Generated: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`, margin, 26);
@@ -1040,7 +1040,7 @@ function ReportsTab({ lab, members }: { lab: any; members: any[] }) {
     for (let p = 1; p <= totalPages; p++) {
       doc.setPage(p);
       doc.setFontSize(7); doc.setTextColor(150, 150, 150); doc.setFont("helvetica", "normal");
-      doc.text("iHeartEcho™ DIY Accreditation Tool™  |  For IAC accreditation preparation use only", margin, pageH - 8);
+      doc.text("iHeartEcho™ EchoAccreditation Navigator™  |  For IAC accreditation preparation use only", margin, pageH - 8);
       doc.text(`Page ${p} of ${totalPages}`, pageW - margin - 20, pageH - 8);
     }
 

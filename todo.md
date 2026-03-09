@@ -48,9 +48,9 @@
 - [ ] Split IQR section in Reports & Analytics into Quality Review and Peer Review sub-sections based on reviewType field
 - [ ] Remove "Header Info" and "Review Header" section labels from IQR form
 - [ ] Remove all tags from flashcards (overwhelming)
-- [ ] Fix flashcard layout — cards are halfway down the page, should appear near the top
+- [x] Fix flashcard layout — cards are halfway down the page, should appear near the top
 - [ ] Hide flashcard count from UI (don't show how many are available)
-- [ ] Move scoring/tracking display below the flashcard (currently overlapping the card)
+- [x] Move scoring/tracking display below the flashcard (currently overlapping the card)
 - [ ] Fix typo: "LARDS" should be "LARS" (somewhere in the app)
 - [ ] Add flashcard sorting/filtering by category: Adult Echo, Pediatric/Congenital Echo, Fetal Echo
 - [x] Generate EchoAssist hero banner background image and upload to CDN (All Files)
@@ -61,6 +61,9 @@
 - [ ] Rename "Flashcard Deck" to "Echo Flashcards" throughout the app
 - [ ] Separate Flashcards from Daily Challenge (own route, own nav entry, own admin section)
 - [ ] Add echoCategory field to quickfireQuestions schema (Adult Echo, Pediatric/Congenital Echo, Fetal Echo)
+- [ ] Fix premium gate for EchoAssist premium options (basic members can currently access premium features)
+- [ ] Fix premium gate for DIY Accreditation (basic members can currently access it)
+- [ ] Update EchoCase Library subtext: remove case count, add descriptive text about image/video/non-image cases and critical thinking focus
 
 ## Physician Peer Review Analytics Fix
 - [x] Fix: physician comparison reviews (over-read workflow) not appearing in DIY Reports analytics
@@ -1691,3 +1694,17 @@
 - [ ] ScanCoach pages: rename H1 titles to "EchoAssist™ - ScanCoach" (not links/buttons/menus)
 - [ ] Navigator pages: rename H1 titles to "EchoAssist™ [X] Navigator" (exclude AccreditationNavigator)
 - [ ] Update EchoAssist hub subtext to "Echo Protocol Navigator & ScanCoach"
+
+## Flashcard AI Generator Fix
+- [ ] Fix Flashcard AI Generator returning a JSON error (investigate prompt/response parsing)
+
+## Daily Challenge Overhaul
+- [ ] Daily challenge shows only 1 question per day (not 5)
+- [ ] Remove group challenge concept — each question goes into the queue individually
+- [ ] Admin: select individual questions from bank and approve them to queue (no title/group required)
+- [ ] Queue shows ordered list of individually approved questions, one served per day
+
+## DIY Accreditation - Peer Review UI
+- [ ] Show checkmark on Step 1 icon when both Step 1 and Step 2 are completed in physician peer review workflow
+
+- [x] Remove all user-facing references to Thinkific from premium upgrade page and any other user-visible areas

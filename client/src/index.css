@@ -268,7 +268,7 @@ textarea,
 .flashcard-card {
   position: relative;
   width: 100%;
-  min-height: 200px;
+  min-height: 220px;
   transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
   transform-style: preserve-3d;
 }
@@ -279,8 +279,10 @@ textarea,
 
 .flashcard-face {
   position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
-  min-height: 200px;
+  /* height is set via inline style to match the taller face */
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   border-radius: 0.75rem;
@@ -290,6 +292,7 @@ textarea,
   align-items: center;
   justify-content: center;
   text-align: center;
+  box-sizing: border-box;
 }
 
 .flashcard-face--front {

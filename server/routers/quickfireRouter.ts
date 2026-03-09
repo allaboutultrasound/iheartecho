@@ -49,7 +49,12 @@ function sampleN<T>(arr: T[], n: number): T[] {
   return shuffled.slice(0, n);
 }
 
-/** Auto-generate a daily set of 5 questions (mix of types) if one doesn't exist */
+/**
+ * Ensure exactly 1 daily question exists for the given date.
+ * Priority order:
+ *   1. Next queued challenge (draft/scheduled) from quickfireChallenges — uses its first question
+ *   2. Fallback: random active non-flashcard question from the bank
+ */
 async function ensureTodaySet(db: NonNullable<Awaited<ReturnType<typeof getDb>>>, date: string) {
   const existing = await db
     .select()
@@ -59,14 +64,52 @@ async function ensureTodaySet(db: NonNullable<Awaited<ReturnType<typeof getDb>>>
 
   if (existing.length > 0) return existing[0];
 
-  // Fetch active questions, try to balance types
+  // 1. Check for a queued challenge ready to go live
+  const queuedChallenges = await db
+    .select()
+    .from(quickfireChallenges)
+    .where(sql`${quickfireChallenges.status} IN ('draft', 'scheduled')` as any)
+    .orderBy(quickfireChallenges.priority, quickfireChallenges.createdAt)
+    .limit(10);
+
+  const nextChallenge =
+    queuedChallenges.find((c) => !c.publishDate || c.publishDate <= date) ??
+    queuedChallenges[0];
+
+  if (nextChallenge) {
+    const ids: number[] = JSON.parse(nextChallenge.questionIds || "[]");
+    const finalIds = ids.slice(0, 1); // always exactly 1
+    if (finalIds.length > 0) {
+      // Archive any currently live challenge first
+      await db
+        .update(quickfireChallenges)
+        .set({ status: "archived", archivedAt: new Date() })
+        .where(eq(quickfireChallenges.status, "live"));
+      // Mark this challenge as live
+      await db
+        .update(quickfireChallenges)
+        .set({ status: "live", publishDate: nextChallenge.publishDate ?? date, publishedAt: new Date(), archivedAt: null })
+        .where(eq(quickfireChallenges.id, nextChallenge.id));
+      const [inserted] = await db.insert(quickfireDailySets).values({
+        setDate: date,
+        questionIds: JSON.stringify(finalIds),
+      });
+      return { setDate: date, questionIds: JSON.stringify(finalIds), id: (inserted as any).insertId };
+    }
+  }
+
+  // 2. Fallback: pick 1 random active non-flashcard question
   const allQuestions = await db
     .select({ id: quickfireQuestions.id, type: quickfireQuestions.type })
     .from(quickfireQuestions)
-    .where(eq(quickfireQuestions.isActive, true));
+    .where(
+      and(
+        eq(quickfireQuestions.isActive, true),
+        sql`${quickfireQuestions.type} != 'quickReview'` as any,
+      )
+    );
 
   if (allQuestions.length === 0) {
-    // Return an empty set if no questions exist yet
     const [inserted] = await db.insert(quickfireDailySets).values({
       setDate: date,
       questionIds: "[]",
@@ -74,33 +117,11 @@ async function ensureTodaySet(db: NonNullable<Awaited<ReturnType<typeof getDb>>>
     return { setDate: date, questionIds: "[]", id: (inserted as any).insertId };
   }
 
-  const scenarios = allQuestions.filter((q) => q.type === "scenario");
-  const images = allQuestions.filter((q) => q.type === "image");
-  const reviews = allQuestions.filter((q) => q.type === "quickReview");
-
-  // Target: 2 scenario, 2 image, 1 quickReview (adjust if not enough)
-  const picked = [
-    ...sampleN(scenarios, Math.min(2, scenarios.length)),
-    ...sampleN(images, Math.min(2, images.length)),
-    ...sampleN(reviews, Math.min(1, reviews.length)),
-  ];
-
-  // Fill to 5 if we didn't get enough
-  if (picked.length < 5) {
-    const remaining = allQuestions.filter(
-      (q) => !picked.find((p) => p.id === q.id)
-    );
-    picked.push(...sampleN(remaining, 5 - picked.length));
-  }
-
-  // Shuffle final set
-  const finalIds = sampleN(picked, picked.length).map((q) => q.id);
-
+  const finalIds = sampleN(allQuestions, 1).map((q) => q.id);
   await db.insert(quickfireDailySets).values({
     setDate: date,
     questionIds: JSON.stringify(finalIds),
   });
-
   return { setDate: date, questionIds: JSON.stringify(finalIds) };
 }
 
@@ -1294,6 +1315,43 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
         archivedAt: null,
       });
       return { success: true };
+    }),
+
+  /**
+   * Approve a single question to the daily challenge queue.
+   * Creates a single-question challenge entry with an auto-generated title.
+   * This replaces the old "create challenge group" workflow.
+   */
+  adminApproveQuestionToQueue: adminProcedure
+    .input(
+      z.object({
+        questionId: z.number().int().positive(),
+        publishDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      // Fetch the question to auto-generate a title
+      const [q] = await db
+        .select()
+        .from(quickfireQuestions)
+        .where(eq(quickfireQuestions.id, input.questionId))
+        .limit(1);
+      if (!q) throw new TRPCError({ code: "NOT_FOUND", message: "Question not found" });
+      const autoTitle =
+        q.question.length > 60 ? q.question.slice(0, 57) + "..." : q.question;
+      const [result] = await db.insert(quickfireChallenges).values({
+        title: autoTitle,
+        description: null,
+        questionIds: JSON.stringify([input.questionId]),
+        priority: 100,
+        category: null,
+        status: input.publishDate ? "scheduled" : "draft",
+        publishDate: input.publishDate ?? null,
+        createdByUserId: ctx.user.id,
+      });
+      return { id: (result as any).insertId };
     }),
 
   /** List only archived challenges for the archive tab */

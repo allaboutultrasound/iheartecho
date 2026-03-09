@@ -3,7 +3,11 @@
   Tabs: Quality Review | Peer Review | Policy Builder | Appropriate Use Monitor
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import {
+  LineChart, Line, BarChart as ReBarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+} from "recharts";
 import Layout from "@/components/Layout";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -18,7 +22,7 @@ import {
   ClipboardList, Star, FileText, BarChart2, Plus, CheckCircle, AlertTriangle,
   XCircle, Clock, ChevronDown, ChevronUp, Shield, Award, BookOpen, Loader2, Download,
   TrendingUp, TrendingDown, Minus, Info, ImageIcon, GitCompare, CheckSquare, Stethoscope,
-  BarChart, Users, Activity
+  BarChart, Users, Activity, FileDown, ChevronRight, PieChart as PieChartIcon, LineChart as LineChartIcon
 } from "lucide-react";
 import PhysicianPeerReview from "./PhysicianPeerReview";
 import ImageQualityReviewTab from "./ImageQualityReview";
@@ -408,10 +412,10 @@ function exportPeerReviewPDF(reviews: PeerReviewRow[]) {
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
-  doc.text("iHeartEcho™ — Peer Review Report", margin, 12);
+  doc.text("iHeartEcho™ EchoAccreditation Navigator™", margin, 12);
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
-  doc.text("DIY Accreditation Tool™  |  For IAC Accreditation Preparation", margin, 19);
+  doc.text("Peer Review Report  |  For IAC Accreditation Preparation", margin, 19);
   doc.text(`Generated: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`, margin, 24);
   y = 36;
 
@@ -546,7 +550,7 @@ function exportPeerReviewPDF(reviews: PeerReviewRow[]) {
     doc.setTextColor(150, 150, 150);
     doc.setFont("helvetica", "normal");
     doc.text(
-      "iHeartEcho™ DIY Accreditation Tool™  |  For accreditation preparation use only  |  Not a substitute for official IAC review",
+      "iHeartEcho™ EchoAccreditation Navigator™  |  For accreditation preparation use only  |  Not a substitute for official IAC review",
       margin, pageH - 8
     );
     doc.text(`Page ${p} of ${totalPages}`, pageW - margin - 20, pageH - 8);
@@ -1122,13 +1126,51 @@ function AppropriateUseTab() {
 }
 
 // ─── DIY Reports & Analytics Tab ─────────────────────────────────────────────
+// ─── CSV Export Helper ────────────────────────────────────────────────────────
+function exportCSV(filename: string, rows: Record<string, unknown>[]) {
+  if (!rows.length) return;
+  const headers = Object.keys(rows[0]);
+  const csv = [headers.join(","), ...rows.map(r => headers.map(h => JSON.stringify(r[h] ?? "")).join(","))].join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ─── Score colour helper ───────────────────────────────────────────────────────
+function scoreColor(score: number) {
+  return score >= 85 ? "#16a34a" : score >= 70 ? "#d97706" : "#dc2626";
+}
+
+const PIE_COLORS = ["#16a34a", "#2563eb", "#d97706", "#dc2626"];
+
 function DIYReportsTab() {
   const { data: iqrSnapshot = [] } = trpc.lab.getIqrStaffSnapshot.useQuery();
-  const { data: monthly = [] } = trpc.lab.getIqrMonthlySummary.useQuery();
+  const { data: qualityMonthly = [] } = trpc.lab.getIqrMonthlySummary.useQuery({ reviewType: "QUALITY REVIEW" });
+  const { data: peerMonthly = [] } = trpc.lab.getIqrMonthlySummary.useQuery({ reviewType: "PEER REVIEW" });
   const { data: physicianMonthly = [] } = trpc.physicianPeerReview.getMonthlySummary.useQuery();
   const { data: comparisonMonthly = [] } = trpc.physicianOverRead.getMonthlySummary.useQuery();
   const { data: cmeSummary = [] } = trpc.cme.getStaffSummary.useQuery();
   const { data: members = [] } = trpc.lab.getMembers.useQuery();
+
+  // Per-staff drill-down state
+  const [selectedStaffId, setSelectedStaffId] = useState<number | null>(null);
+  const [drilldownOpen, setDrilldownOpen] = useState(false);
+  const { data: staffTrend = [] } = trpc.lab.getIqrStaffTrend.useQuery(
+    { revieweeLabMemberId: selectedStaffId! },
+    { enabled: selectedStaffId !== null }
+  );
+  const { data: staffDomainBreakdown = [] } = trpc.lab.getIqrDomainBreakdown.useQuery(
+    { revieweeLabMemberId: selectedStaffId! },
+    { enabled: selectedStaffId !== null }
+  );
+  const { data: drilldownReviews = [] } = trpc.lab.getIqrDrilldown.useQuery(
+    { revieweeLabMemberId: selectedStaffId ?? undefined },
+    { enabled: drilldownOpen }
+  );
+
+  // View mode: overview | staff
+  const [viewMode, setViewMode] = useState<"overview" | "staff" | "physician">("overview");
 
   // Date range filter state
   const now = new Date();
@@ -1138,7 +1180,11 @@ function DIYReportsTab() {
   });
   const [endDate, setEndDate] = useState(() => now.toISOString().slice(0, 7));
 
-  const filteredMonthly = monthly.filter(m => {
+  const filteredQualityMonthly = qualityMonthly.filter(m => {
+    const mo = (m.month ?? "");
+    return mo >= startDate && mo <= endDate;
+  });
+  const filteredPeerMonthly = peerMonthly.filter(m => {
     const mo = (m.month ?? "");
     return mo >= startDate && mo <= endDate;
   });
@@ -1201,8 +1247,8 @@ function DIYReportsTab() {
       {/* IQR Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: "Total IQR Reviews", value: filteredMonthly.reduce((s, m) => s + Number(m.reviewCount ?? 0), 0), icon: Activity, color: BRAND },
-          { label: "Avg Quality Score", value: filteredMonthly.length > 0 ? Math.round(filteredMonthly.reduce((s, m) => s + Number(m.avgScore ?? 0), 0) / filteredMonthly.length) + "/100" : "—", icon: BarChart, color: "#16a34a" },
+          { label: "Total IQR Reviews", value: [...filteredQualityMonthly, ...filteredPeerMonthly].reduce((s, m) => s + Number(m.reviewCount ?? 0), 0), icon: Activity, color: BRAND },
+          { label: "Avg Quality Score", value: filteredQualityMonthly.length > 0 ? Math.round(filteredQualityMonthly.reduce((s, m) => s + Number(m.avgScore ?? 0), 0) / filteredQualityMonthly.length) + "/100" : "—", icon: BarChart, color: "#16a34a" },
           { label: "Peer Reviews", value: filteredPhysician.reduce((s: number, m: any) => s + Number(m.reviewCount ?? 0), 0), icon: Users, color: "#7c3aed" },
           { label: "Staff Tracked", value: members.length, icon: Users, color: "#d97706" },
         ].map(({ label, value, icon: Icon, color }) => (
@@ -1218,13 +1264,13 @@ function DIYReportsTab() {
         ))}
       </div>
 
-      {/* IQR Monthly Trend */}
-      {filteredMonthly.length > 0 && (
+      {/* Quality Review Monthly Trend */}
+      {filteredQualityMonthly.length > 0 && (
         <Card className="border border-gray-100">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
               <Activity className="w-4 h-4" style={{ color: BRAND }} />
-              IQR Monthly Quality Score Trend
+              Quality Review — Monthly Trend
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -1242,11 +1288,53 @@ function DIYReportsTab() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredMonthly.map((m, i) => (
+                  {filteredQualityMonthly.map((m, i) => (
                     <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
                       <td className="py-1.5 font-medium text-gray-700">{m.month}</td>
                       <td className="py-1.5 text-right text-gray-600">{m.reviewCount}</td>
                       <td className="py-1.5 text-right font-bold" style={{ color: BRAND }}>{m.avgScore != null ? Math.round(Number(m.avgScore)) : "—"}</td>
+                      <td className="py-1.5 text-right text-green-600">{m.excellentCount ?? 0}</td>
+                      <td className="py-1.5 text-right text-blue-600">{m.goodCount ?? 0}</td>
+                      <td className="py-1.5 text-right text-amber-600">{m.adequateCount ?? 0}</td>
+                      <td className="py-1.5 text-right text-red-600">{m.needsImprovementCount ?? 0}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Peer Review (IQR) Monthly Trend */}
+      {filteredPeerMonthly.length > 0 && (
+        <Card className="border border-gray-100">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
+              <Activity className="w-4 h-4" style={{ color: "#0ea5e9" }} />
+              Peer Review — Monthly Trend
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-gray-100">
+                    <th className="text-left py-1.5 text-gray-500 font-semibold">Month</th>
+                    <th className="text-right py-1.5 text-gray-500 font-semibold">Reviews</th>
+                    <th className="text-right py-1.5 text-gray-500 font-semibold">Avg QS</th>
+                    <th className="text-right py-1.5 text-gray-500 font-semibold">Excellent</th>
+                    <th className="text-right py-1.5 text-gray-500 font-semibold">Good</th>
+                    <th className="text-right py-1.5 text-gray-500 font-semibold">Adequate</th>
+                    <th className="text-right py-1.5 text-gray-500 font-semibold">Needs Impr.</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredPeerMonthly.map((m, i) => (
+                    <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
+                      <td className="py-1.5 font-medium text-gray-700">{m.month}</td>
+                      <td className="py-1.5 text-right text-gray-600">{m.reviewCount}</td>
+                      <td className="py-1.5 text-right font-bold" style={{ color: "#0ea5e9" }}>{m.avgScore != null ? Math.round(Number(m.avgScore)) : "—"}</td>
                       <td className="py-1.5 text-right text-green-600">{m.excellentCount ?? 0}</td>
                       <td className="py-1.5 text-right text-blue-600">{m.goodCount ?? 0}</td>
                       <td className="py-1.5 text-right text-amber-600">{m.adequateCount ?? 0}</td>
@@ -1440,7 +1528,7 @@ export default function AccreditationTool() {
             <TabBtn active={activeTab === "peer"} onClick={() => setActiveTab("peer")} icon={Star} label="Physician Peer Review" />
             <TabBtn active={activeTab === "echo-correlation"} onClick={() => setActiveTab("echo-correlation")} icon={GitCompare} label="Echo Correlations" />
             <TabBtn active={activeTab === "auc"} onClick={() => setActiveTab("auc")} icon={BarChart2} label="Appropriate Use" />
-            <TabBtn active={activeTab === "case-mix"} onClick={() => setActiveTab("case-mix")} icon={Stethoscope} label="Case Mix" />
+            <TabBtn active={activeTab === "case-mix"} onClick={() => setActiveTab("case-mix")} icon={Stethoscope} label="Case Studies" />
             <TabBtn active={activeTab === "policy"} onClick={() => setActiveTab("policy")} icon={FileText} label="Policy Builder" />
             <TabBtn active={activeTab === "reports"} onClick={() => setActiveTab("reports")} icon={TrendingUp} label="Reports & Analytics" />
             <TabBtn active={activeTab === "readiness"} onClick={() => setActiveTab("readiness")} icon={CheckSquare} label="Readiness" />

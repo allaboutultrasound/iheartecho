@@ -852,9 +852,10 @@ export async function getStaffIQRDomainBreakdown(labId: number, revieweeLabMembe
 }
 
 /** Lab-wide monthly summary for the Reports tab */
-export async function getLabIQRMonthlySummary(labId: number) {
+export async function getLabIQRMonthlySummary(labId: number, reviewType?: string) {
   const db = await getDb();
   if (!db) return [];
+  const conditions = [eq(imageQualityReviews.labId, labId), ...(reviewType ? [eq(imageQualityReviews.reviewType, reviewType)] : [])];
   return db.select({
     month: sql<string>`DATE_FORMAT(${imageQualityReviews.createdAt}, '%Y-%m')`,
     reviewCount: count(),
@@ -866,7 +867,7 @@ export async function getLabIQRMonthlySummary(labId: number) {
     needsImprovementCount: sql<number>`SUM(CASE WHEN ${imageQualityReviews.qualityScore} < 60 THEN 1 ELSE 0 END)`,
   })
     .from(imageQualityReviews)
-    .where(eq(imageQualityReviews.labId, labId))
+    .where(and(...conditions))
     .groupBy(sql`DATE_FORMAT(${imageQualityReviews.createdAt}, '%Y-%m')`)
     .orderBy(sql`DATE_FORMAT(${imageQualityReviews.createdAt}, '%Y-%m')`);
 }

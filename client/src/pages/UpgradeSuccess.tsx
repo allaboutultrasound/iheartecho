@@ -1,13 +1,13 @@
 /**
  * UpgradeSuccess.tsx
  *
- * Landing page for users returning from Thinkific checkout.
+ * Landing page for users returning from checkout.
  * Handles two scenarios:
  *  1. Logged-in user  → auto-sync premium status via checkAndSync
  *  2. Logged-out user → prompt to enter email to verify purchase,
  *                       then direct to sign-in or register
  *
- * Thinkific should redirect here after checkout:
+ * Redirect here after checkout:
  *   https://your-domain.com/upgrade-success
  */
 import { useEffect, useState } from "react";
@@ -126,7 +126,7 @@ export default function UpgradeSuccess() {
                 {checkAndSync.isPending ? (
                   <div className="flex flex-col items-center gap-4">
                     <Loader2 className="w-8 h-8 animate-spin text-[#189aa1]" />
-                    <p className="text-gray-600 text-sm">Verifying your purchase with Thinkific…</p>
+                    <p className="text-gray-600 text-sm">Verifying your purchase…</p>
                   </div>
                 ) : syncDone && !syncError ? (
                   <div className="flex flex-col items-center gap-4">
@@ -188,7 +188,7 @@ export default function UpgradeSuccess() {
                       <h2 className="font-bold text-gray-800 text-lg">Verify Your Purchase</h2>
                     </div>
                     <p className="text-gray-500 text-sm mb-6">
-                      Enter the email address you used on Thinkific to confirm your purchase and activate premium access.
+                      Enter the email address you used to purchase to confirm your order and activate premium access.
                     </p>
                     <form onSubmit={handleEmailSubmit} className="flex flex-col gap-3">
                       <Input
@@ -246,7 +246,7 @@ export default function UpgradeSuccess() {
                     </a>
                   </div>
                 ) : syncResult?.premiumOnThinkific && !syncResult.userExists ? (
-                  /* Purchase on Thinkific but no iHeartEcho™ account yet → prompt to register */
+                  /* Purchase verified but no iHeartEcho™ account yet → prompt to register */
                   <div className="flex flex-col items-center gap-4">
                     <div className="w-14 h-14 rounded-full bg-[#f0fbfc] flex items-center justify-center">
                       <Crown className="w-7 h-7 text-[#189aa1]" />
@@ -254,7 +254,7 @@ export default function UpgradeSuccess() {
                     <div>
                       <p className="font-bold text-gray-800 text-base mb-1">Purchase Confirmed!</p>
                       <p className="text-gray-500 text-sm max-w-xs mx-auto">
-                        Your Thinkific purchase was found. Create your free iHeartEcho™ account using{" "}
+                        Your purchase was verified. Create your free iHeartEcho™ account using{" "}
                         <strong>{email}</strong> and premium will be activated automatically.
                       </p>
                     </div>

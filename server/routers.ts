@@ -725,12 +725,14 @@ export const appRouter = router({
         return getStaffIQRDomainBreakdown(lab.id, input.revieweeLabMemberId);
       }),
 
-    /** Monthly lab-wide IQR summary for the Reports tab */
-    getIqrMonthlySummary: protectedProcedure.query(async ({ ctx }) => {
-      const lab = await getLabByAdmin(ctx.user.id);
-      if (!lab) return [];
-      return getLabIQRMonthlySummary(lab.id);
-    }),
+    /** Monthly lab-wide IQR summary for the Reports tab, optionally filtered by reviewType */
+    getIqrMonthlySummary: protectedProcedure
+      .input(z.object({ reviewType: z.string().optional() }))
+      .query(async ({ ctx, input }) => {
+        const lab = await getLabByAdmin(ctx.user.id);
+        if (!lab) return [];
+        return getLabIQRMonthlySummary(lab.id, input.reviewType);
+      }),
 
     /** Lab members enriched with IQR stats (for Staff tab) */
     getMembersWithIqrStats: protectedProcedure.query(async ({ ctx }) => {
@@ -738,6 +740,15 @@ export const appRouter = router({
       if (!lab) return [];
       return getLabMembersWithIQRStats(lab.id);
     }),
+
+    /** Drill-down: all IQR reviews for a lab, optionally filtered by staff member */
+    getIqrDrilldown: protectedProcedure
+      .input(z.object({ revieweeLabMemberId: z.number().optional() }))
+      .query(async ({ ctx, input }) => {
+        const lab = await getLabByAdmin(ctx.user.id);
+        if (!lab) return [];
+        return getIQRReviewsByLab(lab.id, input.revieweeLabMemberId);
+      }),
   }),
   // ─── Strain Navigator ────────────────────────────────────────────────────────
 

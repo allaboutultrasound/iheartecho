@@ -145,7 +145,7 @@ export default function CaseLibrary() {
               </h1>
             </div>
             <p className="text-sm text-gray-500 ml-11">
-              {total > 0 ? `${total} approved cases` : "Browse clinical echo cases"}
+              Our Echo Case Library has image, video and non-image cases. Cases are intended to encourage critical thinking, not just in image review, but also in clinical history, clinical scenarios and outcomes.
             </p>
           </div>
           {isAuthenticated ? (

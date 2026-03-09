@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE quickfireQuestions SET echoCategory = 'fetal' WHERE type = 'quickReview' AND tags LIKE '%Fetal%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mhhtxpXA9Esras.root --database etVPnUidWNWG8W4GHnRqzv --execute UPDATE quickfireQuestions SET echoCategory = 'fetal' WHERE type = 'quickReview' AND tags LIKE '%Fetal%';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 77
+}

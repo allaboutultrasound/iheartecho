@@ -1,6 +1,6 @@
 /**
- * Premium Access page — explains the $9/month plan and redirects to Thinkific checkout.
- * Also handles the post-checkout sync when the user returns from Thinkific.
+ * Premium Access page — explains the $9.99/month plan and handles checkout redirect.
+ * Also handles the post-checkout sync when the user returns from checkout.
  */
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
@@ -108,7 +108,7 @@ export default function Premium() {
     },
   });
 
-  // Auto-sync when returning from Thinkific checkout (URL has ?sync=1)
+  // Auto-sync when returning from checkout (URL has ?sync=1)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("sync") === "1" && user && !syncing) {
@@ -118,7 +118,7 @@ export default function Premium() {
   }, [user]);
 
   const handleCheckout = () => {
-    // Redirect to Thinkific checkout; user returns to /upgrade-success
+    // Redirect to checkout; user returns to /upgrade-success
     const returnUrl = encodeURIComponent(`${window.location.origin}/upgrade-success`);
     window.location.href = `${CHECKOUT_URL}?return_url=${returnUrl}`;
   };
@@ -214,7 +214,7 @@ export default function Premium() {
             </div>
 
             <div className="flex flex-wrap items-center justify-center gap-4 text-white/60 text-xs">
-              <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> Secure checkout via Thinkific</span>
+              <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> Secure checkout</span>
               <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> Cancel anytime</span>
               <span className="flex items-center gap-1"><Star className="w-3 h-3" /> Instant access</span>
             </div>
@@ -311,7 +311,7 @@ export default function Premium() {
               </a>
             )}
             <p className="text-gray-400 text-xs mt-3">
-              Checkout is handled securely by Thinkific · Cancel anytime from your account
+              Secure checkout · Cancel anytime from your account
             </p>
           </div>
         )}

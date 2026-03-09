@@ -209,7 +209,7 @@ function exportComparisonPDF(review: any) {
 
   doc.setFillColor(14, 74, 80); doc.rect(0, 0, pageW, 14, "F");
   doc.setTextColor(255, 255, 255); doc.setFontSize(11); doc.setFont("helvetica", "bold");
-  doc.text("iHeartEcho™ — Physician Peer Review Comparison Report", margin, 9.5);
+  doc.text("iHeartEcho™ EchoAccreditation Navigator™ — Physician Peer Review", margin, 9.5);
   doc.setFontSize(8); doc.setFont("helvetica", "normal");
   doc.text(`Generated: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`, pageW - margin, 9.5, { align: "right" });
   y = 22;
@@ -916,6 +916,12 @@ export default function PhysicianPeerReview() {
   const { data: comparisonReviews = [], isLoading: loadingComparisons, refetch: refetchComparisons } =
     trpc.physicianOverRead.listComparisonReviews.useQuery();
 
+  // Build a Set of invitationIds that have a completed Step 2 comparison review
+  const completedInvitationIds = useMemo(
+    () => new Set(comparisonReviews.map((r: any) => r.invitationId).filter(Boolean)),
+    [comparisonReviews]
+  );
+
   const deleteInvitationMutation = trpc.physicianOverRead.deleteInvitation.useMutation({
     onSuccess: () => { toast.success("Invitation deleted."); refetchInvitations(); },
     onError: (e) => toast.error(e.message),
@@ -1000,11 +1006,13 @@ export default function PhysicianPeerReview() {
 
       {/* Workflow explanation */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="flex items-start gap-3 p-3 rounded-lg bg-blue-50 border border-blue-200">
-          <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0 text-white text-xs font-bold">1</div>
+        <div className={`flex items-start gap-3 p-3 rounded-lg border transition-colors ${completedInvitationIds.size > 0 ? "bg-green-50 border-green-300" : "bg-blue-50 border-blue-200"}`}>
+          <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-bold transition-colors ${completedInvitationIds.size > 0 ? "bg-green-600" : "bg-blue-600"}`}>
+            {completedInvitationIds.size > 0 ? <CheckCircle2 className="w-4 h-4" /> : "1"}
+          </div>
           <div>
-            <p className="text-sm font-bold text-blue-900">Physician Over-Read</p>
-            <p className="text-xs text-blue-700 mt-0.5">Lab admin sends a secure email link to the over-reading physician. Physician completes a blind over-read form.</p>
+            <p className={`text-sm font-bold ${completedInvitationIds.size > 0 ? "text-green-900" : "text-blue-900"}`}>Physician Over-Read</p>
+            <p className={`text-xs mt-0.5 ${completedInvitationIds.size > 0 ? "text-green-700" : "text-blue-700"}`}>Lab admin sends a secure email link to the over-reading physician. Physician completes a blind over-read form.</p>
           </div>
         </div>
         <div className="flex items-start gap-3 p-3 rounded-lg bg-[#f0fbfc] border border-[#189aa1]/30">
@@ -1045,7 +1053,15 @@ export default function PhysicianPeerReview() {
                     <div className="flex items-center gap-3 min-w-0">
                       <StatusBadge status={inv.status} />
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-gray-800 truncate">{inv.examIdentifier}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-sm font-semibold text-gray-800 truncate">{inv.examIdentifier}</p>
+                          {completedInvitationIds.has(inv.id) && (
+                            <span title="Step 1 &amp; Step 2 both completed" className="flex items-center gap-0.5 text-xs font-semibold text-green-700 bg-green-100 px-1.5 py-0.5 rounded-full flex-shrink-0">
+                              <CheckCircle2 className="w-3 h-3" />
+                              Both steps done
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-gray-500">{inv.examType} · {inv.reviewerEmail}</p>
                       </div>
                     </div>

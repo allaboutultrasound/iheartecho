@@ -1,0 +1,60 @@
+{
+  "query": "SELECT id, echoCategory, tags FROM quickfireQuestions WHERE type = 'quickReview' LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mhhtxpXA9Esras.root --database etVPnUidWNWG8W4GHnRqzv --execute SELECT id, echoCategory, tags FROM quickfireQuestions WHERE type = 'quickReview' LIMIT 10;",
+  "rows": [
+    {
+      "id": "7",
+      "echoCategory": "adult",
+      "tags": "[\"Adult Echo\",\"ACS\"]"
+    },
+    {
+      "id": "30046",
+      "echoCategory": "adult",
+      "tags": "[\"HOCM\",\"Cardiomyopathy\"]"
+    },
+    {
+      "id": "30047",
+      "echoCategory": "adult",
+      "tags": "[\"HOCM\",\"Cardiomyopathy\"]"
+    },
+    {
+      "id": "30048",
+      "echoCategory": "adult",
+      "tags": "[\"HOCM\",\"Cardiomyopathy\"]"
+    },
+    {
+      "id": "30049",
+      "echoCategory": "adult",
+      "tags": "[\"HOCM\",\"Cardiomyopathy\"]"
+    },
+    {
+      "id": "30050",
+      "echoCategory": "adult",
+      "tags": "[\"HOCM\",\"Cardiomyopathy\"]"
+    },
+    {
+      "id": "30051",
+      "echoCategory": "adult",
+      "tags": "[\"Strain\",\"GLS\",\"Speckle Tracking\"]"
+    },
+    {
+      "id": "30052",
+      "echoCategory": "adult",
+      "tags": "[\"Strain\",\"GLS\",\"Speckle Tracking\"]"
+    },
+    {
+      "id": "30053",
+      "echoCategory": "adult",
+      "tags": "[\"Strain\",\"GLS\",\"Speckle Tracking\"]"
+    },
+    {
+      "id": "30054",
+      "echoCategory": "adult",
+      "tags": "[\"Strain\",\"GLS\",\"Speckle Tracking\"]"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\techoCategory\ttags\n7\tadult\t[\"Adult Echo\",\"ACS\"]\n30046\tadult\t[\"HOCM\",\"Cardiomyopathy\"]\n30047\tadult\t[\"HOCM\",\"Cardiomyopathy\"]\n30048\tadult\t[\"HOCM\",\"Cardiomyopathy\"]\n30049\tadult\t[\"HOCM\",\"Cardiomyopathy\"]\n30050\tadult\t[\"HOCM\",\"Cardiomyopathy\"]\n30051\tadult\t[\"Strain\",\"GLS\",\"Speckle Tracking\"]\n30052\tadult\t[\"Strain\",\"GLS\",\"Speckle Tracking\"]\n30053\tadult\t[\"Strain\",\"GLS\",\"Speckle Tracking\"]\n30054\tadult\t[\"Strain\",\"GLS\",\"Speckle Tracking\"]\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}

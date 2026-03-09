@@ -548,14 +548,16 @@ export default function QuickFire() {
                 <>
                   {/* Category filter chips removed — filters are available in Archives only */}
 
-                  {/* Progress bar */}
-                  <div className="mb-4">
-                    <div className="flex justify-between text-xs text-gray-400 mb-1">
-                      <span>Question {currentIndex + 1} of {questions.length}</span>
-                      <span>{Math.round(progress)}% complete</span>
+                  {/* Progress bar — only show when more than 1 question */}
+                  {questions.length > 1 && (
+                    <div className="mb-4">
+                      <div className="flex justify-between text-xs text-gray-400 mb-1">
+                        <span>Question {currentIndex + 1} of {questions.length}</span>
+                        <span>{Math.round(progress)}% complete</span>
+                      </div>
+                      <Progress value={progress} className="h-1.5" />
                     </div>
-                    <Progress value={progress} className="h-1.5" />
-                  </div>
+                  )}
 
                   <Card className="shadow-sm border-gray-100">
                     <CardHeader className="pb-3">
@@ -706,7 +708,9 @@ export default function QuickFire() {
                     <CardFooter className="pt-2">
                       {(answered || (isQuickReview && flipped && answered)) && (
                         <Button className="w-full text-white" style={{ background: "#189aa1" }} onClick={handleNext}>
-                          {currentIndex < questions.length - 1 ? (
+                          {questions.length === 1 ? (
+                            <>See Result <Trophy className="w-4 h-4 ml-1" /></>
+                          ) : currentIndex < questions.length - 1 ? (
                             <>Next Question <ChevronRight className="w-4 h-4 ml-1" /></>
                           ) : (
                             <>See Results <Trophy className="w-4 h-4 ml-1" /></>
@@ -716,12 +720,14 @@ export default function QuickFire() {
                     </CardFooter>
                   </Card>
 
-                  {/* Progress dots */}
-                  <div className="flex justify-center gap-2 mt-4">
-                    {questions.map((_, i) => (
-                      <div key={i} className={`h-2 rounded-full transition-all ${i < currentIndex ? "bg-[#189aa1] w-2" : i === currentIndex ? "bg-[#189aa1] w-4" : "bg-gray-200 w-2"}`} />
-                    ))}
-                  </div>
+                  {/* Progress dots — only show for multi-question sets */}
+                  {questions.length > 1 && (
+                    <div className="flex justify-center gap-2 mt-4">
+                      {questions.map((_, i) => (
+                        <div key={i} className={`h-2 rounded-full transition-all ${i < currentIndex ? "bg-[#189aa1] w-2" : i === currentIndex ? "bg-[#189aa1] w-4" : "bg-gray-200 w-2"}`} />
+                      ))}
+                    </div>
+                  )}
                 </>
               );
             })()}

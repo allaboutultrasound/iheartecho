@@ -68,6 +68,7 @@ import {
   ChevronDown,
   Clock,
   Tag,
+  ListPlus,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -459,6 +460,14 @@ export default function QuickFireAdmin() {
     onError: (err) => toast.error(err.message || "Failed to deactivate question."),
   });
 
+  const approveToQueueMutation = trpc.quickfire.adminApproveQuestionToQueue.useMutation({
+    onSuccess: () => {
+      toast.success("Question approved and added to the daily queue.");
+      challengeListQuery.refetch();
+    },
+    onError: (err) => toast.error(err.message || "Failed to approve question."),
+  });
+
   const aiGenerateMutation = trpc.quickfire.aiGenerateQuestions.useMutation({
     onSuccess: (data: any) => {
       if (flashcardAiOpen) {
@@ -702,13 +711,13 @@ export default function QuickFireAdmin() {
             {/* Queue header */}
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div>
-                <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Challenge Queue</h2>
-                <p className="text-xs text-gray-400 mt-0.5">Build challenges from your question bank and schedule them for daily auto-publish.</p>
+                <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Daily Challenge Queue</h2>
+                <p className="text-xs text-gray-400 mt-0.5">One question per day. Approve individual questions from the Question Bank to add them to this queue.</p>
               </div>
               <Input
                 value={challengeSearch}
                 onChange={(e) => setChallengeSearch(e.target.value)}
-                placeholder="Search challenges…"
+                placeholder="Search queue…"
                 className="w-52"
               />
               <div className="flex items-center gap-2">
@@ -723,19 +732,19 @@ export default function QuickFireAdmin() {
                   Publish Next Now
                 </Button>
                 <Button
+                  variant="outline"
                   size="sm"
-                  className="gap-1.5 text-white"
-                  style={{ background: "#189aa1" }}
-                  onClick={openCreateChallenge}
+                  className="gap-1.5"
+                  onClick={() => setActiveAdminTab("questions")}
                 >
-                  <Plus className="w-4 h-4" /> New Challenge
+                  <ListPlus className="w-4 h-4" /> Go to Question Bank
                 </Button>
               </div>
             </div>
 
             {/* Info banner */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-xs text-blue-700">
-              <strong>Auto-publish workflow:</strong> The system publishes one challenge per day. Each challenge is live for 24 hours, then archived automatically. Free users can access 7 days of archive history; Premium users have unlimited access.
+            <div className="bg-teal-50 border border-teal-200 rounded-lg px-4 py-3 text-xs text-teal-700">
+              <strong>How to add questions:</strong> Go to the <button className="underline font-semibold" onClick={() => setActiveAdminTab("questions")}>Question Bank</button> tab, find any Scenario or Image question, and click the <strong>Queue</strong> button to approve it for the daily challenge. Each question is served individually — one per day.
             </div>
 
             {/* Challenge list */}
@@ -744,10 +753,10 @@ export default function QuickFireAdmin() {
             ) : challenges.length === 0 ? (
               <div className="text-center py-16">
                 <ListOrdered className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p className="text-gray-500 font-medium">No challenges in queue</p>
-                <p className="text-sm text-gray-400 mt-1">Create your first challenge to get started.</p>
-                <Button className="mt-4 text-white" style={{ background: "#189aa1" }} onClick={openCreateChallenge}>
-                  <Plus className="w-4 h-4 mr-2" /> Create Challenge
+                <p className="text-gray-500 font-medium">No questions in queue</p>
+                <p className="text-sm text-gray-400 mt-1">Go to the Question Bank and click <strong>Queue</strong> on any question to add it here.</p>
+                <Button className="mt-4 gap-2" variant="outline" onClick={() => setActiveAdminTab("questions")}>
+                  <ListPlus className="w-4 h-4" /> Go to Question Bank
                 </Button>
               </div>
             ) : (
@@ -944,6 +953,23 @@ export default function QuickFireAdmin() {
                     </div>
 
                     <div className="flex items-center gap-1 flex-shrink-0">
+                      {q.isActive && q.type !== "quickReview" && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 px-2 text-xs gap-1 text-[#189aa1] hover:bg-[#189aa1]/10 border border-[#189aa1]/30"
+                          title="Approve to daily queue"
+                          onClick={() => {
+                            if (confirm(`Add "${q.question.slice(0, 60)}..." to the daily challenge queue?`)) {
+                              approveToQueueMutation.mutate({ questionId: q.id });
+                            }
+                          }}
+                          disabled={approveToQueueMutation.isPending}
+                        >
+                          <ListPlus className="w-3.5 h-3.5" />
+                          Queue
+                        </Button>
+                      )}
                       <Button
                         size="sm"
                         variant="ghost"
