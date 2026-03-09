@@ -48,7 +48,6 @@ import {
   ChevronRight,
   Zap,
   RefreshCw,
-  Calendar,
   CheckCircle2,
   X,
   Sparkles,
@@ -156,9 +155,6 @@ export default function QuickFireAdmin() {
     }
   }
 
-  // Daily set generator
-  const [genDate, setGenDate] = useState(new Date().toISOString().slice(0, 10));
-  const [genOpen, setGenOpen] = useState(false);
   // CSV Import
   const [csvOpen, setCsvOpen] = useState(false);
   const [csvRows, setCsvRows] = useState<any[]>([]);
@@ -482,14 +478,6 @@ export default function QuickFireAdmin() {
     onError: (err: any) => toast.error(err.message || "AI generation failed."),
   });
 
-  const generateMutation = trpc.quickfire.generateDailySet.useMutation({
-    onSuccess: () => {
-      toast.success(`Daily set generated for ${genDate}.`);
-      setGenOpen(false);
-    },
-    onError: (err) => toast.error(err.message || "Failed to generate daily set."),
-  });
-
   // Guard: admin only
   if (!isAuthenticated || user?.role !== "admin") {
     return (
@@ -643,14 +631,6 @@ export default function QuickFireAdmin() {
               onClick={() => { setAiPreview([]); setAiOpen(true); }}
             >
               <Sparkles className="w-4 h-4" /> AI Generate
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5 border-[#189aa1] text-[#189aa1]"
-              onClick={() => setGenOpen(true)}
-            >
-              <Calendar className="w-4 h-4" /> Generate Daily Set
             </Button>
             <Button
               size="sm"
@@ -2047,42 +2027,6 @@ export default function QuickFireAdmin() {
             >
               {bulkImportMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
               {bulkImportMutation.isPending ? "Importing…" : `Import ${csvSelected.size} Question${csvSelected.size !== 1 ? "s" : ""}`}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* ── Generate Daily Set Dialog ────────────────────────────────────────── */}
-      <Dialog open={genOpen} onOpenChange={setGenOpen}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-[#189aa1]" /> Generate Daily Set
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 py-2">
-            <p className="text-sm text-gray-600">
-              This will create (or regenerate) the Daily Challenge set for the selected date — a balanced mix of scenario, image, and quick-review questions.
-            </p>
-            <div>
-              <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Date</label>
-              <Input
-                type="date"
-                value={genDate}
-                onChange={(e) => setGenDate(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setGenOpen(false)}>Cancel</Button>
-            <Button
-              className="text-white gap-2"
-              style={{ background: "#189aa1" }}
-              onClick={() => generateMutation.mutate({ date: genDate })}
-              disabled={generateMutation.isPending}
-            >
-              <Zap className="w-4 h-4" />
-              {generateMutation.isPending ? "Generating…" : "Generate"}
             </Button>
           </DialogFooter>
         </DialogContent>

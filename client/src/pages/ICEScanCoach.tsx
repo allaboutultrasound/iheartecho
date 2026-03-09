@@ -742,11 +742,11 @@ export default function ICEScanCoach() {
                     <span><strong>CW rotation</strong> → anterior structures (AV, MV)</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-[#0e7490]" />
+                    <span className="w-2 h-2 rounded-full bg-[#189aa1]" />
                     <span><strong>CCW rotation</strong> → posterior structures (PV, CS)</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-[#0f766e]" />
+                    <span className="w-2 h-2 rounded-full bg-[#189aa1]" />
                     <span><strong>Posterior flex</strong> → IAS, fossa ovalis, LAA</span>
                   </div>
                   <div className="flex items-center gap-2">

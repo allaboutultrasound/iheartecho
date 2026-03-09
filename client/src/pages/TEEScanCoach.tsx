@@ -289,7 +289,7 @@ const TEE_VIEWS = [
   {
     id: "tgsax",
     group: "Transgastric",
-    groupColor: "#0e7490",
+    groupColor: "#189aa1",
     name: "TG Mid SAX",
     angle: "0°",
     depth: "40–45 cm",
@@ -325,7 +325,7 @@ const TEE_VIEWS = [
   {
     id: "tg2c",
     group: "Transgastric",
-    groupColor: "#0e7490",
+    groupColor: "#189aa1",
     name: "TG 2-Chamber",
     angle: "90°",
     depth: "40–45 cm",
@@ -357,7 +357,7 @@ const TEE_VIEWS = [
   {
     id: "tglax",
     group: "Transgastric",
-    groupColor: "#0e7490",
+    groupColor: "#189aa1",
     name: "TG Long Axis (LAX)",
     angle: "90–120°",
     depth: "40–45 cm",
@@ -390,7 +390,7 @@ const TEE_VIEWS = [
   {
     id: "tgrvio",
     group: "Transgastric",
-    groupColor: "#0e7490",
+    groupColor: "#189aa1",
     name: "TG RV Inflow",
     angle: "100–120°",
     depth: "40–45 cm",
@@ -423,7 +423,7 @@ const TEE_VIEWS = [
   {
     id: "ueaorticarch",
     group: "Upper Esophageal",
-    groupColor: "#0f766e",
+    groupColor: "#189aa1",
     name: "UE Aortic Arch",
     angle: "0° (arch LAX) / 90° (arch SAX)",
     depth: "18–22 cm",
@@ -460,7 +460,7 @@ const TEE_VIEWS = [
   {
     id: "uepv",
     group: "Upper Esophageal",
-    groupColor: "#0f766e",
+    groupColor: "#189aa1",
     name: "UE Pulmonary Veins",
     angle: "0–30°",
     depth: "20–25 cm",
@@ -498,8 +498,8 @@ const TEE_VIEWS = [
 // ─── GROUP DEFINITIONS ────────────────────────────────────────────────────────
 const GROUPS = [
   { key: "Mid-Esophageal", color: "#189aa1", label: "Mid-Esophageal (ME)", count: 7 },
-  { key: "Transgastric",   color: "#0e7490", label: "Transgastric (TG)",   count: 4 },
-  { key: "Upper Esophageal", color: "#0f766e", label: "Upper Esophageal (UE)", count: 2 },
+  { key: "Transgastric",   color: "#189aa1", label: "Transgastric (TG)",   count: 4 },
+  { key: "Upper Esophageal", color: "#189aa1", label: "Upper Esophageal (UE)", count: 2 },
 ];
 
 // ─── VIEW DETAIL PANEL ────────────────────────────────────────────────────────

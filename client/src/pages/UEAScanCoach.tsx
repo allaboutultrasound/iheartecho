@@ -166,7 +166,7 @@ const UEA_VIEWS = [
   {
     id: "a4c",
     group: "Apical",
-    groupColor: "#0e7490",
+    groupColor: "#189aa1",
     name: "Apical 4-Chamber (A4C)",
     patientPosition: "Steep left lateral decubitus (60–90°); left arm raised above head; head of bed elevated 15–30°",
     probePosition: "Cardiac apex — typically 5th–6th intercostal space, midaxillary line; indicator toward left",
@@ -220,7 +220,7 @@ const UEA_VIEWS = [
   {
     id: "a2c",
     group: "Apical",
-    groupColor: "#0e7490",
+    groupColor: "#189aa1",
     name: "Apical 2-Chamber (A2C)",
     patientPosition: "Steep left lateral decubitus; same position as A4C",
     probePosition: "Same apex position as A4C; rotate probe 60° counterclockwise",
@@ -264,7 +264,7 @@ const UEA_VIEWS = [
   {
     id: "a3c",
     group: "Apical",
-    groupColor: "#0e7490",
+    groupColor: "#189aa1",
     name: "Apical 3-Chamber / Long Axis (A3C)",
     patientPosition: "Steep left lateral decubitus; same position as A4C",
     probePosition: "Same apex position; rotate probe 30–60° counterclockwise from A2C (120–150° from A4C)",
@@ -305,7 +305,7 @@ const UEA_VIEWS = [
   {
     id: "subcostal",
     group: "Subcostal",
-    groupColor: "#0f766e",
+    groupColor: "#189aa1",
     name: "Subcostal 4-Chamber",
     patientPosition: "Supine; knees bent to relax abdominal muscles; head flat or slightly elevated",
     probePosition: "Subxiphoid process; indicator toward patient's left; probe angled superiorly toward heart",
@@ -1221,7 +1221,7 @@ function UEAScanCoachInner() {
               {
                 title: "Positioning Essentials",
                 icon: Target,
-                color: "#0e7490",
+                color: "#189aa1",
                 tips: [
                   "Steep left lateral decubitus (60–90°) is ESSENTIAL for apical views",
                   "Left arm raised above head opens intercostal spaces",

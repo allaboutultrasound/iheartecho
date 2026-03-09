@@ -173,7 +173,7 @@ const teeViews: TEEView[] = [
     section: "TG",
     angle: "0–20°",
     depth: "40–45 cm",
-    color: "#0e7490",
+    color: "#189aa1",
     description: "Short-axis view of the LV at mid-papillary level. Gold standard for intraoperative LV function monitoring.",
     probeManeuver: "Advance probe into stomach (40–45 cm); anteflex to bring LV into view; rotate to 0–20°. Both papillary muscles should be visible.",
     anatomy: ["LV (all six wall segments at mid level)", "Anterolateral PM", "Posteromedial PM", "RV (crescent shape)"],
@@ -189,7 +189,7 @@ const teeViews: TEEView[] = [
     section: "TG",
     angle: "80–100°",
     depth: "40–45 cm",
-    color: "#0e7490",
+    color: "#189aa1",
     description: "Long-axis view of the LV from the transgastric position. Shows true LV apex — critical for apical pathology.",
     probeManeuver: "From TG Mid SAX, rotate to 80–100°. The LV apex should be at the top. Adjust anteflexion to maximise LV length.",
     anatomy: ["LV (true apex, anterior + inferior walls)", "LA", "MV"],
@@ -205,7 +205,7 @@ const teeViews: TEEView[] = [
     section: "TG",
     angle: "0–20°",
     depth: "45–50 cm",
-    color: "#0e7490",
+    color: "#189aa1",
     description: "The only TEE view that allows CW Doppler alignment with LVOT/AV flow. Essential for accurate aortic valve gradients.",
     probeManeuver: "Advance probe fully into stomach (45–50 cm); anteflex maximally; rotate to 0–20°. The LVOT and AV should align with the Doppler beam.",
     anatomy: ["LV apex", "LVOT", "AV", "Proximal ascending aorta"],
@@ -389,7 +389,7 @@ const SECTION_LABELS: Record<string, string> = {
 
 const SECTION_COLORS: Record<string, string> = {
   ME: "#189aa1",
-  TG: "#0e7490",
+  TG: "#189aa1",
   UE: "#6366f1",
   ICE: "#d97706",
 };

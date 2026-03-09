@@ -1715,3 +1715,13 @@
 - [x] Add "Unlimited Echo Flashcards" to Premium membership features list
 
 - [x] Remove "(2023)" year reference from IAC Accreditation Checklist in Readiness section
+
+## Image Quality Review Fixes
+- [ ] Fix IQR save errors (investigate server-side procedure and schema)
+- [ ] Fix old IQR form still showing (ensure updated form is rendered)
+
+- [x] Remove "Generate Daily Set" button from Daily Challenge admin (keep approve-to-queue workflow)
+
+- [ ] Add missing fetal echo (FE_) specific fields to imageQualityReviews schema and IQR save procedure
+
+- [x] Fix TEE ScanCoach color scheme to brand colors: Teal #189aa1, Aqua #4ad9e0, dark navy background

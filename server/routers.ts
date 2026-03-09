@@ -960,6 +960,24 @@ export const appRouter = router({
         revieweeLabMemberId: z.number().optional(),
         comparableToPrevious: z.string().optional(),
         dob: z.string().optional(),
+        // TEE-specific fields
+        teeMeasurementsComplete: z.string().optional(),
+        teeMeasurementsAccurate: z.string().optional(),
+        teeVentricularFunction: z.string().optional(),
+        teeDopplerSettings: z.string().optional(),
+        teeDopplerSampleVolumes: z.string().optional(),
+        teeAorticValve: z.string().optional(),
+        teeMitralValve: z.string().optional(),
+        teeTricuspidValve: z.string().optional(),
+        teePulmonicValve: z.string().optional(),
+        teeImageOptSummary: z.string().optional(),
+        teeMeasurementSummary: z.string().optional(),
+        teeDopplerSummary: z.string().optional(),
+        // Staff identifier fields
+        performingSonographerId: z.string().optional(),
+        performingSonographerText: z.string().optional(),
+        interpretingPhysicianId: z.string().optional(),
+        interpretingPhysicianText: z.string().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
         // Map comparableToPrevious → comparableToPreview for DB compatibility
