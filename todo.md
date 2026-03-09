@@ -1853,3 +1853,7 @@
 - [x] Add peer review email notification to sonographer when Sonographer Peer Review is submitted
 - [x] Add IAC Flag button on Quality Review final step to push case to Possible Case Studies tracker
 - [x] Add protocol checklist progress indicator badge on Step 2 (e.g. "14 / 17 views")
+
+## IAC Flag Enhancement - Session Mar 09 2026
+- [x] Enhance IAC Flag button on Quality Review Step 7 — open modal to capture diagnosis, sonographer name, interpreting physician, accreditation type, submission notes before creating Case Study entry
+- [x] Show richer confirmation state after flagging with case study ID and link to Case Studies tracker
