@@ -1771,3 +1771,6 @@
 ## Cosmetic Cleanup (Mar 09 2026)
 - [x] Remove "Header Info" and "Review Header" section labels from IQR form (EchoCorrelation.tsx)
 - [x] Remove HOCM and POCUS from Appropriate Use exam type list
+
+## Bug Fix (Mar 09 2026)
+- [x] Fix TEE Upper Esophageal section — still showing purple instead of teal brand color
