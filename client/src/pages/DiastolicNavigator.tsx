@@ -413,47 +413,39 @@ export default function DiastolicNavigator() {
 
   return (
     <Layout>
-      {/* Hero */}
-      <div className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}>
-        <div className="container py-10 md:py-14">
-          <div className="mb-3">
-            <BackToEchoAssist className="text-white/70 hover:text-white" />
+      {/* Page header */}
+      <div className="border-b border-[#189aa1]/15 bg-white">
+        <div className="container py-4">
+          <div className="mb-1">
+            <BackToEchoAssist />
           </div>
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 mt-1" style={{ background: "rgba(255,255,255,0.1)" }}>
-              <Activity className="w-6 h-6 text-[#4ad9e0]" />
-            </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-2 mb-3">
-                <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1">
-                  <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
-                  <span className="text-sm text-white/80 font-medium">Diastolic Function · ASE 2025</span>
-                </div>
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-emerald-500/20 border border-emerald-400/30 text-emerald-300">Free</span>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "#189aa1" + "18" }}>
+                <Activity className="w-4 h-4" style={{ color: "#189aa1" }} />
               </div>
-              <h1 className="text-2xl md:text-3xl font-black text-white leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
-                Diastolic Function Navigator
-              </h1>
-              <p className="text-[#4ad9e0] font-semibold text-base mt-0.5">LV Diastolic Assessment · LARS Included</p>
-              <p className="text-white/70 text-sm md:text-base mt-2 max-w-xl leading-relaxed">
-                Systematic assessment of LV diastolic function using the ASE 2025 two-step algorithm — mitral inflow, tissue Doppler, LA reservoir strain, pulmonary venous flow, and left atrial volume index.
-              </p>
+              <div>
+                <h1 className="text-xl font-black text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>EchoAssist™ Diastolic Function Navigator</h1>
+                <p className="text-gray-500 text-xs">LV Diastolic Assessment · LARS Included · ASE 2025</p>
+              </div>
             </div>
-          </div>
-          {/* Tab bar */}
-          <div className="flex gap-2 mt-6">
-            <button
-              onClick={() => setActiveTab("protocol")}
-              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === "protocol" ? "bg-white text-[#189aa1]" : "bg-white/10 text-white/80 hover:bg-white/20"}`}
-            >
-              Protocol
-            </button>
-            <button
-              onClick={() => setActiveTab("scancoach")}
-              className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all ${activeTab === "scancoach" ? "bg-white text-[#189aa1]" : "bg-white/10 text-white/80 hover:bg-white/20"}`}
-            >
-              Scan Coach
-            </button>
+            {/* Tab bar */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setActiveTab("protocol")}
+                className="px-5 py-2 rounded-lg text-sm font-semibold transition-all"
+                style={activeTab === "protocol" ? { background: "#189aa1", color: "white" } : { background: "white", color: "#189aa1", border: "1px solid #e2e8f0" }}
+              >
+                Protocol
+              </button>
+              <button
+                onClick={() => setActiveTab("scancoach")}
+                className="px-5 py-2 rounded-lg text-sm font-semibold transition-all"
+                style={activeTab === "scancoach" ? { background: "#189aa1", color: "white" } : { background: "white", color: "#189aa1", border: "1px solid #e2e8f0" }}
+              >
+                Scan Coach
+              </button>
+            </div>
           </div>
         </div>
       </div>

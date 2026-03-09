@@ -273,7 +273,7 @@ export default function TEENavigator() {
                 </div>
               </div>
               <h1 className="text-2xl font-black text-white leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
-                TEE Navigator
+                EchoAssist™ Navigator — TEE
               </h1>
               <p className="text-white/70 text-sm mt-1 max-w-xl">
                 Comprehensive transesophageal echocardiography protocol with ME, TG, and UE views, clinical applications, and intraoperative guidance.
@@ -326,12 +326,6 @@ export default function TEENavigator() {
             </button>
           ))}
           <div className="ml-auto flex gap-2">
-            <button onClick={handleExport}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-white transition-all"
-              style={{ background: "#189aa1" }}>
-              <Printer className="w-3.5 h-3.5" />
-              Export
-            </button>
             <button onClick={() => setChecked(new Set())}
               className="px-3 py-2 rounded-lg text-xs font-semibold text-gray-500 border border-gray-200 hover:border-red-300 hover:text-red-500 bg-white transition-all">
               Reset

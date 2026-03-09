@@ -258,7 +258,7 @@ export default function DeviceNavigator() {
                 </div>
               </div>
               <h1 className="text-2xl font-black text-white leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
-                Structural Heart Navigator
+                EchoAssist™ Navigator — Structural Heart
               </h1>
               <p className="text-white/70 text-sm mt-1 max-w-xl">
                 Pre- and post-procedure echo checklists, normal values, and procedural thresholds for TAVR, MitraClip, WATCHMAN, and ASD/PFO closure.

@@ -307,7 +307,7 @@ export default function ACHDNavigator() {
                 <span className="text-xs text-white/80 font-medium">ACC/AHA 2018 · Adult Congenital Heart</span>
               </div>
               <h1 className="text-2xl font-black text-white leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
-                Adult Congenital Navigator
+                EchoAssist™ Navigator — Adult Congenital
               </h1>
               <p className="text-white/70 text-sm mt-1 max-w-xl">
                 Echocardiographic assessment protocols for adults with congenital heart disease — lesion-specific views, key measurements, and procedural checklists.

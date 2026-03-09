@@ -460,7 +460,7 @@ export default function UEANavigator() {
               <div>
                 <h1 className="text-2xl md:text-3xl font-black text-white leading-tight"
                   style={{ fontFamily: "Merriweather, serif" }}>
-                  UEA Navigator
+                  EchoAssist™ Navigator — UEA
                 </h1>
                 <p className="text-[#4ad9e0] font-semibold text-sm">Ultrasound Enhancing Agents — Contrast Echo Protocol</p>
               </div>

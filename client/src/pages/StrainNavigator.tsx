@@ -345,7 +345,7 @@ export default function StrainNavigator() {
                 PREMIUM FEATURE
               </div>
               <h1 className="text-2xl md:text-3xl font-black text-white mb-2" style={{ fontFamily: "Merriweather, serif" }}>
-                Strain Navigator
+                EchoAssist™ Navigator — Strain
               </h1>
               <p className="text-white/70 text-sm leading-relaxed mb-4">
                 LV GLS · RV Free-Wall Strain · LA Reservoir Strain · Relative Apical Strain · Imaging Checklist · ASE 2025 Reference Values

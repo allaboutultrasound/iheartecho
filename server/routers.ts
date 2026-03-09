@@ -118,6 +118,7 @@ import {
   getComparisonReviewsByLab,
   getComparisonReviewById,
   deleteComparisonReview,
+  getComparisonReviewsMonthlySummary,
 } from "./db";
 
 export const appRouter = router({
@@ -1622,6 +1623,7 @@ export const appRouter = router({
           originalInterpretingPhysician: invitation.originalInterpretingPhysician,
           reviewerName: invitation.reviewerName,
           reviewerEmail: invitation.reviewerEmail,
+          pacsImageUrl: invitation.pacsImageUrl ?? null,
         };
       }),
 
@@ -1749,6 +1751,13 @@ export const appRouter = router({
         }
         return { success: true, submissionId };
       }),
+
+    /** Monthly summary of comparison reviews for Reports & Analytics tab */
+    getMonthlySummary: protectedProcedure.query(async ({ ctx }) => {
+      const lab = await getLabByMemberUserId(ctx.user.id);
+      if (!lab) return [];
+      return getComparisonReviewsMonthlySummary(lab.id);
+    }),
 
     /** List all comparison reviews for the current user's lab */
     listComparisonReviews: protectedProcedure.query(async ({ ctx }) => {

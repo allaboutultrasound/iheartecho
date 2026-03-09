@@ -679,7 +679,7 @@ export default function PediatricNavigator() {
                 <span className="text-xs text-white/80 font-medium">Congenital Heart · Pediatric Echo</span>
               </div>
               <h1 className="text-2xl font-black text-white leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
-                Pediatric Echo Navigator
+                EchoAssist™ Navigator — Pediatric Echo
               </h1>
               <p className="text-white/70 text-sm mt-1 max-w-xl">
                 Congenital heart disease findings, BSA-normalized Z-scores, Qp/Qs shunt estimation, and segmental analysis.

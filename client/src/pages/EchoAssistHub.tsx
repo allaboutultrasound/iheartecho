@@ -94,7 +94,7 @@ export default function EchoAssistHub() {
               >
                 EchoAssist™
               </h1>
-              <p className="text-[#4ad9e0] font-semibold text-base mt-0.5">Echo Protocol &amp; Scan Coach</p>
+              <p className="text-[#4ad9e0] font-semibold text-base mt-0.5">Echo Protocol Navigator &amp; ScanCoach</p>
               <p className="text-white/70 text-sm md:text-base mt-2 max-w-xl leading-relaxed">
                 Structured echo protocols with view-by-view checklists, normal reference values, scanning tips, probe guidance, and guideline-based interpretation — for every modality and patient population.
               </p>

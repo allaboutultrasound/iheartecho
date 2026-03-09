@@ -438,7 +438,7 @@ export default function HOCMNavigator() {
               <span className="text-xs text-white/80 font-medium">ASE/AHA HCM Guidelines 2020</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-black text-white mb-2" style={{ fontFamily: "Merriweather, serif" }}>
-              HOCM Navigator
+              EchoAssist™ Navigator — HOCM
             </h1>
             <p className="text-[#4ad9e0] font-semibold mb-2">Hypertrophic Obstructive Cardiomyopathy</p>
             <p className="text-white/70 text-sm leading-relaxed mb-5 max-w-lg">

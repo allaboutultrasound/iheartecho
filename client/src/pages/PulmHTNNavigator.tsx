@@ -140,7 +140,7 @@ export default function PulmHTNNavigator() {
                 <span className="text-xs text-white/80 font-medium">ASE 2025 · ESC/ERS 2022 Guidelines</span>
               </div>
               <h1 className="text-2xl font-black text-white leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
-                Pulmonary HTN & PE Navigator
+                EchoAssist™ Navigator — Pulmonary HTN & PE
               </h1>
               <p className="text-white/70 text-sm mt-1 max-w-xl">
                 Echo-based assessment of pulmonary hypertension and pulmonary embolism — diagnostic criteria, RV/PA measurements, risk stratification, and clinical decision support.

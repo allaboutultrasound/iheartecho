@@ -425,7 +425,7 @@ export default function StressNavigator() {
                 </div>
               </div>
               <h1 className="text-2xl font-black text-white leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
-                Stress Echo Navigator
+                EchoAssist™ Navigator — Stress Echo
               </h1>
               <p className="text-white/70 text-sm mt-1 max-w-xl">
                 Exercise and dobutamine stress echo protocols, target HR calculator, and interpretation criteria.

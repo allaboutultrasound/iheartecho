@@ -1126,6 +1126,7 @@ function DIYReportsTab() {
   const { data: iqrSnapshot = [] } = trpc.lab.getIqrStaffSnapshot.useQuery();
   const { data: monthly = [] } = trpc.lab.getIqrMonthlySummary.useQuery();
   const { data: physicianMonthly = [] } = trpc.physicianPeerReview.getMonthlySummary.useQuery();
+  const { data: comparisonMonthly = [] } = trpc.physicianOverRead.getMonthlySummary.useQuery();
   const { data: cmeSummary = [] } = trpc.cme.getStaffSummary.useQuery();
   const { data: members = [] } = trpc.lab.getMembers.useQuery();
 
@@ -1142,7 +1143,26 @@ function DIYReportsTab() {
     return mo >= startDate && mo <= endDate;
   });
 
-  const filteredPhysician = physicianMonthly.filter((m: any) => {
+  // Merge both peer review sources: old standalone form + new over-read workflow
+  const allPhysicianMonthly = [...physicianMonthly, ...comparisonMonthly].reduce((acc: any[], m: any) => {
+    const existing = acc.find(e => e.month === m.month);
+    if (existing) {
+      existing.reviewCount = Number(existing.reviewCount ?? 0) + Number(m.reviewCount ?? 0);
+      // Weighted average of concordance scores
+      const totalCount = Number(existing.reviewCount);
+      const prevCount = totalCount - Number(m.reviewCount ?? 0);
+      const prevScore = Number(existing.avgConcordanceScore ?? 0);
+      const newScore = Number(m.avgConcordanceScore ?? 0);
+      existing.avgConcordanceScore = totalCount > 0
+        ? ((prevScore * prevCount) + (newScore * Number(m.reviewCount ?? 0))) / totalCount
+        : 0;
+    } else {
+      acc.push({ ...m });
+    }
+    return acc;
+  }, []).sort((a: any, b: any) => (a.month ?? "").localeCompare(b.month ?? ""));
+
+  const filteredPhysician = allPhysicianMonthly.filter((m: any) => {
     const mo = (m.month ?? "");
     return mo >= startDate && mo <= endDate;
   });
@@ -1231,6 +1251,44 @@ function DIYReportsTab() {
                       <td className="py-1.5 text-right text-blue-600">{m.goodCount ?? 0}</td>
                       <td className="py-1.5 text-right text-amber-600">{m.adequateCount ?? 0}</td>
                       <td className="py-1.5 text-right text-red-600">{m.needsImprovementCount ?? 0}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Physician Peer Review Monthly Trend */}
+      {filteredPhysician.length > 0 && (
+        <Card className="border border-gray-100">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
+              <Users className="w-4 h-4" style={{ color: "#7c3aed" }} />
+              Physician Peer Review Monthly Trend
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-gray-100">
+                    <th className="text-left py-1.5 text-gray-500 font-semibold">Month</th>
+                    <th className="text-right py-1.5 text-gray-500 font-semibold">Reviews</th>
+                    <th className="text-right py-1.5 text-gray-500 font-semibold">Avg Concordance</th>
+                    <th className="text-right py-1.5 text-gray-500 font-semibold">Physicians Reviewed</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredPhysician.map((m: any, i: number) => (
+                    <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
+                      <td className="py-1.5 font-medium text-gray-700">{m.month}</td>
+                      <td className="py-1.5 text-right text-gray-600">{m.reviewCount}</td>
+                      <td className="py-1.5 text-right font-bold" style={{ color: "#7c3aed" }}>
+                        {m.avgConcordanceScore != null ? Math.round(Number(m.avgConcordanceScore)) + "%" : "—"}
+                      </td>
+                      <td className="py-1.5 text-right text-gray-600">{m.physiciansReviewed ?? "—"}</td>
                     </tr>
                   ))}
                 </tbody>

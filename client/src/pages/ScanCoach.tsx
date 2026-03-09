@@ -1232,7 +1232,7 @@ export default function ScanCoach() {
               <Scan className="w-4 h-4" style={{ color: "#189aa1" }} />
             </div>
             <div>
-              <h1 className="text-xl font-black text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>ScanCoach</h1>
+              <h1 className="text-xl font-black text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>EchoAssist™ — ScanCoach</h1>
               <p className="text-gray-500 text-xs">View-by-view scanning guides with probe positioning, anatomy, and clinical pearls</p>
             </div>
           </div>
@@ -1241,21 +1241,48 @@ export default function ScanCoach() {
 
       <div className="max-w-7xl mx-auto px-4 py-6">
 
-        {/* Tab switcher */}
-        <div className="flex flex-wrap gap-2 mb-6">
-          {(["tte", "chd", "fetal", "achd", "diastolic", "strain", "uea", "hocm", "pulm", "tee", "ice"] as const).map(tab => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className="px-5 py-2 rounded-lg text-sm font-semibold transition-all"
-              style={activeTab === tab
-                ? { background: "#189aa1", color: "white" }
-                : { background: "white", color: "#189aa1", border: "1px solid #e2e8f0" }}
-            >
-              {tab === "tte" ? "Adult TTE" : tab === "fetal" ? "Fetal Echo" : tab === "achd" ? "Adult Congenital" : tab === "diastolic" ? "Diastolic Function" : tab === "strain" ? "Strain" : tab === "uea" ? "UEA" : tab === "hocm" ? "HOCM" : tab === "pulm" ? "Pulmonary HTN & PE" : tab === "tee" ? "TEE" : tab === "ice" ? "ICE" : "Pediatric CHD"}
-            </button>
-          ))}
-        </div>
+        {/* Tab switcher + Go to Navigator */}
+        {(() => {
+          const tabNavMap: Record<string, { path: string; label: string }> = {
+            tte: { path: "/tte", label: "TTE Navigator" },
+            chd: { path: "/pediatric", label: "Pediatric Navigator" },
+            fetal: { path: "/fetal", label: "Fetal Navigator" },
+            achd: { path: "/achd", label: "ACHD Navigator" },
+            diastolic: { path: "/diastolic", label: "Diastolic Navigator" },
+            strain: { path: "/strain", label: "Strain Navigator" },
+            uea: { path: "/uea-navigator", label: "UEA Navigator" },
+            hocm: { path: "/hocm-navigator", label: "HOCM Navigator" },
+            pulm: { path: "/pulm-htn", label: "Pulm HTN Navigator" },
+            tee: { path: "/tee", label: "TEE Navigator" },
+            ice: { path: "/ice", label: "ICE Navigator" },
+          };
+          const nav = tabNavMap[activeTab];
+          return (
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+              <div className="flex flex-wrap gap-2">
+                {(["tte", "chd", "fetal", "achd", "diastolic", "strain", "uea", "hocm", "pulm", "tee", "ice"] as const).map(tab => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className="px-5 py-2 rounded-lg text-sm font-semibold transition-all"
+                    style={activeTab === tab
+                      ? { background: "#189aa1", color: "white" }
+                      : { background: "white", color: "#189aa1", border: "1px solid #e2e8f0" }}
+                  >
+                    {tab === "tte" ? "Adult TTE" : tab === "fetal" ? "Fetal Echo" : tab === "achd" ? "Adult Congenital" : tab === "diastolic" ? "Diastolic Function" : tab === "strain" ? "Strain" : tab === "uea" ? "UEA" : tab === "hocm" ? "HOCM" : tab === "pulm" ? "Pulmonary HTN & PE" : tab === "tee" ? "TEE" : tab === "ice" ? "ICE" : "Pediatric CHD"}
+                  </button>
+                ))}
+              </div>
+              {nav && (
+                <Link href={nav.path}>
+                  <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold border transition-all hover:bg-[#189aa1]/5 cursor-pointer" style={{ borderColor: "#189aa1" + "40", color: "#189aa1" }}>
+                    Go to {nav.label} <Stethoscope className="w-3.5 h-3.5" />
+                  </span>
+                </Link>
+              )}
+            </div>
+          );
+        })()}
 
         {/* ─── ADULT TTE TAB ─── */}
         {activeTab === "tte" && (

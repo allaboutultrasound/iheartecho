@@ -237,7 +237,7 @@ export default function ICENavigator() {
                 </div>
               </div>
               <h1 className="text-2xl font-black text-white leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
-                ICE Navigator
+                EchoAssist™ Navigator — ICE
               </h1>
               <p className="text-white/70 text-sm mt-1 max-w-xl">
                 Intracardiac Echocardiography — structural heart procedure guidance, views, and real-time checklists.

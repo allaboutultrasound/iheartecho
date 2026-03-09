@@ -39,6 +39,14 @@
 - [x] Hub card — Added to Home dashboard module grid
 - [x] Hub vitest — 16 moderation tests, all passing
 
+## Physician Peer Review Analytics Fix
+- [x] Fix: physician comparison reviews (over-read workflow) not appearing in DIY Reports analytics
+- [x] Add getComparisonReviewsMonthlySummary DB function querying physicianComparisonReviews table
+- [x] Add physicianOverRead.getMonthlySummary tRPC procedure
+- [x] Update DIYReportsTab to merge both physicianPeerReviews and physicianComparisonReviews monthly data
+- [x] Add Physician Peer Review Monthly Trend table to DIY Reports tab
+- [x] Fix: pacsImageUrl missing from getInvitationByToken response (TypeScript error)
+
 ## Pending Features
 - [ ] Tricuspid Regurgitation engine in EchoAssist™
 - [ ] "Copy to Report" button in EchoAssist™ → Report Builder deep-link
@@ -1642,3 +1650,21 @@
 - [x] Remove dark gradient view header from StressScanCoach ViewDetail — replaced with teal-tinted card header
 - [x] Remove dark gradient view header from StructuralHeartScanCoach ViewDetail — replaced with teal-tinted card header
 - [x] Remove hero banner from PedCHDCoach.tsx (CHD tab component)
+
+## EchoAssist Hub Navigation Fix (Mar 09 2026)
+- [ ] Fix "Go to Navigator" and "Go to ScanCoach" links in EchoAssist hub — remove anchor hashes so pages open at the top
+
+## Navigation & UI Fixes (Mar 09 2026)
+- [ ] Add global ScrollToTop component to App.tsx so all route changes scroll to top
+- [ ] Remove export option/button from all protocol navigators
+
+## Cross-Navigation Buttons (Mar 09 2026)
+- [ ] Add "Go to Navigator" button on each ScanCoach subpage header
+- [ ] Add "Go to ScanCoach" button on each protocol navigator page header
+- [ ] Remove hero banner from Diastolic Navigator ScanCoach tab
+- [ ] Remove export buttons from all protocol navigators
+
+## Page Title Renames (Mar 09 2026)
+- [ ] ScanCoach pages: rename H1 titles to "EchoAssist™ - ScanCoach" (not links/buttons/menus)
+- [ ] Navigator pages: rename H1 titles to "EchoAssist™ [X] Navigator" (exclude AccreditationNavigator)
+- [ ] Update EchoAssist hub subtext to "Echo Protocol Navigator & ScanCoach"

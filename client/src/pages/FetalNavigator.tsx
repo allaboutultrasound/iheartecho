@@ -394,7 +394,7 @@ export default function FetalNavigator() {
                 <span className="text-xs text-white/80 font-medium">Fetal Echo · CHD Differentials</span>
               </div>
               <h1 className="text-2xl font-black text-white leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
-                Fetal Echo Navigator
+                EchoAssist™ Navigator — Fetal Echo
               </h1>
               <p className="text-white/70 text-sm mt-1 max-w-xl">
                 Select a fetal cardiac finding to generate a differential diagnosis and clinical guidance.

@@ -2074,3 +2074,19 @@ export async function deleteComparisonReview(id: number, labId: number): Promise
     .delete(physicianComparisonReviews)
     .where(and(eq(physicianComparisonReviews.id, id), eq(physicianComparisonReviews.labId, labId)));
 }
+
+/** Monthly summary for physician comparison reviews (over-read workflow) */
+export async function getComparisonReviewsMonthlySummary(labId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({
+    month: sql<string>`DATE_FORMAT(createdAt, '%Y-%m')`,
+    reviewCount: count(),
+    avgConcordanceScore: avg(physicianComparisonReviews.concordanceScore),
+    physiciansReviewed: sql<number>`COUNT(DISTINCT overReadingPhysician)`,
+  })
+    .from(physicianComparisonReviews)
+    .where(eq(physicianComparisonReviews.labId, labId))
+    .groupBy(sql`DATE_FORMAT(createdAt, '%Y-%m')`)
+    .orderBy(sql`DATE_FORMAT(createdAt, '%Y-%m')`);
+}
