@@ -1,5 +1,13 @@
-// ─── Image Quality Review — Form Data Constants ──────────────────────────────
-// Derived from Formsite IMAGE-QUALITY-REVIEW API analysis
+// iqrData.ts — Image Quality Review field definitions
+// Derived from FormSite form: https://fs23.formsite.com/allaboutultrasound/hmrmdywgzj/index
+// Exam type prefix logic:
+//   AETTE  = Adult TTE
+//   AETEE  = Adult TEE
+//   AE_STRESS = Adult Stress
+//   PETTE  = Pediatric/Congenital TTE
+//   PETEE  = Pediatric/Congenital TEE
+//   FE     = Fetal
+//   (no prefix) = all exam types
 
 export const EXAM_TYPES = [
   "ADULT TTE",
@@ -11,112 +19,171 @@ export const EXAM_TYPES = [
 ] as const;
 export type ExamType = typeof EXAM_TYPES[number];
 
+// ─── Exam-type helpers ────────────────────────────────────────────────────────
+export function isAETTE(et: ExamType | "") { return et === "ADULT TTE"; }
+export function isAETEE(et: ExamType | "") { return et === "ADULT TEE"; }
+export function isAESTRESS(et: ExamType | "") { return et === "ADULT STRESS"; }
+export function isPETTE(et: ExamType | "") { return et === "PEDIATRIC TTE"; }
+export function isPETEE(et: ExamType | "") { return et === "PEDIATRIC TEE"; }
+export function isFE(et: ExamType | "") { return et === "FETAL ECHO"; }
+export function isTEE(et: ExamType | "") { return et === "ADULT TEE" || et === "PEDIATRIC TEE"; }
+export function isTTE(et: ExamType | "") { return et === "ADULT TTE" || et === "PEDIATRIC TTE"; }
+export function isPed(et: ExamType | "") { return et === "PEDIATRIC TTE" || et === "PEDIATRIC TEE"; }
+export function isAdult(et: ExamType | "") { return et === "ADULT TTE" || et === "ADULT TEE" || et === "ADULT STRESS"; }
+
+// ─── Option arrays (matching FormSite exactly) ────────────────────────────────
+
 export const STRESS_TYPES = [
   "Treadmill/Bike Stress Echo with Doppler",
   "Treadmill/Bike Stress Echo without Doppler",
   "Dobutamine/Chemical Stress Echo with Doppler",
   "Dobutamine/Chemical Stress Echo without Doppler",
-] as const;
+];
 
 export const INDICATION_OPTIONS = [
-  "Appropriate A7",
-  "Appropriate A8",
   "Appropriate A9",
-  "Uncertain U4",
+  "Appropriate A8",
+  "Appropriate A7",
   "Uncertain U6",
+  "Uncertain U5",
+  "Uncertain U4",
+  "Inappropriate I3",
   "Inappropriate I2",
+  "Inappropriate I1",
 ];
 
-export const GAIN_DEPTH_FOCAL_OPTIONS = ["Excellent", "Adequate", "Deficiencies Noted"];
-export const COLORIZE_ZOOM_OPTIONS = ["Excellent", "Adequate", "Deficiencies Noted"];
-export const YES_NO_NA = ["Yes", "No", "N/A"];
-export const YES_NO = ["Yes", "No"];
-export const ADEQUATE_DEFICIENT = ["Adequate", "Deficiencies Noted"];
-export const COMPLETE_OPTIONS = [
-  "Complete",
-  "Minor Deficiencies Noted (all required images are present and in order, but missing measurements)",
-  "Minor Deficiencies Noted (images/measurements are documented but taken out of protocol sequence)",
-  "Moderate Deficiencies Noted (missing images, measurements and/or documentation)",
-  "Major Deficiencies Noted (missing views, images and or measurements)",
-];
-export const PROTOCOL_SEQUENCE_OPTIONS = [
-  "Complete (to BEST ability - if TDS study documents attempts at all views)",
-  "Minor Deficiencies Noted (images/measurements are documented but taken out of protocol sequence)",
-  "Minor Deficiencies Noted (all required images are present and in order, but missing measurements)",
-  "Moderate Deficiencies Noted (missing images, measurements and/or documentation)",
-  "Major Deficiencies Noted (missing views, images and or measurements)",
-];
-export const ON_AXIS_OPTIONS = [
-  "Yes - On axis imaging with no foreshortening",
-  "No - Foreshortening present",
-];
-export const EFFORT_SUBOPTIMAL_OPTIONS = [
-  "Yes - Image optimization attempted",
-  "No - No attempt to optimize suboptimal views",
-  "N/A - All views were adequate",
-];
+// Image quality settings
+export const GAIN_OPTIONS = ["Adequate", "Too Bright", "Too Dark", "Other"];
+export const DEPTH_OPTIONS = ["Adequate", "Too Deep", "Too Shallow", "Other"];
+export const FOCAL_OPTIONS = ["Adequate", "Deficiencies Noted"];
+export const COLORIZE_OPTIONS = ["Adequate", "Over-Utilized", "Other"];
+export const ZOOM_OPTIONS = ["Adequate", "Over-Utilized", "Not Utilized", "Other"];
+export const ECG_OPTIONS = ["Yes", "N/A", "No", "Deficiencies in Display"];
+
+// Contrast/UEA
 export const CONTRAST_USE_OPTIONS = [
   "Yes (with appropriate use criteria and good image optimization/contrast UEA settings)",
-  "No - Contrast/UAE was NOT used when it should have been",
+  "Yes (with appropriate use criteria but deficient contrast settings/imaging)",
+  "Contrast/UEA Not Available",
+  "Patient Refused Contrast/UEA",
   "N/A - Limited Exam/Contrast UEA Not Needed",
+  "No - Contrast/UEA not used when needed",
+  "Contrast/UEA used in TDS. However, image optimization not performed - may have eliminated need for contrast use",
 ];
-export const CONTRAST_SETTINGS_OPTIONS = ["Yes", "No", "N/A"];
+export const CONTRAST_SETTINGS_OPTIONS = ["Yes", "N/A", "No"];
+
+// On-axis imaging
+export const ON_AXIS_OPTIONS = [
+  "Yes - On axis imaging with no foreshortening",
+  "Some Deficiencies - No documentation of patient position/attempts to correct",
+  "Some Deficiencies - Annotations noted with patient position/attempts to correct",
+  "No - Off axis imaging with significant foreshortening",
+];
+export const EFFORT_SUBOPTIMAL_OPTIONS = ["Yes - Image optimization attempted", "N/A", "No"];
+
+// Measurements
+export const COMPLETE_OPTIONS = [
+  "Complete",
+  "Sufficient attempts made in a TDS",
+  "Limited exam: all appropriate measurements performed",
+  "Deficiencies Noted",
+];
+export const YES_NO_NA = ["Yes", "N/A", "No"];
+export const YES_NO = ["Yes", "No"];
+export const ADEQUATE_DEFICIENT = ["Adequate", "Deficiencies Noted"];
+
 export const PSAX_LV_OPTIONS = [
   "Complete - Includes MV, Pap, Apex Views",
-  "Incomplete - Missing Apex",
-  "Incomplete - Missing Pap",
+  "Apex Not Visualized",
+  "N/A - Limited Exam",
+  "Not Fully Visualized",
+];
+export const VENTRICULAR_FUNCTION_OPTIONS = ["Yes", "N/A", "No"];
+export const EF_MEASUREMENTS_OPTIONS = ["Yes", "N/A - Limited Exam", "No"];
+export const SIMPSONS_OPTIONS = ["Yes", "N/A", "No"];
+export const LA_VOLUME_OPTIONS = ["Yes", "N/A", "No"];
+
+// TEE measurements
+export const TEE_MEASUREMENTS_COMPLETE_OPTIONS = [
+  "Complete",
+  "Sufficient attempts made in a TDS",
+  "Limited exam: all appropriate measurements performed",
+  "Deficiencies Noted",
+];
+export const TEE_MEASUREMENTS_ACCURATE_OPTIONS = [
+  "Excellent",
+  "Adequate",
+  "Some Deficiencies",
+  "N/A - Limited Exam",
+  "No",
+];
+export const TEE_VENTRICULAR_OPTIONS = [
+  "Excellent",
+  "Adequate",
+  "Some Deficiencies",
+  "N/A - Limited Exam",
+  "No",
+];
+
+// Doppler
+export const DOPPLER_SETTINGS_OPTIONS = ["Adequate", "N/A - Limited Exam", "Deficiencies Noted"];
+export const DOPPLER_MEASUREMENTS_OPTIONS = ["Adequate", "N/A - Limited Exam", "Deficiencies Noted"];
+export const FORWARD_FLOW_OPTIONS = ["Yes", "N/A - Limited Exam", "No"];
+export const PW_CW_OPTIONS = ["Yes", "N/A - Limited Exam", "No"];
+export const SPECTRAL_OPTIONS = ["Yes", "N/A", "No"];
+export const COLOR_FLOW_OPTIONS = ["Yes", "N/A - Limited Exam", "No"];
+
+// TEE Doppler
+export const TEE_DOPPLER_SETTINGS_OPTIONS = ["Excellent", "Adequate", "N/A - Limited Exam", "Deficiencies Noted"];
+export const TEE_DOPPLER_SAMPLE_OPTIONS = ["Yes", "Some Deficiencies", "N/A - Limited Exam", "No"];
+
+// Diastolic function (AETTE only)
+export const DIASTOLIC_FUNCTION_OPTIONS = [
+  "Not Fully Evaluated",
+  "Mitral Annulus TDI Performed (BOTH Lateral & Medial)",
+  "Mitral Inflow PW Performed",
+  "TR RVSP/PASP",
+  "Pulmonary Vein Inflow Performed",
+  "LARS Performed when indicated",
+  "E/SR IVRT",
+  "Deceleration Time",
+  "Mitral Inflow PW with Valsalva Performed (if indicated)",
   "N/A - Limited Exam",
 ];
-export const VENTRICULAR_FUNCTION_OPTIONS = ["Yes", "Adequate", "Some Deficiencies", "Excellent"];
-export const EF_MEASUREMENTS_OPTIONS = ["Yes", "No", "N/A"];
-export const SIMPSONS_OPTIONS = ["Yes", "No", "N/A - Limited Exam or No Simpson's Performed"];
-export const LA_VOLUME_OPTIONS = ["Yes", "No", "N/A - Limited Exam or No LA Volume Performed"];
-export const DOPPLER_SETTINGS_OPTIONS = ["Excellent", "Adequate", "Deficiencies Noted"];
-export const DOPPLER_MEASUREMENTS_OPTIONS = ["Excellent", "Adequate", "Deficiencies Noted"];
-export const PEDOFF_OPTIONS = [
-  "Yes",
-  "No",
-  "N/A (Limited Exam or No AS >2m/s)",
+
+// Right heart (AETTE + PETTE)
+export const RIGHT_HEART_OPTIONS = [
+  "Not Fully Evaluated",
+  "Appropriate RV Focused View",
+  "Tricuspid Inflow Performed",
+  "Tricuspid Annulus TDI Performed",
+  "TAPSE Performed",
+  "RV1 and RV2 Diameter Measurements",
+  "RA Volume Measurements",
+  "N/A - Limited Exam",
 ];
+
+// Valves
+export const VALVE_OPTIONS = ["Yes", "N/A", "No"];
+export const PEDOFF_OPTIONS = ["Yes", "N/A (Limited Exam or No AS >2m/s)", "No"];
 export const MR_EVAL_OPTIONS = [
   "Yes",
-  "No (more than mild MR present & no PISA/ERO performed)",
   "N/A (limited exam, eccentric jet, no significant MR)",
+  "No (more than mild MR present & no PISA/ERO performed)",
 ];
 export const PISA_OPTIONS = [
   "Yes",
-  "No",
   "N/A (limited exam, eccentric jet, no significant MR)",
-];
-export const STRAIN_CORRECT_OPTIONS = [
-  "Yes",
   "No",
-  "N/A - Strain Not Performed",
 ];
-export const IAC_OPTIONS = [
-  "Accreditation Acceptable Case - ADULT: AS",
-  "Accreditation Acceptable Case - ADULT: MR",
-  "Accreditation Acceptable Case - ADULT: AR",
-  "Accreditation Acceptable Case - ADULT: MS",
-  "Accreditation Acceptable Case - ADULT: TR",
-  "Accreditation Acceptable Case - ADULT: PR",
-  "Accreditation Acceptable Case - ADULT: Cardiomyopathy",
-  "Accreditation Acceptable Case - ADULT: Pericardial Disease",
-  "Accreditation Acceptable Case - ADULT: Aortic Disease",
-  "Accreditation Acceptable Case - ADULT: Cardiac Mass",
-  "Not IAC Acceptable - No pathology to submit",
-  "Not IAC Acceptable - Reporting Issues (not sonographer related)",
-  "Not IAC Acceptable - Image Quality Issues",
-];
-export const REPORT_CONCORDANT_OPTIONS = [
-  "Yes",
-  "N/A - NOT COMPLETED",
-  "N/A - UNABLE TO CONFIRM",
-];
-export const COMPARABLE_OPTIONS = ["Yes", "No", "N/A"];
-export const IMAGE_OPT_SUMMARY_OPTIONS = ["Excellent", "Execellent", "Adequate", "Deficiencies Noted"];
-export const DIASTOLOGY_OPTIONS = ["Yes", "Deficiencies Noted"];
-export const RH_SYSTOLIC_OPTIONS = ["Yes", "Deficiencies Noted"];
+
+// TEE valves
+export const TEE_VALVE_OPTIONS = ["Yes", "N/A", "Deficiencies Noted"];
+
+// Strain
+export const STRAIN_CORRECT_OPTIONS = ["Yes", "N/A - Strain Not Performed", "No"];
+
+// Additional imaging
 export const ADDITIONAL_IMAGING_OPTIONS = [
   "None Performed",
   "2D Strain",
@@ -124,28 +191,50 @@ export const ADDITIONAL_IMAGING_OPTIONS = [
   "3D EF",
   "Other",
 ];
+
+// TEE summary
+export const TEE_IMAGE_OPT_OPTIONS = ["Excellent", "Adequate", "N/A - Limited Exam", "Deficiencies Noted"];
+export const TEE_MEASUREMENT_SUMMARY_OPTIONS = ["Excellent", "Adequate", "N/A", "Deficiencies Noted"];
+export const TEE_DOPPLER_SUMMARY_OPTIONS = ["Excellent", "Adequate", "N/A - Limited Exam", "Deficiencies Noted"];
+
+// Protocol sequence
+export const PROTOCOL_SEQUENCE_OPTIONS = [
+  "Complete (to BEST ability)",
+  "Minor Deficiencies Noted (all required images present but missing measurements)",
+  "Minor Deficiencies Noted (images/measurements documented but out of protocol sequence)",
+  "Minor Deficiencies Noted (see review comments)",
+  "Moderate Deficiencies Noted (missing images, measurements and/or documentation)",
+  "Major Deficiencies Noted (missing views, images and or measurements)",
+];
+
+export const REPORT_CONCORDANT_OPTIONS = [
+  "Yes",
+  "N/A - NOT COMPLETED",
+  "N/A - UNABLE TO CONFIRM",
+  "No",
+];
+export const COMPARABLE_OPTIONS = ["Yes", "N/A", "No"];
+
+export const IAC_OPTIONS = [
+  "Not IAC Acceptable - No pathology to submit",
+  "Not IAC Acceptable - Case images not IAC acceptable",
+  "Not IAC Acceptable - Reporting Issues (not sonographer related)",
+  "Accreditation Acceptable Case - ADULT: AS",
+  "Accreditation Acceptable Case - ADULT: LVDF/RWMA",
+  "Accreditation Acceptable Case - PED: Simple Obstruction",
+  "Accreditation Acceptable Case - PED: Shunt",
+  "Accreditation Acceptable Case - PED: Complex Defect",
+  "Accreditation Acceptable Case - FETAL: Arrhythmia",
+  "Accreditation Acceptable Case - FETAL: Complex Defect",
+  "Accreditation Acceptable Case - FETAL: Simple Obstruction",
+  "Accreditation Acceptable Case - STRESS: Wall Motion at Rest",
+  "Accreditation Acceptable Case - STRESS: Ischemia during Stress",
+  "Accreditation Acceptable Case - STRESS: with Contrast",
+  "Accreditation Acceptable Case - TEE: More than Mild MR",
+  "Accreditation Acceptable Case - TEE: Source of emboli",
+];
+
 export const SCANNING_TIME_OPTIONS = ["Actual", "Estimated"];
-
-// ─── Diastolic function multi-select options ──────────────────────────────────
-export const DIASTOLIC_FUNCTION_OPTIONS = [
-  "Mitral Inflow PW Performed",
-  "Mitral Annulus TDI Performed (BOTH Lateral & Medial)",
-  "Pulmonary Vein Inflow Performed",
-  "Mitral Inflow PW with Valsalva Performed (if indicated)",
-  "N/A - Limited Exam",
-  "Not Fully Evaluated",
-];
-
-// ─── Right heart function multi-select options ────────────────────────────────
-export const RIGHT_HEART_OPTIONS = [
-  "Appropriate RV Focused View",
-  "Tricuspid Inflow Performed",
-  "Tricuspid Annulus TDI Performed",
-  "TAPSE Performed",
-  "RV1 and RV2 Diameter Measurements",
-  "RA Volume Measurements",
-  "Not Fully Evaluated",
-];
 
 // ─── Required views per exam type ────────────────────────────────────────────
 export const REQUIRED_VIEWS: Record<ExamType, string[]> = {
@@ -164,6 +253,8 @@ export const REQUIRED_VIEWS: Record<ExamType, string[]> = {
     "Subcostal IVC/hepatic vein view",
     "Subcostal Abdominal Aorta view",
     "Suprasternal notch view (with Color & CW Doppler)",
+    "Right Parasternal view (when indicated)",
+    "If limited exam - all components obtained or attempted",
   ],
   "ADULT TEE": [
     "Mid Esophageal - Five Chamber View",
@@ -254,115 +345,100 @@ export const REQUIRED_VIEWS: Record<ExamType, string[]> = {
   ],
 };
 
-// ─── Scoring weights per exam type ───────────────────────────────────────────
-// Based on Formsite score calculations observed in real results
-// Max possible score per exam type (used to normalize to 0-100)
-export const SCORE_MAX: Record<ExamType, number> = {
-  "ADULT TTE": 100,
-  "ADULT TEE": 100,
-  "ADULT STRESS": 100,
-  "PEDIATRIC TTE": 100,
-  "PEDIATRIC TEE": 100,
-  "FETAL ECHO": 100,
-};
-
-// ─── Score calculation ────────────────────────────────────────────────────────
-// Each question contributes points; "Yes"/"Excellent"/"Adequate"/"Complete" = full points
-// "No"/"Deficiencies Noted"/"Incomplete" = 0 points
-// "N/A" = excluded from denominator
-
+// ─── IQRFormData type ─────────────────────────────────────────────────────────
 export type IQRFormData = {
-  // Header
+  // Header (all exam types)
   reviewType: string;
-  organization: string;
   dateReviewCompleted: string;
   examDos: string;
   examIdentifier: string;
-  dob: string;
+  referringPhysician: string;
   facilityLocation: string;
-  // Staff — from Lab Admin (id) or free text
+  // Staff
   performingSonographerId: string;
   performingSonographerText: string;
   interpretingPhysicianId: string;
   interpretingPhysicianText: string;
-  referringPhysician: string;
   // Exam info
   examType: ExamType | "";
   examScope: string;
-  stressType: string;
+  stressType: string;         // AE_STRESS only
   examIndication: string;
   indicationAppropriateness: string;
   demographicsAccurate: string;
-  // Required views (multi-select)
+  // Required views (multi-select, per exam type)
   requiredViews: string[];
-  // Image quality
+  // Image quality settings (all exam types)
   gainSettings: string;
   depthSettings: string;
   focalZoneSettings: string;
   colorizeSettings: string;
   zoomSettings: string;
-  ecgDisplay: string;
+  ecgDisplay: string;         // AETTE, AETEE, PETTE, PETEE only
+  // Contrast (AETTE, AETEE, PETTE, PETEE only)
   contrastUseAppropriate: string;
   contrastSettingsAppropriate: string;
+  // On-axis imaging (AETTE, PETTE only)
   onAxisImaging: string;
-  effortSuboptimalViews: string;
-  // Measurements
+  effortSuboptimalViews: string;  // all exam types
+  // Measurements (all exam types, some fields conditional)
   measurements2dComplete: string;
   measurements2dAccurate: string;
-  psaxLvComplete: string;
+  psaxLvComplete: string;           // AETTE, PETTE only
   ventricularFunctionAccurate: string;
-  efMeasurementsAccurate: string;
-  simpsonsEfAccurate: string;
-  laVolumeAccurate: string;
-  // Doppler
-  dopplerMeasurementsComplete: string;
-  dopplerMeasurementsAccurate: string;
-  dopplerVentricularFunction: string;
+  efMeasurementsAccurate: string;   // AETTE, PETTE only
+  simpsonsEfAccurate: string;       // AETTE, PTTE only
+  laVolumeAccurate: string;         // AETTE only
+  // TEE-specific measurements (AETEE, PETEE)
+  teeMeasurementsComplete: string;
+  teeMeasurementsAccurate: string;
+  teeVentricularFunction: string;
+  // Doppler (all exam types)
   dopplerWaveformSettings: string;
   dopplerMeasurementAccuracy: string;
-  forwardFlowSpectrum: string;
+  forwardFlowSpectrum: string;      // not for AE_STRESS
   pwDopplerPlacement: string;
   cwDopplerPlacement: string;
   spectralEnvelopePeaks: string;
+  // Color Doppler (AETTE, PETTE, FE)
   colorFlowInterrogation: string;
   colorDopplerIasIvs: string;
-  // Diastolic function (multi-select)
+  // TEE Doppler (AETEE, PETEE)
+  teeDopplerSettings: string;
+  teeDopplerSampleVolumes: string;
+  // Diastolic function (AETTE only)
   diastolicFunctionEval: string[];
+  // Pulmonary vein inflow (AETTE, PETTE, FE)
   pulmonaryVeinInflow: string;
-  // Right heart (multi-select)
+  // Right heart (AETTE, PETTE)
   rightHeartFunctionEval: string[];
-  tapseAccurate: string;
-  tissueDopplerAdequate: string;
-  // Peer review doppler fields
-  dopplerWaveformSettingsPeer: string;
-  dopplerSampleVolumesPeer: string;
-  // Valves
+  tapseAccurate: string;            // AETTE only
+  tissueDopplerAdequate: string;    // AETTE, PETTE
+  // Valves (all exam types)
   aorticValveDoppler: string;
   lvotDopplerPlacement: string;
-  pedoffCwUtilized: string;
-  pedoffCwEnvelope: string;
-  pedoffCwLabelled: string;
+  pedoffCwUtilized: string;         // AETTE only
+  pedoffCwEnvelope: string;         // AETTE only (conditional)
+  pedoffCwLabelled: string;         // AETTE only (conditional)
   mitralValveDoppler: string;
-  mrEvaluationMethods: string;
-  pisaEroMeasurements: string;
+  mrEvaluationMethods: string;      // AETTE only
+  pisaEroMeasurements: string;      // AETTE only (conditional)
   tricuspidValveDoppler: string;
   pulmonicValveDoppler: string;
-  // Peer review valve fields
-  aorticValvePeer: string;
-  mitralValvePeer: string;
-  tricuspidValvePeer: string;
-  pulmonicValvePeer: string;
-  diastologyPeer: string;
-  rightHeartPeer: string;
-  // Additional imaging
+  // TEE valves (AETEE, PETEE)
+  teeAorticValve: string;
+  teeMitralValve: string;
+  teeTricuspidValve: string;
+  teePulmonicValve: string;
+  // Additional imaging (all exam types)
   additionalImagingMethods: string[];
-  strainPerformed: string;
-  strainCorrect: string;
-  threeDPerformed: string;
-  // Summary fields
-  imageOptimizationSummary: string;
-  measurementAccuracySummary: string;
-  dopplerSettingsSummary: string;
+  strainPerformed: string;          // AETTE only
+  strainCorrect: string;            // AETTE only (conditional)
+  // TEE summary (AETEE, PETEE)
+  teeImageOptSummary: string;
+  teeMeasurementSummary: string;
+  teeDopplerSummary: string;
+  // Summary (all exam types)
   protocolSequenceFollowed: string;
   pathologyDocumented: string;
   clinicalQuestionAnswered: string;
@@ -383,17 +459,15 @@ export type IQRFormData = {
 
 export const EMPTY_FORM: IQRFormData = {
   reviewType: "QUALITY REVIEW",
-  organization: "",
   dateReviewCompleted: new Date().toLocaleDateString("en-US"),
   examDos: "",
   examIdentifier: "",
-  dob: "",
+  referringPhysician: "",
   facilityLocation: "",
   performingSonographerId: "",
   performingSonographerText: "",
   interpretingPhysicianId: "",
   interpretingPhysicianText: "",
-  referringPhysician: "",
   examType: "",
   examScope: "Complete Exam",
   stressType: "",
@@ -418,9 +492,9 @@ export const EMPTY_FORM: IQRFormData = {
   efMeasurementsAccurate: "",
   simpsonsEfAccurate: "",
   laVolumeAccurate: "",
-  dopplerMeasurementsComplete: "",
-  dopplerMeasurementsAccurate: "",
-  dopplerVentricularFunction: "",
+  teeMeasurementsComplete: "",
+  teeMeasurementsAccurate: "",
+  teeVentricularFunction: "",
   dopplerWaveformSettings: "",
   dopplerMeasurementAccuracy: "",
   forwardFlowSpectrum: "",
@@ -429,13 +503,13 @@ export const EMPTY_FORM: IQRFormData = {
   spectralEnvelopePeaks: "",
   colorFlowInterrogation: "",
   colorDopplerIasIvs: "",
+  teeDopplerSettings: "",
+  teeDopplerSampleVolumes: "",
   diastolicFunctionEval: [],
   pulmonaryVeinInflow: "",
   rightHeartFunctionEval: [],
   tapseAccurate: "",
   tissueDopplerAdequate: "",
-  dopplerWaveformSettingsPeer: "",
-  dopplerSampleVolumesPeer: "",
   aorticValveDoppler: "",
   lvotDopplerPlacement: "",
   pedoffCwUtilized: "",
@@ -446,19 +520,16 @@ export const EMPTY_FORM: IQRFormData = {
   pisaEroMeasurements: "",
   tricuspidValveDoppler: "",
   pulmonicValveDoppler: "",
-  aorticValvePeer: "",
-  mitralValvePeer: "",
-  tricuspidValvePeer: "",
-  pulmonicValvePeer: "",
-  diastologyPeer: "",
-  rightHeartPeer: "",
+  teeAorticValve: "",
+  teeMitralValve: "",
+  teeTricuspidValve: "",
+  teePulmonicValve: "",
   additionalImagingMethods: [],
   strainPerformed: "",
   strainCorrect: "",
-  threeDPerformed: "",
-  imageOptimizationSummary: "",
-  measurementAccuracySummary: "",
-  dopplerSettingsSummary: "",
+  teeImageOptSummary: "",
+  teeMeasurementSummary: "",
+  teeDopplerSummary: "",
   protocolSequenceFollowed: "",
   pathologyDocumented: "",
   clinicalQuestionAnswered: "",
@@ -475,17 +546,25 @@ export const EMPTY_FORM: IQRFormData = {
   notifySonographer: "NO",
 };
 
-// ─── Score calculation helper ─────────────────────────────────────────────────
-function score(val: string | string[], positiveVals: string[], weight = 1): { earned: number; possible: number } {
+// ─── Quality score calculation ────────────────────────────────────────────────
+// Scoring: "Excellent", "Yes", "Adequate", "Complete" (and starts-with variants) = 1 point
+// "N/A" / empty = excluded from denominator
+// Final score = (earned / possible) * 100, capped at 100
+
+const POSITIVE_VALS = ["yes", "excellent", "adequate", "complete"];
+
+function scoreField(val: string | string[]): { earned: number; possible: number } {
   if (Array.isArray(val)) {
-    // Multi-select: N/A means excluded
-    if (val.includes("N/A - Limited Exam")) return { earned: 0, possible: 0 };
-    return { earned: weight, possible: weight }; // If any selection made, give credit
+    // Multi-select: skip if empty or only N/A entries
+    const meaningful = val.filter(v => !v.startsWith("N/A") && v !== "Not Fully Evaluated");
+    if (meaningful.length === 0) return { earned: 0, possible: 0 };
+    return { earned: 1, possible: 1 };
   }
   if (!val || val === "") return { earned: 0, possible: 0 };
   if (val.startsWith("N/A") || val === "N/A") return { earned: 0, possible: 0 };
-  const isPositive = positiveVals.some(p => val.toLowerCase().includes(p.toLowerCase()));
-  return { earned: isPositive ? weight : 0, possible: weight };
+  const lower = val.toLowerCase();
+  const isPositive = POSITIVE_VALS.some(p => lower.startsWith(p));
+  return { earned: isPositive ? 1 : 0, possible: 1 };
 }
 
 export function calculateQualityScore(form: IQRFormData): number {
@@ -494,107 +573,143 @@ export function calculateQualityScore(form: IQRFormData): number {
   let earned = 0;
   let possible = 0;
 
-  const add = (val: string | string[], positiveVals: string[], weight = 1) => {
-    const s = score(val, positiveVals, weight);
+  const add = (val: string | string[]) => {
+    const s = scoreField(val);
     earned += s.earned;
     possible += s.possible;
   };
 
-  // Demographics (2pts)
-  add(form.demographicsAccurate, ["yes"], 2);
+  // Demographics (all)
+  add(form.demographicsAccurate);
 
-  // Required views (5pts) — based on % of views checked
+  // Required views — score as fraction of views checked
   const views = REQUIRED_VIEWS[et] || [];
-  if (views.length > 0 && form.requiredViews.length > 0) {
-    const pct = form.requiredViews.length / views.length;
-    earned += Math.round(pct * 5);
-    possible += 5;
-  } else if (views.length > 0) {
-    possible += 5;
+  if (views.length > 0) {
+    const checked = form.requiredViews.length;
+    if (checked > 0) {
+      const pct = Math.min(1, checked / views.length);
+      earned += pct;
+    }
+    possible += 1;
   }
 
-  // Image quality settings (3pts each)
-  add(form.gainSettings, ["excellent", "adequate"], 3);
-  add(form.depthSettings, ["excellent", "adequate"], 3);
-  add(form.focalZoneSettings, ["excellent", "adequate"], 3);
-  add(form.colorizeSettings, ["excellent", "adequate"], 2);
-  add(form.zoomSettings, ["excellent", "adequate"], 2);
-  add(form.ecgDisplay, ["yes"], 2);
+  // Image quality settings (all)
+  add(form.gainSettings);
+  add(form.depthSettings);
+  add(form.focalZoneSettings);
+  add(form.colorizeSettings);
+  add(form.zoomSettings);
 
-  // Contrast (if applicable)
-  add(form.contrastUseAppropriate, ["yes"], 2);
-  add(form.contrastSettingsAppropriate, ["yes"], 1);
+  // ECG display (AETTE, AETEE, PETTE, PETEE)
+  if (!isAESTRESS(et) && !isFE(et)) add(form.ecgDisplay);
 
-  // On-axis imaging
-  add(form.onAxisImaging, ["yes - on axis"], 3);
-  add(form.effortSuboptimalViews, ["yes - image optimization"], 2);
+  // Contrast (AETTE, AETEE, PETTE, PETEE)
+  if (!isAESTRESS(et) && !isFE(et)) {
+    add(form.contrastUseAppropriate);
+    if (form.contrastUseAppropriate?.startsWith("Yes")) add(form.contrastSettingsAppropriate);
+  }
+
+  // On-axis imaging (AETTE, PETTE)
+  if (isTTE(et)) add(form.onAxisImaging);
+
+  // Effort suboptimal (all)
+  add(form.effortSuboptimalViews);
 
   // Measurements
-  add(form.measurements2dComplete, ["complete"], 4);
-  add(form.measurements2dAccurate, ["yes"], 3);
-  if (et !== "ADULT TEE" && et !== "FETAL ECHO") {
-    add(form.psaxLvComplete, ["complete"], 2);
-  }
-  add(form.ventricularFunctionAccurate, ["yes", "excellent", "adequate"], 4);
-  add(form.efMeasurementsAccurate, ["yes"], 3);
-  add(form.simpsonsEfAccurate, ["yes"], 2);
-  add(form.laVolumeAccurate, ["yes"], 2);
-
-  // Doppler
-  add(form.dopplerWaveformSettings, ["excellent", "adequate"], 3);
-  add(form.dopplerMeasurementAccuracy, ["excellent", "adequate"], 3);
-  add(form.forwardFlowSpectrum, ["yes"], 2);
-  add(form.pwDopplerPlacement, ["yes"], 2);
-  add(form.cwDopplerPlacement, ["yes"], 2);
-  add(form.spectralEnvelopePeaks, ["yes"], 2);
-  add(form.colorFlowInterrogation, ["yes"], 2);
-  add(form.colorDopplerIasIvs, ["yes"], 2);
-
-  // Diastolic function
-  if (form.diastolicFunctionEval.length > 0 && !form.diastolicFunctionEval.includes("N/A - Limited Exam")) {
-    const hasCore = form.diastolicFunctionEval.some(v => v.includes("Mitral Inflow") || v.includes("TDI"));
-    earned += hasCore ? 4 : 2;
-    possible += 4;
-  } else if (!form.diastolicFunctionEval.includes("N/A - Limited Exam")) {
-    possible += 4;
-  }
-
-  // Right heart
-  if (form.rightHeartFunctionEval.length > 0 && !form.rightHeartFunctionEval.includes("Not Fully Evaluated")) {
-    earned += 3;
-    possible += 3;
-  } else if (form.rightHeartFunctionEval.length > 0) {
-    possible += 3;
+  if (isTEE(et)) {
+    add(form.teeMeasurementsComplete);
+    add(form.teeMeasurementsAccurate);
+    add(form.teeVentricularFunction);
   } else {
-    possible += 3;
+    add(form.measurements2dComplete);
+    add(form.measurements2dAccurate);
+    if (isTTE(et)) add(form.psaxLvComplete);
+    add(form.ventricularFunctionAccurate);
+    if (isTTE(et)) {
+      add(form.efMeasurementsAccurate);
+      add(form.simpsonsEfAccurate);
+    }
+    if (isAETTE(et)) add(form.laVolumeAccurate);
   }
-  add(form.tapseAccurate, ["yes"], 2);
-  add(form.tissueDopplerAdequate, ["yes"], 2);
+
+  // Doppler (all)
+  if (isTEE(et)) {
+    add(form.teeDopplerSettings);
+    add(form.teeDopplerSampleVolumes);
+  } else {
+    add(form.dopplerWaveformSettings);
+    add(form.dopplerMeasurementAccuracy);
+    if (!isAESTRESS(et)) add(form.forwardFlowSpectrum);
+    add(form.pwDopplerPlacement);
+    add(form.cwDopplerPlacement);
+    add(form.spectralEnvelopePeaks);
+  }
+
+  // Color Doppler (AETTE, PETTE, FE)
+  if (isAETTE(et) || isPETTE(et) || isFE(et)) {
+    add(form.colorFlowInterrogation);
+    add(form.colorDopplerIasIvs);
+  }
+
+  // Diastolic function (AETTE only)
+  if (isAETTE(et)) {
+    add(form.diastolicFunctionEval);
+  }
+
+  // Pulmonary vein inflow (AETTE, PETTE, FE)
+  if (isAETTE(et) || isPETTE(et) || isFE(et)) add(form.pulmonaryVeinInflow);
+
+  // Right heart (AETTE, PETTE)
+  if (isAETTE(et) || isPETTE(et)) {
+    add(form.rightHeartFunctionEval);
+    if (isAETTE(et)) add(form.tapseAccurate);
+    add(form.tissueDopplerAdequate);
+  }
 
   // Valves
-  add(form.aorticValveDoppler, ["yes"], 3);
-  add(form.lvotDopplerPlacement, ["yes"], 2);
-  add(form.pedoffCwUtilized, ["yes"], 2);
-  add(form.pedoffCwEnvelope, ["yes"], 1);
-  add(form.pedoffCwLabelled, ["yes"], 1);
-  add(form.mitralValveDoppler, ["yes"], 3);
-  add(form.mrEvaluationMethods, ["yes"], 2);
-  add(form.pisaEroMeasurements, ["yes"], 2);
-  add(form.tricuspidValveDoppler, ["yes"], 2);
-  add(form.pulmonicValveDoppler, ["yes"], 2);
+  if (isTEE(et)) {
+    add(form.teeAorticValve);
+    add(form.teeMitralValve);
+    add(form.teeTricuspidValve);
+    add(form.teePulmonicValve);
+  } else {
+    add(form.aorticValveDoppler);
+    add(form.lvotDopplerPlacement);
+    if (isAETTE(et)) {
+      add(form.pedoffCwUtilized);
+      if (form.pedoffCwUtilized === "Yes") {
+        add(form.pedoffCwEnvelope);
+        add(form.pedoffCwLabelled);
+      }
+    }
+    add(form.mitralValveDoppler);
+    if (isAETTE(et)) {
+      add(form.mrEvaluationMethods);
+      if (form.mrEvaluationMethods === "Yes") add(form.pisaEroMeasurements);
+    }
+    add(form.tricuspidValveDoppler);
+    add(form.pulmonicValveDoppler);
+  }
 
-  // Protocol sequence
-  add(form.protocolSequenceFollowed, ["complete"], 4);
+  // Strain (AETTE only)
+  if (isAETTE(et)) {
+    add(form.strainPerformed);
+    if (form.strainPerformed === "Yes") add(form.strainCorrect);
+  }
 
-  // Pathology
-  add(form.pathologyDocumented, ["yes"], 3);
-  add(form.clinicalQuestionAnswered, ["yes"], 3);
+  // TEE summary (AETEE, PETEE)
+  if (isTEE(et)) {
+    add(form.teeImageOptSummary);
+    add(form.teeMeasurementSummary);
+    add(form.teeDopplerSummary);
+  }
 
-  // Report concordance
-  add(form.reportConcordant, ["yes"], 2);
-
-  // Comparable to previous
-  add(form.comparableToPrevious, ["yes"], 1);
+  // Summary (all)
+  add(form.protocolSequenceFollowed);
+  add(form.pathologyDocumented);
+  add(form.clinicalQuestionAnswered);
+  add(form.reportConcordant);
+  add(form.comparableToPrevious);
 
   if (possible === 0) return 0;
   return Math.min(100, Math.round((earned / possible) * 100));

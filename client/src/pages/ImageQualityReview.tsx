@@ -13,18 +13,25 @@ import {
   Trash2, Plus, Users, RefreshCw,
 } from "lucide-react";
 import {
-  EXAM_TYPES, STRESS_TYPES, INDICATION_OPTIONS, GAIN_DEPTH_FOCAL_OPTIONS,
-  COLORIZE_ZOOM_OPTIONS, YES_NO_NA, YES_NO, ADEQUATE_DEFICIENT,
+  EXAM_TYPES, STRESS_TYPES, INDICATION_OPTIONS,
+  GAIN_OPTIONS, DEPTH_OPTIONS, FOCAL_OPTIONS, COLORIZE_OPTIONS, ZOOM_OPTIONS, ECG_OPTIONS,
+  YES_NO_NA, YES_NO,
   COMPLETE_OPTIONS, PROTOCOL_SEQUENCE_OPTIONS, ON_AXIS_OPTIONS,
   EFFORT_SUBOPTIMAL_OPTIONS, CONTRAST_USE_OPTIONS, CONTRAST_SETTINGS_OPTIONS,
   PSAX_LV_OPTIONS, VENTRICULAR_FUNCTION_OPTIONS, EF_MEASUREMENTS_OPTIONS,
-  SIMPSONS_OPTIONS, LA_VOLUME_OPTIONS, DOPPLER_SETTINGS_OPTIONS,
-  DOPPLER_MEASUREMENTS_OPTIONS, PEDOFF_OPTIONS, MR_EVAL_OPTIONS, PISA_OPTIONS,
-  STRAIN_CORRECT_OPTIONS, IAC_OPTIONS, REPORT_CONCORDANT_OPTIONS,
-  COMPARABLE_OPTIONS, IMAGE_OPT_SUMMARY_OPTIONS, DIASTOLOGY_OPTIONS,
-  RH_SYSTOLIC_OPTIONS, ADDITIONAL_IMAGING_OPTIONS, SCANNING_TIME_OPTIONS,
-  DIASTOLIC_FUNCTION_OPTIONS, RIGHT_HEART_OPTIONS, REQUIRED_VIEWS,
-  EMPTY_FORM, calculateQualityScore, getScoreTier,
+  SIMPSONS_OPTIONS, LA_VOLUME_OPTIONS,
+  TEE_MEASUREMENTS_COMPLETE_OPTIONS, TEE_MEASUREMENTS_ACCURATE_OPTIONS, TEE_VENTRICULAR_OPTIONS,
+  DOPPLER_SETTINGS_OPTIONS, DOPPLER_MEASUREMENTS_OPTIONS,
+  FORWARD_FLOW_OPTIONS, PW_CW_OPTIONS, SPECTRAL_OPTIONS, COLOR_FLOW_OPTIONS,
+  TEE_DOPPLER_SETTINGS_OPTIONS, TEE_DOPPLER_SAMPLE_OPTIONS,
+  DIASTOLIC_FUNCTION_OPTIONS, RIGHT_HEART_OPTIONS,
+  PEDOFF_OPTIONS, MR_EVAL_OPTIONS, PISA_OPTIONS, VALVE_OPTIONS,
+  TEE_VALVE_OPTIONS,
+  STRAIN_CORRECT_OPTIONS, ADDITIONAL_IMAGING_OPTIONS, SCANNING_TIME_OPTIONS,
+  TEE_IMAGE_OPT_OPTIONS, TEE_MEASUREMENT_SUMMARY_OPTIONS, TEE_DOPPLER_SUMMARY_OPTIONS,
+  IAC_OPTIONS, REPORT_CONCORDANT_OPTIONS, COMPARABLE_OPTIONS,
+  REQUIRED_VIEWS, EMPTY_FORM, calculateQualityScore, getScoreTier,
+  isAETTE, isAETEE, isAESTRESS, isPETTE, isPETEE, isFE, isTEE, isTTE,
   type IQRFormData, type ExamType,
 } from "./iqr/iqrData";
 
@@ -338,10 +345,12 @@ export default function ImageQualityReview({ embedded = false }: { embedded?: bo
   }
 
   const examType = form.examType as ExamType | "";
-  const isStress = examType === "ADULT STRESS";
-  const isTEE = examType === "ADULT TEE" || examType === "PEDIATRIC TEE";
-  const isFetal = examType === "FETAL ECHO";
-  const isPed = examType === "PEDIATRIC TTE" || examType === "PEDIATRIC TEE";
+  const isStress = isAESTRESS(examType);
+  const isTEEExam = isTEE(examType);
+  const isFetal = isFE(examType);
+  const isTTEExam = isTTE(examType);
+  const isAdultTTE = isAETTE(examType);
+  const isPedTTE = isPETTE(examType);
   const requiredViews = examType ? REQUIRED_VIEWS[examType as ExamType] ?? [] : [];
 
   // ─── Step renderers ──────────────────────────────────────────────────────────
@@ -502,53 +511,62 @@ export default function ImageQualityReview({ embedded = false }: { embedded?: bo
       <>
         <FormSection title="2D Image Quality Settings">
           <FormField label="2D Gain Settings">
-            <RadioGroup name="gainSettings" options={GAIN_DEPTH_FOCAL_OPTIONS}
-              value={form.gainSettings} onChange={v => set("gainSettings", v)} cols={3} />
+            <RadioGroup name="gainSettings" options={GAIN_OPTIONS}
+              value={form.gainSettings} onChange={v => set("gainSettings", v)} cols={2} />
           </FormField>
           <FormField label="Depth Settings">
-            <RadioGroup name="depthSettings" options={GAIN_DEPTH_FOCAL_OPTIONS}
-              value={form.depthSettings} onChange={v => set("depthSettings", v)} cols={3} />
+            <RadioGroup name="depthSettings" options={DEPTH_OPTIONS}
+              value={form.depthSettings} onChange={v => set("depthSettings", v)} cols={2} />
           </FormField>
           <FormField label="Focal Zone Settings">
-            <RadioGroup name="focalZoneSettings" options={GAIN_DEPTH_FOCAL_OPTIONS}
-              value={form.focalZoneSettings} onChange={v => set("focalZoneSettings", v)} cols={3} />
+            <RadioGroup name="focalZoneSettings" options={FOCAL_OPTIONS}
+              value={form.focalZoneSettings} onChange={v => set("focalZoneSettings", v)} cols={2} />
           </FormField>
           <FormField label="Colorize Settings">
-            <RadioGroup name="colorizeSettings" options={COLORIZE_ZOOM_OPTIONS}
+            <RadioGroup name="colorizeSettings" options={COLORIZE_OPTIONS}
               value={form.colorizeSettings} onChange={v => set("colorizeSettings", v)} cols={3} />
           </FormField>
           <FormField label="Zoom Settings">
-            <RadioGroup name="zoomSettings" options={COLORIZE_ZOOM_OPTIONS}
-              value={form.zoomSettings} onChange={v => set("zoomSettings", v)} cols={3} />
+            <RadioGroup name="zoomSettings" options={ZOOM_OPTIONS}
+              value={form.zoomSettings} onChange={v => set("zoomSettings", v)} cols={2} />
           </FormField>
-          <FormField label="ECG on Image Display">
-            <RadioGroup name="ecgDisplay" options={YES_NO}
-              value={form.ecgDisplay} onChange={v => set("ecgDisplay", v)} cols={2} />
-          </FormField>
-        </FormSection>
-
-        <FormSection title="Contrast / UEA">
-          <FormField label="Was contrast/UAE used if it was appropriate to do so?">
-            <RadioGroup name="contrastUseAppropriate" options={CONTRAST_USE_OPTIONS}
-              value={form.contrastUseAppropriate} onChange={v => set("contrastUseAppropriate", v)} />
-          </FormField>
-          {form.contrastUseAppropriate?.startsWith("Yes") && (
-            <FormField label="If contrast was used, were the settings appropriate for contrast imaging?">
-              <RadioGroup name="contrastSettingsAppropriate" options={CONTRAST_SETTINGS_OPTIONS}
-                value={form.contrastSettingsAppropriate}
-                onChange={v => set("contrastSettingsAppropriate", v)} cols={3} />
+          {/* ECG display: AETTE, AETEE, PETTE, PETEE only */}
+          {!isStress && !isFetal && (
+            <FormField label="ECG on Image Display">
+              <RadioGroup name="ecgDisplay" options={ECG_OPTIONS}
+                value={form.ecgDisplay} onChange={v => set("ecgDisplay", v)} cols={2} />
             </FormField>
           )}
         </FormSection>
 
+        {/* Contrast: AETTE, AETEE, PETTE, PETEE only */}
+        {!isStress && !isFetal && (
+          <FormSection title="Contrast / UEA">
+            <FormField label="Was contrast/UEA used if it was appropriate to do so?">
+              <RadioGroup name="contrastUseAppropriate" options={CONTRAST_USE_OPTIONS}
+                value={form.contrastUseAppropriate} onChange={v => set("contrastUseAppropriate", v)} />
+            </FormField>
+            {form.contrastUseAppropriate?.startsWith("Yes") && (
+              <FormField label="If contrast was used, were the settings appropriate for the contrast/UEA used?">
+                <RadioGroup name="contrastSettingsAppropriate" options={CONTRAST_SETTINGS_OPTIONS}
+                  value={form.contrastSettingsAppropriate}
+                  onChange={v => set("contrastSettingsAppropriate", v)} cols={3} />
+              </FormField>
+            )}
+          </FormSection>
+        )}
+
         <FormSection title="On-Axis Imaging">
-          <FormField label="Does the study demonstrate standard on axis imaging planes without foreshortening?">
-            <RadioGroup name="onAxisImaging" options={ON_AXIS_OPTIONS}
-              value={form.onAxisImaging} onChange={v => set("onAxisImaging", v)} />
-          </FormField>
+          {/* On-axis: AETTE, PETTE only */}
+          {isTTEExam && (
+            <FormField label="Does the study demonstrate standard on axis imaging planes? (i.e. avoidance of foreshortening)">
+              <RadioGroup name="onAxisImaging" options={ON_AXIS_OPTIONS}
+                value={form.onAxisImaging} onChange={v => set("onAxisImaging", v)} />
+            </FormField>
+          )}
           <FormField label="Was an effort made to better define any suboptimal views?">
             <RadioGroup name="effortSuboptimalViews" options={EFFORT_SUBOPTIMAL_OPTIONS}
-              value={form.effortSuboptimalViews} onChange={v => set("effortSuboptimalViews", v)} />
+              value={form.effortSuboptimalViews} onChange={v => set("effortSuboptimalViews", v)} cols={3} />
           </FormField>
         </FormSection>
       </>
@@ -558,51 +576,81 @@ export default function ImageQualityReview({ embedded = false }: { embedded?: bo
   function renderStep5() {
     return (
       <>
-        <FormSection title="2D Measurements">
-          <FormField label="Were all protocol measurements obtained?">
-            <RadioGroup name="measurements2dComplete" options={COMPLETE_OPTIONS}
-              value={form.measurements2dComplete} onChange={v => set("measurements2dComplete", v)} />
-          </FormField>
-          <FormField label="Are 2D measurements placed accurately in the correct window/location/angle/anatomy landmarks/ECG cycle?">
-            <RadioGroup name="measurements2dAccurate" options={YES_NO}
-              value={form.measurements2dAccurate} onChange={v => set("measurements2dAccurate", v)} cols={2} />
-          </FormField>
-          {!isTEE && !isFetal && (
-            <FormField label="PSAX LV — Was the complete LV series obtained?">
-              <RadioGroup name="psaxLvComplete" options={PSAX_LV_OPTIONS}
-                value={form.psaxLvComplete} onChange={v => set("psaxLvComplete", v)} />
-            </FormField>
-          )}
-        </FormSection>
-
-        <FormSection title="Ventricular Function">
-          <FormField label="Does the study accurately measure ventricular function?">
-            <RadioGroup name="ventricularFunctionAccurate" options={VENTRICULAR_FUNCTION_OPTIONS}
-              value={form.ventricularFunctionAccurate}
-              onChange={v => set("ventricularFunctionAccurate", v)} cols={2} />
-          </FormField>
-          {!isFetal && (
-            <>
-              <FormField label="Are 2D and/or M-Mode EF measurements obtained accurately?">
-                <RadioGroup name="efMeasurementsAccurate" options={EF_MEASUREMENTS_OPTIONS}
-                  value={form.efMeasurementsAccurate}
-                  onChange={v => set("efMeasurementsAccurate", v)} cols={3} />
+        {/* TEE measurements (AETEE, PETEE) */}
+        {isTEEExam ? (
+          <>
+            <FormSection title="TEE 2D Measurements">
+              <FormField label="Were all protocol measurements obtained?">
+                <RadioGroup name="teeMeasurementsComplete" options={TEE_MEASUREMENTS_COMPLETE_OPTIONS}
+                  value={form.teeMeasurementsComplete} onChange={v => set("teeMeasurementsComplete", v)} />
               </FormField>
-              {!isTEE && (
-                <FormField label="Are Simpson's EF measurements placed accurately, in the correct window?">
-                  <RadioGroup name="simpsonsEfAccurate" options={SIMPSONS_OPTIONS}
-                    value={form.simpsonsEfAccurate}
-                    onChange={v => set("simpsonsEfAccurate", v)} />
+              <FormField label="Are TEE 2D measurements placed accurately in the correct window/location/angle/anatomy landmarks?">
+                <RadioGroup name="teeMeasurementsAccurate" options={TEE_MEASUREMENTS_ACCURATE_OPTIONS}
+                  value={form.teeMeasurementsAccurate} onChange={v => set("teeMeasurementsAccurate", v)} cols={3} />
+              </FormField>
+            </FormSection>
+            <FormSection title="TEE Ventricular Function">
+              <FormField label="Does the study accurately measure ventricular function?">
+                <RadioGroup name="teeVentricularFunction" options={TEE_VENTRICULAR_OPTIONS}
+                  value={form.teeVentricularFunction} onChange={v => set("teeVentricularFunction", v)} cols={3} />
+              </FormField>
+            </FormSection>
+          </>
+        ) : (
+          <>
+            <FormSection title="2D Measurements">
+              <FormField label="Were all protocol measurements obtained?">
+                <RadioGroup name="measurements2dComplete" options={COMPLETE_OPTIONS}
+                  value={form.measurements2dComplete} onChange={v => set("measurements2dComplete", v)} />
+              </FormField>
+              <FormField label="Are 2D measurements placed accurately in the correct window/location/angle/anatomy landmarks/ECG cycle?">
+                <RadioGroup name="measurements2dAccurate" options={YES_NO}
+                  value={form.measurements2dAccurate} onChange={v => set("measurements2dAccurate", v)} cols={2} />
+              </FormField>
+              {/* PSAX LV: AETTE, PETTE only */}
+              {isTTEExam && (
+                <FormField label="PSAX LV — Was the complete LV series obtained?">
+                  <RadioGroup name="psaxLvComplete" options={PSAX_LV_OPTIONS}
+                    value={form.psaxLvComplete} onChange={v => set("psaxLvComplete", v)} />
                 </FormField>
               )}
-              <FormField label="Is LA volume measured accurately?">
-                <RadioGroup name="laVolumeAccurate" options={LA_VOLUME_OPTIONS}
-                  value={form.laVolumeAccurate}
-                  onChange={v => set("laVolumeAccurate", v)} />
+            </FormSection>
+
+            <FormSection title="Ventricular Function">
+              <FormField label="Does the study accurately measure ventricular function?">
+                <RadioGroup name="ventricularFunctionAccurate" options={VENTRICULAR_FUNCTION_OPTIONS}
+                  value={form.ventricularFunctionAccurate}
+                  onChange={v => set("ventricularFunctionAccurate", v)} cols={2} />
               </FormField>
-            </>
-          )}
-        </FormSection>
+              {/* EF measurements: AETTE, PETTE, AE_STRESS only */}
+              {!isFetal && (
+                <>
+                  <FormField label="Are 2D and/or M-Mode EF measurements obtained accurately?">
+                    <RadioGroup name="efMeasurementsAccurate" options={EF_MEASUREMENTS_OPTIONS}
+                      value={form.efMeasurementsAccurate}
+                      onChange={v => set("efMeasurementsAccurate", v)} cols={3} />
+                  </FormField>
+                  {/* Simpson's EF: AETTE, PETTE only */}
+                  {isTTEExam && (
+                    <FormField label="Are Simpson's EF measurements placed accurately, in the correct window?">
+                      <RadioGroup name="simpsonsEfAccurate" options={SIMPSONS_OPTIONS}
+                        value={form.simpsonsEfAccurate}
+                        onChange={v => set("simpsonsEfAccurate", v)} cols={3} />
+                    </FormField>
+                  )}
+                  {/* LA volume: AETTE only */}
+                  {isAdultTTE && (
+                    <FormField label="Is LA volume measured accurately?">
+                      <RadioGroup name="laVolumeAccurate" options={LA_VOLUME_OPTIONS}
+                        value={form.laVolumeAccurate}
+                        onChange={v => set("laVolumeAccurate", v)} cols={3} />
+                    </FormField>
+                  )}
+                </>
+              )}
+            </FormSection>
+          </>
+        )}
       </>
     );
   }
@@ -610,58 +658,83 @@ export default function ImageQualityReview({ embedded = false }: { embedded?: bo
   function renderStep6() {
     return (
       <>
-        <FormSection title="Doppler Settings">
-          <FormField label="Are Doppler waveform settings correct (Baseline/PRF-Scale)?">
-            <RadioGroup name="dopplerWaveformSettings" options={DOPPLER_SETTINGS_OPTIONS}
-              value={form.dopplerWaveformSettings}
-              onChange={v => set("dopplerWaveformSettings", v)} cols={3} />
-          </FormField>
-          <FormField label="Are Doppler measurements accurate (correct placement/no contrast blooming)?">
-            <RadioGroup name="dopplerMeasurementAccuracy" options={DOPPLER_MEASUREMENTS_OPTIONS}
-              value={form.dopplerMeasurementAccuracy}
-              onChange={v => set("dopplerMeasurementAccuracy", v)} cols={3} />
-          </FormField>
-        </FormSection>
+        {/* TEE Doppler (AETEE, PETEE) */}
+        {isTEEExam ? (
+          <>
+            <FormSection title="TEE Doppler Settings">
+              <FormField label="Are Doppler waveform settings correct (Baseline/PRF-Scale/Gain)?">
+                <RadioGroup name="teeDopplerSettings" options={TEE_DOPPLER_SETTINGS_OPTIONS}
+                  value={form.teeDopplerSettings}
+                  onChange={v => set("teeDopplerSettings", v)} cols={2} />
+              </FormField>
+              <FormField label="Are PW/CW Doppler sample volumes placed in the correct location consistently?">
+                <RadioGroup name="teeDopplerSampleVolumes" options={TEE_DOPPLER_SAMPLE_OPTIONS}
+                  value={form.teeDopplerSampleVolumes}
+                  onChange={v => set("teeDopplerSampleVolumes", v)} cols={2} />
+              </FormField>
+            </FormSection>
+          </>
+        ) : (
+          <>
+            <FormSection title="Doppler Settings">
+              <FormField label="Are Doppler waveform settings correct (Baseline/PRF-Scale)?">
+                <RadioGroup name="dopplerWaveformSettings" options={DOPPLER_SETTINGS_OPTIONS}
+                  value={form.dopplerWaveformSettings}
+                  onChange={v => set("dopplerWaveformSettings", v)} cols={3} />
+              </FormField>
+              <FormField label="Are Doppler measurements accurate (correct placement/no contrast blooming)?">
+                <RadioGroup name="dopplerMeasurementAccuracy" options={DOPPLER_MEASUREMENTS_OPTIONS}
+                  value={form.dopplerMeasurementAccuracy}
+                  onChange={v => set("dopplerMeasurementAccuracy", v)} cols={3} />
+              </FormField>
+            </FormSection>
 
-        <FormSection title="Spectral Doppler">
-          {!isStress && (
-            <FormField label="Does the study demonstrate a forward flow spectrum for each of the valves?">
-              <RadioGroup name="forwardFlowSpectrum" options={YES_NO}
-                value={form.forwardFlowSpectrum}
-                onChange={v => set("forwardFlowSpectrum", v)} cols={2} />
-            </FormField>
-          )}
-          <FormField label="Are PW Doppler sample volumes placed in the correct location consistently?">
-            <RadioGroup name="pwDopplerPlacement" options={YES_NO}
-              value={form.pwDopplerPlacement}
-              onChange={v => set("pwDopplerPlacement", v)} cols={2} />
-          </FormField>
-          <FormField label="Are CW Doppler sample volumes placed in the correct location/angle consistently?">
-            <RadioGroup name="cwDopplerPlacement" options={YES_NO}
-              value={form.cwDopplerPlacement}
-              onChange={v => set("cwDopplerPlacement", v)} cols={2} />
-          </FormField>
-          <FormField label="Were spectral envelope peaks clearly defined or attempted multiple times when difficult?">
-            <RadioGroup name="spectralEnvelopePeaks" options={YES_NO_NA}
-              value={form.spectralEnvelopePeaks}
-              onChange={v => set("spectralEnvelopePeaks", v)} cols={3} />
-          </FormField>
-        </FormSection>
+            <FormSection title="Spectral Doppler">
+              {/* Forward flow: not for AE_STRESS */}
+              {!isStress && (
+                <FormField label="Does the study demonstrate a forward flow spectrum for each of the valves?">
+                  <RadioGroup name="forwardFlowSpectrum" options={FORWARD_FLOW_OPTIONS}
+                    value={form.forwardFlowSpectrum}
+                    onChange={v => set("forwardFlowSpectrum", v)} cols={3} />
+                </FormField>
+              )}
+              <FormField label="Are PW Doppler sample volumes placed in the correct location consistently?">
+                <RadioGroup name="pwDopplerPlacement" options={PW_CW_OPTIONS}
+                  value={form.pwDopplerPlacement}
+                  onChange={v => set("pwDopplerPlacement", v)} cols={3} />
+              </FormField>
+              <FormField label="Are CW Doppler sample volumes placed in the correct location/angle consistently?">
+                <RadioGroup name="cwDopplerPlacement" options={PW_CW_OPTIONS}
+                  value={form.cwDopplerPlacement}
+                  onChange={v => set("cwDopplerPlacement", v)} cols={3} />
+              </FormField>
+              <FormField label="Were spectral envelope peaks clearly defined or attempted multiple times when difficult?">
+                <RadioGroup name="spectralEnvelopePeaks" options={SPECTRAL_OPTIONS}
+                  value={form.spectralEnvelopePeaks}
+                  onChange={v => set("spectralEnvelopePeaks", v)} cols={3} />
+              </FormField>
+            </FormSection>
 
-        <FormSection title="Color Doppler">
-          <FormField label="Does the study demonstrate color flow interrogation of all normal and abnormal flows?">
-            <RadioGroup name="colorFlowInterrogation" options={YES_NO}
-              value={form.colorFlowInterrogation}
-              onChange={v => set("colorFlowInterrogation", v)} cols={2} />
-          </FormField>
-          {!isTEE && !isFetal && (
-            <FormField label="Was Color Doppler utilized on both the IAS & IVS appropriately?">
-              <RadioGroup name="colorDopplerIasIvs" options={YES_NO}
-                value={form.colorDopplerIasIvs}
-                onChange={v => set("colorDopplerIasIvs", v)} cols={2} />
-            </FormField>
-          )}
-        </FormSection>
+            {/* Color Doppler: AETTE, PETTE, FE */}
+            {(isTTEExam || isFetal) && (
+              <FormSection title="Color Doppler">
+                <FormField label="Does the study demonstrate color flow interrogation of all normal and abnormal flows?">
+                  <RadioGroup name="colorFlowInterrogation" options={COLOR_FLOW_OPTIONS}
+                    value={form.colorFlowInterrogation}
+                    onChange={v => set("colorFlowInterrogation", v)} cols={3} />
+                </FormField>
+                {/* IAS/IVS: AETTE, PETTE only */}
+                {isTTEExam && (
+                  <FormField label="Was Color Doppler utilized on both the IAS & IVS appropriately?">
+                    <RadioGroup name="colorDopplerIasIvs" options={YES_NO}
+                      value={form.colorDopplerIasIvs}
+                      onChange={v => set("colorDopplerIasIvs", v)} cols={2} />
+                  </FormField>
+                )}
+              </FormSection>
+            )}
+          </>
+        )}
       </>
     );
   }
@@ -669,7 +742,8 @@ export default function ImageQualityReview({ embedded = false }: { embedded?: bo
   function renderStep7() {
     return (
       <>
-        {!isStress && !isFetal && (
+        {/* Diastolic function: AETTE only */}
+        {isAdultTTE && (
           <FormSection title="Diastolic Function">
             <FormField label="Was Diastolic Function/LAP evaluated appropriately?" hint="Select all that apply">
               <CheckboxGroup
@@ -679,6 +753,40 @@ export default function ImageQualityReview({ embedded = false }: { embedded?: bo
                 onChange={v => set("diastolicFunctionEval", v)}
               />
             </FormField>
+          </FormSection>
+        )}
+
+        {/* Pulmonary vein inflow: AETTE, PETTE, FE */}
+        {(isTTEExam || isFetal) && (
+          <FormSection title="Pulmonary Vein Inflow">
+            <FormField label="Was Pulmonary Vein Inflow evaluated appropriately?">
+              <RadioGroup name="pulmonaryVeinInflow" options={YES_NO_NA}
+                value={form.pulmonaryVeinInflow}
+                onChange={v => set("pulmonaryVeinInflow", v)} cols={3} />
+            </FormField>
+          </FormSection>
+        )}
+
+        {/* Right heart: AETTE, PETTE */}
+        {isTTEExam && (
+          <FormSection title="Right Heart Function">
+            <FormField label="Was Right Heart Function evaluated appropriately?" hint="Select all that apply">
+              <CheckboxGroup
+                name="rightHeartFunctionEval"
+                options={RIGHT_HEART_OPTIONS}
+                values={form.rightHeartFunctionEval}
+                onChange={v => set("rightHeartFunctionEval", v)}
+              />
+            </FormField>
+            {/* TAPSE: AETTE only */}
+            {isAdultTTE && (
+              <FormField label="Were TAPSE measurements performed accurately?">
+                <RadioGroup name="tapseAccurate" options={YES_NO_NA}
+                  value={form.tapseAccurate}
+                  onChange={v => set("tapseAccurate", v)} cols={3} />
+              </FormField>
+            )}
+            {/* Tissue Doppler: AETTE, PETTE */}
             <FormField label="Was Tissue Doppler adequate and measured/assessed properly?">
               <RadioGroup name="tissueDopplerAdequate" options={YES_NO}
                 value={form.tissueDopplerAdequate}
@@ -687,90 +795,108 @@ export default function ImageQualityReview({ embedded = false }: { embedded?: bo
           </FormSection>
         )}
 
-        <FormSection title="Right Heart Function">
-          <FormField label="Was Right Heart Function evaluated appropriately?" hint="Select all that apply">
-            <CheckboxGroup
-              name="rightHeartFunctionEval"
-              options={RIGHT_HEART_OPTIONS}
-              values={form.rightHeartFunctionEval}
-              onChange={v => set("rightHeartFunctionEval", v)}
-            />
-          </FormField>
-          {!isStress && !isFetal && (
-            <FormField label="Were TAPSE measurements performed accurately?">
-              <RadioGroup name="tapseAccurate" options={YES_NO_NA}
-                value={form.tapseAccurate}
-                onChange={v => set("tapseAccurate", v)} cols={3} />
+        {/* TEE Valve Evaluation (AETEE, PETEE) */}
+        {isTEEExam ? (
+          <FormSection title="TEE Valve Evaluation">
+            <FormField label="Is the Aortic Valve evaluated appropriately (Color/CW Doppler, morphology, planimetry)?">
+              <RadioGroup name="teeAorticValve" options={TEE_VALVE_OPTIONS}
+                value={form.teeAorticValve}
+                onChange={v => set("teeAorticValve", v)} cols={3} />
             </FormField>
-          )}
-        </FormSection>
-
-        <FormSection title="Valve Evaluation">
-          <FormField label="Is the Aortic Valve evaluated with Color/CW Doppler appropriately?">
-            <RadioGroup name="aorticValveDoppler" options={YES_NO_NA}
-              value={form.aorticValveDoppler}
-              onChange={v => set("aorticValveDoppler", v)} cols={3} />
-          </FormField>
-          {!isTEE && !isFetal && (
-            <FormField label="Is the LVOT pulsed Doppler sample volume placed in the correct location?">
-              <RadioGroup name="lvotDopplerPlacement" options={YES_NO}
-                value={form.lvotDopplerPlacement}
-                onChange={v => set("lvotDopplerPlacement", v)} cols={2} />
+            <FormField label="Is the Mitral Valve evaluated appropriately (Color/CW/PW Doppler, morphology, commissures)?">
+              <RadioGroup name="teeMitralValve" options={TEE_VALVE_OPTIONS}
+                value={form.teeMitralValve}
+                onChange={v => set("teeMitralValve", v)} cols={3} />
             </FormField>
-          )}
-
-          {/* AS-specific Pedoff branching */}
-          <FormField label="If Aortic Stenosis was present, was the dedicated Pedoff CW transducer utilized from multiple views?">
-            <RadioGroup name="pedoffCwUtilized" options={PEDOFF_OPTIONS}
-              value={form.pedoffCwUtilized}
-              onChange={v => set("pedoffCwUtilized", v)} />
-          </FormField>
-          {form.pedoffCwUtilized === "Yes" && (
-            <>
-              <FormField label="Was a clear envelope obtained using the dedicated Pedoff CW transducer?">
-                <RadioGroup name="pedoffCwEnvelope" options={PEDOFF_OPTIONS}
-                  value={form.pedoffCwEnvelope}
-                  onChange={v => set("pedoffCwEnvelope", v)} />
+            <FormField label="Is the Tricuspid Valve evaluated appropriately (Color/CW Doppler, morphology)?">
+              <RadioGroup name="teeTricuspidValve" options={TEE_VALVE_OPTIONS}
+                value={form.teeTricuspidValve}
+                onChange={v => set("teeTricuspidValve", v)} cols={3} />
+            </FormField>
+            <FormField label="Is the Pulmonic Valve evaluated appropriately (Color/CW/PW Doppler, morphology)?">
+              <RadioGroup name="teePulmonicValve" options={TEE_VALVE_OPTIONS}
+                value={form.teePulmonicValve}
+                onChange={v => set("teePulmonicValve", v)} cols={3} />
+            </FormField>
+          </FormSection>
+        ) : (
+          /* TTE / Stress / Fetal Valve Evaluation */
+          <FormSection title="Valve Evaluation">
+            <FormField label="Is the Aortic Valve evaluated with Color/CW Doppler appropriately?">
+              <RadioGroup name="aorticValveDoppler" options={VALVE_OPTIONS}
+                value={form.aorticValveDoppler}
+                onChange={v => set("aorticValveDoppler", v)} cols={3} />
+            </FormField>
+            {/* LVOT: AETTE, PETTE, AE_STRESS only */}
+            {!isFetal && (
+              <FormField label="Is the LVOT pulsed Doppler sample volume placed in the correct location?">
+                <RadioGroup name="lvotDopplerPlacement" options={YES_NO}
+                  value={form.lvotDopplerPlacement}
+                  onChange={v => set("lvotDopplerPlacement", v)} cols={2} />
               </FormField>
-              <FormField label="Were the dedicated Pedoff CW transducer views labelled according to view location (Apical, RSB, Subcostal, SSN)?">
-                <RadioGroup name="pedoffCwLabelled" options={PEDOFF_OPTIONS}
-                  value={form.pedoffCwLabelled}
-                  onChange={v => set("pedoffCwLabelled", v)} />
-              </FormField>
-            </>
-          )}
+            )}
 
-          <FormField label="Is the Mitral Valve evaluated with Color/CW/PW Doppler appropriately?">
-            <RadioGroup name="mitralValveDoppler" options={YES_NO_NA}
-              value={form.mitralValveDoppler}
-              onChange={v => set("mitralValveDoppler", v)} cols={3} />
-          </FormField>
+            {/* Pedoff CW: AETTE only */}
+            {isAdultTTE && (
+              <>
+                <FormField label="If Aortic Stenosis was present, was the dedicated Pedoff CW transducer utilized from multiple views?">
+                  <RadioGroup name="pedoffCwUtilized" options={PEDOFF_OPTIONS}
+                    value={form.pedoffCwUtilized}
+                    onChange={v => set("pedoffCwUtilized", v)} />
+                </FormField>
+                {form.pedoffCwUtilized === "Yes" && (
+                  <>
+                    <FormField label="Was a clear envelope obtained using the dedicated Pedoff CW transducer?">
+                      <RadioGroup name="pedoffCwEnvelope" options={YES_NO}
+                        value={form.pedoffCwEnvelope}
+                        onChange={v => set("pedoffCwEnvelope", v)} cols={2} />
+                    </FormField>
+                    <FormField label="Were the dedicated Pedoff CW transducer views labelled according to view location (Apical, RSB, Subcostal, SSN)?">
+                      <RadioGroup name="pedoffCwLabelled" options={YES_NO}
+                        value={form.pedoffCwLabelled}
+                        onChange={v => set("pedoffCwLabelled", v)} cols={2} />
+                    </FormField>
+                  </>
+                )}
+              </>
+            )}
 
-          {/* MR PISA branching */}
-          <FormField label="If significant Mitral Regurgitation is present, was it evaluated with appropriate methods (PISA, ERO, Vena Contracta)?">
-            <RadioGroup name="mrEvaluationMethods" options={MR_EVAL_OPTIONS}
-              value={form.mrEvaluationMethods}
-              onChange={v => set("mrEvaluationMethods", v)} />
-          </FormField>
-          {form.mrEvaluationMethods === "Yes" && (
-            <FormField label="Were PISA, ERO, Vena Contracta measurements performed correctly (baseline shift), if applicable?">
-              <RadioGroup name="pisaEroMeasurements" options={PISA_OPTIONS}
-                value={form.pisaEroMeasurements}
-                onChange={v => set("pisaEroMeasurements", v)} />
+            <FormField label="Is the Mitral Valve evaluated with Color/CW/PW Doppler appropriately?">
+              <RadioGroup name="mitralValveDoppler" options={VALVE_OPTIONS}
+                value={form.mitralValveDoppler}
+                onChange={v => set("mitralValveDoppler", v)} cols={3} />
             </FormField>
-          )}
 
-          <FormField label="Is the Tricuspid Valve evaluated with Color/CW Doppler appropriately?">
-            <RadioGroup name="tricuspidValveDoppler" options={YES_NO_NA}
-              value={form.tricuspidValveDoppler}
-              onChange={v => set("tricuspidValveDoppler", v)} cols={3} />
-          </FormField>
-          <FormField label="Is the Pulmonic Valve evaluated with Color/CW/PW Doppler appropriately?">
-            <RadioGroup name="pulmonicValveDoppler" options={YES_NO_NA}
-              value={form.pulmonicValveDoppler}
-              onChange={v => set("pulmonicValveDoppler", v)} cols={3} />
-          </FormField>
-        </FormSection>
+            {/* MR PISA: AETTE only */}
+            {isAdultTTE && (
+              <>
+                <FormField label="If significant Mitral Regurgitation is present, was it evaluated with appropriate methods (PISA, ERO, Vena Contracta)?">
+                  <RadioGroup name="mrEvaluationMethods" options={MR_EVAL_OPTIONS}
+                    value={form.mrEvaluationMethods}
+                    onChange={v => set("mrEvaluationMethods", v)} />
+                </FormField>
+                {form.mrEvaluationMethods === "Yes" && (
+                  <FormField label="Were PISA, ERO, Vena Contracta measurements performed correctly (baseline shift), if applicable?">
+                    <RadioGroup name="pisaEroMeasurements" options={PISA_OPTIONS}
+                      value={form.pisaEroMeasurements}
+                      onChange={v => set("pisaEroMeasurements", v)} />
+                  </FormField>
+                )}
+              </>
+            )}
+
+            <FormField label="Is the Tricuspid Valve evaluated with Color/CW Doppler appropriately?">
+              <RadioGroup name="tricuspidValveDoppler" options={VALVE_OPTIONS}
+                value={form.tricuspidValveDoppler}
+                onChange={v => set("tricuspidValveDoppler", v)} cols={3} />
+            </FormField>
+            <FormField label="Is the Pulmonic Valve evaluated with Color/CW/PW Doppler appropriately?">
+              <RadioGroup name="pulmonicValveDoppler" options={VALVE_OPTIONS}
+                value={form.pulmonicValveDoppler}
+                onChange={v => set("pulmonicValveDoppler", v)} cols={3} />
+            </FormField>
+          </FormSection>
+        )}
       </>
     );
   }
@@ -789,28 +915,44 @@ export default function ImageQualityReview({ embedded = false }: { embedded?: bo
           </FormField>
         </FormSection>
 
-        <FormSection title="Strain Imaging">
-          <FormField label="Was strain imaging / speckle tracking performed?">
-            <RadioGroup name="strainPerformed" options={YES_NO}
-              value={form.strainPerformed}
-              onChange={v => set("strainPerformed", v)} cols={2} />
-          </FormField>
-          {form.strainPerformed === "Yes" && (
-            <FormField label="If strain imaging was performed, was it performed correctly with correct reporting (Bullet Export)?">
-              <RadioGroup name="strainCorrect" options={STRAIN_CORRECT_OPTIONS}
-                value={form.strainCorrect}
-                onChange={v => set("strainCorrect", v)} />
+        {/* Strain: AETTE only */}
+        {isAdultTTE && (
+          <FormSection title="Strain Imaging">
+            <FormField label="Was strain imaging / speckle tracking performed?">
+              <RadioGroup name="strainPerformed" options={YES_NO}
+                value={form.strainPerformed}
+                onChange={v => set("strainPerformed", v)} cols={2} />
             </FormField>
-          )}
-        </FormSection>
+            {form.strainPerformed === "Yes" && (
+              <FormField label="If strain imaging was performed, was it performed correctly with correct reporting (Bullet Export)?">
+                <RadioGroup name="strainCorrect" options={STRAIN_CORRECT_OPTIONS}
+                  value={form.strainCorrect}
+                  onChange={v => set("strainCorrect", v)} />
+              </FormField>
+            )}
+          </FormSection>
+        )}
 
-        <FormSection title="3D Imaging">
-          <FormField label="Was 3D imaging performed?">
-            <RadioGroup name="threeDPerformed" options={YES_NO}
-              value={form.threeDPerformed}
-              onChange={v => set("threeDPerformed", v)} cols={2} />
-          </FormField>
-        </FormSection>
+        {/* TEE Image Optimization Summary (AETEE, PETEE) */}
+        {isTEEExam && (
+          <FormSection title="TEE Image Quality Summary">
+            <FormField label="Overall TEE Image Optimization">
+              <RadioGroup name="teeImageOptSummary" options={TEE_IMAGE_OPT_OPTIONS}
+                value={form.teeImageOptSummary}
+                onChange={v => set("teeImageOptSummary", v)} cols={2} />
+            </FormField>
+            <FormField label="Overall TEE Measurement Quality">
+              <RadioGroup name="teeMeasurementSummary" options={TEE_MEASUREMENT_SUMMARY_OPTIONS}
+                value={form.teeMeasurementSummary}
+                onChange={v => set("teeMeasurementSummary", v)} cols={2} />
+            </FormField>
+            <FormField label="Overall TEE Doppler Quality">
+              <RadioGroup name="teeDopplerSummary" options={TEE_DOPPLER_SUMMARY_OPTIONS}
+                value={form.teeDopplerSummary}
+                onChange={v => set("teeDopplerSummary", v)} cols={2} />
+            </FormField>
+          </FormSection>
+        )}
 
         <FormSection title="Scan Timing">
           <div className="grid grid-cols-2 gap-3">

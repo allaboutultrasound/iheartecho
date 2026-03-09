@@ -180,8 +180,8 @@ describe("getScoreTier", () => {
 
 // ─── Required views tests ─────────────────────────────────────────────────────
 describe("REQUIRED_VIEWS", () => {
-  it("has 14 views for ADULT TTE", () => {
-    expect(REQUIRED_VIEWS["ADULT TTE"].length).toBe(14);
+  it("has 16 views for ADULT TTE", () => {
+    expect(REQUIRED_VIEWS["ADULT TTE"].length).toBe(16);
   });
 
   it("has 20 views for ADULT TEE", () => {

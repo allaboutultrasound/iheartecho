@@ -1628,3 +1628,11 @@
 - [x] Remove Organization field from image quality review form
 - [x] Remove MRN field from image quality review form
 - [x] Update Exam Identifier label to "(LAS, FIR)" in image quality review form
+
+## Image Quality Review Form — FormSite Remap (Mar 09 2026)
+- [x] Extract all fields and prefixes from FormSite IQR form (hmrmdywgzj)
+- [x] Rewrite iqrData.ts with correct option arrays matching FormSite exactly
+- [x] Update ImageQualityReview.tsx step renderers with prefix-based exam-type visibility
+- [x] Quality score: Excellent/Yes/Adequate/Complete = 1pt each, N/A excluded from denominator, 0-100% output
+- [x] Update REQUIRED_VIEWS for ADULT TTE to 16 views (FormSite-derived)
+- [x] Update vitest REQUIRED_VIEWS test to match new 16-view count
