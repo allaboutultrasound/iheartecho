@@ -1618,10 +1618,10 @@
 - [ ] ScanCoach.tsx: fetal tab — add useScanCoachOverrides(module="fetal") and merge selectedFetal
 - [ ] ScanCoach.tsx: chd tab — add useScanCoachOverrides(module="chd") and merge selectedCHD
 - [ ] ScanCoach.tsx: achd tab — add useScanCoachOverrides(module="achd") and merge selectedACHD
-- [ ] ScanCoach.tsx: pulm tab — add useScanCoachOverrides(module="pulm") and merge selectedPulm
-- [ ] ScanCoach.tsx: diastolic tab — add useScanCoachOverrides(module="diastolic") and merge selectedDiastolic
-- [ ] StrainScanCoach.tsx: add image rendering section and useScanCoachOverrides(module="strain")
-- [ ] TEEIceScanCoach.tsx: migrate from per-view getMediaByView to useScanCoachOverrides hook
+- [x] ScanCoach.tsx: pulm tab — add useScanCoachOverrides(module="pulm") and merge selectedPulm
+- [x] ScanCoach.tsx: diastolic tab — add useScanCoachOverrides(module="diastolic") and merge selectedDiastolic
+- [x] StrainScanCoach.tsx: add image rendering section and useScanCoachOverrides(module="strain")
+- [x] TEEIceScanCoach.tsx: migrate from per-view getMediaByView to useScanCoachOverrides hook
 
 ## Image Quality Review Form Cleanup (Mar 09 2026)
 - [x] Remove Patient DOB field from image quality review form
@@ -1636,3 +1636,9 @@
 - [x] Quality score: Excellent/Yes/Adequate/Complete = 1pt each, N/A excluded from denominator, 0-100% output
 - [x] Update REQUIRED_VIEWS for ADULT TTE to 16 views (FormSite-derived)
 - [x] Update vitest REQUIRED_VIEWS test to match new 16-view count
+
+## Hero Banner Removal — ScanCoach Modules (Mar 09 2026)
+- [x] Remove hero banner from ScanCoach.tsx (multi-tab page) — replaced with compact teal page header
+- [x] Remove dark gradient view header from StressScanCoach ViewDetail — replaced with teal-tinted card header
+- [x] Remove dark gradient view header from StructuralHeartScanCoach ViewDetail — replaced with teal-tinted card header
+- [x] Remove hero banner from PedCHDCoach.tsx (CHD tab component)

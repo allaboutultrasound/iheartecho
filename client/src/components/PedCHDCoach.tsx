@@ -589,27 +589,7 @@ export default function PedCHDCoach() {
 
   return (
     <div>
-      {/* Banner */}
-      <div className="relative overflow-hidden mb-6" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}>
-        <div className="relative container py-8 md:py-10">
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-3">
-              <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
-              <span className="text-xs text-white/80 font-medium">Pediatric CHD Acquisition Guide</span>
-            </div>
-            <h1 className="text-2xl md:text-3xl font-black text-white mb-1" style={{ fontFamily: "Merriweather, serif" }}>
-              Pediatric CHD ScanCoach
-            </h1>
-            <p className="text-[#4ad9e0] font-semibold text-sm mb-3">Congenital Heart Disease</p>
-            <p className="text-white/70 text-sm leading-relaxed mb-3 max-w-lg">
-              Lesion-specific scanning protocols for paediatric CHD — defect anatomy, staged palliation surveillance, key views, Doppler targets, and red-flag criteria.
-            </p>
-            <p className="text-white/50 text-xs mb-4">
-              <span className="font-semibold text-white/70">Patient Positioning:</span> Supine for neonates/infants; left lateral decubitus for older children; subcostal windows are often the primary approach in small patients.
-            </p>
-          </div>
-        </div>
-      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 items-start">
       {/* Detail panel — order-first on mobile */}
       <div ref={detailRef} className="lg:col-span-3 lg:order-2 order-1 space-y-4">

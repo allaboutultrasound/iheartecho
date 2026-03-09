@@ -512,15 +512,15 @@ function ViewDetail({ view }: { view: typeof SH_VIEWS[0] }) {
     <div className="space-y-4">
       {/* Header */}
       <div className="rounded-xl overflow-hidden border border-gray-100 shadow-sm">
-        <div className="px-5 py-4" style={{ background: `linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, ${groupColor} 100%)` }}>
+        <div className="px-5 py-4" style={{ background: groupColor + "0d", borderBottom: `1px solid ${groupColor}25` }}>
           <div className="flex items-start gap-3">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-white/15 text-white/80">{view.group}</span>
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-white/15 text-white/80">{view.modality}</span>
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: groupColor + "30", color: AQUA }}>{view.phase}</span>
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: groupColor + "18", color: groupColor }}>{view.group}</span>
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: groupColor + "18", color: groupColor }}>{view.modality}</span>
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: groupColor + "18", color: groupColor }}>{view.phase}</span>
               </div>
-              <h2 className="text-lg font-bold text-white" style={{ fontFamily: "Merriweather, serif" }}>{view.name}</h2>
+              <h2 className="text-lg font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>{view.name}</h2>
             </div>
           </div>
         </div>

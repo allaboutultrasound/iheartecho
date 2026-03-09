@@ -1221,19 +1221,19 @@ export default function ScanCoach() {
 
   return (
     <Layout>
-      {/* Hero Banner */}
-      <div className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}>
-        <div className="container py-6 md:py-8">
-          <div className="mb-3">
-            <BackToEchoAssist href="/scan-coach-hub" label="ScanCoach Hub" className="text-white/70 hover:text-white" />
+      {/* Page header — no hero banner */}
+      <div className="border-b border-[#189aa1]/15 bg-white">
+        <div className="container py-4">
+          <div className="mb-1">
+            <BackToEchoAssist href="/scan-coach-hub" label="ScanCoach Hub" />
           </div>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(255,255,255,0.1)" }}>
-              <Scan className="w-5 h-5 text-[#4ad9e0]" />
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "#189aa1" + "18" }}>
+              <Scan className="w-4 h-4" style={{ color: "#189aa1" }} />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-white" style={{ fontFamily: "Merriweather, serif" }}>ScanCoach</h1>
-              <p className="text-white/70 text-sm">View-by-view scanning guides with probe positioning, anatomy, and clinical pearls</p>
+              <h1 className="text-xl font-black text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>ScanCoach</h1>
+              <p className="text-gray-500 text-xs">View-by-view scanning guides with probe positioning, anatomy, and clinical pearls</p>
             </div>
           </div>
         </div>
