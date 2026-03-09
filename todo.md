@@ -1867,3 +1867,6 @@
 ## Case Studies TD/MD Filter - Session Mar 09 2026
 - [x] Add TD/MD filter chips to Case Studies tracker (filter by Technical Director, Medical Director, or both)
 - [x] Add sort option for TD/MD cases in the tracker list
+
+## Case Studies CSV Export - Session Mar 09 2026
+- [x] Add CSV export button to Case Studies tracker that exports the currently filtered/sorted list

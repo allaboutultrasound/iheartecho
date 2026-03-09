@@ -40,6 +40,7 @@ import {
   Tag,
   ChevronDown,
   ChevronUp,
+  Download,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -304,6 +305,82 @@ export default function PossibleCaseStudies() {
   const mdCount = useMemo(() => cases.filter(c => c.isMedicalDirectorCase).length, [cases]);
   const bothCount = useMemo(() => cases.filter(c => c.isTechnicalDirectorCase && c.isMedicalDirectorCase).length, [cases]);
 
+  // ── CSV Export ────────────────────────────────────────────────────────────
+  function exportToCSV() {
+    if (filteredCases.length === 0) {
+      toast.error("No cases to export.");
+      return;
+    }
+
+    const STATUS_LABELS: Record<string, string> = {
+      identified: "Identified",
+      under_review: "Under Review",
+      submitted: "Submitted",
+      accepted: "Accepted",
+    };
+
+    const headers = [
+      "Case Study ID",
+      "Exam Type",
+      "Exam Date",
+      "Patient MRN / Identifier",
+      "Diagnosis / Primary Finding",
+      "Accreditation Category",
+      "Submission Status",
+      "Sonographer Name",
+      "Sonographer Email",
+      "Interpreting Physician",
+      "Physician Email",
+      "Technical Director Case",
+      "Medical Director Case",
+      "Clinical Notes",
+      "Submission Notes",
+      "Date Added",
+    ];
+
+    const escape = (val: string | null | undefined) => {
+      if (val == null) return "";
+      const s = String(val);
+      if (s.includes(",") || s.includes('"') || s.includes("\n")) {
+        return `"${s.replace(/"/g, '""')}"`;
+      }
+      return s;
+    };
+
+    const rows = filteredCases.map(c => [
+      escape(c.caseStudyId),
+      escape(examTypeLabel(c.examType ?? "")),
+      escape(c.examDate),
+      escape(c.patientMrn),
+      escape(c.diagnosis),
+      escape(c.accreditationType),
+      escape(STATUS_LABELS[c.submissionStatus] ?? c.submissionStatus),
+      escape(c.sonographerName),
+      escape(c.sonographerEmail),
+      escape(c.interpretingPhysicianName),
+      escape(c.interpretingPhysicianEmail),
+      c.isTechnicalDirectorCase ? "Yes" : "No",
+      c.isMedicalDirectorCase ? "Yes" : "No",
+      escape(c.clinicalNotes),
+      escape(c.submissionNotes),
+      escape(c.createdAt ? new Date(c.createdAt).toLocaleDateString() : ""),
+    ].join(","));
+
+    const csvContent = [headers.join(","), ...rows].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const filterLabel = filterTDMD ? `_${filterTDMD.toUpperCase()}` : "";
+    link.href = url;
+    link.download = `case-studies${filterLabel}_${dateStr}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success(`Exported ${filteredCases.length} case${filteredCases.length !== 1 ? "s" : ""} to CSV.`);
+  }
+
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -317,13 +394,31 @@ export default function PossibleCaseStudies() {
             Each case is assigned a unique ID for tracking.
           </p>
         </div>
-        <Button
-          onClick={openCreate}
-          className="flex items-center gap-2 text-white text-xs"
-          style={{ background: BRAND }}
-        >
-          <Plus className="w-4 h-4" /> Add Case Study
-        </Button>
+        <div className="flex items-center gap-2">
+          {filteredCases.length > 0 && (
+            <Button
+              variant="outline"
+              onClick={exportToCSV}
+              className="flex items-center gap-1.5 text-xs h-8 px-3"
+              title={`Export ${filteredCases.length} case${filteredCases.length !== 1 ? "s" : ""} to CSV`}
+            >
+              <Download className="w-3.5 h-3.5" />
+              Export CSV
+              {(filterTDMD || filterExamType || filterStatus || search) && (
+                <span className="ml-1 px-1.5 py-0.5 rounded-full text-white text-[10px] font-bold" style={{ background: BRAND }}>
+                  {filteredCases.length}
+                </span>
+              )}
+            </Button>
+          )}
+          <Button
+            onClick={openCreate}
+            className="flex items-center gap-2 text-white text-xs"
+            style={{ background: BRAND }}
+          >
+            <Plus className="w-4 h-4" /> Add Case Study
+          </Button>
+        </div>
       </div>
 
       {/* Status summary pills */}
