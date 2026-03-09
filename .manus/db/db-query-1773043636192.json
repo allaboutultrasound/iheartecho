@@ -1,0 +1,122 @@
+{
+  "query": "SELECT module, viewId, viewName, LEFT(echoImageUrl, 60) as echoImg, LEFT(anatomyImageUrl, 60) as anatomyImg FROM scanCoachOverrides WHERE echoImageUrl IS NOT NULL OR anatomyImageUrl IS NOT NULL OR transducerImageUrl IS NOT NULL LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mhhtxpXA9Esras.root --database etVPnUidWNWG8W4GHnRqzv --execute SELECT module, viewId, viewName, LEFT(echoImageUrl, 60) as echoImg, LEFT(anatomyImageUrl, 60) as anatomyImg FROM scanCoachOverrides WHERE echoImageUrl IS NOT NULL OR anatomyImageUrl IS NOT NULL OR transducerImageUrl IS NOT NULL LIMIT 20;",
+  "rows": [
+    {
+      "module": "uea",
+      "viewId": "clear-test-1772868729403",
+      "viewName": "NULL",
+      "echoImg": "https://example.com/image.png",
+      "anatomyImg": "NULL"
+    },
+    {
+      "module": "uea",
+      "viewId": "clear-test-1772868738046",
+      "viewName": "NULL",
+      "echoImg": "https://example.com/image.png",
+      "anatomyImg": "NULL"
+    },
+    {
+      "module": "uea",
+      "viewId": "clear-test-1772868746327",
+      "viewName": "NULL",
+      "echoImg": "https://example.com/image.png",
+      "anatomyImg": "NULL"
+    },
+    {
+      "module": "uea",
+      "viewId": "clear-test-1772868796380",
+      "viewName": "NULL",
+      "echoImg": "https://example.com/image.png",
+      "anatomyImg": "NULL"
+    },
+    {
+      "module": "uea",
+      "viewId": "clear-test-1772868805470",
+      "viewName": "NULL",
+      "echoImg": "https://example.com/image.png",
+      "anatomyImg": "NULL"
+    },
+    {
+      "module": "uea",
+      "viewId": "clear-test-1772868814614",
+      "viewName": "NULL",
+      "echoImg": "https://example.com/image.png",
+      "anatomyImg": "NULL"
+    },
+    {
+      "module": "uea",
+      "viewId": "clear-test-1772868822608",
+      "viewName": "NULL",
+      "echoImg": "https://example.com/image.png",
+      "anatomyImg": "NULL"
+    },
+    {
+      "module": "uea",
+      "viewId": "clear-test-1772868829884",
+      "viewName": "NULL",
+      "echoImg": "https://example.com/image.png",
+      "anatomyImg": "NULL"
+    },
+    {
+      "module": "ice",
+      "viewId": "home",
+      "viewName": "Home View",
+      "echoImg": "NULL",
+      "anatomyImg": "https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etV"
+    },
+    {
+      "module": "ice",
+      "viewId": "avview",
+      "viewName": "NULL",
+      "echoImg": "NULL",
+      "anatomyImg": "https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etV"
+    },
+    {
+      "module": "ice",
+      "viewId": "laaview",
+      "viewName": "NULL",
+      "echoImg": "NULL",
+      "anatomyImg": "https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etV"
+    },
+    {
+      "module": "ice",
+      "viewId": "mvlhview",
+      "viewName": "NULL",
+      "echoImg": "NULL",
+      "anatomyImg": "https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etV"
+    },
+    {
+      "module": "ice",
+      "viewId": "transseptal",
+      "viewName": "NULL",
+      "echoImg": "NULL",
+      "anatomyImg": "https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etV"
+    },
+    {
+      "module": "ice",
+      "viewId": "esophagusview",
+      "viewName": "NULL",
+      "echoImg": "NULL",
+      "anatomyImg": "https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etV"
+    },
+    {
+      "module": "ice",
+      "viewId": "leftpvview",
+      "viewName": "NULL",
+      "echoImg": "NULL",
+      "anatomyImg": "https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etV"
+    },
+    {
+      "module": "ice",
+      "viewId": "rightpvview",
+      "viewName": "NULL",
+      "echoImg": "NULL",
+      "anatomyImg": "https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etV"
+    }
+  ],
+  "messages": [],
+  "stdout": "module\tviewId\tviewName\techoImg\tanatomyImg\nuea\tclear-test-1772868729403\tNULL\thttps://example.com/image.png\tNULL\nuea\tclear-test-1772868738046\tNULL\thttps://example.com/image.png\tNULL\nuea\tclear-test-1772868746327\tNULL\thttps://example.com/image.png\tNULL\nuea\tclear-test-1772868796380\tNULL\thttps://example.com/image.png\tNULL\nuea\tclear-test-1772868805470\tNULL\thttps://example.com/image.png\tNULL\nuea\tclear-test-1772868814614\tNULL\thttps://example.com/image.png\tNULL\nuea\tclear-test-1772868822608\tNULL\thttps://example.com/image.png\tNULL\nuea\tclear-test-1772868829884\tNULL\thttps://example.com/image.png\tNULL\nice\thome\tHome View\tNULL\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etV\nice\tavview\tNULL\tNULL\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etV\nice\tlaaview\tNULL\tNULL\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etV\nice\tmvlhview\tNULL\tNULL\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etV\nice\ttransseptal\tNULL\tNULL\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etV\nice\tesophagusview\tNULL\tNULL\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etV\nice\tleftpvview\tNULL\tNULL\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etV\nice\trightpvview\tNULL\tNULL\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etV\n",
+  "stderr": "",
+  "execution_time_ms": 62
+}

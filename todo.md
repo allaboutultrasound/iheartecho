@@ -1588,6 +1588,7 @@
 - [ ] Daily Challenge: remove filters from active challenge view, keep filters only in Archives
 
 ## ICE ScanCoach New Views
-- [ ] Add Esophagus view to ICE ScanCoach
-- [ ] Add Left Pulmonary Veins view to ICE ScanCoach
-- [ ] Add Right Pulmonary Veins view to ICE ScanCoach
+- [x] Add Esophagus view to ICE ScanCoach
+- [x] Add Left Pulmonary Veins view to ICE ScanCoach
+- [x] Add Right Pulmonary Veins view to ICE ScanCoach
+- [x] Fix ScanCoach image display - images not consistently showing on member pages

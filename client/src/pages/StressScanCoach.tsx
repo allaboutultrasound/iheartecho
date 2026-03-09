@@ -11,6 +11,7 @@ import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
 import ScanCoachNavBar from "@/components/ScanCoachNavBar";
+import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 import {
   ChevronDown, ChevronUp, ArrowRight, Zap, Activity,
   AlertTriangle, Lightbulb, Info, ImageIcon, Stethoscope,
@@ -722,10 +723,11 @@ export default function StressScanCoach() {
     });
   };
 
-  const selectedView = useMemo(
-    () => STRESS_VIEWS.find(v => v.id === selectedViewId) ?? STRESS_VIEWS[0],
-    [selectedViewId]
-  );
+  const { mergeView, overrideMap } = useScanCoachOverrides("stress");
+  const selectedView = useMemo(() => {
+    const raw = STRESS_VIEWS.find(v => v.id === selectedViewId) ?? STRESS_VIEWS[0];
+    return mergeView(raw as any);
+  }, [selectedViewId, mergeView, overrideMap]);
 
   return (
     <Layout>

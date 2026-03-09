@@ -1,0 +1,410 @@
+{
+  "query": "SELECT module, viewId, viewName, echoImageUrl IS NOT NULL as hasEchoImg, anatomyImageUrl IS NOT NULL as hasAnatomyImg, transducerImageUrl IS NOT NULL as hasTransducerImg FROM scanCoachOverrides ORDER BY module, viewId LIMIT 50;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mhhtxpXA9Esras.root --database etVPnUidWNWG8W4GHnRqzv --execute SELECT module, viewId, viewName, echoImageUrl IS NOT NULL as hasEchoImg, anatomyImageUrl IS NOT NULL as hasAnatomyImg, transducerImageUrl IS NOT NULL as hasTransducerImg FROM scanCoachOverrides ORDER BY module, viewId LIMIT 50;",
+  "rows": [
+    {
+      "module": "ice",
+      "viewId": "avview",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "1",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "ice",
+      "viewId": "delete-test-1772868729354",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "ice",
+      "viewId": "delete-test-1772868737989",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "ice",
+      "viewId": "delete-test-1772868746276",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "ice",
+      "viewId": "delete-test-1772868796341",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "ice",
+      "viewId": "delete-test-1772868805420",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "ice",
+      "viewId": "delete-test-1772868814546",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "ice",
+      "viewId": "delete-test-1772868822557",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "ice",
+      "viewId": "delete-test-1772868829837",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "ice",
+      "viewId": "esophagusview",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "1",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "ice",
+      "viewId": "home",
+      "viewName": "Home View",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "1",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "ice",
+      "viewId": "laaview",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "1",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "ice",
+      "viewId": "leftpvview",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "1",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "ice",
+      "viewId": "mvlhview",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "1",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "ice",
+      "viewId": "pericardialview",
+      "viewName": "Pericardial Monitoring View",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "ice",
+      "viewId": "rightpvview",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "1",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "ice",
+      "viewId": "transseptal",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "1",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tee",
+      "viewId": "upsert-test-1772868729282",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tee",
+      "viewId": "upsert-test-1772868737928",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tee",
+      "viewId": "upsert-test-1772868746211",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tee",
+      "viewId": "upsert-test-1772868796310",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tee",
+      "viewId": "upsert-test-1772868805385",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tee",
+      "viewId": "upsert-test-1772868814504",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tee",
+      "viewId": "upsert-test-1772868822521",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tee",
+      "viewId": "upsert-test-1772868829800",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tee",
+      "viewId": "upsert-test-1772868863784",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tee",
+      "viewId": "upsert-test-1772869354607",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tee",
+      "viewId": "upsert-test-1772870074853",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tee",
+      "viewId": "upsert-test-1772872636667",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tee",
+      "viewId": "upsert-test-1772873949385",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tee",
+      "viewId": "upsert-test-1772997342385",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tee",
+      "viewId": "upsert-test-1772997363143",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tee",
+      "viewId": "upsert-test-1773036356046",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tee",
+      "viewId": "upsert-test-1773036369765",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tee",
+      "viewId": "upsert-test-1773036394668",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tee",
+      "viewId": "upsert-test-1773036545225",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tee",
+      "viewId": "upsert-test-1773037593379",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tee",
+      "viewId": "upsert-test-1773042731250",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tte",
+      "viewId": "plax",
+      "viewName": "NULL",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tte",
+      "viewId": "test-view-1772868729254",
+      "viewName": "Test View",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tte",
+      "viewId": "test-view-1772868737908",
+      "viewName": "Test View",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tte",
+      "viewId": "test-view-1772868746187",
+      "viewName": "Test View",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tte",
+      "viewId": "test-view-1772868796279",
+      "viewName": "Test View",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tte",
+      "viewId": "test-view-1772868805333",
+      "viewName": "Test View",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tte",
+      "viewId": "test-view-1772868814467",
+      "viewName": "Test View",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tte",
+      "viewId": "test-view-1772868822484",
+      "viewName": "Test View",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tte",
+      "viewId": "test-view-1772868829764",
+      "viewName": "Test View",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tte",
+      "viewId": "test-view-1772868863755",
+      "viewName": "Test View",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tte",
+      "viewId": "test-view-1772869354582",
+      "viewName": "Test View",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    },
+    {
+      "module": "tte",
+      "viewId": "test-view-1772870074827",
+      "viewName": "Test View",
+      "hasEchoImg": "0",
+      "hasAnatomyImg": "0",
+      "hasTransducerImg": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "module\tviewId\tviewName\thasEchoImg\thasAnatomyImg\thasTransducerImg\nice\tavview\tNULL\t0\t1\t0\nice\tdelete-test-1772868729354\tNULL\t0\t0\t0\nice\tdelete-test-1772868737989\tNULL\t0\t0\t0\nice\tdelete-test-1772868746276\tNULL\t0\t0\t0\nice\tdelete-test-1772868796341\tNULL\t0\t0\t0\nice\tdelete-test-1772868805420\tNULL\t0\t0\t0\nice\tdelete-test-1772868814546\tNULL\t0\t0\t0\nice\tdelete-test-1772868822557\tNULL\t0\t0\t0\nice\tdelete-test-1772868829837\tNULL\t0\t0\t0\nice\tesophagusview\tNULL\t0\t1\t0\nice\thome\tHome View\t0\t1\t0\nice\tlaaview\tNULL\t0\t1\t0\nice\tleftpvview\tNULL\t0\t1\t0\nice\tmvlhview\tNULL\t0\t1\t0\nice\tpericardialview\tPericardial Monitoring View\t0\t0\t0\nice\trightpvview\tNULL\t0\t1\t0\nice\ttransseptal\tNULL\t0\t1\t0\ntee\tupsert-test-1772868729282\tNULL\t0\t0\t0\ntee\tupsert-test-1772868737928\tNULL\t0\t0\t0\ntee\tupsert-test-1772868746211\tNULL\t0\t0\t0\ntee\tupsert-test-1772868796310\tNULL\t0\t0\t0\ntee\tupsert-test-1772868805385\tNULL\t0\t0\t0\ntee\tupsert-test-1772868814504\tNULL\t0\t0\t0\ntee\tupsert-test-1772868822521\tNULL\t0\t0\t0\ntee\tupsert-test-1772868829800\tNULL\t0\t0\t0\ntee\tupsert-test-1772868863784\tNULL\t0\t0\t0\ntee\tupsert-test-1772869354607\tNULL\t0\t0\t0\ntee\tupsert-test-1772870074853\tNULL\t0\t0\t0\ntee\tupsert-test-1772872636667\tNULL\t0\t0\t0\ntee\tupsert-test-1772873949385\tNULL\t0\t0\t0\ntee\tupsert-test-1772997342385\tNULL\t0\t0\t0\ntee\tupsert-test-1772997363143\tNULL\t0\t0\t0\ntee\tupsert-test-1773036356046\tNULL\t0\t0\t0\ntee\tupsert-test-1773036369765\tNULL\t0\t0\t0\ntee\tupsert-test-1773036394668\tNULL\t0\t0\t0\ntee\tupsert-test-1773036545225\tNULL\t0\t0\t0\ntee\tupsert-test-1773037593379\tNULL\t0\t0\t0\ntee\tupsert-test-1773042731250\tNULL\t0\t0\t0\ntte\tplax\tNULL\t0\t0\t0\ntte\ttest-view-1772868729254\tTest View\t0\t0\t0\ntte\ttest-view-1772868737908\tTest View\t0\t0\t0\ntte\ttest-view-1772868746187\tTest View\t0\t0\t0\ntte\ttest-view-1772868796279\tTest View\t0\t0\t0\ntte\ttest-view-1772868805333\tTest View\t0\t0\t0\ntte\ttest-view-1772868814467\tTest View\t0\t0\t0\ntte\ttest-view-1772868822484\tTest View\t0\t0\t0\ntte\ttest-view-1772868829764\tTest View\t0\t0\t0\ntte\ttest-view-1772868863755\tTest View\t0\t0\t0\ntte\ttest-view-1772869354582\tTest View\t0\t0\t0\ntte\ttest-view-1772870074827\tTest View\t0\t0\t0\n",
+  "stderr": "",
+  "execution_time_ms": 61
+}

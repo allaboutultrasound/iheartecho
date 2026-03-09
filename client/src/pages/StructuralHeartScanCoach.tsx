@@ -12,6 +12,7 @@ import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
 import ScanCoachNavBar from "@/components/ScanCoachNavBar";
+import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 import {
   ChevronDown, ChevronUp, ArrowRight, Zap,
   AlertTriangle, Lightbulb, Info, ImageIcon, Stethoscope, Heart,
@@ -693,10 +694,11 @@ export default function StructuralHeartScanCoach() {
     });
   };
 
-  const selectedView = useMemo(
-    () => SH_VIEWS.find(v => v.id === selectedViewId) ?? SH_VIEWS[0],
-    [selectedViewId]
-  );
+  const { mergeView, overrideMap } = useScanCoachOverrides("structural");
+  const selectedView = useMemo(() => {
+    const raw = SH_VIEWS.find(v => v.id === selectedViewId) ?? SH_VIEWS[0];
+    return mergeView(raw as any);
+  }, [selectedViewId, mergeView, overrideMap]);
 
   const groupColor = GROUPS.find(g => g.key === selectedView.group)?.color ?? BRAND;
 

@@ -7,8 +7,13 @@
  * Usage:
  *   const { mergeView, isLoading } = useScanCoachOverrides("tte");
  *   const view = mergeView(staticViewObject);
+ *
+ * Fix (2026-03-09): mergeView is now wrapped in useCallback so its reference
+ * only changes when overrideMap changes (i.e. when DB data loads). Previously
+ * it was a plain function re-created every render, causing useMemo dependencies
+ * to always be "new" and images to not appear until a forced re-render.
  */
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
 import type { ScanCoachModule } from "@/lib/scanCoachRegistry";
 
@@ -45,7 +50,7 @@ function applyOverride<T extends Record<string, unknown>>(view: T, override: Ove
 
   const merged: Record<string, unknown> = { ...view };
 
-  // Image URL overrides
+  // Image URL overrides — only replace if the override has a non-empty value
   if (override.echoImageUrl)       merged.echoImageUrl       = override.echoImageUrl;
   if (override.anatomyImageUrl)    merged.anatomyImageUrl    = override.anatomyImageUrl;
   if (override.transducerImageUrl) merged.transducerImageUrl = override.transducerImageUrl;
@@ -86,6 +91,7 @@ export function useScanCoachOverrides(module: ScanCoachModule) {
   );
 
   // Build a lookup map: viewId → override row
+  // This only recomputes when the DB data changes (not on every render)
   const overrideMap = useMemo(() => {
     const map = new Map<string, OverrideRow>();
     for (const row of overrides as OverrideRow[]) {
@@ -94,15 +100,25 @@ export function useScanCoachOverrides(module: ScanCoachModule) {
     return map;
   }, [overrides]);
 
-  /** Merge DB overrides onto a static view object */
-  function mergeView<T extends Record<string, unknown>>(view: T & { id: string }): T {
-    return applyOverride(view, overrideMap.get(view.id));
-  }
+  /**
+   * Merge DB overrides onto a static view object.
+   * Wrapped in useCallback so the function reference is stable between renders —
+   * it only changes when overrideMap changes (i.e. when DB data loads/updates).
+   * This prevents useMemo dependencies in consumer components from always being
+   * "new" and ensures images appear as soon as the query resolves.
+   */
+  const mergeView = useCallback(
+    function mergeViewFn<T extends Record<string, unknown>>(view: T & { id: string }): T {
+      return applyOverride(view, overrideMap.get(view.id));
+    },
+    [overrideMap]
+  );
 
   /** Check if a specific view has any override */
-  function hasOverride(viewId: string): boolean {
-    return overrideMap.has(viewId);
-  }
+  const hasOverride = useCallback(
+    (viewId: string): boolean => overrideMap.has(viewId),
+    [overrideMap]
+  );
 
   return { mergeView, hasOverride, isLoading, overrideMap };
 }
