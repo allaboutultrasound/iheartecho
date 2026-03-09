@@ -6,6 +6,12 @@
  *   → lab admin is notified to complete Step 2 (comparison).
  *
  * Route: /physician-review/:token
+ *
+ * Field visibility follows FormSite prefix logic:
+ *   AETTE = Adult TTE | AETEE = Adult TEE | AE_STRESS = Adult STRESS
+ *   PETTE = Pediatric/Congenital TTE | PETEE = Pediatric/Congenital TEE | FE = FETAL
+ *   Prefix string before the LAST underscore determines which exam types show the field.
+ *   Displayed label = text AFTER the last underscore.
  */
 import { useState, useEffect } from "react";
 import { useParams } from "wouter";
@@ -19,25 +25,68 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Loader2, CheckCircle2, AlertCircle, Stethoscope, ClipboardList } from "lucide-react";
 
-const BRAND = "#189aa1";
-
 // ─── Finding options (matching FormSite form) ─────────────────────────────────
-const NORMAL_ABNORMAL = ["Normal", "Abnormal", "Not Evaluated", "Not Applicable"];
-const PRESENT_ABSENT = ["Present", "Absent", "Not Evaluated", "Not Applicable"];
+const UNABLE_NORMAL_ABNORMAL = ["Unable to Evaluate", "Within Normal Limits", "Abnormal Findings (see comments)"];
+const UNABLE_NORMAL_LEVO_DEXTRO = ["Unable to Evaluate", "Within Normal Limits", "Levocardia", "Dextrocardia", "Other (see comments)"];
+const UNABLE_NORMAL_ABNORMAL_VALVE = ["Unable to Evaluate", "Normal Morphology/Position/Function", "Abnormal Findings (see comments)"];
 const CHAMBER_SIZE = ["Normal", "Mildly Enlarged", "Moderately Enlarged", "Severely Enlarged", "Mildly Reduced", "Not Evaluated", "Not Applicable"];
 const EF_OPTIONS = ["Normal (≥55%)", "Mildly Reduced (45–54%)", "Moderately Reduced (30–44%)", "Severely Reduced (<30%)", "Hyperdynamic (>70%)", "Not Evaluated"];
 const VALVE_STENOSIS = ["None", "Mild", "Moderate", "Severe", "Not Evaluated", "Not Applicable"];
 const VALVE_REGURG = ["None/Trace", "Mild", "Moderate", "Moderate-Severe", "Severe", "Not Evaluated", "Not Applicable"];
-const RWMA_OPTIONS = ["None", "Anterior", "Anterolateral", "Inferolateral", "Inferior", "Inferoseptal", "Anteroseptal", "Apical", "Multiple Territories", "Not Evaluated"];
+const RWMA_OPTIONS = [
+  "Unable to Evaluate", "Within Normal Limits - No RWMA",
+  "RWMA Present - Hypokinetic", "RWMA Present - Dyskinetic", "RWMA Present - Akinetic",
+  "Basal Anterior", "Basal Anteroseptal", "Basal Inferoseptal", "Basal Inferior", "Basal Inferolateral", "Basal Anterolateral",
+  "Mid Anterior", "Mid Anteroseptal", "Mid Inferoseptal", "Mid Inferior", "Mid Inferolateral", "Mid Anterolateral",
+  "Apical Anterior", "Apical Septal", "Apical Inferior", "Apical Lateral", "Apex",
+  "Other (see comments)",
+];
 const RVSP_OPTIONS = ["Normal (<35 mmHg)", "Mildly Elevated (35–50 mmHg)", "Moderately Elevated (50–70 mmHg)", "Severely Elevated (>70 mmHg)", "Not Evaluated", "Not Applicable"];
-const PERICARDIAL_EFF = ["None", "Small", "Moderate", "Large", "Circumferential", "Loculated", "Not Evaluated"];
-const RESPONSE_TO_STRESS = ["Normal", "Ischemia", "Infarction", "Non-diagnostic", "Not Evaluated"];
-const SITUS_OPTIONS = ["Situs Solitus", "Situs Inversus", "Situs Ambiguus", "Not Evaluated"];
-const CARDIAC_POSITION = ["Levocardia", "Dextrocardia", "Mesocardia", "Not Evaluated"];
-const FETAL_BIOMETRY = ["Appropriate for Gestational Age", "Small for Gestational Age", "Large for Gestational Age", "Not Evaluated"];
-const FETAL_POSITION = ["Cephalic", "Breech", "Transverse", "Not Evaluated"];
-const FETAL_HR = ["Normal Sinus Rhythm", "Bradycardia", "Tachycardia", "Irregular", "Not Evaluated"];
+const PERICARDIAL_EFF = [
+  "Unable to Evaluate", "Within Normal Limits - No Pericardial Effusion",
+  "Trace/Physiological Pericardial Effusion", "Trace-Mild Pericardial Effusion",
+  "Mild Pericardial Effusion", "Moderate Pericardial Effusion", "Large Pericardial Effusion",
+  "Circumferential", "Loculated",
+];
+const RESPONSE_TO_STRESS = ["Unable to Evaluate", "Within Normal Limits", "Ischemia", "Other (see comments)"];
 const WALL_THICKNESS = ["Normal", "Increased (Hypertrophy)", "Decreased", "Not Evaluated"];
+const VSD_OPTIONS = [
+  "Present", "Absent", "Small", "Medium", "Large", "Multiple",
+  "Subarterial, Supracristal, Conal or Infundibular", "Inlet or AV Canal",
+  "Perimembranous, Paramembranous, Conoventricular, Membranous or Subaortic",
+  "Muscular", "Swiss Cheese", "Unable to Evaluate", "Other",
+];
+const ASD_OPTIONS = [
+  "Present", "Absent", "Small", "Medium", "Large", "Multiple",
+  "Ostium Primum", "Ostium Secundum", "Sinus Venosus", "Coronary Sinus",
+  "Unable to Evaluate", "Other",
+];
+const PFO_OPTIONS = [
+  "Present", "Absent", "Small", "Medium", "Large",
+  "Restrictive", "Unrestrictive", "Unable to Evaluate", "Other",
+];
+const PULM_VEINS_OPTIONS = [
+  "Unable to Evaluate", "Limited Evaluation - Appear Within Normal Limits",
+  "Within Normal Limits - Normal Connections", "Abnormal Connections and/or Flow (see comments)",
+];
+const CORONARY_OPTIONS = ["Unable to Evaluate", "Within Normal Limits", "Abnormal Findings (See Comments)"];
+const AORTIC_ARCH_OPTIONS = [
+  "Unable to Evaluate", "Within Normal Limits", "Left", "Right",
+  "Coarctation", "Interrupted", "Other (see comments)",
+];
+const GREAT_VESSELS_OPTIONS = ["Unable to Evaluate", "Within Normal Limits", "Abnormal Findings (see comments)"];
+const PDA_OPTIONS = [
+  "Unable to Evaluate", "Within Normal Limits", "No evidence of PDA",
+  "Small PDA", "Medium PDA", "Large PDA", "Bidirectional PDA", "Other (see comments)",
+];
+const CONOTRUNCAL_OPTIONS = ["Unable to Evaluate", "Within Normal Limits", "Abnormal Findings (see comments)"];
+const FETAL_BIOMETRY = [
+  "Unable to Adequately Evaluate", "Within Normal Limits",
+  "Appropriate for Gestational Age", "Abnormal Findings (see comments)",
+];
+const FETAL_POSITION = ["Vertex", "Breech", "Transverse"];
+const FETAL_HR = ["Within Normal Limits", "Arrhythmia Present", "Other"];
+const SITUS_OPTIONS = ["Situs Solitus", "Situs Inversus", "Situs Ambiguus", "Not Evaluated"];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function FRow({ label, options, value, onChange, required }: {
@@ -113,11 +162,20 @@ export default function PhysicianOverReadForm() {
   }, [invitation]);
 
   const examType = invitation?.examType ?? "";
-  const isAdultTTE = examType === "Adult TTE" || examType === "Adult TEE";
-  const isPediatric = examType === "Pediatric/Congenital TTE" || examType === "Pediatric/Congenital TEE";
-  const isStress = examType === "Adult STRESS";
-  const isFetal = examType === "FETAL";
-  const showCardiac = isAdultTTE || isPediatric;
+
+  // Exam type flags based on FormSite prefix codes
+  const isAETTE  = examType === "Adult TTE";
+  const isAETEE  = examType === "Adult TEE";
+  const isStress = examType === "Adult STRESS";   // AE_STRESS
+  const isPETTE  = examType === "Pediatric/Congenital TTE";
+  const isPETEE  = examType === "Pediatric/Congenital TEE";
+  const isFE     = examType === "FETAL";
+
+  // Prefix group helpers
+  const isAETTE_AETEE              = isAETTE || isAETEE;
+  const isAETTE_AETEE_PETTE_PETEE  = isAETTE || isAETEE || isPETTE || isPETEE;
+  const isPETTE_PETEE_FE           = isPETTE || isPETEE || isFE;
+  const isFE_PETTE_PETEE           = isFE || isPETTE || isPETEE;
 
   const handleSubmit = () => {
     if (!physicianName.trim()) {
@@ -222,7 +280,7 @@ export default function PhysicianOverReadForm() {
               <div>
                 <p className="text-sm font-semibold text-amber-800">Blind Over-Read Instructions</p>
                 <p className="text-xs text-amber-700 mt-1">
-                  Please complete this form as a <strong>blind over-read</strong>. Do NOT review the original physician's report or interpretation before completing this form. Your independent assessment will be compared with the original read to evaluate concordance.
+                  Please complete this form as a <strong>blind over-read</strong>. Do NOT review the original physician's report or interpretation before completing this form. Your independent assessment will be compared with the original read for concordance scoring.
                 </p>
               </div>
             </div>
@@ -254,6 +312,23 @@ export default function PhysicianOverReadForm() {
                 </div>
               )}
             </div>
+            {invitation.pacsImageUrl && (
+              <div className="mt-3 rounded-lg border border-[#189aa1] bg-[#f0fbfc] p-3 flex items-start gap-3">
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-[#0e4a50] mb-0.5">Echo Images Available</p>
+                  <p className="text-xs text-gray-600 mb-2">Your lab has provided a link to the PACS / echo image viewer for this study.</p>
+                  <a
+                    href={invitation.pacsImageUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-white px-3 py-1.5 rounded-md"
+                    style={{ background: "#189aa1" }}
+                  >
+                    View Echo Images
+                  </a>
+                </div>
+              </div>
+            )}
             <p className="text-xs text-amber-600 font-medium mt-2">
               ⚠ The original interpreting physician's name is intentionally withheld to preserve blinding.
             </p>
@@ -289,7 +364,7 @@ export default function PhysicianOverReadForm() {
           </CardContent>
         </Card>
 
-        {/* ── Stress Echo specific ─────────────────────────────────────────────── */}
+        {/* ── Stress Echo Protocol ─────────────────────────────────────────────── */}
         {isStress && (
           <Card>
             <CardHeader className="pb-2 pt-4">
@@ -306,79 +381,167 @@ export default function PhysicianOverReadForm() {
           </Card>
         )}
 
-        {/* ── Cardiac Findings (Adult TTE / TEE / Pediatric) ───────────────────── */}
-        {showCardiac && (
+        {/* ── Fetal Echo Findings (FE_ prefix fields) ──────────────────────────── */}
+        {isFE && (
           <Card>
             <CardHeader className="pb-2 pt-4">
-              <CardTitle className="text-sm font-bold text-gray-700">Cardiac Findings</CardTitle>
+              <CardTitle className="text-sm font-bold text-gray-700">Fetal Assessment</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 pb-4">
-              <SectionHeader title="Cardiac Anatomy" />
-              <FRow label="Situs" options={SITUS_OPTIONS} value={f.situs ?? ""} onChange={setField("situs")} />
-              <FRow label="Cardiac Position" options={CARDIAC_POSITION} value={f.cardiacPosition ?? ""} onChange={setField("cardiacPosition")} />
-              <FRow label="Left Heart" options={NORMAL_ABNORMAL} value={f.leftHeart ?? ""} onChange={setField("leftHeart")} />
-              <FRow label="Right Heart" options={NORMAL_ABNORMAL} value={f.rightHeart ?? ""} onChange={setField("rightHeart")} />
+              {/* FE_Fetal Biometry */}
+              <FRow label="Fetal Biometry" options={FETAL_BIOMETRY} value={f.fetalBiometry ?? ""} onChange={setField("fetalBiometry")} />
+              {/* FE_Fetal Position */}
+              <FRow label="Fetal Position" options={FETAL_POSITION} value={f.fetalPosition ?? ""} onChange={setField("fetalPosition")} />
+              {/* FE_Fetal Heart Rate/Rhythm */}
+              <FRow label="Fetal Heart Rate/Rhythm" options={FETAL_HR} value={f.fetalHeartRateRhythm ?? ""} onChange={setField("fetalHeartRateRhythm")} />
+            </CardContent>
+          </Card>
+        )}
 
+        {/* ── Cardiac Anatomy — FE_ prefix fields (FETAL only) ─────────────────── */}
+        {isFE && (
+          <Card>
+            <CardHeader className="pb-2 pt-4">
+              <CardTitle className="text-sm font-bold text-gray-700">Cardiac Anatomy</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 pb-4">
+              {/* FE_Situs */}
+              <FRow label="Situs" options={SITUS_OPTIONS} value={f.situs ?? ""} onChange={setField("situs")} />
+              {/* FE_Cardiac Position */}
+              <FRow label="Cardiac Position" options={UNABLE_NORMAL_LEVO_DEXTRO} value={f.cardiacPosition ?? ""} onChange={setField("cardiacPosition")} />
+              {/* FE_Left Heart */}
+              <FRow label="Left Heart" options={UNABLE_NORMAL_ABNORMAL} value={f.leftHeart ?? ""} onChange={setField("leftHeart")} />
+              {/* FE_Right Heart */}
+              <FRow label="Right Heart" options={UNABLE_NORMAL_ABNORMAL} value={f.rightHeart ?? ""} onChange={setField("rightHeart")} />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ── Cardiac Anatomy — AETTE/AETEE/PETTE/PETEE (non-fetal, non-stress) ── */}
+        {isAETTE_AETEE_PETTE_PETEE && (
+          <Card>
+            <CardHeader className="pb-2 pt-4">
+              <CardTitle className="text-sm font-bold text-gray-700">Cardiac Anatomy</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 pb-4">
               <SectionHeader title="Ventricular Function" />
-              <FRow label="Ejection Fraction (EF%)" options={EF_OPTIONS} value={f.efPercent ?? ""} onChange={setField("efPercent")} />
+              {/* AETTE_AETEE_PETTE_PETEE_EF% */}
+              <FRow label="EF%" options={EF_OPTIONS} value={f.efPercent ?? ""} onChange={setField("efPercent")} />
+              {/* LV Wall Thickness — no prefix (all non-stress non-fetal) */}
               <FRow label="LV Wall Thickness" options={WALL_THICKNESS} value={f.lvWallThickness ?? ""} onChange={setField("lvWallThickness")} />
-              <FRow label="Regional Wall Motion Abnormalities" options={RWMA_OPTIONS} value={f.regionalWallMotionAbnormalities ?? ""} onChange={setField("regionalWallMotionAbnormalities")} />
+              {/* AETTE_AETEE_Regional Wall Motion Abnormalities */}
+              {isAETTE_AETEE && (
+                <FRow label="Regional Wall Motion Abnormalities" options={RWMA_OPTIONS} value={f.regionalWallMotionAbnormalities ?? ""} onChange={setField("regionalWallMotionAbnormalities")} />
+              )}
 
               <SectionHeader title="Chamber Sizes" />
+              {/* AETTE_AETEE_PETTE_PETEE_ chamber sizes */}
               <FRow label="LV Chamber Size" options={CHAMBER_SIZE} value={f.lvChamberSize ?? ""} onChange={setField("lvChamberSize")} />
               <FRow label="LA Chamber Size" options={CHAMBER_SIZE} value={f.laChamberSize ?? ""} onChange={setField("laChamberSize")} />
               <FRow label="RV Chamber Size" options={CHAMBER_SIZE} value={f.rvChamberSize ?? ""} onChange={setField("rvChamberSize")} />
               <FRow label="RA Chamber Size" options={CHAMBER_SIZE} value={f.raChamberSize ?? ""} onChange={setField("raChamberSize")} />
 
-              <SectionHeader title="Valve Morphology" />
-              <FRow label="Aortic Valve" options={NORMAL_ABNORMAL} value={f.aorticValve ?? ""} onChange={setField("aorticValve")} />
-              <FRow label="Mitral Valve" options={NORMAL_ABNORMAL} value={f.mitralValve ?? ""} onChange={setField("mitralValve")} />
-              <FRow label="Tricuspid Valve" options={NORMAL_ABNORMAL} value={f.tricuspidValve ?? ""} onChange={setField("tricuspidValve")} />
-              <FRow label="Pulmonic Valve" options={NORMAL_ABNORMAL} value={f.pulmonicValve ?? ""} onChange={setField("pulmonicValve")} />
-
               <SectionHeader title="Valve Stenosis" />
+              {/* AETTE_AETEE_PETTE_PETEE_ valve stenosis */}
               <FRow label="Aortic Stenosis" options={VALVE_STENOSIS} value={f.aorticStenosis ?? ""} onChange={setField("aorticStenosis")} />
               <FRow label="Mitral Stenosis" options={VALVE_STENOSIS} value={f.mitralStenosis ?? ""} onChange={setField("mitralStenosis")} />
               <FRow label="Tricuspid Stenosis" options={VALVE_STENOSIS} value={f.tricuspidStenosis ?? ""} onChange={setField("tricuspidStenosis")} />
               <FRow label="Pulmonic Stenosis" options={VALVE_STENOSIS} value={f.pulmonicStenosis ?? ""} onChange={setField("pulmonicStenosis")} />
 
               <SectionHeader title="Valve Regurgitation / Insufficiency" />
+              {/* AETTE_AETEE_PETTE_PETEE_ valve regurg */}
               <FRow label="Aortic Insufficiency" options={VALVE_REGURG} value={f.aorticInsufficiency ?? ""} onChange={setField("aorticInsufficiency")} />
               <FRow label="Mitral Regurgitation" options={VALVE_REGURG} value={f.mitralRegurgitation ?? ""} onChange={setField("mitralRegurgitation")} />
               <FRow label="Tricuspid Regurgitation" options={VALVE_REGURG} value={f.tricuspidRegurgitation ?? ""} onChange={setField("tricuspidRegurgitation")} />
               <FRow label="Pulmonic Insufficiency" options={VALVE_REGURG} value={f.pulmonicInsufficiency ?? ""} onChange={setField("pulmonicInsufficiency")} />
 
-              <SectionHeader title="Other Cardiac Findings" />
-              <FRow label="RVSP (mmHg)" options={RVSP_OPTIONS} value={f.rvspmm ?? ""} onChange={setField("rvspmm")} />
-              <FRow label="Pericardial Effusion" options={PERICARDIAL_EFF} value={f.pericardialEffusion ?? ""} onChange={setField("pericardialEffusion")} />
-
-              <SectionHeader title="Septal Defects / Shunts" />
-              <FRow label="Ventricular Septal Defect (VSD)" options={PRESENT_ABSENT} value={f.ventricularSeptalDefect ?? ""} onChange={setField("ventricularSeptalDefect")} />
-              <FRow label="Atrial Septal Defect (ASD)" options={PRESENT_ABSENT} value={f.atrialSeptalDefect ?? ""} onChange={setField("atrialSeptalDefect")} />
-              <FRow label="Patent Foramen Ovale (PFO)" options={PRESENT_ABSENT} value={f.patentForamenOvale ?? ""} onChange={setField("patentForamenOvale")} />
+              <SectionHeader title="Other Hemodynamics" />
+              {/* AETTE_AETEE_PETTE_PETEE_ peripheral PS and RVSP */}
+              <FRow label="Peripheral Pulmonary Stenosis" options={["Present", "Absent", "Unable to Evaluate", "Not Applicable"]} value={f.peripheralPulmonaryStenosis ?? ""} onChange={setField("peripheralPulmonaryStenosis")} />
+              <FRow label="RVSP mmHg" options={RVSP_OPTIONS} value={f.rvspmm ?? ""} onChange={setField("rvspmm")} />
             </CardContent>
           </Card>
         )}
 
-        {/* ── Pediatric / Congenital Extra ─────────────────────────────────────── */}
-        {isPediatric && (
+        {/* ── Fetal Valve Morphology (FE_ prefix) ─────────────────────────────── */}
+        {isFE && (
           <Card>
             <CardHeader className="pb-2 pt-4">
-              <CardTitle className="text-sm font-bold text-gray-700">Congenital / Pediatric Findings</CardTitle>
+              <CardTitle className="text-sm font-bold text-gray-700">Valve Morphology</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 pb-4">
-              <FRow label="Peripheral Pulmonary Stenosis" options={PRESENT_ABSENT} value={f.peripheralPulmonaryStenosis ?? ""} onChange={setField("peripheralPulmonaryStenosis")} />
-              <FRow label="Pulmonary Veins" options={NORMAL_ABNORMAL} value={f.pulmonaryVeins ?? ""} onChange={setField("pulmonaryVeins")} />
-              <FRow label="Coronary Anatomy" options={NORMAL_ABNORMAL} value={f.coronaryAnatomy ?? ""} onChange={setField("coronaryAnatomy")} />
-              <FRow label="Aortic Arch" options={NORMAL_ABNORMAL} value={f.aorticArch ?? ""} onChange={setField("aorticArch")} />
-              <FRow label="Great Vessels" options={NORMAL_ABNORMAL} value={f.greatVessels ?? ""} onChange={setField("greatVessels")} />
-              <FRow label="PDA / Ductal Arch" options={PRESENT_ABSENT} value={f.pdaDuctalArch ?? ""} onChange={setField("pdaDuctalArch")} />
-              <FRow label="Conotruncal Anatomy" options={NORMAL_ABNORMAL} value={f.conotruncalAnatomy ?? ""} onChange={setField("conotruncalAnatomy")} />
+              {/* FE_Aortic Valve, FE_Mitral Valve, FE_Tricuspid Valve, FE_Pulmonic Valve */}
+              <FRow label="Aortic Valve" options={UNABLE_NORMAL_ABNORMAL_VALVE} value={f.aorticValve ?? ""} onChange={setField("aorticValve")} />
+              <FRow label="Mitral Valve" options={UNABLE_NORMAL_ABNORMAL_VALVE} value={f.mitralValve ?? ""} onChange={setField("mitralValve")} />
+              <FRow label="Tricuspid Valve" options={UNABLE_NORMAL_ABNORMAL_VALVE} value={f.tricuspidValve ?? ""} onChange={setField("tricuspidValve")} />
+              <FRow label="Pulmonic Valve" options={UNABLE_NORMAL_ABNORMAL_VALVE} value={f.pulmonicValve ?? ""} onChange={setField("pulmonicValve")} />
             </CardContent>
           </Card>
         )}
 
-        {/* ── Stress Echo Findings ─────────────────────────────────────────────── */}
+        {/* ── Septal Defects — FE_PETTE_PETEE_ prefix ─────────────────────────── */}
+        {isFE_PETTE_PETEE && (
+          <Card>
+            <CardHeader className="pb-2 pt-4">
+              <CardTitle className="text-sm font-bold text-gray-700">Septal Defects / Shunts</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 pb-4">
+              {/* FE_PETTE_PETEE_Ventricular Septal Defect */}
+              <FRow label="Ventricular Septal Defect" options={VSD_OPTIONS} value={f.ventricularSeptalDefect ?? ""} onChange={setField("ventricularSeptalDefect")} />
+              {/* FE_PETTE_PETEE_Atrial Septal Defect */}
+              <FRow label="Atrial Septal Defect" options={ASD_OPTIONS} value={f.atrialSeptalDefect ?? ""} onChange={setField("atrialSeptalDefect")} />
+              {/* Patent Foramen Ovale — no prefix (all exam types) */}
+              <FRow label="Patent Foramen Ovale" options={PFO_OPTIONS} value={f.patentForamenOvale ?? ""} onChange={setField("patentForamenOvale")} />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Patent Foramen Ovale for non-fetal/non-ped exam types */}
+        {isAETTE_AETEE && (
+          <Card>
+            <CardHeader className="pb-2 pt-4">
+              <CardTitle className="text-sm font-bold text-gray-700">Septal Defects / Shunts</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 pb-4">
+              <FRow label="Patent Foramen Ovale" options={PFO_OPTIONS} value={f.patentForamenOvale ?? ""} onChange={setField("patentForamenOvale")} />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ── Congenital / Vascular — PETTE_PETEE_FE_ prefix ──────────────────── */}
+        {isPETTE_PETEE_FE && (
+          <Card>
+            <CardHeader className="pb-2 pt-4">
+              <CardTitle className="text-sm font-bold text-gray-700">Congenital / Vascular Findings</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 pb-4">
+              {/* PETTE_PETEE_FE_Pulmonary Veins */}
+              <FRow label="Pulmonary Veins" options={PULM_VEINS_OPTIONS} value={f.pulmonaryVeins ?? ""} onChange={setField("pulmonaryVeins")} />
+              {/* PETTE_PETEE_FE_Coronary Anatomy */}
+              <FRow label="Coronary Anatomy" options={CORONARY_OPTIONS} value={f.coronaryAnatomy ?? ""} onChange={setField("coronaryAnatomy")} />
+              {/* PETTE_PETEE_FE_Aortic Arch */}
+              <FRow label="Aortic Arch" options={AORTIC_ARCH_OPTIONS} value={f.aorticArch ?? ""} onChange={setField("aorticArch")} />
+              {/* PETTE_PETEE_FE_Great Vessels */}
+              <FRow label="Great Vessels" options={GREAT_VESSELS_OPTIONS} value={f.greatVessels ?? ""} onChange={setField("greatVessels")} />
+              {/* PETTE_PETEE_FE_PDA/Ductal Arch */}
+              <FRow label="PDA/Ductal Arch" options={PDA_OPTIONS} value={f.pdaDuctalArch ?? ""} onChange={setField("pdaDuctalArch")} />
+              {/* PETTE_PETEE_FE_Conotruncal Anatomy */}
+              <FRow label="Conotruncal Anatomy" options={CONOTRUNCAL_OPTIONS} value={f.conotruncalAnatomy ?? ""} onChange={setField("conotruncalAnatomy")} />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ── Pericardial Effusion — no prefix (all exam types) ────────────────── */}
+        <Card>
+          <CardHeader className="pb-2 pt-4">
+            <CardTitle className="text-sm font-bold text-gray-700">Pericardial Assessment</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 pb-4">
+            <FRow label="Pericardial Effusion" options={PERICARDIAL_EFF} value={f.pericardialEffusion ?? ""} onChange={setField("pericardialEffusion")} />
+          </CardContent>
+        </Card>
+
+        {/* ── Stress Echo Findings (AE_STRESS_ prefix) ─────────────────────────── */}
         {isStress && (
           <Card>
             <CardHeader className="pb-2 pt-4">
@@ -386,57 +549,40 @@ export default function PhysicianOverReadForm() {
             </CardHeader>
             <CardContent className="space-y-2 pb-4">
               <SectionHeader title="Ventricular Function" />
+              {/* AE_STRESS_Resting EF% */}
               <FRow label="Resting EF%" options={EF_OPTIONS} value={f.restingEfPercent ?? ""} onChange={setField("restingEfPercent")} />
-              <FRow label="Post-Stress EF%" options={EF_OPTIONS} value={f.postStressEfPercent ?? ""} onChange={setField("postStressEfPercent")} />
-              <FRow label="Resting RWMA" options={RWMA_OPTIONS} value={f.restingRwma ?? ""} onChange={setField("restingRwma")} />
-              <FRow label="Post-Stress RWMA" options={RWMA_OPTIONS} value={f.postStressRwma ?? ""} onChange={setField("postStressRwma")} />
+              {/* AE_STRESS_Post Stress EF% */}
+              <FRow label="Post Stress EF%" options={EF_OPTIONS} value={f.postStressEfPercent ?? ""} onChange={setField("postStressEfPercent")} />
+              {/* AE_STRESS_RESTING - Regional Wall Motion Abnormalities */}
+              <FRow label="RESTING — Regional Wall Motion Abnormalities" options={RWMA_OPTIONS} value={f.restingRwma ?? ""} onChange={setField("restingRwma")} />
+              {/* AE_STRESS_POST STRESS - Regional Wall Motion Abnormalities */}
+              <FRow label="POST STRESS — Regional Wall Motion Abnormalities" options={RWMA_OPTIONS} value={f.postStressRwma ?? ""} onChange={setField("postStressRwma")} />
+              {/* AE_STRESS_Response to Stress */}
               <FRow label="Response to Stress" options={RESPONSE_TO_STRESS} value={f.responseToStress ?? ""} onChange={setField("responseToStress")} />
 
               <SectionHeader title="Valve Stenosis (Stress)" />
+              {/* AE_STRESS_Aortic Stenosis */}
               <FRow label="Aortic Stenosis" options={VALVE_STENOSIS} value={f.stressAorticStenosis ?? ""} onChange={setField("stressAorticStenosis")} />
+              {/* AE_STRESS_Mitral Stenosis */}
               <FRow label="Mitral Stenosis" options={VALVE_STENOSIS} value={f.stressMitralStenosis ?? ""} onChange={setField("stressMitralStenosis")} />
+              {/* AE_STRESS_Tricuspid Stenosis */}
               <FRow label="Tricuspid Stenosis" options={VALVE_STENOSIS} value={f.stressTricuspidStenosis ?? ""} onChange={setField("stressTricuspidStenosis")} />
+              {/* AE_STRESS_Pulmonic Stenosis */}
               <FRow label="Pulmonic Stenosis" options={VALVE_STENOSIS} value={f.stressPulmonicStenosis ?? ""} onChange={setField("stressPulmonicStenosis")} />
 
               <SectionHeader title="Valve Regurgitation (Stress)" />
+              {/* AE_STRESS_Aortic Insufficiency */}
               <FRow label="Aortic Insufficiency" options={VALVE_REGURG} value={f.stressAorticInsufficiency ?? ""} onChange={setField("stressAorticInsufficiency")} />
+              {/* AE_STRESS_Mitral Regurgitation */}
               <FRow label="Mitral Regurgitation" options={VALVE_REGURG} value={f.stressMitralRegurgitation ?? ""} onChange={setField("stressMitralRegurgitation")} />
+              {/* AE_STRESS_Tricuspid Regurgitation */}
               <FRow label="Tricuspid Regurgitation" options={VALVE_REGURG} value={f.stressTricuspidRegurgitation ?? ""} onChange={setField("stressTricuspidRegurgitation")} />
+              {/* AE_STRESS_Pulmonic Insufficiency */}
               <FRow label="Pulmonic Insufficiency" options={VALVE_REGURG} value={f.stressPulmonicInsufficiency ?? ""} onChange={setField("stressPulmonicInsufficiency")} />
 
               <SectionHeader title="Hemodynamics (Stress)" />
-              <FRow label="RVSP (mmHg)" options={RVSP_OPTIONS} value={f.stressRvspmm ?? ""} onChange={setField("stressRvspmm")} />
-            </CardContent>
-          </Card>
-        )}
-
-        {/* ── Fetal Echo ───────────────────────────────────────────────────────── */}
-        {isFetal && (
-          <Card>
-            <CardHeader className="pb-2 pt-4">
-              <CardTitle className="text-sm font-bold text-gray-700">Fetal Echo Findings</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 pb-4">
-              <FRow label="Fetal Biometry" options={FETAL_BIOMETRY} value={f.fetalBiometry ?? ""} onChange={setField("fetalBiometry")} />
-              <FRow label="Fetal Position" options={FETAL_POSITION} value={f.fetalPosition ?? ""} onChange={setField("fetalPosition")} />
-              <FRow label="Fetal Heart Rate / Rhythm" options={FETAL_HR} value={f.fetalHeartRateRhythm ?? ""} onChange={setField("fetalHeartRateRhythm")} />
-
-              <SectionHeader title="Cardiac Anatomy (Fetal)" />
-              <FRow label="Situs" options={SITUS_OPTIONS} value={f.situs ?? ""} onChange={setField("situs")} />
-              <FRow label="Cardiac Position" options={CARDIAC_POSITION} value={f.cardiacPosition ?? ""} onChange={setField("cardiacPosition")} />
-              <FRow label="Left Heart" options={NORMAL_ABNORMAL} value={f.leftHeart ?? ""} onChange={setField("leftHeart")} />
-              <FRow label="Right Heart" options={NORMAL_ABNORMAL} value={f.rightHeart ?? ""} onChange={setField("rightHeart")} />
-              <FRow label="EF%" options={EF_OPTIONS} value={f.efPercent ?? ""} onChange={setField("efPercent")} />
-              <FRow label="VSD" options={PRESENT_ABSENT} value={f.ventricularSeptalDefect ?? ""} onChange={setField("ventricularSeptalDefect")} />
-              <FRow label="ASD" options={PRESENT_ABSENT} value={f.atrialSeptalDefect ?? ""} onChange={setField("atrialSeptalDefect")} />
-              <FRow label="Aortic Valve" options={NORMAL_ABNORMAL} value={f.aorticValve ?? ""} onChange={setField("aorticValve")} />
-              <FRow label="Mitral Valve" options={NORMAL_ABNORMAL} value={f.mitralValve ?? ""} onChange={setField("mitralValve")} />
-              <FRow label="Tricuspid Valve" options={NORMAL_ABNORMAL} value={f.tricuspidValve ?? ""} onChange={setField("tricuspidValve")} />
-              <FRow label="Pulmonic Valve" options={NORMAL_ABNORMAL} value={f.pulmonicValve ?? ""} onChange={setField("pulmonicValve")} />
-              <FRow label="Aortic Arch" options={NORMAL_ABNORMAL} value={f.aorticArch ?? ""} onChange={setField("aorticArch")} />
-              <FRow label="Great Vessels" options={NORMAL_ABNORMAL} value={f.greatVessels ?? ""} onChange={setField("greatVessels")} />
-              <FRow label="Pulmonary Veins" options={NORMAL_ABNORMAL} value={f.pulmonaryVeins ?? ""} onChange={setField("pulmonaryVeins")} />
-              <FRow label="Pericardial Effusion" options={PERICARDIAL_EFF} value={f.pericardialEffusion ?? ""} onChange={setField("pericardialEffusion")} />
+              {/* AE_STRESS_RVSP mmHg */}
+              <FRow label="RVSP mmHg" options={RVSP_OPTIONS} value={f.stressRvspmm ?? ""} onChange={setField("stressRvspmm")} />
             </CardContent>
           </Card>
         )}

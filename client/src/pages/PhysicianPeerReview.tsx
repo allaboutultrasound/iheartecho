@@ -39,22 +39,67 @@ const EXAM_TYPES = [
 ] as const;
 type ExamType = typeof EXAM_TYPES[number];
 
-// ─── Finding options ──────────────────────────────────────────────────────────
-const NORMAL_ABNORMAL = ["Normal", "Abnormal", "Not Evaluated", "Not Applicable"];
-const PRESENT_ABSENT = ["Present", "Absent", "Not Evaluated", "Not Applicable"];
+// ─── Finding options (matching FormSite form) ────────────────────────────────
+const UNABLE_NORMAL_ABNORMAL = ["Unable to Evaluate", "Within Normal Limits", "Abnormal Findings (see comments)"];
+const UNABLE_NORMAL_LEVO_DEXTRO = ["Unable to Evaluate", "Within Normal Limits", "Levocardia", "Dextrocardia", "Other (see comments)"];
+const UNABLE_NORMAL_ABNORMAL_VALVE = ["Unable to Evaluate", "Normal Morphology/Position/Function", "Abnormal Findings (see comments)"];
 const CHAMBER_SIZE = ["Normal", "Mildly Enlarged", "Moderately Enlarged", "Severely Enlarged", "Mildly Reduced", "Not Evaluated", "Not Applicable"];
 const EF_OPTIONS = ["Normal (≥55%)", "Mildly Reduced (45–54%)", "Moderately Reduced (30–44%)", "Severely Reduced (<30%)", "Hyperdynamic (>70%)", "Not Evaluated"];
 const VALVE_STENOSIS = ["None", "Mild", "Moderate", "Severe", "Not Evaluated", "Not Applicable"];
 const VALVE_REGURG = ["None/Trace", "Mild", "Moderate", "Moderate-Severe", "Severe", "Not Evaluated", "Not Applicable"];
-const RWMA_OPTIONS = ["None", "Anterior", "Anterolateral", "Inferolateral", "Inferior", "Inferoseptal", "Anteroseptal", "Apical", "Multiple Territories", "Not Evaluated"];
+const RWMA_OPTIONS = [
+  "Unable to Evaluate", "Within Normal Limits - No RWMA",
+  "RWMA Present - Hypokinetic", "RWMA Present - Dyskinetic", "RWMA Present - Akinetic",
+  "Basal Anterior", "Basal Anteroseptal", "Basal Inferoseptal", "Basal Inferior", "Basal Inferolateral", "Basal Anterolateral",
+  "Mid Anterior", "Mid Anteroseptal", "Mid Inferoseptal", "Mid Inferior", "Mid Inferolateral", "Mid Anterolateral",
+  "Apical Anterior", "Apical Septal", "Apical Inferior", "Apical Lateral", "Apex",
+  "Other (see comments)",
+];
 const RVSP_OPTIONS = ["Normal (<35 mmHg)", "Mildly Elevated (35–50 mmHg)", "Moderately Elevated (50–70 mmHg)", "Severely Elevated (>70 mmHg)", "Not Evaluated", "Not Applicable"];
-const PERICARDIAL_EFF = ["None", "Small", "Moderate", "Large", "Circumferential", "Loculated", "Not Evaluated"];
-const RESPONSE_TO_STRESS = ["Normal", "Ischemia", "Infarction", "Non-diagnostic", "Not Evaluated"];
+const PERICARDIAL_EFF = [
+  "Unable to Evaluate", "Within Normal Limits - No Pericardial Effusion",
+  "Trace/Physiological Pericardial Effusion", "Trace-Mild Pericardial Effusion",
+  "Mild Pericardial Effusion", "Moderate Pericardial Effusion", "Large Pericardial Effusion",
+  "Circumferential", "Loculated",
+];
+const RESPONSE_TO_STRESS = ["Unable to Evaluate", "Within Normal Limits", "Ischemia", "Other (see comments)"];
 const SITUS_OPTIONS = ["Situs Solitus", "Situs Inversus", "Situs Ambiguus", "Not Evaluated"];
-const CARDIAC_POSITION = ["Levocardia", "Dextrocardia", "Mesocardia", "Not Evaluated"];
-const FETAL_BIOMETRY = ["Appropriate for Gestational Age", "Small for Gestational Age", "Large for Gestational Age", "Not Evaluated"];
-const FETAL_POSITION = ["Cephalic", "Breech", "Transverse", "Not Evaluated"];
-const FETAL_HR = ["Normal Sinus Rhythm", "Bradycardia", "Tachycardia", "Irregular", "Not Evaluated"];
+const VSD_OPTIONS = [
+  "Present", "Absent", "Small", "Medium", "Large", "Multiple",
+  "Subarterial, Supracristal, Conal or Infundibular", "Inlet or AV Canal",
+  "Perimembranous, Paramembranous, Conoventricular, Membranous or Subaortic",
+  "Muscular", "Swiss Cheese", "Unable to Evaluate", "Other",
+];
+const ASD_OPTIONS = [
+  "Present", "Absent", "Small", "Medium", "Large", "Multiple",
+  "Ostium Primum", "Ostium Secundum", "Sinus Venosus", "Coronary Sinus",
+  "Unable to Evaluate", "Other",
+];
+const PFO_OPTIONS = [
+  "Present", "Absent", "Small", "Medium", "Large",
+  "Restrictive", "Unrestrictive", "Unable to Evaluate", "Other",
+];
+const PULM_VEINS_OPTIONS = [
+  "Unable to Evaluate", "Limited Evaluation - Appear Within Normal Limits",
+  "Within Normal Limits - Normal Connections", "Abnormal Connections and/or Flow (see comments)",
+];
+const CORONARY_OPTIONS = ["Unable to Evaluate", "Within Normal Limits", "Abnormal Findings (See Comments)"];
+const AORTIC_ARCH_OPTIONS = [
+  "Unable to Evaluate", "Within Normal Limits", "Left", "Right",
+  "Coarctation", "Interrupted", "Other (see comments)",
+];
+const GREAT_VESSELS_OPTIONS = ["Unable to Evaluate", "Within Normal Limits", "Abnormal Findings (see comments)"];
+const PDA_OPTIONS = [
+  "Unable to Evaluate", "Within Normal Limits", "No evidence of PDA",
+  "Small PDA", "Medium PDA", "Large PDA", "Bidirectional PDA", "Other (see comments)",
+];
+const CONOTRUNCAL_OPTIONS = ["Unable to Evaluate", "Within Normal Limits", "Abnormal Findings (see comments)"];
+const FETAL_BIOMETRY = [
+  "Unable to Adequately Evaluate", "Within Normal Limits",
+  "Appropriate for Gestational Age", "Abnormal Findings (see comments)",
+];
+const FETAL_POSITION = ["Vertex", "Breech", "Transverse"];
+const FETAL_HR = ["Within Normal Limits", "Arrhythmia Present", "Other"];
 const WALL_THICKNESS = ["Normal", "Increased (Hypertrophy)", "Decreased", "Not Evaluated"];
 
 // ─── Concordance scoring ──────────────────────────────────────────────────────
@@ -242,12 +287,13 @@ function Step1InvitationForm({ onCreated }: { onCreated: () => void }) {
   const [originalPhysician, setOriginalPhysician] = useState("");
   const [reviewerName, setReviewerName] = useState("");
   const [reviewerEmail, setReviewerEmail] = useState("");
+  const [pacsImageUrl, setPacsImageUrl] = useState("");
 
   const createMutation = trpc.physicianOverRead.createInvitation.useMutation({
     onSuccess: () => {
       toast.success("Invitation sent to physician's email.");
       setExamIdentifier(""); setExamDos(""); setExamType(""); setPostStressDoppler("");
-      setOriginalPhysician(""); setReviewerName(""); setReviewerEmail("");
+      setOriginalPhysician(""); setReviewerName(""); setReviewerEmail(""); setPacsImageUrl("");
       onCreated();
     },
     onError: (e) => toast.error(e.message),
@@ -263,6 +309,7 @@ function Step1InvitationForm({ onCreated }: { onCreated: () => void }) {
       examType: examType as ExamType,
       postStressDopplerPerformed: examType === "Adult STRESS" ? postStressDoppler : undefined,
       originalInterpretingPhysician: originalPhysician || undefined,
+      pacsImageUrl: pacsImageUrl.trim() || undefined,
       reviewerName: reviewerName || undefined,
       reviewerEmail,
     });
@@ -314,6 +361,18 @@ function Step1InvitationForm({ onCreated }: { onCreated: () => void }) {
           <div>
             <label className="text-xs font-semibold text-gray-600 block mb-1">Original Interpreting Physician</label>
             <Input className="h-8 text-sm" placeholder="Dr. Jane Smith, MD" value={originalPhysician} onChange={e => setOriginalPhysician(e.target.value)} />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="text-xs font-semibold text-gray-600 block mb-1">
+              PACS / Echo Image Viewer Link
+              <span className="ml-1 font-normal text-gray-400">(optional — included in physician email so they can access images)</span>
+            </label>
+            <Input
+              className="h-8 text-sm"
+              placeholder="https://pacs.yourhospital.com/study/..."
+              value={pacsImageUrl}
+              onChange={e => setPacsImageUrl(e.target.value)}
+            />
           </div>
         </div>
 
@@ -439,11 +498,19 @@ function Step2ComparisonForm({
   }, [submission]);
 
   const examType = submission?.examType ?? "";
-  const isAdultTTE = examType === "Adult TTE" || examType === "Adult TEE";
-  const isPediatric = examType === "Pediatric/Congenital TTE" || examType === "Pediatric/Congenital TEE";
+  const isAETTE  = examType === "Adult TTE";
+  const isAETEE  = examType === "Adult TEE";
   const isStress = examType === "Adult STRESS";
-  const isFetal = examType === "FETAL";
-  const showCardiac = isAdultTTE || isPediatric;
+  const isPETTE  = examType === "Pediatric/Congenital TTE";
+  const isPETEE  = examType === "Pediatric/Congenital TEE";
+  const isFetal  = examType === "FETAL";
+  const isAdultTTE  = isAETTE || isAETEE;   // kept for compat
+  const isPediatric = isPETTE || isPETEE;   // kept for compat
+  const isAETTE_AETEE             = isAETTE || isAETEE;
+  const isAETTE_AETEE_PETTE_PETEE = isAETTE || isAETEE || isPETTE || isPETEE;
+  const isFE_PETTE_PETEE          = isFetal || isPETTE || isPETEE;
+  const isPETTE_PETEE_FE          = isPETTE || isPETEE || isFetal;
+  const showCardiac = isAETTE_AETEE_PETTE_PETEE;
 
   const fields = getFieldsForExam(examType);
   const { score, discordant } = useMemo(() => computeConcordance(orig, overRead, fields), [orig, overRead, fields]);
@@ -600,35 +667,25 @@ function Step2ComparisonForm({
         </div>
       </div>
 
-      {/* ── Cardiac Findings ─────────────────────────────────────────────────── */}
+      {/* ── Cardiac Findings (AETTE / AETEE / PETTE / PETEE) ────────────────────── */}
       {showCardiac && (
         <Card>
           <CardHeader className="pb-2 pt-4">
             <CardTitle className="text-sm font-bold text-gray-700">Cardiac Findings</CardTitle>
           </CardHeader>
           <CardContent className="space-y-1.5 pb-4">
-            <SectionHeader title="Cardiac Anatomy" />
-            <ComparisonRow label="Situs" options={SITUS_OPTIONS} origValue={orig.situs ?? ""} overValue={overRead.situs} onOrigChange={setOrigField("situs")} />
-            <ComparisonRow label="Cardiac Position" options={CARDIAC_POSITION} origValue={orig.cardiacPosition ?? ""} overValue={overRead.cardiacPosition} onOrigChange={setOrigField("cardiacPosition")} />
-            <ComparisonRow label="Left Heart" options={NORMAL_ABNORMAL} origValue={orig.leftHeart ?? ""} overValue={overRead.leftHeart} onOrigChange={setOrigField("leftHeart")} />
-            <ComparisonRow label="Right Heart" options={NORMAL_ABNORMAL} origValue={orig.rightHeart ?? ""} overValue={overRead.rightHeart} onOrigChange={setOrigField("rightHeart")} />
-
             <SectionHeader title="Ventricular Function" />
-            <ComparisonRow label="Ejection Fraction (EF%)" options={EF_OPTIONS} origValue={orig.efPercent ?? ""} overValue={overRead.efPercent} onOrigChange={setOrigField("efPercent")} />
+            <ComparisonRow label="EF%" options={EF_OPTIONS} origValue={orig.efPercent ?? ""} overValue={overRead.efPercent} onOrigChange={setOrigField("efPercent")} />
             <ComparisonRow label="LV Wall Thickness" options={WALL_THICKNESS} origValue={orig.lvWallThickness ?? ""} overValue={overRead.lvWallThickness} onOrigChange={setOrigField("lvWallThickness")} />
-            <ComparisonRow label="RWMA" options={RWMA_OPTIONS} origValue={orig.regionalWallMotionAbnormalities ?? ""} overValue={overRead.regionalWallMotionAbnormalities} onOrigChange={setOrigField("regionalWallMotionAbnormalities")} />
+            {isAETTE_AETEE && (
+              <ComparisonRow label="Regional Wall Motion Abnormalities" options={RWMA_OPTIONS} origValue={orig.regionalWallMotionAbnormalities ?? ""} overValue={overRead.regionalWallMotionAbnormalities} onOrigChange={setOrigField("regionalWallMotionAbnormalities")} />
+            )}
 
             <SectionHeader title="Chamber Sizes" />
             <ComparisonRow label="LV Chamber Size" options={CHAMBER_SIZE} origValue={orig.lvChamberSize ?? ""} overValue={overRead.lvChamberSize} onOrigChange={setOrigField("lvChamberSize")} />
             <ComparisonRow label="LA Chamber Size" options={CHAMBER_SIZE} origValue={orig.laChamberSize ?? ""} overValue={overRead.laChamberSize} onOrigChange={setOrigField("laChamberSize")} />
             <ComparisonRow label="RV Chamber Size" options={CHAMBER_SIZE} origValue={orig.rvChamberSize ?? ""} overValue={overRead.rvChamberSize} onOrigChange={setOrigField("rvChamberSize")} />
             <ComparisonRow label="RA Chamber Size" options={CHAMBER_SIZE} origValue={orig.raChamberSize ?? ""} overValue={overRead.raChamberSize} onOrigChange={setOrigField("raChamberSize")} />
-
-            <SectionHeader title="Valve Morphology" />
-            <ComparisonRow label="Aortic Valve" options={NORMAL_ABNORMAL} origValue={orig.aorticValve ?? ""} overValue={overRead.aorticValve} onOrigChange={setOrigField("aorticValve")} />
-            <ComparisonRow label="Mitral Valve" options={NORMAL_ABNORMAL} origValue={orig.mitralValve ?? ""} overValue={overRead.mitralValve} onOrigChange={setOrigField("mitralValve")} />
-            <ComparisonRow label="Tricuspid Valve" options={NORMAL_ABNORMAL} origValue={orig.tricuspidValve ?? ""} overValue={overRead.tricuspidValve} onOrigChange={setOrigField("tricuspidValve")} />
-            <ComparisonRow label="Pulmonic Valve" options={NORMAL_ABNORMAL} origValue={orig.pulmonicValve ?? ""} overValue={overRead.pulmonicValve} onOrigChange={setOrigField("pulmonicValve")} />
 
             <SectionHeader title="Valve Stenosis" />
             <ComparisonRow label="Aortic Stenosis" options={VALVE_STENOSIS} origValue={orig.aorticStenosis ?? ""} overValue={overRead.aorticStenosis} onOrigChange={setOrigField("aorticStenosis")} />
@@ -642,32 +699,38 @@ function Step2ComparisonForm({
             <ComparisonRow label="Tricuspid Regurgitation" options={VALVE_REGURG} origValue={orig.tricuspidRegurgitation ?? ""} overValue={overRead.tricuspidRegurgitation} onOrigChange={setOrigField("tricuspidRegurgitation")} />
             <ComparisonRow label="Pulmonic Insufficiency" options={VALVE_REGURG} origValue={orig.pulmonicInsufficiency ?? ""} overValue={overRead.pulmonicInsufficiency} onOrigChange={setOrigField("pulmonicInsufficiency")} />
 
-            <SectionHeader title="Other Cardiac" />
+            <SectionHeader title="Other Hemodynamics" />
+            <ComparisonRow label="Peripheral Pulmonary Stenosis" options={["Present", "Absent", "Unable to Evaluate", "Not Applicable"]} origValue={orig.peripheralPulmonaryStenosis ?? ""} overValue={overRead.peripheralPulmonaryStenosis} onOrigChange={setOrigField("peripheralPulmonaryStenosis")} />
             <ComparisonRow label="RVSP (mmHg)" options={RVSP_OPTIONS} origValue={orig.rvspmm ?? ""} overValue={overRead.rvspmm} onOrigChange={setOrigField("rvspmm")} />
-            <ComparisonRow label="Pericardial Effusion" options={PERICARDIAL_EFF} origValue={orig.pericardialEffusion ?? ""} overValue={overRead.pericardialEffusion} onOrigChange={setOrigField("pericardialEffusion")} />
 
             <SectionHeader title="Septal Defects / Shunts" />
-            <ComparisonRow label="VSD" options={PRESENT_ABSENT} origValue={orig.ventricularSeptalDefect ?? ""} overValue={overRead.ventricularSeptalDefect} onOrigChange={setOrigField("ventricularSeptalDefect")} />
-            <ComparisonRow label="ASD" options={PRESENT_ABSENT} origValue={orig.atrialSeptalDefect ?? ""} overValue={overRead.atrialSeptalDefect} onOrigChange={setOrigField("atrialSeptalDefect")} />
-            <ComparisonRow label="PFO" options={PRESENT_ABSENT} origValue={orig.patentForamenOvale ?? ""} overValue={overRead.patentForamenOvale} onOrigChange={setOrigField("patentForamenOvale")} />
+            {isPediatric && (
+              <>
+                <ComparisonRow label="Ventricular Septal Defect" options={VSD_OPTIONS} origValue={orig.ventricularSeptalDefect ?? ""} overValue={overRead.ventricularSeptalDefect} onOrigChange={setOrigField("ventricularSeptalDefect")} />
+                <ComparisonRow label="Atrial Septal Defect" options={ASD_OPTIONS} origValue={orig.atrialSeptalDefect ?? ""} overValue={overRead.atrialSeptalDefect} onOrigChange={setOrigField("atrialSeptalDefect")} />
+              </>
+            )}
+            <ComparisonRow label="Patent Foramen Ovale" options={PFO_OPTIONS} origValue={orig.patentForamenOvale ?? ""} overValue={overRead.patentForamenOvale} onOrigChange={setOrigField("patentForamenOvale")} />
+
+            <SectionHeader title="Pericardial Assessment" />
+            <ComparisonRow label="Pericardial Effusion" options={PERICARDIAL_EFF} origValue={orig.pericardialEffusion ?? ""} overValue={overRead.pericardialEffusion} onOrigChange={setOrigField("pericardialEffusion")} />
           </CardContent>
         </Card>
       )}
 
-      {/* ── Pediatric Extra ───────────────────────────────────────────────────── */}
+      {/* ── Congenital / Vascular (PETTE / PETEE) ────────────────────────────── */}
       {isPediatric && (
         <Card>
           <CardHeader className="pb-2 pt-4">
-            <CardTitle className="text-sm font-bold text-gray-700">Congenital / Pediatric Findings</CardTitle>
+            <CardTitle className="text-sm font-bold text-gray-700">Congenital / Vascular Findings</CardTitle>
           </CardHeader>
           <CardContent className="space-y-1.5 pb-4">
-            <ComparisonRow label="Peripheral Pulmonary Stenosis" options={PRESENT_ABSENT} origValue={orig.peripheralPulmonaryStenosis ?? ""} overValue={overRead.peripheralPulmonaryStenosis} onOrigChange={setOrigField("peripheralPulmonaryStenosis")} />
-            <ComparisonRow label="Pulmonary Veins" options={NORMAL_ABNORMAL} origValue={orig.pulmonaryVeins ?? ""} overValue={overRead.pulmonaryVeins} onOrigChange={setOrigField("pulmonaryVeins")} />
-            <ComparisonRow label="Coronary Anatomy" options={NORMAL_ABNORMAL} origValue={orig.coronaryAnatomy ?? ""} overValue={overRead.coronaryAnatomy} onOrigChange={setOrigField("coronaryAnatomy")} />
-            <ComparisonRow label="Aortic Arch" options={NORMAL_ABNORMAL} origValue={orig.aorticArch ?? ""} overValue={overRead.aorticArch} onOrigChange={setOrigField("aorticArch")} />
-            <ComparisonRow label="Great Vessels" options={NORMAL_ABNORMAL} origValue={orig.greatVessels ?? ""} overValue={overRead.greatVessels} onOrigChange={setOrigField("greatVessels")} />
-            <ComparisonRow label="PDA / Ductal Arch" options={PRESENT_ABSENT} origValue={orig.pdaDuctalArch ?? ""} overValue={overRead.pdaDuctalArch} onOrigChange={setOrigField("pdaDuctalArch")} />
-            <ComparisonRow label="Conotruncal Anatomy" options={NORMAL_ABNORMAL} origValue={orig.conotruncalAnatomy ?? ""} overValue={overRead.conotruncalAnatomy} onOrigChange={setOrigField("conotruncalAnatomy")} />
+            <ComparisonRow label="Pulmonary Veins" options={PULM_VEINS_OPTIONS} origValue={orig.pulmonaryVeins ?? ""} overValue={overRead.pulmonaryVeins} onOrigChange={setOrigField("pulmonaryVeins")} />
+            <ComparisonRow label="Coronary Anatomy" options={CORONARY_OPTIONS} origValue={orig.coronaryAnatomy ?? ""} overValue={overRead.coronaryAnatomy} onOrigChange={setOrigField("coronaryAnatomy")} />
+            <ComparisonRow label="Aortic Arch" options={AORTIC_ARCH_OPTIONS} origValue={orig.aorticArch ?? ""} overValue={overRead.aorticArch} onOrigChange={setOrigField("aorticArch")} />
+            <ComparisonRow label="Great Vessels" options={GREAT_VESSELS_OPTIONS} origValue={orig.greatVessels ?? ""} overValue={overRead.greatVessels} onOrigChange={setOrigField("greatVessels")} />
+            <ComparisonRow label="PDA / Ductal Arch" options={PDA_OPTIONS} origValue={orig.pdaDuctalArch ?? ""} overValue={overRead.pdaDuctalArch} onOrigChange={setOrigField("pdaDuctalArch")} />
+            <ComparisonRow label="Conotruncal Anatomy" options={CONOTRUNCAL_OPTIONS} origValue={orig.conotruncalAnatomy ?? ""} overValue={overRead.conotruncalAnatomy} onOrigChange={setOrigField("conotruncalAnatomy")} />
           </CardContent>
         </Card>
       )}
@@ -701,34 +764,78 @@ function Step2ComparisonForm({
         </Card>
       )}
 
-      {/* ── Fetal Echo ────────────────────────────────────────────────────────── */}
+      {/* ── Fetal Echo (FE_ prefix) ────────────────────────────────────────────── */}
       {isFetal && (
-        <Card>
-          <CardHeader className="pb-2 pt-4">
-            <CardTitle className="text-sm font-bold text-gray-700">Fetal Echo Findings</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-1.5 pb-4">
-            <ComparisonRow label="Fetal Biometry" options={FETAL_BIOMETRY} origValue={orig.fetalBiometry ?? ""} overValue={overRead.fetalBiometry} onOrigChange={setOrigField("fetalBiometry")} />
-            <ComparisonRow label="Fetal Position" options={FETAL_POSITION} origValue={orig.fetalPosition ?? ""} overValue={overRead.fetalPosition} onOrigChange={setOrigField("fetalPosition")} />
-            <ComparisonRow label="Fetal Heart Rate / Rhythm" options={FETAL_HR} origValue={orig.fetalHeartRateRhythm ?? ""} overValue={overRead.fetalHeartRateRhythm} onOrigChange={setOrigField("fetalHeartRateRhythm")} />
-            <SectionHeader title="Cardiac Anatomy (Fetal)" />
-            <ComparisonRow label="Situs" options={SITUS_OPTIONS} origValue={orig.situs ?? ""} overValue={overRead.situs} onOrigChange={setOrigField("situs")} />
-            <ComparisonRow label="Cardiac Position" options={CARDIAC_POSITION} origValue={orig.cardiacPosition ?? ""} overValue={overRead.cardiacPosition} onOrigChange={setOrigField("cardiacPosition")} />
-            <ComparisonRow label="Left Heart" options={NORMAL_ABNORMAL} origValue={orig.leftHeart ?? ""} overValue={overRead.leftHeart} onOrigChange={setOrigField("leftHeart")} />
-            <ComparisonRow label="Right Heart" options={NORMAL_ABNORMAL} origValue={orig.rightHeart ?? ""} overValue={overRead.rightHeart} onOrigChange={setOrigField("rightHeart")} />
-            <ComparisonRow label="EF%" options={EF_OPTIONS} origValue={orig.efPercent ?? ""} overValue={overRead.efPercent} onOrigChange={setOrigField("efPercent")} />
-            <ComparisonRow label="VSD" options={PRESENT_ABSENT} origValue={orig.ventricularSeptalDefect ?? ""} overValue={overRead.ventricularSeptalDefect} onOrigChange={setOrigField("ventricularSeptalDefect")} />
-            <ComparisonRow label="ASD" options={PRESENT_ABSENT} origValue={orig.atrialSeptalDefect ?? ""} overValue={overRead.atrialSeptalDefect} onOrigChange={setOrigField("atrialSeptalDefect")} />
-            <ComparisonRow label="Aortic Valve" options={NORMAL_ABNORMAL} origValue={orig.aorticValve ?? ""} overValue={overRead.aorticValve} onOrigChange={setOrigField("aorticValve")} />
-            <ComparisonRow label="Mitral Valve" options={NORMAL_ABNORMAL} origValue={orig.mitralValve ?? ""} overValue={overRead.mitralValve} onOrigChange={setOrigField("mitralValve")} />
-            <ComparisonRow label="Tricuspid Valve" options={NORMAL_ABNORMAL} origValue={orig.tricuspidValve ?? ""} overValue={overRead.tricuspidValve} onOrigChange={setOrigField("tricuspidValve")} />
-            <ComparisonRow label="Pulmonic Valve" options={NORMAL_ABNORMAL} origValue={orig.pulmonicValve ?? ""} overValue={overRead.pulmonicValve} onOrigChange={setOrigField("pulmonicValve")} />
-            <ComparisonRow label="Aortic Arch" options={NORMAL_ABNORMAL} origValue={orig.aorticArch ?? ""} overValue={overRead.aorticArch} onOrigChange={setOrigField("aorticArch")} />
-            <ComparisonRow label="Great Vessels" options={NORMAL_ABNORMAL} origValue={orig.greatVessels ?? ""} overValue={overRead.greatVessels} onOrigChange={setOrigField("greatVessels")} />
-            <ComparisonRow label="Pulmonary Veins" options={NORMAL_ABNORMAL} origValue={orig.pulmonaryVeins ?? ""} overValue={overRead.pulmonaryVeins} onOrigChange={setOrigField("pulmonaryVeins")} />
-            <ComparisonRow label="Pericardial Effusion" options={PERICARDIAL_EFF} origValue={orig.pericardialEffusion ?? ""} overValue={overRead.pericardialEffusion} onOrigChange={setOrigField("pericardialEffusion")} />
-          </CardContent>
-        </Card>
+        <>
+          {/* Fetal Assessment */}
+          <Card>
+            <CardHeader className="pb-2 pt-4">
+              <CardTitle className="text-sm font-bold text-gray-700">Fetal Assessment</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1.5 pb-4">
+              <ComparisonRow label="Fetal Biometry" options={FETAL_BIOMETRY} origValue={orig.fetalBiometry ?? ""} overValue={overRead.fetalBiometry} onOrigChange={setOrigField("fetalBiometry")} />
+              <ComparisonRow label="Fetal Position" options={FETAL_POSITION} origValue={orig.fetalPosition ?? ""} overValue={overRead.fetalPosition} onOrigChange={setOrigField("fetalPosition")} />
+              <ComparisonRow label="Fetal Heart Rate/Rhythm" options={FETAL_HR} origValue={orig.fetalHeartRateRhythm ?? ""} overValue={overRead.fetalHeartRateRhythm} onOrigChange={setOrigField("fetalHeartRateRhythm")} />
+            </CardContent>
+          </Card>
+          {/* Fetal Cardiac Anatomy */}
+          <Card>
+            <CardHeader className="pb-2 pt-4">
+              <CardTitle className="text-sm font-bold text-gray-700">Cardiac Anatomy</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1.5 pb-4">
+              <ComparisonRow label="Situs" options={SITUS_OPTIONS} origValue={orig.situs ?? ""} overValue={overRead.situs} onOrigChange={setOrigField("situs")} />
+              <ComparisonRow label="Cardiac Position" options={UNABLE_NORMAL_LEVO_DEXTRO} origValue={orig.cardiacPosition ?? ""} overValue={overRead.cardiacPosition} onOrigChange={setOrigField("cardiacPosition")} />
+              <ComparisonRow label="Left Heart" options={UNABLE_NORMAL_ABNORMAL} origValue={orig.leftHeart ?? ""} overValue={overRead.leftHeart} onOrigChange={setOrigField("leftHeart")} />
+              <ComparisonRow label="Right Heart" options={UNABLE_NORMAL_ABNORMAL} origValue={orig.rightHeart ?? ""} overValue={overRead.rightHeart} onOrigChange={setOrigField("rightHeart")} />
+            </CardContent>
+          </Card>
+          {/* Fetal Valve Morphology */}
+          <Card>
+            <CardHeader className="pb-2 pt-4">
+              <CardTitle className="text-sm font-bold text-gray-700">Valve Morphology</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1.5 pb-4">
+              <ComparisonRow label="Aortic Valve" options={UNABLE_NORMAL_ABNORMAL_VALVE} origValue={orig.aorticValve ?? ""} overValue={overRead.aorticValve} onOrigChange={setOrigField("aorticValve")} />
+              <ComparisonRow label="Mitral Valve" options={UNABLE_NORMAL_ABNORMAL_VALVE} origValue={orig.mitralValve ?? ""} overValue={overRead.mitralValve} onOrigChange={setOrigField("mitralValve")} />
+              <ComparisonRow label="Tricuspid Valve" options={UNABLE_NORMAL_ABNORMAL_VALVE} origValue={orig.tricuspidValve ?? ""} overValue={overRead.tricuspidValve} onOrigChange={setOrigField("tricuspidValve")} />
+              <ComparisonRow label="Pulmonic Valve" options={UNABLE_NORMAL_ABNORMAL_VALVE} origValue={orig.pulmonicValve ?? ""} overValue={overRead.pulmonicValve} onOrigChange={setOrigField("pulmonicValve")} />
+            </CardContent>
+          </Card>
+          {/* Fetal Septal Defects */}
+          <Card>
+            <CardHeader className="pb-2 pt-4">
+              <CardTitle className="text-sm font-bold text-gray-700">Septal Defects / Shunts</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1.5 pb-4">
+              <ComparisonRow label="Ventricular Septal Defect" options={VSD_OPTIONS} origValue={orig.ventricularSeptalDefect ?? ""} overValue={overRead.ventricularSeptalDefect} onOrigChange={setOrigField("ventricularSeptalDefect")} />
+              <ComparisonRow label="Atrial Septal Defect" options={ASD_OPTIONS} origValue={orig.atrialSeptalDefect ?? ""} overValue={overRead.atrialSeptalDefect} onOrigChange={setOrigField("atrialSeptalDefect")} />
+            </CardContent>
+          </Card>
+          {/* Fetal Congenital / Vascular */}
+          <Card>
+            <CardHeader className="pb-2 pt-4">
+              <CardTitle className="text-sm font-bold text-gray-700">Congenital / Vascular Findings</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1.5 pb-4">
+              <ComparisonRow label="Pulmonary Veins" options={PULM_VEINS_OPTIONS} origValue={orig.pulmonaryVeins ?? ""} overValue={overRead.pulmonaryVeins} onOrigChange={setOrigField("pulmonaryVeins")} />
+              <ComparisonRow label="Coronary Anatomy" options={CORONARY_OPTIONS} origValue={orig.coronaryAnatomy ?? ""} overValue={overRead.coronaryAnatomy} onOrigChange={setOrigField("coronaryAnatomy")} />
+              <ComparisonRow label="Aortic Arch" options={AORTIC_ARCH_OPTIONS} origValue={orig.aorticArch ?? ""} overValue={overRead.aorticArch} onOrigChange={setOrigField("aorticArch")} />
+              <ComparisonRow label="Great Vessels" options={GREAT_VESSELS_OPTIONS} origValue={orig.greatVessels ?? ""} overValue={overRead.greatVessels} onOrigChange={setOrigField("greatVessels")} />
+              <ComparisonRow label="PDA / Ductal Arch" options={PDA_OPTIONS} origValue={orig.pdaDuctalArch ?? ""} overValue={overRead.pdaDuctalArch} onOrigChange={setOrigField("pdaDuctalArch")} />
+              <ComparisonRow label="Conotruncal Anatomy" options={CONOTRUNCAL_OPTIONS} origValue={orig.conotruncalAnatomy ?? ""} overValue={overRead.conotruncalAnatomy} onOrigChange={setOrigField("conotruncalAnatomy")} />
+            </CardContent>
+          </Card>
+          {/* Fetal Pericardial */}
+          <Card>
+            <CardHeader className="pb-2 pt-4">
+              <CardTitle className="text-sm font-bold text-gray-700">Pericardial Assessment</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1.5 pb-4">
+              <ComparisonRow label="Pericardial Effusion" options={PERICARDIAL_EFF} origValue={orig.pericardialEffusion ?? ""} overValue={overRead.pericardialEffusion} onOrigChange={setOrigField("pericardialEffusion")} />
+            </CardContent>
+          </Card>
+        </>
       )}
 
       {/* Concordance score preview */}

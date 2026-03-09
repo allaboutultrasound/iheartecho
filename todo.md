@@ -1592,3 +1592,24 @@
 - [x] Add Left Pulmonary Veins view to ICE ScanCoach
 - [x] Add Right Pulmonary Veins view to ICE ScanCoach
 - [x] Fix ScanCoach image display - images not consistently showing on member pages
+
+## ScanCoach Image Override Audit (Mar 09 2026)
+- [ ] ScanCoach.tsx: add useScanCoachOverrides for fetal tab (module "fetal")
+- [ ] ScanCoach.tsx: add useScanCoachOverrides for chd tab (module "chd")
+- [ ] ScanCoach.tsx: add useScanCoachOverrides for achd tab (module "chd" — shares IDs)
+- [ ] ScanCoach.tsx: add useScanCoachOverrides for pulm tab (module "pulm")
+- [ ] ScanCoach.tsx: add useScanCoachOverrides for diastolic tab (module "diastolic")
+- [ ] StrainScanCoach.tsx: add image rendering section and useScanCoachOverrides (module "strain")
+- [ ] TEEIceScanCoach.tsx: migrate from per-view getMediaByView to unified useScanCoachOverrides hook
+
+## Physician Peer Review Field Remapping (Mar 09 2026)
+- [x] Rewrite PhysicianOverReadForm.tsx field sections using exam-type prefix logic from FormSite
+- [x] Also update PhysicianPeerReview.tsx (Step 2 comparison view) to match same field mapping
+- [ ] Also check/update server-side submitOverRead mutation to accept new field keys
+- [x] Add pacsImageUrl column to physicianOverReadInvitations table in DB schema
+- [x] Update createInvitation procedure to accept pacsImageUrl
+- [x] Update getInvitationByToken to return pacsImageUrl
+- [x] Include PACS link in physician assignment email
+- [x] Add PACS link input field to lab invitation UI
+- [x] Display PACS link on physician over-read form
+- [x] Fix broken EchoAssist link in ScanCoach banner (/echoassist-hub → correct route)

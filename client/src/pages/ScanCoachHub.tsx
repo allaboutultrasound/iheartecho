@@ -124,7 +124,7 @@ export default function ScanCoachHub() {
                     <span className="text-[#4ad9e0] text-xs">→</span>
                   </button>
                 </Link>
-                <Link href="/echoassist-hub">
+                <Link href="/echo-assist-hub">
                   <button className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold bg-white/10 border border-white/25 text-white hover:bg-white/20 transition-all">
                     <Zap className="w-3.5 h-3.5 text-[#4ad9e0]" />
                     EchoAssist™

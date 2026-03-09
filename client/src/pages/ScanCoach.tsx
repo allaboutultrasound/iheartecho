@@ -814,6 +814,8 @@ function PulmHTNScanCoach() {
   const [activeSection, setActiveSection] = useState<"ph" | "pe">("ph");
   const BRAND_LOCAL = "#189aa1";
   const BRAND_DARK_LOCAL = "#0e7490";
+  const { mergeView: mergePulmView } = useScanCoachOverrides("pulm");
+  const selectedViewMerged = useMemo(() => mergePulmView(selectedView as any), [selectedView, mergePulmView]);
   return (
     <div>
 
@@ -1145,8 +1147,12 @@ export default function ScanCoach() {
   const [mrExpanded, setMrExpanded] = useState(false);
   const [arExpanded, setArExpanded] = useState(false);
   const { mergeView: mergeTTEView } = useScanCoachOverrides("tte");
+  const { mergeView: mergeFetalView, overrideMap: fetalOverrideMap } = useScanCoachOverrides("fetal");
+  const { mergeView: mergePulmView, overrideMap: pulmOverrideMap } = useScanCoachOverrides("pulm");
   // Apply DB overrides to the selected TTE view at render time
   const selectedTTEMerged = useMemo(() => mergeTTEView(selectedTTE as any), [selectedTTE, mergeTTEView]);
+  // Apply DB overrides to the selected Fetal view at render time
+  const selectedFetalMerged = useMemo(() => mergeFetalView(selectedFetal as any), [selectedFetal, mergeFetalView, fetalOverrideMap]);
    const fetalDetailRef = useRef<HTMLDivElement>(null);
   const tteDetailRef = useRef<HTMLDivElement>(null);
   const scrollOnFetalChange = useRef(false);
@@ -1893,8 +1899,8 @@ export default function ScanCoach() {
                     <div className="text-center">
                       <p className="text-xs text-gray-400 mb-1.5">Anatomy Diagram</p>
                       <img
-                        src={selectedFetal.imageUrl}
-                        alt={`${selectedFetal.name} diagram`}
+                        src={(selectedFetalMerged as any).anatomyImageUrl || selectedFetal.imageUrl}
+                        alt={`${selectedFetalMerged.name} diagram`}
                         className="max-h-60 object-contain rounded"
                         style={{ background: "#030712" }}
                       />
@@ -1904,8 +1910,8 @@ export default function ScanCoach() {
                     <div className="text-center">
                       <p className="text-xs text-gray-400 mb-1.5">Clinical Echo Image</p>
                       <img
-                        src={(selectedFetal as any).echoImageUrl || selectedFetal.imageUrl}
-                        alt={`${selectedFetal.name} echo`}
+                        src={(selectedFetalMerged as any).echoImageUrl || selectedFetal.imageUrl}
+                        alt={`${selectedFetalMerged.name} echo`}
                         className="max-h-60 object-contain rounded"
                         style={{ background: "#030712" }}
                       />

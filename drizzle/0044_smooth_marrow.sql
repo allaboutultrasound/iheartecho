@@ -1,0 +1,1 @@
+ALTER TABLE `physicianOverReadInvitations` ADD `pacsImageUrl` varchar(2048);

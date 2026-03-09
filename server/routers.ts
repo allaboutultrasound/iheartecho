@@ -1518,6 +1518,7 @@ export const appRouter = router({
         examType: z.enum(["Adult TTE", "Adult TEE", "Adult STRESS", "Pediatric/Congenital TTE", "Pediatric/Congenital TEE", "FETAL"]),
         postStressDopplerPerformed: z.string().optional(),
         originalInterpretingPhysician: z.string().optional(),
+        pacsImageUrl: z.string().url().optional().or(z.literal("")),
         reviewerName: z.string().optional(),
         reviewerEmail: z.string().email(),
       }))
@@ -1535,6 +1536,7 @@ export const appRouter = router({
           examType: input.examType,
           postStressDopplerPerformed: input.postStressDopplerPerformed,
           originalInterpretingPhysician: input.originalInterpretingPhysician,
+          pacsImageUrl: input.pacsImageUrl || undefined,
           reviewerName: input.reviewerName,
           reviewerEmail: input.reviewerEmail,
           accessToken,
@@ -1565,6 +1567,7 @@ export const appRouter = router({
                     ${input.examDos ? `<tr><td style="padding: 8px; background: #f3f4f6; font-weight: bold; color: #374151;">Exam Date</td><td style="padding: 8px; color: #374151;">${input.examDos}</td></tr>` : ""}
                     ${input.originalInterpretingPhysician ? `<tr><td style="padding: 8px; background: #f3f4f6; font-weight: bold; color: #374151;">Original Physician</td><td style="padding: 8px; color: #374151;">${input.originalInterpretingPhysician}</td></tr>` : ""}
                   </table>
+                  ${input.pacsImageUrl ? `<div style="background: #f0fbfc; border: 1px solid #189aa1; border-radius: 6px; padding: 14px 18px; margin: 16px 0;"><p style="margin: 0 0 8px 0; color: #0e4a50; font-weight: bold; font-size: 14px;">&#128444; PACS / Echo Image Viewer</p><p style="margin: 0 0 10px 0; color: #374151; font-size: 13px;">Use the link below to view the echocardiography images for this study before completing your over-read.</p><a href="${input.pacsImageUrl}" style="background: #0e4a50; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 14px;">View Echo Images</a></div>` : ""}
                   <p style="color: #374151;"><strong>Important:</strong> Please complete this form as a <em>blind over-read</em> &#8212; do NOT view the original physician report before completing the form.</p>
                   <div style="text-align: center; margin: 24px 0;">
                     <a href="${formUrl}" style="background: #189aa1; color: white; padding: 14px 28px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 16px;">Complete Over-Read Form</a>

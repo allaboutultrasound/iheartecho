@@ -1052,6 +1052,8 @@ export const physicianOverReadInvitations = mysqlTable("physicianOverReadInvitat
   examType: varchar("examType", { length: 50 }).notNull(),
   postStressDopplerPerformed: varchar("postStressDopplerPerformed", { length: 10 }),
   originalInterpretingPhysician: varchar("originalInterpretingPhysician", { length: 255 }),
+  // Optional PACS / image-viewer link sent to the physician so they can access echo images
+  pacsImageUrl: varchar("pacsImageUrl", { length: 2048 }),
   // Physician reviewer info
   reviewerName: varchar("reviewerName", { length: 255 }),
   reviewerEmail: varchar("reviewerEmail", { length: 320 }).notNull(),
