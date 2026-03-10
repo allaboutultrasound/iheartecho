@@ -1,10 +1,7 @@
 /*
-  POCUS-Assist™ Hub — iHeartEcho™
-  Entry point for all POCUS-Assist™ modules:
-    • eFAST (free)
-    • RUSH (premium)
-    • Cardiac POCUS (free)
-    • Lung POCUS (premium)
+  POCUSAssistHub.tsx — POCUS-Assist™ Hub
+  Exact layout mirror of EchoAssistHub.tsx.
+  Modules: eFAST (free), Cardiac POCUS (free), RUSH (premium), Lung POCUS (premium)
   Brand: Teal #189aa1, Aqua #4ad9e0
   Fonts: Merriweather headings, Open Sans body
 */
@@ -13,114 +10,82 @@ import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import { usePremium } from "@/hooks/usePremium";
 import {
-  Shield, Zap, Heart, Wind, Crown, Lock,
-  ArrowRight, Activity, Scan,
+  Shield, Zap, Heart, Wind,
+  ArrowRight, Crown, Lock,
 } from "lucide-react";
 
 const BRAND = "#189aa1";
 
-type Module = {
-  navigatorPath: string;
+type Specialty = {
+  path: string;
   scanCoachPath: string;
   icon: React.ElementType;
   title: string;
-  subtitle: string;
   description: string;
   badge: string;
-  badgeColor: string;
   free: boolean;
-  views: number;
-  highlights: string[];
 };
 
-const modules: Module[] = [
+const specialties: Specialty[] = [
+  // ── Free ──────────────────────────────────────────────────────────────────
   {
-    navigatorPath: "/pocus-efast",
+    path: "/pocus-efast",
     scanCoachPath: "/pocus-efast-scan-coach",
     icon: Shield,
     title: "eFAST",
-    subtitle: "Extended FAST Exam",
-    description:
-      "Systematic 6-window eFAST protocol for trauma — RUQ, LUQ, pelvic, subxiphoid cardiac, and bilateral thoracic windows. Free fluid grading, pneumothorax detection, and hemothorax assessment.",
-    badge: "Trauma / Emergency",
-    badgeColor: "#0e7490",
+    description: "Extended Focused Assessment with Sonography for Trauma — RUQ, LUQ, pelvic, subxiphoid, and bilateral thorax windows with free-fluid grading, pneumothorax detection, and hemopericardium assessment.",
+    badge: "Trauma",
     free: true,
-    views: 6,
-    highlights: [
-      "Morison's pouch & splenorenal free fluid",
-      "Bilateral pneumothorax detection",
-      "Subxiphoid cardiac tamponade screen",
-    ],
   },
   {
-    navigatorPath: "/pocus-rush",
-    scanCoachPath: "/pocus-rush-scan-coach",
-    icon: Zap,
-    title: "RUSH",
-    subtitle: "Rapid Ultrasound in Shock",
-    description:
-      "Structured RUSH protocol — The Pump (cardiac function), The Tank (volume status / IVC), and The Pipes (aorta, DVT, pneumothorax). Systematic shock differentiation with decision support.",
-    badge: "Shock Protocol",
-    badgeColor: "#b45309",
-    free: false,
-    views: 11,
-    highlights: [
-      "Pump: LV/RV function, pericardial effusion",
-      "Tank: IVC collapsibility index, free fluid",
-      "Pipes: AAA, DVT, pneumothorax",
-    ],
-  },
-  {
-    navigatorPath: "/pocus-cardiac",
+    path: "/pocus-cardiac",
     scanCoachPath: "/pocus-cardiac-scan-coach",
     icon: Heart,
     title: "Cardiac POCUS",
-    subtitle: "Focused Cardiac Ultrasound",
-    description:
-      "Goal-directed cardiac POCUS with 6 standard views — PLAX, PSAX, A4C, subcostal 4-chamber, and IVC. LV/RV function, pericardial effusion, volume assessment, and tamponade physiology.",
+    description: "FoCUS protocol — PLAX, PSAX, A4C, subcostal, and IVC views with LV/RV function, pericardial effusion, and volume status assessment at the bedside.",
     badge: "Cardiac",
-    badgeColor: "#189aa1",
     free: true,
-    views: 6,
-    highlights: [
-      "LV systolic function (visual EF)",
-      "Pericardial effusion & tamponade",
-      "IVC collapsibility for volume status",
-    ],
+  },
+  // ── Premium ───────────────────────────────────────────────────────────────
+  {
+    path: "/pocus-rush",
+    scanCoachPath: "/pocus-rush-scan-coach",
+    icon: Zap,
+    title: "RUSH Protocol",
+    description: "Rapid Ultrasound for Shock and Hypotension — 4-step pump/tank/pipes/pneumothorax assessment with shock-type differentiation (obstructive, distributive, cardiogenic, hypovolemic).",
+    badge: "Shock",
+    free: false,
   },
   {
-    navigatorPath: "/pocus-lung",
+    path: "/pocus-lung",
     scanCoachPath: "/pocus-lung-scan-coach",
     icon: Wind,
     title: "Lung POCUS",
-    subtitle: "Thoracic Ultrasound",
-    description:
-      "8-zone lung POCUS with BLUE protocol integration — pleural sliding, A-lines, B-lines, consolidation, pleural effusion, and diaphragm assessment. Systematic differentiation of dyspnoea aetiology.",
+    description: "8-zone lung protocol — A-lines, B-lines, pleural sliding, consolidation patterns, BLUE protocol for acute dyspnea, and lung point detection for pneumothorax.",
     badge: "Pulmonary",
-    badgeColor: "#0f766e",
     free: false,
-    views: 8,
-    highlights: [
-      "B-line quantification (interstitial syndrome)",
-      "BLUE protocol for acute dyspnoea",
-      "Pleural effusion & consolidation",
-    ],
   },
 ];
+
+const badgeColors: Record<string, string> = {
+  Trauma: "#0369a1",
+  Cardiac: "#189aa1",
+  Shock: "#b45309",
+  Pulmonary: "#0e7490",
+};
 
 export default function POCUSAssistHub() {
   const { isPremium } = usePremium();
   const [upgradeModal, setUpgradeModal] = useState<{ title: string } | null>(null);
-
-  const freeCount = modules.filter((m) => m.free).length;
-  const premiumCount = modules.filter((m) => !m.free).length;
+  const freeCount = specialties.filter(s => s.free).length;
+  const premiumCount = specialties.filter(s => !s.free).length;
 
   return (
     <Layout>
-      {/* ── Hero Banner ─────────────────────────────────────────────────────── */}
+      {/* Header — identical gradient to EchoAssistHub */}
       <div
         className="relative overflow-hidden"
-        style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0a3a40 60%, #189aa1 100%)" }}
+        style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}
       >
         <div className="container py-10 md:py-14">
           <div className="flex items-start gap-4">
@@ -128,15 +93,13 @@ export default function POCUSAssistHub() {
               className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 mt-1"
               style={{ background: "rgba(255,255,255,0.1)" }}
             >
-              <Scan className="w-6 h-6 text-[#4ad9e0]" />
+              <Shield className="w-6 h-6 text-[#4ad9e0]" />
             </div>
             <div>
               <div className="flex flex-wrap items-center gap-2 mb-3">
                 <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1">
                   <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
-                  <span className="text-sm text-white/80 font-medium">
-                    4 Modules · Navigator + ScanCoach
-                  </span>
+                  <span className="text-sm text-white/80 font-medium">4 Modules · Navigator + ScanCoach</span>
                 </div>
                 <div className="inline-flex items-center gap-1.5 bg-emerald-500/20 border border-emerald-400/30 rounded-full px-3 py-1">
                   <span className="text-sm text-emerald-300 font-medium">{freeCount} Free</span>
@@ -152,109 +115,197 @@ export default function POCUSAssistHub() {
               >
                 POCUS-Assist™
               </h1>
-              <p className="text-[#4ad9e0] font-semibold text-base mt-0.5">
-                Point-of-Care Ultrasound Navigator &amp; ScanCoach
-              </p>
+              <p className="text-[#4ad9e0] font-semibold text-base mt-0.5">Point-of-Care Ultrasound Navigator &amp; ScanCoach</p>
               <p className="text-white/70 text-sm md:text-base mt-2 max-w-xl leading-relaxed">
-                Structured POCUS protocols with window-by-window checklists, probe positioning
-                guides, clinical decision support, and scanning tips — for eFAST, RUSH, Cardiac,
-                and Lung ultrasound.
+                Structured POCUS protocols with window-by-window checklists, normal reference values, scanning tips, probe guidance, and clinical decision support — for eFAST, Cardiac, RUSH, and Lung ultrasound.
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── Module Grid ─────────────────────────────────────────────────────── */}
+      {/* Module Grid */}
       <div className="container py-8">
         {/* Free section */}
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-4">
             <div className="w-2 h-2 rounded-full bg-emerald-500" />
-            <h2
-              className="text-base font-bold text-gray-700"
-              style={{ fontFamily: "Merriweather, serif" }}
-            >
+            <h2 className="text-base font-bold text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>
               Free — Available to All Members
             </h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {modules
-              .filter((m) => m.free)
-              .map((mod) => (
-                <ModuleCard
-                  key={mod.title}
-                  mod={mod}
-                  isPremium={isPremium}
-                  onUpgrade={() => setUpgradeModal({ title: mod.title })}
-                />
-              ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {specialties.filter(s => s.free).map(({ path, scanCoachPath, icon: Icon, title, description, badge }) => {
+              const badgeColor = badgeColors[badge] ?? BRAND;
+              return (
+                <div
+                  key={path}
+                  className="bg-white rounded-xl border border-emerald-100 p-5 h-full hover:shadow-md transition-all hover:border-emerald-300/50 flex flex-col"
+                  style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: BRAND + "15" }}>
+                      <Icon className="w-5 h-5" style={{ color: BRAND }} />
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        Free
+                      </span>
+                      <span
+                        className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                        style={{ background: badgeColor + "15", color: badgeColor }}
+                      >
+                        {badge}
+                      </span>
+                    </div>
+                  </div>
+                  <h3
+                    className="font-bold text-gray-800 mb-1.5 text-base leading-snug"
+                    style={{ fontFamily: "Merriweather, serif" }}
+                  >
+                    {title}
+                  </h3>
+                  <p className="text-sm text-gray-500 leading-relaxed mb-4 flex-1">{description}</p>
+                  <div className="flex items-center gap-2 mt-auto">
+                    <Link href={path} className="flex-1">
+                      <button
+                        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90"
+                        style={{ background: BRAND }}
+                      >
+                        Go to Navigator <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    </Link>
+                    {scanCoachPath && (
+                      <Link href={scanCoachPath} className="flex-1">
+                        <button
+                          className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border transition-all hover:bg-[#189aa1]/5"
+                          style={{ borderColor: BRAND + "40", color: BRAND }}
+                        >
+                          Go to ScanCoach
+                        </button>
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
         {/* Premium section */}
-        <div className="mb-8">
+        <div>
           <div className="flex items-center gap-2 mb-4">
-            <Crown className="w-3.5 h-3.5 text-amber-500" />
-            <h2
-              className="text-base font-bold text-gray-700"
-              style={{ fontFamily: "Merriweather, serif" }}
-            >
-              Premium — Requires Membership
+            <Crown className="w-4 h-4 text-amber-500" />
+            <h2 className="text-base font-bold text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>
+              Premium — Available with Paid Membership
             </h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {modules
-              .filter((m) => !m.free)
-              .map((mod) => (
-                <ModuleCard
-                  key={mod.title}
-                  mod={mod}
-                  isPremium={isPremium}
-                  onUpgrade={() => setUpgradeModal({ title: mod.title })}
-                />
-              ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {specialties.filter(s => !s.free).map(({ path, scanCoachPath, icon: Icon, title, description, badge }) => {
+              const badgeColor = badgeColors[badge] ?? BRAND;
+              return (
+                <div
+                  key={path}
+                  className="bg-white rounded-xl border border-amber-100 p-5 h-full hover:shadow-md transition-all hover:border-amber-300/50 flex flex-col relative"
+                  style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
+                >
+                  {/* Premium corner ribbon */}
+                  <div className="absolute top-3 right-3 flex items-center gap-1 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
+                    <Crown className="w-3 h-3 text-amber-500" />
+                    <span className="text-xs font-semibold text-amber-600">Premium</span>
+                  </div>
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: BRAND + "15" }}>
+                      <Icon className="w-5 h-5" style={{ color: BRAND }} />
+                    </div>
+                    <div className="w-24" /> {/* spacer for the absolute badge */}
+                  </div>
+                  <span
+                    className="text-xs font-semibold px-2 py-0.5 rounded-full self-start mb-2"
+                    style={{ background: badgeColor + "15", color: badgeColor }}
+                  >
+                    {badge}
+                  </span>
+                  <h3
+                    className="font-bold text-gray-800 mb-1.5 text-base leading-snug"
+                    style={{ fontFamily: "Merriweather, serif" }}
+                  >
+                    {title}
+                  </h3>
+                  <p className="text-sm text-gray-500 leading-relaxed mb-4 flex-1">{description}</p>
+                  <div className="flex items-center gap-2 mt-auto">
+                    {isPremium ? (
+                      <>
+                        <Link href={path} className="flex-1">
+                          <button
+                            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90"
+                            style={{ background: BRAND }}
+                          >
+                            Go to Navigator <ArrowRight className="w-3.5 h-3.5" />
+                          </button>
+                        </Link>
+                        {scanCoachPath && (
+                          <Link href={scanCoachPath} className="flex-1">
+                            <button
+                              className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border transition-all hover:bg-[#189aa1]/5"
+                              style={{ borderColor: BRAND + "40", color: BRAND }}
+                            >
+                              Go to ScanCoach
+                            </button>
+                          </Link>
+                        )}
+                      </>
+                    ) : (
+                      <button
+                        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90"
+                        style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}
+                        onClick={() => setUpgradeModal({ title })}
+                      >
+                        <Crown className="w-3.5 h-3.5" /> Upgrade to Unlock
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        </div>
 
-        {/* Upgrade CTA — only shown to free users */}
-        {!isPremium && (
-          <div
-            className="mt-2 rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4"
-            style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}
-          >
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <Lock className="w-4 h-4 text-amber-300" />
-                <span className="text-xs font-semibold text-amber-300 uppercase tracking-wider">
-                  Premium Access
-                </span>
+          {/* Upgrade CTA — only shown to free users */}
+          {!isPremium && (
+            <div
+              className="mt-6 rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4"
+              style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}
+            >
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <Lock className="w-4 h-4 text-amber-300" />
+                  <span className="text-xs font-semibold text-amber-300 uppercase tracking-wider">Premium Access</span>
+                </div>
+                <h3
+                  className="text-white font-bold text-base mb-1"
+                  style={{ fontFamily: "Merriweather, serif" }}
+                >
+                  Unlock RUSH Protocol &amp; Lung POCUS
+                </h3>
+                <p className="text-white/60 text-sm">
+                  Full RUSH shock assessment, 8-zone lung protocol, BLUE protocol, and all future premium POCUS content.
+                </p>
               </div>
-              <h3
-                className="text-white font-bold text-base mb-1"
-                style={{ fontFamily: "Merriweather, serif" }}
-              >
-                Unlock RUSH &amp; Lung POCUS
-              </h3>
-              <p className="text-white/60 text-sm">
-                RUSH shock protocol, Lung POCUS with BLUE protocol, plus all EchoAssist™ premium
-                specialties.
-              </p>
+              <Link href="/premium" className="flex-shrink-0">
+                <button
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
+                  style={{ background: "#189aa1" }}
+                >
+                  <Crown className="w-4 h-4" />
+                  Upgrade Membership
+                </button>
+              </Link>
             </div>
-            <Link href="/premium" className="flex-shrink-0">
-              <button
-                className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
-                style={{ background: "#189aa1" }}
-              >
-                <Crown className="w-4 h-4" />
-                Upgrade Membership
-              </button>
-            </Link>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* ── Upgrade Modal ────────────────────────────────────────────────────── */}
+      {/* Upgrade modal */}
       {upgradeModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -263,23 +314,15 @@ export default function POCUSAssistHub() {
         >
           <div
             className="bg-white rounded-2xl p-6 max-w-sm w-full text-center space-y-4 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             <div className="flex justify-center">
-              <div
-                className="w-16 h-16 rounded-full flex items-center justify-center"
-                style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}
-              >
+              <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}>
                 <Crown className="w-8 h-8 text-white" />
               </div>
             </div>
             <div>
-              <h3
-                className="text-lg font-bold text-gray-900"
-                style={{ fontFamily: "Merriweather, serif" }}
-              >
-                Premium Feature
-              </h3>
+              <h3 className="text-lg font-bold text-gray-900" style={{ fontFamily: "Merriweather, serif" }}>Premium Feature</h3>
               <p className="text-sm text-gray-500 mt-1">
                 <strong>{upgradeModal.title}</strong> requires a Premium membership.
               </p>
@@ -304,108 +347,5 @@ export default function POCUSAssistHub() {
         </div>
       )}
     </Layout>
-  );
-}
-
-// ── Module Card ──────────────────────────────────────────────────────────────
-function ModuleCard({
-  mod,
-  isPremium,
-  onUpgrade,
-}: {
-  mod: Module;
-  isPremium: boolean;
-  onUpgrade: () => void;
-}) {
-  const { navigatorPath, scanCoachPath, icon: Icon, title, subtitle, description, badge, badgeColor, free, views, highlights } = mod;
-  const canAccess = free || isPremium;
-
-  return (
-    <div
-      className="bg-white rounded-xl border border-gray-100 p-5 flex flex-col gap-4 transition-all hover:shadow-md"
-      style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
-    >
-      {/* Header */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <div
-            className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: badgeColor + "18" }}
-          >
-            <Icon className="w-5 h-5" style={{ color: badgeColor }} />
-          </div>
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3
-                className="font-bold text-gray-900 text-base leading-tight"
-                style={{ fontFamily: "Merriweather, serif" }}
-              >
-                {title}
-              </h3>
-              {!free && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">
-                  <Crown className="w-2.5 h-2.5" /> Premium
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>
-          </div>
-        </div>
-        <div className="flex flex-col items-end gap-1 flex-shrink-0">
-          <span
-            className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-            style={{ background: badgeColor + "15", color: badgeColor }}
-          >
-            {badge}
-          </span>
-          <span className="text-[10px] text-gray-400">{views} views</span>
-        </div>
-      </div>
-
-      {/* Description */}
-      <p className="text-xs text-gray-600 leading-relaxed">{description}</p>
-
-      {/* Highlights */}
-      <ul className="space-y-1">
-        {highlights.map((h) => (
-          <li key={h} className="flex items-start gap-2 text-xs text-gray-600">
-            <Activity className="w-3 h-3 mt-0.5 flex-shrink-0" style={{ color: badgeColor }} />
-            {h}
-          </li>
-        ))}
-      </ul>
-
-      {/* Action buttons */}
-      <div className="flex gap-2 mt-auto pt-1">
-        {canAccess ? (
-          <>
-            <Link href={navigatorPath} className="flex-1">
-              <button
-                className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90"
-                style={{ background: BRAND }}
-              >
-                Navigator <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </Link>
-            <Link href={scanCoachPath} className="flex-1">
-              <button
-                className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border transition-all hover:bg-[#189aa1]/5"
-                style={{ borderColor: BRAND + "40", color: BRAND }}
-              >
-                ScanCoach
-              </button>
-            </Link>
-          </>
-        ) : (
-          <button
-            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90"
-            style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}
-            onClick={onUpgrade}
-          >
-            <Crown className="w-3.5 h-3.5" /> Upgrade to Unlock
-          </button>
-        )}
-      </div>
-    </div>
   );
 }

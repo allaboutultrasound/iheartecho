@@ -1589,6 +1589,256 @@ function PulmonaryHTNEngine() {
   );
 }
 
+// ─── POCUS-ASSIST ENGINE ────────────────────────────────────────────────────
+/**
+ * Three POCUS calculators bundled into one EngineSection:
+ *   1. IVC Collapsibility Index (IVC CI) — volume status / RAP estimation
+ *   2. B-Line Scorer — interstitial syndrome / pulmonary oedema grading
+ *   3. eFAST Free-Fluid Grader — trauma free-fluid severity
+ */
+function POCUSAssistEngine() {
+  // ── IVC CI ──────────────────────────────────────────────────────────────────
+  const [ivcMax, setIvcMax] = useState("");
+  const [ivcMin, setIvcMin] = useState("");
+  const [ivcDiam, setIvcDiam] = useState("");
+  const [ivcCollapse, setIvcCollapse] = useState<"normal" | "blunted" | "">("" );
+
+  const hasP = (v: string) => v !== "" && !isNaN(Number(v));
+  const nP = (v: string) => Number(v);
+
+  const ivcCI = hasP(ivcMax) && hasP(ivcMin) && nP(ivcMax) > 0
+    ? Math.round(((nP(ivcMax) - nP(ivcMin)) / nP(ivcMax)) * 100)
+    : null;
+
+  const rapFromIVC = (): number | null => {
+    if (!hasP(ivcDiam)) return null;
+    const d = nP(ivcDiam);
+    if (d <= 21 && ivcCollapse === "normal") return 3;
+    if (d <= 21 && ivcCollapse === "blunted") return 8;
+    if (d > 21 && ivcCollapse === "normal") return 8;
+    if (d > 21 && ivcCollapse === "blunted") return 15;
+    return null;
+  };
+  const rap = rapFromIVC();
+
+  type IVCResult = { sev: Severity; label: string; criteria: string[]; note?: string };
+  const ivcResult = (): IVCResult | null => {
+    const criteria: string[] = [];
+    if (ivcCI !== null) criteria.push(`IVC CI = ${ivcCI}% (nl ≥ 50%)`);
+    if (rap !== null) criteria.push(`Estimated RAP = ${rap} mmHg`);
+    if (!criteria.length) return null;
+    if (ivcCI !== null) {
+      if (ivcCI >= 50) return { sev: "normal", label: "Normal IVC Collapsibility", criteria, note: "IVC CI ≥ 50% with IVC ≤ 21 mm suggests low RAP (~3 mmHg) and adequate preload." };
+      if (ivcCI >= 30) return { sev: "mild", label: "Mildly Reduced Collapsibility", criteria, note: "IVC CI 30–49% suggests borderline elevated RAP (~8 mmHg). Correlate with clinical picture." };
+      return { sev: "severe", label: "Markedly Reduced Collapsibility", criteria, note: "IVC CI < 30% with dilated IVC (>21 mm) suggests elevated RAP (≥15 mmHg). Consider diuresis." };
+    }
+    return { sev: "info", label: "RAP Estimate from IVC", criteria };
+  };
+
+  // ── B-Line Scorer ────────────────────────────────────────────────────────────
+  const [bZones, setBZones] = useState<string[]>(Array(8).fill(""));
+  const setBZone = (i: number, v: string) => {
+    const updated = [...bZones];
+    updated[i] = v;
+    setBZones(updated);
+  };
+  const totalBLines = bZones.reduce((sum, v) => sum + (hasP(v) ? nP(v) : 0), 0);
+  const filledZones = bZones.filter(v => hasP(v)).length;
+
+  type BLineResult = { sev: Severity; label: string; criteria: string[]; note?: string };
+  const bLineResult = (): BLineResult | null => {
+    if (filledZones === 0) return null;
+    const criteria = [`Total B-lines across ${filledZones} zone(s) = ${totalBLines}`];
+    if (totalBLines <= 5) return { sev: "normal", label: "Normal / No Interstitial Syndrome", criteria, note: "≤5 total B-lines across 8 zones is within normal limits." };
+    if (totalBLines <= 15) return { sev: "mild", label: "Mild Interstitial Syndrome", criteria, note: "6–15 B-lines suggests mild interstitial oedema or early pulmonary congestion." };
+    if (totalBLines <= 30) return { sev: "moderate", label: "Moderate Interstitial Syndrome", criteria, note: "16–30 B-lines indicates moderate interstitial oedema. Consider diuresis." };
+    return { sev: "severe", label: "Severe Interstitial Syndrome / Pulmonary Oedema", criteria, note: ">30 B-lines is consistent with severe pulmonary oedema. Urgent management indicated." };
+  };
+
+  // ── eFAST Free-Fluid Grader ──────────────────────────────────────────────────
+  const [efastWindows, setEfastWindows] = useState({
+    ruq: false, luq: false, pelvis: false,
+    subxiphoid: false, rightThorax: false, leftThorax: false,
+  });
+  const toggleEfast = (key: keyof typeof efastWindows) =>
+    setEfastWindows(prev => ({ ...prev, [key]: !prev[key] }));
+
+  const positiveWindows = Object.values(efastWindows).filter(Boolean).length;
+  const hasPneumo = efastWindows.rightThorax || efastWindows.leftThorax;
+  const hasCardiac = efastWindows.subxiphoid;
+  const hasFreeFluid = efastWindows.ruq || efastWindows.luq || efastWindows.pelvis;
+
+  type EfastResult = { sev: Severity; label: string; criteria: string[]; note?: string; tip?: string };
+  const efastResult = (): EfastResult | null => {
+    if (positiveWindows === 0) return null;
+    const criteria: string[] = [];
+    if (efastWindows.ruq) criteria.push("RUQ (Morison's pouch): free fluid present");
+    if (efastWindows.luq) criteria.push("LUQ (splenorenal): free fluid present");
+    if (efastWindows.pelvis) criteria.push("Pelvis (pouch of Douglas / rectovesical): free fluid present");
+    if (efastWindows.subxiphoid) criteria.push("Subxiphoid: pericardial effusion / haemopericardium");
+    if (efastWindows.rightThorax) criteria.push("Right thorax: absent lung sliding / pneumothorax");
+    if (efastWindows.leftThorax) criteria.push("Left thorax: absent lung sliding / pneumothorax");
+
+    if (hasCardiac && hasFreeFluid) return {
+      sev: "critical", label: "Critical — Haemopericardium + Haemoperitoneum",
+      criteria,
+      note: "EchoAssist™ Note: Concurrent pericardial and peritoneal free fluid in a trauma patient is critical. Immediate surgical consultation and resuscitation are indicated.",
+      tip: "EchoAssist™ Tip: Subxiphoid view is the fastest cardiac window in trauma. Even a small effusion with haemodynamic instability may indicate tamponade.",
+    };
+    if (hasCardiac) return {
+      sev: "severe", label: "Haemopericardium / Pericardial Effusion",
+      criteria,
+      note: "EchoAssist™ Note: Pericardial free fluid in trauma should be presumed haemopericardium. Assess for tamponade physiology (RV collapse, IVC plethora).",
+    };
+    if (hasPneumo && hasFreeFluid) return {
+      sev: "severe", label: "Haemoperitoneum + Pneumothorax",
+      criteria,
+      note: "EchoAssist™ Note: Combined haemoperitoneum and pneumothorax indicates significant thoracoabdominal trauma. Prioritise airway and haemorrhage control.",
+    };
+    if (hasPneumo) return {
+      sev: "moderate", label: "Pneumothorax Suspected",
+      criteria,
+      note: "EchoAssist™ Note: Absent lung sliding is the primary sign of pneumothorax. Confirm with lung point identification.",
+      tip: "EchoAssist™ Tip: The lung point (transition between sliding and non-sliding) is pathognomonic for pneumothorax.",
+    };
+    if (positiveWindows >= 2) return {
+      sev: "severe", label: "Significant Haemoperitoneum (≥2 windows)",
+      criteria,
+      note: "EchoAssist™ Note: Free fluid in ≥2 abdominal windows indicates significant haemoperitoneum. Immediate surgical consultation required.",
+    };
+    return {
+      sev: "mild", label: "Free Fluid in 1 Window",
+      criteria,
+      note: "EchoAssist™ Note: Free fluid in a single window may represent small haemoperitoneum. Correlate with mechanism of injury and haemodynamic status.",
+      tip: "EchoAssist™ Tip: The RUQ (Morison's pouch) is the most sensitive window. Even a small sliver of fluid between liver and kidney is a positive eFAST.",
+    };
+  };
+
+  const ivcRes = ivcResult();
+  const bLineRes = bLineResult();
+  const efastRes = efastResult();
+
+  return (
+    <EngineSection
+      id="engine-pocus"
+      title="POCUS-Assist™"
+      subtitle="IVC Collapsibility Index · B-Line Scorer · eFAST Free-Fluid Grader"
+    >
+      <div className="space-y-8">
+        {/* IVC CI */}
+        <div>
+          <h4 className="font-bold text-sm text-gray-700 mb-3 flex items-center gap-2" style={{ fontFamily: "Merriweather, serif" }}>
+            <span className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-bold" style={{ background: "#189aa1" }}>1</span>
+            IVC Collapsibility Index (IVC CI)
+          </h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
+            <NumInput label="IVC Max Diameter (expiration)" value={ivcMax} onChange={setIvcMax} unit="mm" placeholder="nl ≤21" />
+            <NumInput label="IVC Min Diameter (inspiration)" value={ivcMin} onChange={setIvcMin} unit="mm" placeholder="sniff" />
+          </div>
+          {ivcCI !== null && (
+            <div className="text-sm font-mono text-[#189aa1] font-bold mb-2">
+              IVC CI = {ivcCI}% {ivcCI >= 50 ? "✓ Normal" : ivcCI >= 30 ? "↓ Borderline" : "↓↓ Reduced"}
+            </div>
+          )}
+          <div className="mb-3">
+            <NumInput label="IVC Diameter (single measurement)" value={ivcDiam} onChange={setIvcDiam} unit="mm" placeholder="nl ≤21" hint="for RAP estimate" />
+          </div>
+          <div className="mb-3">
+            <label className="block text-xs font-semibold text-gray-600 mb-1">IVC Collapse with Sniff</label>
+            <div className="flex gap-2">
+              {(["normal", "blunted"] as const).map(opt => (
+                <button
+                  key={opt}
+                  onClick={() => setIvcCollapse(ivcCollapse === opt ? "" : opt)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all"
+                  style={ivcCollapse === opt
+                    ? { background: "#189aa1", color: "white", borderColor: "#189aa1" }
+                    : { background: "white", color: "#374151", borderColor: "#d1d5db" }}
+                >
+                  {opt === "normal" ? ">50% (Normal)" : "<50% (Blunted)"}
+                </button>
+              ))}
+            </div>
+          </div>
+          {ivcRes && <ResultCard severity={ivcRes.sev} title="IVC Assessment" value={ivcRes.label} criteria={ivcRes.criteria} note={ivcRes.note} />}
+          {!ivcRes && <p className="text-xs text-gray-400 italic">Enter IVC max/min diameters to calculate collapsibility index and estimate RAP.</p>}
+        </div>
+
+        <div className="border-t border-gray-100" />
+
+        {/* B-Line Scorer */}
+        <div>
+          <h4 className="font-bold text-sm text-gray-700 mb-1 flex items-center gap-2" style={{ fontFamily: "Merriweather, serif" }}>
+            <span className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-bold" style={{ background: "#189aa1" }}>2</span>
+            B-Line Scorer (8-Zone Protocol)
+          </h4>
+          <p className="text-xs text-gray-500 mb-3">Enter the number of B-lines counted in each zone (0 = none). Zones: Right/Left anterior upper/lower, Right/Left lateral upper/lower.</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+            {["R Ant Upper", "R Ant Lower", "L Ant Upper", "L Ant Lower", "R Lat Upper", "R Lat Lower", "L Lat Upper", "L Lat Lower"].map((zone, i) => (
+              <NumInput key={zone} label={zone} value={bZones[i]} onChange={v => setBZone(i, v)} placeholder="0" />
+            ))}
+          </div>
+          {filledZones > 0 && (
+            <div className="text-sm font-mono text-[#189aa1] font-bold mb-2">
+              Total B-lines: {totalBLines} across {filledZones} zone(s)
+            </div>
+          )}
+          {bLineRes && <ResultCard severity={bLineRes.sev} title="B-Line Assessment" value={bLineRes.label} criteria={bLineRes.criteria} note={bLineRes.note} />}
+          {!bLineRes && <p className="text-xs text-gray-400 italic">Enter B-line counts per zone to grade interstitial syndrome severity.</p>}
+        </div>
+
+        <div className="border-t border-gray-100" />
+
+        {/* eFAST Free-Fluid Grader */}
+        <div>
+          <h4 className="font-bold text-sm text-gray-700 mb-1 flex items-center gap-2" style={{ fontFamily: "Merriweather, serif" }}>
+            <span className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-bold" style={{ background: "#189aa1" }}>3</span>
+            eFAST Free-Fluid Grader
+          </h4>
+          <p className="text-xs text-gray-500 mb-3">Select all windows with positive findings (free fluid, pericardial effusion, or absent lung sliding).</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
+            {([
+              { key: "ruq", label: "RUQ (Morison's Pouch)" },
+              { key: "luq", label: "LUQ (Splenorenal)" },
+              { key: "pelvis", label: "Pelvis / Pouch of Douglas" },
+              { key: "subxiphoid", label: "Subxiphoid (Cardiac)" },
+              { key: "rightThorax", label: "Right Thorax" },
+              { key: "leftThorax", label: "Left Thorax" },
+            ] as { key: keyof typeof efastWindows; label: string }[]).map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => toggleEfast(key)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold border transition-all text-left"
+                style={efastWindows[key]
+                  ? { background: "#fef2f2", color: "#991b1b", borderColor: "#fca5a5" }
+                  : { background: "white", color: "#374151", borderColor: "#d1d5db" }}
+              >
+                <span className={`w-3 h-3 rounded-full flex-shrink-0 ${efastWindows[key] ? "bg-red-500" : "bg-gray-200"}`} />
+                {label}
+              </button>
+            ))}
+          </div>
+          {efastRes && (
+            <>
+              <ResultCard severity={efastRes.sev} title="eFAST Assessment" value={efastRes.label} criteria={efastRes.criteria} note={efastRes.note} />
+              {efastRes.tip && (
+                <div className="flex items-start gap-3 px-4 py-3 bg-white border border-[#189aa1]/20 rounded-xl mt-2">
+                  <Lightbulb className="w-4 h-4 text-[#189aa1] flex-shrink-0 mt-0.5" />
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#189aa1] block mb-0.5">EchoAssist™ Tip</span>
+                    <p className="text-sm text-gray-600 leading-snug">{efastRes.tip}</p>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+          {positiveWindows === 0 && <p className="text-xs text-gray-400 italic">Select positive eFAST windows to grade free-fluid severity and get clinical guidance.</p>}
+        </div>
+      </div>
+    </EngineSection>
+  );
+}
+
 // ─── FRANK-STARLING ENGINE ───────────────────────────────────────────────────
 function FrankStarlingEngine() {
   const [open, setOpen] = useState(false);
@@ -2201,6 +2451,7 @@ export default function EchoAssist() {
           <RVFunctionEngine />
           <PulmonaryHTNEngine />
           <FrankStarlingEngine />
+          <POCUSAssistEngine />
         </div>
 
         {/* Footer */}

@@ -9,7 +9,7 @@ import Layout from "@/components/Layout";
 import { trpc } from "@/lib/trpc";
 import {
   Calculator, ClipboardList, Activity, BookOpen, FileText,
-  ArrowRight, Users, Award, Zap, Stethoscope, ExternalLink, MessageCircle, GraduationCap, BookMarked, Crown
+  ArrowRight, Users, Award, Zap, Stethoscope, ExternalLink, MessageCircle, GraduationCap, BookMarked, Crown, Shield
 } from "lucide-react";
 
 const BRAND = "#189aa1";
@@ -24,6 +24,14 @@ const modules: Module[] = [
     title: "EchoAssist™",
     description: "Echo protocol + scan coach for all 11 specialties — Adult Echo, Pediatric, Fetal, Stress, Strain, UEA, HOCM, Pulmonary HTN & PE, Structural Heart, TEE, and ICE. View-by-view checklists, reference values, and probe guidance.",
     badge: "11 Specialties",
+    color: BRAND,
+  },
+  {
+    path: "/pocus-assist-hub",
+    icon: Shield,
+    title: "POCUS-Assist™",
+    description: "Point-of-care ultrasound protocols for eFAST, Cardiac POCUS, RUSH, and Lung POCUS — window-by-window checklists, probe guidance, IVC CI, B-line scorer, and eFAST free-fluid grader.",
+    badge: "4 Modules",
     color: BRAND,
   },
   {

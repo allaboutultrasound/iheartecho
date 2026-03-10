@@ -1884,3 +1884,10 @@
 
 ## Quality Review Submission Bug Fix (Mar 10 2026)
 - [x] Fix quality review form submission — added 46 missing columns to imageQualityReviews DB schema (db:push) and added all missing fields to iqr.create tRPC router schema so all IQR form fields are accepted and stored correctly
+
+## POCUS-Assist™ Enhancement (Phase 2) - Mar 10 2026
+
+- [x] Redesign POCUS-Assist Hub to exactly mirror EchoAssist Hub layout (free/premium sections, per-module cards with Navigator+ScanCoach buttons)
+- [x] Add POCUS-Assist engine to EchoAssist page (IVC CI, B-line scorer, eFAST free-fluid grader)
+- [x] Verify image upload enabled on all 4 POCUS ScanCoach pages (via useScanCoachOverrides + mergeView)
+- [x] Add single POCUS-Assist™ card to Home dashboard (links to Hub)
