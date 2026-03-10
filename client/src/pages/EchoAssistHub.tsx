@@ -11,7 +11,7 @@ import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import {
   Stethoscope, Microscope, Zap, Users, Baby, Heart,
-  Cpu, BarChart3, ArrowRight, Droplets, Activity, Wind, Crown, Lock
+  Cpu, BarChart3, ArrowRight, Droplets, Activity, Wind, Crown, Lock, Shield
 } from "lucide-react";
 import { usePremium } from "@/hooks/usePremium";
 
@@ -288,6 +288,62 @@ export default function EchoAssistHub() {
             </Link>
           </div>
           )}
+        </div>
+
+        {/* ── POCUS-Assist™ Cross-Promotion ──────────────────────────────── */}
+        <div
+          className="mt-8 rounded-xl p-5 border"
+          style={{ borderColor: "#189aa1" + "40", background: "#f0fbfc" }}
+        >
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="flex-shrink-0">
+              <div
+                className="w-14 h-14 rounded-xl flex items-center justify-center"
+                style={{ background: "linear-gradient(135deg, #0e1e2e, #189aa1)" }}
+              >
+                <Shield className="w-7 h-7 text-[#4ad9e0]" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span
+                  className="text-xs font-semibold uppercase tracking-wider"
+                  style={{ color: "#189aa1" }}
+                >
+                  Also in iHeartEcho
+                </span>
+              </div>
+              <h3
+                className="font-bold text-gray-900 text-base mb-1"
+                style={{ fontFamily: "Merriweather, serif" }}
+              >
+                POCUS-Assist™
+              </h3>
+              <p className="text-sm text-gray-500 mb-3">
+                Point-of-care ultrasound protocols for eFAST, RUSH, Cardiac POCUS, and Lung POCUS — each with a Navigator, ScanCoach, and guideline-based engine calculators including IVC Collapsibility Index, 8-Zone B-Line Scorer, and eFAST Free-Fluid Grader.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Link href="/pocus-assist-hub">
+                  <button
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
+                    style={{ background: "#189aa1" }}
+                  >
+                    <Shield className="w-3.5 h-3.5" />
+                    Open POCUS-Assist™ Hub
+                  </button>
+                </Link>
+                <Link href="/echoassist#engine-pocus">
+                  <button
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm border bg-white transition-all hover:bg-[#189aa1]/5"
+                    style={{ borderColor: "#189aa1" + "50", color: "#189aa1" }}
+                  >
+                    <Droplets className="w-3.5 h-3.5" />
+                    POCUS Engine Calculators
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

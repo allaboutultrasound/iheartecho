@@ -1894,6 +1894,10 @@
 
 
 
+## POCUS-Assist™ Cross-Promotion Card (Mar 10 2026)
+
+- [x] Add POCUS-Assist™ cross-promotion card to EchoAssist™ Hub page
+
 ## POCUS-Assist™ Calculator Links (Mar 10 2026)
 
 - [x] Add POCUS-Assist engine calculator quick-access banner to eFAST Navigator (IVC CI + eFAST grader)
