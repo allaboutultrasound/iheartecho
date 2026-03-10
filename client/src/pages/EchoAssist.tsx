@@ -775,249 +775,185 @@ function LVSystolicEngine() {
 //   Exclusions: AF, MAC, MR, MS, LVAD, non-cardiac PH, HTX, pericardial constriction
 
 function DiastolicEngine() {
-  const [eVel, setEVel] = useState("");
-  const [aVel, setAVel] = useState("");
+  // Step 1 inputs
   const [ePrimeSep, setEPrimeSep] = useState("");
   const [ePrimeLat, setEPrimeLat] = useState("");
-  const [trVmax, setTrVmax] = useState("");
-  const [lavi, setLavi] = useState("");
+  // Step 2 inputs
+  const [eVel, setEVel] = useState("");
+  const [aVel, setAVel] = useState("");
   const [lars, setLars] = useState("");
-  const [pvSD, setPvSD] = useState("");
-  const [ivrt, setIvrt] = useState("");
-  const [ddt, setDdt] = useState("");
-  const [exclusion, setExclusion] = useState(false);
+  const [lavi, setLavi] = useState("");
 
-  // Derived values
-  const eaRatio = has(eVel, aVel) ? n(eVel) / n(aVel) : null;
-  const ePrimeSepVal = has(ePrimeSep) ? n(ePrimeSep) : null;
-  const ePrimeLatVal = has(ePrimeLat) ? n(ePrimeLat) : null;
-  const ePrimeAvg = ePrimeSepVal !== null && ePrimeLatVal !== null
-    ? (ePrimeSepVal + ePrimeLatVal) / 2
-    : ePrimeSepVal ?? ePrimeLatVal;
-  const eeRatio = has(eVel) && ePrimeAvg !== null ? n(eVel) * 100 / ePrimeAvg : null;
-  const rvsp = has(trVmax) ? 4 * Math.pow(n(trVmax), 2) : null;
+  // ── Derived values ──────────────────────────────────────────────────────────
+  const epSeptalVal = has(ePrimeSep) ? n(ePrimeSep) : null;
+  const epLateralVal = has(ePrimeLat) ? n(ePrimeLat) : null;
+  const avgEp = epSeptalVal !== null && epLateralVal !== null
+    ? (epSeptalVal + epLateralVal) / 2
+    : epSeptalVal ?? epLateralVal;
+  const eVal = has(eVel) ? n(eVel) : null;
+  const aVal = has(aVel) ? n(aVel) : null;
+  const eaRatio = eVal !== null && aVal !== null ? eVal / aVal : null;
+  const eeRatio = eVal !== null && avgEp !== null ? eVal / avgEp : null;
+  const larsVal = has(lars) ? n(lars) : null;
+  const laviVal = has(lavi) ? n(lavi) : null;
 
-  // ── Step 1: Is e' reduced? ──────────────────────────────────────────────────
-  // Reduced if septal ≤6 OR lateral ≤7 OR average ≤6.5
-  const ePrimeReduced =
-    (ePrimeSepVal !== null && ePrimeSepVal <= 6) ||
-    (ePrimeLatVal !== null && ePrimeLatVal <= 7) ||
-    (ePrimeAvg !== null && ePrimeAvg <= 6.5);
-  const ePrimeEntered = ePrimeSepVal !== null || ePrimeLatVal !== null;
+  // ── Step 1: e' reduced? ──────────────────────────────────────────────────────
+  const septalReduced = epSeptalVal !== null && epSeptalVal <= 6;
+  const lateralReduced = epLateralVal !== null && epLateralVal <= 7;
+  const avgReduced = epSeptalVal !== null && epLateralVal !== null && avgEp !== null && avgEp <= 6.5;
+  const eReduced = septalReduced || lateralReduced || avgReduced;
+  const hasStep1 = epSeptalVal !== null || epLateralVal !== null;
 
-  // ── Step 2 criteria (DD detection algorithm) ────────────────────────────────
-  const eeAbove14 = eeRatio !== null && eeRatio > 14;
-  const larsAbnDD = has(lars) && n(lars) <= 18;
-  const eaAbnDD = eaRatio !== null && (eaRatio <= 0.8 || eaRatio >= 2);
-  const laviAbnDD = has(lavi) && n(lavi) > 34;
-  const step2Positive = [eeAbove14, larsAbnDD, eaAbnDD, laviAbnDD].filter(Boolean).length;
+  // ── Step 2: Count abnormal markers ──────────────────────────────────────────
+  // E/e' avg >14 | LARS ≤18% | E/A ≤0.8 or ≥2 | LAVI >34 mL/m²
+  const eeAbnormal = eeRatio !== null && eeRatio > 14;
+  const larsAbnormal = larsVal !== null && larsVal <= 18;
+  const eaAbnormal = eaRatio !== null && (eaRatio <= 0.8 || eaRatio >= 2);
+  const laviAbnormal = laviVal !== null && laviVal > 34;
+  const step2Entered = [
+    eeRatio !== null ? eeAbnormal : null,
+    larsVal !== null ? larsAbnormal : null,
+    eaRatio !== null ? eaAbnormal : null,
+    laviVal !== null ? laviAbnormal : null,
+  ].filter(v => v !== null) as boolean[];
+  const step2Count = step2Entered.filter(Boolean).length;
+  const step2Total = step2Entered.length;
+  const hasStep2 = step2Total > 0;
 
-  // ── Grading algorithm variables ─────────────────────────────────────────────
-  // Variable 1: e' reduced (same as Step 1)
-  // Variable 2: E/e' elevated (septal ≥15 OR lateral ≥13 OR average ≥14)
-  const eeElevated =
-    (ePrimeSepVal !== null && has(eVel) && (n(eVel) * 100 / ePrimeSepVal) >= 15) ||
-    (ePrimeLatVal !== null && has(eVel) && (n(eVel) * 100 / ePrimeLatVal) >= 13) ||
-    (eeRatio !== null && eeRatio >= 14);
-  // Variable 3: TR ≥2.8 m/s OR PASP ≥35 mmHg
-  const trAbn = (has(trVmax) && n(trVmax) >= 2.8) || (rvsp !== null && rvsp >= 35);
+  // ── Final interpretation ─────────────────────────────────────────────────────
+  let grade = "";
+  let gradeColor = "#189aa1";
+  let gradeNote = "";
+  let ddPresent: boolean | null = null;
 
-  const gradingVarsAbn = [ePrimeReduced && ePrimeEntered, eeElevated, trAbn].filter(Boolean).length;
+  if (hasStep1 && hasStep2) {
+    if (eReduced) {
+      if (step2Count >= 1) {
+        ddPresent = true;
+        if (eaRatio !== null && eaRatio >= 2) {
+          grade = "Diastolic Dysfunction — Grade III (Restrictive)";
+          gradeColor = "#dc2626";
+          gradeNote = "Reduced e' + ≥1 Step 2 marker + E/A ≥2 → Grade III restrictive filling pattern.";
+        } else {
+          grade = "Diastolic Dysfunction — Grade II";
+          gradeColor = "#f97316";
+          gradeNote = "Reduced e' + ≥1 Step 2 marker → Diastolic dysfunction with elevated filling pressures.";
+        }
+      } else {
+        ddPresent = true;
+        grade = "Diastolic Dysfunction — Grade I";
+        gradeColor = "#eab308";
+        gradeNote = "Reduced e' + no Step 2 markers elevated → Grade I, normal filling pressures.";
+      }
+    } else {
+      if (step2Count >= 2) {
+        ddPresent = true;
+        grade = "Diastolic Dysfunction (Preserved e')";
+        gradeColor = "#f97316";
+        gradeNote = "Preserved e' + ≥2 Step 2 markers abnormal → Diastolic dysfunction present.";
+      } else if (step2Count === 1) {
+        ddPresent = null;
+        grade = "Indeterminate — enter more parameters";
+        gradeColor = "#6b7280";
+        gradeNote = "Preserved e' + 1 Step 2 marker abnormal — insufficient to classify. Enter more parameters.";
+      } else {
+        ddPresent = false;
+        grade = "Normal Diastolic Function";
+        gradeColor = "#15803d";
+        gradeNote = "Preserved e' + no Step 2 markers elevated → Normal diastolic function.";
+      }
+    }
+  } else if (!hasStep1 && hasStep2) {
+    if (step2Count >= 2) {
+      grade = "≥2 Step 2 markers abnormal. Enter e' septal/lateral to complete Step 1.";
+      gradeColor = "#f97316";
+    } else {
+      grade = "Enter e' to classify";
+      gradeColor = "#6b7280";
+    }
+    gradeNote = "Enter e' septal and/or lateral to complete Step 1.";
+  }
 
-  // Secondary branch criteria (PV S/D, LARS, LAVI, IVRT)
-  const pvSDAbn = has(pvSD) && n(pvSD) <= 0.67;
-  const larsAbnGrade = has(lars) && n(lars) <= 18;
-  const laviAbnGrade = has(lavi) && n(lavi) > 34;
-  const ivrtAbn = has(ivrt) && n(ivrt) <= 70;
-  const secondaryPositive = [pvSDAbn, larsAbnGrade, laviAbnGrade, ivrtAbn].filter(Boolean).length;
-  const secondaryEntered = has(pvSD) || has(lars) || has(lavi) || has(ivrt);
+  const hasInput = hasStep1 || hasStep2;
 
   // ── Main grading logic ──────────────────────────────────────────────────────
-  const getGrade = (): { sev: Severity; label: string; lap: string; criteria: string[]; note?: string; ddDetected?: boolean | null } => {
-    const criteria: string[] = [];
-
-    // Populate criteria display
-    if (ePrimeEntered) {
-      const parts = [];
-      if (ePrimeSepVal !== null) parts.push(`septal ${ePrimeSepVal} cm/s${ePrimeSepVal <= 6 ? " ≤6 ✓" : ""}`);
-      if (ePrimeLatVal !== null) parts.push(`lateral ${ePrimeLatVal} cm/s${ePrimeLatVal <= 7 ? " ≤7 ✓" : ""}`);
-      if (ePrimeAvg !== null && ePrimeSepVal !== null && ePrimeLatVal !== null) parts.push(`avg ${ePrimeAvg.toFixed(1)} cm/s${ePrimeAvg <= 6.5 ? " ≤6.5 ✓" : ""}`);
-      criteria.push(`e' (${parts.join(", ")}) → ${ePrimeReduced ? "REDUCED (Step 1 positive)" : "Normal"}`);
-    }
-    if (eeRatio !== null) criteria.push(`E/e' avg = ${eeRatio.toFixed(1)}${eeElevated ? " → Elevated (≥14)" : " → Normal (<14)"}`);
-    if (has(trVmax)) criteria.push(`TR Vmax = ${trVmax} m/s${n(trVmax) >= 2.8 ? " → Abnormal (≥2.8)" : " → Normal (<2.8)"}${rvsp ? ` | RVSP ~${rvsp.toFixed(0)} mmHg` : ""}`);
-    if (has(lars)) criteria.push(`LARS = ${lars}%${larsAbnGrade ? " → Reduced (≤18%)" : " → Normal (>18%)"}`);
-    if (has(lavi)) criteria.push(`LAVI = ${lavi} mL/m²${laviAbnGrade ? " → Dilated (>34)" : " → Normal (≤34)"}`);
-    if (has(pvSD)) criteria.push(`PV S/D = ${pvSD}${pvSDAbn ? " → Abnormal (≤0.67)" : " → Normal (>0.67)"}`);
-    if (has(ivrt)) criteria.push(`IVRT = ${ivrt} ms${ivrtAbn ? " → Short (≤70 ms, elevated LAP)" : " → Normal (>70 ms)"}`);
-    if (eaRatio !== null) criteria.push(`E/A = ${eaRatio.toFixed(2)}${eaRatio < 0.8 ? " → ≤0.8 (Grade I pattern)" : eaRatio >= 2 ? " → ≥2 (restrictive)" : " → Normal (0.8–2)"}`);
-    if (has(ddt)) criteria.push(`E DT = ${ddt} ms${n(ddt) < 160 ? " → Short (restrictive)" : n(ddt) > 240 ? " → Prolonged (Grade I pattern)" : " → Normal"}`);
-
-    if (!ePrimeEntered && !has(trVmax) && !eeRatio && !has(lavi)) {
-      return { sev: "indeterminate", label: "Insufficient data", lap: "—", criteria: ["Enter e' (septal/lateral), E velocity, TR Vmax, and LAVI to apply ASE 2025 algorithms"] };
-    }
-
-    if (exclusion) {
-      return { sev: "indeterminate", label: "Algorithm not applicable", lap: "—", criteria: [...criteria, "⚠ Exclusion criterion present (AF, MAC, MR, MS, LVAD, non-cardiac PH, HTX, or pericardial constriction) — standard ASE 2025 grading algorithm is not reliable in this context."], note: "Use clinical judgment and supplementary methods. Consider invasive hemodynamic assessment if filling pressures are clinically relevant." };
-    }
-
-    // ── ALGORITHM 2: Grading & LAP ──────────────────────────────────────────
-    // All 3 variables normal
-    if (ePrimeEntered && !ePrimeReduced && !eeElevated && !trAbn) {
-      return { sev: "normal", label: "Normal Diastolic Function", lap: "Normal LAP", criteria, note: "All three grading variables are within normal limits. No evidence of elevated LV filling pressures.", ddDetected: false };
-    }
-
-    // Only e' reduced (Variable 1 only)
-    if (ePrimeEntered && ePrimeReduced && !eeElevated && !trAbn) {
-      if (eaRatio !== null && eaRatio <= 0.8) {
-        return { sev: "mild", label: "Grade I Diastolic Dysfunction", lap: "Normal LAP", criteria, note: "Reduced e' with E/A ≤0.8 and no other elevated filling pressure markers = Grade I, normal LVEDP.", ddDetected: true };
-      }
-      if (eaRatio !== null && eaRatio > 0.8) {
-        if (!secondaryEntered) {
-          return { sev: "indeterminate", label: "Grade I vs II — Secondary criteria needed", lap: "Indeterminate", criteria: [...criteria, "Enter PV S/D, LARS, LAVI, or IVRT to distinguish Grade I from Grade II"], ddDetected: null };
-        }
-        if (secondaryPositive === 0) {
-          return { sev: "mild", label: "Grade I Diastolic Dysfunction", lap: "Normal LAP", criteria, note: "Reduced e', E/A >0.8, but no secondary LAP markers present. Grade I — if symptomatic, consider Diastolic Exercise Echo.", ddDetected: true };
-        }
-        const ea = eaRatio;
-        if (ea !== null && ea >= 2) {
-          return { sev: "severe", label: "Grade III Diastolic Dysfunction", lap: "Increased LAP", criteria, note: `Reduced e', E/A ≥2, and ≥1 secondary LAP marker present (${secondaryPositive} of 4). Grade III — restrictive filling pattern with markedly elevated filling pressures.`, ddDetected: true };
-        }
-        return { sev: "moderate", label: "Grade II Diastolic Dysfunction", lap: "Increased LAP", criteria, note: `Reduced e', E/A >0.8, and ≥1 secondary LAP marker present (${secondaryPositive} of 4). Grade II — elevated filling pressures.`, ddDetected: true };
-      }
-    }
-
-    // 3 of 3 variables abnormal → Increased LAP directly
-    if (gradingVarsAbn === 3) {
-      if (eaRatio !== null && eaRatio >= 2) {
-        return { sev: "severe", label: "Grade III Diastolic Dysfunction", lap: "Increased LAP", criteria, note: "All 3 grading variables abnormal with E/A ≥2 = Grade III (restrictive, markedly elevated LAP).", ddDetected: true };
-      }
-      return { sev: "moderate", label: "Grade II Diastolic Dysfunction", lap: "Increased LAP", criteria, note: "All 3 grading variables abnormal with E/A <2 = Grade II, elevated LAP.", ddDetected: true };
-    }
-
-    // Increased TR/PASP only OR Increased E/e' only OR any 2 abnormal → secondary branch
-    if (gradingVarsAbn >= 1) {
-      if (!secondaryEntered) {
-        return { sev: "indeterminate", label: "LAP indeterminate — secondary criteria needed", lap: "Indeterminate", criteria: [...criteria, `${gradingVarsAbn} of 3 grading variable(s) abnormal. Enter PV S/D, LARS, LAVI, or IVRT to determine LAP.`], ddDetected: null };
-      }
-      if (secondaryPositive === 0) {
-        // No secondary markers → Normal LAP
-        if (ePrimeEntered && ePrimeReduced && eaRatio !== null && eaRatio <= 0.8) {
-          return { sev: "mild", label: "Grade I Diastolic Dysfunction", lap: "Normal LAP", criteria, note: "Reduced e' with E/A ≤0.8 and no secondary LAP markers. Grade I — if symptomatic, consider Diastolic Exercise Echo.", ddDetected: true };
-        }
-        return { sev: "mild", label: "Grade I Diastolic Dysfunction", lap: "Normal LAP", criteria, note: `${gradingVarsAbn} grading variable(s) abnormal but no secondary LAP markers (PV S/D, LARS, LAVI, IVRT) present. Grade I — if symptomatic, consider Diastolic Exercise Echo.`, ddDetected: true };
-      }
-      // ≥1 secondary marker → Increased LAP
-      if (eaRatio !== null && eaRatio >= 2) {
-        return { sev: "severe", label: "Grade III Diastolic Dysfunction", lap: "Increased LAP", criteria, note: `${gradingVarsAbn} grading variable(s) abnormal, ${secondaryPositive} secondary LAP marker(s) present, E/A ≥2 = Grade III (restrictive, markedly elevated LAP).`, ddDetected: true };
-      }
-      return { sev: "moderate", label: "Grade II Diastolic Dysfunction", lap: "Increased LAP", criteria, note: `${gradingVarsAbn} grading variable(s) abnormal, ${secondaryPositive} secondary LAP marker(s) present, E/A <2 = Grade II, elevated LAP.`, ddDetected: true };
-    }
-
-    return { sev: "indeterminate", label: "Indeterminate — enter more parameters", lap: "—", criteria, ddDetected: null };
-  };
-
-  // ── DD Detection (Algorithm 1) ──────────────────────────────────────────────
-  const getDDDetection = (): { detected: boolean | null; reason: string } => {
-    if (!ePrimeEntered) return { detected: null, reason: "Enter e' to assess Step 1" };
-    if (ePrimeReduced && step2Positive >= 1) return { detected: true, reason: `e' reduced + ${step2Positive} Step 2 criterion/criteria met` };
-    if (!ePrimeReduced && step2Positive >= 2) return { detected: true, reason: `e' preserved but ${step2Positive} Step 2 criteria met (≥2 required)` };
-    if (ePrimeReduced && step2Positive === 0) return { detected: false, reason: "e' reduced but no Step 2 criteria met — not DD by algorithm" };
-    if (!ePrimeReduced && step2Positive === 1) return { detected: false, reason: "e' preserved and only 1 Step 2 criterion met (need ≥2)" };
-    if (!ePrimeReduced && step2Positive === 0) return { detected: false, reason: "e' normal and no Step 2 criteria met" };
-    return { detected: null, reason: "Enter additional Step 2 parameters (E/e', LARS, E/A, LAVI)" };
-  };
-
-  const result = getGrade();
-  const ddResult = getDDDetection();
-
-  const getDiastEchoAssist = (): EchoAssistOutput | null => {
-    if (result.sev === "indeterminate" && result.label === "Insufficient data") return null;
-    if (result.sev === "normal") return {
-      suggests: `EchoAssist™ Suggests: Normal diastolic function. All ASE 2025 grading variables within normal limits. LAP is estimated to be normal. No evidence of diastolic dysfunction.${ePrimeAvg ? " Average e' " + ePrimeAvg.toFixed(1) + " cm/s." : ""}${eeRatio ? " E/e' " + eeRatio.toFixed(1) + "." : ""}`,
-      tip: "EchoAssist™ Tip: Ensure e' velocities are sampled at the septal and lateral mitral annulus using TDI with a low wall filter and high gain. Angle of incidence should be <20° for accurate velocity measurement."
-    };
-    if (result.label.includes("Grade I")) return {
-      suggests: `EchoAssist™ Suggests: Grade I diastolic dysfunction. e' is reduced.${eaRatio !== null ? " E/A " + eaRatio.toFixed(2) + "." : ""} LAP is estimated to be normal. LVEDP is not elevated at rest.`,
-      note: `EchoAssist™ Note: Grade I is common in aging and hypertension. Normal filling pressures at rest. ${result.lap === "Normal LAP" && eaRatio !== null && eaRatio > 0.8 ? "If symptomatic with unexplained dyspnea, consider Diastolic Exercise Echo — a rise in E/e' >14 or TR >2.8 m/s with exercise confirms exercise-induced elevated filling pressures." : ""}`,
-      tip: "EchoAssist™ Tip: Valsalva maneuver may show E/A reversal to <0.8, helping distinguish Grade I from Grade II. Obtain PV S/D and LARS if not yet done."
-    };
-    if (result.label.includes("Grade II")) return {
-      suggests: `EchoAssist™ Suggests: Grade II diastolic dysfunction. LAP is estimated to be elevated.${eeRatio ? " E/e' " + eeRatio.toFixed(1) + (eeElevated ? " (elevated ≥14)." : ".") : ""}${has(lars) ? " LARS " + lars + "%." : ""}${has(lavi) ? " LAVI " + lavi + " mL/m²." : ""} Mean LAP is elevated — consistent with HFpEF physiology.`,
-      note: "EchoAssist™ Note: Grade II is associated with increased risk of HF hospitalization and AF. Evaluate for underlying hypertension, diabetes, obesity, or HFpEF. Valsalva maneuver may show E/A reversal to <0.8.",
-      tip: "EchoAssist™ Tip: Confirm with PV S/D ≤0.67 (blunted systolic filling), LARS ≤18%, or IVRT ≤70 ms. These secondary markers strengthen the diagnosis of elevated LAP."
-    };
-    if (result.label.includes("Grade III")) return {
-      suggests: `EchoAssist™ Suggests: Grade III diastolic dysfunction (restrictive filling pattern). LAP is markedly elevated.${eaRatio !== null ? " E/A " + eaRatio.toFixed(2) + " (≥2.0 — restrictive)." : ""} This represents advanced diastolic impairment with significantly elevated LV filling pressures.`,
-      note: "EchoAssist™ Note: Grade III carries a poor prognosis and is associated with advanced HF, cardiac amyloidosis, and constrictive pericarditis. Assess reversibility with Valsalva — if E/A remains ≥2 (irreversible restriction), this indicates more advanced disease and higher mortality risk.",
-      tip: "EchoAssist™ Tip: In Grade III, IVRT is typically very short (<60 ms) and DT <160 ms. Cardiac amyloidosis should be excluded — check for apical-sparing strain pattern (RAS >1.0) and increased wall thickness."
-    };
-    if (result.label.includes("not applicable")) return {
-      suggests: "EchoAssist™ Suggests: Standard ASE 2025 diastolic grading algorithm is not applicable due to an exclusion criterion (AF, MAC, significant MR/MS, LVAD, non-cardiac PH, HTX, or pericardial constriction).",
-      note: "EchoAssist™ Note: In these conditions, standard E/e' thresholds and grading criteria are unreliable. Use clinical judgment, invasive hemodynamics, or condition-specific assessment protocols.",
-      tip: "EchoAssist™ Tip: In AF, use averaged measurements over ≥5 beats. In significant MR, E/e' overestimates filling pressures. In constrictive pericarditis, look for respiratory variation in E velocity and annulus reversus (lateral e' > septal e')."
-    };
-    return {
-      suggests: "EchoAssist™ Suggests: Diastolic function assessment is indeterminate. Additional parameters are needed to complete the ASE 2025 grading algorithm.",
-      note: "EchoAssist™ Note: Enter PV S/D (normal >0.67), LARS (normal >18%), LAVI (normal ≤34 mL/m²), or IVRT (normal >70 ms) to determine LAP and complete grading.",
-      tip: "EchoAssist™ Tip: If TR is absent or not measurable, LARS ≤18% or PV S/D ≤0.67 can substitute as surrogate markers of elevated filling pressures per ASE 2025 supplementary methods."
-    };
-  };
-
-  const ddColor = ddResult.detected === true ? "#dc2626" : ddResult.detected === false ? "#15803d" : "#6b7280";
-
   return (
-    <EngineSection id="engine-diastolic" title="Diastolic Function" subtitle="ASE 2025 · Two-step DD detection + Grading & LAP algorithm · e' · E/e' · TR · LARS · LAVI · PV S/D">
-      {/* Input grid */}
-      <div className="grid grid-cols-2 gap-3">
-        <NumInput label="e' Septal" value={ePrimeSep} onChange={setEPrimeSep} unit="cm/s" placeholder="nl >7" hint="(nl >7 cm/s)" />
-        <NumInput label="e' Lateral" value={ePrimeLat} onChange={setEPrimeLat} unit="cm/s" placeholder="nl >10" hint="(nl >10 cm/s)" />
-        <NumInput label="E velocity" value={eVel} onChange={setEVel} unit="m/s" placeholder="e.g. 0.8" />
-        <NumInput label="A velocity" value={aVel} onChange={setAVel} unit="m/s" placeholder="e.g. 0.6" />
-        <NumInput label="TR Vmax" value={trVmax} onChange={setTrVmax} unit="m/s" placeholder="nl <2.8" hint="(nl <2.8)" />
-        <NumInput label="LARS" value={lars} onChange={setLars} unit="%" placeholder="nl >18" hint="(nl >18%)" />
-        <NumInput label="LAVI" value={lavi} onChange={setLavi} unit="mL/m²" placeholder="nl ≤34" hint="(nl ≤34)" />
-        <NumInput label="PV S/D ratio" value={pvSD} onChange={setPvSD} unit="" placeholder="nl >0.67" hint="(nl >0.67)" />
-        <NumInput label="IVRT" value={ivrt} onChange={setIvrt} unit="ms" placeholder="nl >70" hint="(nl 70–90 ms)" />
-        <NumInput label="E Deceleration Time" value={ddt} onChange={setDdt} unit="ms" placeholder="nl 160–240" />
+    <EngineSection id="engine-diastolic" title="DiastologyAssist™" subtitle="ASE 2025 · Step 1: e' assessment · Step 2: E/e' · LARS · E/A · LAVI">
+      {/* STEP 1 */}
+      <div className="mb-3">
+        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Step 1 — Is e' Reduced?</p>
+        <div className="grid grid-cols-2 gap-3">
+          <NumInput label="e' Septal" value={ePrimeSep} onChange={setEPrimeSep} unit="cm/s" placeholder="nl >7" hint="(nl >7 cm/s)" />
+          <NumInput label="e' Lateral" value={ePrimeLat} onChange={setEPrimeLat} unit="cm/s" placeholder="nl >10" hint="(nl >10 cm/s)" />
+        </div>
+        {hasStep1 && (
+          <div className="mt-2 p-2.5 rounded-lg text-xs font-medium" style={{ background: (eReduced ? "#dc262610" : "#15803d10"), color: (eReduced ? "#dc2626" : "#15803d"), border: `1px solid ${eReduced ? "#dc262630" : "#15803d30"}` }}>
+            {avgEp !== null
+              ? `Avg e': ${avgEp.toFixed(1)} cm/s — ${eReduced ? "REDUCED (Step 1 ✔ positive)" : "Normal (Step 1 ✖ negative)"}`
+              : epSeptalVal !== null
+                ? `Septal e': ${epSeptalVal} cm/s — ${septalReduced ? "REDUCED (Step 1 ✔ positive)" : "Normal (Step 1 ✖ negative)"}`
+                : `Lateral e': ${epLateralVal} cm/s — ${lateralReduced ? "REDUCED (Step 1 ✔ positive)" : "Normal (Step 1 ✖ negative)"}`
+            }
+            {eReduced && <span className="block mt-0.5 text-gray-500 font-normal">Threshold: septal ≤6 cm/s · lateral ≤7 cm/s · avg ≤6.5 cm/s</span>}
+          </div>
+        )}
       </div>
 
-      {/* Derived values summary */}
-      {(ePrimeAvg !== null || eaRatio !== null || eeRatio !== null) && (
-        <p className="text-xs text-gray-400 mt-2">
-          {ePrimeAvg !== null ? `Avg e': ${ePrimeAvg.toFixed(1)} cm/s` : ""}
-          {ePrimeAvg !== null && eaRatio !== null ? " | " : ""}
-          {eaRatio !== null ? `E/A: ${eaRatio.toFixed(2)}` : ""}
-          {eeRatio !== null ? ` | E/e': ${eeRatio.toFixed(1)}` : ""}
-          {rvsp !== null ? ` | RVSP ~${rvsp.toFixed(0)} mmHg` : ""}
-        </p>
-      )}
-
-      {/* Algorithm 1: DD Detection */}
-      {ePrimeEntered && (
-        <div className="mt-3 p-3 rounded-lg border" style={{ borderColor: ddColor + "40", background: ddColor + "08" }}>
-          <p className="text-xs font-semibold mb-1" style={{ color: ddColor }}>Algorithm 1 — DD Detection (ASE 2025 Figure 2)</p>
-          <p className="text-xs" style={{ color: ddColor }}>
-            {ddResult.detected === true ? "✓ Diastolic Dysfunction Detected" : ddResult.detected === false ? "✗ Diastolic Dysfunction Not Detected" : "⋯ Indeterminate"}
-            {" — "}{ddResult.reason}
-          </p>
-          <div className="mt-1.5 text-xs text-gray-500 space-y-0.5">
-            <p>Step 1 — e' reduced: {ePrimeReduced ? <span className="text-red-600 font-medium">Yes</span> : <span className="text-green-700 font-medium">No</span>}</p>
-            <p>Step 2 — criteria met: {step2Positive}/4 (E/e&apos; &gt;14: {eeAbove14 ? "✓" : "✗"} · LARS≤18%: {larsAbnDD ? "✓" : has(lars) ? "✗" : "—"} · E/A≤0.8 or ≥2: {eaAbnDD ? "✓" : eaRatio !== null ? "✗" : "—"} · LAVI &gt;34: {laviAbnDD ? "✓" : has(lavi) ? "✗" : "—"})</p>
+      {/* STEP 2 */}
+      <div>
+        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Step 2 — Count Abnormal Markers (need ≥2 if e' preserved, ≥1 if e' reduced)</p>
+        <div className="grid grid-cols-2 gap-3">
+          <NumInput label="E velocity" value={eVel} onChange={setEVel} unit="m/s" placeholder="e.g. 0.8" />
+          <NumInput label="A velocity" value={aVel} onChange={setAVel} unit="m/s" placeholder="e.g. 0.6" />
+          <NumInput label="LARS" value={lars} onChange={setLars} unit="%" placeholder="nl >18" hint="(nl >18%)" />
+          <NumInput label="LAVI" value={lavi} onChange={setLavi} unit="mL/m²" placeholder="nl ≤34" hint="(nl ≤34)" />
+        </div>
+        {hasStep2 && (
+          <div className="mt-2 space-y-1">
+            {eeRatio !== null && (
+              <div className={`flex items-center gap-2 text-xs p-1.5 rounded ${eeAbnormal ? "text-red-600 bg-red-50" : "text-green-700 bg-green-50"}`}>
+                <span className="font-bold">{eeAbnormal ? "✔" : "✖"}</span>
+                <span>E/e&apos; avg = {eeRatio.toFixed(1)} {eeAbnormal ? "(>14 — abnormal)" : "(≤14 — normal)"}</span>
+              </div>
+            )}
+            {larsVal !== null && (
+              <div className={`flex items-center gap-2 text-xs p-1.5 rounded ${larsAbnormal ? "text-red-600 bg-red-50" : "text-green-700 bg-green-50"}`}>
+                <span className="font-bold">{larsAbnormal ? "✔" : "✖"}</span>
+                <span>LARS = {larsVal}% {larsAbnormal ? "(≤18% — abnormal)" : "(>18% — normal)"}</span>
+              </div>
+            )}
+            {eaRatio !== null && (
+              <div className={`flex items-center gap-2 text-xs p-1.5 rounded ${eaAbnormal ? "text-red-600 bg-red-50" : "text-green-700 bg-green-50"}`}>
+                <span className="font-bold">{eaAbnormal ? "✔" : "✖"}</span>
+                <span>E/A = {eaRatio.toFixed(2)} {eaAbnormal ? "(≤0.8 or ≥2 — abnormal)" : "(0.8–2 — normal)"}</span>
+              </div>
+            )}
+            {laviVal !== null && (
+              <div className={`flex items-center gap-2 text-xs p-1.5 rounded ${laviAbnormal ? "text-red-600 bg-red-50" : "text-green-700 bg-green-50"}`}>
+                <span className="font-bold">{laviAbnormal ? "✔" : "✖"}</span>
+                <span>LAVI = {laviVal} mL/m² {laviAbnormal ? "(>34 — abnormal)" : "(≤34 — normal)"}</span>
+              </div>
+            )}
+            {step2Total > 0 && (
+              <p className="text-xs text-gray-500 mt-1">{step2Count} of {step2Total} entered markers abnormal</p>
+            )}
           </div>
+        )}
+      </div>
+
+      {/* RESULT */}
+      {hasInput && grade && (
+        <div className="mt-3 p-3 rounded-lg border" style={{ borderColor: gradeColor + "40", background: gradeColor + "08" }}>
+          <p className="text-sm font-bold" style={{ color: gradeColor }}>{grade}</p>
+          {gradeNote && <p className="text-xs text-gray-500 mt-1">{gradeNote}</p>}
+          {ddPresent === true && <p className="text-xs font-medium mt-1" style={{ color: "#dc2626" }}>✔ Diastolic Dysfunction Detected</p>}
+          {ddPresent === false && <p className="text-xs font-medium mt-1" style={{ color: "#15803d" }}>✖ No Diastolic Dysfunction Detected</p>}
         </div>
       )}
 
-      {/* Algorithm 2: Grading & LAP */}
-      <div className="mt-2">
-        <p className="text-xs font-semibold text-gray-500 mb-1">Algorithm 2 — Grading & LAP (ASE 2025 Figure 3)</p>
-        <ResultCard severity={result.sev} title="Diastolic Function Grade" value={`${result.label}${result.lap !== "—" ? " · " + result.lap : ""}`} criteria={result.criteria} note={result.note} />
-      </div>
-
-      <EchoAssistPanel output={getDiastEchoAssist()} />
-      <div className="flex flex-wrap gap-2 mt-1">
-        <CalcLink tabId="diastology" label="Diastology Grading" />
+      <div className="flex flex-wrap gap-2 mt-3">
         <CalcLink tabId="lap_estimation" label="LAP Estimation" />
+        <CalcLink tabId="diastology_special" label="Special Populations" />
       </div>
       <p className="text-xs text-gray-400 mt-3">Reference: <a href="https://www.asecho.org/wp-content/uploads/2025/07/Left-Ventricular-Diastolic-Function.pdf" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#189aa1] transition-colors">ASE 2025 Left Ventricular Diastolic Function Guidelines (Nagueh et al., JASE 2025)</a></p>
     </EngineSection>

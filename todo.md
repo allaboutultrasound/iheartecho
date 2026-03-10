@@ -2004,3 +2004,17 @@
 - [x] Email notifications for meeting invitations via SendGrid (server-side, triggered on invite mutation)
 - [x] Meeting Minutes Archive view — searchable/filterable list of finalized minutes with bulk PDF export
 - [x] Meeting attendance analytics chart in DIY Reports — attendance rate over time per meeting type
+
+## EchoAssist™ Calculators Restructure (Mar 10 2026) — REDO
+- [ ] Fix Diastology Assessment: Step 1 + Step 2 ONLY (remove extra parameters, match old Echo Calculators format)
+- [ ] Move StrokeVolumeEngine INSIDE LVSystolicEngine section (not standalone)
+- [ ] Add HOCM LVOT Gradient Calculator inside LVSystolicEngine section
+- [ ] Reorder engines: 1) LV SystolicAssist (LV EF/FS/Mass/Dim + SV/CO + HOCM LVOT), 2) DiastologyAssist (Diastology Assessment + LAP Grading + Special Populations), 3) AS, 4) AR, 5) MS, 6) MR, 7) TR, 8) RV SystolicAssist, 9) PulmonaryHypertensionAssist, 10) POCUS-Assist, 11) Frank-Starling, 12) StrainAssist (PremiumOverlay), 13) StressEchoAssist (PremiumOverlay)
+- [ ] Remove StrokeVolumeEngine as a standalone section
+
+## EchoAssist™ Calculators Restructure (Mar 10 2026) — REDO
+- [ ] Fix Diastology Assessment: Step 1 + Step 2 ONLY (remove extra parameters, match old Echo Calculators format)
+- [ ] Move StrokeVolumeEngine INSIDE LVSystolicEngine section (not standalone)
+- [ ] Add HOCM LVOT Gradient Calculator inside LVSystolicEngine section
+- [ ] Reorder engines: 1) LV SystolicAssist (LV EF/FS/Mass/Dim + SV/CO + HOCM LVOT), 2) DiastologyAssist (Diastology Assessment + LAP Grading + Special Populations), 3) AS, 4) AR, 5) MS, 6) MR, 7) TR, 8) RV SystolicAssist, 9) PulmonaryHypertensionAssist, 10) POCUS-Assist, 11) Frank-Starling, 12) StrainAssist (PremiumOverlay), 13) StressEchoAssist (PremiumOverlay)
+- [ ] Remove StrokeVolumeEngine as a standalone section
