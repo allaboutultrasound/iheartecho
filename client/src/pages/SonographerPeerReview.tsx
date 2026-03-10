@@ -1519,7 +1519,7 @@ export default function SonographerPeerReview({ embedded }: { embedded?: boolean
           >
             <div className="container py-8 md:py-10">
               <div className="flex items-center gap-2 mb-2">
-                <Link href="/diy-accreditation">
+                <Link href="/diy-accreditation-plans">
                   <button className="flex items-center gap-1.5 text-white/60 hover:text-white text-xs transition-colors">
                     <ArrowLeft className="w-3.5 h-3.5" /> DIY Accreditation
                   </button>

@@ -1902,7 +1902,7 @@ export default function ImageQualityReview({ embedded = false }: Props) {
             Submit Another Review
           </Button>
           {!embedded && (
-            <Link href="/diy-accreditation">
+            <Link href="/diy-accreditation-plans">
               <Button variant="outline">Back to DIY Accreditation</Button>
             </Link>
           )}
@@ -1925,7 +1925,7 @@ export default function ImageQualityReview({ embedded = false }: Props) {
       >
         <div className="container py-8 md:py-10">
           <div className="flex items-center gap-2 mb-2">
-            <Link href="/diy-accreditation">
+            <Link href="/diy-accreditation-plans">
               <button className="flex items-center gap-1.5 text-white/60 hover:text-white text-xs transition-colors">
                 <ArrowLeft className="w-3.5 h-3.5" /> DIY Accreditation
               </button>

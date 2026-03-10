@@ -188,7 +188,7 @@ export default function DIYMemberPortal() {
                   Subscribe to a DIY Accreditation plan to create your organization and begin the accreditation process.
                 </p>
                 <Button style={{ background: BRAND, color: "white" }} asChild>
-                  <Link href="/diy-accreditation">
+                  <Link href="/diy-accreditation-plans">
                     View Plans &amp; Pricing <ArrowRight className="w-4 h-4 ml-1" />
                   </Link>
                 </Button>
@@ -324,7 +324,7 @@ export default function DIYMemberPortal() {
               </p>
             </div>
             <Button className="flex-shrink-0 text-white" style={{ background: BRAND }} asChild>
-              <Link href="/diy-accreditation">View Plans</Link>
+              <Link href="/diy-accreditation-plans">View Plans</Link>
             </Button>
           </div>
         )}

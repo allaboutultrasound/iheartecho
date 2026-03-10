@@ -12,7 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Shield, Zap, Star, Crown, Check, Lock, Users, Building2,
   ClipboardList, FileText, BarChart2, BookOpen, ChevronDown,
-  ChevronUp, ExternalLink, AlertCircle, Sparkles
+  ChevronUp, ExternalLink
 } from "lucide-react";
 import { Link } from "wouter";
 import { getLoginUrl } from "@/const";
@@ -147,10 +147,6 @@ const FAQS = [
     a: "Each organization has exactly one SuperAdmin — the account owner who subscribes. The SuperAdmin has full control over org settings, billing, and can invite/revoke Lab Admins. The SuperAdmin seat counts as one of the Lab Admin seats in your plan.",
   },
   {
-    q: "Can I add the Concierge add-on to any plan?",
-    a: "Yes — the Accreditation Concierge™ is available as a one-time $4,997 add-on to any active DIY Accreditation subscription. It cannot be purchased as a standalone product.",
-  },
-  {
     q: "Can a DIY Member also have Premium App access?",
     a: "Yes. DIY Members can independently upgrade to a Premium App subscription. Multiple membership types are supported — a user can be both a DIY Member and a Premium subscriber.",
   },
@@ -167,7 +163,6 @@ const FAQS = [
 export default function DIYAccreditationPlans() {
   const { isAuthenticated } = useAuth();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [showConciergeDetails, setShowConciergeDetails] = useState(false);
 
   return (
     <Layout>
@@ -323,82 +318,7 @@ export default function DIYAccreditationPlans() {
           })}
         </div>
 
-        {/* Concierge Add-on */}
-        <div id="concierge" className="mt-10">
-          <div className="rounded-2xl border-2 border-purple-200 overflow-hidden">
-            <div className="p-6 flex flex-col md:flex-row items-start md:items-center gap-6"
-              style={{ background: "linear-gradient(135deg, #1e1b4b, #4c1d95)" }}>
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 bg-white/15">
-                <Sparkles className="w-7 h-7 text-purple-200" />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1 flex-wrap">
-                  <h3 className="text-xl font-black text-white" style={{ fontFamily: "Merriweather, serif" }}>
-                    Accreditation Concierge™
-                  </h3>
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-purple-400/30 text-purple-200 border border-purple-400/30">
-                    Add-on Only
-                  </span>
-                </div>
-                <p className="text-purple-200 text-sm mb-1">
-                  Expert-guided assistance preparing and submitting your IAC Accreditation Application.
-                </p>
-                <div className="flex items-center gap-2 mt-1">
-                  <AlertCircle className="w-3.5 h-3.5 text-yellow-300 flex-shrink-0" />
-                  <p className="text-xs text-yellow-200">
-                    Available only as an add-on to an active DIY Accreditation™ subscription.
-                  </p>
-                </div>
-              </div>
-              <div className="flex flex-col items-start md:items-end gap-3 flex-shrink-0">
-                <div>
-                  <span className="text-3xl font-black text-white">$4,997</span>
-                  <span className="text-white/60 text-sm ml-1">one-time</span>
-                </div>
-                <a href="https://buy.stripe.com/7sYcN475Lcs94Nm3hH9R604" target="_blank" rel="noopener noreferrer">
-                  <Button className="text-white font-semibold" style={{ background: BRAND }}>
-                    Add Concierge <ExternalLink className="w-3.5 h-3.5 ml-1.5" />
-                  </Button>
-                </a>
-              </div>
-            </div>
-
-            {/* Concierge details toggle */}
-            <div className="border-t" style={{ background: `${BRAND}08`, borderColor: `${BRAND}30` }}>
-              <button
-                onClick={() => setShowConciergeDetails(!showConciergeDetails)}
-                className="w-full flex items-center justify-between px-6 py-3 text-sm font-semibold hover:opacity-80 transition-opacity"
-                style={{ color: BRAND }}
-              >
-                <span>What's included in Accreditation Concierge™?</span>
-                {showConciergeDetails ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              </button>
-              {showConciergeDetails && (
-                <div className="px-6 pb-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {[
-                      { icon: ClipboardList, title: "Application Preparation Guidance", desc: "Step-by-step guidance through the IAC application process." },
-                      { icon: FileText, title: "Policy & Protocol Review", desc: "Expert review of your lab policies and protocols before submission." },
-                      { icon: BookOpen, title: "Case Study Documentation Guidance", desc: "Assistance identifying and documenting qualifying case studies." },
-                      { icon: BarChart2, title: "Mock Accreditation Readiness Assessment", desc: "Simulated assessment to identify gaps before the real review." },
-                      { icon: Shield, title: "IAC Accreditation Submission Assistance", desc: "Hands-on support completing and submitting your IAC application." },
-                    ].map(({ icon: Icon, title, desc }) => (
-                      <div key={title} className="flex items-start gap-3 p-3 rounded-lg bg-white border" style={{ borderColor: `${BRAND}20` }}>
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${BRAND}18` }}>
-                          <Icon className="w-4 h-4" style={{ color: BRAND }} />
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-gray-800">{title}</p>
-                          <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+        {/* Accreditation Concierge™ is shown only to Professional+ Lab Admins in the Lab Admin Portal */}
 
         {/* Feature comparison table */}
         <div className="mt-12">

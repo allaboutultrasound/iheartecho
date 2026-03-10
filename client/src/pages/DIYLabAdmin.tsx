@@ -161,7 +161,7 @@ export default function DIYLabAdmin() {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button asChild style={{ background: BRAND, color: "white" }}>
-              <Link href="/diy-accreditation">View Plans &amp; Pricing</Link>
+              <Link href="/diy-accreditation-plans">View Plans &amp; Pricing</Link>
             </Button>
             <Button variant="outline" asChild>
               <Link href="/diy-member">I Have an Invite Token</Link>
@@ -175,6 +175,7 @@ export default function DIYLabAdmin() {
   const { org, subscription: sub, members, seatUsage, myRole } = orgDetails;
   const isSuperAdmin = myRole === "super_admin";
   const planInfo = sub ? PLAN_LABELS[sub.plan] : null;
+  const isProfessionalOrAbove = sub ? ["professional", "advanced", "partner"].includes(sub.plan) : false;
   const PlanIcon = planInfo?.icon ?? Shield;
 
   const activeMembers = members.filter((m) => m.isActive && m.inviteStatus === "accepted");
@@ -347,7 +348,7 @@ export default function DIYLabAdmin() {
                     </div>
                     <div>
                       <p className="text-gray-500 text-xs mb-0.5">Concierge Add-on</p>
-                      <p className={`font-semibold ${sub.hasConcierge ? "text-purple-600" : "text-gray-400"}`}>
+                      <p className={`font-semibold ${sub.hasConcierge ? "text-green-600" : "text-gray-400"}`}>
                         {sub.hasConcierge ? "Active" : "Not purchased"}
                       </p>
                     </div>
@@ -358,24 +359,65 @@ export default function DIYLabAdmin() {
                       </p>
                     </div>
                   </div>
-                  {!sub.hasConcierge && (
-                    <div className="mt-4 p-3 rounded-lg border border-purple-200 bg-purple-50 flex items-start gap-3">
-                      <Star className="w-4 h-4 text-purple-600 flex-shrink-0 mt-0.5" />
+                  {/* Org ID — needed when purchasing Concierge via Stripe */}
+                  <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-2">
+                    <span className="text-xs text-gray-400">Organization ID:</span>
+                    <code className="text-xs font-mono px-2 py-0.5 rounded" style={{ background: `${BRAND}12`, color: BRAND }}>{org.id}</code>
+                    <button
+                      className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                      title="Copy Org ID"
+                      onClick={() => { navigator.clipboard.writeText(String(org.id)); }}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                    </button>
+                    <span className="text-xs text-gray-400">— Enter this when purchasing Concierge</span>
+                  </div>
+                  {!sub.hasConcierge && isProfessionalOrAbove && (
+                    <div className="mt-4 p-3 rounded-lg flex items-start gap-3" style={{ background: `${BRAND}10`, border: `1px solid ${BRAND}30` }}>
+                      <Star className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: BRAND }} />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-purple-800">Add Accreditation Concierge™</p>
-                        <p className="text-xs text-purple-600 mt-0.5">
-                          Get expert-guided accreditation support — one-time $4,997 add-on available to active subscribers.
+                        <p className="text-sm font-semibold" style={{ color: NAVY }}>Add Accreditation Concierge™</p>
+                        <p className="text-xs mt-0.5" style={{ color: BRAND }}>
+                          Expert-guided IAC accreditation support — one-time $4,997 add-on for active subscribers.
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-1.5 text-xs">
+                          {["Application Preparation", "Policy & Protocol Review", "Case Study Guidance", "Mock Readiness Assessment", "IAC Submission Assistance"].map(item => (
+                            <span key={item} className="px-2 py-0.5 rounded-full text-white text-xs" style={{ background: BRAND }}>{item}</span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0 flex flex-col gap-1 items-end">
+                        <a
+                          href={`https://buy.stripe.com/7sYcN475Lcs94Nm3hH9R604?prefilled_custom_field_0=${org.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Button size="sm" className="text-white" style={{ background: BRAND }}>
+                            Add Concierge <ExternalLink className="w-3 h-3 ml-1" />
+                          </Button>
+                        </a>
+                        <span className="text-xs text-gray-400">Your Org ID ({org.id}) is pre-filled</span>
+                      </div>
+                    </div>
+                  )}
+                  {!sub.hasConcierge && !isProfessionalOrAbove && (
+                    <div className="mt-4 p-3 rounded-lg flex items-start gap-3 bg-gray-50 border border-gray-200">
+                      <Lock className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-600">Accreditation Concierge™</p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          Available on Professional, Advanced, and Partner plans. Upgrade to unlock expert-guided IAC accreditation support.
                         </p>
                       </div>
-                      <Button size="sm" variant="outline" className="border-purple-300 text-purple-700 hover:bg-purple-100 flex-shrink-0" asChild>
-                        <Link href="/diy-accreditation#concierge">Learn More</Link>
+                      <Button size="sm" variant="outline" className="flex-shrink-0" asChild>
+                        <Link href="/diy-accreditation-plans">Upgrade Plan</Link>
                       </Button>
                     </div>
                   )}
                   {isSuperAdmin && (
                     <div className="mt-3 flex gap-2">
                       <Button variant="outline" size="sm" asChild>
-                        <Link href="/diy-accreditation">Upgrade Plan</Link>
+                        <Link href="/diy-accreditation-plans">Upgrade Plan</Link>
                       </Button>
                     </div>
                   )}
@@ -484,7 +526,7 @@ export default function DIYLabAdmin() {
                     <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0" />
                     <p className="text-xs text-red-700">
                       Lab Admin seat limit reached ({seatUsage.labAdminTotal} seats).{" "}
-                      <Link href="/diy-accreditation" className="underline font-semibold">Upgrade your plan</Link> to add more Lab Admins.
+                      <Link href="/diy-accreditation-plans" className="underline font-semibold">Upgrade your plan</Link> to add more Lab Admins.
                     </p>
                   </div>
                 )}
@@ -493,7 +535,7 @@ export default function DIYLabAdmin() {
                     <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0" />
                     <p className="text-xs text-red-700">
                       DIY Member seat limit reached ({seatUsage.memberTotal} seats).{" "}
-                      <Link href="/diy-accreditation" className="underline font-semibold">Upgrade your plan</Link> to add more members.
+                      <Link href="/diy-accreditation-plans" className="underline font-semibold">Upgrade your plan</Link> to add more members.
                     </p>
                   </div>
                 )}
@@ -722,7 +764,7 @@ export default function DIYLabAdmin() {
                             Upgrade your plan to add more capacity.
                           </p>
                           <Button size="sm" className="mt-2 text-white" style={{ background: BRAND }} asChild>
-                            <Link href="/diy-accreditation">Upgrade Plan</Link>
+                            <Link href="/diy-accreditation-plans">Upgrade Plan</Link>
                           </Button>
                         </div>
                       </div>
