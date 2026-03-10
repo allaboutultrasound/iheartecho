@@ -9,7 +9,7 @@ import {
   Heart, Calculator, ClipboardList, Activity,
   Scan, BookOpen, FileText, Menu, X, ChevronRight,
   Stethoscope, Zap, ExternalLink, ShoppingBag, FlaskConical, MessageCircle, Award, Shield, GraduationCap,
-  BookMarked, Library, Plus, Crown, Droplets, Building2, Users,
+  BookMarked, Library, Plus, Crown, Droplets, Building2, Users, UserPlus,
   LogIn, LogOut, Settings, ChevronDown, Webhook, Layers, CreditCard
 } from "lucide-react";
 
@@ -83,6 +83,7 @@ const navGroups = [
       { path: "/accreditation-navigator", label: "EchoAccreditation Navigator™", icon: Award },
       { path: "/accreditation", label: "DIY Accreditation Tool™", icon: ClipboardList },
       { path: "/diy-accreditation-plans", label: "DIY Accreditation™ Plans", icon: Building2 },
+      { path: "/diy-register", label: "Register Your Lab", icon: UserPlus },
       { path: "/diy-lab-admin", label: "Lab Admin Portal", icon: Shield },
       { path: "/diy-member", label: "Member Portal", icon: Users },
     ],
@@ -121,6 +122,7 @@ const hiddenNavItems = [
   { path: "/pocus-cardiac-scan-coach", label: "Cardiac POCUS ScanCoach™" },
   { path: "/pocus-lung-scan-coach", label: "Lung POCUS ScanCoach™" },
   { path: "/diy-accreditation-plans", label: "DIY Accreditation™ Plans" },
+  { path: "/diy-register", label: "Register Your Lab" },
   { path: "/diy-lab-admin", label: "Lab Admin Portal" },
   { path: "/diy-member", label: "Member Portal" },
 ];

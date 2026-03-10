@@ -87,6 +87,7 @@ import POCUSLungScanCoach from "./pages/POCUSLungScanCoach";
 import DIYLabAdmin from "./pages/DIYLabAdmin";
 import DIYMemberPortal from "./pages/DIYMemberPortal";
 import DIYAccreditationPlans from "./pages/DIYAccreditationPlans";
+import DIYRegister from "./pages/DIYRegister";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -195,6 +196,7 @@ function Router() {
       <Route path="/admin/thinkific-webhook" component={ThinkificWebhookAdmin} />
       {/* ── DIY Accreditation™ ─────────────────────────────────────────── */}
       <Route path="/diy-accreditation-plans" component={DIYAccreditationPlans} />
+      <Route path="/diy-register" component={DIYRegister} />
       <Route path="/diy-lab-admin">{() => <RoleGuard roles={["diy_admin", "admin"]}><DIYLabAdmin /></RoleGuard>}</Route>
       <Route path="/diy-member">{() => <RoleGuard roles={["diy_user", "diy_admin", "admin"]}><DIYMemberPortal /></RoleGuard>}</Route>
       {/* ── Premium Access ──────────────────────────────────────────────── */}

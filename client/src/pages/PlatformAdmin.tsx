@@ -50,6 +50,9 @@ import {
   AlertCircle,
   X,
   Clock,
+  Building2,
+  BarChart2,
+  ExternalLink,
 } from "lucide-react";
 import { Link } from "wouter";
 import BulkCsvUploadPanel, { type BulkResult } from "@/components/BulkCsvUploadPanel";
@@ -377,6 +380,219 @@ function AddUserByEmailPanel({ onSuccess }: { onSuccess: () => void }) {
           </>
         )}
       </CardContent>
+    </Card>
+  );
+}
+
+// ─── DIY Organizations Panel ─────────────────────────────────────────────────
+
+const PLAN_LABELS: Record<string, string> = {
+  starter: "Starter",
+  professional: "Professional",
+  advanced: "Advanced",
+  partner: "Partner",
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  active: "#16a34a",
+  trialing: "#2563eb",
+  past_due: "#d97706",
+  canceled: "#dc2626",
+  paused: "#6b7280",
+};
+
+function DIYOrgsPanel() {
+  const { data: orgs, isLoading, refetch } = trpc.diy.adminListOrgs.useQuery();
+  const updateSub = trpc.diy.adminUpdateSubscription.useMutation({
+    onSuccess: () => { toast.success("Subscription updated."); refetch(); },
+    onError: (err) => toast.error(err.message),
+  });
+  const [editingOrg, setEditingOrg] = useState<number | null>(null);
+  const [editPlan, setEditPlan] = useState<"starter" | "professional" | "advanced" | "partner">("starter");
+  const [editStatus, setEditStatus] = useState<"active" | "trialing" | "past_due" | "canceled" | "paused">("active");
+  const [editConcierge, setEditConcierge] = useState(false);
+
+  return (
+    <Card className="mb-6 border-0 shadow-sm">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base font-semibold text-gray-800 flex items-center gap-2">
+            <Building2 className="w-4 h-4 text-[#189aa1]" />
+            DIY Accreditation Organizations ({orgs?.length ?? 0})
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => refetch()} className="flex items-center gap-1 text-xs">
+              <RefreshCw className="w-3 h-3" /> Refresh
+            </Button>
+            <Link href="/diy-accreditation-plans">
+              <Button size="sm" className="flex items-center gap-1 text-xs text-white" style={{ background: "#189aa1" }}>
+                <ExternalLink className="w-3 h-3" /> Plans Page
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <RefreshCw className="w-5 h-5 animate-spin text-[#189aa1]" />
+          </div>
+        ) : !orgs || orgs.length === 0 ? (
+          <div className="text-center py-8 text-gray-400 text-sm">
+            No DIY Accreditation organizations registered yet.
+            <div className="mt-2">
+              <Link href="/diy-register">
+                <Button size="sm" variant="outline" className="text-xs">Register First Org</Button>
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="text-left text-xs font-semibold text-gray-500 pb-2 pr-4">Organization</th>
+                  <th className="text-left text-xs font-semibold text-gray-500 pb-2 pr-4">Plan</th>
+                  <th className="text-left text-xs font-semibold text-gray-500 pb-2 pr-4">Status</th>
+                  <th className="text-left text-xs font-semibold text-gray-500 pb-2 pr-4">Seats Used</th>
+                  <th className="text-left text-xs font-semibold text-gray-500 pb-2 pr-4">Concierge</th>
+                  <th className="text-left text-xs font-semibold text-gray-500 pb-2">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {orgs.map(({ org, subscription: sub, memberCount }) => (
+                  <tr key={org.id} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="py-3 pr-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "#189aa118" }}>
+                          <Building2 className="w-3.5 h-3.5" style={{ color: "#189aa1" }} />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-800 text-xs leading-tight">{org.name}</p>
+                          {org.website && (
+                            <a href={org.website} target="_blank" rel="noopener noreferrer"
+                              className="text-[10px] text-gray-400 hover:underline flex items-center gap-0.5">
+                              <ExternalLink className="w-2.5 h-2.5" /> {org.website.replace(/^https?:\/\//, "")}
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3 pr-4">
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full text-white" style={{ background: "#189aa1" }}>
+                        {sub ? PLAN_LABELS[sub.plan] ?? sub.plan : "—"}
+                      </span>
+                    </td>
+                    <td className="py-3 pr-4">
+                      {sub ? (
+                        <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{
+                          background: `${STATUS_COLORS[sub.status] ?? "#6b7280"}18`,
+                          color: STATUS_COLORS[sub.status] ?? "#6b7280",
+                        }}>
+                          {sub.status}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-gray-400">No subscription</span>
+                      )}
+                    </td>
+                    <td className="py-3 pr-4">
+                      <div className="flex items-center gap-1 text-xs text-gray-600">
+                        <BarChart2 className="w-3 h-3 text-gray-400" />
+                        {memberCount} / {sub?.totalSeats ?? "—"}
+                      </div>
+                    </td>
+                    <td className="py-3 pr-4">
+                      {sub?.hasConcierge ? (
+                        <span className="text-xs font-medium text-[#189aa1] flex items-center gap-0.5">
+                          <CheckCircle2 className="w-3 h-3" /> Active
+                        </span>
+                      ) : (
+                        <span className="text-xs text-gray-400">—</span>
+                      )}
+                    </td>
+                    <td className="py-3">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-xs h-7 px-2"
+                        onClick={() => {
+                          setEditingOrg(org.id);
+                          setEditPlan((sub?.plan as typeof editPlan) ?? "starter");
+                          setEditStatus((sub?.status as typeof editStatus) ?? "active");
+                          setEditConcierge(sub?.hasConcierge ?? false);
+                        }}
+                      >
+                        Edit
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </CardContent>
+
+      {/* Edit subscription dialog */}
+      <Dialog open={editingOrg !== null} onOpenChange={(open) => { if (!open) setEditingOrg(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-[#189aa1]" />
+              Edit Subscription
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <label className="text-sm font-medium text-gray-700 block mb-1.5">Plan</label>
+              <Select value={editPlan} onValueChange={(v) => setEditPlan(v as typeof editPlan)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Object.entries(PLAN_LABELS).map(([id, label]) => (
+                    <SelectItem key={id} value={id}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-700 block mb-1.5">Status</label>
+              <Select value={editStatus} onValueChange={(v) => setEditStatus(v as typeof editStatus)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Object.keys(STATUS_COLORS).map((s) => (
+                    <SelectItem key={s} value={s}>{s}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                id="concierge"
+                checked={editConcierge}
+                onChange={(e) => setEditConcierge(e.target.checked)}
+                className="w-4 h-4 rounded"
+              />
+              <label htmlFor="concierge" className="text-sm text-gray-700">Concierge Add-on Active</label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingOrg(null)}>Cancel</Button>
+            <Button
+              onClick={() => {
+                if (editingOrg === null) return;
+                updateSub.mutate({ orgId: editingOrg, plan: editPlan, status: editStatus, hasConcierge: editConcierge });
+                setEditingOrg(null);
+              }}
+              disabled={updateSub.isPending}
+              style={{ background: "#189aa1" }}
+              className="text-white"
+            >
+              {updateSub.isPending ? "Saving…" : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
@@ -823,6 +1039,10 @@ export default function PlatformAdmin() {
             </div>
           </CardContent>
         </Card>
+
+        {/* DIY Organizations */}
+        <DIYOrgsPanel />
+
       </div>
 
       {/* Add Role Dialog (from user list) */}

@@ -87,7 +87,7 @@ const PLANS = [
     tagline: "Multi-site & large lab solution",
     bestFor: "Large labs, multi-site organizations, hospital departments, and IDTF groups.",
     icon: Star,
-    color: "#7c3aed",
+    color: BRAND,
     popular: false,
     seats: {
       total: 50,
@@ -114,7 +114,7 @@ const PLANS = [
     tagline: "Unlimited seats + expert guidance",
     bestFor: "Labs that want ongoing expert guidance while using the platform.",
     icon: Crown,
-    color: "#d97706",
+    color: BRAND,
     popular: false,
     seats: {
       total: null, // unlimited
@@ -215,7 +215,7 @@ export default function DIYAccreditationPlans() {
               {
                 icon: Crown,
                 role: "SuperAdmin",
-                color: "#d97706",
+                color: BRAND,
                 desc: "1 per organization. Full org control: billing, settings, Lab Admin management. Counts as 1 Lab Admin seat.",
               },
               {
@@ -353,10 +353,10 @@ export default function DIYAccreditationPlans() {
               <div className="flex flex-col items-start md:items-end gap-3 flex-shrink-0">
                 <div>
                   <span className="text-3xl font-black text-white">$4,997</span>
-                  <span className="text-purple-200 text-sm ml-1">one-time</span>
+                  <span className="text-white/60 text-sm ml-1">one-time</span>
                 </div>
                 <a href="https://buy.stripe.com/7sYcN475Lcs94Nm3hH9R604" target="_blank" rel="noopener noreferrer">
-                  <Button className="bg-purple-500 hover:bg-purple-400 text-white font-semibold">
+                  <Button className="text-white font-semibold" style={{ background: BRAND }}>
                     Add Concierge <ExternalLink className="w-3.5 h-3.5 ml-1.5" />
                   </Button>
                 </a>
@@ -364,10 +364,11 @@ export default function DIYAccreditationPlans() {
             </div>
 
             {/* Concierge details toggle */}
-            <div className="bg-purple-50 border-t border-purple-200">
+            <div className="border-t" style={{ background: `${BRAND}08`, borderColor: `${BRAND}30` }}>
               <button
                 onClick={() => setShowConciergeDetails(!showConciergeDetails)}
-                className="w-full flex items-center justify-between px-6 py-3 text-sm font-semibold text-purple-800 hover:bg-purple-100 transition-colors"
+                className="w-full flex items-center justify-between px-6 py-3 text-sm font-semibold hover:opacity-80 transition-opacity"
+                style={{ color: BRAND }}
               >
                 <span>What's included in Accreditation Concierge™?</span>
                 {showConciergeDetails ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -382,9 +383,9 @@ export default function DIYAccreditationPlans() {
                       { icon: BarChart2, title: "Mock Accreditation Readiness Assessment", desc: "Simulated assessment to identify gaps before the real review." },
                       { icon: Shield, title: "IAC Accreditation Submission Assistance", desc: "Hands-on support completing and submitting your IAC application." },
                     ].map(({ icon: Icon, title, desc }) => (
-                      <div key={title} className="flex items-start gap-3 p-3 rounded-lg bg-white border border-purple-100">
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-purple-100">
-                          <Icon className="w-4 h-4 text-purple-600" />
+                      <div key={title} className="flex items-start gap-3 p-3 rounded-lg bg-white border" style={{ borderColor: `${BRAND}20` }}>
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${BRAND}18` }}>
+                          <Icon className="w-4 h-4" style={{ color: BRAND }} />
                         </div>
                         <div>
                           <p className="text-sm font-semibold text-gray-800">{title}</p>

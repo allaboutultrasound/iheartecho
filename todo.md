@@ -1923,3 +1923,12 @@
 - [x] Sidebar nav: DIY Accreditation Plans, Lab Admin Portal, Member Portal added to Accreditation section
 - [x] SuperAdmin role defined (1 per org, occupies 1 Lab Admin seat)
 - [x] Seat allotment enforcement per tier (Starter: 5, Professional: 15, Advanced: 50, Partner: unlimited)
+
+## DIY Accreditation™ Phase 2 (Mar 10 2026)
+
+- [x] Add DIY Organizations panel to Platform Admin page (table view, seat usage, subscription status, edit dialog)
+- [x] Fix Concierge add-on to use Stripe checkout link (all tier plans route through Thinkific)
+- [x] Fix off-brand purple/amber colors on Advanced/Partner plan cards and Concierge section
+- [x] Build /diy-register org registration flow (3-step: plan selection → org details → confirmation)
+- [x] Register /diy-register route in App.tsx
+- [x] Add "Register Your Lab" nav entry to Accreditation sidebar section
