@@ -10,7 +10,7 @@ import {
   Scan, BookOpen, FileText, Menu, X, ChevronRight,
   Stethoscope, Zap, ExternalLink, ShoppingBag, FlaskConical, MessageCircle, Award, Shield, GraduationCap,
   BookMarked, Library, Plus, Crown, Droplets,
-  LogIn, LogOut, Settings, ChevronDown, Webhook, Wind, Baby, Users, Microscope, Layers
+  LogIn, LogOut, Settings, ChevronDown, Webhook, Wind, Baby, Users, Microscope, Layers, CreditCard
 } from "lucide-react";
 
 import { trpc } from "@/lib/trpc";
@@ -329,14 +329,27 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       {/* Subscription badges */}
                       {allBadges.length > 0 && (
                         <div className="px-4 py-2.5 border-b border-gray-100">
-                          <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">My Subscriptions</div>
-                          <div className="flex flex-wrap gap-1">
+                          <a
+                            href="https://member.allaboutultrasound.com/account/billing"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 hover:text-[#189aa1] transition-colors flex items-center gap-1"
+                          >
+                            My Subscriptions
+                          </a>
+                          <div className="flex flex-wrap gap-1 mt-1.5">
                             {allBadges.map(({ label, color }) => (
-                              <span key={label} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold"
-                                style={{ background: color + "15", color, border: `1px solid ${color}40` }}>
+                              <a
+                                key={label}
+                                href="https://member.allaboutultrasound.com/account/billing"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold hover:opacity-80 transition-opacity"
+                                style={{ background: color + "15", color, border: `1px solid ${color}40` }}
+                              >
                                 {label === "Premium" && <Crown className="w-2.5 h-2.5" />}
                                 {label}
-                              </span>
+                              </a>
                             ))}
                           </div>
                         </div>
@@ -349,9 +362,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                           <button onClick={() => setAccountOpen(false)}
                             className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs md:text-sm text-gray-700 hover:bg-[#f0fbfc] hover:text-[#189aa1] transition-all text-left">
                             <Settings className="w-3.5 h-3.5 text-[#189aa1]" />
-                            Edit Profile &amp; Manage Subscriptions
+                            Edit Profile
                           </button>
                         </WouterLink>
+                        <a
+                          href="https://member.allaboutultrasound.com/account/billing"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => setAccountOpen(false)}
+                          className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs md:text-sm text-gray-700 hover:bg-[#f0fbfc] hover:text-[#189aa1] transition-all text-left"
+                        >
+                          <CreditCard className="w-3.5 h-3.5 text-[#189aa1]" />
+                          My Subscriptions
+                        </a>
                         <WouterLink href="/case-library/submit">
                           <button onClick={() => setAccountOpen(false)}
                             className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs md:text-sm text-gray-700 hover:bg-[#f0fbfc] hover:text-[#189aa1] transition-all text-left">
