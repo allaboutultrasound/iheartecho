@@ -2009,14 +2009,13 @@
 - [ ] Fix Diastology Assessment: Step 1 + Step 2 ONLY (remove extra parameters, match old Echo Calculators format)
 - [ ] Move StrokeVolumeEngine INSIDE LVSystolicEngine section (not standalone)
 - [ ] Add HOCM LVOT Gradient Calculator inside LVSystolicEngine section
-- [ ] Reorder engines: 1) LV SystolicAssist (LV EF/FS/Mass/Dim + SV/CO + HOCM LVOT), 2) DiastologyAssist (Diastology Assessment + LAP Grading + Special Populations), 3) AS, 4) AR, 5) MS, 6) MR, 7) TR, 8) RV SystolicAssist, 9) PulmonaryHypertensionAssist, 10) POCUS-Assist, 11) Frank-Starling, 12) StrainAssist (PremiumOverlay), 13) StressEchoAssist (PremiumOverlay)
-- [ ] Remove StrokeVolumeEngine as a standalone section
+- [x] Reorder engines: 1) LV SystolicAssist + SV/CO, 2) DiastologyAssist (Diastology + LAP + Special Pops), 3) AS, 4) AR, 5) MS, 6) MR, 7) TR, 8) RV, 9) PulmHTN, 10) POCUS-Assist, 11) Frank-Starling, 12) Strain (Premium), 13) StressEchoAssist (Premium)
 
 ## EchoAssist™ Calculators Restructure (Mar 10 2026) — REDO
 - [ ] Fix Diastology Assessment: Step 1 + Step 2 ONLY (remove extra parameters, match old Echo Calculators format)
 - [ ] Move StrokeVolumeEngine INSIDE LVSystolicEngine section (not standalone)
 - [ ] Add HOCM LVOT Gradient Calculator inside LVSystolicEngine section
-- [ ] Reorder engines: 1) LV SystolicAssist (LV EF/FS/Mass/Dim + SV/CO + HOCM LVOT), 2) DiastologyAssist (Diastology Assessment + LAP Grading + Special Populations), 3) AS, 4) AR, 5) MS, 6) MR, 7) TR, 8) RV SystolicAssist, 9) PulmonaryHypertensionAssist, 10) POCUS-Assist, 11) Frank-Starling, 12) StrainAssist (PremiumOverlay), 13) StressEchoAssist (PremiumOverlay)
+- [x] Reorder engines: 1) LV SystolicAssist + SV/CO, 2) DiastologyAssist (Diastology + LAP + Special Pops), 3) AS, 4) AR, 5) MS, 6) MR, 7) TR, 8) RV, 9) PulmHTN, 10) POCUS-Assist, 11) Frank-Starling, 12) Strain (Premium), 13) StressEchoAssist (Premium)
 - [ ] Remove StrokeVolumeEngine as a standalone section
 
 ## Premium Membership Restructure ($19.97/month)
@@ -2076,3 +2075,6 @@
 - [ ] Add "Learn POCUS" sidebar link after Learn Fetal Echo → https://www.allaboutultrasound.com/pocus-education.html
 - [x] Confirm DIY access users go directly to DIY Accreditation Tool via smart sidebar link
 - [x] Add DIY Accreditation Tool link in profile dropdown menu for DIY users
+- [ ] Rebuild EchoAccreditation Navigator with accurate IAC standards content (Adult, Pediatric/Fetal, Perioperative TEE)
+- [ ] Ensure all tag options have referenced content in Accreditation Navigator
+- [ ] Add CME/Personnel breakdown by role (Medical Director, Medical Staff, Technical Director, Technical Staff) and Adult/Pediatric differentiation

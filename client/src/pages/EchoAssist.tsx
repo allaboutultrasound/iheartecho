@@ -2760,24 +2760,33 @@ export default function EchoAssist() {
 
         {/* Engine sections */}
         <div className="space-y-4">
+          {/* 1. LV SystolicAssist group (LV EF/FS/Mass/Dim + SV/CO) */}
           <LVSystolicEngine />
+          <StrokeVolumeEngine />
+          {/* 2. DiastologyAssist group */}
           <DiastolicEngine />
           <LAPEstimationEngine />
           <DiastologySpecialPopulations />
+          {/* 3-7. Valve engines */}
+          <AorticStenosisEngine />
+          <AorticRegurgEngine />
+          <MitraStenosisEngine />
+          <MitralRegurgEngine />
+          <TricuspidRegurgEngine />
+          {/* 8. RV */}
+          <RVFunctionEngine />
+          {/* 9. Pulmonary HTN */}
+          <PulmonaryHTNEngine />
+          {/* 10. POCUS-Assist */}
+          <POCUSAssistEngine />
+          {/* 11. Frank-Starling */}
+          <FrankStarlingEngine />
+          {/* 12. Strain (Premium) */}
           <StrainEngine />
+          {/* 13. Stress Echo (Premium) */}
           <PremiumOverlay featureName="StressEchoAssist™">
             <StressEchoAssistEngine />
           </PremiumOverlay>
-          <AorticStenosisEngine />
-          <MitraStenosisEngine />
-          <AorticRegurgEngine />
-          <MitralRegurgEngine />
-          <TricuspidRegurgEngine />
-          <RVFunctionEngine />
-          <PulmonaryHTNEngine />
-          <StrokeVolumeEngine />
-          <FrankStarlingEngine />
-          <POCUSAssistEngine />
         </div>
 
         {/* Footer */}

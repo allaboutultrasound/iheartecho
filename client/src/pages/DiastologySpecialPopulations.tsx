@@ -135,8 +135,7 @@ function EngineSection({
     <div id={id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
       <button
         onClick={() => setOpen(o => !o)}
-        className="w-full px-5 py-3 flex items-center justify-between"
-        style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}
+        className="w-full teal-header px-5 py-3 flex items-center justify-between"
       >
         <div className="text-left">
           <h3 className="font-bold text-sm text-white" style={{ fontFamily: "Merriweather, serif" }}>{title}</h3>
@@ -1021,27 +1020,20 @@ export default function DiastologySpecialPopulations() {
       {/* Section header — collapsible, matches other EngineSection headers */}
       <button
         onClick={() => setOpen(o => !o)}
-        className="w-full px-5 py-3 flex items-center justify-between text-left"
-        style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}
+        className="w-full teal-header px-5 py-3 flex items-center justify-between"
       >
-        <div className="flex items-center gap-3">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-            style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}>
-            <Lock className="w-3.5 h-3.5 text-white" />
+        <div className="text-left flex-1">
+          <div className="flex items-center gap-2">
+            <h3 className="font-bold text-sm text-white" style={{ fontFamily: "Merriweather, serif" }}>
+              Diastology in Special Populations
+            </h3>
+            <span className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-yellow-400/20 border border-yellow-400/40 text-yellow-300">
+              <Crown className="w-2.5 h-2.5" /> Premium
+            </span>
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="font-bold text-sm text-white" style={{ fontFamily: "Merriweather, serif" }}>
-                Diastology in Special Populations
-              </h3>
-              <span className="inline-flex items-center gap-1 bg-amber-400/20 border border-amber-400/40 text-amber-200 text-[10px] font-semibold px-2 py-0.5 rounded-full">
-                <Crown className="w-2.5 h-2.5" /> Premium
-              </span>
-            </div>
-            <p className="text-xs text-white/70 mt-0.5">
-              ASE 2025 — MAC · Heart Transplant · Pulmonary HTN · Atrial Fibrillation · Constrictive vs Restrictive
-            </p>
-          </div>
+          <p className="text-xs text-white/70 mt-0.5">
+            ASE 2025 — MAC · Heart Transplant · Pulmonary HTN · Atrial Fibrillation · Constrictive vs Restrictive
+          </p>
         </div>
         {open ? <ChevronUp className="w-4 h-4 text-white/70 flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-white/70 flex-shrink-0" />}
       </button>
