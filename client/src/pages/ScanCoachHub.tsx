@@ -29,6 +29,11 @@ const coaches = [
 export default function ScanCoachHub() {
   const [, navigate] = useLocation();
 
+  // Map tabs that have standalone routes (not tabs in /scan-coach)
+  const standaloneRoutes: Record<string, string> = {
+    stress: "/stress-scan-coach",
+  };
+
   return (
     <Layout>
       {/* Hero Banner */}
@@ -70,7 +75,7 @@ export default function ScanCoachHub() {
           {coaches.map(({ tab, icon: Icon, label, views }) => (
             <button
               key={tab}
-              onClick={() => navigate(`/scan-coach?tab=${tab}`)}
+              onClick={() => navigate(standaloneRoutes[tab] ?? `/scan-coach?tab=${tab}`)}
               className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-gray-100 bg-white hover:border-[#189aa1]/50 hover:shadow-md transition-all text-center cursor-pointer group"
               style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
             >

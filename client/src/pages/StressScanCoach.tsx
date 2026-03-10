@@ -732,6 +732,40 @@ export default function StressScanCoach() {
   return (
     <Layout>
       <ScanCoachNavBar navigatorPath="/stress" navigatorLabel="Stress Navigator" />
+
+      {/* Hero Banner */}
+      <div
+        className="relative overflow-hidden"
+        style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}
+      >
+        <div className="container py-10 md:py-12">
+          <div className="flex items-start gap-4">
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 mt-1"
+              style={{ background: "rgba(255,255,255,0.1)" }}
+            >
+              <Zap className="w-6 h-6 text-[#4ad9e0]" />
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-3">
+                <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
+                <span className="text-sm text-white/80 font-medium">Exercise &amp; DSE · 13 Views · Rest → Peak → Recovery</span>
+              </div>
+              <h1
+                className="text-2xl md:text-3xl font-black text-white leading-tight"
+                style={{ fontFamily: "Merriweather, serif" }}
+              >
+                Stress Echo ScanCoach™
+              </h1>
+              <p className="text-[#4ad9e0] font-semibold text-base mt-0.5">Probe Positioning · Wall Motion Scoring · DSE Protocol</p>
+              <p className="text-white/70 text-sm md:text-base mt-2 max-w-xl leading-relaxed">
+                View-by-view acquisition guide for exercise and pharmacological stress echocardiography — baseline, peak stress, and recovery phases with Doppler guidance and critical findings.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
 {/* Main Layout */}
       <div className="container py-6">
         <div className="flex gap-5">
