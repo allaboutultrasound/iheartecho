@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 const BRAND = "#189aa1";
-const GROUP_COLOR = "#0e7490";
+const GROUP_COLOR = "#189aa1";
 
 const EFAST_VIEWS = [
   {
@@ -194,7 +194,7 @@ const EFAST_VIEWS = [
   {
     id: "rthorax",
     group: "Thoracic Windows",
-    groupColor: "#0f766e",
+    groupColor: "#189aa1",
     name: "Right Thorax — PTX / Hemothorax",
     probe: "Linear 7–12 MHz (PTX) | Curvilinear (hemothorax)",
     depth: "4–6 cm (PTX) | 10–14 cm (hemothorax)",
@@ -238,7 +238,7 @@ const EFAST_VIEWS = [
   {
     id: "lthorax",
     group: "Thoracic Windows",
-    groupColor: "#0f766e",
+    groupColor: "#189aa1",
     name: "Left Thorax — PTX / Hemothorax",
     probe: "Linear 7–12 MHz (PTX) | Curvilinear (hemothorax)",
     depth: "4–6 cm (PTX) | 10–14 cm (hemothorax)",

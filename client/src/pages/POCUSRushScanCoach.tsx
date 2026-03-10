@@ -15,9 +15,9 @@ import {
 } from "lucide-react";
 
 const BRAND = "#189aa1";
-const GROUP_PUMP = "#7c3aed";
-const GROUP_TANK = "#0e7490";
-const GROUP_PIPES = "#b45309";
+const GROUP_PUMP = "#189aa1";
+const GROUP_TANK = "#189aa1";
+const GROUP_PIPES = "#189aa1";
 
 const RUSH_VIEWS = [
   // ── PUMP ──────────────────────────────────────────────────────────────────
@@ -474,7 +474,7 @@ export default function POCUSRushScanCoach() {
       </div>
 
       <PremiumGate featureName="RUSH ScanCoach">
-        <div className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #1e1b4b 60%, #7c3aed 100%)" }}>
+        <div className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}>
           <div className="container py-6 md:py-8">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(255,255,255,0.1)" }}>

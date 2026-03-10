@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 const BRAND = "#189aa1";
-const GROUP_COLOR = "#0f766e";
+const GROUP_COLOR = "#189aa1";
 
 const LUNG_VIEWS = [
   {
@@ -104,7 +104,7 @@ const LUNG_VIEWS = [
   {
     id: "plaps_right",
     group: "PLAPS Point — Consolidation / Effusion",
-    groupColor: "#0e7490",
+    groupColor: "#189aa1",
     name: "Right PLAPS Point",
     probe: "Curvilinear 3.5–5 MHz",
     depth: "10–16 cm",
@@ -146,7 +146,7 @@ const LUNG_VIEWS = [
   {
     id: "plaps_left",
     group: "PLAPS Point — Consolidation / Effusion",
-    groupColor: "#0e7490",
+    groupColor: "#189aa1",
     name: "Left PLAPS Point",
     probe: "Curvilinear 3.5–5 MHz",
     depth: "10–16 cm",
@@ -185,7 +185,7 @@ const LUNG_VIEWS = [
   {
     id: "diaphragm",
     group: "Diaphragm Assessment",
-    groupColor: "#7c3aed",
+    groupColor: "#189aa1",
     name: "Diaphragm — M-mode Assessment",
     probe: "Curvilinear 3.5–5 MHz",
     depth: "8–12 cm",
@@ -414,7 +414,7 @@ export default function POCUSLungScanCoach() {
       </div>
 
       <PremiumGate featureName="Lung POCUS ScanCoach">
-        <div className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0a3a40 60%, #0f766e 100%)" }}>
+        <div className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}>
           <div className="container py-6 md:py-8">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(255,255,255,0.1)" }}>
