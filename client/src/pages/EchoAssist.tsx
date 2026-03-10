@@ -2396,15 +2396,18 @@ function StressEchoAssistEngine() {
 
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 export default function EchoAssist() {
-  // Fire hash-based open event on mount so the matching engine auto-opens
+  // Fire hash-based deep-link event on mount — retries at 100ms, 400ms, 800ms
+  // so it works reliably for both in-app navigation AND external deep-links
+  // (external links need more time for React to fully hydrate all engine components)
   useEffect(() => {
     const hash = window.location.hash.replace("#", "");
     if (!hash) return;
-    // Dispatch after a short delay so all engine components have mounted
-    const timer = setTimeout(() => {
+    const dispatch = () =>
       window.dispatchEvent(new CustomEvent("echoassist:open", { detail: hash }));
-    }, 100);
-    return () => clearTimeout(timer);
+    const t1 = setTimeout(dispatch, 100);
+    const t2 = setTimeout(dispatch, 400);
+    const t3 = setTimeout(dispatch, 800);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, []);
 
   return (
