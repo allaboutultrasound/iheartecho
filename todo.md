@@ -1904,3 +1904,7 @@
 - [x] Add POCUS-Assist engine calculator quick-access banner to RUSH Navigator (IVC CI + eFAST grader)
 - [x] Add POCUS-Assist engine calculator quick-access banner to Cardiac Navigator (IVC CI)
 - [x] Add POCUS-Assist engine calculator quick-access banner to Lung Navigator (B-line scorer)
+
+## EchoAssist™ Cross-Promotion on POCUS Hub (Mar 10 2026)
+
+- [x] Add EchoAssist™ reciprocal cross-promotion card to POCUS-Assist™ Hub page

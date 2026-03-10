@@ -11,7 +11,7 @@ import Layout from "@/components/Layout";
 import { usePremium } from "@/hooks/usePremium";
 import {
   Shield, Zap, Heart, Wind,
-  ArrowRight, Crown, Lock,
+  ArrowRight, Crown, Lock, Stethoscope,
 } from "lucide-react";
 
 const BRAND = "#189aa1";
@@ -302,6 +302,62 @@ export default function POCUSAssistHub() {
               </Link>
             </div>
           )}
+        </div>
+
+        {/* ── EchoAssist™ Cross-Promotion ──────────────────────────────── */}
+        <div
+          className="mt-8 rounded-xl p-5 border"
+          style={{ borderColor: "#189aa1" + "40", background: "#f0fbfc" }}
+        >
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="flex-shrink-0">
+              <div
+                className="w-14 h-14 rounded-xl flex items-center justify-center"
+                style={{ background: "linear-gradient(135deg, #0e1e2e, #189aa1)" }}
+              >
+                <Stethoscope className="w-7 h-7 text-[#4ad9e0]" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span
+                  className="text-xs font-semibold uppercase tracking-wider"
+                  style={{ color: "#189aa1" }}
+                >
+                  Also in iHeartEcho
+                </span>
+              </div>
+              <h3
+                className="font-bold text-gray-900 text-base mb-1"
+                style={{ fontFamily: "Merriweather, serif" }}
+              >
+                EchoAssist™
+              </h3>
+              <p className="text-sm text-gray-500 mb-3">
+                Structured echo protocols with view-by-view checklists, normal reference values, scanning tips, and guideline-based interpretation for 11 specialties — Adult TTE, Pediatric, Fetal, Strain, Diastology, UEA, Stress Echo, HOCM, Pulmonary HTN &amp; PE, Structural Heart, TEE, and ICE.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Link href="/echoassist-hub">
+                  <button
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
+                    style={{ background: "#189aa1" }}
+                  >
+                    <Stethoscope className="w-3.5 h-3.5" />
+                    Open EchoAssist™ Hub
+                  </button>
+                </Link>
+                <Link href="/echoassist">
+                  <button
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm border bg-white transition-all hover:bg-[#189aa1]/5"
+                    style={{ borderColor: "#189aa1" + "50", color: "#189aa1" }}
+                  >
+                    <ArrowRight className="w-3.5 h-3.5" />
+                    Open EchoAssist™ Engine
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
