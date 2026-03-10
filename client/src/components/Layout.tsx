@@ -10,7 +10,7 @@ import {
   Scan, BookOpen, FileText, Menu, X, ChevronRight,
   Stethoscope, Zap, ExternalLink, ShoppingBag, FlaskConical, MessageCircle, Award, Shield, GraduationCap,
   BookMarked, Library, Plus, Crown, Droplets,
-  LogIn, LogOut, Settings, ChevronDown, Webhook, Wind, Baby, Users, Microscope, Layers, CreditCard
+  LogIn, LogOut, Settings, ChevronDown, Webhook, Layers, CreditCard
 } from "lucide-react";
 
 import { trpc } from "@/lib/trpc";
@@ -59,19 +59,10 @@ const navGroups = [
     label: "Clinical Tools",
     items: [
       { path: "/echo-assist-hub", label: "EchoAssist™", icon: Stethoscope },
+      { path: "/pocus-assist-hub", label: "POCUS-Assist™", icon: Shield },
       { path: "/hemodynamics", label: "Hemodynamics Lab", icon: Activity },
       { path: "/calculator", label: "Echo Calculators", icon: Calculator },
       { path: "/report", label: "Report Builder", icon: FileText },
-    ],
-  },
-  {
-    label: "POCUS-Assist™",
-    items: [
-      { path: "/pocus-assist-hub", label: "POCUS-Assist™ Hub", icon: Shield },
-      { path: "/pocus-efast", label: "eFAST Navigator", icon: Scan },
-      { path: "/pocus-rush", label: "RUSH Navigator", icon: Zap },
-      { path: "/pocus-cardiac", label: "Cardiac POCUS Navigator", icon: Heart },
-      { path: "/pocus-lung", label: "Lung POCUS Navigator", icon: Wind },
     ],
   },
   {
