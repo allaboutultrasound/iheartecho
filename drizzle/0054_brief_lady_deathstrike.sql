@@ -1,0 +1,81 @@
+CREATE TABLE `diyConciergePurchases` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`orgId` int NOT NULL,
+	`subscriptionId` int NOT NULL,
+	`purchaserUserId` int,
+	`purchaserEmail` varchar(320),
+	`stripePaymentIntentId` varchar(128),
+	`stripeSessionId` varchar(128),
+	`amountCents` int NOT NULL DEFAULT 499700,
+	`status` enum('pending','complete','refunded') NOT NULL DEFAULT 'pending',
+	`notificationSentAt` timestamp,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `diyConciergePurchases_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `diyOrgMembers` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`orgId` int NOT NULL,
+	`subscriptionId` int NOT NULL,
+	`userId` int,
+	`inviteEmail` varchar(320) NOT NULL,
+	`displayName` varchar(100),
+	`credentials` varchar(200),
+	`diyRole` enum('super_admin','lab_admin','diy_member') NOT NULL,
+	`canManageWorkflows` boolean NOT NULL DEFAULT false,
+	`canUploadPolicies` boolean NOT NULL DEFAULT false,
+	`canAssignTasks` boolean NOT NULL DEFAULT false,
+	`canManageStaff` boolean NOT NULL DEFAULT false,
+	`canViewAnalytics` boolean NOT NULL DEFAULT false,
+	`canViewPolicyBuilder` boolean NOT NULL DEFAULT false,
+	`canViewCaseStudies` boolean NOT NULL DEFAULT false,
+	`canViewReadiness` boolean NOT NULL DEFAULT false,
+	`inviteStatus` enum('pending','accepted','declined','revoked') NOT NULL DEFAULT 'pending',
+	`inviteToken` varchar(64),
+	`invitedByUserId` int,
+	`joinedAt` timestamp,
+	`isActive` boolean NOT NULL DEFAULT true,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `diyOrgMembers_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `diyOrganizations` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`ownerUserId` int NOT NULL,
+	`name` varchar(300) NOT NULL,
+	`address` text,
+	`phone` varchar(30),
+	`website` varchar(255),
+	`accreditationTypes` text,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `diyOrganizations_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `diySubscriptions` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`orgId` int NOT NULL,
+	`plan` enum('starter','professional','advanced','partner') NOT NULL,
+	`status` enum('active','trialing','past_due','canceled','paused') NOT NULL DEFAULT 'trialing',
+	`totalSeats` int NOT NULL,
+	`labAdminSeats` int NOT NULL,
+	`memberSeats` int NOT NULL,
+	`isUnlimitedMembers` boolean NOT NULL DEFAULT false,
+	`hasConcierge` boolean NOT NULL DEFAULT false,
+	`conciergeGrantedAt` timestamp,
+	`conciergeStripePaymentId` varchar(128),
+	`thinkificProductId` int,
+	`thinkificOrderId` int,
+	`stripeCustomerId` varchar(64),
+	`stripeSubscriptionId` varchar(64),
+	`billingCycleStart` timestamp,
+	`billingCycleEnd` timestamp,
+	`trialEndsAt` timestamp,
+	`canceledAt` timestamp,
+	`notes` text,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `diySubscriptions_id` PRIMARY KEY(`id`)
+);

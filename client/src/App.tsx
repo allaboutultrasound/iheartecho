@@ -83,6 +83,10 @@ import POCUSEfastScanCoach from "./pages/POCUSEfastScanCoach";
 import POCUSRushScanCoach from "./pages/POCUSRushScanCoach";
 import POCUSCardiacScanCoach from "./pages/POCUSCardiacScanCoach";
 import POCUSLungScanCoach from "./pages/POCUSLungScanCoach";
+// DIY Accreditation™
+import DIYLabAdmin from "./pages/DIYLabAdmin";
+import DIYMemberPortal from "./pages/DIYMemberPortal";
+import DIYAccreditationPlans from "./pages/DIYAccreditationPlans";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -189,6 +193,10 @@ function Router() {
       <Route path="/admin/quickfire" component={QuickFireAdmin} />
       <Route path="/admin/scancoach" component={ScanCoachEditor} />
       <Route path="/admin/thinkific-webhook" component={ThinkificWebhookAdmin} />
+      {/* ── DIY Accreditation™ ─────────────────────────────────────────── */}
+      <Route path="/diy-accreditation-plans" component={DIYAccreditationPlans} />
+      <Route path="/diy-lab-admin">{() => <RoleGuard roles={["diy_admin", "admin"]}><DIYLabAdmin /></RoleGuard>}</Route>
+      <Route path="/diy-member">{() => <RoleGuard roles={["diy_user", "diy_admin", "admin"]}><DIYMemberPortal /></RoleGuard>}</Route>
       {/* ── Premium Access ──────────────────────────────────────────────── */}
       <Route path="/premium" component={Premium} />
       <Route path="/upgrade-success" component={UpgradeSuccess} />

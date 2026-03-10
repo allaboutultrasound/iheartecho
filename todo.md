@@ -1908,3 +1908,18 @@
 ## EchoAssist™ Cross-Promotion on POCUS Hub (Mar 10 2026)
 
 - [x] Add EchoAssist™ reciprocal cross-promotion card to POCUS-Assist™ Hub page
+
+## DIY Accreditation™ Member Profiles & Upgrade Pages (Mar 10 2026)
+
+- [x] DB schema: diyOrganizations, diySubscriptions, diyOrgMembers, diyConciergePurchases tables
+- [x] DB migration pushed (pnpm db:push)
+- [x] tRPC diyRouter: org management, seat enforcement, role gating, invite/revoke members
+- [x] Lab Admin Portal page (/diy-lab-admin) — org dashboard, seat management, member invite
+- [x] DIY Member Portal page (/diy-member) — restricted access view, workflow tasks
+- [x] DIY Accreditation Plans sales page (/diy-accreditation-plans) — 4 tiers + Concierge add-on
+- [x] Stripe webhook handler for Concierge purchase activation + owner notification
+- [x] Stripe webhook registered in server index.ts
+- [x] Routes registered in App.tsx with RoleGuard gating
+- [x] Sidebar nav: DIY Accreditation Plans, Lab Admin Portal, Member Portal added to Accreditation section
+- [x] SuperAdmin role defined (1 per org, occupies 1 Lab Admin seat)
+- [x] Seat allotment enforcement per tier (Starter: 5, Professional: 15, Advanced: 50, Partner: unlimited)

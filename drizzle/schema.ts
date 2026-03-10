@@ -1403,3 +1403,136 @@ export const possibleCaseStudies = mysqlTable("possibleCaseStudies", {
 });
 export type PossibleCaseStudy = typeof possibleCaseStudies.$inferSelect;
 export type InsertPossibleCaseStudy = typeof possibleCaseStudies.$inferInsert;
+
+// ─── DIY Accreditation: Organizations ────────────────────────────────────────
+// One Organization per lab/clinic that subscribes to a DIY Accreditation tier.
+// Created at registration or when a user purchases a DIY plan.
+// All DIY data (subscriptions, members, seat allotments) is scoped to an org.
+export const diyOrganizations = mysqlTable("diyOrganizations", {
+  id: int("id").autoincrement().primaryKey(),
+  // The owner/billing user who registered the org (SuperAdmin seat)
+  ownerUserId: int("ownerUserId").notNull(),
+  name: varchar("name", { length: 300 }).notNull(),
+  address: text("address"),
+  phone: varchar("phone", { length: 30 }),
+  website: varchar("website", { length: 255 }),
+  // Accreditation types the lab is seeking (JSON array: "adult_echo" | "pediatric_fetal_echo")
+  accreditationTypes: text("accreditationTypes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type DiyOrganization = typeof diyOrganizations.$inferSelect;
+export type InsertDiyOrganization = typeof diyOrganizations.$inferInsert;
+
+// ─── DIY Accreditation: Subscriptions ────────────────────────────────────────
+// One active subscription per organization.
+// Tracks the tier, seat allotments, and payment metadata.
+//
+// Tiers and seat allotments:
+//   starter       — 5 seats: 1 Lab Admin + 4 DIY Members
+//   professional  — 15 seats: 2 Lab Admins + 13 DIY Members
+//   advanced      — 50 seats: 5 Lab Admins + 45 DIY Members
+//   partner       — unlimited: up to 10 Lab Admins + unlimited DIY Members
+//
+// SuperAdmin:
+//   Each organization has exactly 1 SuperAdmin (the ownerUserId on diyOrganizations).
+//   The SuperAdmin occupies 1 of the Lab Admin seats for their tier.
+//   SuperAdmin can manage all org settings, billing, and seat assignments.
+//
+// Concierge add-on:
+//   Available only as an add-on to an active subscription.
+//   Tracked via hasConcierge flag + conciergeGrantedAt timestamp.
+export const diySubscriptions = mysqlTable("diySubscriptions", {
+  id: int("id").autoincrement().primaryKey(),
+  orgId: int("orgId").notNull(),
+  // Billing tier
+  plan: mysqlEnum("plan", ["starter", "professional", "advanced", "partner"]).notNull(),
+  status: mysqlEnum("status", ["active", "trialing", "past_due", "canceled", "paused"]).default("trialing").notNull(),
+  // Seat allotments (derived from plan, stored for fast enforcement)
+  totalSeats: int("totalSeats").notNull(),        // total seats (Lab Admin + DIY Member)
+  labAdminSeats: int("labAdminSeats").notNull(),  // max Lab Admin seats (incl. SuperAdmin)
+  memberSeats: int("memberSeats").notNull(),      // max DIY Member seats
+  isUnlimitedMembers: boolean("isUnlimitedMembers").default(false).notNull(),
+  // Concierge add-on ($4,997 one-time, only available with active subscription)
+  hasConcierge: boolean("hasConcierge").default(false).notNull(),
+  conciergeGrantedAt: timestamp("conciergeGrantedAt"),
+  conciergeStripePaymentId: varchar("conciergeStripePaymentId", { length: 128 }),
+  // Thinkific checkout tracking
+  thinkificProductId: int("thinkificProductId"),
+  thinkificOrderId: int("thinkificOrderId"),
+  // Stripe (for Concierge and future direct billing)
+  stripeCustomerId: varchar("stripeCustomerId", { length: 64 }),
+  stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 64 }),
+  // Billing cycle
+  billingCycleStart: timestamp("billingCycleStart"),
+  billingCycleEnd: timestamp("billingCycleEnd"),
+  trialEndsAt: timestamp("trialEndsAt"),
+  canceledAt: timestamp("canceledAt"),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type DiySubscription = typeof diySubscriptions.$inferSelect;
+export type InsertDiySubscription = typeof diySubscriptions.$inferInsert;
+
+// ─── DIY Accreditation: Org Members ──────────────────────────────────────────
+// Each row represents one seat assignment within an organization.
+// diyRole:
+//   super_admin  — 1 per org, the ownerUserId; occupies 1 Lab Admin seat
+//   lab_admin    — manages workflows, policies, staff; has premium app access
+//   diy_member   — participates in case review and workflow tasks; DIY-only access
+//
+// Seat enforcement rules (checked on every invite/assignment):
+//   - Count active lab_admin rows (incl. super_admin) ≤ labAdminSeats
+//   - Count active diy_member rows ≤ memberSeats (unless isUnlimitedMembers)
+//   - Total active rows ≤ totalSeats (unless isUnlimitedMembers)
+export const diyOrgMembers = mysqlTable("diyOrgMembers", {
+  id: int("id").autoincrement().primaryKey(),
+  orgId: int("orgId").notNull(),
+  subscriptionId: int("subscriptionId").notNull(),
+  userId: int("userId"),                              // null until invite accepted
+  inviteEmail: varchar("inviteEmail", { length: 320 }).notNull(),
+  displayName: varchar("displayName", { length: 100 }),
+  credentials: varchar("credentials", { length: 200 }),
+  // DIY-specific role within the organization
+  diyRole: mysqlEnum("diyRole", ["super_admin", "lab_admin", "diy_member"]).notNull(),
+  // Permissions snapshot (denormalized for fast gating checks)
+  canManageWorkflows: boolean("canManageWorkflows").default(false).notNull(),
+  canUploadPolicies: boolean("canUploadPolicies").default(false).notNull(),
+  canAssignTasks: boolean("canAssignTasks").default(false).notNull(),
+  canManageStaff: boolean("canManageStaff").default(false).notNull(),
+  canViewAnalytics: boolean("canViewAnalytics").default(false).notNull(),
+  canViewPolicyBuilder: boolean("canViewPolicyBuilder").default(false).notNull(),
+  canViewCaseStudies: boolean("canViewCaseStudies").default(false).notNull(),
+  canViewReadiness: boolean("canViewReadiness").default(false).notNull(),
+  // Invite lifecycle
+  inviteStatus: mysqlEnum("inviteStatus", ["pending", "accepted", "declined", "revoked"]).default("pending").notNull(),
+  inviteToken: varchar("inviteToken", { length: 64 }),
+  invitedByUserId: int("invitedByUserId"),
+  joinedAt: timestamp("joinedAt"),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type DiyOrgMember = typeof diyOrgMembers.$inferSelect;
+export type InsertDiyOrgMember = typeof diyOrgMembers.$inferInsert;
+
+// ─── DIY Accreditation: Concierge Purchases ──────────────────────────────────
+// Tracks individual Concierge add-on purchases (Stripe one-time payment).
+// A notification is sent to the owner when a purchase is processed.
+export const diyConciergePurchases = mysqlTable("diyConciergePurchases", {
+  id: int("id").autoincrement().primaryKey(),
+  orgId: int("orgId").notNull(),
+  subscriptionId: int("subscriptionId").notNull(),
+  purchaserUserId: int("purchaserUserId"),
+  purchaserEmail: varchar("purchaserEmail", { length: 320 }),
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 128 }),
+  stripeSessionId: varchar("stripeSessionId", { length: 128 }),
+  amountCents: int("amountCents").default(499700).notNull(), // $4,997.00
+  status: mysqlEnum("status", ["pending", "complete", "refunded"]).default("pending").notNull(),
+  notificationSentAt: timestamp("notificationSentAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type DiyConciergePurchase = typeof diyConciergePurchases.$inferSelect;
+export type InsertDiyConciergePurchase = typeof diyConciergePurchases.$inferInsert;

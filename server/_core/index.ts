@@ -6,6 +6,7 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { registerChatRoutes } from "./chat";
 import { registerThinkificWebhook } from "../webhooks/thinkific";
+import { registerStripeWebhook } from "../webhooks/stripe";
 import { registerUploadCaseMediaRoute } from "../routes/uploadCaseMedia";
 import { registerUploadQuestionImageRoute } from "../routes/uploadQuestionImage";
 import { registerUploadQuestionMediaRoute } from "../routes/uploadQuestionMedia";
@@ -45,6 +46,8 @@ async function startServer() {
   registerChatRoutes(app);
   // Thinkific webhook for live course sync
   registerThinkificWebhook(app);
+  // Stripe webhook for Concierge purchase activation
+  registerStripeWebhook(app);
   // Case media upload endpoint (multipart/form-data)
   registerUploadCaseMediaRoute(app);
   // Question image upload endpoint (admin only)

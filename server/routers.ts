@@ -12,6 +12,7 @@ import { quickfireRouter } from "./routers/quickfireRouter";
 import { caseLibraryRouter } from "./routers/caseLibraryRouter";
 import { premiumRouter } from "./routers/premiumRouter";
 import { scanCoachAdminRouter } from "./routers/scanCoachAdminRouter";
+import { diyRouter } from "./routers/diyRouter";
 import {
   getUserById,
   getUsersByIds,
@@ -1727,6 +1728,9 @@ export const appRouter = router({
 
   // ─── ScanCoach WYSIWYG Admin ──────────────────────────────────────────────────
   scanCoachAdmin: scanCoachAdminRouter,
+
+  // ─── DIY Accreditation ─────────────────────────────────────────────────────────────
+  diy: diyRouter,
 
   // ─── Physician Over-Read Workflow (Step 1 & Step 2) ──────────────────────────
   physicianOverRead: router({
