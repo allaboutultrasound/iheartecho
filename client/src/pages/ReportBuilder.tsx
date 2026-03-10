@@ -6,7 +6,7 @@
 */
 import { useState, useMemo, useCallback, useEffect } from "react";
 import Layout from "@/components/Layout";
-import { FileText, Copy, Download, CheckCircle2, ChevronDown, ChevronUp, Printer, MessageSquarePlus, Trash2, Bold, Italic, Underline as UnderlineIcon, AlignLeft, AlignCenter, AlignRight, Type } from "lucide-react";
+import { FileText, Copy, Download, CheckCircle2, ChevronDown, ChevronUp, Printer, MessageSquarePlus, Trash2, Bold, Italic, Underline as UnderlineIcon, AlignLeft, AlignCenter, AlignRight, Type, ClipboardCopy, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -913,6 +913,68 @@ export default function ReportBuilder() {
     toast.success("Report copied to clipboard!");
     setTimeout(() => setCopied(false), 2000);
   };
+  const copyRichText = async () => {
+    // Copy as rich text so it pastes into Word/Epic with formatting
+    const html = richHtml || `<pre style="font-family:Arial,sans-serif;font-size:12pt">${report.replace(/</g,"&lt;").replace(/>/g,"&gt;")}</pre>`;
+    try {
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          "text/html": new Blob([html], { type: "text/html" }),
+          "text/plain": new Blob([document.createElement("div").innerHTML = html, document.createElement("div").innerText || report], { type: "text/plain" }),
+        }),
+      ]);
+      toast.success("Rich text copied — paste into Word or Epic!");
+    } catch {
+      // Fallback: copy plain text
+      navigator.clipboard.writeText(report);
+      toast.success("Copied as plain text (browser doesn't support rich copy).");
+    }
+  };
+  const downloadDocx = async () => {
+    try {
+      const { Document, Packer, Paragraph, TextRun, HeadingLevel, HorizontalPositionRelativeFrom } = await import("docx");
+      const lines = report.split("\n");
+      const paragraphs = lines.map(line => {
+        const trimmed = line.trim();
+        if (!trimmed) return new Paragraph({ children: [new TextRun("")], spacing: { after: 60 } });
+        if (/^[─\-]{10,}$/.test(trimmed)) {
+          return new Paragraph({ border: { bottom: { color: "CCCCCC", size: 6, space: 1, style: "single" } }, spacing: { after: 120 } });
+        }
+        if (/^[A-Z][A-Z0-9 \-\/&:]+:?$/.test(trimmed) && trimmed.length < 60) {
+          return new Paragraph({
+            children: [new TextRun({ text: trimmed, bold: true, font: "Arial", size: 24 })],
+            spacing: { before: 160, after: 60 },
+          });
+        }
+        return new Paragraph({
+          children: [new TextRun({ text: line, font: "Arial", size: 24 })],
+          spacing: { after: 40 },
+        });
+      });
+      const doc = new Document({
+        styles: {
+          default: {
+            document: {
+              run: { font: "Arial", size: 24 },
+              paragraph: { spacing: { line: 276 } },
+            },
+          },
+        },
+        sections: [{ properties: {}, children: paragraphs }],
+      });
+      const buffer = await Packer.toBlob(doc);
+      const url = URL.createObjectURL(buffer);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `echo-report-${new Date().toISOString().split("T")[0]}.docx`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Report downloaded as .docx!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to generate .docx — try plain text download.");
+    }
+  };
   const downloadReport = () => {
     const tmp = document.createElement("div");
     tmp.innerHTML = richHtml || report;
@@ -1227,10 +1289,20 @@ export default function ReportBuilder() {
                   <Printer className="w-3.5 h-3.5" />
                   Print
                 </button>
+                <button onClick={downloadDocx}
+                  className="flex items-center gap-1.5 text-xs font-semibold bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-lg transition-all">
+                  <FileDown className="w-3.5 h-3.5" />
+                  .docx
+                </button>
                 <button onClick={downloadReport}
                   className="flex items-center gap-1.5 text-xs font-semibold bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-lg transition-all">
                   <Download className="w-3.5 h-3.5" />
-                  Download
+                  .txt
+                </button>
+                <button onClick={copyRichText}
+                  className="flex items-center gap-1.5 text-xs font-semibold bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-lg transition-all">
+                  <ClipboardCopy className="w-3.5 h-3.5" />
+                  Copy Rich
                 </button>
                 <button onClick={copyReport}
                   className="flex items-center gap-1.5 text-xs font-semibold bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-lg transition-all">

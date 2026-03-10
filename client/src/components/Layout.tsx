@@ -63,6 +63,7 @@ const navGroups = [
       { path: "/hemodynamics", label: "Hemodynamics Lab", icon: Activity },
       { path: "/echoassist", label: "EchoAssist™ Calculators", icon: Calculator },
       { path: "/report", label: "Report Builder", icon: FileText },
+      { path: "/stress-echo-assist", label: "StressEchoAssist™", icon: Activity },
     ],
   },
   {

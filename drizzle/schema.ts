@@ -1536,3 +1536,89 @@ export const diyConciergePurchases = mysqlTable("diyConciergePurchases", {
 });
 export type DiyConciergePurchase = typeof diyConciergePurchases.$inferSelect;
 export type InsertDiyConciergePurchase = typeof diyConciergePurchases.$inferInsert;
+
+// ─── Quality Meetings ─────────────────────────────────────────────────────────
+// Meetings live inside the DIY Accreditation Tool under Lab Admin.
+
+export const qualityMeetings = mysqlTable("qualityMeetings", {
+  id: int("id").autoincrement().primaryKey(),
+  orgId: int("orgId").notNull(),
+  createdByUserId: int("createdByUserId").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  meetingType: mysqlEnum("meetingType", [
+    "quality_assurance",
+    "peer_review",
+    "accreditation",
+    "staff_education",
+    "policy_review",
+    "other",
+  ]).default("quality_assurance").notNull(),
+  scheduledAt: timestamp("scheduledAt").notNull(),
+  durationMinutes: int("durationMinutes").default(60),
+  location: varchar("location", { length: 255 }), // room name or video link
+  agenda: text("agenda"),
+  status: mysqlEnum("status", ["scheduled", "in_progress", "completed", "cancelled"]).default("scheduled").notNull(),
+  minutesHtml: text("minutesHtml"),          // final rich-text meeting minutes
+  minutesFinalized: boolean("minutesFinalized").default(false).notNull(),
+  minutesFinalizedAt: timestamp("minutesFinalizedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type QualityMeeting = typeof qualityMeetings.$inferSelect;
+export type InsertQualityMeeting = typeof qualityMeetings.$inferInsert;
+
+export const meetingAttendees = mysqlTable("meetingAttendees", {
+  id: int("id").autoincrement().primaryKey(),
+  meetingId: int("meetingId").notNull(),
+  userId: int("userId"),                     // null = external invitee
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 320 }).notNull(),
+  role: varchar("role", { length: 128 }),    // e.g. "Sonographer", "Cardiologist"
+  rsvpStatus: mysqlEnum("rsvpStatus", ["pending", "accepted", "declined"]).default("pending").notNull(),
+  attendanceStatus: mysqlEnum("attendanceStatus", ["unknown", "present", "absent", "excused"]).default("unknown").notNull(),
+  inviteSentAt: timestamp("inviteSentAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type MeetingAttendee = typeof meetingAttendees.$inferSelect;
+export type InsertMeetingAttendee = typeof meetingAttendees.$inferInsert;
+
+export const meetingRecordings = mysqlTable("meetingRecordings", {
+  id: int("id").autoincrement().primaryKey(),
+  meetingId: int("meetingId").notNull(),
+  uploadedByUserId: int("uploadedByUserId").notNull(),
+  fileKey: varchar("fileKey", { length: 512 }).notNull(),  // S3 key
+  fileUrl: text("fileUrl").notNull(),                       // S3 public URL
+  fileName: varchar("fileName", { length: 255 }).notNull(),
+  mimeType: varchar("mimeType", { length: 128 }).notNull(),
+  fileSizeBytes: bigint("fileSizeBytes", { mode: "number" }),
+  durationSeconds: int("durationSeconds"),
+  transcriptionStatus: mysqlEnum("transcriptionStatus", ["pending", "processing", "completed", "failed"]).default("pending").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type MeetingRecording = typeof meetingRecordings.$inferSelect;
+export type InsertMeetingRecording = typeof meetingRecordings.$inferInsert;
+
+export const meetingTranscripts = mysqlTable("meetingTranscripts", {
+  id: int("id").autoincrement().primaryKey(),
+  meetingId: int("meetingId").notNull(),
+  recordingId: int("recordingId").notNull(),
+  fullText: text("fullText").notNull(),
+  language: varchar("language", { length: 16 }),
+  durationSeconds: int("durationSeconds"),
+  segmentsJson: text("segmentsJson"),   // JSON array of Whisper segments with timestamps
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type MeetingTranscript = typeof meetingTranscripts.$inferSelect;
+export type InsertMeetingTranscript = typeof meetingTranscripts.$inferInsert;
+
+export const meetingMinutesDrafts = mysqlTable("meetingMinutesDrafts", {
+  id: int("id").autoincrement().primaryKey(),
+  meetingId: int("meetingId").notNull(),
+  generatedByUserId: int("generatedByUserId").notNull(),
+  minutesHtml: text("minutesHtml").notNull(),
+  promptUsed: text("promptUsed"),
+  isAiGenerated: boolean("isAiGenerated").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type MeetingMinutesDraft = typeof meetingMinutesDrafts.$inferSelect;
+export type InsertMeetingMinutesDraft = typeof meetingMinutesDrafts.$inferInsert;

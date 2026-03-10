@@ -1948,3 +1948,54 @@
 - [x] Auto-converts plain-text report to HTML on generation (ALL-CAPS headers → bold, separator lines → hr)
 - [x] Copy/Download/Print actions updated to work with rich HTML content
 - [x] Print uses Arial 12pt with proper hr/paragraph styling
+
+## Report Builder Enhancements (Mar 10 2026)
+- [x] Copy as Rich Text — copy HTML to clipboard for paste into Word/Epic with formatting preserved
+- [x] Download as .docx — server-side HTML-to-Word conversion using docx npm package
+- [x] Section font overrides — per-section font size/weight selector in the rich-text toolbar
+
+## Quality Meeting Tool (Mar 10 2026) — inside DIY Accreditation Tool
+- [x] DB schema: qualityMeetings, meetingAttendees, meetingRecordings, meetingTranscripts, meetingMinutes tables
+- [x] Server router: meetingRouter with CRUD for meetings, attendees, recordings, transcripts, minutes
+- [x] Meeting scheduler UI: create/edit meeting (title, date/time, agenda, type, location/link)
+- [x] Invitation system: invite lab members by email, track RSVP status
+- [x] Attendance tracking: mark present/absent/excused per attendee at meeting time
+- [x] Recording upload: upload audio/video file to S3, trigger Whisper transcription
+- [x] Transcript viewer: display timestamped Whisper transcript with speaker segments
+- [x] Automated meeting minutes: AI-generated structured minutes from transcript (agenda items, decisions, action items, attendees)
+- [x] Meeting minutes editor: rich-text editor pre-loaded with AI minutes, editable before finalization
+- [x] Add "Quality Meetings" tab to DIY Accreditation Tool
+
+## StressEchoAssist™ Dedicated Page (Mar 10 2026)
+- [x] Revert accidental move in EchoAssist — restore PremiumOverlay wrapper in original position after StrainEngine
+- [x] Rename engine title from "Stress Echo EchoAssist™" to "StressEchoAssist™" (keep in EchoAssist with PremiumOverlay)
+- [x] Create dedicated /stress-echo-assist page (StressEchoAssistPage.tsx) with full WMSI/Target HR/Interpretation tabs wrapped in PremiumOverlay
+- [x] Add sidebar nav link for StressEchoAssist™ under Clinical Tools
+- [x] Add "Open StressEchoAssist™" link-card inside LV Systolic engine section
+- [x] Register /stress-echo-assist route in App.tsx
+
+## Quality Meeting Video Component (Mar 10 2026)
+- [ ] Research Daily.co API for embedded video meetings
+- [ ] Add DAILY_API_KEY secret to project
+- [ ] Server: create Daily.co room via REST API when meeting is created
+- [ ] Server: generate meeting token (participant/owner) for authenticated users
+- [ ] Frontend: embed Daily.co call frame inside Quality Meeting tab when meeting is active
+- [ ] Attendance auto-mark: mark attendee as present when they join the video room
+- [ ] Recording: trigger Daily.co cloud recording, store recording URL in DB
+- [ ] Transcription: download recording, run through Whisper, store transcript
+- [ ] AI Minutes: generate structured minutes from transcript using LLM
+
+## Quality Meeting Tool — Upload-Based Zoom/Teams (Mar 10 2026)
+- [x] DB schema: qualityMeetings, meetingInvitees, meetingAttendance, meetingRecordings, meetingMinutes tables (already pushed)
+- [x] Server meetingRouter: list, create, update, delete meetings; invite/RSVP; upload recording; transcribe; generate AI minutes
+- [x] QualityMeetingsTab component: meeting list view with status badges (Scheduled/In Progress/Completed)
+- [x] Create/Edit meeting modal: title, date/time, agenda, Zoom/Teams link, invitees
+- [x] Meeting detail panel: agenda display, invitee RSVP list, Join Meeting button (opens external link)
+- [x] Recording upload section: drag-and-drop or file picker, upload to S3, trigger transcription
+- [x] Transcription display: timestamped transcript with speaker detection
+- [x] AI minutes generation: structured minutes (agenda items, decisions, action items, next meeting)
+- [x] AI summary: 3-5 sentence executive summary
+- [x] Attendance confirmation: cross-reference RSVP list with transcript speaker names
+- [x] Rich-text minutes editor: edit generated minutes before finalizing
+- [x] Export minutes as PDF or .docx
+- [x] Wire QualityMeetingsTab into AccreditationTool as admin-only tab

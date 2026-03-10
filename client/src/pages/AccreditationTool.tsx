@@ -22,9 +22,11 @@ import {
   ClipboardList, Star, FileText, BarChart2, Plus, CheckCircle, AlertTriangle,
   XCircle, Clock, ChevronDown, ChevronUp, Shield, Award, BookOpen, Loader2, Download,
   TrendingUp, TrendingDown, Minus, Info, ImageIcon, GitCompare, CheckSquare, Stethoscope,
-  BarChart, Users, Activity, FileDown, ChevronRight, PieChart as PieChartIcon, LineChart as LineChartIcon
+  BarChart, Users, Activity, FileDown, ChevronRight, PieChart as PieChartIcon, LineChart as LineChartIcon,
+  Calendar
 } from "lucide-react";
 import PhysicianPeerReview from "./PhysicianPeerReview";
+import QualityMeetingsTab from "./QualityMeetingsTab";
 import ImageQualityReviewTab from "./ImageQualityReview";
 import SonographerPeerReview from "./SonographerPeerReview";
 import EchoCorrelationTab from "./EchoCorrelation";
@@ -2297,7 +2299,7 @@ export default function AccreditationTool() {
   const searchString = useSearch();
   const params = new URLSearchParams(searchString);
   const initialTab = (params.get("tab") as "iqr" | "sono-peer" | "peer" | "echo-correlation" | "auc" | "case-mix" | "policy" | "readiness" | "reports" | null) ?? "iqr";
-  const [activeTab, setActiveTab] = useState<"iqr" | "sono-peer" | "peer" | "echo-correlation" | "auc" | "case-mix" | "policy" | "readiness" | "reports">(initialTab);
+  const [activeTab, setActiveTab] = useState<"iqr" | "sono-peer" | "peer" | "echo-correlation" | "auc" | "case-mix" | "policy" | "readiness" | "reports" | "meetings">(initialTab as any);
 
   if (loading) {
     return (
@@ -2375,6 +2377,7 @@ export default function AccreditationTool() {
                 <TabBtn active={activeTab === "policy"} onClick={() => setActiveTab("policy")} icon={FileText} label="Policy Builder" />
                 <TabBtn active={activeTab === "reports"} onClick={() => setActiveTab("reports")} icon={TrendingUp} label="Reports & Analytics" />
                 <TabBtn active={activeTab === "readiness"} onClick={() => setActiveTab("readiness")} icon={CheckSquare} label="Readiness" />
+                <TabBtn active={activeTab === "meetings"} onClick={() => setActiveTab("meetings")} icon={Calendar} label="Quality Meetings" />
               </>
             )}
           </div>
@@ -2383,7 +2386,7 @@ export default function AccreditationTool() {
 
       {/* Content */}
       <div className="container py-6">
-        <div className={(activeTab === "iqr" || activeTab === "sono-peer" || activeTab === "echo-correlation" || activeTab === "case-mix" || activeTab === "readiness" || activeTab === "reports") ? "" : "max-w-3xl"}>
+        <div className={(activeTab === "iqr" || activeTab === "sono-peer" || activeTab === "echo-correlation" || activeTab === "case-mix" || activeTab === "readiness" || activeTab === "reports" || activeTab === "meetings") ? "" : "max-w-3xl"}>
           {/* Disclaimer */}
           <div className="mb-4 p-3 rounded-lg border border-amber-200 bg-amber-50 flex items-start gap-2">
             <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
@@ -2403,6 +2406,7 @@ export default function AccreditationTool() {
           {activeTab === "readiness" && <AccreditationReadiness />}
           {activeTab === "case-mix" && <CaseMixSubmission initialView={(params.get("view") as "requirements" | "tracker" | null) ?? "requirements"} />}
           {activeTab === "reports" && <DIYReportsTab />}
+          {activeTab === "meetings" && <QualityMeetingsTab isDiyAdmin={isDiyAdmin} />}
         </div>
       </div>
 

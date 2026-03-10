@@ -13,6 +13,7 @@ import { caseLibraryRouter } from "./routers/caseLibraryRouter";
 import { premiumRouter } from "./routers/premiumRouter";
 import { scanCoachAdminRouter } from "./routers/scanCoachAdminRouter";
 import { diyRouter } from "./routers/diyRouter";
+import { meetingRouter } from "./routers/meetingRouter";
 import {
   getUserById,
   getUsersByIds,
@@ -1731,6 +1732,7 @@ export const appRouter = router({
 
   // ─── DIY Accreditation ─────────────────────────────────────────────────────────────
   diy: diyRouter,
+  meeting: meetingRouter,
 
   // ─── Physician Over-Read Workflow (Step 1 & Step 2) ──────────────────────────
   physicianOverRead: router({

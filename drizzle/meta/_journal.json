@@ -386,6 +386,13 @@
       "when": 1773162776862,
       "tag": "0054_brief_lady_deathstrike",
       "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "5",
+      "when": 1773170211210,
+      "tag": "0055_magenta_xavin",
+      "breakpoints": true
     }
   ]
 }

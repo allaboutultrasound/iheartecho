@@ -68,6 +68,7 @@ import ScanCoachEditor from "./pages/ScanCoachEditor";
 import HOCMNavigator from "./pages/HOCMNavigator";
 import HOCMScanCoach from "./pages/HOCMScanCoach";
 import StressScanCoach from "./pages/StressScanCoach";
+import StressEchoAssistPage from "./pages/StressEchoAssist";
 import StructuralHeartScanCoach from "./pages/StructuralHeartScanCoach";
 import PulmHTNNavigator from "./pages/PulmHTNNavigator";
 import DiastolicNavigator from "./pages/DiastolicNavigator";
@@ -179,6 +180,7 @@ function Router() {
       <Route path="/hocm-navigator">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><HOCMNavigator /></RoleGuard>}</Route>
       <Route path="/hocm-scan-coach">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><HOCMScanCoach /></RoleGuard>}</Route>
       <Route path="/stress-scan-coach">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><StressScanCoach /></RoleGuard>}</Route>
+      <Route path="/stress-echo-assist" component={StressEchoAssistPage} />
       <Route path="/structural-heart-scan-coach">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><StructuralHeartScanCoach /></RoleGuard>}</Route>
       <Route path="/pulm-htn">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><PulmHTNNavigator /></RoleGuard>}</Route>
       <Route path="/diastolic" component={DiastolicNavigator} />
