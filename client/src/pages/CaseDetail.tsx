@@ -5,7 +5,7 @@
  * teaching points, diagnosis, and submitter info.
  */
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams, Link } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -71,8 +71,13 @@ export default function CaseDetail() {
     { enabled: !!caseId }
   );
 
-  // Related cases — only query once we have the current case's tags
-  const caseTags: string[] = caseData ? (caseData as any).tags ?? [] : [];
+  // Stabilize caseTags with useMemo to prevent infinite re-fetches from new array references on every render
+  const caseTags: string[] = useMemo(
+    () => (caseData ? ((caseData as any).tags ?? []) : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [caseData?.id, (caseData as any)?.tags?.join(",")]
+  );
+
   const { data: relatedCases } = trpc.caseLibrary.getRelatedCases.useQuery(
     { caseId, tags: caseTags, limit: 4 },
     { enabled: !!caseId && caseTags.length > 0 }
