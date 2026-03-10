@@ -1940,3 +1940,11 @@
 - [x] Apply premium gates with transparent overlays to premium sections (LAP Estimation, Diastology Special Populations, Stress Echo)
 - [x] Delete old EchoCalculator page (replaced with redirect /calculator → /echoassist)
 - [x] Update sidebar nav link and all internal /calculator links to /echoassist
+
+## Report Builder Rich-Text Editor (Mar 10 2026)
+- [x] Replace static pre output with Tiptap rich-text editor in Report Builder
+- [x] Default font: Arial 12pt
+- [x] Toolbar: Font family selector (Arial, Times New Roman, Courier New, Georgia, Verdana, Calibri), font size (8–24pt), Bold, Italic, Underline, Align Left/Center/Right, Reset
+- [x] Auto-converts plain-text report to HTML on generation (ALL-CAPS headers → bold, separator lines → hr)
+- [x] Copy/Download/Print actions updated to work with rich HTML content
+- [x] Print uses Arial 12pt with proper hr/paragraph styling

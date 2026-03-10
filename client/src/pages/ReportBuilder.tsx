@@ -4,10 +4,137 @@
   Brand: Teal #189aa1, Aqua #4ad9e0
   Fonts: Merriweather headings, Open Sans body, JetBrains Mono data
 */
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import Layout from "@/components/Layout";
-import { FileText, Copy, Download, CheckCircle2, ChevronDown, ChevronUp, Printer, MessageSquarePlus, Trash2 } from "lucide-react";
+import { FileText, Copy, Download, CheckCircle2, ChevronDown, ChevronUp, Printer, MessageSquarePlus, Trash2, Bold, Italic, Underline as UnderlineIcon, AlignLeft, AlignCenter, AlignRight, Type } from "lucide-react";
 import { toast } from "sonner";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import UnderlineExt from "@tiptap/extension-underline";
+import { TextStyle, FontFamily, FontSize } from "@tiptap/extension-text-style";
+import TextAlign from "@tiptap/extension-text-align";
+
+// ─── RICH REPORT EDITOR ─────────────────────────────────────────────────────
+function RichReportEditor({ content, onChange }: { content: string; onChange: (html: string) => void }) {
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      UnderlineExt,
+      TextStyle,
+      FontFamily,
+      FontSize,
+      TextAlign.configure({ types: ["heading", "paragraph"] }),
+    ],
+    content: "",
+    editorProps: {
+      attributes: {
+        class: "outline-none min-h-[60vh] leading-relaxed",
+        style: "font-family: Arial, sans-serif; font-size: 12pt; color: #1a1a1a;",
+      },
+    },
+    onUpdate: ({ editor }) => onChange(editor.getHTML()),
+  });
+
+  // Sync plain-text report into editor whenever content changes
+  useEffect(() => {
+    if (!editor) return;
+    // Convert plain-text report to HTML: section headers become <strong>, separator lines become <hr>
+    const html = content
+      .split("\n")
+      .map(line => {
+        const trimmed = line.trim();
+        if (!trimmed) return "<p><br></p>";
+        // Separator lines (─────)
+        if (/^[─\-]{10,}$/.test(trimmed)) return "<hr>";
+        // ALL-CAPS section headers
+        if (/^[A-Z][A-Z0-9 \-\/&:]+:?$/.test(trimmed) && trimmed.length < 60)
+          return `<p><strong>${trimmed}</strong></p>`;
+        return `<p>${line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>`;
+      })
+      .join("");
+    // Only update if content actually differs (avoids cursor jumping)
+    if (editor.getHTML() !== html) {
+      editor.commands.setContent(html, { emitUpdate: false });
+    }
+  }, [content, editor]);
+
+  if (!editor) return null;
+
+  const ToolBtn = ({ active, onClick, children }: { active?: boolean; onClick: () => void; children: React.ReactNode }) => (
+    <button
+      type="button"
+      onMouseDown={e => { e.preventDefault(); onClick(); }}
+      className={`p-1.5 rounded transition-all ${
+        active ? "bg-[#189aa1] text-white" : "text-gray-600 hover:bg-gray-100"
+      }`}
+    >
+      {children}
+    </button>
+  );
+
+  return (
+    <div className="border border-gray-200 rounded-xl overflow-hidden">
+      {/* Toolbar */}
+      <div className="flex items-center gap-0.5 px-3 py-2 border-b border-gray-200 bg-gray-50 flex-wrap">
+        {/* Font family */}
+        <select
+          value={editor.getAttributes("textStyle").fontFamily ?? "Arial, sans-serif"}
+          onChange={e => editor.chain().focus().setFontFamily(e.target.value).run()}
+          className="text-xs border border-gray-200 rounded px-2 py-1 mr-1 bg-white text-gray-700 outline-none focus:ring-1 focus:ring-[#189aa1]/40"
+          style={{ fontFamily: "Arial, sans-serif" }}
+        >
+          <option value="Arial, sans-serif">Arial</option>
+          <option value="'Times New Roman', serif">Times New Roman</option>
+          <option value="'Courier New', monospace">Courier New</option>
+          <option value="Georgia, serif">Georgia</option>
+          <option value="Verdana, sans-serif">Verdana</option>
+          <option value="Calibri, sans-serif">Calibri</option>
+        </select>
+        {/* Font size */}
+        <select
+          defaultValue="12pt"
+          onChange={e => {
+            editor.chain().focus().setFontSize(e.target.value).run();
+          }}
+          className="text-xs border border-gray-200 rounded px-2 py-1 mr-2 bg-white text-gray-700 outline-none focus:ring-1 focus:ring-[#189aa1]/40"
+        >
+          {["8pt","9pt","10pt","11pt","12pt","14pt","16pt","18pt","20pt","24pt"].map(s => (
+            <option key={s} value={s}>{s.replace("pt", " pt")}</option>
+          ))}
+        </select>
+        <div className="w-px h-5 bg-gray-200 mx-1" />
+        <ToolBtn active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()}>
+          <Bold className="w-3.5 h-3.5" />
+        </ToolBtn>
+        <ToolBtn active={editor.isActive("italic")} onClick={() => editor.chain().focus().toggleItalic().run()}>
+          <Italic className="w-3.5 h-3.5" />
+        </ToolBtn>
+        <ToolBtn active={editor.isActive("underline")} onClick={() => editor.chain().focus().toggleUnderline().run()}>
+          <UnderlineIcon className="w-3.5 h-3.5" />
+        </ToolBtn>
+        <div className="w-px h-5 bg-gray-200 mx-1" />
+        <ToolBtn active={editor.isActive({ textAlign: "left" })} onClick={() => editor.chain().focus().setTextAlign("left").run()}>
+          <AlignLeft className="w-3.5 h-3.5" />
+        </ToolBtn>
+        <ToolBtn active={editor.isActive({ textAlign: "center" })} onClick={() => editor.chain().focus().setTextAlign("center").run()}>
+          <AlignCenter className="w-3.5 h-3.5" />
+        </ToolBtn>
+        <ToolBtn active={editor.isActive({ textAlign: "right" })} onClick={() => editor.chain().focus().setTextAlign("right").run()}>
+          <AlignRight className="w-3.5 h-3.5" />
+        </ToolBtn>
+        <div className="w-px h-5 bg-gray-200 mx-1" />
+        <ToolBtn active={false} onClick={() => editor.chain().focus().setContent(content.split("\n").map(l => l.trim() ? `<p>${l.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</p>` : "<p><br></p>").join(""), { emitUpdate: false }).run()}>
+          <Type className="w-3.5 h-3.5" />
+        </ToolBtn>
+        <span className="text-[10px] text-gray-400 ml-1">Reset</span>
+      </div>
+      {/* Editor area */}
+      <div className="p-6 overflow-auto" style={{ maxHeight: "75vh" }}>
+        <EditorContent editor={editor} />
+      </div>
+    </div>
+  );
+}
 
 // ─── UI PRIMITIVES ──────────────────────────────────────────────────────────
 
@@ -768,7 +895,7 @@ export default function ReportBuilder() {
   const [data, setData] = useState<ReportData>(EMPTY);
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<"worksheet" | "report">("worksheet");
-
+  const [richHtml, setRichHtml] = useState("");
   const report = useMemo(() => generateReport(data), [data]);
   const set = (key: keyof ReportData) => (v: string) => setData(d => ({ ...d, [key]: v }));
   const clearAll = useCallback(() => {
@@ -777,16 +904,19 @@ export default function ReportBuilder() {
       toast.success("Worksheet cleared.");
     }
   }, []);
-
   const copyReport = () => {
-    navigator.clipboard.writeText(report);
+    // Copy as plain text (stripped of HTML tags)
+    const tmp = document.createElement("div");
+    tmp.innerHTML = richHtml || report;
+    navigator.clipboard.writeText(tmp.innerText);
     setCopied(true);
     toast.success("Report copied to clipboard!");
     setTimeout(() => setCopied(false), 2000);
   };
-
   const downloadReport = () => {
-    const blob = new Blob([report], { type: "text/plain" });
+    const tmp = document.createElement("div");
+    tmp.innerHTML = richHtml || report;
+    const blob = new Blob([tmp.innerText], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -795,14 +925,17 @@ export default function ReportBuilder() {
     URL.revokeObjectURL(url);
     toast.success("Report downloaded!");
   };
-
   const printReport = () => {
     const win = window.open("", "_blank");
     if (!win) return;
+    const htmlBody = richHtml
+      ? richHtml
+      : `<pre style="white-space:pre-wrap">${report.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre>`;
     win.document.write(`<html><head><title>Echo Report</title><style>
-      body { font-family: 'Gill Sans', 'Gill Sans MT', Arial, sans-serif; font-size: 12px; padding: 24px; color: #000; }
-      pre { white-space: pre-wrap; font-family: 'Gill Sans', 'Gill Sans MT', Arial, sans-serif; font-size: 12px; line-height: 1.6; }
-    </style></head><body><pre>${report.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</pre></body></html>`);
+      body { font-family: Arial, sans-serif; font-size: 12pt; padding: 24px; color: #000; line-height: 1.6; }
+      hr { border: none; border-top: 1px solid #ccc; margin: 8px 0; }
+      p { margin: 2px 0; }
+    </style></head><body>${htmlBody}</body></html>`);
     win.document.close();
     win.print();
   };
@@ -1106,11 +1239,8 @@ export default function ReportBuilder() {
                 </button>
               </div>
             </div>
-            <div className="p-6">
-              <pre className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap overflow-auto"
-                style={{ fontFamily: "'Gill Sans', 'Gill Sans MT', Arial, sans-serif", maxHeight: "80vh" }}>
-                {report}
-              </pre>
+            <div className="p-4">
+              <RichReportEditor content={report} onChange={setRichHtml} />
             </div>
           </div>
         )}
