@@ -17,7 +17,12 @@ export type ScanCoachModule =
   | "fetal"
   | "chd"
   | "diastolic"
-  | "pulm";
+  | "pulm"
+  // POCUS-Assist™ modules
+  | "pocus_efast"
+  | "pocus_rush"
+  | "pocus_cardiac"
+  | "pocus_lung";
 
 export interface ScanCoachViewMeta {
   id: string;
@@ -249,6 +254,69 @@ export const SCANCOACH_MODULES: ScanCoachModuleMeta[] = [
       { id: "subcostal-rv",      name: "Subcostal — RV",                    group: "RV Assessment" },
       { id: "plax-rv",           name: "PLAX — RV Focus",                   group: "RV Assessment" },
       { id: "suprasternal",      name: "Suprasternal — PA Flow",            group: "RV Assessment" },
+    ],
+  },
+  // ─── POCUS-Assist™ — eFAST ─────────────────────────────────────────────────
+  {
+    key: "pocus_efast",
+    label: "eFAST ScanCoach",
+    path: "/pocus-efast-scan-coach",
+    views: [
+      { id: "ruq",          name: "RUQ — Morison's Pouch",          group: "Abdominal" },
+      { id: "luq",          name: "LUQ — Splenorenal Space",         group: "Abdominal" },
+      { id: "pelvis",       name: "Pelvic / Suprapubic",             group: "Abdominal" },
+      { id: "subxiphoid",   name: "Subxiphoid Cardiac",              group: "Cardiac" },
+      { id: "rthorax",      name: "Right Thorax (Hemothorax/PTX)",   group: "Thoracic" },
+      { id: "lthorax",      name: "Left Thorax (Hemothorax/PTX)",    group: "Thoracic" },
+    ],
+  },
+  // ─── POCUS-Assist™ — RUSH ──────────────────────────────────────────────────
+  {
+    key: "pocus_rush",
+    label: "RUSH ScanCoach",
+    path: "/pocus-rush-scan-coach",
+    views: [
+      { id: "pump_plax",    name: "The Pump — PLAX",                 group: "Pump" },
+      { id: "pump_psax",    name: "The Pump — PSAX",                 group: "Pump" },
+      { id: "pump_a4c",     name: "The Pump — Apical 4-Chamber",     group: "Pump" },
+      { id: "pump_subcostal",name: "The Pump — Subcostal",           group: "Pump" },
+      { id: "tank_ivc",     name: "The Tank — IVC Collapsibility",   group: "Tank" },
+      { id: "tank_ruq",     name: "The Tank — RUQ Free Fluid",       group: "Tank" },
+      { id: "tank_luq",     name: "The Tank — LUQ Free Fluid",       group: "Tank" },
+      { id: "tank_pelvis",  name: "The Tank — Pelvic Free Fluid",    group: "Tank" },
+      { id: "pipes_aorta",  name: "The Pipes — Aorta (AAA)",         group: "Pipes" },
+      { id: "pipes_dvt",    name: "The Pipes — DVT Assessment",      group: "Pipes" },
+      { id: "pipes_ptx",    name: "The Pipes — Pneumothorax",        group: "Pipes" },
+    ],
+  },
+  // ─── POCUS-Assist™ — Cardiac ────────────────────────────────────────────────
+  {
+    key: "pocus_cardiac",
+    label: "Cardiac POCUS ScanCoach",
+    path: "/pocus-cardiac-scan-coach",
+    views: [
+      { id: "plax",         name: "Parasternal Long Axis (PLAX)",    group: "Parasternal" },
+      { id: "psax_mv",      name: "PSAX — Mitral Valve Level",       group: "Parasternal" },
+      { id: "psax_pm",      name: "PSAX — Papillary Muscle Level",   group: "Parasternal" },
+      { id: "a4c",          name: "Apical 4-Chamber",                group: "Apical" },
+      { id: "subcostal",    name: "Subcostal 4-Chamber",             group: "Subcostal" },
+      { id: "ivc",          name: "Subcostal IVC",                   group: "Subcostal" },
+    ],
+  },
+  // ─── POCUS-Assist™ — Lung ───────────────────────────────────────────────────
+  {
+    key: "pocus_lung",
+    label: "Lung POCUS ScanCoach",
+    path: "/pocus-lung-scan-coach",
+    views: [
+      { id: "rua",          name: "Right Upper Anterior (Zone 1)",   group: "Right Lung" },
+      { id: "rla",          name: "Right Lower Anterior (Zone 2)",   group: "Right Lung" },
+      { id: "rl_plaps",     name: "Right Lateral — PLAPS Point",     group: "Right Lung" },
+      { id: "lua",          name: "Left Upper Anterior (Zone 4)",    group: "Left Lung" },
+      { id: "lla",          name: "Left Lower Anterior (Zone 5)",    group: "Left Lung" },
+      { id: "ll_plaps",     name: "Left Lateral — PLAPS Point",      group: "Left Lung" },
+      { id: "diaphragm_r",  name: "Right Diaphragm",                 group: "Diaphragm" },
+      { id: "diaphragm_l",  name: "Left Diaphragm",                  group: "Diaphragm" },
     ],
   },
 ];

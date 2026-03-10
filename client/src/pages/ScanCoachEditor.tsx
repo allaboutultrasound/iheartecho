@@ -30,7 +30,7 @@ import {
   Image as ImageIcon, Edit3, Eye, Loader2, CheckCircle2,
   AlertCircle, ExternalLink, Layers, AlertTriangle,
   Stethoscope, Ruler, Lightbulb, Activity, Heart, Baby,
-  Zap, Scan, Wind, Microscope, Users,
+  Zap, Scan, Wind, Microscope, Users, Shield,
 } from "lucide-react";
 
 // Icon map for each ScanCoach module
@@ -47,6 +47,10 @@ const MODULE_ICONS: Record<string, React.ReactNode> = {
   chd:        <Users className="w-5 h-5" />,
   diastolic:  <Wind className="w-5 h-5" />,
   pulm:       <Wind className="w-5 h-5" />,
+  pocus_efast:   <Shield className="w-5 h-5" />,
+  pocus_rush:    <Zap className="w-5 h-5" />,
+  pocus_cardiac: <Heart className="w-5 h-5" />,
+  pocus_lung:    <Wind className="w-5 h-5" />,
 };
 
 const BRAND = "#189aa1";

@@ -73,6 +73,16 @@ import PulmHTNNavigator from "./pages/PulmHTNNavigator";
 import DiastolicNavigator from "./pages/DiastolicNavigator";
 import ThinkificWebhookAdmin from "./pages/ThinkificWebhookAdmin";
 import PhysicianOverReadForm from "./pages/PhysicianOverReadForm";
+// POCUS-Assist™
+import POCUSAssistHub from "./pages/POCUSAssistHub";
+import POCUSEfastNavigator from "./pages/POCUSEfastNavigator";
+import POCUSRushNavigator from "./pages/POCUSRushNavigator";
+import POCUSCardiacNavigator from "./pages/POCUSCardiacNavigator";
+import POCUSLungNavigator from "./pages/POCUSLungNavigator";
+import POCUSEfastScanCoach from "./pages/POCUSEfastScanCoach";
+import POCUSRushScanCoach from "./pages/POCUSRushScanCoach";
+import POCUSCardiacScanCoach from "./pages/POCUSCardiacScanCoach";
+import POCUSLungScanCoach from "./pages/POCUSLungScanCoach";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -117,6 +127,16 @@ function Router() {
       <Route path="/cardiac-pocus" component={CardiacPOCUS} />
       <Route path="/lung-pocus" component={LungPOCUS} />
       <Route path="/efast" component={EfastPOCUS} />
+      {/* ── POCUS-Assist™ ──────────────────────────────────────────────── */}
+      <Route path="/pocus-assist-hub" component={POCUSAssistHub} />
+      <Route path="/pocus-efast" component={POCUSEfastNavigator} />
+      <Route path="/pocus-rush">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><POCUSRushNavigator /></RoleGuard>}</Route>
+      <Route path="/pocus-cardiac" component={POCUSCardiacNavigator} />
+      <Route path="/pocus-lung">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><POCUSLungNavigator /></RoleGuard>}</Route>
+      <Route path="/pocus-efast-scan-coach" component={POCUSEfastScanCoach} />
+      <Route path="/pocus-rush-scan-coach">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><POCUSRushScanCoach /></RoleGuard>}</Route>
+      <Route path="/pocus-cardiac-scan-coach" component={POCUSCardiacScanCoach} />
+      <Route path="/pocus-lung-scan-coach">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><POCUSLungScanCoach /></RoleGuard>}</Route>
       <Route path="/strain" component={StrainNavigator} />
       <Route path="/accreditation">
         {() => (

@@ -65,6 +65,16 @@ const navGroups = [
     ],
   },
   {
+    label: "POCUS-Assist™",
+    items: [
+      { path: "/pocus-assist-hub", label: "POCUS-Assist™ Hub", icon: Shield },
+      { path: "/pocus-efast", label: "eFAST Navigator", icon: Scan },
+      { path: "/pocus-rush", label: "RUSH Navigator", icon: Zap },
+      { path: "/pocus-cardiac", label: "Cardiac POCUS Navigator", icon: Heart },
+      { path: "/pocus-lung", label: "Lung POCUS Navigator", icon: Wind },
+    ],
+  },
+  {
     label: "Learning",
     items: [
       { path: "/quickfire", label: "Daily Challenge", icon: Zap },
@@ -107,6 +117,15 @@ const hiddenNavItems = [
   { path: "/admin/thinkific-webhook", label: "Thinkific Webhook" },
   { path: "/echo-assist-hub", label: "EchoAssist™" },
   { path: "/scan-coach", label: "EchoAssist™ — Scan Coach" },
+  { path: "/pocus-assist-hub", label: "POCUS-Assist™" },
+  { path: "/pocus-efast", label: "eFAST Navigator" },
+  { path: "/pocus-rush", label: "RUSH Navigator" },
+  { path: "/pocus-cardiac", label: "Cardiac POCUS Navigator" },
+  { path: "/pocus-lung", label: "Lung POCUS Navigator" },
+  { path: "/pocus-efast-scan-coach", label: "eFAST ScanCoach™" },
+  { path: "/pocus-rush-scan-coach", label: "RUSH ScanCoach™" },
+  { path: "/pocus-cardiac-scan-coach", label: "Cardiac POCUS ScanCoach™" },
+  { path: "/pocus-lung-scan-coach", label: "Lung POCUS ScanCoach™" },
 ];
 const navItems = [...navGroups.flatMap(g => g.items), ...hiddenNavItems];
 
