@@ -2074,3 +2074,5 @@
 - [ ] Update plan comparison chart with corrected tier features
 - [ ] Add "Learn Echo" sidebar link after ACS Mastery → https://www.allaboutultrasound.net/adultecho-preview-pass-access
 - [ ] Add "Learn POCUS" sidebar link after Learn Fetal Echo → https://www.allaboutultrasound.com/pocus-education.html
+- [x] Confirm DIY access users go directly to DIY Accreditation Tool via smart sidebar link
+- [x] Add DIY Accreditation Tool link in profile dropdown menu for DIY users

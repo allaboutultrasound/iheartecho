@@ -418,23 +418,22 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                           <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider px-2 mb-1">Accreditation</div>
                           {/* Lab Admin Portal — diy_admin only */}
                           {hasDiyAdmin && (
-                            <>
-                              <WouterLink href="/lab-admin">
-                                <button onClick={() => setAccountOpen(false)}
-                                  className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-all text-left">
-                                  <ClipboardList className="w-3.5 h-3.5 text-orange-500" />
-                                  Lab Admin Portal
-                                </button>
-                              </WouterLink>
-                              <WouterLink href="/accreditation">
-                                <button onClick={() => setAccountOpen(false)}
-                                  className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-all text-left">
-                                  <Award className="w-3.5 h-3.5 text-orange-500" />
-                                  DIY Accreditation Tool™
-                                </button>
-                              </WouterLink>
-                            </>
+                            <WouterLink href="/lab-admin">
+                              <button onClick={() => setAccountOpen(false)}
+                                className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-all text-left">
+                                <ClipboardList className="w-3.5 h-3.5 text-orange-500" />
+                                Lab Admin Portal
+                              </button>
+                            </WouterLink>
                           )}
+                          {/* DIY Accreditation Tool — all DIY users (diy_user + diy_admin) */}
+                          <WouterLink href="/accreditation">
+                            <button onClick={() => setAccountOpen(false)}
+                              className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-all text-left">
+                              <Award className="w-3.5 h-3.5 text-orange-500" />
+                              DIY Accreditation Tool™
+                            </button>
+                          </WouterLink>
                           {/* Member Portal — all DIY users */}
                           <WouterLink href="/diy-member">
                             <button onClick={() => setAccountOpen(false)}
