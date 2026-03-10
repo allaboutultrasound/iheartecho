@@ -10,7 +10,7 @@ import Layout from "@/components/Layout";
 import { PremiumGate } from "@/components/PremiumGate";
 import {
   CheckCircle2, Circle, ChevronDown, ChevronUp, Info,
-  Wind, AlertTriangle, ArrowRight,
+  Wind, AlertTriangle, ArrowRight, Shield,
 } from "lucide-react";
 
 const BRAND = "#189aa1";
@@ -263,6 +263,31 @@ export default function POCUSLungNavigator() {
             </div>
             <div className="space-y-3">
               {leftZones.map((section) => <ZoneCard key={section.id} section={section} checked={checked} expanded={expanded} showDetail={showDetail} toggle={toggle} toggleSection={toggleSection} setShowDetail={setShowDetail} />)}
+            </div>
+          </div>
+
+          {/* ── POCUS-Assist™ Engine Calculators ─────────────────────────────── */}
+          <div className="rounded-xl p-4 mt-2" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(255,255,255,0.15)" }}>
+                <Shield className="w-4 h-4 text-[#4ad9e0]" />
+              </div>
+              <div>
+                <div className="text-sm font-bold text-white" style={{ fontFamily: "Merriweather, serif" }}>POCUS-Assist™ Engine</div>
+                <div className="text-xs text-[#4ad9e0]">Guideline-based calculators for lung POCUS findings</div>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              <Link href="/echoassist#engine-pocus">
+                <div className="flex items-center gap-2 bg-white/10 hover:bg-white/20 transition-colors rounded-lg px-3 py-2.5 cursor-pointer">
+                  <span className="text-[#4ad9e0] text-lg">🫁</span>
+                  <div>
+                    <div className="text-xs font-bold text-white">8-Zone B-Line Scorer</div>
+                    <div className="text-[10px] text-white/60">Interstitial syndrome grading · Open in EchoAssist™</div>
+                  </div>
+                  <ArrowRight className="w-3.5 h-3.5 text-white/50 ml-auto flex-shrink-0" />
+                </div>
+              </Link>
             </div>
           </div>
 

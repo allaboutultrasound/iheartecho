@@ -1891,3 +1891,12 @@
 - [x] Add POCUS-Assist engine to EchoAssist page (IVC CI, B-line scorer, eFAST free-fluid grader)
 - [x] Verify image upload enabled on all 4 POCUS ScanCoach pages (via useScanCoachOverrides + mergeView)
 - [x] Add single POCUS-Assist™ card to Home dashboard (links to Hub)
+
+
+
+## POCUS-Assist™ Calculator Links (Mar 10 2026)
+
+- [x] Add POCUS-Assist engine calculator quick-access banner to eFAST Navigator (IVC CI + eFAST grader)
+- [x] Add POCUS-Assist engine calculator quick-access banner to RUSH Navigator (IVC CI + eFAST grader)
+- [x] Add POCUS-Assist engine calculator quick-access banner to Cardiac Navigator (IVC CI)
+- [x] Add POCUS-Assist engine calculator quick-access banner to Lung Navigator (B-line scorer)
