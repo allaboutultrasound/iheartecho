@@ -2018,3 +2018,42 @@
 - [ ] Add HOCM LVOT Gradient Calculator inside LVSystolicEngine section
 - [ ] Reorder engines: 1) LV SystolicAssist (LV EF/FS/Mass/Dim + SV/CO + HOCM LVOT), 2) DiastologyAssist (Diastology Assessment + LAP Grading + Special Populations), 3) AS, 4) AR, 5) MS, 6) MR, 7) TR, 8) RV SystolicAssist, 9) PulmonaryHypertensionAssist, 10) POCUS-Assist, 11) Frank-Starling, 12) StrainAssist (PremiumOverlay), 13) StressEchoAssist (PremiumOverlay)
 - [ ] Remove StrokeVolumeEngine as a standalone section
+
+## Premium Membership Restructure ($19.97/month)
+- [ ] Update premium price to $19.97/month in PremiumGate, PremiumModal, Premium page, PremiumOverlay, Home, Profile
+- [ ] Update PREMIUM_FEATURES list in PremiumModal and Premium page to match new premium items
+- [ ] Update FREE_FEATURES list in Premium page (50 cases, 10 flashcards/day, today's challenge only)
+- [ ] Add gold Crown badge + PREMIUM label to premium Navigators in EchoNavigatorHub
+- [ ] Add gold Crown badge + PREMIUM label to premium ScanCoaches in ScanCoachHub
+- [ ] Move premium Navigators to bottom section of EchoNavigatorHub with FREE/PREMIUM divider
+- [ ] Move premium ScanCoaches to bottom section of ScanCoachHub with FREE/PREMIUM divider
+- [ ] Mark PulmHTN Navigator as premium in EchoNavigatorHub
+- [ ] Gate LAP Grading engine in EchoAssist with PremiumOverlay
+- [ ] Gate DiastologySpecialPopulations engine in EchoAssist with PremiumOverlay
+- [ ] Gate HOCM LVOT Gradient in EchoCalculator with PremiumGate
+- [ ] Implement Case Library free tier: 50 case limit with upgrade prompt at limit
+- [ ] Implement FlashCards free tier: 10/day with midnight reset and random rotation per attempt
+- [ ] Implement Daily Challenge free tier: today-only, archive requires premium
+- [ ] Update Accreditation plan comparison: Quality Meeting + Concierge = Professional+ only
+- [ ] Update Accreditation plan comparison: Starter gets limited analytics (no drill-down, no export) with upgrade prompt
+- [ ] Add "Automated Quality Improvement Management" to plan comparison chart and pricing cards
+- [ ] Add upgrade prompt in AccreditationTool when Starter user tries to drill-down or export
+- [ ] Add EchoAssistEngineLink deep-links to all Navigator and ScanCoach pages missing them
+
+## Recent Changes (Mar 2026)
+- [x] Update premium pricing to $19.97/month across all pages
+- [x] Update premium features list: Navigators, ScanCoaches, EchoAssist engines, features
+- [x] Restructure EchoNavigatorHub with FREE/PREMIUM sections and gold Crown badges
+- [x] Restructure ScanCoachHub with FREE/PREMIUM sections and gold Crown badges
+- [x] Verify premium gates on LAP, Diastology Special Pops, StressEchoAssist engines
+- [x] Add 50-case limit for free members in Case Library (server + frontend upgrade prompt)
+- [x] Verify FlashCards daily limit = 10 for free members (already correct)
+- [x] Verify Daily Challenge archive = premium-only (already correct)
+- [x] Add POCUS-Assist engine deep-link buttons in POCUS-Assist hub hero banner
+- [x] Add adminBatchApproveToQueue server endpoint for bulk daily challenge publishing
+- [ ] Wire bulk-select UI in QuickFireAdmin Question Bank tab
+- [ ] Complete premium restructure: Accreditation tier restrictions (Quality Meeting + Concierge = Professional+ only)
+- [ ] Update plan comparison chart with QI management, corrected tier features
+- [ ] Starter tier: limited analytics (no drill-down/export), prompt upgrade
+- [ ] Add Crown badges to premium items in EchoAssist engine list
+- [ ] Add Crown badges to premium items in EchoCalculator

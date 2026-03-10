@@ -1,38 +1,41 @@
 /*
   ScanCoach Hub — iHeartEcho™
-  Hero banner + clean card grid with icon, name, view count
+  FREE coaches shown first, PREMIUM coaches in a separate section at the bottom.
 */
+import { useState } from "react";
 import { useLocation } from "wouter";
 import Layout from "@/components/Layout";
+import PremiumModal from "@/components/PremiumModal";
+import { usePremium } from "@/hooks/usePremium";
 import {
   Scan, Stethoscope, Baby, Heart, Users, Activity,
-  Zap, Microscope, Droplets, Wind
+  Zap, Microscope, Droplets, Wind, Crown, Lock
 } from "lucide-react";
 
 const BRAND = "#189aa1";
 
-const coaches = [
+const freeCoaches = [
   { tab: "tte",       icon: Stethoscope, label: "Adult TTE",          views: 10 },
-  { tab: "tee",       icon: Microscope,  label: "TEE",                views: 13 },
-  { tab: "ice",       icon: Scan,        label: "ICE",                views: 9  },
   { tab: "uea",       icon: Droplets,    label: "UEA",                views: 7  },
   { tab: "strain",    icon: Activity,    label: "Strain",             views: 4  },
-  { tab: "hocm",      icon: Heart,       label: "HOCM",               views: 14 },
   { tab: "chd",       icon: Users,       label: "Pediatric CHD",      views: 14 },
   { tab: "fetal",     icon: Baby,        label: "Fetal Echo",         views: 13 },
   { tab: "achd",      icon: Heart,       label: "Adult Congenital",   views: 13 },
   { tab: "diastolic", icon: Wind,        label: "Diastolic Function", views: 7  },
-  { tab: "pulm",      icon: Wind,        label: "Pulm HTN & PE",      views: 8  },
-  { tab: "stress",    icon: Zap,         label: "Stress Echo",        views: 13 },
+];
+
+const premiumCoaches = [
+  { tab: "stress",    icon: Zap,         label: "Stress Echo",        views: 13, route: "/stress-scan-coach" },
+  { tab: "pulm",      icon: Wind,        label: "Pulm HTN & PE",      views: 8,  route: null as string | null },
+  { tab: "hocm",      icon: Heart,       label: "HOCM",               views: 14, route: null as string | null },
+  { tab: "tee",       icon: Microscope,  label: "TEE",                views: 13, route: null as string | null },
+  { tab: "ice",       icon: Scan,        label: "ICE",                views: 9,  route: null as string | null },
 ];
 
 export default function ScanCoachHub() {
   const [, navigate] = useLocation();
-
-  // Map tabs that have standalone routes (not tabs in /scan-coach)
-  const standaloneRoutes: Record<string, string> = {
-    stress: "/stress-scan-coach",
-  };
+  const { isPremium } = usePremium();
+  const [premiumModal, setPremiumModal] = useState<{ name: string } | null>(null);
 
   return (
     <Layout>
@@ -69,30 +72,117 @@ export default function ScanCoachHub() {
         </div>
       </div>
 
-      {/* Card Grid */}
-      <div className="container py-8">
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
-          {coaches.map(({ tab, icon: Icon, label, views }) => (
-            <button
-              key={tab}
-              onClick={() => navigate(standaloneRoutes[tab] ?? `/scan-coach?tab=${tab}`)}
-              className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-gray-100 bg-white hover:border-[#189aa1]/50 hover:shadow-md transition-all text-center cursor-pointer group"
-              style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
-            >
-              <div
-                className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform"
-                style={{ background: BRAND + "15" }}
+      <div className="container py-8 space-y-10">
+        {/* FREE ScanCoaches */}
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold text-[#189aa1] bg-[#189aa1]/10 border border-[#189aa1]/20">
+              <div className="w-2 h-2 rounded-full bg-[#189aa1]" />
+              FREE — Included with all memberships
+            </div>
+          </div>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
+            {freeCoaches.map(({ tab, icon: Icon, label, views }) => (
+              <button
+                key={tab}
+                onClick={() => navigate(`/scan-coach?tab=${tab}`)}
+                className="flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-gray-100 bg-white hover:border-[#189aa1]/50 hover:shadow-md transition-all text-center cursor-pointer group"
+                style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
               >
-                <Icon className="w-5 h-5" style={{ color: BRAND }} />
-              </div>
-              <div>
-                <div className="text-xs font-bold leading-tight text-gray-800">{label}</div>
-                <div className="text-[10px] mt-0.5 text-gray-400">{views} views</div>
-              </div>
-            </button>
-          ))}
+                <div
+                  className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform"
+                  style={{ background: BRAND + "15" }}
+                >
+                  <Icon className="w-5 h-5" style={{ color: BRAND }} />
+                </div>
+                <div>
+                  <div className="text-xs font-bold leading-tight text-gray-800">{label}</div>
+                  <div className="text-[10px] mt-0.5 text-gray-400">{views} views</div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* PREMIUM ScanCoaches */}
+        <div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200">
+              <Crown className="w-3 h-3 text-amber-500" />
+              PREMIUM — Requires Premium membership ($19.97/month)
+            </div>
+          </div>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
+            {premiumCoaches.map(({ tab, icon: Icon, label, views, route }) => {
+              if (isPremium) {
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => navigate(route ?? `/scan-coach?tab=${tab}`)}
+                    className="relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-amber-100 bg-white hover:border-amber-300/60 hover:shadow-md transition-all text-center cursor-pointer group"
+                    style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
+                  >
+                    <div className="absolute top-1 right-1">
+                      <Crown className="w-3 h-3 text-amber-400" />
+                    </div>
+                    <div
+                      className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform"
+                      style={{ background: BRAND + "15" }}
+                    >
+                      <Icon className="w-5 h-5" style={{ color: BRAND }} />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold leading-tight text-gray-800">{label}</div>
+                      <div className="text-[10px] mt-0.5 text-gray-400">{views} views</div>
+                    </div>
+                  </button>
+                );
+              }
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setPremiumModal({ name: label })}
+                  className="relative flex flex-col items-center gap-2 p-4 rounded-xl border-2 border-amber-100 bg-amber-50/40 hover:border-amber-300/60 hover:shadow-md transition-all text-center cursor-pointer group"
+                  style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
+                >
+                  <div className="absolute top-1 right-1">
+                    <Crown className="w-3 h-3 text-amber-400" />
+                  </div>
+                  <div
+                    className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform"
+                    style={{ background: "#f59e0b15" }}
+                  >
+                    <Icon className="w-5 h-5 text-amber-500" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold leading-tight text-gray-700">{label}</div>
+                    <div className="text-[10px] mt-0.5 text-amber-500 flex items-center justify-center gap-0.5">
+                      <Lock className="w-2.5 h-2.5" /> Premium
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          {!isPremium && (
+            <div className="mt-4 text-center">
+              <a href="/premium" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90"
+                style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}>
+                <Crown className="w-4 h-4" />
+                Upgrade to Premium — $19.97/month
+              </a>
+            </div>
+          )}
         </div>
       </div>
+
+      {premiumModal && (
+        <PremiumModal
+          featureName={`${premiumModal.name} ScanCoach`}
+          featureDescription={`The ${premiumModal.name} ScanCoach is available with a Premium membership. Upgrade to access view-by-view probe guidance, anatomy overlays, and clinical pearls for this modality.`}
+          onClose={() => setPremiumModal(null)}
+        />
+      )}
     </Layout>
   );
 }

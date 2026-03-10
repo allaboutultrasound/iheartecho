@@ -119,6 +119,26 @@ export default function POCUSAssistHub() {
               <p className="text-white/70 text-sm md:text-base mt-2 max-w-xl leading-relaxed">
                 Structured POCUS protocols with window-by-window checklists, normal reference values, scanning tips, probe guidance, and clinical decision support — for eFAST, Cardiac, RUSH, and Lung ultrasound.
               </p>
+              {/* CTA buttons */}
+              <div className="flex flex-wrap gap-3 mt-5">
+                <Link href="/echoassist#engine-pocus">
+                  <button
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90 hover:scale-105"
+                    style={{ background: "#189aa1" }}
+                  >
+                    <Stethoscope className="w-4 h-4" />
+                    Open POCUS-Assist™ Calculator
+                  </button>
+                </Link>
+                <Link href="/echoassist#engine-frank-starling">
+                  <button
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white/80 bg-white/10 border border-white/20 hover:bg-white/20 transition-all"
+                  >
+                    <ArrowRight className="w-4 h-4" />
+                    Frank-Starling Engine
+                  </button>
+                </Link>
+              </div>
             </div>
           </div>
         </div>

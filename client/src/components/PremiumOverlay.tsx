@@ -99,7 +99,7 @@ export function PremiumOverlay({ children, featureName, checkoutUrl }: PremiumOv
                     style={{ background: "linear-gradient(135deg, #189aa1, #0e7490)" }}
                   >
                     <Sparkles className="w-4 h-4 mr-1.5" />
-                    Upgrade — $9.99/month
+                    Upgrade — $19.97/month
                   </Button>
                 </a>
                 <Link href="/premium">

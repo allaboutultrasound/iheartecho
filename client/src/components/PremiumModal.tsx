@@ -12,16 +12,15 @@ interface PremiumModalProps {
 }
 
 const PREMIUM_FEATURES = [
-  "TEE Navigator — ME, TG & UE views with full guidance",
-  "Stress Echo Navigator — Exercise & DSE protocols",
-  "Strain Navigator — LV/RV/LA strain reference values",
-  "ICE Navigator — Procedural checklists & measurements",
-  "Device Navigator — TAVR, MitraClip, WATCHMAN guidance",
-  "EchoAssist™ Valve Engines — AS, MS, AR, MR severity grading",
-  "EchoAssist™ Strain Engine — LV GLS, RV & LA strain",
-  "EchoAssist™ RV Function & PA Pressure engines",
-  "DIY Accreditation Tool™ — Full lab accreditation suite",
-  "500+ Echo Case Lab cases with gamified learning",
+  "Stress Echo, Pulmonary HTN, HOCM, TEE, ICE & Structural Heart Navigators",
+  "Stress Echo, HOCM, TEE, ICE & Structural Heart ScanCoaches",
+  "POCUS RUSH & Lung POCUS Modules",
+  "EchoAssist™ LAP Grading, Diastology Special Populations & StressEchoAssist™",
+  "HOCM LVOT Gradient Calculator",
+  "Report Builder — 2025 ASE-compliant clinical narratives",
+  "Unlimited Case Library (500+ cases) & Daily Challenge Archive",
+  "Unlimited Echo Flashcards (no daily limit)",
+  "EchoAccreditation Navigator — IAC standards guide",
 ];
 
 export default function PremiumModal({ featureName, featureDescription, onClose }: PremiumModalProps) {
@@ -94,7 +93,7 @@ export default function PremiumModal({ featureName, featureDescription, onClose 
               style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}
             >
               <Zap className="w-4 h-4" />
-              Upgrade to Premium
+              Upgrade to Premium — $19.97/month
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
             <button

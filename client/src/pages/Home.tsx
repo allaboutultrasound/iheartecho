@@ -279,7 +279,7 @@ export default function Home() {
                 Unlock Full Clinical Suite
               </h3>
               <p className="text-white/60 text-xs md:text-sm">
-                UEA Navigator, HOCM Navigator, full interpretation engine, 500+ cases, and all premium modules — $9.99/month.
+                UEA Navigator, HOCM Navigator, full interpretation engine, 500+ cases, and all premium modules — $19.97/month.
               </p>
             </div>
             <a href="https://member.allaboutultrasound.com/enroll/3703267?price_id=4651832" target="_blank" rel="noopener noreferrer"

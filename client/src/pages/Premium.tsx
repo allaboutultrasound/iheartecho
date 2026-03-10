@@ -1,5 +1,5 @@
 /**
- * Premium Access page — explains the $9.99/month plan and handles checkout redirect.
+ * Premium Access page — explains the $19.97/month plan and handles checkout redirect.
  * Also handles the post-checkout sync when the user returns from checkout.
  */
 import { useEffect, useState } from "react";
@@ -21,28 +21,43 @@ const CHECKOUT_URL =
 const PREMIUM_FEATURES = [
   {
     icon: Stethoscope,
-    title: "Adult TTE Navigator",
-    description: "Full structured TTE protocol with view-by-view checklist and ASE reference values.",
+    title: "Stress Echo Navigator & ScanCoach",
+    description: "Exercise and DSE protocols, 17-segment WMSI scorer, StressEchoAssist™ engine, and interpretation criteria.",
   },
   {
     icon: Stethoscope,
-    title: "TEE Navigator",
-    description: "ME, TG, and UE views with angle/depth guidance and intraoperative checklist.",
+    title: "Pulmonary HTN & PE Navigator",
+    description: "Right heart and pulmonary pressure assessment, PH probability, RVSP, RV function, PE echo signs, and risk stratification.",
   },
   {
-    icon: Zap,
-    title: "Stress Echo Navigator",
-    description: "Exercise and DSE protocols, 17-segment WMSI scorer, and interpretation criteria.",
+    icon: Stethoscope,
+    title: "HOCM Navigator & ScanCoach",
+    description: "HOCM morphology, SAM grading, resting and provoked LVOT gradients, Valsalva, MR evaluation, and HOCM LVOT Gradient calculator.",
   },
   {
-    icon: Users,
-    title: "Pediatric & Fetal Echo",
-    description: "CHD findings, BSA Z-scores, Qp/Qs shunt estimation, and fetal cardiac scan coach.",
+    icon: Stethoscope,
+    title: "TEE Navigator & ScanCoach",
+    description: "ME, TG, and UE views with angle/depth guidance, clinical applications, and intraoperative checklist.",
+  },
+  {
+    icon: Stethoscope,
+    title: "ICE Navigator & ScanCoach",
+    description: "Intracardiac echo views, procedural checklists, and key measurements for structural interventions.",
+  },
+  {
+    icon: Stethoscope,
+    title: "Structural Heart Navigator & ScanCoach",
+    description: "TAVR, MitraClip, WATCHMAN, and ASD/PFO closure — procedural echo guidance and post-implant assessment.",
   },
   {
     icon: Activity,
-    title: "Daily Challenge Archive",
-    description: "Access the full archive of past daily challenges. Free members get today's challenge only — premium unlocks the complete history.",
+    title: "POCUS RUSH & Lung POCUS Modules",
+    description: "RUSH protocol navigator and ScanCoach, Lung POCUS 8-zone protocol, B-lines, BLUE protocol, and pleural assessment.",
+  },
+  {
+    icon: Zap,
+    title: "EchoAssist™ Premium Engines",
+    description: "LAP Grading, Diastology in Special Populations (MAC, transplant, AF, constriction), and StressEchoAssist™ WMSI.",
   },
   {
     icon: FileText,
@@ -50,43 +65,52 @@ const PREMIUM_FEATURES = [
     description: "Generate complete, structured echo reports instantly from your measurements with 2025 ASE-compliant clinical narratives.",
   },
   {
-    icon: Zap,
-    title: "Echo Severity Calculator",
-    description: "Guideline-based AS, MR, TR, AR, diastology interpretation with LARS and LV GLS.",
-  },
-  {
-    icon: Zap,
-    title: "EchoAssist™ AI",
-    description: "Enter measurements and get instant guideline-based severity classification.",
-  },
-  {
-    icon: Activity,
-    title: "Hemodynamics Lab",
-    description: "Interactive PV loop simulator — adjust preload, afterload, and contractility.",
+    icon: BookOpen,
+    title: "Unlimited Case Library",
+    description: "Full access to 500+ echo cases with images, video, and critical thinking questions. Free members get 50 cases.",
   },
   {
     icon: Layers,
     title: "Unlimited Echo Flashcards",
-    description: "Study as many flashcards as you want, every day. Free members are limited to 10 per day. Premium unlocks the full deck with spaced repetition.",
+    description: "Unlimited daily flashcard access with random rotation. Free members get 10 per day, resetting at midnight.",
+  },
+  {
+    icon: Activity,
+    title: "Daily Challenge Archive",
+    description: "Full archive of past daily challenges. Free members get today's challenge only — premium unlocks the complete history.",
+  },
+  {
+    icon: Shield,
+    title: "EchoAccreditation Navigator",
+    description: "IAC standards guide with search across TTE, TEE, Stress, Pediatric, Fetal, and HOCM accreditation requirements.",
   },
 ];
 
 const FREE_FEATURES = [
-  "Echo Case Library (full access)",
-  "Daily Challenge (today's challenge only)",
-  "Echo Flashcards (10 per day)",
-  "Basic echo reference values",
+  "Echo Case Library — 50 cases (mix of image/video and text-based)",
+  "Daily Challenge — today's challenge only (no archive access)",
+  "Echo Flashcards — 10 per day, random rotation, resets at midnight",
+  "Adult TTE Navigator & ScanCoach",
+  "Pediatric, Fetal & Adult Congenital Navigators",
+  "Strain Navigator & ScanCoach",
+  "UEA Navigator & ScanCoach",
+  "Diastolic Function Navigator",
+  "Cardiac POCUS, eFAST Navigator & ScanCoach",
+  "EchoAssist™ core engines (LV, Diastology, Strain, AS, MS, AR, MR, TR, RV, PH, SV, Frank-Starling)",
   "Community Hub access",
 ];
 
 const PREMIUM_ONLY_LABELS = [
+  "Stress Echo, Pulmonary HTN, HOCM, TEE, ICE & Structural Heart Navigators",
+  "Stress Echo, HOCM, TEE, ICE & Structural Heart ScanCoaches",
+  "POCUS RUSH & Lung POCUS Modules",
+  "EchoAssist™ LAP Grading, Diastology Special Populations & StressEchoAssist™",
+  "HOCM LVOT Gradient Calculator",
+  "Report Builder",
+  "Unlimited Case Library (500+ cases)",
   "Unlimited Echo Flashcards (no daily limit)",
   "Daily Challenge Archive (full history)",
-  "Report Builder",
-  "All EchoNavigator protocols",
-  "EchoAssist™ clinical engines",
-  "Hemodynamics Lab",
-  "Diastology in Special Populations",
+  "EchoAccreditation Navigator",
 ];
 
 export default function Premium() {
@@ -166,7 +190,7 @@ export default function Premium() {
             {/* Pricing card */}
             <div className="inline-block bg-white rounded-2xl shadow-xl px-8 py-6 text-center mb-6">
               <div className="text-5xl font-black text-[#189aa1] mb-1" style={{ fontFamily: "Merriweather, serif" }}>
-                $9.99
+                $19.97
               </div>
               <div className="text-gray-500 text-sm mb-4">per month · cancel anytime</div>
 
@@ -276,7 +300,7 @@ export default function Premium() {
             {/* Premium */}
             <div className="rounded-xl border-2 border-[#189aa1] p-5 relative overflow-hidden">
               <div className="absolute top-0 right-0 bg-[#189aa1] text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
-                $9.99/mo
+                $19.97/mo
               </div>
               <div className="font-bold text-[#189aa1] text-sm mb-4 uppercase tracking-wider flex items-center gap-1.5">
                 <Crown className="w-3.5 h-3.5" /> Premium
@@ -306,7 +330,7 @@ export default function Premium() {
                 className="bg-[#189aa1] hover:bg-[#147a80] text-white font-bold px-10 py-3 text-base rounded-xl"
               >
                 <Crown className="w-4 h-4 mr-2" />
-                Get Premium Access — $9.99/month
+                Get Premium Access — $19.97/month
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             ) : (

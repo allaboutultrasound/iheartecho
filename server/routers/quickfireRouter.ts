@@ -1425,6 +1425,61 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       return { id: (result as any).insertId };
     }),
 
+  /**
+   * Batch-approve multiple questions to the daily challenge queue.
+   * Each question becomes its own challenge entry (one per day).
+   * Optionally accepts a startDate to auto-schedule them on consecutive days.
+   */
+  adminBatchApproveToQueue: adminProcedure
+    .input(
+      z.object({
+        questionIds: z.array(z.number().int().positive()).min(1).max(100),
+        startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+
+      // Fetch all requested questions
+      const qs = await db
+        .select()
+        .from(quickfireQuestions)
+        .where(inArray(quickfireQuestions.id, input.questionIds));
+
+      if (qs.length === 0) throw new TRPCError({ code: "NOT_FOUND", message: "No valid questions found" });
+
+      // Preserve the order the admin selected them in
+      const ordered = input.questionIds
+        .map((id) => qs.find((q) => q.id === id))
+        .filter(Boolean) as typeof qs;
+
+      const results: number[] = [];
+      for (let i = 0; i < ordered.length; i++) {
+        const q = ordered[i];
+        const autoTitle = q.question.length > 60 ? q.question.slice(0, 57) + "..." : q.question;
+        let publishDate: string | null = null;
+        if (input.startDate) {
+          const d = new Date(input.startDate);
+          d.setDate(d.getDate() + i);
+          publishDate = d.toISOString().slice(0, 10);
+        }
+        const [result] = await db.insert(quickfireChallenges).values({
+          title: autoTitle,
+          description: null,
+          questionIds: JSON.stringify([q.id]),
+          priority: 100,
+          category: null,
+          status: publishDate ? "scheduled" : "draft",
+          publishDate: publishDate ?? null,
+          createdByUserId: ctx.user.id,
+        });
+        results.push((result as any).insertId);
+      }
+
+      return { added: results.length, ids: results };
+    }),
+
   /** List only archived challenges for the archive tab */
   adminListArchivedChallenges: adminProcedure
     .query(async () => {
