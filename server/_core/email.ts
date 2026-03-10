@@ -673,3 +673,109 @@ export function buildPeerReviewFeedbackEmail(opts: {
   `);
   return { subject, htmlBody, previewText };
 }
+
+// ─── Quality Meeting Invitation Email ─────────────────────────────────────────
+export function buildMeetingInvitationEmail(opts: {
+  recipientName: string;
+  meetingTitle: string;
+  meetingType: string;
+  scheduledAt: Date;
+  durationMinutes: number;
+  location?: string | null;
+  meetingLink?: string | null;
+  agenda?: string | null;
+  organizerName: string;
+  appUrl: string;
+  rsvpUrl: string;
+}): { subject: string; htmlBody: string; previewText: string } {
+  const subject = `Meeting Invitation: ${opts.meetingTitle}`;
+  const previewText = `You have been invited to "${opts.meetingTitle}" on ${opts.scheduledAt.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}`;
+
+  const dateStr = opts.scheduledAt.toLocaleString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  });
+
+  const meetingTypeLabel: Record<string, string> = {
+    quality_review: "Quality Review",
+    staff_meeting: "Staff Meeting",
+    accreditation: "Accreditation Meeting",
+    education: "Education Session",
+    other: "Meeting",
+  };
+
+  const joinButton = opts.meetingLink
+    ? `<div style="text-align:center;margin:20px 0;">
+        <a href="${opts.meetingLink}"
+          style="display:inline-block;background:#0e4a50;color:#ffffff;font-weight:700;font-size:14px;padding:12px 28px;border-radius:8px;text-decoration:none;">
+          🎥 Join Meeting (Zoom/Teams)
+        </a>
+      </div>`
+    : "";
+
+  const agendaBlock = opts.agenda
+    ? `<div style="background:#f8fafc;border-left:3px solid ${brandColor};padding:12px 16px;border-radius:0 8px 8px 0;margin:0 0 20px;">
+        <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">Agenda</p>
+        <p style="margin:0;font-size:14px;color:#0e1e2e;line-height:1.6;white-space:pre-wrap;">${opts.agenda}</p>
+      </div>`
+    : "";
+
+  const htmlBody = emailWrapper(`
+    <h2 style="margin:0 0 8px;font-size:20px;color:${brandDark};font-family:Georgia,serif;">
+      Quality Meeting Invitation
+    </h2>
+    <p style="margin:0 0 16px;font-size:15px;color:#475569;line-height:1.6;">
+      Hi ${opts.recipientName},
+    </p>
+    <p style="margin:0 0 20px;font-size:15px;color:#475569;line-height:1.6;">
+      <strong>${opts.organizerName}</strong> has invited you to the following quality meeting:
+    </p>
+    <div style="background:#f0fbfc;border:1px solid #b2e8eb;border-radius:8px;padding:16px 20px;margin:0 0 20px;">
+      <table style="width:100%;border-collapse:collapse;font-size:14px;">
+        <tr>
+          <td style="padding:7px 0;color:#64748b;font-weight:600;width:40%;">Meeting</td>
+          <td style="padding:7px 0;color:#0e1e2e;font-weight:700;">${opts.meetingTitle}</td>
+        </tr>
+        <tr style="background:rgba(24,154,161,0.05);">
+          <td style="padding:7px 0;color:#64748b;font-weight:600;">Type</td>
+          <td style="padding:7px 0;color:#0e1e2e;">${meetingTypeLabel[opts.meetingType] ?? opts.meetingType}</td>
+        </tr>
+        <tr>
+          <td style="padding:7px 0;color:#64748b;font-weight:600;">Date &amp; Time</td>
+          <td style="padding:7px 0;color:#0e1e2e;font-weight:600;">${dateStr}</td>
+        </tr>
+        <tr style="background:rgba(24,154,161,0.05);">
+          <td style="padding:7px 0;color:#64748b;font-weight:600;">Duration</td>
+          <td style="padding:7px 0;color:#0e1e2e;">${opts.durationMinutes} minutes</td>
+        </tr>
+        ${opts.location ? `<tr><td style="padding:7px 0;color:#64748b;font-weight:600;">Location</td><td style="padding:7px 0;color:#0e1e2e;">${opts.location}</td></tr>` : ""}
+        ${opts.meetingLink ? `<tr style="background:rgba(24,154,161,0.05);"><td style="padding:7px 0;color:#64748b;font-weight:600;">Meeting Link</td><td style="padding:7px 0;"><a href="${opts.meetingLink}" style="color:${brandColor};font-weight:600;word-break:break-all;">Join Meeting</a></td></tr>` : ""}
+      </table>
+    </div>
+    ${agendaBlock}
+    ${joinButton}
+    <p style="margin:0 0 20px;font-size:14px;color:#475569;line-height:1.6;text-align:center;">
+      Please confirm your attendance by clicking below:
+    </p>
+    <div style="text-align:center;margin:0 0 28px;display:flex;gap:12px;justify-content:center;">
+      <a href="${opts.rsvpUrl}?response=accepted"
+        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:13px 28px;border-radius:8px;text-decoration:none;margin-right:8px;">
+        ✓ Accept
+      </a>
+      <a href="${opts.rsvpUrl}?response=declined"
+        style="display:inline-block;background:#f1f5f9;color:#475569;font-weight:700;font-size:15px;padding:13px 28px;border-radius:8px;text-decoration:none;border:1px solid #e2e8f0;">
+        ✗ Decline
+      </a>
+    </div>
+    <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.5;text-align:center;">
+      This invitation was sent from the iHeartEcho™ DIY Accreditation Tool.<br/>
+      You can also manage your RSVP by logging in to <a href="${opts.appUrl}" style="color:${brandColor};">iHeartEcho™</a>.
+    </p>
+  `);
+  return { subject, htmlBody, previewText };
+}

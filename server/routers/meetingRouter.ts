@@ -20,6 +20,7 @@ import {
 import { storagePut } from "../storage";
 import { transcribeAudio } from "../_core/voiceTranscription";
 import { ENV } from "../_core/env";
+import { sendEmail, buildMeetingInvitationEmail } from "../_core/email";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -156,6 +157,7 @@ export const meetingRouter = router({
       scheduledAt: z.date(),
       durationMinutes: z.number().min(5).max(480).optional(),
       location: z.string().max(255).optional(),
+      meetingLink: z.string().url().optional(),
       agenda: z.string().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
@@ -170,6 +172,7 @@ export const meetingRouter = router({
         scheduledAt: input.scheduledAt,
         durationMinutes: input.durationMinutes ?? 60,
         location: input.location,
+        meetingLink: input.meetingLink,
         agenda: input.agenda,
         status: "scheduled",
       });
@@ -185,6 +188,7 @@ export const meetingRouter = router({
       scheduledAt: z.date().optional(),
       durationMinutes: z.number().min(5).max(480).optional(),
       location: z.string().max(255).optional(),
+      meetingLink: z.string().url().optional().nullable(),
       agenda: z.string().optional(),
       status: z.enum(["scheduled", "in_progress", "completed", "cancelled"]).optional(),
     }))
@@ -436,6 +440,76 @@ export const meetingRouter = router({
       return { ok: true };
     }),
 
+  // ── List finalized meetings (Minutes Archive) ────────────────────────────
+  listFinalized: protectedProcedure
+    .input(z.object({
+      search: z.string().optional(),
+      meetingType: z.enum(["quality_assurance", "peer_review", "accreditation", "staff_education", "policy_review", "other", "all"]).optional(),
+      year: z.number().optional(),
+    }))
+    .query(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      const orgId = await getOrgId(ctx.user.id);
+      const rows = await db
+        .select()
+        .from(qualityMeetings)
+        .where(
+          and(
+            eq(qualityMeetings.orgId, orgId),
+            eq(qualityMeetings.minutesFinalized, true)
+          )
+        )
+        .orderBy(desc(qualityMeetings.scheduledAt));
+      // Filter in JS for search/type/year (small dataset)
+      return rows.filter((m) => {
+        if (input.meetingType && input.meetingType !== "all" && m.meetingType !== input.meetingType) return false;
+        if (input.year && new Date(m.scheduledAt).getFullYear() !== input.year) return false;
+        if (input.search) {
+          const q = input.search.toLowerCase();
+          if (!m.title.toLowerCase().includes(q) && !(m.agenda ?? "").toLowerCase().includes(q)) return false;
+        }
+        return true;
+      });
+    }),
+
+  // ── Attendance analytics for DIY Reports ──────────────────────────────────
+  getAttendanceStats: protectedProcedure
+    .query(async ({ ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      const orgId = await getOrgId(ctx.user.id);
+      const meetings = await db
+        .select()
+        .from(qualityMeetings)
+        .where(and(eq(qualityMeetings.orgId, orgId), eq(qualityMeetings.status, "completed")))
+        .orderBy(qualityMeetings.scheduledAt);
+      const stats = await Promise.all(
+        meetings.map(async (m) => {
+          const attendees = await db
+            .select({ status: meetingAttendees.attendanceStatus })
+            .from(meetingAttendees)
+            .where(eq(meetingAttendees.meetingId, m.id));
+          const total = attendees.length;
+          const present = attendees.filter((a) => a.status === "present").length;
+          const absent = attendees.filter((a) => a.status === "absent").length;
+          const excused = attendees.filter((a) => a.status === "excused").length;
+          return {
+            meetingId: m.id,
+            title: m.title,
+            meetingType: m.meetingType,
+            scheduledAt: m.scheduledAt,
+            total,
+            present,
+            absent,
+            excused,
+            attendanceRate: total > 0 ? Math.round((present / total) * 100) : null,
+          };
+        })
+      );
+      return stats;
+    }),
+
   // ── Send email invitations ─────────────────────────────────────────────────
   sendInvitations: protectedProcedure
     .input(z.object({ meetingId: z.number(), attendeeIds: z.array(z.number()).optional() }))
@@ -458,59 +532,31 @@ export const meetingRouter = router({
             : eq(meetingAttendees.meetingId, input.meetingId)
         );
 
-      const sendgridKey = process.env.SENDGRID_API_KEY;
-      const fromEmail = process.env.SENDGRID_FROM_EMAIL ?? "noreply@iheartecho.com";
-      const fromName = process.env.SENDGRID_FROM_NAME ?? "iHeartEcho";
       const appUrl = process.env.VITE_APP_URL ?? "https://app.iheartecho.com";
-
       let sent = 0;
       const errors: string[] = [];
 
       for (const attendee of attendees) {
-        const emailHtml = `
-          <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
-            <div style="background:#189aa1;padding:20px;border-radius:8px 8px 0 0">
-              <h1 style="color:white;margin:0;font-size:20px">iHeartEcho™ Quality Meeting Invitation</h1>
-            </div>
-            <div style="padding:24px;background:#f9fafb;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px">
-              <p style="color:#374151">Dear ${attendee.name},</p>
-              <p style="color:#374151">You are invited to the following quality meeting:</p>
-              <table style="width:100%;border-collapse:collapse;margin:16px 0">
-                <tr><td style="padding:8px;font-weight:bold;color:#374151;width:140px">Meeting:</td><td style="padding:8px;color:#374151">${meeting.title}</td></tr>
-                <tr style="background:#f3f4f6"><td style="padding:8px;font-weight:bold;color:#374151">Date &amp; Time:</td><td style="padding:8px;color:#374151">${new Date(meeting.scheduledAt).toLocaleString("en-US", { dateStyle: "full", timeStyle: "short" })}</td></tr>
-                <tr><td style="padding:8px;font-weight:bold;color:#374151">Duration:</td><td style="padding:8px;color:#374151">${meeting.durationMinutes} minutes</td></tr>
-                ${meeting.location ? `<tr style="background:#f3f4f6"><td style="padding:8px;font-weight:bold;color:#374151">Location:</td><td style="padding:8px;color:#374151">${meeting.location}</td></tr>` : ""}
-                ${meeting.agenda ? `<tr><td style="padding:8px;font-weight:bold;color:#374151;vertical-align:top">Agenda:</td><td style="padding:8px;color:#374151;white-space:pre-wrap">${meeting.agenda}</td></tr>` : ""}
-              </table>
-              <p style="color:#6b7280;font-size:13px">Please log in to iHeartEcho to confirm your attendance.</p>
-              <a href="${appUrl}" style="display:inline-block;background:#189aa1;color:white;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:bold;margin-top:8px">Open iHeartEcho</a>
-            </div>
-          </div>`;
-
-        if (sendgridKey) {
-          try {
-            const resp = await fetch("https://api.sendgrid.com/v3/mail/send", {
-              method: "POST",
-              headers: { "Content-Type": "application/json", Authorization: `Bearer ${sendgridKey}` },
-              body: JSON.stringify({
-                personalizations: [{ to: [{ email: attendee.email, name: attendee.name }] }],
-                from: { email: fromEmail, name: fromName },
-                subject: `Meeting Invitation: ${meeting.title}`,
-                content: [{ type: "text/html", value: emailHtml }],
-              }),
-            });
-            if (resp.ok) {
-              await db.update(meetingAttendees).set({ inviteSentAt: new Date() }).where(eq(meetingAttendees.id, attendee.id));
-              sent++;
-            } else {
-              errors.push(`${attendee.email}: ${resp.status}`);
-            }
-          } catch (err) {
-            errors.push(`${attendee.email}: ${String(err)}`);
-          }
-        } else {
+        const rsvpUrl = `${appUrl}/diy-accreditation?tab=meetings&meetingId=${meeting.id}&attendeeId=${attendee.id}`;
+        const { subject, htmlBody } = buildMeetingInvitationEmail({
+          recipientName: attendee.name,
+          meetingTitle: meeting.title,
+          meetingType: meeting.meetingType,
+          scheduledAt: new Date(meeting.scheduledAt),
+          durationMinutes: meeting.durationMinutes,
+          location: meeting.location,
+          meetingLink: meeting.meetingLink ?? null,
+          agenda: meeting.agenda,
+          organizerName: ctx.user.name ?? "Lab Admin",
+          appUrl,
+          rsvpUrl,
+        });
+        const ok = await sendEmail({ to: { name: attendee.name, email: attendee.email }, subject, htmlBody });
+        if (ok) {
           await db.update(meetingAttendees).set({ inviteSentAt: new Date() }).where(eq(meetingAttendees.id, attendee.id));
           sent++;
+        } else {
+          errors.push(attendee.email);
         }
       }
 

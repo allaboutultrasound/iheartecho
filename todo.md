@@ -1999,3 +1999,8 @@
 - [x] Rich-text minutes editor: edit generated minutes before finalizing
 - [x] Export minutes as PDF or .docx
 - [x] Wire QualityMeetingsTab into AccreditationTool as admin-only tab
+
+## Quality Meeting Follow-up Features (Mar 10 2026)
+- [x] Email notifications for meeting invitations via SendGrid (server-side, triggered on invite mutation)
+- [x] Meeting Minutes Archive view — searchable/filterable list of finalized minutes with bulk PDF export
+- [x] Meeting attendance analytics chart in DIY Reports — attendance rate over time per meeting type

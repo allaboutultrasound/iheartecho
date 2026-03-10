@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import PhysicianPeerReview from "./PhysicianPeerReview";
 import QualityMeetingsTab from "./QualityMeetingsTab";
+import MeetingAttendanceChart from "@/components/MeetingAttendanceChart";
 import ImageQualityReviewTab from "./ImageQualityReview";
 import SonographerPeerReview from "./SonographerPeerReview";
 import EchoCorrelationTab from "./EchoCorrelation";
@@ -1921,6 +1922,11 @@ function DIYReportsTab() {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* ── MEETING ATTENDANCE ANALYTICS ── */}
+      {viewMode === "overview" && (
+        <MeetingAttendanceChart />
       )}
 
       {/* ── STAFF GROWTH CURVES TAB ── */}

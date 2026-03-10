@@ -1555,7 +1555,8 @@ export const qualityMeetings = mysqlTable("qualityMeetings", {
   ]).default("quality_assurance").notNull(),
   scheduledAt: timestamp("scheduledAt").notNull(),
   durationMinutes: int("durationMinutes").default(60),
-  location: varchar("location", { length: 255 }), // room name or video link
+  location: varchar("location", { length: 255 }), // room name
+  meetingLink: varchar("meetingLink", { length: 1024 }), // Zoom/Teams URL
   agenda: text("agenda"),
   status: mysqlEnum("status", ["scheduled", "in_progress", "completed", "cancelled"]).default("scheduled").notNull(),
   minutesHtml: text("minutesHtml"),          // final rich-text meeting minutes

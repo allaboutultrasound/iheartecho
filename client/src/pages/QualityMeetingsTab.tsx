@@ -19,6 +19,7 @@ import {
   RefreshCw, Send, Save, X
 } from "lucide-react";
 import { toast } from "sonner";
+import MeetingMinutesArchive from "./MeetingMinutesArchive";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { TextStyle } from "@tiptap/extension-text-style";
@@ -1043,6 +1044,7 @@ function MeetingList({
 
 export default function QualityMeetingsTab({ isDiyAdmin }: { isDiyAdmin: boolean }) {
   const [selectedMeetingId, setSelectedMeetingId] = useState<number | null>(null);
+  const [mainTab, setMainTab] = useState<"meetings" | "archive">("meetings");
 
   if (selectedMeetingId !== null) {
     return (
@@ -1054,5 +1056,44 @@ export default function QualityMeetingsTab({ isDiyAdmin }: { isDiyAdmin: boolean
     );
   }
 
-  return <MeetingList onSelect={setSelectedMeetingId} isDiyAdmin={isDiyAdmin} />;
+  return (
+    <div className="space-y-4">
+      {/* Sub-tab bar */}
+      <div className="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit">
+        <button
+          onClick={() => setMainTab("meetings")}
+          className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+            mainTab === "meetings"
+              ? "bg-white shadow-sm text-[#189aa1] font-semibold"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          <span className="flex items-center gap-1.5">
+            <Calendar className="w-3.5 h-3.5" />
+            Meetings
+          </span>
+        </button>
+        <button
+          onClick={() => setMainTab("archive")}
+          className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+            mainTab === "archive"
+              ? "bg-white shadow-sm text-[#189aa1] font-semibold"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          <span className="flex items-center gap-1.5">
+            <FileText className="w-3.5 h-3.5" />
+            Minutes Archive
+          </span>
+        </button>
+      </div>
+
+      {mainTab === "meetings" && (
+        <MeetingList onSelect={setSelectedMeetingId} isDiyAdmin={isDiyAdmin} />
+      )}
+      {mainTab === "archive" && (
+        <MeetingMinutesArchive />
+      )}
+    </div>
+  );
 }
