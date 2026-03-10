@@ -68,6 +68,7 @@ import {
   Clock,
   Tag,
   ListPlus,
+  Calendar,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -463,6 +464,33 @@ export default function QuickFireAdmin() {
     },
     onError: (err) => toast.error(err.message || "Failed to approve question."),
   });
+
+  // ── Bulk-select state ─────────────────────────────────────────────────────
+  const [bulkMode, setBulkMode] = useState(false);
+  const [bulkSelected, setBulkSelected] = useState<Set<number>>(new Set());
+  const [bulkStartDate, setBulkStartDate] = useState("");
+  const [bulkSchedulerOpen, setBulkSchedulerOpen] = useState(false);
+
+  const batchApproveToQueueMutation = trpc.quickfire.adminBatchApproveToQueue.useMutation({
+    onSuccess: (data: any) => {
+      toast.success(`${data.queued} question${data.queued !== 1 ? "s" : ""} added to the queue.`);
+      setBulkSelected(new Set());
+      setBulkMode(false);
+      setBulkSchedulerOpen(false);
+      setBulkStartDate("");
+      challengeListQuery.refetch();
+    },
+    onError: (err) => toast.error(err.message || "Failed to batch-approve questions."),
+  });
+
+  function toggleBulkSelect(id: number) {
+    setBulkSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
 
   const aiGenerateMutation = trpc.quickfire.aiGenerateQuestions.useMutation({
     onSuccess: (data: any) => {
@@ -883,7 +911,46 @@ export default function QuickFireAdmin() {
             <RefreshCw className="w-4 h-4 text-gray-400" />
           </Button>
           <span className="ml-auto text-sm text-gray-400 self-center">{total} question{total !== 1 ? "s" : ""}</span>
+          {/* Bulk select toggle */}
+          <Button
+            variant={bulkMode ? "default" : "outline"}
+            size="sm"
+            className={bulkMode ? "text-white gap-1.5" : "gap-1.5"}
+            style={bulkMode ? { background: "#189aa1" } : {}}
+            onClick={() => {
+              setBulkMode((v) => !v);
+              setBulkSelected(new Set());
+            }}
+          >
+            <CheckSquare className="w-3.5 h-3.5" />
+            {bulkMode ? "Exit Bulk" : "Bulk Select"}
+          </Button>
         </div>
+
+        {/* Bulk-mode toolbar: Select All + count */}
+        {bulkMode && (
+          <div className="flex items-center gap-3 mb-3 px-3 py-2 bg-[#f0fbfc] rounded-lg border border-[#189aa1]/20">
+            <button
+              className="flex items-center gap-1.5 text-xs font-semibold text-[#189aa1] hover:underline"
+              onClick={() => {
+                const eligibleIds = questions
+                  .filter((q: any) => q.isActive && q.type !== "quickReview")
+                  .map((q: any) => q.id);
+                if (bulkSelected.size === eligibleIds.length) {
+                  setBulkSelected(new Set());
+                } else {
+                  setBulkSelected(new Set(eligibleIds));
+                }
+              }}
+            >
+              {bulkSelected.size === questions.filter((q: any) => q.isActive && q.type !== "quickReview").length
+                ? <CheckSquare className="w-3.5 h-3.5" />
+                : <Square className="w-3.5 h-3.5" />}
+              Select All Eligible
+            </button>
+            <span className="text-xs text-gray-500">{bulkSelected.size} selected</span>
+          </div>
+        )}
 
         {/* Question list */}
         {listQuery.isLoading ? (
@@ -905,17 +972,35 @@ export default function QuickFireAdmin() {
               {questions.map((q: any) => {
                 const meta = TYPE_META[q.type as QuestionType] ?? TYPE_META.scenario;
                 const Icon = meta.icon;
+                const isEligibleForBulk = q.isActive && q.type !== "quickReview";
+                const isChecked = bulkSelected.has(q.id);
                 return (
                   <div
                     key={q.id}
-                    className={`flex items-start gap-3 p-4 bg-white rounded-xl border transition-all ${q.isActive ? "border-gray-100 hover:border-[#189aa1]/30" : "border-gray-100 opacity-50"}`}
+                    className={`flex items-start gap-3 p-4 bg-white rounded-xl border transition-all ${
+                      isChecked ? "border-[#189aa1] bg-[#f0fbfc]" :
+                      q.isActive ? "border-gray-100 hover:border-[#189aa1]/30" : "border-gray-100 opacity-50"
+                    }`}
+                    onClick={bulkMode && isEligibleForBulk ? () => toggleBulkSelect(q.id) : undefined}
+                    style={bulkMode && isEligibleForBulk ? { cursor: "pointer" } : {}}
                   >
+                    {/* Bulk checkbox */}
+                    {bulkMode && (
+                      <div className="flex-shrink-0 mt-0.5">
+                        {isEligibleForBulk ? (
+                          isChecked
+                            ? <CheckSquare className="w-4 h-4 text-[#189aa1]" />
+                            : <Square className="w-4 h-4 text-gray-300" />
+                        ) : (
+                          <Square className="w-4 h-4 text-gray-100" />
+                        )}
+                      </div>
+                    )}
                     {/* Type badge */}
                     <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full flex-shrink-0 mt-0.5 ${meta.color}`}>
                       <Icon className="w-3 h-3" />
                       {q.type === "quickReview" ? "QR" : q.type === "image" ? "IMG" : "MCQ"}
                     </span>
-
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-800 leading-snug line-clamp-2">{q.question}</p>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
@@ -989,6 +1074,64 @@ export default function QuickFireAdmin() {
                 <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages}>
                   <ChevronRight className="w-4 h-4" />
                 </Button>
+              </div>
+            )}
+
+            {/* Floating bulk action bar */}
+            {bulkMode && bulkSelected.size > 0 && (
+              <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 bg-[#0e1e2e] rounded-2xl shadow-2xl border border-[#189aa1]/30">
+                <span className="text-white text-sm font-semibold">{bulkSelected.size} question{bulkSelected.size !== 1 ? "s" : ""} selected</span>
+                <div className="w-px h-5 bg-white/20" />
+                {/* Optional start date */}
+                {bulkSchedulerOpen ? (
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-3.5 h-3.5 text-[#4ad9e0]" />
+                    <input
+                      type="date"
+                      value={bulkStartDate}
+                      onChange={(e) => setBulkStartDate(e.target.value)}
+                      min={new Date().toISOString().slice(0, 10)}
+                      className="text-xs bg-white/10 border border-white/20 rounded px-2 py-1 text-white focus:outline-none focus:border-[#4ad9e0]"
+                    />
+                    <button
+                      className="text-white/50 hover:text-white/80 text-xs"
+                      onClick={() => { setBulkSchedulerOpen(false); setBulkStartDate(""); }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    className="flex items-center gap-1 text-xs text-[#4ad9e0] hover:text-white transition-colors"
+                    onClick={() => setBulkSchedulerOpen(true)}
+                  >
+                    <Calendar className="w-3.5 h-3.5" />
+                    Schedule
+                  </button>
+                )}
+                <Button
+                  size="sm"
+                  className="text-white gap-1.5 px-4"
+                  style={{ background: "#189aa1" }}
+                  disabled={batchApproveToQueueMutation.isPending}
+                  onClick={() => {
+                    batchApproveToQueueMutation.mutate({
+                      questionIds: Array.from(bulkSelected),
+                      startDate: bulkStartDate || undefined,
+                    });
+                  }}
+                >
+                  {batchApproveToQueueMutation.isPending
+                    ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    : <ListPlus className="w-3.5 h-3.5" />}
+                  Add {bulkSelected.size} to Queue
+                </Button>
+                <button
+                  className="text-white/50 hover:text-white ml-1"
+                  onClick={() => { setBulkMode(false); setBulkSelected(new Set()); }}
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
             )}
           </>

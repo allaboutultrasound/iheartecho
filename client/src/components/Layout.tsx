@@ -75,18 +75,19 @@ const navGroups = [
       { path: "/cme", label: "CME Hub", icon: GraduationCap },
       { path: "/registry-review", label: "Registry Review", icon: BookMarked },
       { path: "https://www.allaboutultrasound.net/acs-preview-pass-access", label: "ACS Mastery", icon: Award, external: true },
+      { path: "https://www.allaboutultrasound.net/adultecho-preview-pass-access", label: "Learn Echo", icon: GraduationCap, external: true },
       { path: "https://www.allaboutultrasound.net/fetal-echo-preview-access-pass", label: "Learn Fetal Echo", icon: BookOpen, external: true },
+      { path: "https://www.allaboutultrasound.com/pocus-education.html", label: "Learn POCUS", icon: Stethoscope, external: true },
     ],
   },
   {
     label: "Accreditation",
     items: [
       { path: "/accreditation-navigator", label: "EchoAccreditation Navigator™", icon: Award },
-      { path: "/accreditation", label: "DIY Accreditation Tool™", icon: ClipboardList },
-      { path: "/diy-accreditation-plans", label: "DIY Accreditation™ Plans", icon: Building2 },
+      // DIY Accreditation: smart link resolved at render time based on user access
+      // (replaced by dynamic item in sidebar render below)
+      { path: "/diy-accreditation-smart", label: "DIY Accreditation™", icon: ClipboardList },
       { path: "/diy-register", label: "Register Your Lab", icon: UserPlus },
-      { path: "/diy-lab-admin", label: "Lab Admin Portal", icon: Shield },
-      { path: "/diy-member", label: "Member Portal", icon: Users },
     ],
   },
   {
@@ -123,6 +124,7 @@ const hiddenNavItems = [
   { path: "/pocus-cardiac-scan-coach", label: "Cardiac POCUS ScanCoach™" },
   { path: "/pocus-lung-scan-coach", label: "Lung POCUS ScanCoach™" },
   { path: "/diy-accreditation-plans", label: "DIY Accreditation™ Plans" },
+  { path: "/diy-accreditation-smart", label: "DIY Accreditation™" },
   { path: "/diy-register", label: "Register Your Lab" },
   { path: "/diy-lab-admin", label: "Lab Admin Portal" },
   { path: "/diy-member", label: "Member Portal" },
@@ -137,6 +139,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [accountOpen, setAccountOpen] = useState(false);
   const { isAuthenticated, user, logout } = useAuth();
   const isAdmin = (user as any)?.role === "admin";
+  const userRoles: string[] = (user as any)?.thinkificRoles ?? [];
+  const hasDiyAccess = userRoles.includes("diy_user") || userRoles.includes("diy_admin");
+  const hasDiyAdmin = userRoles.includes("diy_admin");
 
   return (
     <div className="flex min-h-screen bg-[#f0fbfc]">
@@ -181,14 +186,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <div key={group.label}>
               <div className="text-xs font-semibold text-white/40 uppercase tracking-wider px-3 mb-1">{group.label}</div>
               {group.items.map(({ path, label, icon: Icon, external }) => {
+                // Smart DIY Accreditation link: resolve destination based on user access
+                const resolvedPath = path === "/diy-accreditation-smart"
+                  ? (hasDiyAccess ? "/accreditation" : "/diy-accreditation-plans")
+                  : path;
+
                 // For paths with query params (e.g. /scan-coach?tab=tte), match full URL; otherwise use path-only match
-                const hasQuery = path.includes("?");
+                const hasQuery = resolvedPath.includes("?");
                 const active = !external && (
                   hasQuery
-                    ? fullLocation === path
-                    : (location === path || (path !== "/" && location.startsWith(path)))
+                    ? fullLocation === resolvedPath
+                    : (location === resolvedPath || (resolvedPath !== "/" && location.startsWith(resolvedPath)))
                 );
-                const isCaseLibrary = path === "/case-library";
+                const isCaseLibrary = resolvedPath === "/case-library";
                 const innerContent = (
                   <div
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg mb-0.5 transition-all duration-150 group
@@ -207,11 +217,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   </div>
                 );
                 return external ? (
-                  <a key={path} href={path} target="_blank" rel="noopener noreferrer">
+                  <a key={path} href={resolvedPath} target="_blank" rel="noopener noreferrer">
                     {innerContent}
                   </a>
                 ) : (
-                  <Link key={path} href={path}>
+                  <Link key={path} href={resolvedPath}>
                     {innerContent}
                   </Link>
                 );
@@ -403,22 +413,35 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         </WouterLink>
                       </div>
 
-                      {/* Lab Admin section — only for diy_admin */}
-                      {hasDiyAdmin && (
+                      {/* Accreditation Portal section — for any DIY user or admin */}
+                      {(hasDiyAccess || hasDiyAdmin) && (
                         <div className="px-2 py-1.5 border-t border-gray-100">
-                          <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider px-2 mb-1">Lab Admin</div>
-                          <WouterLink href="/lab-admin">
+                          <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider px-2 mb-1">Accreditation</div>
+                          {/* Lab Admin Portal — diy_admin only */}
+                          {hasDiyAdmin && (
+                            <>
+                              <WouterLink href="/lab-admin">
+                                <button onClick={() => setAccountOpen(false)}
+                                  className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-all text-left">
+                                  <ClipboardList className="w-3.5 h-3.5 text-orange-500" />
+                                  Lab Admin Portal
+                                </button>
+                              </WouterLink>
+                              <WouterLink href="/accreditation">
+                                <button onClick={() => setAccountOpen(false)}
+                                  className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-all text-left">
+                                  <Award className="w-3.5 h-3.5 text-orange-500" />
+                                  DIY Accreditation Tool™
+                                </button>
+                              </WouterLink>
+                            </>
+                          )}
+                          {/* Member Portal — all DIY users */}
+                          <WouterLink href="/diy-member">
                             <button onClick={() => setAccountOpen(false)}
                               className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-all text-left">
-                              <ClipboardList className="w-3.5 h-3.5 text-orange-500" />
-                              Lab Admin Dashboard
-                            </button>
-                          </WouterLink>
-                          <WouterLink href="/accreditation">
-                            <button onClick={() => setAccountOpen(false)}
-                              className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-all text-left">
-                              <Award className="w-3.5 h-3.5 text-orange-500" />
-                              DIY Accreditation Tool™
+                              <Users className="w-3.5 h-3.5 text-orange-500" />
+                              Member Portal
                             </button>
                           </WouterLink>
                         </div>

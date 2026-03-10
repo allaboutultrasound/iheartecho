@@ -2057,3 +2057,20 @@
 - [ ] Starter tier: limited analytics (no drill-down/export), prompt upgrade
 - [ ] Add Crown badges to premium items in EchoAssist engine list
 - [ ] Add Crown badges to premium items in EchoCalculator
+
+## Sidebar Nav + Admin + Premium Badges + Accreditation Tiers (Mar 2026)
+- [ ] Sidebar: replace DIY Accreditation Plans link with smart link (DIY access → /accreditation, no access → /diy-accreditation-plans)
+- [ ] Sidebar: remove Lab Admin Portal and Member Portal from sidebar nav group
+- [ ] Profile menu: add Lab Admin Portal and Member Portal links for users with DIY access
+- [ ] Admin Question Bank: bulk-select checkboxes on each question row
+- [ ] Admin Question Bank: Select All toggle in toolbar
+- [ ] Admin Question Bank: floating "Add X to Queue" action bar with optional start-date scheduler
+- [ ] EchoAssist engines: add gold Crown badge to LAP Estimation engine header
+- [ ] EchoAssist engines: add gold Crown badge to Diastology Special Populations engine header
+- [ ] EchoAssist engines: add gold Crown badge to StressEchoAssist engine header
+- [ ] Accreditation: gate Quality Meeting tool to Professional+ tier only
+- [ ] Accreditation: gate Accreditation Concierge to Professional+ tier only
+- [ ] Accreditation: Starter tier analytics — no drill-downs, no exports, show upgrade prompt
+- [ ] Update plan comparison chart with corrected tier features
+- [ ] Add "Learn Echo" sidebar link after ACS Mastery → https://www.allaboutultrasound.net/adultecho-preview-pass-access
+- [ ] Add "Learn POCUS" sidebar link after Learn Fetal Echo → https://www.allaboutultrasound.com/pocus-education.html

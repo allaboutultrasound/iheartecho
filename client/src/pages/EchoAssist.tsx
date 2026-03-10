@@ -99,9 +99,9 @@ function ResultCard({
 }
 
 function EngineSection({
-  title, subtitle, children, defaultOpen = false, id,
+  title, subtitle, children, defaultOpen = false, id, premium = false,
 }: {
-  title: string; subtitle?: string; children: React.ReactNode; defaultOpen?: boolean; id?: string;
+  title: string; subtitle?: string; children: React.ReactNode; defaultOpen?: boolean; id?: string; premium?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const ref = useRef<HTMLDivElement>(null);
@@ -127,8 +127,16 @@ function EngineSection({
         onClick={() => setOpen(o => !o)}
         className="w-full teal-header px-5 py-3 flex items-center justify-between"
       >
-        <div className="text-left">
-          <h3 className="font-bold text-sm text-white" style={{ fontFamily: "Merriweather, serif" }}>{title}</h3>
+        <div className="text-left flex-1">
+          <div className="flex items-center gap-2">
+            <h3 className="font-bold text-sm text-white" style={{ fontFamily: "Merriweather, serif" }}>{title}</h3>
+            {premium && (
+              <span className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-yellow-400/20 border border-yellow-400/40 text-yellow-300">
+                <Crown className="w-2.5 h-2.5" />
+                Premium
+              </span>
+            )}
+          </div>
           {subtitle && <p className="text-xs text-white/70 mt-0.5">{subtitle}</p>}
         </div>
         {open ? <ChevronUp className="w-4 h-4 text-white/70 flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-white/70 flex-shrink-0" />}
@@ -2109,7 +2117,7 @@ function StressEchoAssistEngine() {
   };
 
   return (
-    <EngineSection id="engine-stress" title="StressEchoAssist™" subtitle="17-Segment WMSI · Target HR · Protocol Dosing · Interpretation · Save as Case">
+    <EngineSection id="engine-stress" title="StressEchoAssist™" subtitle="17-Segment WMSI · Target HR · Protocol Dosing · Interpretation · Save as Case" premium>
       <div>
             <div className="flex flex-wrap gap-2 mb-5">
               {(["wmsi", "target_hr", "interpretation"] as const).map(t => (
@@ -2697,7 +2705,8 @@ function LAPEstimationEngine() {
     <EngineSection
       id="engine-lap"
       title="LAP Estimation"
-      subtitle="ASE 2025 · 3-variable algorithm · e’ · E/e’ · TR/PASP · Premium"
+      subtitle="ASE 2025 · 3-variable algorithm · e' · E/e' · TR/PASP"
+      premium
     >
       <PremiumOverlay featureName="LAP Estimation (ASE 2025)">
         <LAPEstimationEngineInner />

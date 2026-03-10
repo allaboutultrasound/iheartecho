@@ -23,7 +23,7 @@ import {
   XCircle, Clock, ChevronDown, ChevronUp, Shield, Award, BookOpen, Loader2, Download,
   TrendingUp, TrendingDown, Minus, Info, ImageIcon, GitCompare, CheckSquare, Stethoscope,
   BarChart, Users, Activity, FileDown, ChevronRight, PieChart as PieChartIcon, LineChart as LineChartIcon,
-  Calendar
+  Calendar, Crown, Lock
 } from "lucide-react";
 import PhysicianPeerReview from "./PhysicianPeerReview";
 import QualityMeetingsTab from "./QualityMeetingsTab";
@@ -1356,7 +1356,7 @@ function scoreColor(score: number) {
 
 const PIE_COLORS = ["#16a34a", "#2563eb", "#d97706", "#dc2626"];
 
-function DIYReportsTab() {
+function DIYReportsTab({ isProfessionalPlus = true }: { isProfessionalPlus?: boolean }) {
   const [filterExamTypeQuery, setFilterExamTypeQuery] = useState<string>("");
   const [dateFromQuery, setDateFromQuery] = useState<string>("");
   const [dateToQuery, setDateToQuery] = useState<string>("");
@@ -1665,12 +1665,20 @@ function DIYReportsTab() {
           )}
         </div>
         <div className="flex gap-1.5 ml-auto">
-          <button onClick={exportPDF} className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md bg-[#189aa1] text-white hover:bg-[#147f85] transition-colors">
-            <FileDown className="w-3.5 h-3.5" /> Export PDF
-          </button>
-          <button onClick={() => exportCSV(filteredQualityMonthly.map(m => ({ Month: m.month, Reviews: m.reviewCount, AvgQS: m.avgScore != null ? Math.round(Number(m.avgScore)) : "", Excellent: m.excellentCount ?? 0, Good: m.goodCount ?? 0, Adequate: m.adequateCount ?? 0, NeedsImprovement: m.needsImprovementCount ?? 0 })), `quality-monthly-${startDate}-${endDate}.csv`)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border border-[#189aa1]/40 text-[#189aa1] hover:bg-[#189aa1]/10 transition-colors">
-            <FileDown className="w-3.5 h-3.5" /> CSV
-          </button>
+          {isProfessionalPlus ? (
+            <>
+              <button onClick={exportPDF} className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md bg-[#189aa1] text-white hover:bg-[#147f85] transition-colors">
+                <FileDown className="w-3.5 h-3.5" /> Export PDF
+              </button>
+              <button onClick={() => exportCSV(filteredQualityMonthly.map(m => ({ Month: m.month, Reviews: m.reviewCount, AvgQS: m.avgScore != null ? Math.round(Number(m.avgScore)) : "", Excellent: m.excellentCount ?? 0, Good: m.goodCount ?? 0, Adequate: m.adequateCount ?? 0, NeedsImprovement: m.needsImprovementCount ?? 0 })), `quality-monthly-${startDate}-${endDate}.csv`)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border border-[#189aa1]/40 text-[#189aa1] hover:bg-[#189aa1]/10 transition-colors">
+                <FileDown className="w-3.5 h-3.5" /> CSV
+              </button>
+            </>
+          ) : (
+            <a href="/diy-accreditation-plans" className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md bg-amber-50 border border-amber-300 text-amber-700 hover:bg-amber-100 transition-colors">
+              <Crown className="w-3.5 h-3.5" /> Upgrade to Export
+            </a>
+          )}
         </div>
       </div>
 
@@ -1781,9 +1789,13 @@ function DIYReportsTab() {
                     <Activity className="w-4 h-4" style={{ color: BRAND }} />
                     Quality Review — Monthly Detail
                   </CardTitle>
-                  <button onClick={() => exportCSV(filteredQualityMonthly.map(m => ({ Month: m.month, Reviews: m.reviewCount, AvgQS: m.avgScore != null ? Math.round(Number(m.avgScore)) : "", Excellent: m.excellentCount ?? 0, Good: m.goodCount ?? 0, Adequate: m.adequateCount ?? 0, NeedsImprovement: m.needsImprovementCount ?? 0 })), `quality-monthly.csv`)} className="flex items-center gap-1 text-xs text-[#189aa1] hover:underline">
-                    <FileDown className="w-3.5 h-3.5" /> CSV
-                  </button>
+                  {isProfessionalPlus ? (
+                    <button onClick={() => exportCSV(filteredQualityMonthly.map(m => ({ Month: m.month, Reviews: m.reviewCount, AvgQS: m.avgScore != null ? Math.round(Number(m.avgScore)) : "", Excellent: m.excellentCount ?? 0, Good: m.goodCount ?? 0, Adequate: m.adequateCount ?? 0, NeedsImprovement: m.needsImprovementCount ?? 0 })), `quality-monthly.csv`)} className="flex items-center gap-1 text-xs text-[#189aa1] hover:underline">
+                      <FileDown className="w-3.5 h-3.5" /> CSV
+                    </button>
+                  ) : (
+                    <a href="/diy-accreditation-plans" className="flex items-center gap-1 text-xs text-amber-600 hover:underline"><Crown className="w-3 h-3" /> Upgrade</a>
+                  )}
                 </div>
               </CardHeader>
               <CardContent>
@@ -1828,9 +1840,13 @@ function DIYReportsTab() {
                     <Users className="w-4 h-4" style={{ color: "#7c3aed" }} />
                     Sonographer Peer Review — Monthly Detail
                   </CardTitle>
-                  <button onClick={() => exportCSV(filteredPeerMonthly.map(m => ({ Month: m.month, Reviews: m.reviewCount, AvgQS: m.avgScore != null ? Math.round(Number(m.avgScore)) : "", Excellent: m.excellentCount ?? 0, Good: m.goodCount ?? 0, Adequate: m.adequateCount ?? 0, NeedsImprovement: m.needsImprovementCount ?? 0 })), `peer-review-monthly.csv`)} className="flex items-center gap-1 text-xs text-[#189aa1] hover:underline">
-                    <FileDown className="w-3.5 h-3.5" /> CSV
-                  </button>
+                  {isProfessionalPlus ? (
+                    <button onClick={() => exportCSV(filteredPeerMonthly.map(m => ({ Month: m.month, Reviews: m.reviewCount, AvgQS: m.avgScore != null ? Math.round(Number(m.avgScore)) : "", Excellent: m.excellentCount ?? 0, Good: m.goodCount ?? 0, Adequate: m.adequateCount ?? 0, NeedsImprovement: m.needsImprovementCount ?? 0 })), `peer-review-monthly.csv`)} className="flex items-center gap-1 text-xs text-[#189aa1] hover:underline">
+                      <FileDown className="w-3.5 h-3.5" /> CSV
+                    </button>
+                  ) : (
+                    <a href="/diy-accreditation-plans" className="flex items-center gap-1 text-xs text-amber-600 hover:underline"><Crown className="w-3 h-3" /> Upgrade</a>
+                  )}
                 </div>
               </CardHeader>
               <CardContent>
@@ -2087,16 +2103,25 @@ function DIYReportsTab() {
                     <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
                       <ClipboardList className="w-4 h-4" style={{ color: BRAND }} />
                       Individual Reviews — {selectedStaffName}
+                      {!isProfessionalPlus && <span className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 border border-amber-300 text-amber-700 ml-1"><Crown className="w-2.5 h-2.5" /> Pro+</span>}
                     </CardTitle>
                     <div className="flex gap-2">
-                      <button onClick={() => setDrilldownOpen(o => !o)} className="flex items-center gap-1 text-xs text-[#189aa1] hover:underline">
-                        {drilldownOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                        {drilldownOpen ? "Hide" : "Show"} Reviews
-                      </button>
-                      {drilldownOpen && drilldownReviews.length > 0 && (
-                        <button onClick={() => exportCSV(drilldownReviews.map((r: any) => ({ Date: r.dateReviewCompleted ?? r.createdAt, ExamType: r.examType, Identifier: r.examIdentifier, QualityScore: r.qualityScore, Reviewer: r.reviewer, Comments: r.reviewComments })), `${selectedStaffName}-reviews.csv`)} className="flex items-center gap-1 text-xs text-[#189aa1] hover:underline">
-                          <FileDown className="w-3.5 h-3.5" /> CSV
-                        </button>
+                      {isProfessionalPlus ? (
+                        <>
+                          <button onClick={() => setDrilldownOpen(o => !o)} className="flex items-center gap-1 text-xs text-[#189aa1] hover:underline">
+                            {drilldownOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                            {drilldownOpen ? "Hide" : "Show"} Reviews
+                          </button>
+                          {drilldownOpen && drilldownReviews.length > 0 && (
+                            <button onClick={() => exportCSV(drilldownReviews.map((r: any) => ({ Date: r.dateReviewCompleted ?? r.createdAt, ExamType: r.examType, Identifier: r.examIdentifier, QualityScore: r.qualityScore, Reviewer: r.reviewer, Comments: r.reviewComments })), `${selectedStaffName}-reviews.csv`)} className="flex items-center gap-1 text-xs text-[#189aa1] hover:underline">
+                              <FileDown className="w-3.5 h-3.5" /> CSV
+                            </button>
+                          )}
+                        </>
+                      ) : (
+                        <a href="/diy-accreditation-plans" className="flex items-center gap-1 text-xs text-amber-600 hover:underline">
+                          <Crown className="w-3 h-3" /> Upgrade to view drill-downs
+                        </a>
                       )}
                     </div>
                   </div>
@@ -2302,6 +2327,10 @@ export default function AccreditationTool() {
   const appRoles: string[] = (user as any)?.appRoles ?? [];
   // diy_admin and platform_admin see all tabs; diy_user sees only IQR, Peer Review, Echo Correlations, Appropriate Use
   const isDiyAdmin = appRoles.includes("diy_admin") || appRoles.includes("platform_admin") || (user as any)?.role === "admin";
+  const { data: myLab } = trpc.lab.getMyLab.useQuery(undefined, { enabled: isDiyAdmin });
+  // Plan tier: 'basic' = Starter, 'professional' = Professional+, 'enterprise' = Advanced/Partner
+  const labPlan = (myLab as any)?.plan ?? "basic";
+  const isProfessionalPlus = labPlan === "professional" || labPlan === "enterprise";
   const searchString = useSearch();
   const params = new URLSearchParams(searchString);
   const initialTab = (params.get("tab") as "iqr" | "sono-peer" | "peer" | "echo-correlation" | "auc" | "case-mix" | "policy" | "readiness" | "reports" | null) ?? "iqr";
@@ -2383,7 +2412,19 @@ export default function AccreditationTool() {
                 <TabBtn active={activeTab === "policy"} onClick={() => setActiveTab("policy")} icon={FileText} label="Policy Builder" />
                 <TabBtn active={activeTab === "reports"} onClick={() => setActiveTab("reports")} icon={TrendingUp} label="Reports & Analytics" />
                 <TabBtn active={activeTab === "readiness"} onClick={() => setActiveTab("readiness")} icon={CheckSquare} label="Readiness" />
-                <TabBtn active={activeTab === "meetings"} onClick={() => setActiveTab("meetings")} icon={Calendar} label="Quality Meetings" />
+                {isProfessionalPlus ? (
+                  <TabBtn active={activeTab === "meetings"} onClick={() => setActiveTab("meetings")} icon={Calendar} label="Quality Meetings" />
+                ) : (
+                  <button
+                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg text-amber-600 bg-amber-50 border border-amber-200 cursor-not-allowed opacity-80"
+                    title="Quality Meetings requires Professional plan or higher"
+                    onClick={() => {}}
+                  >
+                    <Crown className="w-3 h-3" />
+                    Quality Meetings
+                    <Lock className="w-3 h-3 ml-0.5" />
+                  </button>
+                )}
               </>
             )}
           </div>
@@ -2411,8 +2452,21 @@ export default function AccreditationTool() {
           {activeTab === "auc" && <AppropriateUseTab />}
           {activeTab === "readiness" && <AccreditationReadiness />}
           {activeTab === "case-mix" && <CaseMixSubmission initialView={(params.get("view") as "requirements" | "tracker" | null) ?? "requirements"} />}
-          {activeTab === "reports" && <DIYReportsTab />}
-          {activeTab === "meetings" && <QualityMeetingsTab isDiyAdmin={isDiyAdmin} />}
+          {activeTab === "reports" && <DIYReportsTab isProfessionalPlus={isProfessionalPlus} />}
+          {activeTab === "meetings" && (
+            isProfessionalPlus ? (
+              <QualityMeetingsTab isDiyAdmin={isDiyAdmin} />
+            ) : (
+              <div className="text-center py-16">
+                <Crown className="w-12 h-12 mx-auto mb-4 text-amber-400" />
+                <h3 className="text-lg font-bold text-gray-800 mb-2" style={{ fontFamily: "Merriweather, serif" }}>Professional Plan Required</h3>
+                <p className="text-gray-500 text-sm mb-5 max-w-md mx-auto">The Quality Meeting tool is available on the Accreditation Professional plan and above. Upgrade to unlock meeting management, attendance tracking, and automated QI management.</p>
+                <a href="/diy-accreditation-plans" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white" style={{ background: "#189aa1" }}>
+                  View Plans &amp; Upgrade
+                </a>
+              </div>
+            )
+          )}
         </div>
       </div>
 

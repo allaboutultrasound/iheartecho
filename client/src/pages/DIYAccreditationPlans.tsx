@@ -48,6 +48,7 @@ const PLANS = [
       "Staff access management",
       "DIY Member task participation",
       "Peer review submission",
+      "Limited analytics & reporting (no drill-downs or export)",
     ],
     checkoutUrl: "https://member.allaboutultrasound.com/enroll/3706401?price_id=4655411",
   },
@@ -70,7 +71,10 @@ const PLANS = [
       "2 Accreditation Lab Admins",
       "13 DIY Member profiles",
       "All Starter features",
-      "Analytics & reporting dashboard",
+      "Full analytics & reporting dashboard",
+      "Analytics drill-downs & PDF/CSV export",
+      "Automated Quality Improvement management",
+      "Quality Meeting tool",
       "Policy Builder",
       "Case Studies manager",
       "DIY Accreditation Readiness tracker",
@@ -103,6 +107,7 @@ const PLANS = [
       "Dedicated policy library",
       "Priority support",
       "All Lab Admins get Premium App access",
+      "Accreditation Concierge™ add-on available",
     ],
     checkoutUrl: "https://member.allaboutultrasound.com/enroll/3706392?price_id=4655402",
   },
@@ -131,6 +136,7 @@ const PLANS = [
       "Accreditation readiness monitoring & review",
       "Dedicated account manager",
       "All Lab Admins get Premium App access",
+      "Accreditation Concierge™ add-on available",
     ],
     checkoutUrl: "https://member.allaboutultrasound.com/enroll/3706344?price_id=4655349",
   },
@@ -344,14 +350,17 @@ export default function DIYAccreditationPlans() {
                   ["Workflow Management", true, true, true, true],
                   ["Policy Upload & Builder", true, true, true, true],
                   ["Case Review Assignment", true, true, true, true],
-                  ["Analytics & Reporting", false, true, true, true],
+                  ["Analytics & Reporting", "Limited", true, true, true],
+                  ["Analytics Drill-downs & Export", false, true, true, true],
+                  ["Automated QI Management", false, true, true, true],
+                  ["Quality Meeting Tool", false, true, true, true],
                   ["Case Studies Manager", false, true, true, true],
                   ["DIY Readiness Tracker", false, true, true, true],
                   ["IAC-Ready PDF Bundles", false, true, true, true],
                   ["Lab Admin Premium App Access", true, true, true, true],
                   ["Expert Consulting", false, false, false, true],
                   ["Monthly Advisory Meeting", false, false, false, true],
-                  ["Concierge Add-on Available", true, true, true, true],
+                  ["Accreditation Concierge™ Add-on", false, false, true, true],
                 ].map(([label, s, p, a, pa]) => (
                   <tr key={label as string} className="hover:bg-gray-50">
                     <td className="py-2.5 px-4 text-gray-700 text-xs font-medium">{label as string}</td>
@@ -363,6 +372,8 @@ export default function DIYAccreditationPlans() {
                           ) : (
                             <span className="text-gray-300 text-lg">—</span>
                           )
+                        ) : val === "Limited" ? (
+                          <span className="inline-flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-amber-100 border border-amber-300 text-amber-700">⚠ Limited</span>
                         ) : (
                           <span className="text-xs font-semibold text-gray-700">{val}</span>
                         )}
