@@ -11,7 +11,7 @@ import { useEffect } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
-import EchoCalculator from "./pages/EchoCalculator";
+// EchoCalculator merged into EchoAssist — redirect handled below
 import FetalNavigator from "./pages/FetalNavigator";
 import TTENavigatorRedirect from "./pages/TTENavigator";
 import HemodynamicsLab from "./pages/HemodynamicsLab";
@@ -111,7 +111,7 @@ function Router() {
       <Route path="/reset-password" component={ResetPassword} />
       <Route path="/magic-link" component={MagicLinkRequest} />
       <Route path="/auth/magic" component={MagicLinkCallback} />
-      <Route path="/calculator" component={EchoCalculator} />
+      <Route path="/calculator">{() => { const [, setLoc] = useLocation(); useEffect(() => { setLoc("/echoassist"); }, []); return null; }}</Route>
       <Route path="/fetal" component={FetalNavigator} />
       <Route path="/pediatric" component={PediatricNavigator} />
       <Route path="/tte" component={TTENavigator} />

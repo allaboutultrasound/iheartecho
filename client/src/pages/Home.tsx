@@ -35,10 +35,10 @@ const modules: Module[] = [
     color: BRAND,
   },
   {
-    path: "/calculator",
+    path: "/echoassist",
     icon: Calculator,
-    title: "Echo Calculators",
-    description: "Guideline-based severity calculators for AS, MR, AR, TR, MS, LV function, diastology, strain, RV function, PA pressure, and more — ASE 2025.",
+    title: "EchoAssist™ Calculators",
+    description: "Guideline-based severity calculators for AS, MR, AR, TR, MS, LV function, diastology, strain, RV function, PA pressure, SV/CO, LAP estimation, and more — ASE 2025.",
     badge: "ASE 2025",
     color: BRAND,
   },

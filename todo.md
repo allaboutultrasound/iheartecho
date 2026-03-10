@@ -1932,3 +1932,11 @@
 - [x] Build /diy-register org registration flow (3-step: plan selection → org details → confirmation)
 - [x] Register /diy-register route in App.tsx
 - [x] Add "Register Your Lab" nav entry to Accreditation sidebar section
+
+### EchoAssist™ Calculators Revamp (Mar 10 2026)
+- [x] Build transparent system-wide PremiumOverlay gate component
+- [x] Restructure EchoAssist page: retitle to EchoAssist Calculators, add all migrated calculator sections per PDF layout
+- [x] Migrate 2-step Diastolic Function calculator from old EchoCalculator page
+- [x] Apply premium gates with transparent overlays to premium sections (LAP Estimation, Diastology Special Populations, Stress Echo)
+- [x] Delete old EchoCalculator page (replaced with redirect /calculator → /echoassist)
+- [x] Update sidebar nav link and all internal /calculator links to /echoassist

@@ -17,6 +17,7 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp, AlertCircle, Info, Lightbulb, Lock, Crown } from "lucide-react";
 import { PremiumGate } from "@/components/PremiumGate";
+import { PremiumOverlay } from "@/components/PremiumOverlay";
 
 // ─── UI PRIMITIVES ─────────────────────────────────────────────────────────────
 
@@ -1046,7 +1047,7 @@ export default function DiastologySpecialPopulations() {
       </button>
       {open && (
         <div className="p-4">
-          <PremiumGate featureName="Diastology in Special Populations">
+          <PremiumOverlay featureName="Diastology in Special Populations">
             <div className="space-y-4">
               <MACEngine />
               <HeartTransplantEngine />
@@ -1054,7 +1055,7 @@ export default function DiastologySpecialPopulations() {
               <AFibDiastolicEngine />
               <ConstrictiveRestrictiveEngine />
             </div>
-          </PremiumGate>
+          </PremiumOverlay>
         </div>
       )}
     </div>

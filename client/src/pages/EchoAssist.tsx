@@ -9,12 +9,13 @@ import { useState, useEffect, useRef } from "react";
 import { useSearch } from "wouter";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
-import { Zap, ChevronDown, ChevronUp, Info, Lightbulb, MessageSquare, AlertCircle, TrendingUp, Activity, Save, CheckCircle2, Calculator } from "lucide-react";
+import { Zap, ChevronDown, ChevronUp, Info, Lightbulb, MessageSquare, AlertCircle, TrendingUp, Activity, Save, CheckCircle2, Calculator, Crown } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import FrankStarlingGraph, { type FrankStarlingParams } from "@/components/FrankStarlingGraph";
 import DiastologySpecialPopulations from "@/pages/DiastologySpecialPopulations";
 import { PremiumGate } from "@/components/PremiumGate";
+import { PremiumOverlay } from "@/components/PremiumOverlay";
 
 // ─── UI PRIMITIVES ────────────────────────────────────────────────────────────
 
@@ -188,15 +189,31 @@ function EchoAssistPanel({ output }: { output: EchoAssistOutput | null }) {
 }
 
 // ─── CALCULATOR DEEP-LINK BUTTON ─────────────────────────────────────────────
+// Maps old tab IDs to engine IDs within EchoAssist
+const calcTabToEngineId: Record<string, string> = {
+  as: "engine-as",
+  mr: "engine-mr",
+  tr: "engine-tr",
+  ar: "engine-ar",
+  mva: "engine-ms",
+  rvsp: "engine-ph",
+  diastology: "engine-diastolic",
+  lap_estimation: "engine-lap",
+  diastology_special: "engine-diastology-special",
+  lv: "engine-lv",
+  rv: "engine-rv",
+  sv: "engine-sv",
+};
 
 function CalcLink({ tabId, label }: { tabId: string; label: string }) {
+  const engineId = calcTabToEngineId[tabId] ?? `engine-${tabId}`;
   return (
     <Link
-      href={`/calculator#calc-${tabId}`}
+      href={`/echoassist#${engineId}`}
       className="inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 rounded-lg text-xs font-semibold border border-[#189aa1] text-[#189aa1] bg-white transition-all hover:bg-[#f0fbfc] hover:border-[#0e7490] active:scale-95"
     >
       <Calculator className="w-3 h-3" />
-      {label} Calculator →
+      {label} →
     </Link>
   );
 }
@@ -2394,7 +2411,355 @@ function StressEchoAssistEngine() {
   );
 }
 
-// ─── MAIN PAGE ────────────────────────────────────────────────────────────────
+// ─── STROKE VOLUME / CO ENGINE ────────────────────────────────────────────────────
+function StrokeVolumeEngine() {
+  const [lvotD, setLvotD] = useState("");
+  const [lvotVti, setLvotVti] = useState("");
+  const [hr, setHr] = useState("");
+  const [bsa, setBsa] = useState("");
+
+  const lvotArea = has(lvotD) ? Math.PI * Math.pow(n(lvotD) / 2, 2) : null;
+  const sv = lvotArea !== null && has(lvotVti) ? lvotArea * n(lvotVti) : null;
+  const co = sv !== null && has(hr) ? (sv * n(hr)) / 1000 : null;
+  const ci = co !== null ? co / (has(bsa) ? n(bsa) : 1.7) : null;
+  const svNormal = sv !== null ? (sv >= 60 && sv <= 100 ? "normal" : sv < 60 ? "low" : "high") : null;
+  const coNormal = co !== null ? (co >= 4 && co <= 8 ? "normal" : co < 4 ? "low" : "high") : null;
+
+  return (
+    <EngineSection id="engine-sv" title="Stroke Volume / Cardiac Output" subtitle="LVOT method · SV = CSA × VTI · CO = SV × HR">
+      <div className="grid grid-cols-2 gap-3">
+        <NumInput label="LVOT Diameter" value={lvotD} onChange={setLvotD} unit="cm" placeholder="e.g. 2.0" hint="(nl 1.8–2.2 cm)" />
+        <NumInput label="LVOT VTI" value={lvotVti} onChange={setLvotVti} unit="cm" placeholder="e.g. 22" hint="(nl 18–25 cm)" />
+        <NumInput label="Heart Rate" value={hr} onChange={setHr} unit="bpm" placeholder="e.g. 72" />
+        <NumInput label="BSA (optional)" value={bsa} onChange={setBsa} unit="m²" placeholder="e.g. 1.7" hint="(for CI; default 1.7)" />
+      </div>
+      {lvotArea !== null && (
+        <p className="text-xs text-gray-400 mt-2">LVOT CSA: {lvotArea.toFixed(2)} cm²</p>
+      )}
+      {sv !== null && (
+        <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="rounded-lg p-3 border" style={{
+            borderColor: svNormal === "normal" ? "#16a34a40" : svNormal === "low" ? "#dc262640" : "#f9731640",
+            background: svNormal === "normal" ? "#f0fdf4" : svNormal === "low" ? "#fef2f2" : "#fff7ed",
+          }}>
+            <div className="text-xs text-gray-500 mb-0.5">Stroke Volume</div>
+            <div className="text-2xl font-black" style={{ fontFamily: "JetBrains Mono, monospace", color: svNormal === "normal" ? "#16a34a" : svNormal === "low" ? "#dc2626" : "#f97316" }}>
+              {sv.toFixed(1)} <span className="text-sm font-normal text-gray-500">mL</span>
+            </div>
+            <div className="text-xs text-gray-400 mt-0.5">
+              {svNormal === "normal" ? "✓ Normal (60–100 mL)" : svNormal === "low" ? "↓ Low (<60 mL)" : "↑ High (>100 mL)"}
+            </div>
+          </div>
+          {co !== null && (
+            <div className="rounded-lg p-3 border" style={{
+              borderColor: coNormal === "normal" ? "#16a34a40" : coNormal === "low" ? "#dc262640" : "#f9731640",
+              background: coNormal === "normal" ? "#f0fdf4" : coNormal === "low" ? "#fef2f2" : "#fff7ed",
+            }}>
+              <div className="text-xs text-gray-500 mb-0.5">Cardiac Output</div>
+              <div className="text-2xl font-black" style={{ fontFamily: "JetBrains Mono, monospace", color: coNormal === "normal" ? "#16a34a" : coNormal === "low" ? "#dc2626" : "#f97316" }}>
+                {co.toFixed(2)} <span className="text-sm font-normal text-gray-500">L/min</span>
+              </div>
+              <div className="text-xs text-gray-400 mt-0.5">
+                {coNormal === "normal" ? "✓ Normal (4–8 L/min)" : coNormal === "low" ? "↓ Low (<4 L/min)" : "↑ High (>8 L/min)"}
+              </div>
+            </div>
+          )}
+          {ci !== null && (
+            <div className="rounded-lg p-3 border border-gray-200 bg-gray-50">
+              <div className="text-xs text-gray-500 mb-0.5">Cardiac Index</div>
+              <div className="text-2xl font-black text-gray-700" style={{ fontFamily: "JetBrains Mono, monospace" }}>
+                {ci.toFixed(2)} <span className="text-sm font-normal text-gray-500">L/min/m²</span>
+              </div>
+              <div className="text-xs text-gray-400 mt-0.5">
+                {ci >= 2.2 ? "✓ Normal (≥2.2)" : "↓ Low (<2.2)"} {!has(bsa) ? "(BSA assumed 1.7 m²)" : ""}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+      {sv !== null && (
+        <EchoAssistPanel output={{
+          suggests: `SV = ${sv.toFixed(1)} mL${co !== null ? ", CO = " + co.toFixed(2) + " L/min" : ""}${ci !== null ? ", CI = " + ci.toFixed(2) + " L/min/m²" : ""}. ${svNormal === "normal" ? "Stroke volume is within normal limits." : svNormal === "low" ? "Reduced stroke volume may indicate impaired LV systolic function, hypovolemia, or significant valvular disease." : "Elevated stroke volume may reflect high-output states such as anemia, sepsis, or significant AR/MR."}`,
+          tip: "LVOT diameter is the most critical measurement for SV accuracy. A 1 mm error in LVOT diameter results in approximately 10% error in SV. Measure in PLAX view at the aortic annulus level, inner-edge to inner-edge, in mid-systole.",
+        }} />
+      )}
+      <p className="text-xs text-gray-400 mt-3">Reference: ASE/WFTF 2018 Chamber Quantification; Quinones et al. JASE 2002</p>
+    </EngineSection>
+  );
+}
+
+// ─── LAP ESTIMATION ENGINE (PREMIUM) ──────────────────────────────────────────────────────────────────────────────
+function LAPEstimationEngineInner() {
+  const [eSeptal, setESeptal] = useState("");
+  const [eLateral, setELateral] = useState("");
+  const [eVel, setEVel] = useState("");
+  const [aVel, setAVel] = useState("");
+  const [eeRatioSep, setEeRatioSep] = useState("");
+  const [eeRatioLat, setEeRatioLat] = useState("");
+  const [trVmax, setTrVmax] = useState("");
+  const [pasp, setPasp] = useState("");
+  const [pvSD, setPvSD] = useState("");
+  const [lars, setLars] = useState("");
+  const [lavi, setLavi] = useState("");
+  const [ivrt, setIvrt] = useState("");
+
+  const epSep = n(eSeptal), epLat = n(eLateral);
+  const eV = n(eVel), aV = n(aVel);
+  const eeS = n(eeRatioSep), eeL = n(eeRatioLat);
+  const trV = n(trVmax), paspV = n(pasp);
+  const pvSDV = n(pvSD), larsV = n(lars), laviV = n(lavi), ivrtV = n(ivrt);
+
+  const epSepEntered = has(eSeptal);
+  const epLatEntered = has(eLateral);
+  const eEntered = has(eVel);
+  const aEntered = has(aVel);
+  const eeSepEntered = has(eeRatioSep);
+  const eeLatEntered = has(eeRatioLat);
+  const trEntered = has(trVmax);
+  const paspEntered = has(pasp);
+
+  const avgEp = epSepEntered && epLatEntered ? (epSep + epLat) / 2
+    : epSepEntered ? epSep : epLatEntered ? epLat : 0;
+
+  let avgEeRatio = 0;
+  if (eeSepEntered && eeLatEntered) avgEeRatio = (eeS + eeL) / 2;
+  else if (eeSepEntered) avgEeRatio = eeS;
+  else if (eeLatEntered) avgEeRatio = eeL;
+  else if (eEntered && avgEp > 0) avgEeRatio = eV / avgEp;
+
+  const eaRatio = eEntered && aEntered ? eV / aV : 0;
+
+  // Step 1 variables
+  const epSepReduced = epSepEntered && epSep <= 6;
+  const epLatReduced = epLatEntered && epLat <= 7;
+  const avgEpReduced = epSepEntered && epLatEntered && avgEp <= 6.5;
+  const eReduced = epSepReduced || epLatReduced || avgEpReduced;
+  const eEntered1 = epSepEntered || epLatEntered;
+
+  const eeSepIncreased = eeSepEntered && eeS >= 15;
+  const eeLatIncreased = eeLatEntered && eeL >= 13;
+  const eeAvgIncreased = avgEeRatio > 0 && avgEeRatio >= 14;
+  const eeIncreased = eeSepIncreased || eeLatIncreased || eeAvgIncreased;
+  const eeEntered1 = eeSepEntered || eeLatEntered || (eEntered && avgEp > 0);
+
+  const trIncreased = trEntered && trV >= 2.8;
+  const paspIncreased = paspEntered && paspV >= 35;
+  const trPaspIncreased = trIncreased || paspIncreased;
+  const trPaspEntered = trEntered || paspEntered;
+
+  const step1Abnormal: boolean[] = [];
+  if (eEntered1) step1Abnormal.push(eReduced);
+  if (eeEntered1) step1Abnormal.push(eeIncreased);
+  if (trPaspEntered) step1Abnormal.push(trPaspIncreased);
+  const step1AbnormalCount = step1Abnormal.filter(Boolean).length;
+  const step1EnteredCount = step1Abnormal.length;
+
+  // Step 2 markers
+  const pvSDAbnormal = pvSDV > 0 && pvSDV <= 0.67;
+  const larsAbnormal = larsV > 0 && larsV <= 18;
+  const laviAbnormal = laviV > 0 && laviV > 34;
+  const ivrtAbnormal = ivrtV > 0 && ivrtV <= 70;
+  const step2Markers = [
+    pvSDV > 0 ? pvSDAbnormal : null,
+    larsV > 0 ? larsAbnormal : null,
+    laviV > 0 ? laviAbnormal : null,
+    ivrtV > 0 ? ivrtAbnormal : null,
+  ].filter((v): v is boolean => v !== null);
+  const step2AbnormalCount = step2Markers.filter(Boolean).length;
+  const step2EnteredCount = step2Markers.length;
+  const step2HasAbnormal = step2AbnormalCount >= 1;
+
+  const hasAnyInput = eEntered1 || eeEntered1 || trPaspEntered;
+  const allNormal = step1EnteredCount > 0 && step1AbnormalCount === 0;
+  const all3Abnormal = step1EnteredCount === 3 && step1AbnormalCount === 3;
+  const eeOnlyOrTrOnly = step1EnteredCount > 0 && step1AbnormalCount === 1 && !eReduced;
+  const any2Abnormal = step1AbnormalCount === 2;
+
+  let grade = "";
+  let gradeColor = "#6b7280";
+  let lapStatus: "normal" | "increased" | "pending" | "" = "";
+  let gradeNote = "";
+
+  if (hasAnyInput) {
+    if (allNormal) {
+      grade = "Normal LAP — Normal Diastolic Function";
+      gradeColor = "#16a34a";
+      lapStatus = "normal";
+      gradeNote = "All 3 Step 1 variables normal → Normal LAP, Normal diastolic function.";
+    } else if (all3Abnormal) {
+      if (eaRatio >= 2) {
+        grade = "Increased LAP — Grade III Diastolic Dysfunction";
+        gradeColor = "#dc2626";
+        lapStatus = "increased";
+        gradeNote = "All 3 variables abnormal + E/A ≥2 → Grade III.";
+      } else if (eaRatio > 0) {
+        grade = "Increased LAP — Grade II Diastolic Dysfunction";
+        gradeColor = "#f97316";
+        lapStatus = "increased";
+        gradeNote = "All 3 variables abnormal + E/A <2 → Grade II.";
+      } else {
+        grade = "Increased LAP — Enter E/A to grade";
+        gradeColor = "#f97316";
+        lapStatus = "increased";
+        gradeNote = "All 3 variables abnormal → Increased LAP. Enter E and A velocities to determine grade.";
+      }
+    } else if (eeOnlyOrTrOnly || any2Abnormal) {
+      if (step2EnteredCount === 0) {
+        grade = "Enter Step 2 parameters to classify";
+        gradeColor = "#6b7280";
+        lapStatus = "pending";
+        gradeNote = any2Abnormal
+          ? "2 Step 1 variables abnormal → Step 2 required to determine LAP."
+          : "Single Step 1 variable abnormal → Step 2 required to determine LAP.";
+      } else if (!step2HasAbnormal) {
+        grade = "Normal LAP — Grade I Diastolic Dysfunction";
+        gradeColor = "#d97706";
+        lapStatus = "normal";
+        gradeNote = "Step 1 abnormal + no Step 2 markers present → Normal LAP, Grade I.";
+      } else {
+        lapStatus = "increased";
+        if (eaRatio >= 2) {
+          grade = "Increased LAP — Grade III Diastolic Dysfunction";
+          gradeColor = "#dc2626";
+          gradeNote = "Step 1 abnormal + ≥1 Step 2 marker + E/A ≥2 → Grade III.";
+        } else if (eaRatio > 0) {
+          grade = "Increased LAP — Grade II Diastolic Dysfunction";
+          gradeColor = "#f97316";
+          gradeNote = "Step 1 abnormal + ≥1 Step 2 marker + E/A <2 → Grade II.";
+        } else {
+          grade = "Increased LAP — Enter E/A to grade";
+          gradeColor = "#f97316";
+          gradeNote = "≥1 Step 2 marker present → Increased LAP. Enter E and A velocities to determine grade.";
+        }
+      }
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Step 1 */}
+      <div className="border border-[#189aa1]/30 rounded-xl p-4 space-y-3 bg-[#f8feff]">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-xs font-bold uppercase tracking-wider text-white bg-[#189aa1] px-2 py-0.5 rounded-full">Step 1</span>
+          <span className="text-xs text-gray-500">Evaluate 3 variables (e’, E/e’, TR/PASP)</span>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <NumInput label="e’ Septal" value={eSeptal} onChange={setESeptal} unit="cm/s" placeholder="e.g. 5" hint="Reduced ≤6" />
+          <NumInput label="e’ Lateral" value={eLateral} onChange={setELateral} unit="cm/s" placeholder="e.g. 7" hint="Reduced ≤7" />
+          <NumInput label="E/e’ Septal" value={eeRatioSep} onChange={setEeRatioSep} unit="" placeholder="e.g. 12" hint="Increased ≥15" />
+          <NumInput label="E/e’ Lateral" value={eeRatioLat} onChange={setEeRatioLat} unit="" placeholder="e.g. 10" hint="Increased ≥13" />
+          <NumInput label="E velocity" value={eVel} onChange={setEVel} unit="m/s" placeholder="e.g. 0.8" />
+          <NumInput label="A velocity" value={aVel} onChange={setAVel} unit="m/s" placeholder="e.g. 0.6" />
+          <NumInput label="TR Vmax" value={trVmax} onChange={setTrVmax} unit="m/s" placeholder="nl <2.8" hint="Increased ≥2.8" />
+          <NumInput label="PASP" value={pasp} onChange={setPasp} unit="mmHg" placeholder="nl <35" hint="Increased ≥35" />
+        </div>
+        {(epSepEntered || epLatEntered) && (
+          <div className="flex flex-wrap gap-1.5 mt-1">
+            {epSepEntered && (
+              <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${epSepReduced ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                Septal e’ {epSep} cm/s {epSepReduced ? "↓ Reduced" : "✓ Normal"}
+              </span>
+            )}
+            {epLatEntered && (
+              <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${epLatReduced ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                Lateral e’ {epLat} cm/s {epLatReduced ? "↓ Reduced" : "✓ Normal"}
+              </span>
+            )}
+            <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${eReduced ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+              Variable 1: {eReduced ? "ABNORMAL" : "Normal"}
+            </span>
+          </div>
+        )}
+        {eeEntered1 && (
+          <div className="flex flex-wrap gap-1.5 mt-1">
+            <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${eeIncreased ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+              Avg E/e’ {avgEeRatio.toFixed(1)} {eeIncreased ? "↑ Increased (≥14)" : "✓ Normal (<14)"}
+            </span>
+            <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${eeIncreased ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+              Variable 2: {eeIncreased ? "ABNORMAL" : "Normal"}
+            </span>
+          </div>
+        )}
+        {trPaspEntered && (
+          <div className="flex flex-wrap gap-1.5 mt-1">
+            <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${trPaspIncreased ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+              Variable 3 (TR/PASP): {trPaspIncreased ? "ABNORMAL" : "Normal"}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Step 2 — only shown when needed */}
+      {hasAnyInput && step1AbnormalCount > 0 && step1AbnormalCount < 3 && (
+        <div className="border border-amber-200 rounded-xl p-4 space-y-3 bg-amber-50">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-white bg-amber-500 px-2 py-0.5 rounded-full">Step 2</span>
+            <span className="text-xs text-amber-700">Additional LAP markers (any 1 abnormal = Increased LAP)</span>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <NumInput label="PV S/D ratio" value={pvSD} onChange={setPvSD} unit="" placeholder="e.g. 0.6" hint="Abnormal ≤0.67" />
+            <NumInput label="LA Reservoir Strain" value={lars} onChange={setLars} unit="%" placeholder="e.g. 16" hint="Abnormal ≤18%" />
+            <NumInput label="LAVi" value={lavi} onChange={setLavi} unit="mL/m²" placeholder="e.g. 38" hint="Abnormal >34" />
+            <NumInput label="IVRT" value={ivrt} onChange={setIvrt} unit="ms" placeholder="e.g. 65" hint="Abnormal ≤70 ms" />
+          </div>
+          {step2EnteredCount > 0 && (
+            <div className="flex flex-wrap gap-1.5 mt-1">
+              {pvSDV > 0 && <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${pvSDAbnormal ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>PV S/D {pvSDV.toFixed(2)} {pvSDAbnormal ? "↓ ≤0.67" : "✓ >0.67"}</span>}
+              {larsV > 0 && <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${larsAbnormal ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>LARS {larsV}% {larsAbnormal ? "↓ ≤18%" : "✓ >18%"}</span>}
+              {laviV > 0 && <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${laviAbnormal ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>LAVi {laviV} mL/m² {laviAbnormal ? "↑ >34" : "✓ ≤34"}</span>}
+              {ivrtV > 0 && <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${ivrtAbnormal ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>IVRT {ivrtV} ms {ivrtAbnormal ? "↓ ≤70 ms" : "✓ >70 ms"}</span>}
+              <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${step2HasAbnormal ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                Step 2: {step2AbnormalCount}/{step2EnteredCount} abnormal
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Result */}
+      {hasAnyInput && grade && (
+        <div className={`rounded-xl p-4 border ${
+          lapStatus === "increased" ? "bg-red-50 border-red-200" :
+          lapStatus === "normal" ? "bg-green-50 border-green-200" :
+          "bg-gray-50 border-gray-200"
+        }`}>
+          {lapStatus !== "pending" && lapStatus !== "" && (
+            <div className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: lapStatus === "increased" ? "#dc2626" : lapStatus === "normal" ? "#16a34a" : "#6b7280" }}>
+              {lapStatus === "increased" ? "⬆ Elevated LAP" : "✓ Normal LAP"}
+            </div>
+          )}
+          <div className="text-sm font-bold mb-0.5" style={{ color: gradeColor }}>{grade}</div>
+          {gradeNote && <div className="text-xs text-gray-500 mt-0.5">{gradeNote}</div>}
+          {step1EnteredCount > 0 && (
+            <div className="text-xs text-gray-500 bg-white/60 rounded-lg p-2 border border-gray-100 mt-2 space-y-0.5">
+              <div className="font-semibold text-gray-600">Decision Logic</div>
+              <div>• Step 1: <span className="font-semibold">{step1AbnormalCount}/{step1EnteredCount} variables abnormal</span></div>
+              {step2EnteredCount > 0 && <div>• Step 2: <span className="font-semibold">{step2AbnormalCount}/{step2EnteredCount} markers abnormal</span></div>}
+              {eaRatio > 0 && <div>• E/A: <span className="font-semibold">{eaRatio.toFixed(2)}</span></div>}
+            </div>
+          )}
+        </div>
+      )}
+      <p className="text-xs text-gray-400 mt-1">Reference: <a href="https://www.asecho.org/wp-content/uploads/2025/07/Left-Ventricular-Diastolic-Function.pdf" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#189aa1]">ASE 2025 LV Diastolic Function Guidelines (Nagueh et al., JASE 2025)</a></p>
+    </div>
+  );
+}
+
+function LAPEstimationEngine() {
+  return (
+    <EngineSection
+      id="engine-lap"
+      title="LAP Estimation"
+      subtitle="ASE 2025 · 3-variable algorithm · e’ · E/e’ · TR/PASP · Premium"
+    >
+      <PremiumOverlay featureName="LAP Estimation (ASE 2025)">
+        <LAPEstimationEngineInner />
+      </PremiumOverlay>
+    </EngineSection>
+  );
+}
+
+// ─── MAIN PAGE ──────────────────────────────────────────────────────────────────────────────
 export default function EchoAssist() {
   // Fire hash-based deep-link event on mount — retries at 100ms, 400ms, 800ms
   // so it works reliably for both in-app navigation AND external deep-links
@@ -2421,10 +2786,10 @@ export default function EchoAssist() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-              EchoAssist™
+              EchoAssist™ Calculators
             </h1>
             <p className="text-sm text-gray-500 mt-0.5">
-              Enter raw measurements — get instant ASE/AHA/ACC guideline-based severity classifications, calculated values, and the specific criteria met. Domains: Frank-Starling, AS, MS, AR, MR, TR, LV, Diastology, Strain, RV, PA Pressure.
+              Enter raw measurements — get instant ASE/AHA/ACC guideline-based severity classifications, calculated values, and the specific criteria met. Domains: LV, Diastology, Strain, Stress Echo, AS, MS, AR, MR, TR, RV, PA Pressure, SV/CO, LAP Estimation, Frank-Starling.
             </p>
           </div>
         </div>
@@ -2441,11 +2806,12 @@ export default function EchoAssist() {
         <div className="space-y-4">
           <LVSystolicEngine />
           <DiastolicEngine />
+          <LAPEstimationEngine />
           <DiastologySpecialPopulations />
           <StrainEngine />
-          <PremiumGate featureName="Stress Echo EchoAssist™">
+          <PremiumOverlay featureName="Stress Echo EchoAssist™">
             <StressEchoAssistEngine />
-          </PremiumGate>
+          </PremiumOverlay>
           <AorticStenosisEngine />
           <MitraStenosisEngine />
           <AorticRegurgEngine />
@@ -2453,6 +2819,7 @@ export default function EchoAssist() {
           <TricuspidRegurgEngine />
           <RVFunctionEngine />
           <PulmonaryHTNEngine />
+          <StrokeVolumeEngine />
           <FrankStarlingEngine />
           <POCUSAssistEngine />
         </div>

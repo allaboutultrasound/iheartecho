@@ -657,13 +657,13 @@ export default function DiastolicNavigator() {
                 </p>
               </div>
               <div className="flex items-center gap-2 ml-4 flex-shrink-0">
-                <Link href="/calculator#calc-diastology"
+                <Link href="/echoassist#engine-diastolic"
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90"
                   style={{ background: "#189aa1" }}>
                   <Calculator className="w-3 h-3" />
                   Diastology
                 </Link>
-                <Link href="/calculator#calc-lap_estimation"
+                <Link href="/echoassist#engine-lap"
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all hover:bg-[#189aa1]/5"
                   style={{ borderColor: "#189aa1", color: "#189aa1" }}>
                   <Lock className="w-3 h-3 text-amber-500" />

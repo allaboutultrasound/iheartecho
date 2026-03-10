@@ -61,7 +61,7 @@ const navGroups = [
       { path: "/echo-assist-hub", label: "EchoAssist™", icon: Stethoscope },
       { path: "/pocus-assist-hub", label: "POCUS-Assist™", icon: Shield },
       { path: "/hemodynamics", label: "Hemodynamics Lab", icon: Activity },
-      { path: "/calculator", label: "Echo Calculators", icon: Calculator },
+      { path: "/echoassist", label: "EchoAssist™ Calculators", icon: Calculator },
       { path: "/report", label: "Report Builder", icon: FileText },
     ],
   },
