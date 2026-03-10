@@ -1878,3 +1878,9 @@
 ## Related Cases Section - Session Mar 09 2026
 - [x] Add getRelatedCases tRPC procedure that queries by shared tags, excluding the current case
 - [x] Add Related Cases section to the case detail page showing 3-4 cases with shared tags
+
+## Bug Fix - Quality Review Submission Error (Mar 10 2026)
+- [ ] Fix quality review form submission — form data rendered as raw JSON text instead of being submitted
+
+## Quality Review Submission Bug Fix (Mar 10 2026)
+- [x] Fix quality review form submission — added 46 missing columns to imageQualityReviews DB schema (db:push) and added all missing fields to iqr.create tRPC router schema so all IQR form fields are accepted and stored correctly

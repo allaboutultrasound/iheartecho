@@ -365,6 +365,20 @@
       "when": 1773082096456,
       "tag": "0051_aberrant_warstar",
       "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "5",
+      "when": 1773105998468,
+      "tag": "0052_common_shooting_star",
+      "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "5",
+      "when": 1773106533178,
+      "tag": "0053_tense_black_widow",
+      "breakpoints": true
     }
   ]
 }
