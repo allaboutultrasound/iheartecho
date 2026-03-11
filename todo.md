@@ -2411,3 +2411,47 @@
 - [x] Platform Admin hub — Form Builder card added to Admin Tools section
 - [x] App.tsx — Routes /admin/form-builder and /admin/form-builder/:id registered with RoleGuard
 - [x] Vitest tests — 22 tests covering templates, sections, items, options, branch rules, org visibility rules, quality score computation
+
+## Dynamic Form Builder Integration (In Progress)
+- [ ] DB schema: accreditationFormSubmissions table (templateId, submittedByUserId, orgId, reviewTargetId, reviewTargetType, responses JSON, qualityScore, status, submittedAt)
+- [ ] DB schema: accreditationFormTemplateAssignments table (formType enum → templateId mapping, orgId optional override)
+- [ ] Seed IQR form as Form Builder template (all current static fields → DB items)
+- [ ] Seed Sonographer Peer Review form as Form Builder template
+- [ ] Seed Physician Peer Review form as Form Builder template (with exam-type branching via AETTE/AETEE/AE_STRESS/PETTE/PETEE/FE prefixes)
+- [ ] Seed Case Mix submission form as Form Builder template
+- [ ] tRPC: getActiveTemplateForFormType — returns active template for a given formType + orgId
+- [ ] tRPC: submitFormResponse — saves responses JSON + computed quality score
+- [ ] tRPC: getSubmissions — list submissions by formType/orgId/userId with pagination
+- [ ] tRPC: getSubmissionById — full response detail
+- [ ] tRPC: deleteSubmission — admin-only
+- [ ] DynamicFormRenderer component — renders any template with branching + org visibility + all 10 field types
+- [ ] Replace IQR static form with DynamicFormRenderer using image_quality template
+- [ ] Replace Sonographer Peer Review static form with DynamicFormRenderer
+- [ ] Replace Physician Peer Review static form with DynamicFormRenderer (exam-type branching preserved)
+- [ ] Replace Case Mix static form with DynamicFormRenderer
+- [ ] Reports & Analytics: dynamic submissions viewer (list + detail modal)
+- [ ] Vitest tests for form submission procedures
+
+## Dynamic Form Menu — Quality Improvement (In Progress)
+- [ ] tRPC: getActiveFormMenuItems — returns all active assigned templates for a given context (lab/diy), used to build the dynamic menu
+- [ ] tRPC: assignTemplateToFormType — admin assigns a template to a formType (creates/updates accreditationFormTemplateAssignments)
+- [ ] tRPC: submitDynamicForm — saves accreditationFormSubmissions with computed quality score
+- [ ] tRPC: getMyFormSubmissions — returns submissions for the current user
+- [ ] tRPC: getFormSubmissionsForOrg — returns all submissions for an org (admin view)
+- [ ] Form Builder Admin: add "Assign to Form Type" action on each template (with formType label and optional orgId)
+- [ ] DynamicFormRenderer component — renders any template from DB with branching, org visibility, all 10 field types
+- [ ] Lab Admin Quality Improvement tab: dynamic menu showing all active assigned forms + existing static forms
+- [ ] DIY Member Portal Quality Improvement section: dynamic menu showing all active assigned forms
+- [ ] Seed IQR, Sonographer Peer Review, Physician Peer Review, Case Mix as Form Builder templates
+- [ ] Submission viewer: list + detail modal for dynamic form responses in Reports & Analytics
+
+## Admin Consolidation & Concierge (In Progress)
+- [x] Redirect /diy-lab-admin to /lab-admin
+- [x] Fix profile sidenav to point to /lab-admin
+- [x] Fix DIY Member Portal broken links (workflows, case review, policy library)
+- [x] Add deep-link tab support to LabAdmin (?tab=quality, ?tab=organization, etc.)
+- [x] Add OrgID scoping (labId, diyOrgId) to policies table and enforce in getPolicies/createPolicy
+- [x] Merge DIY member invite/role management into LabAdmin Organization tab
+- [x] Wire dynamic form menu items to Quality Improvement tab in LabAdmin
+- [x] Wire dynamic form menu items to DIY Member Portal "Your Access" section
+- [x] Add Accreditation Concierge prompt/CTA to Lab Admin portal (Organization tab contextual banner)

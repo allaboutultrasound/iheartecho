@@ -486,12 +486,16 @@ export const appRouter = router({
       status: z.enum(["draft", "active", "archived"]).optional(),
     }))
     .mutation(async ({ ctx, input }) => {
-      return createPolicy({ ...input, authorId: ctx.user.id });
+      // Attach the lab's ID so the policy is scoped to this org
+      const lab = await getLabByAdmin(ctx.user.id);
+      return createPolicy({ ...input, authorId: ctx.user.id, labId: lab?.id ?? null });
     }),
 
   getPolicies: protectedProcedure
     .query(async ({ ctx }) => {
-      return getPolicies(ctx.user.id);
+      // Scope policies to the user's lab so each org only sees its own policies
+      const lab = await getLabByAdmin(ctx.user.id);
+      return getPolicies(ctx.user.id, lab ? { labId: lab.id } : undefined);
     }),
 
   updatePolicy: protectedProcedure

@@ -34,6 +34,17 @@ import {
   getOrgVisibilityRulesByTemplate,
   saveOrgVisibilityRules,
   deleteOrgVisibilityRule,
+  getTemplateAssignments,
+  getActiveFormMenuItems,
+  upsertTemplateAssignment,
+  deleteTemplateAssignment,
+  createFormSubmission,
+  getFormSubmissionById,
+  getFormSubmissionsByUser,
+  getFormSubmissionsByOrg,
+  getFormSubmissionsByTemplate,
+  updateFormSubmissionStatus,
+  getActiveTemplateForFormType,
 } from "../db";
 
 // ─── Guard helper ─────────────────────────────────────────────────────────────
@@ -493,5 +504,148 @@ export const formBuilderRouter = router({
       }
 
       return { hiddenItemIds, hiddenSectionIds };
+    }),
+
+  // ── Template Assignments ──────────────────────────────────────────────────────
+
+  /** List all template assignments (admin) */
+  listAssignments: protectedProcedure.query(async ({ ctx }) => {
+    await requirePlatformAdmin(ctx);
+    return getTemplateAssignments();
+  }),
+
+  /** Get the active form menu items for a given org (used by Lab Admin / DIY Portal) */
+  getFormMenuItems: protectedProcedure
+    .input(z.object({ orgId: z.number().optional() }))
+    .query(async ({ input }) => {
+      return getActiveFormMenuItems(input.orgId);
+    }),
+
+  /** Assign a template to a form type (creates or replaces existing assignment) */
+  assignTemplate: protectedProcedure
+    .input(z.object({
+      formType: z.string().min(1).max(100),
+      templateId: z.number(),
+      orgId: z.number().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      await requirePlatformAdmin(ctx);
+      const id = await upsertTemplateAssignment({
+        formType: input.formType,
+        templateId: input.templateId,
+        orgId: input.orgId ?? null,
+        isActive: true,
+      });
+      return { id };
+    }),
+
+  /** Remove a template assignment */
+  removeAssignment: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      await requirePlatformAdmin(ctx);
+      await deleteTemplateAssignment(input.id);
+      return { success: true };
+    }),
+
+  /** Get the active template + full form data for a given formType (used by dynamic form renderer) */
+  getActiveFormForType: protectedProcedure
+    .input(z.object({
+      formType: z.string(),
+      orgId: z.number().optional(),
+    }))
+    .query(async ({ input }) => {
+      const assignment = await getActiveTemplateForFormType(input.formType, input.orgId);
+      if (!assignment) return null;
+      const template = await getFullFormTemplate(assignment.templateId);
+      if (!template) return null;
+      return { assignment, template };
+    }),
+
+  // ── Form Submissions ───────────────────────────────────────────────────────────
+
+  /** Submit a completed dynamic form */
+  submitForm: protectedProcedure
+    .input(z.object({
+      templateId: z.number(),
+      formType: z.string(),
+      orgId: z.number().optional(),
+      reviewTargetType: z.string().optional(),
+      reviewTargetId: z.number().optional(),
+      responses: z.record(z.string(), z.union([z.string(), z.array(z.string())])),
+      qualityScore: z.number().min(0).max(100).default(0),
+      maxPossibleScore: z.number().min(0).default(0),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const id = await createFormSubmission({
+        templateId: input.templateId,
+        formType: input.formType,
+        submittedByUserId: ctx.user.id,
+        orgId: input.orgId ?? null,
+        reviewTargetType: input.reviewTargetType ?? null,
+        reviewTargetId: input.reviewTargetId ?? null,
+        responses: JSON.stringify(input.responses),
+        qualityScore: input.qualityScore,
+        maxPossibleScore: input.maxPossibleScore,
+        status: 'submitted',
+      });
+      return { id };
+    }),
+
+  /** Get my own submissions */
+  getMySubmissions: protectedProcedure
+    .input(z.object({ formType: z.string().optional() }))
+    .query(async ({ ctx }) => {
+      const submissions = await getFormSubmissionsByUser(ctx.user.id);
+      return submissions;
+    }),
+
+  /** Get submissions for an org (admin/org-admin view) */
+  getOrgSubmissions: protectedProcedure
+    .input(z.object({
+      orgId: z.number(),
+      formType: z.string().optional(),
+    }))
+    .query(async ({ ctx, input }) => {
+      // Allow platform admins or org admins
+      const roles = await getUserRoles(ctx.user.id);
+      const isAdmin = ctx.user.role === 'admin' || roles.includes('platform_admin') || roles.includes('diy_admin');
+      if (!isAdmin) throw new TRPCError({ code: 'FORBIDDEN' });
+      return getFormSubmissionsByOrg(input.orgId, input.formType);
+    }),
+
+  /** Get submissions for a template (admin view) */
+  getTemplateSubmissions: protectedProcedure
+    .input(z.object({ templateId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      await requirePlatformAdmin(ctx);
+      return getFormSubmissionsByTemplate(input.templateId);
+    }),
+
+  /** Get a single submission by ID */
+  getSubmission: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const sub = await getFormSubmissionById(input.id);
+      if (!sub) throw new TRPCError({ code: 'NOT_FOUND' });
+      // Only owner, org admin, or platform admin can view
+      const roles = await getUserRoles(ctx.user.id);
+      const isAdmin = ctx.user.role === 'admin' || roles.includes('platform_admin') || roles.includes('diy_admin');
+      if (sub.submittedByUserId !== ctx.user.id && !isAdmin) {
+        throw new TRPCError({ code: 'FORBIDDEN' });
+      }
+      return { ...sub, responses: JSON.parse(sub.responses) as Record<string, string | string[]> };
+    }),
+
+  /** Update submission status (admin only) */
+  updateSubmissionStatus: protectedProcedure
+    .input(z.object({
+      id: z.number(),
+      status: z.enum(['draft', 'submitted', 'reviewed']),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      await requirePlatformAdmin(ctx);
+      await updateFormSubmissionStatus(input.id, input.status);
+      return { success: true };
     }),
 });

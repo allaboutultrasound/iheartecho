@@ -74,6 +74,12 @@ import {
   type InsertAccreditationFormOrgVisibilityRule,
   diyOrganizations,
   type DiyOrganization,
+  accreditationFormTemplateAssignments,
+  type AccreditationFormTemplateAssignment,
+  type InsertAccreditationFormTemplateAssignment,
+  accreditationFormSubmissions,
+  type AccreditationFormSubmission,
+  type InsertAccreditationFormSubmission,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -340,6 +346,8 @@ export async function getPeerReviews(userId: number, limit = 20, offset = 0) {
 
 export async function createPolicy(data: {
   authorId: number;
+  labId?: number | null;
+  diyOrgId?: number | null;
   title: string;
   category: "infection_control" | "equipment" | "patient_safety" | "protocol" | "staff_competency" | "quality_assurance" | "appropriate_use" | "report_turnaround" | "emergency" | "other";
   modality?: "TTE" | "TEE" | "Stress" | "Pediatric" | "Fetal" | "HOCM" | "POCUS" | "All";
@@ -355,11 +363,26 @@ export async function createPolicy(data: {
   return row;
 }
 
-export async function getPolicies(userId: number) {
+/**
+ * Get policies scoped by OrgID.
+ * - If labId provided: return policies for that lab (all members of the lab can read).
+ * - If diyOrgId provided: return policies for that DIY org.
+ * - Falls back to authorId-only scope if neither is provided (legacy).
+ */
+export async function getPolicies(userId: number, opts?: { labId?: number; diyOrgId?: number }) {
   const db = await getDb();
   if (!db) return [];
+  const { or, and } = await import("drizzle-orm");
+  let whereClause;
+  if (opts?.labId) {
+    whereClause = eq(policies.labId, opts.labId);
+  } else if (opts?.diyOrgId) {
+    whereClause = eq(policies.diyOrgId, opts.diyOrgId);
+  } else {
+    whereClause = eq(policies.authorId, userId);
+  }
   return db.select().from(policies)
-    .where(eq(policies.authorId, userId))
+    .where(whereClause)
     .orderBy(desc(policies.updatedAt));
 }
 
@@ -2451,3 +2474,133 @@ export async function saveOrgVisibilityRules(templateId: number, rules: InsertAc
 }
 
 export type { AccreditationFormOrgVisibilityRule, InsertAccreditationFormOrgVisibilityRule, DiyOrganization };
+
+// ─── FORM TEMPLATE ASSIGNMENTS ────────────────────────────────────────────────
+
+export async function getTemplateAssignments() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(accreditationFormTemplateAssignments).orderBy(accreditationFormTemplateAssignments.formType);
+}
+
+export async function getActiveTemplateForFormType(formType: string, orgId?: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  // Prefer org-specific assignment, fall back to global
+  if (orgId) {
+    const orgRow = await db.select().from(accreditationFormTemplateAssignments)
+      .where(and(
+        eq(accreditationFormTemplateAssignments.formType, formType),
+        eq(accreditationFormTemplateAssignments.orgId, orgId),
+        eq(accreditationFormTemplateAssignments.isActive, true)
+      )).limit(1);
+    if (orgRow.length > 0) return orgRow[0];
+  }
+  const globalRow = await db.select().from(accreditationFormTemplateAssignments)
+    .where(and(
+      eq(accreditationFormTemplateAssignments.formType, formType),
+      eq(accreditationFormTemplateAssignments.isActive, true),
+      sql`${accreditationFormTemplateAssignments.orgId} IS NULL`
+    )).limit(1);
+  return globalRow[0];
+}
+
+export async function getActiveFormMenuItems(orgId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  // Get all active assignments, prefer org-specific over global
+  const rows = await db.select({
+    id: accreditationFormTemplateAssignments.id,
+    formType: accreditationFormTemplateAssignments.formType,
+    templateId: accreditationFormTemplateAssignments.templateId,
+    orgId: accreditationFormTemplateAssignments.orgId,
+    templateName: accreditationFormTemplates.name,
+    templateDescription: accreditationFormTemplates.description,
+  })
+    .from(accreditationFormTemplateAssignments)
+    .innerJoin(accreditationFormTemplates, eq(accreditationFormTemplateAssignments.templateId, accreditationFormTemplates.id))
+    .where(eq(accreditationFormTemplateAssignments.isActive, true))
+    .orderBy(accreditationFormTemplateAssignments.formType);
+  // Deduplicate: prefer org-specific over global for same formType
+  const seen = new Map<string, typeof rows[0]>();
+  for (const row of rows) {
+    const key = row.formType;
+    const existing = seen.get(key);
+    if (!existing || (row.orgId === orgId && existing.orgId !== orgId)) {
+      seen.set(key, row);
+    }
+  }
+  return Array.from(seen.values());
+}
+
+export async function upsertTemplateAssignment(data: InsertAccreditationFormTemplateAssignment) {
+  const db = await getDb();
+  if (!db) throw new Error('DB unavailable');
+  // Deactivate any existing assignment for same formType + orgId scope
+  await db.update(accreditationFormTemplateAssignments)
+    .set({ isActive: false, updatedAt: new Date() })
+    .where(and(
+      eq(accreditationFormTemplateAssignments.formType, data.formType),
+      data.orgId
+        ? eq(accreditationFormTemplateAssignments.orgId, data.orgId)
+        : sql`${accreditationFormTemplateAssignments.orgId} IS NULL`
+    ));
+  const [result] = await db.insert(accreditationFormTemplateAssignments).values({ ...data, isActive: true });
+  return (result as any).insertId as number;
+}
+
+export async function deleteTemplateAssignment(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error('DB unavailable');
+  await db.delete(accreditationFormTemplateAssignments).where(eq(accreditationFormTemplateAssignments.id, id));
+}
+
+// ─── FORM SUBMISSIONS ─────────────────────────────────────────────────────────
+
+export async function createFormSubmission(data: InsertAccreditationFormSubmission) {
+  const db = await getDb();
+  if (!db) throw new Error('DB unavailable');
+  const [result] = await db.insert(accreditationFormSubmissions).values(data);
+  return (result as any).insertId as number;
+}
+
+export async function getFormSubmissionById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select().from(accreditationFormSubmissions).where(eq(accreditationFormSubmissions.id, id)).limit(1);
+  return rows[0];
+}
+
+export async function getFormSubmissionsByUser(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(accreditationFormSubmissions)
+    .where(eq(accreditationFormSubmissions.submittedByUserId, userId))
+    .orderBy(desc(accreditationFormSubmissions.submittedAt));
+}
+
+export async function getFormSubmissionsByOrg(orgId: number, formType?: string) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions = [eq(accreditationFormSubmissions.orgId, orgId)];
+  if (formType) conditions.push(eq(accreditationFormSubmissions.formType, formType));
+  return db.select().from(accreditationFormSubmissions)
+    .where(and(...conditions))
+    .orderBy(desc(accreditationFormSubmissions.submittedAt));
+}
+
+export async function getFormSubmissionsByTemplate(templateId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(accreditationFormSubmissions)
+    .where(eq(accreditationFormSubmissions.templateId, templateId))
+    .orderBy(desc(accreditationFormSubmissions.submittedAt));
+}
+
+export async function updateFormSubmissionStatus(id: number, status: 'draft' | 'submitted' | 'reviewed') {
+  const db = await getDb();
+  if (!db) throw new Error('DB unavailable');
+  await db.update(accreditationFormSubmissions).set({ status, updatedAt: new Date() }).where(eq(accreditationFormSubmissions.id, id));
+}
+
+export type { AccreditationFormTemplateAssignment, InsertAccreditationFormTemplateAssignment, AccreditationFormSubmission, InsertAccreditationFormSubmission };

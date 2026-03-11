@@ -164,14 +164,118 @@ const FORM_TYPES = [
 
 const BRAND = "#0891b2";
 
-// ─── Template List ────────────────────────────────────────────────────────────
+// ─── Assignments Panel ────────────────────────────────────────────────────────
+function AssignmentsPanel({ templates }: { templates: Array<{ id: number; name: string; formType: string; isActive: boolean }> }) {
+  const [assignFormType, setAssignFormType] = useState("");
+  const [assignTemplateId, setAssignTemplateId] = useState<number | null>(null);
+  const [assignOrgId, setAssignOrgId] = useState<number | null>(null);
 
+  const { data: assignments, refetch: refetchAssignments } = trpc.formBuilder.listAssignments.useQuery();
+  const { data: orgs } = trpc.formBuilder.listOrganizations.useQuery();
+
+  const assignMutation = trpc.formBuilder.assignTemplate.useMutation({
+    onSuccess: () => { toast.success("Template assigned — it will now appear in the Quality Improvement menu"); refetchAssignments(); setAssignFormType(""); setAssignTemplateId(null); setAssignOrgId(null); },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const removeMutation = trpc.formBuilder.removeAssignment.useMutation({
+    onSuccess: () => { toast.success("Assignment removed"); refetchAssignments(); },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const activeTemplates = templates.filter(t => t.isActive);
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-[#f0fbfc] border border-[#189aa1]/20 rounded-lg p-4">
+        <h3 className="text-sm font-bold text-gray-800 mb-1">Publish a Form to Quality Improvement Menus</h3>
+        <p className="text-xs text-gray-500 mb-4">Assign an active template to a form type. It will automatically appear as a menu item in Lab Admin and DIY Member Portal Quality Improvement sections. Org-specific assignments override global ones.</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label className="text-xs font-medium text-gray-600 block mb-1">Form Type *</label>
+            <Select value={assignFormType} onValueChange={setAssignFormType}>
+              <SelectTrigger className="text-sm"><SelectValue placeholder="Select form type" /></SelectTrigger>
+              <SelectContent>
+                {FORM_TYPES.map(ft => <SelectItem key={ft.value} value={ft.value}>{ft.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-600 block mb-1">Template *</label>
+            <Select value={assignTemplateId ? String(assignTemplateId) : ""} onValueChange={v => setAssignTemplateId(Number(v))}>
+              <SelectTrigger className="text-sm"><SelectValue placeholder="Select template" /></SelectTrigger>
+              <SelectContent>
+                {activeTemplates.map(t => <SelectItem key={t.id} value={String(t.id)}>{t.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-600 block mb-1">Organization (optional — global if blank)</label>
+            <Select value={assignOrgId ? String(assignOrgId) : "global"} onValueChange={v => setAssignOrgId(v === "global" ? null : Number(v))}>
+              <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="global">All Organizations (Global)</SelectItem>
+                {(orgs ?? []).map((o: { id: number; name: string }) => <SelectItem key={o.id} value={String(o.id)}>{o.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <Button
+          className="mt-3 text-white gap-2" size="sm" style={{ background: BRAND }}
+          disabled={!assignFormType || !assignTemplateId || assignMutation.isPending}
+          onClick={() => assignMutation.mutate({ formType: assignFormType, templateId: assignTemplateId!, orgId: assignOrgId ?? undefined })}
+        >
+          {assignMutation.isPending ? "Publishing…" : "Publish to Menu"}
+        </Button>
+      </div>
+
+      <div>
+        <h3 className="text-sm font-bold text-gray-700 mb-3">Active Assignments</h3>
+        {!assignments || assignments.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-6">No forms published yet. Use the panel above to assign a template.</p>
+        ) : (
+          <div className="space-y-2">
+            {assignments.map((a: { id: number; formType: string; templateId: number; orgId: number | null; isActive: boolean }) => {
+              const template = templates.find(t => t.id === a.templateId);
+              const org = (orgs ?? []).find((o: { id: number; name: string }) => o.id === a.orgId);
+              const formLabel = FORM_TYPES.find(f => f.value === a.formType)?.label ?? a.formType;
+              return (
+                <div key={a.id} className="flex items-center justify-between bg-white border border-gray-100 rounded-lg px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <span className={`w-2 h-2 rounded-full flex-shrink-0 ${a.isActive ? "bg-green-400" : "bg-gray-300"}`} />
+                    <div>
+                      <div className="text-sm font-medium text-gray-800">{formLabel}</div>
+                      <div className="text-xs text-gray-400">
+                        {template?.name ?? `Template #${a.templateId}`}
+                        {org ? ` · ${org.name}` : " · All Organizations"}
+                      </div>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm" variant="outline"
+                    className="text-xs text-red-500 hover:text-red-600 hover:bg-red-50 gap-1"
+                    onClick={() => { if (confirm("Remove this assignment? The form will no longer appear in menus.")) removeMutation.mutate({ id: a.id }); }}
+                  >
+                    <X className="w-3 h-3" /> Remove
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Template List ────────────────────────────────────────────────────────────
 function TemplateList() {
   const [, navigate] = useLocation();
   const [createOpen, setCreateOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [newType, setNewType] = useState("image_quality");
   const [newDesc, setNewDesc] = useState("");
+  const [listTab, setListTab] = useState<"templates" | "assignments">("templates");
 
   const { data: templates, isLoading, refetch } = trpc.formBuilder.listTemplates.useQuery();
 
@@ -219,7 +323,24 @@ function TemplateList() {
         </Button>
       </div>
 
-      {isLoading ? (
+      {/* Tab Bar */}
+      <div className="flex border-b border-gray-200 mb-6">
+        {(["templates", "assignments"] as const).map(tab => (
+          <button
+            key={tab}
+            onClick={() => setListTab(tab)}
+            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+              listTab === tab ? "border-[#0891b2] text-[#0891b2]" : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            {tab === "templates" ? "Form Templates" : "Publish to Menus"}
+          </button>
+        ))}
+      </div>
+
+      {listTab === "assignments" ? (
+        <AssignmentsPanel templates={templates ?? []} />
+      ) : isLoading ? (
         <div className="flex items-center justify-center py-16 text-gray-400">
           <RefreshCw className="w-5 h-5 animate-spin mr-2" /> Loading templates…
         </div>

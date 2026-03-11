@@ -11,10 +11,11 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import DynamicFormRenderer from "@/components/DynamicFormRenderer";
 import {
   Building2, Users, CheckCircle, Lock, Loader2, ChevronRight,
   FileText, ClipboardList, BookOpen, BarChart2, Shield, Star,
-  AlertTriangle, UserCheck, Zap, ArrowRight
+  AlertTriangle, UserCheck, Zap, ArrowRight, ClipboardCheck
 } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "wouter";
@@ -37,21 +38,21 @@ const MEMBER_FEATURES = [
     title: "Workflow Tasks",
     description: "Complete assigned accreditation workflow tasks and submit required documentation.",
     available: true,
-    link: "/lab-admin",
+    link: "/lab-admin?tab=quality",
   },
   {
     icon: FileText,
     title: "Case Review Participation",
     description: "Participate in peer case reviews and submit your review findings.",
     available: true,
-    link: "/lab-admin",
+    link: "/lab-admin?tab=quality",
   },
   {
     icon: BookOpen,
     title: "Policy Library",
     description: "View and acknowledge required lab policies and procedures.",
     available: true,
-    link: "/lab-admin",
+    link: "/lab-admin?tab=organization&sub=policy",
   },
 ];
 
@@ -202,6 +203,13 @@ export default function DIYMemberPortal() {
   const { membership, org, subscription: sub } = myContext;
   const isLabAdmin = membership.diyRole === "super_admin" || membership.diyRole === "lab_admin";
 
+  // Fetch dynamic form menu items assigned to this org's form types
+  const { data: dynamicForms } = trpc.formBuilder.getFormMenuItems.useQuery(
+    { orgId: org?.id },
+    { enabled: isAuthenticated }
+  );
+  const [activeDynamicForm, setActiveDynamicForm] = useState<{ templateId: number; formType: string; name: string } | null>(null);
+
   return (
     <Layout>
       {/* Header */}
@@ -248,10 +256,32 @@ export default function DIYMemberPortal() {
               </p>
             </div>
             <Button size="sm" style={{ background: BRAND, color: "white" }} asChild>
-              <Link href="/diy-lab-admin">
+              <Link href="/lab-admin">
                 Open Lab Admin <ChevronRight className="w-3.5 h-3.5 ml-1" />
               </Link>
             </Button>
+          </div>
+        )}
+
+        {/* Dynamic form renderer overlay */}
+        {activeDynamicForm && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-start justify-center p-4 overflow-y-auto">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl my-8">
+              <div className="flex items-center justify-between p-4 border-b">
+                <h3 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
+                  {activeDynamicForm.name}
+                </h3>
+                <Button variant="ghost" size="sm" onClick={() => setActiveDynamicForm(null)}>✕</Button>
+              </div>
+              <div className="p-4">
+                <DynamicFormRenderer
+                  templateId={activeDynamicForm.templateId}
+                  formType={activeDynamicForm.formType}
+                  onSubmitted={() => setActiveDynamicForm(null)}
+                  onCancel={() => setActiveDynamicForm(null)}
+                />
+              </div>
+            </div>
           </div>
         )}
 
@@ -279,6 +309,31 @@ export default function DIYMemberPortal() {
               </Link>
             ))}
           </div>
+
+          {/* Dynamic forms from Form Builder */}
+          {dynamicForms && dynamicForms.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+              {dynamicForms.map((form) => (
+                <button
+                  key={form.id}
+                  onClick={() => setActiveDynamicForm({ templateId: form.templateId, formType: form.formType, name: form.templateName })}
+                  className="group p-4 rounded-xl border border-gray-200 hover:border-[#189aa1] hover:bg-[#189aa1]/5 transition-all cursor-pointer text-left h-full"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: `${BRAND}18` }}>
+                      <ClipboardCheck className="w-4 h-4" style={{ color: BRAND }} />
+                    </div>
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                  </div>
+                  <h3 className="text-sm font-bold text-gray-800 mb-1">{form.templateName}</h3>
+                  <p className="text-xs text-gray-500 leading-relaxed">{form.formType.replace(/_/g, " ")}</p>
+                  <div className="flex items-center gap-1 text-xs font-semibold mt-3 group-hover:gap-2 transition-all" style={{ color: BRAND }}>
+                    Open Form <ArrowRight className="w-3 h-3" />
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Restricted features */}

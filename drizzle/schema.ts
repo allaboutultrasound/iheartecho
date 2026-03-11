@@ -119,6 +119,9 @@ export type InsertQaLog = typeof qaLogs.$inferInsert;
 export const policies = mysqlTable("policies", {
   id: int("id").autoincrement().primaryKey(),
   authorId: int("authorId").notNull(),
+  // OrgID scoping: labId ties to the lab that owns this policy; diyOrgId ties to a DIY accreditation org
+  labId: int("labId"),
+  diyOrgId: int("diyOrgId"),
   title: varchar("title", { length: 300 }).notNull(),
   category: mysqlEnum("category", [
     "infection_control", "equipment", "patient_safety", "protocol",
@@ -1771,3 +1774,33 @@ export const accreditationFormOrgVisibilityRules = mysqlTable("accreditationForm
 });
 export type AccreditationFormOrgVisibilityRule = typeof accreditationFormOrgVisibilityRules.$inferSelect;
 export type InsertAccreditationFormOrgVisibilityRule = typeof accreditationFormOrgVisibilityRules.$inferInsert;
+
+export const accreditationFormTemplateAssignments = mysqlTable("accreditationFormTemplateAssignments", {
+  id: int("id").autoincrement().primaryKey(),
+  formType: varchar("formType", { length: 100 }).notNull(),
+  templateId: int("templateId").notNull(),
+  orgId: int("orgId"),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+export type AccreditationFormTemplateAssignment = typeof accreditationFormTemplateAssignments.$inferSelect;
+export type InsertAccreditationFormTemplateAssignment = typeof accreditationFormTemplateAssignments.$inferInsert;
+
+export const accreditationFormSubmissions = mysqlTable("accreditationFormSubmissions", {
+  id: int("id").autoincrement().primaryKey(),
+  templateId: int("templateId").notNull(),
+  formType: varchar("formType", { length: 100 }).notNull(),
+  submittedByUserId: int("submittedByUserId").notNull(),
+  orgId: int("orgId"),
+  reviewTargetType: varchar("reviewTargetType", { length: 100 }),
+  reviewTargetId: int("reviewTargetId"),
+  responses: longtext("responses").notNull(),
+  qualityScore: int("qualityScore").default(0).notNull(),
+  maxPossibleScore: int("maxPossibleScore").default(0).notNull(),
+  status: mysqlEnum("status", ["draft", "submitted", "reviewed"]).default("submitted").notNull(),
+  submittedAt: timestamp("submittedAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+export type AccreditationFormSubmission = typeof accreditationFormSubmissions.$inferSelect;
+export type InsertAccreditationFormSubmission = typeof accreditationFormSubmissions.$inferInsert;

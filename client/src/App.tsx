@@ -203,7 +203,8 @@ function Router() {
       {/* ── DIY Accreditation™ ─────────────────────────────────────────── */}
       <Route path="/diy-accreditation-plans" component={DIYAccreditationPlans} />
       <Route path="/diy-register" component={DIYRegister} />
-      <Route path="/diy-lab-admin">{() => <RoleGuard roles={["diy_admin"]} allowAdmin={false}><DIYLabAdmin /></RoleGuard>}</Route>
+      {/* /diy-lab-admin is deprecated — redirect to the unified /lab-admin */}
+      <Route path="/diy-lab-admin">{() => { const [, setLoc] = useLocation(); useEffect(() => { setLoc("/lab-admin"); }, []); return null; }}</Route>
       <Route path="/diy-member">{() => <RoleGuard roles={["diy_user", "diy_admin"]} allowAdmin={false}><DIYMemberPortal /></RoleGuard>}</Route>      {/* ── Premium Access ────────────────────────────────────────────────── */}
       <Route path="/premium" component={Premium} />
       <Route path="/upgrade-success" component={UpgradeSuccess} />

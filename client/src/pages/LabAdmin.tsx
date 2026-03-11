@@ -3,7 +3,8 @@
   Tabs: Overview | Staff | Analytics | Reports | Subscription
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useLocation } from "wouter";
 import Layout from "@/components/Layout";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -18,7 +19,7 @@ import {
   Loader2, ChevronDown, ChevronUp, AlertTriangle, CheckCircle,
   Download, RefreshCw, Shield, Zap, Crown, Stethoscope,
   ClipboardCheck, HeartPulse, BookOpen, Activity, MapPin, Phone,
-  ChevronRight, Microscope, FlaskConical
+  ChevronRight, Microscope, FlaskConical, Mail, UserPlus, Lock
 } from "lucide-react";
 import { toast } from "sonner";
 import BulkCsvUploadPanel, { type BulkResult } from "@/components/BulkCsvUploadPanel";
@@ -30,6 +31,7 @@ import QualityMeetingsTab from "./QualityMeetingsTab";
 import AccreditationReadiness from "./AccreditationReadiness";
 import CaseMixSubmission from "./CaseMixSubmission";
 import { PolicyBuilderTab, AppropriateUseTab } from "./AccreditationTool";
+import DynamicFormRenderer from "@/components/DynamicFormRenderer";
 import jsPDF from "jspdf";
 import {
   LineChart, Line, BarChart, Bar, RadarChart, Radar, PolarGrid,
@@ -1399,17 +1401,165 @@ function SubTabBtn({ active, onClick, icon: Icon, label }: {
   );
 }
 
-// ─── Organization Tab ─────────────────────────────────────────────────────────
-function OrganizationTab({ lab, members, snapshot, onRefresh }: { lab: any; members: any[]; snapshot: any[]; onRefresh: () => void }) {
-  const [subTab, setSubTab] = useState<"overview" | "facilities" | "personnel" | "policy" | "subscription" | "seats">("overview");
+// ─── DIY Members Sub-Tab ─────────────────────────────────────────────────────
+function DIYMembersTab() {
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<"lab_admin" | "diy_member">("diy_member");
+  const { data: orgDetails, isLoading, refetch } = trpc.diy.getOrgDetails.useQuery(undefined, { retry: false });
+
+  const inviteMutation = trpc.diy.inviteMember.useMutation({
+    onSuccess: () => { toast.success("Invite sent"); setInviteEmail(""); refetch(); },
+    onError: (e) => toast.error(e.message),
+  });
+  const revokeMutation = trpc.diy.revokeMember.useMutation({
+    onSuccess: () => { toast.success("Member removed"); refetch(); },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const ROLE_LABELS: Record<string, { label: string; badge: string }> = {
+    super_admin: { label: "SuperAdmin", badge: "bg-amber-100 text-amber-800" },
+    lab_admin: { label: "Lab Admin", badge: "bg-teal-100 text-teal-800" },
+    diy_member: { label: "DIY Member", badge: "bg-blue-100 text-blue-800" },
+  };
+  const STATUS_LABELS: Record<string, { label: string; badge: string }> = {
+    pending: { label: "Invite Pending", badge: "bg-yellow-100 text-yellow-800" },
+    accepted: { label: "Active", badge: "bg-green-100 text-green-800" },
+    declined: { label: "Declined", badge: "bg-red-100 text-red-800" },
+    revoked: { label: "Revoked", badge: "bg-gray-100 text-gray-600" },
+  };
+
+  if (isLoading) return <div className="flex justify-center py-10"><Loader2 className="w-5 h-5 animate-spin" style={{ color: BRAND }} /></div>;
+  if (!orgDetails) return (
+    <div className="text-center py-10">
+      <Lock className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+      <p className="text-sm text-gray-500">DIY Accreditation organization not found. Set up your organization first.</p>
+    </div>
+  );
+
+  const { members: orgMembers, seatUsage, myRole } = orgDetails;
+  const isSuperAdmin = myRole === "super_admin";
 
   return (
+    <div className="space-y-6">
+      {/* Seat usage summary */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: "Lab Admins", used: seatUsage.labAdminUsed, total: seatUsage.labAdminTotal, color: BRAND },
+          { label: "DIY Members", used: seatUsage.memberUsed, total: seatUsage.isUnlimitedMembers ? "∞" : seatUsage.memberTotal, color: "#2563eb" },
+        ].map(({ label, used, total, color }) => (
+          <Card key={label} className="border border-gray-100">
+            <CardContent className="p-3">
+              <div className="text-xs text-gray-500 mb-1">{label}</div>
+              <div className="text-xl font-black" style={{ color }}>{used}<span className="text-sm font-normal text-gray-400">/{total}</span></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Invite form */}
+      <Card className="border border-[#189aa1]/20">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-bold text-gray-700 flex items-center gap-2">
+            <UserPlus className="w-4 h-4" style={{ color: BRAND }} /> Invite Member
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Input className="h-9 text-sm flex-1" placeholder="Email address" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)} />
+            <Select value={inviteRole} onValueChange={v => setInviteRole(v as "lab_admin" | "diy_member")}>
+              <SelectTrigger className="h-9 text-sm w-40"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {isSuperAdmin && <SelectItem value="lab_admin">Lab Admin</SelectItem>}
+                <SelectItem value="diy_member">DIY Member</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button className="text-white h-9 px-4 text-sm" style={{ background: BRAND }}
+              disabled={!inviteEmail.trim() || inviteMutation.isPending}
+              onClick={() => inviteMutation.mutate({ email: inviteEmail.trim(), diyRole: inviteRole })}>
+              {inviteMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <><Mail className="w-3 h-3 mr-1" />Send Invite</>}
+            </Button>
+          </div>
+          <p className="text-xs text-gray-400 mt-2">
+            {inviteRole === "lab_admin" ? "Lab Admins can manage workflows, upload policies, assign tasks, and view analytics." : "DIY Members can participate in case review and complete workflow tasks."}
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Member list */}
+      <Card className="border border-[#189aa1]/20">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-bold text-gray-700 flex items-center gap-2">
+            <Users className="w-4 h-4" style={{ color: BRAND }} /> Organization Members
+            <Badge className="ml-1 text-[10px]" style={{ background: BRAND + "20", color: BRAND }}>{orgMembers.length}</Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {orgMembers.map((m: any) => {
+              const roleInfo = ROLE_LABELS[m.diyRole] ?? { label: m.diyRole, badge: "bg-gray-100 text-gray-600" };
+              const statusInfo = STATUS_LABELS[m.inviteStatus] ?? { label: m.inviteStatus, badge: "bg-gray-100 text-gray-600" };
+              return (
+                <div key={m.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 bg-gray-50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: BRAND }}>
+                      {(m.displayName || m.inviteEmail || "?").charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-gray-800">{m.displayName || m.inviteEmail}</div>
+                      <div className="text-xs text-gray-400">{m.inviteEmail}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge className={`text-[10px] ${roleInfo.badge}`}>{roleInfo.label}</Badge>
+                    <Badge className={`text-[10px] ${statusInfo.badge}`}>{statusInfo.label}</Badge>
+                    {isSuperAdmin && m.diyRole !== "super_admin" && (
+                      <Button variant="outline" size="sm" className="h-7 text-xs text-red-600 border-red-200 hover:bg-red-50"
+                        disabled={revokeMutation.isPending}
+                        onClick={() => { if (confirm(`Remove ${m.displayName || m.inviteEmail}?`)) revokeMutation.mutate({ memberId: m.id }); }}>
+                        Remove
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ─── Organization Tab ─────────────────────────────────────────────────────
+function OrganizationTab({ lab, members, snapshot, onRefresh }: { lab: any; members: any[]; snapshot: any[]; onRefresh: () => void }) {
+  const [subTab, setSubTab] = useState<"overview" | "facilities" | "personnel" | "diy_members" | "policy" | "subscription" | "seats">("overview");
+  return (
     <div className="space-y-4">
+      {/* Concierge contextual banner */}
+      {!lab?.accreditationOnboardingComplete && (
+        <div className="flex items-center gap-3 p-3 rounded-lg border border-[#4ad9e0]/30" style={{ background: "#0e4a5015" }}>
+          <Award className="w-5 h-5 flex-shrink-0" style={{ color: "#189aa1" }} />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold" style={{ color: "#0e4a50" }}>Need help with IAC Accreditation?</p>
+            <p className="text-xs text-gray-500">Our Accreditation Concierge service provides expert guidance from documentation to final submission.</p>
+          </div>
+          <a
+            href="https://www.iheartecho.com/concierge"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-shrink-0 text-xs font-semibold px-3 py-1.5 rounded-lg text-white transition-all hover:opacity-90"
+            style={{ background: "#189aa1" }}
+          >
+            Learn More
+          </a>
+        </div>
+      )}
       {/* Sub-tab nav */}
       <div className="flex gap-1 p-1 rounded-lg overflow-x-auto" style={{ background: "#f0fbfc" }}>
         <SubTabBtn active={subTab === "overview"} onClick={() => setSubTab("overview")} icon={Building2} label="Overview" />
         <SubTabBtn active={subTab === "facilities"} onClick={() => setSubTab("facilities")} icon={MapPin} label="Facilities" />
         <SubTabBtn active={subTab === "personnel"} onClick={() => setSubTab("personnel")} icon={Users} label="Personnel" />
+        <SubTabBtn active={subTab === "diy_members"} onClick={() => setSubTab("diy_members")} icon={UserPlus} label="DIY Members" />
         <SubTabBtn active={subTab === "policy"} onClick={() => setSubTab("policy")} icon={FileText} label="Policy Builder" />
         <SubTabBtn active={subTab === "subscription"} onClick={() => setSubTab("subscription")} icon={CreditCard} label="Subscription" />
         <SubTabBtn active={subTab === "seats"} onClick={() => setSubTab("seats")} icon={Shield} label="User Seats" />
@@ -1418,6 +1568,7 @@ function OrganizationTab({ lab, members, snapshot, onRefresh }: { lab: any; memb
       {subTab === "overview" && <OverviewTab lab={lab} members={members} snapshot={snapshot} />}
       {subTab === "facilities" && <FacilitiesPanel lab={lab} onRefresh={onRefresh} />}
       {subTab === "personnel" && <StaffTab lab={lab} members={members} onRefresh={onRefresh} />}
+      {subTab === "diy_members" && <DIYMembersTab />}
       {subTab === "policy" && <PolicyBuilderTab />}
       {subTab === "subscription" && <SubscriptionTab lab={lab} />}
       {subTab === "seats" && <SeatsTab lab={lab} />}
@@ -1529,7 +1680,18 @@ function FacilitiesPanel({ lab, onRefresh }: { lab: any; onRefresh: () => void }
 
 // ─── Quality Improvement Tab ─────────────────────────────────────────────────
 function QualityImprovementTab({ members: _members }: { members: any[] }) {
-  const [subTab, setSubTab] = useState<"iqr" | "sono_peer" | "phys_peer" | "correlations" | "appropriate_use" | "meetings">("iqr");
+  const [subTab, setSubTab] = useState<string>("iqr");
+
+  // Load any admin-assigned dynamic form templates for the QI section
+  const { data: dynamicMenuItems = [] } = trpc.formBuilder.getFormMenuItems.useQuery(
+    { orgId: undefined },
+    { staleTime: 60_000 }
+  );
+
+  // Only show dynamic items that are assigned to the "quality_improvement" form type category
+  const dynamicQIForms = dynamicMenuItems.filter(
+    (item) => item.formType.startsWith("quality_") || item.formType.startsWith("custom_")
+  );
 
   return (
     <div className="space-y-4">
@@ -1541,14 +1703,82 @@ function QualityImprovementTab({ members: _members }: { members: any[] }) {
         <SubTabBtn active={subTab === "correlations"} onClick={() => setSubTab("correlations")} icon={FlaskConical} label="Echo Correlations" />
         <SubTabBtn active={subTab === "appropriate_use"} onClick={() => setSubTab("appropriate_use")} icon={ClipboardCheck} label="Appropriate Use" />
         <SubTabBtn active={subTab === "meetings"} onClick={() => setSubTab("meetings")} icon={BookOpen} label="Quality Meetings" />
+        {/* Dynamic admin-created forms */}
+        {dynamicQIForms.map((item) => (
+          <SubTabBtn
+            key={`dynamic_${item.id}`}
+            active={subTab === `dynamic_${item.id}`}
+            onClick={() => setSubTab(`dynamic_${item.id}`)}
+            icon={ClipboardCheck}
+            label={item.templateName}
+          />
+        ))}
       </div>
-
       {subTab === "iqr" && <ImageQualityReviewTab embedded={true} />}
       {subTab === "sono_peer" && <SonographerPeerReview embedded={true} />}
       {subTab === "phys_peer" && <PhysicianPeerReview />}
       {subTab === "correlations" && <EchoCorrelationTab />}
       {subTab === "appropriate_use" && <AppropriateUseTab />}
       {subTab === "meetings" && <QualityMeetingsTab isDiyAdmin={true} />}
+      {/* Render dynamic form templates */}
+      {dynamicQIForms.map((item) =>
+        subTab === `dynamic_${item.id}` ? (
+          <DynamicFormRenderer key={item.id} templateId={item.templateId} formType={item.formType} />
+        ) : null
+      )}
+    </div>
+  );
+}
+
+// ─── Accreditation Concierge CTA Card ────────────────────────────────────────────
+function AccreditationConciergeCard() {
+  return (
+    <div
+      className="rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4"
+      style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}
+    >
+      <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(255,255,255,0.12)" }}>
+        <Award className="w-6 h-6 text-[#4ad9e0]" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-0.5">
+          <span className="text-xs font-bold uppercase tracking-widest text-[#4ad9e0]">Accreditation Concierge</span>
+          <span className="text-xs px-2 py-0.5 rounded-full bg-[#4ad9e0]/20 text-[#4ad9e0] font-semibold">Premium Add-On</span>
+        </div>
+        <h3 className="text-white font-bold text-base mb-1" style={{ fontFamily: "Merriweather, serif" }}>
+          Get Expert Guidance Through IAC Accreditation
+        </h3>
+        <p className="text-white/65 text-xs leading-relaxed max-w-xl">
+          Our Accreditation Concierge team provides hands-on support — from policy documentation and case selection
+          to final submission review. Dedicated expert, unlimited consultations, and a guided readiness roadmap.
+        </p>
+        <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+          {["Dedicated IAC expert", "Policy & documentation review", "Case selection guidance", "Submission checklist & audit"].map((item) => (
+            <li key={item} className="flex items-center gap-1 text-xs text-white/70">
+              <CheckCircle className="w-3 h-3 text-[#4ad9e0] flex-shrink-0" />
+              {item}
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="flex flex-col gap-2 flex-shrink-0">
+        <a
+          href="https://www.iheartecho.com/concierge"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
+          style={{ background: "#189aa1" }}
+        >
+          <Zap className="w-4 h-4" />
+          Learn More
+        </a>
+        <a
+          href="mailto:concierge@iheartecho.com?subject=Accreditation%20Concierge%20Inquiry"
+          className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white/80 border border-white/20 hover:bg-white/10 transition-all text-center justify-center"
+        >
+          Contact Us
+        </a>
+      </div>
     </div>
   );
 }
@@ -1556,22 +1786,22 @@ function QualityImprovementTab({ members: _members }: { members: any[] }) {
 // ─── Accreditation Submission Tab ─────────────────────────────────────────────
 function AccreditationSubmissionTab() {
   const [subTab, setSubTab] = useState<"case_studies" | "readiness">("case_studies");
-
   return (
     <div className="space-y-4">
+      {/* Concierge CTA */}
+      <AccreditationConciergeCard />
       {/* Sub-tab nav */}
       <div className="flex gap-1 p-1 rounded-lg overflow-x-auto" style={{ background: "#f0fbfc" }}>
         <SubTabBtn active={subTab === "case_studies"} onClick={() => setSubTab("case_studies")} icon={FileText} label="Case Studies" />
         <SubTabBtn active={subTab === "readiness"} onClick={() => setSubTab("readiness")} icon={ClipboardCheck} label="Accreditation Readiness" />
       </div>
-
       {subTab === "case_studies" && <CaseMixSubmission />}
       {subTab === "readiness" && <AccreditationReadiness />}
     </div>
   );
 }
 
-// ─── Analytics & Reporting Tab ────────────────────────────────────────────────
+// ─── Analytics & Reporting Tabb ────────────────────────────────────────────────
 function AnalyticsReportingTab({ lab, members }: { lab: any; members: any[] }) {
   const [subTab, setSubTab] = useState<"analytics" | "cme" | "reports">("analytics");
 
@@ -1594,7 +1824,17 @@ function AnalyticsReportingTab({ lab, members }: { lab: any; members: any[] }) {
 // ─── Main Lab Admin Page ──────────────────────────────────────────────────────
 export default function LabAdmin() {
   const { user, loading, isAuthenticated } = useAuth();
+  const [rawLocation] = useLocation();
   const [tab, setTab] = useState<"organization" | "quality" | "accreditation" | "analytics">("organization");
+
+  // Deep-link support: ?tab=quality, ?tab=organization, etc.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get("tab");
+    if (tabParam === "quality" || tabParam === "organization" || tabParam === "accreditation" || tabParam === "analytics") {
+      setTab(tabParam);
+    }
+  }, [rawLocation]);
 
   const { data: lab, isLoading: labLoading, refetch: refetchLab } = trpc.lab.getMyLab.useQuery(undefined, { enabled: isAuthenticated });
   const { data: members = [], refetch: refetchMembers } = trpc.lab.getMembers.useQuery(undefined, { enabled: !!lab });
