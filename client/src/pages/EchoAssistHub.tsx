@@ -24,6 +24,7 @@ type Specialty = {
   description: string;
   badge: string;
   scanCoachPath?: string;
+  echoAssistPath?: string;
   free: boolean;
 };
 
@@ -32,7 +33,7 @@ const specialties: Specialty[] = [
   { path: "/pediatric", scanCoachPath: "/scan-coach?tab=chd", icon: Users, title: "Pediatric Echo", description: "CHD findings, BSA Z-score calculators, Qp/Qs shunt estimation, segmental analysis, neonatal hemodynamics, and pediatric CHD scan guidance.", badge: "Congenital Heart", free: true },
   { path: "/fetal", scanCoachPath: "/scan-coach?tab=fetal", icon: Baby, title: "Fetal Echo", description: "Fetal cardiac findings, CHD differentials, biometry Z-scores, situs, arch patterns, and fetal scan coach with clinical images.", badge: "Fetal", free: true },
   { path: "/stress", scanCoachPath: "/stress-scan-coach", icon: Zap, title: "Stress Echo", description: "Exercise and DSE protocols, 17-segment WMSI scorer, target HR calculator, interpretation criteria, and pharmacologic stress guidance.", badge: "Stress Echo", free: false },
-  { path: "/diastolic", scanCoachPath: "/scan-coach?tab=diastolic", icon: Activity, title: "Diastolic Function", description: "Step-by-step diastolic assessment: mitral inflow, TDI e', E/e' ratio, LAVI, TR velocity, pulmonary venous flow, and ASE 2025 grading algorithm with scan coach.", badge: "Diastology", free: true },
+  { path: "/diastolic", scanCoachPath: "/scan-coach?tab=diastolic", echoAssistPath: "/echoassist#engine-diastologyassist", icon: Activity, title: "Diastolic Function", description: "Step-by-step diastolic assessment: mitral inflow, TDI e', E/e' ratio, LAVI, TR velocity, pulmonary venous flow, and ASE 2025 grading algorithm with scan coach.", badge: "Diastology", free: true },
   { path: "/strain", scanCoachPath: "/strain-scan-coach", icon: BarChart3, title: "Strain", description: "LV GLS, RV strain, LA strain, bull's-eye display, clinical interpretation, segmental curves, and strain scan coach with tips and clinical pattern library.", badge: "Strain", free: true },
   { path: "/uea-navigator", scanCoachPath: "/uea-scan-coach", icon: Droplets, title: "UEA (Contrast Echo)", description: "Contrast echo protocol: safety screening, agent preparation, view-by-view LVO and myocardial perfusion assessment, and reporting guidance.", badge: "Contrast Echo", free: true },
   { path: "/hocm-navigator", scanCoachPath: "/hocm-scan-coach", icon: Activity, title: "HOCM", description: "Morphology assessment, SAM grading, resting and provoked LVOT gradients, goal-directed Valsalva, MR evaluation, and ASE/AHA reporting thresholds.", badge: "Cardiomyopathy", free: false },
@@ -118,7 +119,7 @@ export default function EchoAssistHub() {
             </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {specialties.filter(s => s.free).map(({ path, scanCoachPath, icon: Icon, title, description, badge }) => {
+            {specialties.filter(s => s.free).map(({ path, scanCoachPath, echoAssistPath, icon: Icon, title, description, badge }) => {
               const badgeColor = badgeColors[badge] ?? BRAND;
               return (
                 <div
@@ -149,22 +150,35 @@ export default function EchoAssistHub() {
                     {title}
                   </h3>
                   <p className="text-sm text-gray-500 leading-relaxed mb-4 flex-1">{description}</p>
-                  <div className="flex items-center gap-2 mt-auto">
-                    <Link href={path} className="flex-1">
-                      <button
-                        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90"
-                        style={{ background: BRAND }}
-                      >
-                        Go to Navigator <ArrowRight className="w-3.5 h-3.5" />
-                      </button>
-                    </Link>
-                    {scanCoachPath && (
-                      <Link href={scanCoachPath} className="flex-1">
+                  <div className="flex flex-col gap-2 mt-auto">
+                    <div className="flex items-center gap-2">
+                      <Link href={path} className="flex-1">
+                        <button
+                          className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90"
+                          style={{ background: BRAND }}
+                        >
+                          Go to Navigator <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                      </Link>
+                      {scanCoachPath && (
+                        <Link href={scanCoachPath} className="flex-1">
+                          <button
+                            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border transition-all hover:bg-[#189aa1]/5"
+                            style={{ borderColor: BRAND + "40", color: BRAND }}
+                          >
+                            Go to ScanCoach
+                          </button>
+                        </Link>
+                      )}
+                    </div>
+                    {echoAssistPath && (
+                      <Link href={echoAssistPath}>
                         <button
                           className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border transition-all hover:bg-[#189aa1]/5"
                           style={{ borderColor: BRAND + "40", color: BRAND }}
                         >
-                          Go to ScanCoach
+                          <Activity className="w-3.5 h-3.5" />
+                          DiastologyAssist™ Calculators
                         </button>
                       </Link>
                     )}
