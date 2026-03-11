@@ -801,7 +801,7 @@ export default function QuickFireAdmin() {
 
             {/* Info banner */}
             <div className="bg-teal-50 border border-teal-200 rounded-lg px-4 py-3 text-xs text-teal-700">
-              <strong>How to add questions:</strong> Go to the <button className="underline font-semibold" onClick={() => setActiveAdminTab("questions")}>Question Bank</button> tab, find any Scenario or Image question, and click the <strong>Queue</strong> button to approve it for the daily challenge. Each question is served individually — one per day.
+              <strong>Daily Challenge Queue:</strong> Each entry contains <strong>exactly 1 question</strong> served to users on its scheduled day. Use the <button className="underline font-semibold" onClick={() => setActiveAdminTab("questions")}>Question Bank</button> tab to create questions, then click <strong>Queue</strong> to add them here — or use the <strong>New Challenge</strong> button above to pick any question from the bank.
             </div>
 
             {/* Challenge list */}
@@ -866,7 +866,7 @@ export default function QuickFireAdmin() {
                               <Tag className="w-3 h-3" />{c.category}
                             </span>
                           )}
-                          <span className="text-xs text-gray-400">{qCount} question{qCount !== 1 ? "s" : ""}</span>
+                          <span className="text-xs text-gray-400">{qCount === 1 ? "1 question" : qCount === 0 ? "No question assigned" : `${qCount} questions`}</span>
                           {c.publishDate && (
                             <span className="flex items-center gap-1 text-xs text-gray-400">
                               <Clock className="w-3 h-3" />Scheduled: {c.publishDate}
@@ -1441,14 +1441,14 @@ export default function QuickFireAdmin() {
               </div>
             </div>
             <div>
-              <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Select Questions <span className="text-red-500">*</span></label>
-              <p className="text-xs text-gray-400 mb-2">Pick questions from your bank to include in this challenge.</p>
+              <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Select Question <span className="text-red-500">*</span></label>
+              <p className="text-xs text-gray-400 mb-2">Each challenge contains exactly <strong>1 question</strong> — one question is served per day.</p>
               {listQuery.isLoading ? (
                 <div className="h-32 bg-gray-100 rounded-lg animate-pulse" />
               ) : (
                 <div className="max-h-64 overflow-y-auto border rounded-lg divide-y">
-                  {(listQuery.data?.questions ?? []).map((q: any) => {
-                    const selected = challengeForm.selectedQuestionIds.includes(q.id);
+                  {(listQuery.data?.questions ?? []).filter((q: any) => q.type !== "quickReview").map((q: any) => {
+                    const selected = challengeForm.selectedQuestionIds[0] === q.id;
                     const meta = TYPE_META[q.type as QuestionType] ?? TYPE_META.scenario;
                     const Icon = meta.icon;
                     return (
@@ -1458,20 +1458,24 @@ export default function QuickFireAdmin() {
                           selected ? "bg-teal-50" : "bg-white hover:bg-gray-50"
                         }`}
                         onClick={() => {
+                          // Single-select: replace the array with just this question
                           setChallengeForm((f) => ({
                             ...f,
-                            selectedQuestionIds: selected
-                              ? f.selectedQuestionIds.filter((id) => id !== q.id)
-                              : [...f.selectedQuestionIds, q.id],
+                            selectedQuestionIds: selected ? [] : [q.id],
                           }));
                         }}
                       >
-                        <div className="mt-0.5">{selected ? <CheckSquare className="w-4 h-4 text-[#189aa1]" /> : <Square className="w-4 h-4 text-gray-300" />}</div>
+                        {/* Radio button indicator */}
+                        <div className={`mt-0.5 w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${
+                          selected ? "border-[#189aa1] bg-[#189aa1]" : "border-gray-300"
+                        }`}>
+                          {selected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                        </div>
                         <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${meta.color}`}>
-                          <Icon className="w-3 h-3" />{q.type === "quickReview" ? "QR" : q.type === "image" ? "IMG" : "MCQ"}
+                          <Icon className="w-3 h-3" />{q.type === "connect" ? "CONNECT" : q.type === "identifier" ? "ID" : q.type === "order" ? "ORDER" : q.type === "image" ? "IMG" : "MCQ"}
                         </span>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs text-gray-800 line-clamp-2">{q.question}</p>
+                          <p className="text-xs text-gray-800 line-clamp-2" dangerouslySetInnerHTML={{ __html: q.question }} />
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className={`text-xs px-1 rounded ${
                               q.difficulty === "beginner" ? "bg-green-50 text-green-600" :
@@ -1485,7 +1489,13 @@ export default function QuickFireAdmin() {
                   })}
                 </div>
               )}
-              <p className="text-xs text-gray-400 mt-1">{challengeForm.selectedQuestionIds.length} question{challengeForm.selectedQuestionIds.length !== 1 ? "s" : ""} selected</p>
+              <p className="text-xs text-gray-400 mt-1">
+                {challengeForm.selectedQuestionIds.length === 1 ? (
+                  <span className="text-teal-600 font-semibold">✓ 1 question selected</span>
+                ) : (
+                  <span className="text-gray-400">No question selected</span>
+                )}
+              </p>
             </div>
           </div>
           <DialogFooter>

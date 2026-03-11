@@ -1060,7 +1060,7 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
     .input(z.object({
       title: z.string().min(3).max(300),
       description: z.string().max(2000).optional(),
-      questionIds: z.array(z.number().int().positive()).min(1),
+      questionIds: z.array(z.number().int().positive()).min(1).max(1),  // exactly 1 question per challenge
       priority: z.number().int().min(1).default(100),
       category: z.string().max(64).optional(),
       publishDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
@@ -1087,7 +1087,7 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       id: z.number().int().positive(),
       title: z.string().min(3).max(300).optional(),
       description: z.string().max(2000).optional().nullable(),
-      questionIds: z.array(z.number().int().positive()).min(1).optional(),
+      questionIds: z.array(z.number().int().positive()).min(1).max(1).optional(),  // exactly 1 question per challenge
       priority: z.number().int().min(1).optional(),
       category: z.string().max(64).optional().nullable(),
       publishDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),

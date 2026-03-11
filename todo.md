@@ -52,14 +52,14 @@
 - [ ] Hide flashcard count from UI (don't show how many are available)
 - [x] Move scoring/tracking display below the flashcard (currently overlapping the card)
 - [ ] Fix typo: "LARDS" should be "LARS" (somewhere in the app)
-- [ ] Add flashcard sorting/filtering by category: Adult Echo, Pediatric/Congenital Echo, Fetal Echo
+- [x] Add flashcard sorting/filtering by category: Adult Echo, Pediatric/Congenital Echo, Fetal Echo
 - [x] Generate EchoAssist hero banner background image and upload to CDN (All Files)
 - [x] Add Flashcard Manager to admin area (create/edit/delete flashcards, assign categories) — exists in /admin/quickfire under Flashcard Management tab
 - [ ] Add search field in admin: Cases, Daily Challenges, and Flashcards
 - [ ] Add AI Generate option for flashcards in admin (generate by topic, produces quickReview type cards)
 - [ ] Allow AI Generator to create multiple cases, challenges, and/or flashcards at one time based on topic (bulk generation)
 - [ ] Rename "Flashcard Deck" to "Echo Flashcards" throughout the app
-- [ ] Separate Flashcards from Daily Challenge (own route, own nav entry, own admin section)
+- [x] Separate Flashcards from Daily Challenge (own route, own nav entry, own admin section)
 - [ ] Add echoCategory field to quickfireQuestions schema (Adult Echo, Pediatric/Congenital Echo, Fetal Echo)
 - [ ] Fix premium gate for EchoAssist premium options (basic members can currently access premium features)
 - [ ] Fix premium gate for DIY Accreditation (basic members can currently access it)
@@ -2120,3 +2120,13 @@
 - [ ] Add "order" question type to schema (orderedItems: string[], stored as JSON)
 - [ ] Build Order Game player UI (drag items into correct sequence)
 - [ ] Admin: add Order Game creation form (add/reorder items)
+
+## Daily Challenge & Flashcard Fixes
+- [ ] Complete admin creation forms for Connect, Identifier, and Order game types in QuickFireAdmin
+- [ ] Fix Daily Challenge to show only 1 challenge per day (not 5)
+- [ ] Randomize flashcard order on every page visit (no repeated sequences)
+
+## Session Fixes (Mar 10, 2026)
+- [x] Daily Challenge: enforce exactly 1 question per challenge — changed admin form from multi-select (checkboxes) to single-select (radio buttons), updated server validation (max(1)), updated queue display text
+- [x] Flashcard randomization: added Fisher-Yates shuffle with session-level random seed so cards appear in a different order on every page visit (sequential mode)
+- [x] Admin creation forms for Connect, Identifier, and Order game types: confirmed all three are fully implemented in QuickFireAdmin.tsx (Connect: dynamic pair inputs; Identifier: image upload + click-to-place markers; Order: numbered item list with add/remove)

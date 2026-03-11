@@ -48,6 +48,8 @@ export default function FlashcardDeck() {
   const [sessionResults, setSessionResults] = useState<Record<number, boolean>>({});
   const [sessionComplete, setSessionComplete] = useState(false);
   const [studyMode, setStudyMode] = useState<StudyMode>("sequential");
+  // New random seed on every page visit — ensures cards never appear in the same order twice
+  const [sessionSeed] = useState(() => Math.random());
 
   const frontRef = useRef<HTMLDivElement>(null);
   const backRef = useRef<HTMLDivElement>(null);
@@ -65,12 +67,11 @@ export default function FlashcardDeck() {
   const dailyLimit = data?.dailyLimit ?? null; // null = unlimited (premium)
   const dailySeenCount = data?.dailySeenCount ?? 0;
 
-  // Apply study mode ordering (server already handles ordering for premium/free)
-  // For free users the server returns a date-seeded shuffle; we just use that order
+  // Apply study mode ordering
   const rawCards = data?.cards ?? [];
   const cards = useMemo(() => {
-    // Only apply client-side spaced sort for premium (server handles free ordering)
     if (studyMode === "spaced" && !dailyLimit) {
+      // Premium spaced repetition: sort by missed-first
       return [...rawCards].sort((a, b) => {
         const aAttempts = ((a as any).gotIt ?? 0) + ((a as any).missed ?? 0);
         const bAttempts = ((b as any).gotIt ?? 0) + ((b as any).missed ?? 0);
@@ -81,8 +82,18 @@ export default function FlashcardDeck() {
         return bScore - aScore;
       });
     }
-    return rawCards;
-  }, [rawCards, studyMode, dailyLimit]);
+    // Sequential mode: shuffle using session seed so order is random on every page visit
+    // (server returns date-seeded order; we re-shuffle client-side for true randomness)
+    const arr = [...rawCards];
+    // Fisher-Yates shuffle seeded by sessionSeed
+    let seed = sessionSeed;
+    for (let i = arr.length - 1; i > 0; i--) {
+      seed = (seed * 9301 + 49297) % 233280;
+      const j = Math.floor((seed / 233280) * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }, [rawCards, studyMode, dailyLimit, sessionSeed]);
 
   const currentCard = cards[currentIndex];
   const totalCards = cards.length;
