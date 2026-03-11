@@ -2160,3 +2160,9 @@
 - [x] UI: Mixed Types mode shows +/- stepper for each of 6 question types with live total count
 - [x] UI: preview shows all generated questions with type badge and correct rendering (pairs, orderedItems, options)
 - [x] UI: import passes correct type-specific fields per question
+
+## Platform Management Hub
+- [x] Audit all admin links in profile dropdown menu
+- [x] Build PlatformAdmin hub page with card buttons for each admin section (Case Management, Daily Challenge, ScanCoach Editor, Thinkific Webhook)
+- [x] Remove individual admin sub-links from profile menu; kept single "Platform Management" link
+- [x] /platform-admin route already registered in App.tsx

@@ -470,43 +470,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                             <button onClick={() => setAccountOpen(false)}
                               className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-all text-left">
                               <Shield className="w-3.5 h-3.5 text-purple-500" />
-                              <span className="flex-1">Platform Admin Dashboard</span>
+                              <span className="flex-1">Platform Management</span>
                               <PendingBadge />
                             </button>
                           </WouterLink>
-                          {isAdmin && (
-                            <>
-                              <WouterLink href="/admin/cases">
-                                <button onClick={() => setAccountOpen(false)}
-                                  className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-all text-left">
-                                  <Library className="w-3.5 h-3.5 text-purple-500" />
-                                  <span className="flex-1">Case Management</span>
-                                  <CasePendingBadge />
-                                </button>
-                              </WouterLink>
-                              <WouterLink href="/admin/quickfire">
-                                <button onClick={() => setAccountOpen(false)}
-                                  className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-all text-left">
-                                  <Zap className="w-3.5 h-3.5 text-purple-500" />
-                                  Daily Challenge Admin
-                                </button>
-                              </WouterLink>
-                              <WouterLink href="/admin/scancoach">
-                                <button onClick={() => setAccountOpen(false)}
-                                  className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-all text-left">
-                                  <Scan className="w-3.5 h-3.5 text-purple-500" />
-                                  ScanCoach Editor
-                                </button>
-                              </WouterLink>
-                              <WouterLink href="/admin/thinkific-webhook">
-                                <button onClick={() => setAccountOpen(false)}
-                                  className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition-all text-left">
-                                  <Webhook className="w-3.5 h-3.5 text-purple-500" />
-                                  Thinkific Webhook
-                                </button>
-                              </WouterLink>
-                            </>
-                          )}
                         </div>
                       )}
 

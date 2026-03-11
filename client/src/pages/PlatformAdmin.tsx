@@ -53,6 +53,10 @@ import {
   Building2,
   BarChart2,
   ExternalLink,
+  Library,
+  Zap,
+  Scan,
+  Webhook,
 } from "lucide-react";
 import { Link } from "wouter";
 import BulkCsvUploadPanel, { type BulkResult } from "@/components/BulkCsvUploadPanel";
@@ -771,6 +775,58 @@ export default function PlatformAdmin() {
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        {/* Admin Tools Hub */}
+        <div className="mb-8">
+          <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">Admin Tools</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              {
+                href: "/admin/cases",
+                icon: Library,
+                label: "Case Management",
+                description: "Review, approve, and manage submitted echo cases",
+                color: "#189aa1",
+              },
+              {
+                href: "/admin/quickfire",
+                icon: Zap,
+                label: "Daily Challenge",
+                description: "Question bank, challenge queue, and AI generator",
+                color: "#7c3aed",
+              },
+              {
+                href: "/admin/scancoach",
+                icon: Scan,
+                label: "ScanCoach Editor",
+                description: "Edit scan coach views, anatomy, and Doppler guidance",
+                color: "#0d9488",
+              },
+              {
+                href: "/admin/thinkific-webhook",
+                icon: Webhook,
+                label: "Thinkific Webhook",
+                description: "Manage course sync, webhook events, and enrollment",
+                color: "#d97706",
+              },
+            ].map(({ href, icon: Icon, label, description, color }) => (
+              <Link key={href} href={href}>
+                <div className="group flex flex-col gap-3 p-4 rounded-xl border border-gray-100 bg-white shadow-sm hover:shadow-md hover:border-gray-200 cursor-pointer transition-all h-full">
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: color + "18" }}>
+                    <Icon className="w-4.5 h-4.5" style={{ color }} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-gray-800 mb-0.5">{label}</p>
+                    <p className="text-xs text-gray-400 leading-relaxed">{description}</p>
+                  </div>
+                  <div className="flex items-center gap-1 text-xs font-medium group-hover:gap-2 transition-all" style={{ color }}>
+                    Open <ChevronRight className="w-3 h-3" />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
 
         {/* Add User by Email */}
