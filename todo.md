@@ -2213,3 +2213,14 @@
 - [x] Side-by-side pricing cards with Annual highlighted as Best Value
 - [x] Bottom CTA updated with both Monthly and Annual buttons
 - [x] Removed old handleCheckout/CHECKOUT_URL references
+
+## AI Generator — Find Image Button (Identifier Type)
+- [ ] Add "Find Image" button to AI Generator preview cards for Identifier type questions
+- [ ] Button opens Google Images search using the suggestedImageSearch field value
+- [ ] Also show imageDescription and targetStructure fields in the preview card
+
+## Daily Challenge Question Editor — Rich Text p-tag Bug
+- [x] Root cause: rich text editor stores HTML (e.g. <p>text</p>) but question field was rendered as plain text in 8+ places
+- [x] Fixed: all question display locations now use dangerouslySetInnerHTML to render HTML correctly
+- [x] Fixed: form validation now uses stripHtml() to check actual text length, not raw HTML
+- [x] Added stripHtml() utility to client/src/lib/utils.ts

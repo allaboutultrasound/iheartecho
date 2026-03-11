@@ -10,6 +10,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
+import { stripHtml } from "@/lib/utils";
 import { useAuth } from "@/_core/hooks/useAuth";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -601,7 +602,7 @@ export default function QuickFireAdmin() {
     const tags = form.tags.split(",").map((t) => t.trim()).filter(Boolean);
     const isMCQType = form.type === "scenario" || form.type === "image";
 
-    if (form.question.trim().length < 5) {
+    if (stripHtml(form.question).length < 5) {
       toast.error("Question text must be at least 5 characters.");
       return;
     }
@@ -1093,7 +1094,7 @@ export default function QuickFireAdmin() {
                       {q.type === "quickReview" ? "QR" : q.type === "image" ? "IMG" : q.type === "connect" ? "MATCH" : q.type === "identifier" ? "ID" : q.type === "order" ? "ORDER" : "MCQ"}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 leading-snug line-clamp-2">{q.question}</p>
+                      <p className="text-sm font-medium text-gray-800 leading-snug line-clamp-2" dangerouslySetInnerHTML={{ __html: q.question ?? "" }} />
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
                         <span className={`text-xs px-1.5 py-0.5 rounded ${
                           q.difficulty === "beginner" ? "bg-green-50 text-green-600" :
@@ -1119,7 +1120,7 @@ export default function QuickFireAdmin() {
                         title="Approve to daily queue"
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (confirm(`Add "${q.question.slice(0, 60)}..." to the daily challenge queue?`)) {
+                          if (confirm(`Add "${stripHtml(q.question ?? "").slice(0, 60)}..." to the daily challenge queue?`)) {
                             approveToQueueMutation.mutate({ questionId: q.id });
                           }
                         }}
@@ -2303,7 +2304,7 @@ export default function QuickFireAdmin() {
                         {aiSelected.has(i) ? <CheckSquare className="w-4 h-4 text-purple-500" /> : <Square className="w-4 h-4 text-gray-300" />}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-800 leading-snug">{q.question}</p>
+                        <p className="text-sm font-medium text-gray-800 leading-snug" dangerouslySetInnerHTML={{ __html: q.question ?? "" }} />
                         {/* MCQ options */}
                         {q.options && (
                           <div className="mt-1.5 space-y-0.5">
@@ -2338,6 +2339,34 @@ export default function QuickFireAdmin() {
                                 <span className="text-orange-500 font-bold mr-1">{oi + 1}.</span>{item}
                               </p>
                             ))}
+                          </div>
+                        )}
+                        {/* Identifier hotspot fields */}
+                        {(q.imageDescription || q.targetStructure || q.suggestedImageSearch) && (
+                          <div className="mt-1.5 bg-indigo-50 rounded-lg p-2 space-y-1">
+                            {q.targetStructure && (
+                              <p className="text-xs text-indigo-800">
+                                <span className="font-semibold">Target:</span> {q.targetStructure}
+                              </p>
+                            )}
+                            {q.imageDescription && (
+                              <p className="text-xs text-indigo-700">
+                                <span className="font-semibold">Image:</span> {q.imageDescription}
+                              </p>
+                            )}
+                            {q.suggestedImageSearch && (
+                              <a
+                                href={`https://www.google.com/search?tbm=isch&q=${encodeURIComponent(q.suggestedImageSearch + " echocardiography")}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center gap-1 text-xs bg-indigo-500 hover:bg-indigo-600 text-white rounded-md px-2 py-1 mt-0.5 font-semibold transition-colors"
+                              >
+                                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor"><path d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round"/></svg>
+                                Find Image on Google
+                              </a>
+                            )}
+                            <p className="text-[10px] text-indigo-400 italic">Upload the image and place markers manually in the form.</p>
                           </div>
                         )}
                         {q.explanation && <p className="text-xs text-gray-400 mt-1 italic">{q.explanation}</p>}
@@ -2433,7 +2462,7 @@ export default function QuickFireAdmin() {
                           <div className="flex items-center gap-1.5 mb-1">
                             <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${meta.color}`}>{meta.label}</span>
                           </div>
-                          <p className="text-sm font-medium text-gray-800 leading-snug">{q.question}</p>
+                          <p className="text-sm font-medium text-gray-800 leading-snug" dangerouslySetInnerHTML={{ __html: q.question ?? "" }} />
                           {q.options && (
                             <div className="mt-1.5 space-y-0.5">
                               {q.options.map((opt: string, oi: number) => (
@@ -2631,7 +2660,7 @@ export default function QuickFireAdmin() {
                         {flashcardAiSelected.has(i) ? <CheckSquare className="w-4 h-4 text-purple-500" /> : <Square className="w-4 h-4 text-gray-300" />}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-800 leading-snug">{q.question}</p>
+                        <p className="text-sm font-medium text-gray-800 leading-snug" dangerouslySetInnerHTML={{ __html: q.question ?? "" }} />
                         {q.reviewAnswer && <p className="text-xs text-green-700 font-semibold mt-1">Answer: {q.reviewAnswer}</p>}
                         {q.explanation && <p className="text-xs text-gray-400 mt-1 italic">{q.explanation}</p>}
                       </div>
@@ -2769,7 +2798,7 @@ export default function QuickFireAdmin() {
                           <Icon className="w-3 h-3" />{row.type === "quickReview" ? "QR" : row.type === "image" ? "IMG" : "MCQ"}
                         </span>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs text-gray-800 line-clamp-2">{row.question}</p>
+                          <p className="text-xs text-gray-800 line-clamp-2" dangerouslySetInnerHTML={{ __html: row.question ?? "" }} />
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className={`text-xs px-1 rounded ${
                               row.difficulty === "beginner" ? "bg-green-50 text-green-600" :

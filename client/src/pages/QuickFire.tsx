@@ -771,9 +771,7 @@ export default function QuickFire() {
                           </span>
                         ))}
                       </div>
-                      <CardTitle className="text-base font-semibold text-gray-800 leading-snug mt-2">
-                        {currentQ.question}
-                      </CardTitle>
+                      <CardTitle className="text-base font-semibold text-gray-800 leading-snug mt-2" dangerouslySetInnerHTML={{ __html: currentQ.question ?? "" }} />
                     </CardHeader>
 
                     <CardContent className="space-y-2 pb-3">
@@ -1430,9 +1428,7 @@ export default function QuickFire() {
                               </span>
                             )}
                           </div>
-                          <CardTitle className="text-base font-semibold text-gray-800 leading-snug mt-2">
-                            {archiveCurrentQ.question}
-                          </CardTitle>
+                          <CardTitle className="text-base font-semibold text-gray-800 leading-snug mt-2" dangerouslySetInnerHTML={{ __html: archiveCurrentQ.question ?? "" }} />
                         </CardHeader>
 
                         <CardContent className="space-y-2 pb-3">
