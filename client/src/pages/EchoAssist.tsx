@@ -646,6 +646,175 @@ function MitralRegurgEngine() {
   );
 }
 
+// ─── SV/CO SUB-SECTION (embedded inside LV SystolicAssist™) ─────────────────
+function SVCOSubSection() {
+  const [lvotD, setLvotD] = useState("");
+  const [lvotVti, setLvotVti] = useState("");
+  const [hr, setHr] = useState("");
+  const [bsa, setBsa] = useState("");
+  const [open, setOpen] = useState(false);
+
+  const lvotArea = has(lvotD) ? Math.PI * Math.pow(n(lvotD) / 2, 2) : null;
+  const sv = lvotArea !== null && has(lvotVti) ? lvotArea * n(lvotVti) : null;
+  const co = sv !== null && has(hr) ? (sv * n(hr)) / 1000 : null;
+  const ci = co !== null ? co / (has(bsa) ? n(bsa) : 1.7) : null;
+  const svNormal = sv !== null ? (sv >= 60 && sv <= 100 ? "normal" : sv < 60 ? "low" : "high") : null;
+  const coNormal = co !== null ? (co >= 4 && co <= 8 ? "normal" : co < 4 ? "low" : "high") : null;
+
+  return (
+    <div className="mt-4 border border-[#189aa1]/20 rounded-xl overflow-hidden">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-4 py-2.5 bg-[#f0fbfc] hover:bg-[#e0f7f8] transition-colors"
+      >
+        <div className="text-left">
+          <span className="text-sm font-bold text-[#0e7490]" style={{ fontFamily: "Merriweather, serif" }}>Stroke Volume & Cardiac Output Calculator</span>
+          <span className="block text-xs text-[#189aa1]/70 mt-0.5">LVOT method · SV = CSA × VTI · CO = SV × HR</span>
+        </div>
+        {open ? <ChevronUp className="w-4 h-4 text-[#189aa1] flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-[#189aa1] flex-shrink-0" />}
+      </button>
+      {open && (
+        <div className="p-4 space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <NumInput label="LVOT Diameter" value={lvotD} onChange={setLvotD} unit="cm" placeholder="e.g. 2.0" hint="(nl 1.8–2.2 cm)" />
+            <NumInput label="LVOT VTI" value={lvotVti} onChange={setLvotVti} unit="cm" placeholder="e.g. 22" hint="(nl 18–25 cm)" />
+            <NumInput label="Heart Rate" value={hr} onChange={setHr} unit="bpm" placeholder="e.g. 72" />
+            <NumInput label="BSA (optional)" value={bsa} onChange={setBsa} unit="m²" placeholder="e.g. 1.7" hint="(for CI; default 1.7)" />
+          </div>
+          {lvotArea !== null && (
+            <p className="text-xs text-gray-400">LVOT CSA: {lvotArea.toFixed(2)} cm²</p>
+          )}
+          {sv !== null && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="rounded-lg p-3 border" style={{
+                borderColor: svNormal === "normal" ? "#16a34a40" : svNormal === "low" ? "#dc262640" : "#f9731640",
+                background: svNormal === "normal" ? "#f0fdf4" : svNormal === "low" ? "#fef2f2" : "#fff7ed",
+              }}>
+                <div className="text-xs text-gray-500 mb-0.5">Stroke Volume</div>
+                <div className="text-2xl font-black" style={{ fontFamily: "JetBrains Mono, monospace", color: svNormal === "normal" ? "#16a34a" : svNormal === "low" ? "#dc2626" : "#f97316" }}>
+                  {sv.toFixed(1)} <span className="text-sm font-normal text-gray-500">mL</span>
+                </div>
+                <div className="text-xs text-gray-400 mt-0.5">
+                  {svNormal === "normal" ? "✓ Normal (60–100 mL)" : svNormal === "low" ? "↓ Low (<60 mL)" : "↑ High (>100 mL)"}
+                </div>
+              </div>
+              {co !== null && (
+                <div className="rounded-lg p-3 border" style={{
+                  borderColor: coNormal === "normal" ? "#16a34a40" : coNormal === "low" ? "#dc262640" : "#f9731640",
+                  background: coNormal === "normal" ? "#f0fdf4" : coNormal === "low" ? "#fef2f2" : "#fff7ed",
+                }}>
+                  <div className="text-xs text-gray-500 mb-0.5">Cardiac Output</div>
+                  <div className="text-2xl font-black" style={{ fontFamily: "JetBrains Mono, monospace", color: coNormal === "normal" ? "#16a34a" : coNormal === "low" ? "#dc2626" : "#f97316" }}>
+                    {co.toFixed(2)} <span className="text-sm font-normal text-gray-500">L/min</span>
+                  </div>
+                  <div className="text-xs text-gray-400 mt-0.5">
+                    {coNormal === "normal" ? "✓ Normal (4–8 L/min)" : coNormal === "low" ? "↓ Low (<4 L/min)" : "↑ High (>8 L/min)"}
+                  </div>
+                </div>
+              )}
+              {ci !== null && (
+                <div className="rounded-lg p-3 border border-gray-200 bg-gray-50">
+                  <div className="text-xs text-gray-500 mb-0.5">Cardiac Index</div>
+                  <div className="text-2xl font-black text-gray-700" style={{ fontFamily: "JetBrains Mono, monospace" }}>
+                    {ci.toFixed(2)} <span className="text-sm font-normal text-gray-500">L/min/m²</span>
+                  </div>
+                  <div className="text-xs text-gray-400 mt-0.5">
+                    {ci >= 2.2 ? "✓ Normal (≥2.2)" : "↓ Low (<2.2)"} {!has(bsa) ? "(BSA assumed 1.7 m²)" : ""}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          {sv !== null && (
+            <EchoAssistPanel output={{
+              suggests: `SV = ${sv.toFixed(1)} mL${co !== null ? ", CO = " + co.toFixed(2) + " L/min" : ""}${ci !== null ? ", CI = " + ci.toFixed(2) + " L/min/m²" : ""}. ${svNormal === "normal" ? "Stroke volume is within normal limits." : svNormal === "low" ? "Reduced stroke volume may indicate impaired LV systolic function, hypovolemia, or significant valvular disease." : "Elevated stroke volume may reflect high-output states such as anemia, sepsis, or significant AR/MR."}`,
+              tip: "LVOT diameter is the most critical measurement for SV accuracy. A 1 mm error in LVOT diameter results in approximately 10% error in SV. Measure in PLAX view at the aortic annulus level, inner-edge to inner-edge, in mid-systole.",
+            }} />
+          )}
+          <p className="text-xs text-gray-400 mt-1">Reference: ASE/WFTF 2018 Chamber Quantification; Quinones et al. JASE 2002</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── HOCM LVOT GRADIENT SUB-SECTION (embedded inside LV SystolicAssist™) ─────
+function HOCMLVOTSubSection() {
+  const [lvotGrad, setLvotGrad] = useState("");
+  const [provGrad, setProvGrad] = useState("");
+  const [open, setOpen] = useState(false);
+
+  const baseGrad = has(lvotGrad) ? n(lvotGrad) : null;
+  const provGradVal = has(provGrad) ? n(provGrad) : null;
+
+  const getGradSeverity = (g: number | null) => {
+    if (g === null) return null;
+    if (g >= 50) return { label: "Significant Obstruction (≥50 mmHg)", color: "#dc2626", bg: "#fef2f2", border: "#fca5a5" };
+    if (g >= 30) return { label: "Moderate Obstruction (30–49 mmHg)", color: "#f97316", bg: "#fff7ed", border: "#fdba74" };
+    if (g >= 16) return { label: "Mild Obstruction (16–29 mmHg)", color: "#d97706", bg: "#fffbeb", border: "#fcd34d" };
+    return { label: "No Significant Obstruction (<16 mmHg)", color: "#16a34a", bg: "#f0fdf4", border: "#86efac" };
+  };
+
+  const baseSev = getGradSeverity(baseGrad);
+  const provSev = getGradSeverity(provGradVal);
+
+  return (
+    <div className="mt-3 border border-[#189aa1]/20 rounded-xl overflow-hidden">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-4 py-2.5 bg-[#f0fbfc] hover:bg-[#e0f7f8] transition-colors"
+      >
+        <div className="text-left">
+          <span className="text-sm font-bold text-[#0e7490]" style={{ fontFamily: "Merriweather, serif" }}>HOCM LVOT Gradient Calculator</span>
+          <span className="block text-xs text-[#189aa1]/70 mt-0.5">Resting & Provocable gradients · Obstruction severity · ASE/AHA thresholds</span>
+        </div>
+        {open ? <ChevronUp className="w-4 h-4 text-[#189aa1] flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-[#189aa1] flex-shrink-0" />}
+      </button>
+      {open && (
+        <div className="p-4 space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <NumInput label="Resting LVOT Gradient" value={lvotGrad} onChange={setLvotGrad} unit="mmHg" placeholder="e.g. 45" hint="(significant ≥50)" />
+            <NumInput label="Provocable Gradient" value={provGrad} onChange={setProvGrad} unit="mmHg" placeholder="e.g. 65" hint="(Valsalva/exercise)" />
+          </div>
+          {baseSev && (
+            <div className="rounded-lg p-3 border" style={{ background: baseSev.bg, borderColor: baseSev.border }}>
+              <div className="text-xs text-gray-500 mb-0.5">Resting Gradient</div>
+              <div className="text-base font-bold" style={{ color: baseSev.color }}>{baseGrad} mmHg — {baseSev.label}</div>
+              <div className="text-xs text-gray-500 mt-1">
+                {baseGrad !== null && baseGrad >= 50
+                  ? "Meets threshold for significant LVOT obstruction. Consider septal reduction therapy if symptomatic despite GDMT."
+                  : baseGrad !== null && baseGrad >= 30
+                  ? "Moderate resting obstruction. Assess provocable gradient with Valsalva or exercise. Avoid vasodilators and dehydration."
+                  : "Resting gradient does not meet criteria for significant obstruction. Evaluate provocable gradient if clinically suspected."
+                }
+              </div>
+            </div>
+          )}
+          {provSev && (
+            <div className="rounded-lg p-3 border" style={{ background: provSev.bg, borderColor: provSev.border }}>
+              <div className="text-xs text-gray-500 mb-0.5">Provocable Gradient</div>
+              <div className="text-base font-bold" style={{ color: provSev.color }}>{provGradVal} mmHg — {provSev.label}</div>
+              <div className="text-xs text-gray-500 mt-1">
+                {provGradVal !== null && provGradVal >= 50
+                  ? "Provocable obstruction ≥50 mmHg is hemodynamically significant. Symptoms with exertion may be attributable to LVOT obstruction."
+                  : "Provocable gradient does not reach the threshold for significant obstruction (≥50 mmHg)."
+                }
+              </div>
+            </div>
+          )}
+          {(baseSev || provSev) && (
+            <div className="text-xs text-gray-400 bg-gray-50 rounded-lg p-3 border border-gray-100">
+              <span className="font-semibold text-gray-600">Clinical Note: </span>
+              Significant LVOT obstruction is defined as peak gradient ≥50 mmHg (resting or provocable). Medical therapy: beta-blockers, disopyramide, or mavacamten (per AHA/ACC 2020 HCM Guidelines).
+            </div>
+          )}
+          <p className="text-xs text-gray-400 mt-1">Reference: <a href="https://www.asecho.org/wp-content/uploads/2020/08/2020-AHA-ACC-HCM-Guideline.pdf" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#189aa1]">AHA/ACC 2020 HCM Guidelines</a></p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── LV SYSTOLIC FUNCTION ENGINE ─────────────────────────────────────────────
 function LVSystolicEngine() {
   const [ef, setEf] = useState("");
@@ -731,7 +900,7 @@ function LVSystolicEngine() {
   };
 
   return (
-    <EngineSection id="engine-lv" title="LV Systolic Function" subtitle="EF · Dimensions · Wall thickness · FS">
+    <EngineSection id="engine-lv" title="LV SystolicAssist™" subtitle="EF · FS · LV Mass · LV Dimensions · SV/CO · HOCM LVOT Gradient">
       <div className="grid grid-cols-2 gap-3">
         <NumInput label="Ejection Fraction (EF)" value={ef} onChange={setEf} unit="%" placeholder="nl ≥55" hint="(nl ≥55%)" />
         <NumInput label="Fractional Shortening" value={fs} onChange={setFs} unit="%" placeholder="nl 25–43" />
@@ -746,8 +915,14 @@ function LVSystolicEngine() {
       <EchoAssistPanel output={getLvEchoAssist()} />
       <div className="flex flex-wrap gap-2 mt-1">
         <CalcLink tabId="lv" label="LV Function + GLS" />
-        <CalcLink tabId="sv" label="Stroke Volume / CO" />
       </div>
+
+      {/* ─── Stroke Volume & Cardiac Output Sub-Section ─────────────────────── */}
+      <SVCOSubSection />
+
+      {/* ─── HOCM LVOT Gradient Sub-Section ──────────────────────────────────── */}
+      <HOCMLVOTSubSection />
+
       {/* StressEchoAssist™ link-card */}
       <a href="/stress-echo-assist" className="mt-3 flex items-center gap-3 p-3 rounded-xl border border-[#189aa1]/30 bg-[#f0fbfc] hover:bg-[#e0f7f8] transition-all group">
         <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "#189aa1" }}>
@@ -885,84 +1060,134 @@ function DiastolicEngine() {
   const hasInput = hasStep1 || hasStep2;
 
   // ── Main grading logic ──────────────────────────────────────────────────────
+  const epSeptalEntered = epSeptalVal !== null;
+  const epLateralEntered = epLateralVal !== null;
+  const avgEpNum = avgEp ?? 0;
+
   return (
-    <EngineSection id="engine-diastolic" title="DiastologyAssist™" subtitle="ASE 2025 · Step 1: e' assessment · Step 2: E/e' · LARS · E/A · LAVI">
+    <EngineSection id="engine-diastolic" title="Diastolic Function Assessment" subtitle="ASE 2025 · Step 1: Myocardial Relaxation (e’) · Step 2: Filling Pressure Markers">
       {/* STEP 1 */}
-      <div className="mb-3">
-        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Step 1 — Is e' Reduced?</p>
-        <div className="grid grid-cols-2 gap-3">
-          <NumInput label="e' Septal" value={ePrimeSep} onChange={setEPrimeSep} unit="cm/s" placeholder="nl >7" hint="(nl >7 cm/s)" />
-          <NumInput label="e' Lateral" value={ePrimeLat} onChange={setEPrimeLat} unit="cm/s" placeholder="nl >10" hint="(nl >10 cm/s)" />
+      <div className="border border-[#189aa1]/30 rounded-xl p-4 space-y-3 bg-[#f8feff]">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-xs font-bold uppercase tracking-wider text-white bg-[#189aa1] px-2 py-0.5 rounded-full">Step 1</span>
+          <span className="text-sm font-semibold text-[#189aa1]">Myocardial Relaxation (e’)</span>
         </div>
+        <div className="grid grid-cols-2 gap-3">
+          <NumInput label="e’ Septal" value={ePrimeSep} onChange={setEPrimeSep} unit="cm/s" placeholder="e.g. 5" hint="Reduced ≤6 cm/s" />
+          <NumInput label="e’ Lateral" value={ePrimeLat} onChange={setEPrimeLat} unit="cm/s" placeholder="e.g. 7" hint="Reduced ≤7 cm/s" />
+        </div>
+        {epSeptalEntered && epLateralEntered && (
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-xs text-gray-500">Average e’:</span>
+            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+              avgEpNum <= 6.5 ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
+            }`}>
+              {avgEpNum.toFixed(1)} cm/s {avgEpNum <= 6.5 ? "↓ Reduced (≤6.5)" : "✓ Normal (>6.5)"}
+            </span>
+          </div>
+        )}
         {hasStep1 && (
-          <div className="mt-2 p-2.5 rounded-lg text-xs font-medium" style={{ background: (eReduced ? "#dc262610" : "#15803d10"), color: (eReduced ? "#dc2626" : "#15803d"), border: `1px solid ${eReduced ? "#dc262630" : "#15803d30"}` }}>
-            {avgEp !== null
-              ? `Avg e': ${avgEp.toFixed(1)} cm/s — ${eReduced ? "REDUCED (Step 1 ✔ positive)" : "Normal (Step 1 ✖ negative)"}`
-              : epSeptalVal !== null
-                ? `Septal e': ${epSeptalVal} cm/s — ${septalReduced ? "REDUCED (Step 1 ✔ positive)" : "Normal (Step 1 ✖ negative)"}`
-                : `Lateral e': ${epLateralVal} cm/s — ${lateralReduced ? "REDUCED (Step 1 ✔ positive)" : "Normal (Step 1 ✖ negative)"}`
-            }
-            {eReduced && <span className="block mt-0.5 text-gray-500 font-normal">Threshold: septal ≤6 cm/s · lateral ≤7 cm/s · avg ≤6.5 cm/s</span>}
+          <div className="flex flex-wrap gap-2 mt-1">
+            {epSeptalEntered && (
+              <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                septalReduced ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
+              }`}>
+                Septal {epSeptalVal} cm/s {septalReduced ? "↓ Reduced" : "✓ Normal"}
+              </span>
+            )}
+            {epLateralEntered && (
+              <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                lateralReduced ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
+              }`}>
+                Lateral {epLateralVal} cm/s {lateralReduced ? "↓ Reduced" : "✓ Normal"}
+              </span>
+            )}
           </div>
         )}
       </div>
 
       {/* STEP 2 */}
-      <div>
-        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Step 2 — Count Abnormal Markers (need ≥2 if e' preserved, ≥1 if e' reduced)</p>
+      <div className="border border-[#189aa1]/30 rounded-xl p-4 space-y-3 bg-[#f8feff]">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-xs font-bold uppercase tracking-wider text-white bg-[#189aa1] px-2 py-0.5 rounded-full">Step 2</span>
+          <span className="text-sm font-semibold text-[#189aa1]">Filling Pressure Markers</span>
+        </div>
         <div className="grid grid-cols-2 gap-3">
-          <NumInput label="E velocity" value={eVel} onChange={setEVel} unit="m/s" placeholder="e.g. 0.8" />
-          <NumInput label="A velocity" value={aVel} onChange={setAVel} unit="m/s" placeholder="e.g. 0.6" />
-          <NumInput label="LARS" value={lars} onChange={setLars} unit="%" placeholder="nl >18" hint="(nl >18%)" />
-          <NumInput label="LAVI" value={lavi} onChange={setLavi} unit="mL/m²" placeholder="nl ≤34" hint="(nl ≤34)" />
+          <NumInput label="E velocity" value={eVel} onChange={setEVel} unit="m/s" placeholder="e.g. 0.85" hint="For E/e’ and E/A" />
+          <NumInput label="A velocity" value={aVel} onChange={setAVel} unit="m/s" placeholder="e.g. 0.65" hint="E/A ≤0.8 or ≥2 = abnormal" />
+          <NumInput label="LA Reservoir Strain (LARS)" value={lars} onChange={setLars} unit="%" placeholder="e.g. 22" hint="Abnormal ≤18%" />
+          <NumInput label="LAVI" value={lavi} onChange={setLavi} unit="mL/m²" placeholder="e.g. 38" hint="Abnormal >34" />
         </div>
         {hasStep2 && (
-          <div className="mt-2 space-y-1">
+          <div className="flex flex-wrap gap-2 mt-1">
             {eeRatio !== null && (
-              <div className={`flex items-center gap-2 text-xs p-1.5 rounded ${eeAbnormal ? "text-red-600 bg-red-50" : "text-green-700 bg-green-50"}`}>
-                <span className="font-bold">{eeAbnormal ? "✔" : "✖"}</span>
-                <span>E/e&apos; avg = {eeRatio.toFixed(1)} {eeAbnormal ? "(>14 — abnormal)" : "(≤14 — normal)"}</span>
-              </div>
-            )}
-            {larsVal !== null && (
-              <div className={`flex items-center gap-2 text-xs p-1.5 rounded ${larsAbnormal ? "text-red-600 bg-red-50" : "text-green-700 bg-green-50"}`}>
-                <span className="font-bold">{larsAbnormal ? "✔" : "✖"}</span>
-                <span>LARS = {larsVal}% {larsAbnormal ? "(≤18% — abnormal)" : "(>18% — normal)"}</span>
-              </div>
+              <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                eeAbnormal ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
+              }`}>
+                E/e’ avg {eeRatio.toFixed(1)} {eeAbnormal ? "↑ >14" : "✓ ≤14"}
+              </span>
             )}
             {eaRatio !== null && (
-              <div className={`flex items-center gap-2 text-xs p-1.5 rounded ${eaAbnormal ? "text-red-600 bg-red-50" : "text-green-700 bg-green-50"}`}>
-                <span className="font-bold">{eaAbnormal ? "✔" : "✖"}</span>
-                <span>E/A = {eaRatio.toFixed(2)} {eaAbnormal ? "(≤0.8 or ≥2 — abnormal)" : "(0.8–2 — normal)"}</span>
-              </div>
+              <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                eaAbnormal ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
+              }`}>
+                E/A {eaRatio.toFixed(2)} {eaAbnormal ? "↑ Abnormal" : "✓ Normal"}
+              </span>
+            )}
+            {larsVal !== null && (
+              <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                larsAbnormal ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
+              }`}>
+                LARS {larsVal}% {larsAbnormal ? "↓ ≤18%" : "✓ >18%"}
+              </span>
             )}
             {laviVal !== null && (
-              <div className={`flex items-center gap-2 text-xs p-1.5 rounded ${laviAbnormal ? "text-red-600 bg-red-50" : "text-green-700 bg-green-50"}`}>
-                <span className="font-bold">{laviAbnormal ? "✔" : "✖"}</span>
-                <span>LAVI = {laviVal} mL/m² {laviAbnormal ? "(>34 — abnormal)" : "(≤34 — normal)"}</span>
-              </div>
+              <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
+                laviAbnormal ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"
+              }`}>
+                LAVI {laviVal} mL/m² {laviAbnormal ? "↑ >34" : "✓ ≤34"}
+              </span>
             )}
-            {step2Total > 0 && (
-              <p className="text-xs text-gray-500 mt-1">{step2Count} of {step2Total} entered markers abnormal</p>
-            )}
+          </div>
+        )}
+        {hasStep2 && (
+          <div className="text-xs text-gray-400">
+            {step2Count}/{step2Total} marker{step2Total !== 1 ? "s" : ""} abnormal
           </div>
         )}
       </div>
 
       {/* RESULT */}
-      {hasInput && grade && (
-        <div className="mt-3 p-3 rounded-lg border" style={{ borderColor: gradeColor + "40", background: gradeColor + "08" }}>
-          <p className="text-sm font-bold" style={{ color: gradeColor }}>{grade}</p>
-          {gradeNote && <p className="text-xs text-gray-500 mt-1">{gradeNote}</p>}
-          {ddPresent === true && <p className="text-xs font-medium mt-1" style={{ color: "#dc2626" }}>✔ Diastolic Dysfunction Detected</p>}
-          {ddPresent === false && <p className="text-xs font-medium mt-1" style={{ color: "#15803d" }}>✖ No Diastolic Dysfunction Detected</p>}
+      {hasInput && (
+        <div className={`rounded-lg p-3 border ${
+          ddPresent === true ? "bg-red-50 border-red-200" :
+          ddPresent === false ? "bg-green-50 border-green-200" :
+          "bg-gray-50 border-gray-200"
+        }`}>
+          <div className="text-sm font-bold mb-0.5" style={{ color: gradeColor }}>
+            {grade || "Enter parameters to classify"}
+          </div>
+          {gradeNote && <div className="text-xs text-gray-500 mt-0.5">{gradeNote}</div>}
+          {hasStep1 && (
+            <div className="text-xs text-gray-500 bg-white/60 rounded-lg p-2 border border-gray-100 mt-2 space-y-1">
+              <div className="font-semibold text-gray-600 mb-1">Decision Logic</div>
+              <div>• e’ status: <span className={`font-semibold ${eReduced ? "text-red-600" : !eReduced && hasStep1 ? "text-green-600" : "text-gray-400"}`}>
+                {eReduced ? "Reduced" : hasStep1 ? "Preserved" : "Not yet entered"}
+              </span></div>
+              {hasStep2 && (
+                <div>• Step 2 markers: <span className="font-semibold">{step2Count} of {step2Total} abnormal</span></div>
+              )}
+              {eReduced && hasStep2 && (
+                <div className="text-[#189aa1]">→ DD present if ≥1 Step 2 marker abnormal</div>
+              )}
+              {!eReduced && hasStep1 && hasStep2 && (
+                <div className="text-[#189aa1]">→ DD present if ≥2 Step 2 markers abnormal</div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
-      <div className="flex flex-wrap gap-2 mt-3">
-        <CalcLink tabId="lap_estimation" label="LAP Estimation" />
-        <CalcLink tabId="diastology_special" label="Special Populations" />
-      </div>
       <p className="text-xs text-gray-400 mt-3">Reference: <a href="https://www.asecho.org/wp-content/uploads/2025/07/Left-Ventricular-Diastolic-Function.pdf" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#189aa1] transition-colors">ASE 2025 Left Ventricular Diastolic Function Guidelines (Nagueh et al., JASE 2025)</a></p>
     </EngineSection>
   );
@@ -1041,7 +1266,7 @@ function StrainEngine() {
   const raResult = getRarsSeverity();
 
   return (
-    <EngineSection id="engine-strain" title="Myocardial Strain (ASE 2025)" subtitle="LV GLS · RV Free Wall Strain · LA Reservoir Strain · RA Reservoir Strain">
+    <EngineSection id="engine-strain" title="Myocardial StrainAssist™" subtitle="LV GLS · RV Free Wall Strain · LA Reservoir Strain · RA Reservoir Strain">
       <div className="grid grid-cols-2 gap-3">
         <NumInput label="LV GLS" value={lvGls} onChange={setLvGls} unit="%" placeholder="nl ≤ −18" hint="(nl ≤ −18%)" />
         <NumInput label="LV Strain Rate" value={lvSr} onChange={setLvSr} unit="s⁻¹" placeholder="nl ≤ −1.0" />
@@ -1142,7 +1367,31 @@ function StrainEngine() {
   );
 }
 
-// ─── RV FUNCTION ENGINE ───────────────────────────────────────────────────────
+// ─── MYOCARDIAL STRAINASSIST SUB-SECTION (embedded inside RV SystolicAssist) ─
+function StrainAssistSubSection() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-4 border border-[#189aa1]/20 rounded-xl overflow-hidden">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-4 py-2.5 bg-[#f0fbfc] hover:bg-[#e0f7f8] transition-colors"
+      >
+        <div className="text-left">
+          <span className="text-sm font-bold text-[#0e7490]" style={{ fontFamily: "Merriweather, serif" }}>Myocardial StrainAssist™</span>
+          <span className="block text-xs text-[#189aa1]/70 mt-0.5">LV GLS · RV Free Wall Strain · LA Reservoir Strain · RA Reservoir Strain</span>
+        </div>
+        {open ? <ChevronUp className="w-4 h-4 text-[#189aa1] flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-[#189aa1] flex-shrink-0" />}
+      </button>
+      {open && (
+        <div className="p-4">
+          <StrainEngine />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── RV SYSTOLIC FUNCTION ENGINE ─────────────────────────────────────────────
 function RVFunctionEngine() {
   const [tapse, setTapse] = useState("");
   const [rvSPrime, setRvSPrime] = useState("");
@@ -1234,6 +1483,10 @@ function RVFunctionEngine() {
         <CalcLink tabId="rv" label="RV Function + Strain" />
         <CalcLink tabId="rvsp" label="RVSP / PAP" />
       </div>
+
+      {/* ─── Myocardial StrainAssist Sub-Section ──────────────────────────── */}
+      <StrainAssistSubSection />
+
       <p className="text-xs text-gray-400 mt-3">Reference: <a href='https://www.asecho.org/wp-content/uploads/2025/03/PIIS0894731725000379.pdf' target='_blank' rel='noopener noreferrer' className='underline hover:text-[#189aa1]'>ASE 2025 Right Heart & PH Guidelines</a>; ASE 2025 Strain Guideline</p>
     </EngineSection>
   );
@@ -2760,30 +3013,27 @@ export default function EchoAssist() {
 
         {/* Engine sections */}
         <div className="space-y-4">
-          {/* 1. LV SystolicAssist group (LV EF/FS/Mass/Dim + SV/CO) */}
+          {/* 1. LV SystolicAssist™ (EF/FS/Mass/Dim + SV/CO + HOCM LVOT) */}
           <LVSystolicEngine />
-          <StrokeVolumeEngine />
-          {/* 2. DiastologyAssist group */}
+          {/* 2. DiastologyAssist™ group (Diastolic Function Assessment + LAP + Special Populations) */}
           <DiastolicEngine />
           <LAPEstimationEngine />
           <DiastologySpecialPopulations />
-          {/* 3-7. Valve engines */}
+          {/* 3–7. Valve engines */}
           <AorticStenosisEngine />
           <AorticRegurgEngine />
           <MitraStenosisEngine />
           <MitralRegurgEngine />
           <TricuspidRegurgEngine />
-          {/* 8. RV */}
+          {/* 8. RV SystolicAssist (with Myocardial StrainAssist™ nested inside) */}
           <RVFunctionEngine />
-          {/* 9. Pulmonary HTN */}
+          {/* 9. PulmonaryHTNAssist */}
           <PulmonaryHTNEngine />
           {/* 10. POCUS-Assist */}
           <POCUSAssistEngine />
           {/* 11. Frank-Starling */}
           <FrankStarlingEngine />
-          {/* 12. Strain (Premium) */}
-          <StrainEngine />
-          {/* 13. Stress Echo (Premium) */}
+          {/* 12. Stress Echo (Premium) */}
           <PremiumOverlay featureName="StressEchoAssist™">
             <StressEchoAssistEngine />
           </PremiumOverlay>

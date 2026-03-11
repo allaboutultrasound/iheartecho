@@ -2078,3 +2078,16 @@
 - [ ] Rebuild EchoAccreditation Navigator with accurate IAC standards content (Adult, Pediatric/Fetal, Perioperative TEE)
 - [ ] Ensure all tag options have referenced content in Accreditation Navigator
 - [ ] Add CME/Personnel breakdown by role (Medical Director, Medical Staff, Technical Director, Technical Staff) and Adult/Pediatric differentiation
+
+- [ ] Fix EchoAssist engine order: LV Systolic (EF/FS/Mass/Dim + SV/CO + HOCM LVOT) → DiastologyAssist (Diastology Assessment + LAP + Special Pops) → AS → AR → MS → MR → TR → RV Systolic → PulmHTN → POCUS-Assist → Frank-Starling → Premium (Strain, StressEcho)
+- [ ] Move SV/CO calculator inside LV Systolic section (not standalone between LV and Diastology)
+- [ ] Ensure Diastology Assessment uses ONLY Step 1 + Step 2 format
+
+## EchoAssist Engine Reorder (Completed)
+- [x] Rename LVSystolicEngine section to "LV SystolicAssist™"
+- [x] Embed Stroke Volume & Cardiac Output Calculator inside LV SystolicAssist™
+- [x] Add HOCM LVOT Gradient Calculator inside LV SystolicAssist™
+- [x] Restore Step 1/Step 2 card design for Diastolic Function Assessment (matching original EchoCalculator design)
+- [x] Nest all three diastology engines under DiastologyAssist™ (Diastolic Function Assessment + LAP Estimation + Special Populations)
+- [x] Move Myocardial StrainAssist™ inside RV SystolicAssist section (no longer standalone)
+- [x] Fix main render order: LV SystolicAssist → DiastologyAssist → AS → AR → MS → MR → TR → RV Systolic → PulmHTN → POCUS-Assist → Frank-Starling → StressEchoAssist
