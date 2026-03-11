@@ -97,6 +97,7 @@ export default function ThinkificWebhookAdmin() {
     revoked:        events.filter(e => e.outcome === "revoked").length,
     errors:         events.filter(e => e.outcome === "error").length,
     ignored:        events.filter(e => e.outcome === "ignored").length,
+    filtered:       events.filter(e => e.outcome === "filtered").length,
   };
 
   const handleCopy = () => {
@@ -159,11 +160,15 @@ export default function ThinkificWebhookAdmin() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="bg-[#f0fbfc] rounded-lg p-3">
-                <div className="text-xs font-semibold text-[#189aa1] mb-1">Required Events</div>
-                <ul className="text-xs text-gray-600 space-y-0.5">
+                <div className="text-xs font-semibold text-[#189aa1] mb-2">Subscribe to These Events Only</div>
+                <ul className="text-xs text-gray-600 space-y-1">
                   <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> order.created</li>
                   <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> subscription.cancelled</li>
+                  <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> subscription.activated</li>
+                  <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> enrollment.created</li>
+                  <li className="flex items-center gap-1.5"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> enrollment.updated</li>
                 </ul>
+                <p className="text-[10px] text-gray-400 mt-2">All other event types are immediately filtered (logged but not processed).</p>
               </div>
               <div className="bg-[#f0fbfc] rounded-lg p-3">
                 <div className="text-xs font-semibold text-[#189aa1] mb-1">Where to Configure</div>
@@ -181,14 +186,66 @@ export default function ThinkificWebhookAdmin() {
           </CardContent>
         </Card>
 
+        {/* Active Filter Rules */}
+        <Card className="mb-6 border-amber-200 bg-amber-50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2 text-amber-800">
+              <Shield className="w-4 h-4 text-amber-600" />
+              Active Filter Rules
+            </CardTitle>
+            <CardDescription className="text-amber-700 text-xs">
+              The webhook handler applies two gates before processing any event. Events that fail either gate are logged with outcome <strong>filtered</strong> and no database changes are made.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs font-semibold text-amber-800 mb-2">Gate 1 — Allowed Event Types</p>
+                <div className="space-y-1">
+                  {["order.created", "subscription.cancelled", "subscription.activated", "enrollment.created", "enrollment.updated"].map(e => (
+                    <div key={e} className="flex items-center gap-2 text-xs text-amber-900">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-600 flex-shrink-0" />
+                      <code className="bg-white/60 px-1.5 py-0.5 rounded font-mono">{e}</code>
+                    </div>
+                  ))}
+                  <p className="text-[10px] text-amber-600 mt-1">All other resource/action combinations → filtered immediately</p>
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-amber-800 mb-2">Gate 2 — Relevant Product Names</p>
+                <div className="space-y-2">
+                  <div>
+                    <p className="text-[10px] font-semibold text-amber-700 uppercase tracking-wider mb-1">Premium App Access</p>
+                    <div className="flex flex-wrap gap-1">
+                      {["iHeartEcho App - Premium Access", "iHeartEcho Premium Access"].map(p => (
+                        <span key={p} className="inline-block bg-white/60 text-amber-900 text-[10px] font-mono px-1.5 py-0.5 rounded border border-amber-200">{p}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold text-amber-700 uppercase tracking-wider mb-1">DIY Accreditation Memberships</p>
+                    <div className="flex flex-wrap gap-1">
+                      {["DIY Accreditation", "Accreditation Membership", "Lab Director", "Lab Admin"].map(p => (
+                        <span key={p} className="inline-block bg-white/60 text-amber-900 text-[10px] font-mono px-1.5 py-0.5 rounded border border-amber-200">{p}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-amber-600">Products not matching either group → filtered (no role changes)</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Stats row */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
           <StatCard label="Total Events" value={stats.total} color="#189aa1" />
           <StatCard label="Granted" value={stats.granted} color="#10b981" />
           <StatCard label="Pending Created" value={stats.pending} color="#3b82f6" />
           <StatCard label="Revoked" value={stats.revoked} color="#ef4444" />
-          <StatCard label="Errors" value={stats.errors} color="#f97316" />
+          <StatCard label="Filtered" value={stats.filtered} color="#d97706" />
           <StatCard label="Ignored" value={stats.ignored} color="#9ca3af" />
+          <StatCard label="Errors" value={stats.errors} color="#f97316" />
         </div>
 
         {/* Test tool */}

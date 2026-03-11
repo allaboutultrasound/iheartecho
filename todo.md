@@ -2166,3 +2166,10 @@
 - [x] Build PlatformAdmin hub page with card buttons for each admin section (Case Management, Daily Challenge, ScanCoach Editor, Thinkific Webhook)
 - [x] Remove individual admin sub-links from profile menu; kept single "Platform Management" link
 - [x] /platform-admin route already registered in App.tsx
+
+## Thinkific Webhook Filtering
+- [x] Audit existing webhook handler event processing logic
+- [x] Add event type allowlist: order.created, subscription.cancelled, subscription.activated, enrollment.created, enrollment.updated
+- [x] Add product name allowlist: Premium App Access (isPremiumProduct) + DIY Accreditation memberships (isDIYProduct)
+- [x] DIY product handler: assigns diy_admin for Lab Director/Admin tier, diy_user for sonographer seats
+- [x] Update Thinkific Webhook admin UI: Active Filter Rules panel with Gate 1 (event types) and Gate 2 (product names), Filtered stat card added
