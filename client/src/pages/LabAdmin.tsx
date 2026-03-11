@@ -1580,7 +1580,7 @@ function AnalyticsReportingTab({ lab, members }: { lab: any; members: any[] }) {
     <div className="space-y-4">
       {/* Sub-tab nav */}
       <div className="flex gap-1 p-1 rounded-lg overflow-x-auto" style={{ background: "#f0fbfc" }}>
-        <SubTabBtn active={subTab === "analytics"} onClick={() => setSubTab("analytics")} icon={BarChart2} label="IQR Analytics" />
+        <SubTabBtn active={subTab === "analytics"} onClick={() => setSubTab("analytics")} icon={BarChart2} label="Quality Improvement Analytics" />
         <SubTabBtn active={subTab === "cme"} onClick={() => setSubTab("cme")} icon={Award} label="CME Progress" />
         <SubTabBtn active={subTab === "reports"} onClick={() => setSubTab("reports")} icon={Download} label="Reports & Export" />
       </div>
