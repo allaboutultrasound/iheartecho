@@ -2248,3 +2248,6 @@
 - [ ] Origin-tracking: enrollment link from iHeartEcho adds ?ref=iheartecho param; post-enrollment redirect back to app.iheartecho.com/enrolled
 - [ ] Create /enrolled welcome page for users returning from Thinkific free enrollment
 - [ ] Write tests for free enrollment webhook handler
+
+## Enrolled Decision-Tree Landing Page
+- [x] Redesign /enrolled as a post-enrollment decision-tree: two paths — All About Ultrasound Community and iHeartEcho App

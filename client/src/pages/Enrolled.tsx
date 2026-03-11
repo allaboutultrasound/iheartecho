@@ -1,114 +1,239 @@
 /*
-  iHeartEcho™ — Post-Enrollment Welcome Page
-  Shown to users who complete the Thinkific free membership enrollment
-  and are redirected back to iHeartEcho via the redirect_url parameter.
-  Brand: Teal #189aa1, Aqua #4ad9e0
+  iHeartEcho™ — Post-Enrollment Decision-Tree Landing Page
+  Shown after completing the free All About Ultrasound membership enrollment.
+  Two paths: All About Ultrasound Community | iHeartEcho Clinical Companion App
+  Brand: Teal #189aa1, Aqua #4ad9e0, Dark navy #0e1e2e
 */
 import { useEffect } from "react";
 import { Link } from "wouter";
-import { CheckCircle2, Heart, Stethoscope, BookOpen, Zap, LogIn } from "lucide-react";
+import {
+  CheckCircle2,
+  Users,
+  Stethoscope,
+  ArrowRight,
+  MessageCircle,
+  Calculator,
+  BookOpen,
+  Zap,
+  Heart,
+  ExternalLink,
+} from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 
-const FEATURES = [
-  { icon: Stethoscope, label: "EchoAssist™ Calculators", desc: "Guideline-based severity interpretation for AS, MR, TR, and more." },
-  { icon: Zap,         label: "Daily Echo Challenge",    desc: "Sharpen your skills with a new clinical question every day." },
-  { icon: BookOpen,    label: "Echo Case Library",       desc: "Browse annotated echo cases with teaching points." },
-  { icon: Heart,       label: "Echo Flashcards",         desc: "Rapid-fire review of key echo concepts and measurements." },
+const COMMUNITY_FEATURES = [
+  { icon: MessageCircle, text: "Connect with sonographers & cardiologists worldwide" },
+  { icon: BookOpen,      text: "Access exclusive All About Ultrasound member content" },
+  { icon: Users,         text: "Join live Q&A sessions and community discussions" },
+];
+
+const APP_FEATURES = [
+  { icon: Stethoscope, text: "EchoAssist™ — guideline-based severity interpretation" },
+  { icon: Calculator,  text: "Echo calculators for AS, MR, TR, AR, diastology & more" },
+  { icon: Zap,         text: "Daily Echo Challenge to sharpen your clinical skills" },
+  { icon: BookOpen,    text: "Echo Case Library with annotated teaching points" },
 ];
 
 export default function Enrolled() {
   const { isAuthenticated, loading } = useAuth();
 
-  // Scroll to top on mount
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center px-4 py-12"
-      style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}
+      className="min-h-screen flex flex-col"
+      style={{ background: "linear-gradient(160deg, #0e1e2e 0%, #0b3a40 50%, #0e1e2e 100%)" }}
     >
-      {/* Card */}
-      <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden">
-        {/* Header */}
-        <div
-          className="px-8 py-8 text-center"
-          style={{ background: "linear-gradient(135deg, #0e4a50, #189aa1)" }}
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      <header className="flex items-center justify-center gap-3 px-6 py-6">
+        <img
+          src="https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/TTSqgyHlTBmxeODV.png?Expires=1804183007&Signature=tWUrD-cUfgsk0u97qoBm0zB3mj75cGUW2F-hh-3aepkHA9QlDWUbfY2eqgxrIpyY2Zp3wTFpuBC7DXxtNjAMv5Ju2HBWLLcCgaGJrEB5X2wKLtoJQKscrbUUOXFV7xdwiJWP5zeVe7QNQaBw5zHqqyN6EYc6a0WovYLeHtUnM~vCz5pDvUh0L43UEpwlSVUZnU9ULfYO~ML9cpjCX-M~Uwb1QHUU2IxD7Qa9wMXw3nUhLxhbrUVdc-byWsUfQg5~PCwxH3jjLLq-4hlrBvFgkyB5QJJiqv6f~GM6bMh8jFE1GfWCAPzQVdcY97tgqT4GBExpYMkQ-K7AK83Fvd5zEg__&Key-Pair-Id=K2HSFNDJXOU9YS"
+          alt="iHeartEcho™"
+          className="w-10 h-10 object-contain"
+        />
+        <span
+          className="text-white font-bold text-lg"
+          style={{ fontFamily: "Merriweather, serif" }}
         >
-          <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
-              <CheckCircle2 className="w-9 h-9 text-white" />
-            </div>
-          </div>
-          <h1
-            className="text-2xl font-bold text-white mb-2"
-            style={{ fontFamily: "Merriweather, serif" }}
-          >
-            You're enrolled!
-          </h1>
-          <p className="text-white/80 text-sm leading-relaxed">
-            Your free iHeartEcho™ membership is active. Sign in to start using your clinical tools.
-          </p>
-        </div>
+          iHeartEcho™
+        </span>
+      </header>
 
-        {/* Body */}
-        <div className="px-8 py-6 space-y-5">
-          {/* Features preview */}
-          <div className="space-y-3">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-              What's included in your free membership
+      {/* ── Hero ───────────────────────────────────────────────────────────── */}
+      <div className="flex flex-col items-center text-center px-6 pt-4 pb-10">
+        <div className="w-14 h-14 rounded-full flex items-center justify-center mb-4"
+          style={{ background: "rgba(74, 217, 224, 0.15)", border: "1.5px solid rgba(74,217,224,0.4)" }}>
+          <CheckCircle2 className="w-7 h-7" style={{ color: "#4ad9e0" }} />
+        </div>
+        <h1
+          className="text-3xl md:text-4xl font-bold text-white mb-3 max-w-xl leading-tight"
+          style={{ fontFamily: "Merriweather, serif" }}
+        >
+          Welcome to All About Ultrasound!
+        </h1>
+        <p className="text-white/60 text-base max-w-md leading-relaxed">
+          Your free membership is active. Choose where you'd like to go next.
+        </p>
+      </div>
+
+      {/* ── Decision Cards ─────────────────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col lg:flex-row items-stretch justify-center gap-6 px-6 pb-12 max-w-5xl mx-auto w-full">
+
+        {/* ── Path 1: All About Ultrasound Community ── */}
+        <a
+          href="https://member.allaboutultrasound.com/hub/community/2601"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group flex flex-col flex-1 rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
+          style={{
+            background: "linear-gradient(160deg, #0e4a50 0%, #0a3540 100%)",
+            border: "1px solid rgba(74,217,224,0.2)",
+          }}
+        >
+          {/* Card header */}
+          <div
+            className="px-8 py-7 flex flex-col items-start gap-3"
+            style={{ borderBottom: "1px solid rgba(74,217,224,0.12)" }}
+          >
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center"
+              style={{ background: "rgba(74,217,224,0.15)" }}
+            >
+              <Users className="w-6 h-6" style={{ color: "#4ad9e0" }} />
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: "#4ad9e0" }}>
+                Community
+              </p>
+              <h2
+                className="text-xl font-bold text-white leading-snug"
+                style={{ fontFamily: "Merriweather, serif" }}
+              >
+                All About Ultrasound Community
+              </h2>
+            </div>
+            <p className="text-white/60 text-sm leading-relaxed">
+              Join the All About Ultrasound member community — connect, learn, and grow alongside fellow ultrasound professionals.
             </p>
-            {FEATURES.map(({ icon: Icon, label, desc }) => (
-              <div key={label} className="flex items-start gap-3">
+          </div>
+
+          {/* Features */}
+          <div className="px-8 py-6 flex flex-col gap-3 flex-1">
+            {COMMUNITY_FEATURES.map(({ icon: Icon, text }) => (
+              <div key={text} className="flex items-start gap-3">
                 <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
-                  style={{ background: "#189aa1" + "18" }}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
+                  style={{ background: "rgba(74,217,224,0.12)" }}
                 >
-                  <Icon className="w-4 h-4" style={{ color: "#189aa1" }} />
+                  <Icon className="w-3.5 h-3.5" style={{ color: "#4ad9e0" }} />
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-gray-800">{label}</p>
-                  <p className="text-xs text-gray-500 leading-relaxed">{desc}</p>
-                </div>
+                <p className="text-sm text-white/70 leading-relaxed">{text}</p>
               </div>
             ))}
           </div>
 
           {/* CTA */}
-          <div className="pt-2 space-y-2">
-            {loading ? null : isAuthenticated ? (
-              <Link href="/">
-                <button
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm text-white transition-all hover:opacity-90"
-                  style={{ background: "linear-gradient(135deg, #189aa1, #0e7490)" }}
+          <div className="px-8 pb-7">
+            <div
+              className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm transition-all duration-200 group-hover:gap-3"
+              style={{ background: "rgba(74,217,224,0.15)", color: "#4ad9e0", border: "1px solid rgba(74,217,224,0.3)" }}
+            >
+              <ExternalLink className="w-4 h-4" />
+              Go to Community
+              <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
+            </div>
+          </div>
+        </a>
+
+        {/* ── Divider (mobile: horizontal, desktop: vertical) ── */}
+        <div className="flex lg:flex-col items-center justify-center gap-3 flex-shrink-0">
+          <div className="flex-1 h-px lg:h-auto lg:w-px bg-white/10" />
+          <span
+            className="text-xs font-semibold px-3 py-1.5 rounded-full flex-shrink-0"
+            style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.4)" }}
+          >
+            or
+          </span>
+          <div className="flex-1 h-px lg:h-auto lg:w-px bg-white/10" />
+        </div>
+
+        {/* ── Path 2: iHeartEcho Clinical Companion App ── */}
+        <div
+          className="group flex flex-col flex-1 rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl cursor-pointer"
+          style={{
+            background: "linear-gradient(160deg, #0f3a50 0%, #0e2a3e 100%)",
+            border: "1px solid rgba(24,154,161,0.3)",
+          }}
+          onClick={() => {
+            if (!loading && isAuthenticated) {
+              window.location.href = "/";
+            } else {
+              window.location.href = getLoginUrl();
+            }
+          }}
+        >
+          {/* Card header */}
+          <div
+            className="px-8 py-7 flex flex-col items-start gap-3"
+            style={{ borderBottom: "1px solid rgba(24,154,161,0.15)" }}
+          >
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center"
+              style={{ background: "rgba(24,154,161,0.18)" }}
+            >
+              <Heart className="w-6 h-6" style={{ color: "#189aa1" }} />
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: "#189aa1" }}>
+                Clinical Tools
+              </p>
+              <h2
+                className="text-xl font-bold text-white leading-snug"
+                style={{ fontFamily: "Merriweather, serif" }}
+              >
+                iHeartEcho™ Clinical Companion
+              </h2>
+            </div>
+            <p className="text-white/60 text-sm leading-relaxed">
+              Real-time echo interpretation tools, clinical calculators, and daily learning — built for the clinical environment.
+            </p>
+          </div>
+
+          {/* Features */}
+          <div className="px-8 py-6 flex flex-col gap-3 flex-1">
+            {APP_FEATURES.map(({ icon: Icon, text }) => (
+              <div key={text} className="flex items-start gap-3">
+                <div
+                  className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
+                  style={{ background: "rgba(24,154,161,0.15)" }}
                 >
-                  <Heart className="w-4 h-4" />
-                  Go to Dashboard
-                </button>
-              </Link>
-            ) : (
-              <>
-                <a
-                  href={getLoginUrl()}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm text-white transition-all hover:opacity-90"
-                  style={{ background: "linear-gradient(135deg, #189aa1, #0e7490)" }}
-                >
-                  <LogIn className="w-4 h-4" />
-                  Sign In to iHeartEcho™
-                </a>
-                <p className="text-center text-xs text-gray-400">
-                  Use the same email you enrolled with on Thinkific.
-                </p>
-              </>
-            )}
+                  <Icon className="w-3.5 h-3.5" style={{ color: "#189aa1" }} />
+                </div>
+                <p className="text-sm text-white/70 leading-relaxed">{text}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <div className="px-8 pb-7">
+            <div
+              className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm transition-all duration-200 group-hover:gap-3"
+              style={{ background: "#189aa1", color: "#ffffff" }}
+            >
+              <Heart className="w-4 h-4" />
+              {loading ? "Loading…" : isAuthenticated ? "Go to Dashboard" : "Sign In to Explore"}
+              <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Footer note */}
-      <p className="mt-6 text-white/50 text-xs text-center max-w-sm">
-        Your account is linked to your All About Ultrasound membership. Any changes to your membership on Thinkific are reflected here automatically.
-      </p>
+      {/* ── Footer note ────────────────────────────────────────────────────── */}
+      <footer className="text-center pb-8 px-6">
+        <p className="text-white/30 text-xs max-w-sm mx-auto leading-relaxed">
+          Your membership is managed through All About Ultrasound. Any changes to your membership are automatically reflected in iHeartEcho™.
+        </p>
+      </footer>
     </div>
   );
 }
