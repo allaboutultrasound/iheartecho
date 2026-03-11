@@ -32,7 +32,6 @@ import {
   quickfireChallenges,
   users,
 } from "../../drizzle/schema";
-import { notifyOwner } from "../_core/notification";
 import { eq, and, desc, sql, gte, lte, count, inArray } from "drizzle-orm";
 import { sendStreakReminders } from "../streakReminders";
 import { generateVirtualLeaderboard } from "../leaderboardSeed";
@@ -1166,14 +1165,6 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
         publishedAt: now,
         archivedAt: null,
       }).where(eq(quickfireChallenges.id, next.id));
-
-      // 3. Send owner notification
-      if (input.sendNotification) {
-        await notifyOwner({
-          title: `🔥 New QuickFire Challenge Live: ${next.title}`,
-          content: `Challenge "${next.title}" is now live for 24 hours. Users have been notified.`,
-        }).catch(() => {});
-      }
 
       return { published: true, challengeId: next.id, title: next.title, publishDate: next.publishDate ?? today };
     }),

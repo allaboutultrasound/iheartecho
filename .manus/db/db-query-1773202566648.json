@@ -1,0 +1,40 @@
+{
+  "query": "SELECT id, setDate, questionIds, createdAt FROM quickfireDailySets ORDER BY createdAt DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mhhtxpXA9Esras.root --database etVPnUidWNWG8W4GHnRqzv --execute SELECT id, setDate, questionIds, createdAt FROM quickfireDailySets ORDER BY createdAt DESC LIMIT 5;",
+  "rows": [
+    {
+      "id": "90001",
+      "setDate": "2026-03-11",
+      "questionIds": "[60011,60002,60004,60050,30018]",
+      "createdAt": "2026-03-11 00:02:38"
+    },
+    {
+      "id": "60001",
+      "setDate": "2026-03-10",
+      "questionIds": "[60046,60002,60004,30050,30002]",
+      "createdAt": "2026-03-10 00:00:49"
+    },
+    {
+      "id": "30003",
+      "setDate": "2026-03-09",
+      "questionIds": "[30011,30021,30028,7,30042]",
+      "createdAt": "2026-03-09 01:28:53"
+    },
+    {
+      "id": "3",
+      "setDate": "2026-03-08",
+      "questionIds": "[7]",
+      "createdAt": "2026-03-08 01:24:04"
+    },
+    {
+      "id": "2",
+      "setDate": "2026-03-07",
+      "questionIds": "[]",
+      "createdAt": "2026-03-07 18:33:46"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tsetDate\tquestionIds\tcreatedAt\n90001\t2026-03-11\t[60011,60002,60004,60050,30018]\t2026-03-11 00:02:38\n60001\t2026-03-10\t[60046,60002,60004,30050,30002]\t2026-03-10 00:00:49\n30003\t2026-03-09\t[30011,30021,30028,7,30042]\t2026-03-09 01:28:53\n3\t2026-03-08\t[7]\t2026-03-08 01:24:04\n2\t2026-03-07\t[]\t2026-03-07 18:33:46\n",
+  "stderr": "",
+  "execution_time_ms": 69
+}

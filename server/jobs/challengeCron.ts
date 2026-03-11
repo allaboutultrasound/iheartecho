@@ -12,7 +12,6 @@
 import { getDb } from "../db";
 import { quickfireChallenges, quickfireDailySets, quickfireQuestions, users } from "../../drizzle/schema";
 import { eq, and, asc, lte } from "drizzle-orm";
-import { notifyOwner } from "../_core/notification";
 import sgMail from "@sendgrid/mail";
 
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY ?? "";
@@ -157,14 +156,9 @@ export async function runChallengeCron() {
       .orderBy(asc(quickfireChallenges.priority), asc(quickfireChallenges.createdAt))
       .limit(1);
 
-    const [nextDraft] = await db
-      .select()
-      .from(quickfireChallenges)
-      .where(eq(quickfireChallenges.status, "draft"))
-      .orderBy(asc(quickfireChallenges.priority), asc(quickfireChallenges.createdAt))
-      .limit(1);
-
-    const toPublish = nextScheduled ?? nextDraft;
+    // Only auto-publish drafts that have a publishDate <= today.
+    // Pure drafts (no publishDate) must be manually published by admin.
+    const toPublish = nextScheduled;
     if (!toPublish) {
       console.log("[ChallengeCron] No challenges queued for publishing.");
       return;
@@ -178,13 +172,7 @@ export async function runChallengeCron() {
 
     console.log(`[ChallengeCron] Published challenge #${toPublish.id}: "${toPublish.title}"`);
 
-    // ── Step 5: Notify owner ─────────────────────────────────────────────────
-    await notifyOwner({
-      title: "🔥 New Daily Challenge Live",
-      content: `Challenge "${toPublish.title}" (ID #${toPublish.id}) is now live. Users have 24 hours to participate.`,
-    }).catch(() => {});
-
-    // ── Step 6: Send email notifications to opted-in users ───────────────────
+    // ── Step 5: Send email notifications to opted-in users ───────────────────
     if (!SENDGRID_API_KEY) {
       console.log("[ChallengeCron] SendGrid not configured — skipping user emails.");
       return;

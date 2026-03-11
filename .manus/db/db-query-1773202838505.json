@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE quickfireChallenges SET status = 'draft', archivedAt = NULL, publishedAt = NULL WHERE id = (SELECT id FROM (SELECT id FROM quickfireChallenges ORDER BY createdAt DESC LIMIT 1) t);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mhhtxpXA9Esras.root --database etVPnUidWNWG8W4GHnRqzv --execute UPDATE quickfireChallenges SET status = 'draft', archivedAt = NULL, publishedAt = NULL WHERE id = (SELECT id FROM (SELECT id FROM quickfireChallenges ORDER BY createdAt DESC LIMIT 1) t);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 75
+}

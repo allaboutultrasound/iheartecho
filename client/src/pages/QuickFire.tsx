@@ -119,8 +119,9 @@ export default function QuickFire() {
   const [activeTab, setActiveTab] = useState<"challenge" | "archive" | "performance" | "leaderboard">("challenge");
 
   // ── Daily Challenge state ──────────────────────────────────────────────────
-  const { data, isLoading, error, refetch } = trpc.quickfire.getTodaySet.useQuery(undefined, {
-    enabled: isAuthenticated,
+  // Uses the new challenge system (1 question per challenge from quickfireChallenges)
+  const { data, isLoading, error, refetch } = trpc.quickfire.getLiveChallenge.useQuery(undefined, {
+    refetchInterval: 5 * 60 * 1000, // re-check every 5 min in case a new challenge goes live
   });
   const statsQuery = trpc.quickfire.getUserStats.useQuery(undefined, {
     enabled: isAuthenticated,
@@ -150,7 +151,7 @@ export default function QuickFire() {
   const [orderSubmitted, setOrderSubmitted] = useState(false);
 
   const allQuestions = data?.questions ?? [];
-  const userAttempts = data?.userAttempts ?? {};
+  const userAttempts = (data?.userAttempts ?? {}) as Record<number, { selectedAnswer: number | null; selfMarkedCorrect: boolean | null; isCorrect: boolean | null }>;
 
   const presentTags = CATEGORY_TAGS.filter((cat) =>
     allQuestions.some((q) => Array.isArray(q.tags) && q.tags.includes(cat))

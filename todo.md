@@ -2132,3 +2132,6 @@
 - [x] Admin creation forms for Connect, Identifier, and Order game types: confirmed all three are fully implemented in QuickFireAdmin.tsx (Connect: dynamic pair inputs; Identifier: image upload + click-to-place markers; Order: numbered item list with add/remove)
 - [x] Reorder EchoAssist engine sections to: 1. LV SystolicAssist, 2. DiastologyAssist (Diastolic+LAP+Special Pops), 3. StressEchoAssist, 4. MyocardialStrainAssist, 5. AS, 6. AR, 7. MS, 8. MR, 9. TR, 10. PulmonaryHypertensionAssist, 11. RV SystolicAssist, 12. POCUS-Assist, 13. Frank Starling — also removed StrainAssistSubSection from inside RVFunctionEngine since Strain is now its own top-level section
 - [x] Fix review submission error — widened 40+ short varchar columns (varchar(5/10/20/50)) in imageQualityReviews to varchar(300) to prevent MySQL data truncation errors; db:push applied
+- [ ] Remove Manus-branded email from daily challenge — only iHeartEcho branded emails should be sent
+- [ ] Move daily challenge email from queue-add to publish time (when daily set is actually activated)
+- [ ] Archive the 5 old challenges, leave only the new queued one

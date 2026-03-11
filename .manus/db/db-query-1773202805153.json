@@ -1,0 +1,30 @@
+{
+  "query": "SELECT id, title, status, publishDate, publishedAt, archivedAt, questionIds, createdAt FROM quickfireChallenges ORDER BY createdAt ASC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mhhtxpXA9Esras.root --database etVPnUidWNWG8W4GHnRqzv --execute SELECT id, title, status, publishDate, publishedAt, archivedAt, questionIds, createdAt FROM quickfireChallenges ORDER BY createdAt ASC;",
+  "rows": [
+    {
+      "id": "1",
+      "title": "A patient has mitral stenosis. PHT is 220 ms. What is the...",
+      "status": "live",
+      "publishDate": "2026-03-11",
+      "publishedAt": "2026-03-11 03:54:07",
+      "archivedAt": "NULL",
+      "questionIds": "[60067]",
+      "createdAt": "2026-03-11 03:53:22"
+    },
+    {
+      "id": "2",
+      "title": "Which diastolic parameter is most affected by loading con...",
+      "status": "live",
+      "publishDate": "2026-03-11",
+      "publishedAt": "2026-03-11 03:52:10",
+      "archivedAt": "NULL",
+      "questionIds": "[60056]",
+      "createdAt": "2026-03-11 03:53:51"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\tstatus\tpublishDate\tpublishedAt\tarchivedAt\tquestionIds\tcreatedAt\n1\tA patient has mitral stenosis. PHT is 220 ms. What is the...\tlive\t2026-03-11\t2026-03-11 03:54:07\tNULL\t[60067]\t2026-03-11 03:53:22\n2\tWhich diastolic parameter is most affected by loading con...\tlive\t2026-03-11\t2026-03-11 03:52:10\tNULL\t[60056]\t2026-03-11 03:53:51\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}
