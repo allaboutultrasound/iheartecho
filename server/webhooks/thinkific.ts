@@ -32,7 +32,8 @@
 import { Router, Request, Response } from "express";
 import { getDb } from "../db";
 import { webhookEvents } from "../../drizzle/schema";
-import { getUserByEmail, setPremiumStatus, createPendingUser, assignRole, removeRole } from "../db";
+import { getUserByEmail, setPremiumStatus, createPendingUser, assignRole, removeRole, ensureUserRole, markThinkificEnrolled } from "../db";
+import { syncCatalogToDb } from "../routers/cmeRouter";
 
 // ── Allowed event allowlist ──────────────────────────────────────────────────
 /** Only these resource+action pairs will be processed. Everything else is filtered. */
@@ -42,6 +43,10 @@ const ALLOWED_EVENTS: Array<{ resource: string; action: string }> = [
   { resource: "subscription", action: "activated" },
   { resource: "enrollment",   action: "created"   },
   { resource: "enrollment",   action: "updated"   },
+  // product.* events trigger a background catalog re-sync
+  { resource: "product",      action: "created"   },
+  { resource: "product",      action: "updated"   },
+  { resource: "product",      action: "deleted"   },
 ];
 
 function isAllowedEvent(resource: string, action: string): boolean {
@@ -169,6 +174,27 @@ export function registerThinkificWebhook(app: Router) {
         console.log(`[Thinkific Webhook] ${msg}`);
         await logWebhookEvent({ resource, action, httpStatus: 200, outcome: "filtered", message: msg, rawPayload: payload });
         return res.status(200).json({ ok: true, message: msg });
+      }
+
+      // ── 0. product.* events → trigger background catalog re-sync ──────────
+      // These are catalog management events, not membership events.
+      // Respond immediately and kick off a background sync.
+      if (resource === "product") {
+        const productPayload = payload as { id?: number; name?: string } | undefined;
+        const productId = productPayload?.id;
+        const allowedProductActions = ["created", "updated", "deleted"];
+        if (!allowedProductActions.includes(action)) {
+          const msg = `ignored: product.${action} is not a handled product action`;
+          await logWebhookEvent({ resource, action, httpStatus: 200, outcome: "ignored", message: msg, rawPayload: payload });
+          return res.status(200).json({ ok: true, message: msg });
+        }
+        // Respond immediately — sync runs in background
+        res.status(200).json({ ok: true, message: `product.${action} received — catalog sync queued`, productId });
+        // Fire-and-forget catalog sync
+        syncCatalogToDb().catch(err => {
+          console.error("[Thinkific Webhook] Background catalog sync failed:", err);
+        });
+        return res;
       }
 
       // ── Gate 2: Product relevance filter ─────────────────────────────────
@@ -326,9 +352,11 @@ async function grantAccess(params: {
         const role = diyRoleForProduct(productName);
         await assignRole(pendingUserId, role, 0 /* system/webhook grant */);
       } else if (isFreeProduct(productName)) {
-        // Free membership — user role is the default; no additional role needed.
-        // The pending account creation itself gives them basic access.
-        console.log(`[Thinkific Webhook] Free membership enrolled for ${userEmail} — basic access granted.`);
+        // Free membership — ensure base "user" role is assigned and mark enrollment timestamp.
+        // No email is sent — Thinkific handles all enrollment communications.
+        await ensureUserRole(pendingUserId);
+        await markThinkificEnrolled(pendingUserId);
+        console.log(`[Thinkific Webhook] Free membership enrolled for ${userEmail} (userId=${pendingUserId}) — user role confirmed, thinkificEnrolledAt set.`);
       }
       const msg = `pending account created and access granted for ${userEmail} ("${productName}")`;
       console.log(`[Thinkific Webhook] ${msg} (userId=${pendingUserId})`);
@@ -348,8 +376,11 @@ async function grantAccess(params: {
     const role = diyRoleForProduct(productName);
     await assignRole(user.id, role, 0 /* system/webhook grant */);
   } else if (isFreeProduct(productName)) {
-    // Free membership — user role is the default; no additional role needed.
-    console.log(`[Thinkific Webhook] Free membership enrolled for ${userEmail} (userId=${user.id}) — basic access confirmed.`);
+    // Free membership — ensure base "user" role is assigned and mark enrollment timestamp.
+    // No email is sent — Thinkific handles all enrollment communications.
+    await ensureUserRole(user.id);
+    await markThinkificEnrolled(user.id);
+    console.log(`[Thinkific Webhook] Free membership enrolled for ${userEmail} (userId=${user.id}) — user role confirmed, thinkificEnrolledAt set.`);
   }
 
   const msg = `access granted to ${userEmail} (userId=${user.id}) for "${productName}"`;

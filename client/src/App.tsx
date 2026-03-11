@@ -89,6 +89,7 @@ import DIYLabAdmin from "./pages/DIYLabAdmin";
 import DIYMemberPortal from "./pages/DIYMemberPortal";
 import DIYAccreditationPlans from "./pages/DIYAccreditationPlans";
 import DIYRegister from "./pages/DIYRegister";
+import Enrolled from "./pages/Enrolled";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -200,11 +201,11 @@ function Router() {
       <Route path="/diy-accreditation-plans" component={DIYAccreditationPlans} />
       <Route path="/diy-register" component={DIYRegister} />
       <Route path="/diy-lab-admin">{() => <RoleGuard roles={["diy_admin"]} allowAdmin={false}><DIYLabAdmin /></RoleGuard>}</Route>
-      <Route path="/diy-member">{() => <RoleGuard roles={["diy_user", "diy_admin"]} allowAdmin={false}><DIYMemberPortal /></RoleGuard>}</Route>
-      {/* ── Premium Access ──────────────────────────────────────────────── */}
+      <Route path="/diy-member">{() => <RoleGuard roles={["diy_user", "diy_admin"]} allowAdmin={false}><DIYMemberPortal /></RoleGuard>}</Route>      {/* ── Premium Access ────────────────────────────────────────────────── */}
       <Route path="/premium" component={Premium} />
       <Route path="/upgrade-success" component={UpgradeSuccess} />
-      {/* ── Physician Over-Read (public, token-based) ─────────────────── */}
+      {/* ── Post-enrollment return from Thinkific free membership ────────── */}
+      <Route path="/enrolled" component={Enrolled} />      {/* ── Physician Over-Read (public, token-based) ─────────────────── */}
       <Route path="/physician-review/:token" component={PhysicianOverReadForm} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

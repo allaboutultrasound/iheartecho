@@ -2241,3 +2241,10 @@
 - [x] Fix PremiumGate pricing text ($19.97 → $9.97)
 - [x] Fix PremiumLockOverlay upgrade URL (iheartecho.com → Thinkific link)
 - [x] Restrict Report Builder to authenticated users
+
+## Free Enrollment Webhook (no charge - previously requested)
+- [ ] Fix 4 failing product.* webhook tests (product.created/updated/deleted should trigger syncCatalogToDb)
+- [ ] Free enrollment webhook: isFreeProduct() match for product 3241567 ("Free Membership") provisions user with base "user" role + marks thinkificEnrolledAt (no email sent)
+- [ ] Origin-tracking: enrollment link from iHeartEcho adds ?ref=iheartecho param; post-enrollment redirect back to app.iheartecho.com/enrolled
+- [ ] Create /enrolled welcome page for users returning from Thinkific free enrollment
+- [ ] Write tests for free enrollment webhook handler

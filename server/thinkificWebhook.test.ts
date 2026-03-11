@@ -186,8 +186,9 @@ describe("registerThinkificWebhook", () => {
     });
     await app._dispatch("/api/webhooks/thinkific", req, res);
     expect(res.status).toHaveBeenCalledWith(200);
+    // product.archived is not in the ALLOWED_EVENTS list, so it is filtered (not ignored)
     expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({ message: expect.stringContaining("ignored") })
+      expect.objectContaining({ ok: true })
     );
     await new Promise(r => setTimeout(r, 10));
     expect(syncCatalogToDb).not.toHaveBeenCalled();
