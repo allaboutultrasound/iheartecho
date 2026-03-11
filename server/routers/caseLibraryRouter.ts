@@ -133,12 +133,9 @@ export const caseLibraryRouter = router({
       if (input.modality) conditions.push(eq(echoLibraryCases.modality, input.modality));
       if (input.difficulty) conditions.push(eq(echoLibraryCases.difficulty, input.difficulty));
       if (input.search) {
+        const searchTerm = `%${input.search.toLowerCase()}%`;
         conditions.push(
-          or(
-            like(echoLibraryCases.title, `%${input.search}%`),
-            like(echoLibraryCases.summary, `%${input.search}%`),
-            like(echoLibraryCases.diagnosis, `%${input.search}%`)
-          )
+          sql`(LOWER(${echoLibraryCases.title}) LIKE ${searchTerm} OR LOWER(${echoLibraryCases.summary}) LIKE ${searchTerm} OR LOWER(${echoLibraryCases.diagnosis}) LIKE ${searchTerm})`
         );
       }
 
@@ -945,17 +942,15 @@ export const caseLibraryRouter = router({
         );
       }
       if (input.search) {
+        const searchTerm = `%${input.search.toLowerCase()}%`;
         conditions.push(
-          or(
-            like(echoLibraryCases.title, `%${input.search}%`),
-            like(echoLibraryCases.diagnosis, `%${input.search}%`),
-            like(echoLibraryCases.tags, `%${input.search}%`)
-          )
+          sql`(LOWER(${echoLibraryCases.title}) LIKE ${searchTerm} OR LOWER(${echoLibraryCases.diagnosis}) LIKE ${searchTerm} OR LOWER(${echoLibraryCases.tags}) LIKE ${searchTerm})`
         );
       }
       // Tag filter: search within JSON tags array
       if (input.tag) {
-        conditions.push(like(echoLibraryCases.tags, `%${input.tag}%`));
+        const tagTerm = `%${input.tag.toLowerCase()}%`;
+        conditions.push(sql`LOWER(${echoLibraryCases.tags}) LIKE ${tagTerm}`);
       }
 
       const where = conditions.length > 0 ? and(...conditions) : undefined;

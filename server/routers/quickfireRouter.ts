@@ -559,8 +559,8 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
         conditions.push(eq(quickfireQuestions.echoCategory, input.echoCategory));
       }
       if (input.search) {
-        const term = `%${input.search}%`;
-        conditions.push(sql`(${quickfireQuestions.question} LIKE ${term} OR ${quickfireQuestions.reviewAnswer} LIKE ${term} OR ${quickfireQuestions.explanation} LIKE ${term})`);
+        const term = `%${input.search.toLowerCase()}%`;
+        conditions.push(sql`(LOWER(${quickfireQuestions.question}) LIKE ${term} OR LOWER(${quickfireQuestions.reviewAnswer}) LIKE ${term} OR LOWER(${quickfireQuestions.explanation}) LIKE ${term})`);
       }
 
       const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
