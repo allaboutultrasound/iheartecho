@@ -1601,6 +1601,13 @@ export const appRouter = router({
       if (!lab) return [];
       return getCaseMixSubmissions(lab.id);
     }),
+    /** Get only the current user's own case submissions */
+    myList: protectedProcedure.query(async ({ ctx }) => {
+      const lab = await getLabByMemberUserId(ctx.user.id);
+      if (!lab) return [];
+      const all = await getCaseMixSubmissions(lab.id);
+      return all.filter(c => c.submittedByUserId === ctx.user.id);
+    }),
     /** Get case mix summary (counts by modality/caseType) */
     summary: protectedProcedure.query(async ({ ctx }) => {
       const lab = await getLabByMemberUserId(ctx.user.id);

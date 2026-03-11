@@ -2321,6 +2321,251 @@ export function DIYReportsTab({ isProfessionalPlus = true }: { isProfessionalPlu
   );
 }
 
+// ─── User Case Study Submission ─────────────────────────────────────────────
+function UserCaseStudySubmission() {
+  const utils = trpc.useUtils();
+  const { data: labStaff } = trpc.caseMix.getLabStaff.useQuery();
+  const { data: mySubmissions, isLoading } = trpc.caseMix.myList.useQuery();
+  const createCase = trpc.caseMix.create.useMutation({
+    onSuccess: () => {
+      toast.success("Case study submitted successfully.");
+      utils.caseMix.list.invalidate();
+      utils.caseMix.myList.invalidate();
+      setForm(defaultForm);
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const MODALITY_OPTIONS = [
+    { value: "ATTE", label: "Adult TTE" },
+    { value: "ATEE", label: "Adult TEE" },
+    { value: "STRESS", label: "Stress Echo" },
+    { value: "ACTE", label: "Adult Congenital TTE" },
+    { value: "PTTE", label: "Pediatric TTE" },
+    { value: "PTEE", label: "Pediatric TEE" },
+    { value: "FETAL", label: "Fetal Echo" },
+  ];
+
+  const CASE_TYPES_BY_MODALITY: Record<string, string[]> = {
+    ATTE: ["Routine Adult TTE", "Congenital Heart Disease", "Valvular Heart Disease", "Cardiomyopathy", "Pericardial Disease", "Aortic Disease", "Cardiac Mass/Thrombus", "Hemodynamic Assessment"],
+    ATEE: ["Intraoperative TEE", "Structural Heart Procedure", "Valvular Assessment", "Cardiac Mass/Thrombus", "Aortic Assessment", "Hemodynamic Monitoring"],
+    STRESS: ["Exercise Stress Echo", "Dobutamine Stress Echo", "Pharmacologic Stress Echo", "Valvular Stress Assessment"],
+    ACTE: ["ASD/VSD", "Fontan Circulation", "Tetralogy of Fallot", "Transposition of Great Arteries", "Coarctation of Aorta", "Other Congenital"],
+    PTTE: ["Routine Pediatric TTE", "Congenital Heart Disease", "Cardiomyopathy", "Pericardial Disease", "Kawasaki Disease", "Neonatal Echo"],
+    PTEE: ["Intraoperative Pediatric TEE", "Structural Heart Procedure", "Congenital Assessment"],
+    FETAL: ["Routine Fetal Echo", "Congenital Heart Disease Screening", "Arrhythmia Assessment", "Hydrops Fetalis", "Twin Pregnancy"],
+  };
+
+  const defaultForm = {
+    modality: "" as "ATTE" | "ATEE" | "STRESS" | "ACTE" | "PTTE" | "PTEE" | "FETAL" | "",
+    caseType: "",
+    studyIdentifier: "",
+    studyDate: "",
+    sonographerLabMemberId: undefined as number | undefined,
+    physicianLabMemberId: undefined as number | undefined,
+    isTechDirectorCase: false,
+    isMedDirectorCase: false,
+    notes: "",
+  };
+  const [form, setForm] = useState(defaultForm);
+
+  const caseTypeOptions = form.modality ? (CASE_TYPES_BY_MODALITY[form.modality] ?? []) : [];
+
+  const handleSubmit = () => {
+    if (!form.modality || !form.caseType || !form.studyIdentifier) {
+      toast.error("Please fill in Modality, Case Type, and Study Identifier.");
+      return;
+    }
+    createCase.mutate({
+      modality: form.modality as "ATTE" | "ATEE" | "STRESS" | "ACTE" | "PTTE" | "PTEE" | "FETAL",
+      caseType: form.caseType,
+      studyIdentifier: form.studyIdentifier,
+      studyDate: form.studyDate || undefined,
+      sonographerLabMemberId: form.sonographerLabMemberId,
+      physicianLabMemberId: form.physicianLabMemberId,
+      isTechDirectorCase: form.isTechDirectorCase,
+      isMedDirectorCase: form.isMedDirectorCase,
+      notes: form.notes || undefined,
+    });
+  };
+
+  const mySubmissionsList = mySubmissions ?? [];
+
+  return (
+    <div className="space-y-6">
+      {/* Info Banner */}
+      <div className="p-4 rounded-xl border border-[#189aa1]/20 bg-[#f0fbfc] flex items-start gap-3">
+        <Stethoscope className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: BRAND }} />
+        <div>
+          <p className="text-sm font-semibold text-gray-800 mb-0.5">Case Study Submission</p>
+          <p className="text-xs text-gray-600">Submit de-identified case studies to your lab's accreditation case mix tracker. Each case contributes to your lab's IAC accreditation case requirements. Do not enter any patient PHI — use de-identified study identifiers only.</p>
+        </div>
+      </div>
+
+      {/* Submission Form */}
+      <Card className="border border-[#189aa1]/20">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
+            <Plus className="w-4 h-4" style={{ color: BRAND }} />
+            Submit a New Case Study
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Modality *</label>
+              <Select value={form.modality} onValueChange={(v) => setForm(f => ({ ...f, modality: v as any, caseType: "" }))}>
+                <SelectTrigger className="h-9 text-xs">
+                  <SelectValue placeholder="Select modality" />
+                </SelectTrigger>
+                <SelectContent>
+                  {MODALITY_OPTIONS.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Case Type *</label>
+              <Select value={form.caseType} onValueChange={(v) => setForm(f => ({ ...f, caseType: v }))} disabled={!form.modality}>
+                <SelectTrigger className="h-9 text-xs">
+                  <SelectValue placeholder={form.modality ? "Select case type" : "Select modality first"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {caseTypeOptions.map(ct => <SelectItem key={ct} value={ct}>{ct}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Study Identifier * <span className="text-gray-400 font-normal">(de-identified only, no PHI)</span></label>
+              <Input className="h-9 text-xs" placeholder="e.g. ECHO-2024-0042" value={form.studyIdentifier} onChange={e => setForm(f => ({ ...f, studyIdentifier: e.target.value }))} />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Study Date</label>
+              <Input type="date" className="h-9 text-xs" value={form.studyDate} onChange={e => setForm(f => ({ ...f, studyDate: e.target.value }))} />
+            </div>
+          </div>
+
+          {labStaff && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Sonographer</label>
+                <Select
+                  value={form.sonographerLabMemberId?.toString() ?? ""}
+                  onValueChange={(v) => {
+                    const id = v ? parseInt(v) : undefined;
+                    const member = labStaff.sonographers.find(s => s.id === id);
+                    setForm(f => ({ ...f, sonographerLabMemberId: id, isTechDirectorCase: member?.role === "technical_director" }));
+                  }}
+                >
+                  <SelectTrigger className="h-9 text-xs">
+                    <SelectValue placeholder="Select sonographer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {labStaff.sonographers.map(s => (
+                      <SelectItem key={s.id} value={s.id.toString()}>
+                        {s.displayName ?? s.inviteEmail}{s.role === "technical_director" ? " [Tech Dir]" : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Interpreting Physician</label>
+                <Select
+                  value={form.physicianLabMemberId?.toString() ?? ""}
+                  onValueChange={(v) => {
+                    const id = v ? parseInt(v) : undefined;
+                    const member = labStaff.physicians.find(p => p.id === id);
+                    setForm(f => ({ ...f, physicianLabMemberId: id, isMedDirectorCase: member?.role === "medical_director" }));
+                  }}
+                >
+                  <SelectTrigger className="h-9 text-xs">
+                    <SelectValue placeholder="Select physician" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {labStaff.physicians.map(p => (
+                      <SelectItem key={p.id} value={p.id.toString()}>
+                        {p.displayName ?? p.inviteEmail}{p.role === "medical_director" ? " [Med Dir]" : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          <div>
+            <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Notes <span className="text-gray-400 font-normal">(optional)</span></label>
+            <Textarea className="text-xs min-h-[60px]" placeholder="Any relevant clinical notes (no PHI)..." value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} />
+          </div>
+
+          <div className="flex items-center justify-between pt-1">
+            <div className="flex items-center gap-4 text-xs text-gray-500">
+              {form.isTechDirectorCase && <span className="inline-flex items-center gap-1 text-[#189aa1] font-semibold"><CheckCircle className="w-3.5 h-3.5" /> Tech Director Case</span>}
+              {form.isMedDirectorCase && <span className="inline-flex items-center gap-1 text-[#189aa1] font-semibold"><CheckCircle className="w-3.5 h-3.5" /> Med Director Case</span>}
+            </div>
+            <Button size="sm" onClick={handleSubmit} disabled={createCase.isPending} className="text-white" style={{ background: BRAND }}>
+              {createCase.isPending ? <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Submitting...</> : <><Plus className="w-3.5 h-3.5 mr-1.5" /> Submit Case Study</>}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* My Submitted Cases */}
+      <div>
+        <h3 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+          <ClipboardList className="w-4 h-4" style={{ color: BRAND }} />
+          My Submitted Cases
+          {mySubmissionsList.length > 0 && <span className="text-xs font-semibold px-2 py-0.5 rounded-full text-white" style={{ background: BRAND }}>{mySubmissionsList.length}</span>}
+        </h3>
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8"><Loader2 className="w-5 h-5 animate-spin" style={{ color: BRAND }} /></div>
+        ) : mySubmissionsList.length === 0 ? (
+          <div className="text-center py-10 text-gray-400">
+            <Stethoscope className="w-8 h-8 mx-auto mb-2 opacity-40" />
+            <p className="text-sm">No case studies submitted yet.</p>
+            <p className="text-xs mt-1">Use the form above to submit your first case.</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {mySubmissionsList.map((c: any) => (
+              <div key={c.id} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 bg-white hover:border-[#189aa1]/30 transition-colors">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: BRAND + "15" }}>
+                  <Stethoscope className="w-4 h-4" style={{ color: BRAND }} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-bold text-gray-800">{c.studyIdentifier}</span>
+                    <span className="text-xs px-1.5 py-0.5 rounded font-medium" style={{ background: BRAND + "15", color: BRAND }}>{c.modality}</span>
+                    <span className="text-xs text-gray-500">{c.caseType}</span>
+                  </div>
+                  <div className="flex items-center gap-3 mt-0.5 text-xs text-gray-400">
+                    {c.studyDate && <span>{c.studyDate}</span>}
+                    {c.sonographerName && <span>Sono: {c.sonographerName}</span>}
+                    {c.physicianName && <span>MD: {c.physicianName}</span>}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {c.isTechDirectorCase && <span className="text-xs px-1.5 py-0.5 rounded font-semibold" style={{ background: "#0891b215", color: "#0891b2" }}>TD</span>}
+                  {c.isMedDirectorCase && <span className="text-xs px-1.5 py-0.5 rounded font-semibold" style={{ background: "#7c3aed15", color: "#7c3aed" }}>MD</span>}
+                  <span className={`text-xs px-1.5 py-0.5 rounded font-semibold ${
+                    c.status === "accepted" ? "bg-green-100 text-green-700" :
+                    c.status === "submitted" ? "bg-blue-100 text-blue-700" :
+                    c.status === "rejected" ? "bg-red-100 text-red-700" :
+                    "bg-gray-100 text-gray-600"
+                  }`}>{c.status === "draft" ? "Draft" : c.status === "submitted" ? "Submitted" : c.status === "accepted" ? "Accepted" : "Rejected"}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function AccreditationTool() {
   const { isAuthenticated, loading, user } = useAuth();
@@ -2333,8 +2578,8 @@ export default function AccreditationTool() {
   const isProfessionalPlus = labPlan === "professional" || labPlan === "enterprise";
   const searchString = useSearch();
   const params = new URLSearchParams(searchString);
-  const initialTab = (params.get("tab") as "iqr" | "sono-peer" | "peer" | "echo-correlation" | "auc" | "case-mix" | "policy" | "readiness" | "reports" | null) ?? "iqr";
-  const [activeTab, setActiveTab] = useState<"iqr" | "sono-peer" | "peer" | "echo-correlation" | "auc" | "case-mix" | "policy" | "readiness" | "reports" | "meetings">(initialTab as any);
+  const initialTab = (params.get("tab") as "iqr" | "sono-peer" | "peer" | "echo-correlation" | "auc" | "case-study" | "case-mix" | "policy" | "readiness" | "reports" | null) ?? "iqr";
+  const [activeTab, setActiveTab] = useState<"iqr" | "sono-peer" | "peer" | "echo-correlation" | "auc" | "case-study" | "case-mix" | "policy" | "readiness" | "reports" | "meetings">(initialTab as any);
 
   if (loading) {
     return (
@@ -2405,6 +2650,8 @@ export default function AccreditationTool() {
             <TabBtn active={activeTab === "peer"} onClick={() => setActiveTab("peer")} icon={Star} label="Physician Peer Review" />
             <TabBtn active={activeTab === "echo-correlation"} onClick={() => setActiveTab("echo-correlation")} icon={GitCompare} label="Echo Correlations" />
             <TabBtn active={activeTab === "auc"} onClick={() => setActiveTab("auc")} icon={BarChart2} label="Appropriate Use" />
+            {/* Case Study Submission — visible to all DIY members */}
+            <TabBtn active={activeTab === "case-study"} onClick={() => setActiveTab("case-study")} icon={Stethoscope} label="Submit Case Study" />
             {/* Admin-only tabs — visible to diy_admin and platform_admin only */}
             {isDiyAdmin && (
               <>
@@ -2450,6 +2697,7 @@ export default function AccreditationTool() {
           {activeTab === "peer" && <PhysicianPeerReview />}
           {activeTab === "policy" && <PolicyBuilderTab />}
           {activeTab === "auc" && <AppropriateUseTab />}
+          {activeTab === "case-study" && <UserCaseStudySubmission />}
           {activeTab === "readiness" && <AccreditationReadiness />}
           {activeTab === "case-mix" && <CaseMixSubmission initialView={(params.get("view") as "requirements" | "tracker" | null) ?? "requirements"} />}
           {activeTab === "reports" && <DIYReportsTab isProfessionalPlus={isProfessionalPlus} />}

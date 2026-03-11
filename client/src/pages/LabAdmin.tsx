@@ -237,7 +237,7 @@ const ACCREDITATION_TYPES = [
   {
     id: "adult_echo" as const,
     label: "Adult Echocardiography",
-    description: "TTE, TEE, Stress Echo, Strain — adult patients",
+    description: "TTE, TEE, Stress Echo — adult patients",
     icon: Stethoscope,
     color: BRAND,
   },
