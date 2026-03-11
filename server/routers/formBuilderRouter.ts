@@ -45,6 +45,11 @@ import {
   getFormSubmissionsByTemplate,
   updateFormSubmissionStatus,
   getActiveTemplateForFormType,
+  getFormSubmissionsForLab,
+  getFormSubmissionWithDetails,
+  getFormSubmissionStatsForLab,
+  getFormSubmissionStaffList,
+  type FormSubmissionFilter,
 } from "../db";
 
 // ─── Guard helper ─────────────────────────────────────────────────────────────
@@ -647,5 +652,79 @@ export const formBuilderRouter = router({
       await requirePlatformAdmin(ctx);
       await updateFormSubmissionStatus(input.id, input.status);
       return { success: true };
+    }),
+
+  /** List submissions for a lab with filters (lab admin or platform admin) */
+  listSubmissionsForLab: protectedProcedure
+    .input(z.object({
+      labId: z.number(),
+      formType: z.string().optional(),
+      templateId: z.number().optional(),
+      submittedByUserId: z.number().optional(),
+      status: z.enum(['draft', 'submitted', 'reviewed']).optional(),
+      dateFrom: z.date().optional(),
+      dateTo: z.date().optional(),
+      limit: z.number().min(1).max(200).default(50),
+      offset: z.number().min(0).default(0),
+    }))
+    .query(async ({ ctx, input }) => {
+      const roles = await getUserRoles(ctx.user.id);
+      const isPlatformAdmin = ctx.user.role === 'admin' || roles.includes('platform_admin');
+      const isLabAdmin = roles.includes('diy_admin');
+      if (!isPlatformAdmin && !isLabAdmin) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Lab admin access required' });
+      }
+      const filter: FormSubmissionFilter = {
+        labId: input.labId,
+        formType: input.formType,
+        templateId: input.templateId,
+        submittedByUserId: input.submittedByUserId,
+        status: input.status,
+        dateFrom: input.dateFrom,
+        dateTo: input.dateTo,
+        limit: input.limit,
+        offset: input.offset,
+      };
+      return getFormSubmissionsForLab(filter);
+    }),
+
+  /** Get detailed submission with parsed responses */
+  getSubmissionDetails: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const roles = await getUserRoles(ctx.user.id);
+      const isAdmin = ctx.user.role === 'admin' || roles.includes('platform_admin') || roles.includes('diy_admin');
+      const sub = await getFormSubmissionWithDetails(input.id);
+      if (!sub) throw new TRPCError({ code: 'NOT_FOUND' });
+      if (sub.submittedByUserId !== ctx.user.id && !isAdmin) {
+        throw new TRPCError({ code: 'FORBIDDEN' });
+      }
+      return { ...sub, responses: JSON.parse(sub.responses as unknown as string) as Record<string, string | string[]> };
+    }),
+
+  /** Get submission stats for a lab */
+  getSubmissionStats: protectedProcedure
+    .input(z.object({ labId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const roles = await getUserRoles(ctx.user.id);
+      const isPlatformAdmin = ctx.user.role === 'admin' || roles.includes('platform_admin');
+      const isLabAdmin = roles.includes('diy_admin');
+      if (!isPlatformAdmin && !isLabAdmin) {
+        throw new TRPCError({ code: 'FORBIDDEN' });
+      }
+      return getFormSubmissionStatsForLab(input.labId);
+    }),
+
+  /** Get list of staff who have submitted forms for a lab */
+  getSubmissionStaffList: protectedProcedure
+    .input(z.object({ labId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const roles = await getUserRoles(ctx.user.id);
+      const isPlatformAdmin = ctx.user.role === 'admin' || roles.includes('platform_admin');
+      const isLabAdmin = roles.includes('diy_admin');
+      if (!isPlatformAdmin && !isLabAdmin) {
+        throw new TRPCError({ code: 'FORBIDDEN' });
+      }
+      return getFormSubmissionStaffList(input.labId);
     }),
 });

@@ -32,6 +32,7 @@ import AccreditationReadiness from "./AccreditationReadiness";
 import CaseMixSubmission from "./CaseMixSubmission";
 import { PolicyBuilderTab, AppropriateUseTab } from "./AccreditationTool";
 import DynamicFormRenderer from "@/components/DynamicFormRenderer";
+import FormResponsesTab from "@/components/FormResponsesTab";
 import jsPDF from "jspdf";
 import {
   LineChart, Line, BarChart, Bar, RadarChart, Radar, PolarGrid,
@@ -1801,10 +1802,9 @@ function AccreditationSubmissionTab() {
   );
 }
 
-// ─── Analytics & Reporting Tabb ────────────────────────────────────────────────
+// ─── Analytics & Reporting Tab ────────────────────────────────────────────────
 function AnalyticsReportingTab({ lab, members }: { lab: any; members: any[] }) {
-  const [subTab, setSubTab] = useState<"analytics" | "cme" | "reports">("analytics");
-
+  const [subTab, setSubTab] = useState<"analytics" | "cme" | "reports" | "form_responses">("analytics");
   return (
     <div className="space-y-4">
       {/* Sub-tab nav */}
@@ -1812,15 +1812,15 @@ function AnalyticsReportingTab({ lab, members }: { lab: any; members: any[] }) {
         <SubTabBtn active={subTab === "analytics"} onClick={() => setSubTab("analytics")} icon={BarChart2} label="Quality Improvement Analytics" />
         <SubTabBtn active={subTab === "cme"} onClick={() => setSubTab("cme")} icon={Award} label="CME Progress" />
         <SubTabBtn active={subTab === "reports"} onClick={() => setSubTab("reports")} icon={Download} label="Reports & Export" />
+        <SubTabBtn active={subTab === "form_responses"} onClick={() => setSubTab("form_responses")} icon={ClipboardCheck} label="Form Responses" />
       </div>
-
       {subTab === "analytics" && <AnalyticsTab members={members} />}
       {subTab === "cme" && <CmeSummaryCard members={members} />}
       {subTab === "reports" && <ReportsTab lab={lab} members={members} />}
+       {subTab === "form_responses" && <FormResponsesTab lab={lab} members={members} />}
     </div>
   );
 }
-
 // ─── Main Lab Admin Page ──────────────────────────────────────────────────────
 export default function LabAdmin() {
   const { user, loading, isAuthenticated } = useAuth();

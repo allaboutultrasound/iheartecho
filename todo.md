@@ -2464,3 +2464,14 @@
 - [x] Fix /echoassist#engine-diastolic hash anchor to open Diastology section (EngineSection now initializes open from hash on mount)
 - [x] Fix Vite cache/preview errors — cleared node_modules/.vite, restarted server, 0 errors
 - [x] Fix pre-existing TS errors in QuickFireAdmin, SubmitCase, AdminCaseManagement, CaseEditorDialog (minHeight string→number)
+
+### Form Responses Sub-Tab (Mar 11 2026)
+- [x] Add DB helpers for querying form submissions with filters (formType, dateRange, staffId, labId)
+- [x] Add tRPC procedures: getFormSubmissions, getFormSubmissionDetail, getFormSubmissionStats
+- [x] Build FormResponsesTab component with list, filters, quality scores, and detail view
+- [x] Wire FormResponsesTab into Reports & Analytics in LabAdmin
+- [x] Write Vitest tests for new procedures
+## Seed Existing Forms as Templates (Mar 11 2026)
+- [x] Audit IQR, Sonographer Peer Review, Physician Peer Review, Case Mix form structures
+- [x] Write seed script to create all four templates in the database
+- [x] Run seed script and verify templates appear in Form Builder Admin

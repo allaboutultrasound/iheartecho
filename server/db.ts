@@ -2603,4 +2603,186 @@ export async function updateFormSubmissionStatus(id: number, status: 'draft' | '
   await db.update(accreditationFormSubmissions).set({ status, updatedAt: new Date() }).where(eq(accreditationFormSubmissions.id, id));
 }
 
+// ─── Form Responses: Advanced Query Helpers ─────────────────────────────────
+
+export interface FormSubmissionFilter {
+  labId: number;
+  formType?: string;
+  templateId?: number;
+  submittedByUserId?: number;
+  status?: 'draft' | 'submitted' | 'reviewed';
+  dateFrom?: Date;
+  dateTo?: Date;
+  limit?: number;
+  offset?: number;
+}
+
+export async function getFormSubmissionsForLab(filter: FormSubmissionFilter) {
+  const db = await getDb();
+  if (!db) return { rows: [], total: 0 };
+  // Resolve labId → adminUserId → diyOrganizations.ownerUserId → orgId
+  const labRow = await db
+    .select({ adminUserId: labSubscriptions.adminUserId })
+    .from(labSubscriptions)
+    .where(eq(labSubscriptions.id, filter.labId))
+    .limit(1);
+  const adminUserId = labRow[0]?.adminUserId;
+  if (!adminUserId) return { rows: [], total: 0 };
+  const orgRow = await db
+    .select({ orgId: diyOrganizations.id })
+    .from(diyOrganizations)
+    .where(eq(diyOrganizations.ownerUserId, adminUserId))
+    .limit(1);
+  const orgId = orgRow[0]?.orgId;
+  if (!orgId) return { rows: [], total: 0 };
+  const conditions: Parameters<typeof and>[0][] = [eq(accreditationFormSubmissions.orgId, orgId)];
+  if (filter.formType) conditions.push(eq(accreditationFormSubmissions.formType, filter.formType));
+  if (filter.templateId) conditions.push(eq(accreditationFormSubmissions.templateId, filter.templateId));
+  if (filter.submittedByUserId) conditions.push(eq(accreditationFormSubmissions.submittedByUserId, filter.submittedByUserId));
+  if (filter.status) conditions.push(eq(accreditationFormSubmissions.status, filter.status));
+  if (filter.dateFrom) conditions.push(gte(accreditationFormSubmissions.submittedAt, filter.dateFrom));
+  if (filter.dateTo) conditions.push(lte(accreditationFormSubmissions.submittedAt, filter.dateTo));
+  const whereClause = and(...conditions);
+  const countResult = await db
+    .select({ total: count() })
+    .from(accreditationFormSubmissions)
+    .where(whereClause);
+  const total = countResult[0]?.total ?? 0;
+  const rows = await db
+    .select({
+      id: accreditationFormSubmissions.id,
+      templateId: accreditationFormSubmissions.templateId,
+      formType: accreditationFormSubmissions.formType,
+      submittedByUserId: accreditationFormSubmissions.submittedByUserId,
+      reviewTargetType: accreditationFormSubmissions.reviewTargetType,
+      reviewTargetId: accreditationFormSubmissions.reviewTargetId,
+      qualityScore: accreditationFormSubmissions.qualityScore,
+      maxPossibleScore: accreditationFormSubmissions.maxPossibleScore,
+      status: accreditationFormSubmissions.status,
+      submittedAt: accreditationFormSubmissions.submittedAt,
+      updatedAt: accreditationFormSubmissions.updatedAt,
+      submitterName: users.name,
+      submitterDisplayName: users.displayName,
+      submitterEmail: users.email,
+      submitterCredentials: users.credentials,
+      templateName: accreditationFormTemplates.name,
+    })
+    .from(accreditationFormSubmissions)
+    .leftJoin(users, eq(accreditationFormSubmissions.submittedByUserId, users.id))
+    .leftJoin(accreditationFormTemplates, eq(accreditationFormSubmissions.templateId, accreditationFormTemplates.id))
+    .where(whereClause)
+    .orderBy(desc(accreditationFormSubmissions.submittedAt))
+    .limit(filter.limit ?? 50)
+    .offset(filter.offset ?? 0);
+  return { rows, total };
+}
+
+export async function getFormSubmissionWithDetails(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db
+    .select({
+      id: accreditationFormSubmissions.id,
+      templateId: accreditationFormSubmissions.templateId,
+      formType: accreditationFormSubmissions.formType,
+      submittedByUserId: accreditationFormSubmissions.submittedByUserId,
+      reviewTargetType: accreditationFormSubmissions.reviewTargetType,
+      reviewTargetId: accreditationFormSubmissions.reviewTargetId,
+      responses: accreditationFormSubmissions.responses,
+      qualityScore: accreditationFormSubmissions.qualityScore,
+      maxPossibleScore: accreditationFormSubmissions.maxPossibleScore,
+      status: accreditationFormSubmissions.status,
+      submittedAt: accreditationFormSubmissions.submittedAt,
+      updatedAt: accreditationFormSubmissions.updatedAt,
+      submitterName: users.name,
+      submitterDisplayName: users.displayName,
+      submitterEmail: users.email,
+      submitterCredentials: users.credentials,
+      templateName: accreditationFormTemplates.name,
+      templateFormType: accreditationFormTemplates.formType,
+    })
+    .from(accreditationFormSubmissions)
+    .leftJoin(users, eq(accreditationFormSubmissions.submittedByUserId, users.id))
+    .leftJoin(accreditationFormTemplates, eq(accreditationFormSubmissions.templateId, accreditationFormTemplates.id))
+    .where(eq(accreditationFormSubmissions.id, id))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+export async function getFormSubmissionStatsForLab(labId: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const labRow = await db
+    .select({ adminUserId: labSubscriptions.adminUserId })
+    .from(labSubscriptions)
+    .where(eq(labSubscriptions.id, labId))
+    .limit(1);
+  const adminUserId = labRow[0]?.adminUserId;
+  if (!adminUserId) return null;
+  const orgRow = await db
+    .select({ orgId: diyOrganizations.id })
+    .from(diyOrganizations)
+    .where(eq(diyOrganizations.ownerUserId, adminUserId))
+    .limit(1);
+  const orgId = orgRow[0]?.orgId;
+  if (!orgId) return null;
+  const where = eq(accreditationFormSubmissions.orgId, orgId);
+  const [totalResult, byTypeResult, avgScoreResult, recentResult] = await Promise.all([
+    db.select({ total: count() }).from(accreditationFormSubmissions).where(where),
+    db
+      .select({
+        formType: accreditationFormSubmissions.formType,
+        cnt: count(),
+        avgScore: avg(accreditationFormSubmissions.qualityScore),
+      })
+      .from(accreditationFormSubmissions)
+      .where(where)
+      .groupBy(accreditationFormSubmissions.formType),
+    db
+      .select({ avgScore: avg(accreditationFormSubmissions.qualityScore) })
+      .from(accreditationFormSubmissions)
+      .where(and(where, eq(accreditationFormSubmissions.status, 'submitted'))),
+    db
+      .select({ recent: count() })
+      .from(accreditationFormSubmissions)
+      .where(and(where, gte(accreditationFormSubmissions.submittedAt, new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)))),
+  ]);
+  return {
+    total: totalResult[0]?.total ?? 0,
+    byType: byTypeResult,
+    avgQualityScore: Number(avgScoreResult[0]?.avgScore ?? 0),
+    last30Days: recentResult[0]?.recent ?? 0,
+  };
+}
+
+export async function getFormSubmissionStaffList(labId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const labRow = await db
+    .select({ adminUserId: labSubscriptions.adminUserId })
+    .from(labSubscriptions)
+    .where(eq(labSubscriptions.id, labId))
+    .limit(1);
+  const adminUserId = labRow[0]?.adminUserId;
+  if (!adminUserId) return [];
+  const orgRow = await db
+    .select({ orgId: diyOrganizations.id })
+    .from(diyOrganizations)
+    .where(eq(diyOrganizations.ownerUserId, adminUserId))
+    .limit(1);
+  const orgId = orgRow[0]?.orgId;
+  if (!orgId) return [];
+  const rows = await db
+    .selectDistinct({
+      userId: accreditationFormSubmissions.submittedByUserId,
+      name: users.name,
+      displayName: users.displayName,
+      credentials: users.credentials,
+    })
+    .from(accreditationFormSubmissions)
+    .leftJoin(users, eq(accreditationFormSubmissions.submittedByUserId, users.id))
+    .where(eq(accreditationFormSubmissions.orgId, orgId));
+  return rows;
+}
+
 export type { AccreditationFormTemplateAssignment, InsertAccreditationFormTemplateAssignment, AccreditationFormSubmission, InsertAccreditationFormSubmission };
