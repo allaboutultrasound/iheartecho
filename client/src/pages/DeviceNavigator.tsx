@@ -9,6 +9,7 @@ import Layout from "@/components/Layout";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
 import { ChevronDown, ChevronUp, CheckCircle, Circle, Layers, Scan } from "lucide-react";
 import { Link } from "wouter";
+import { PremiumOverlay } from "@/components/PremiumOverlay";
 
 // ─── DATA ─────────────────────────────────────────────────────────────────────
 
@@ -277,6 +278,7 @@ export default function DeviceNavigator() {
         </div>
       </div>
 
+      <PremiumOverlay featureName="Structural Heart Navigator">
       <div className="container py-6">
         {/* Info banner */}
         <div className="flex items-start gap-3 bg-[#f0fbfc] border border-[#b2e8ec] rounded-xl px-5 py-3 mb-5">
@@ -300,6 +302,7 @@ export default function DeviceNavigator() {
           <p className="pt-1">© All About Ultrasound — iHeartEcho™ | www.iheartecho.com</p>
         </div>
       </div>
+      </PremiumOverlay>
     </Layout>
   );
 }

@@ -41,7 +41,7 @@ export function PremiumOverlay({ children, featureName, checkoutUrl }: PremiumOv
   }
 
   // Not premium or not logged in — show transparent overlay
-  const upgradeUrl = checkoutUrl ?? status?.checkoutUrl ?? "https://member.allaboutultrasound.com/enroll/3703267?price_id=4651832";
+  const upgradeUrl = checkoutUrl ?? status?.checkoutUrl ?? "https://member.allaboutultrasound.com/enroll/3703267?price_id=4651832";  // monthly $9.97
   const isLoggedIn = !!user;
 
   return (
@@ -98,7 +98,7 @@ export function PremiumOverlay({ children, featureName, checkoutUrl }: PremiumOv
                     style={{ background: "linear-gradient(135deg, #189aa1, #0e7490)" }}
                   >
                     <Sparkles className="w-4 h-4 mr-1.5" />
-                    Upgrade — $19.97/month
+                    Upgrade — $9.97/month
                   </Button>
                 </a>
                 <Link href="/premium">

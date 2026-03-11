@@ -2224,3 +2224,20 @@
 - [x] Fixed: all question display locations now use dangerouslySetInnerHTML to render HTML correctly
 - [x] Fixed: form validation now uses stripHtml() to check actual text length, not raw HTML
 - [x] Added stripHtml() utility to client/src/lib/utils.ts
+
+## Premium Page — Comparison Card Price Fix
+- [x] Fixed $19.97/mo badge on Free vs Premium comparison card — now shows $9.97/mo
+
+## Auth Gate & Report Builder Fix (no charge)
+- [ ] Fix blurred auth gates not rendering — old gates still in effect
+- [ ] Fix Report Builder accessible to unauthenticated users — must require login
+
+## Blurred Auth Gate Fixes (no charge)
+- [x] EchoAssistHub premium cards: navigate to page with blurred overlay instead of upgrade modal
+- [x] Remove RoleGuard from all 6 premium specialty routes so pages are accessible with overlay
+- [x] Ensure all 6 premium specialty pages have PremiumOverlay wrapping their content
+- [x] Fix Premium page comparison card badge ($19.97 → $9.97)
+- [x] Fix PremiumOverlay pricing text ($19.97 → $9.97)
+- [x] Fix PremiumGate pricing text ($19.97 → $9.97)
+- [x] Fix PremiumLockOverlay upgrade URL (iheartecho.com → Thinkific link)
+- [x] Restrict Report Builder to authenticated users

@@ -93,7 +93,7 @@ export default function PremiumModal({ featureName, featureDescription, onClose 
               style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}
             >
               <Zap className="w-4 h-4" />
-              Upgrade to Premium — $19.97/month
+              Upgrade to Premium — $9.97/month
               <ExternalLink className="w-3.5 h-3.5" />
             </a>
             <button

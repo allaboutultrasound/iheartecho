@@ -5,6 +5,8 @@
   Fonts: Merriweather headings, Open Sans body, JetBrains Mono data
 */
 import { useState, useMemo, useCallback, useEffect } from "react";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { getLoginUrl } from "@/const";
 import Layout from "@/components/Layout";
 import { FileText, Copy, Download, CheckCircle2, ChevronDown, ChevronUp, Printer, MessageSquarePlus, Trash2, Bold, Italic, Underline as UnderlineIcon, AlignLeft, AlignCenter, AlignRight, Type, ClipboardCopy, FileDown } from "lucide-react";
 import { toast } from "sonner";
@@ -892,6 +894,12 @@ const EMPTY: ReportData = {
 };
 
 export default function ReportBuilder() {
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  if (authLoading) return null;
+  if (!isAuthenticated) {
+    window.location.href = getLoginUrl();
+    return null;
+  }
   const [data, setData] = useState<ReportData>(EMPTY);
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<"worksheet" | "report">("worksheet");

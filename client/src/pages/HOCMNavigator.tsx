@@ -27,6 +27,7 @@ import {
   Zap,
 } from "lucide-react";
 import { Link } from "wouter";
+import { PremiumOverlay } from "@/components/PremiumOverlay";
 
 const BRAND = "#189aa1";
 const AQUA = "#4ad9e0";
@@ -463,6 +464,7 @@ export default function HOCMNavigator() {
         </div>
       </div>
 
+      <PremiumOverlay featureName="HOCM Navigator">
       {/* ── Progress Bar ─────────────────────────────────────────────────── */}
       <div className="bg-white border-b border-gray-100">
         <div className="container py-3">
@@ -1218,6 +1220,7 @@ export default function HOCMNavigator() {
           </div>
         </div>
       )}
+      </PremiumOverlay>
     </Layout>
   );
 }

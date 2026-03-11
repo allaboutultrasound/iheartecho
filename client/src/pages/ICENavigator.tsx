@@ -8,6 +8,7 @@ import { useState } from "react";
 import Layout from "@/components/Layout";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
 import { Link } from "wouter";
+import { PremiumOverlay } from "@/components/PremiumOverlay";
 import { ChevronDown, ChevronUp, CheckCircle, Circle, Cpu } from "lucide-react";
 
 // ─── DATA ─────────────────────────────────────────────────────────────────────
@@ -256,6 +257,7 @@ export default function ICENavigator() {
         </div>
       </div>
 
+      <PremiumOverlay featureName="ICE Navigator">
       <div className="container py-6">
 
         {/* Tabs */}
@@ -334,6 +336,7 @@ export default function ICENavigator() {
           <p className="pt-1">© All About Ultrasound — iHeartEcho™ | www.iheartecho.com</p>
         </div>
       </div>
+      </PremiumOverlay>
     </Layout>
   );
 }

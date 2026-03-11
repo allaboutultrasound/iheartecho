@@ -116,11 +116,11 @@ function Router() {
       <Route path="/fetal" component={FetalNavigator} />
       <Route path="/pediatric" component={PediatricNavigator} />
       <Route path="/tte" component={TTENavigator} />
-      <Route path="/tee">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><TEENavigator /></RoleGuard>}</Route>
-      <Route path="/ice">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><ICENavigator /></RoleGuard>}</Route>
-      <Route path="/device">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><DeviceNavigator /></RoleGuard>}</Route>
+      <Route path="/tee" component={TEENavigator} />
+      <Route path="/ice" component={ICENavigator} />
+      <Route path="/device" component={DeviceNavigator} />
       <Route path="/achd" component={ACHDNavigator} />
-      <Route path="/stress">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><StressNavigator /></RoleGuard>}</Route>
+      <Route path="/stress" component={StressNavigator} />
       <Route path="/protocol" component={TTENavigatorRedirect} />
       <Route path="/hemodynamics" component={HemodynamicsLab} />
       <Route path="/scan-coach" component={ScanCoach} />
@@ -177,12 +177,12 @@ function Router() {
       <Route path="/ice-scan-coach">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><ICEScanCoach /></RoleGuard>}</Route>
       <Route path="/uea-navigator" component={UEANavigator} />
       <Route path="/uea-scan-coach" component={UEAScanCoach} />
-      <Route path="/hocm-navigator">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><HOCMNavigator /></RoleGuard>}</Route>
+      <Route path="/hocm-navigator" component={HOCMNavigator} />
       <Route path="/hocm-scan-coach">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><HOCMScanCoach /></RoleGuard>}</Route>
       <Route path="/stress-scan-coach">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><StressScanCoach /></RoleGuard>}</Route>
-      <Route path="/stress-echo-assist">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><StressEchoAssistPage /></RoleGuard>}</Route>
+      <Route path="/stress-echo-assist" component={StressEchoAssistPage} />
       <Route path="/structural-heart-scan-coach">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><StructuralHeartScanCoach /></RoleGuard>}</Route>
-      <Route path="/pulm-htn">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><PulmHTNNavigator /></RoleGuard>}</Route>
+      <Route path="/pulm-htn" component={PulmHTNNavigator} />
       <Route path="/diastolic">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><DiastolicNavigator /></RoleGuard>}</Route>
       <Route path="/echo-assist-hub" component={EchoAssistHub} />
       {/* ── LMS Engines ──────────────────────────────────────────────────── */}

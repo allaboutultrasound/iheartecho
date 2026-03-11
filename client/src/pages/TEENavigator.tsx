@@ -9,6 +9,7 @@ import Layout from "@/components/Layout";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
 import { CheckCircle2, Circle, ChevronDown, ChevronUp, AlertCircle, Eye, Printer, Scan, ExternalLink } from "lucide-react";
 import { Link } from "wouter";
+import { PremiumOverlay } from "@/components/PremiumOverlay";
 
 type ChecklistItem = { id: string; label: string; detail?: string; critical?: boolean; angle?: string };
 type ViewSection = { view: string; position: string; angle: string; depth: string; items: ChecklistItem[]; clinicalUse?: string };
@@ -292,6 +293,7 @@ export default function TEENavigator() {
         </div>
       </div>
 
+      <PremiumOverlay featureName="TEE Navigator">
       <div className="container py-6">
 
         {/* Safety reminder */}
@@ -515,6 +517,7 @@ export default function TEENavigator() {
           </div>
         )}
       </div>
+      </PremiumOverlay>
     </Layout>
   );
 }

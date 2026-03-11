@@ -282,7 +282,7 @@ export default function EchoNavigatorHub() {
           <div className="flex items-center gap-3 mb-4">
             <div className="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200">
               <Crown className="w-3 h-3 text-amber-500" />
-              PREMIUM — Requires Premium membership ($19.97/month)
+              PREMIUM — Requires Premium membership ($9.97/month)
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -301,7 +301,7 @@ export default function EchoNavigatorHub() {
                 <button className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90"
                   style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}>
                   <Crown className="w-4 h-4" />
-                  Upgrade to Premium — $19.97/month
+                  Upgrade to Premium — $9.97/month
                 </button>
               </Link>
             </div>

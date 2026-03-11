@@ -9,6 +9,7 @@ import { useState } from "react";
 import Layout from "@/components/Layout";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
 import { Link } from "wouter";
+import { PremiumOverlay } from "@/components/PremiumOverlay";
 import {
   Wind, Scan, ChevronDown, ChevronUp, AlertTriangle,
   CheckCircle, Circle, Activity, Zap, TrendingUp, XCircle, CheckCircle2
@@ -159,6 +160,7 @@ export default function PulmHTNNavigator() {
         </div>
       </div>
 
+      <PremiumOverlay featureName="Pulmonary HTN & PE Navigator">
       {/* ── Section Toggle ── */}
       <div className="container pt-6">
         <div className="flex gap-2 mb-6">
@@ -754,6 +756,7 @@ export default function PulmHTNNavigator() {
           Clinical content © All About Ultrasound, Inc. / iHeartEcho™. Educational use only. Based on ASE 2025, ESC/ERS 2022, and ESC 2019 PE guidelines.
         </div>
       </div>
+      </PremiumOverlay>
     </Layout>
   );
 }

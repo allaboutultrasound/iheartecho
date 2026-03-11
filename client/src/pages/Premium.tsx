@@ -332,7 +332,7 @@ export default function Premium() {
             {/* Premium */}
             <div className="rounded-xl border-2 border-[#189aa1] p-5 relative overflow-hidden">
               <div className="absolute top-0 right-0 bg-[#189aa1] text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
-                $19.97/mo
+                $9.97/mo
               </div>
               <div className="font-bold text-[#189aa1] text-sm mb-4 uppercase tracking-wider flex items-center gap-1.5">
                 <Crown className="w-3.5 h-3.5" /> Premium

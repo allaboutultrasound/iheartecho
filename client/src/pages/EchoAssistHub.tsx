@@ -256,13 +256,14 @@ export default function EchoAssistHub() {
                         )}
                       </>
                     ) : (
-                      <button
-                        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90"
-                        style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}
-                        onClick={() => setUpgradeModal({ title })}
-                      >
-                        <Crown className="w-3.5 h-3.5" /> Upgrade to Unlock
-                      </button>
+                      <Link href={path} className="w-full">
+                        <button
+                          className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90"
+                          style={{ background: "linear-gradient(135deg, #189aa1, #0e7490)" }}
+                        >
+                          Preview Content <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                      </Link>
                     )}
                   </div>
                 </div>

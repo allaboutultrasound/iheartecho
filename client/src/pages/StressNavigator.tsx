@@ -9,6 +9,7 @@ import Layout from "@/components/Layout";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
 import { Activity, AlertCircle, CheckCircle2, Circle, ChevronDown, ChevronUp, Zap, Scan } from "lucide-react";
 import { Link } from "wouter";
+import { PremiumOverlay } from "@/components/PremiumOverlay";
 
 // --- WALL MOTION SCORING ------------------------------------------------------
 const segments17 = [
@@ -450,6 +451,7 @@ export default function StressNavigator() {
         </div>
       </div>
 
+      <PremiumOverlay featureName="Stress Echo Navigator">
       <div className="container py-6">
         {/* Tabs */}
         <div className="flex flex-wrap gap-2 mb-5">
@@ -641,6 +643,7 @@ export default function StressNavigator() {
           </div>
         )}
       </div>
+      </PremiumOverlay>
     </Layout>
   );
 }
