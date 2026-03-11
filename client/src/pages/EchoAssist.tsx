@@ -923,17 +923,6 @@ function LVSystolicEngine() {
       {/* ─── HOCM LVOT Gradient Sub-Section ──────────────────────────────────── */}
       <HOCMLVOTSubSection />
 
-      {/* StressEchoAssist™ link-card */}
-      <a href="/stress-echo-assist" className="mt-3 flex items-center gap-3 p-3 rounded-xl border border-[#189aa1]/30 bg-[#f0fbfc] hover:bg-[#e0f7f8] transition-all group">
-        <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "#189aa1" }}>
-          <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="text-sm font-bold text-[#0e7490]" style={{ fontFamily: "Merriweather, serif" }}>StressEchoAssist™</div>
-          <div className="text-xs text-gray-500">17-Segment WMSI · Target HR · Protocol Dosing · Interpretation</div>
-        </div>
-        <svg className="w-4 h-4 text-[#189aa1] group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-      </a>
       <p className="text-xs text-gray-400 mt-3">Reference: <a href='https://asecho.org/wp-content/uploads/2018/08/WFTF-Chamber-Quantification-Summary-Doc-Final-July-18.pdf' target='_blank' rel='noopener noreferrer' className='underline hover:text-[#189aa1]'>ASE/WFTF 2018 Chamber Quantification</a>; AHA/ACC HF Classification 2022</p>
     </EngineSection>
   );
@@ -3056,6 +3045,33 @@ function LAPEstimationEngine() {
   );
 }
 
+// ─── DIASTOLOGYASSIST™ WRAPPER ─────────────────────────────────────────────────
+// Groups all three diastology calculators under a single collapsible parent section
+function DiastologyAssistEngine() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div id="engine-diastologyassist" className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full teal-header px-5 py-3 flex items-center justify-between"
+      >
+        <div className="text-left flex-1">
+          <h3 className="font-bold text-sm text-white" style={{ fontFamily: "Merriweather, serif" }}>DiastologyAssist™</h3>
+          <p className="text-xs text-white/70 mt-0.5">Diastolic Function Assessment · LAP Grading · Special Populations</p>
+        </div>
+        {open ? <ChevronUp className="w-4 h-4 text-white/70 flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-white/70 flex-shrink-0" />}
+      </button>
+      {open && (
+        <div className="p-4 space-y-4">
+          <DiastolicEngine />
+          <LAPEstimationEngine />
+          <DiastologySpecialPopulations />
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── MAIN PAGE ──────────────────────────────────────────────────────────────────────────────
 export default function EchoAssist() {
   // Fire hash-based deep-link event on mount — retries at 100ms, 400ms, 800ms
@@ -3103,10 +3119,8 @@ export default function EchoAssist() {
         <div className="space-y-4">
           {/* 1. LV SystolicAssist™ (EF/FS/Mass/Dim + SV/CO + HOCM LVOT) */}
           <LVSystolicEngine />
-          {/* 2. DiastologyAssist™ group (Diastolic Function Assessment + LAP + Special Populations) */}
-          <DiastolicEngine />
-          <LAPEstimationEngine />
-          <DiastologySpecialPopulations />
+          {/* 2. DiastologyAssist™ — single collapsible parent containing all 3 diastology calculators */}
+          <DiastologyAssistEngine />
           {/* 3. StressEchoAssist™ (Premium) */}
           <PremiumOverlay featureName="StressEchoAssist™">
             <StressEchoAssistEngine />
