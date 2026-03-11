@@ -543,7 +543,7 @@ export const meetingRouter = router({
           meetingTitle: meeting.title,
           meetingType: meeting.meetingType,
           scheduledAt: new Date(meeting.scheduledAt),
-          durationMinutes: meeting.durationMinutes,
+          durationMinutes: meeting.durationMinutes ?? 60,
           location: meeting.location,
           meetingLink: meeting.meetingLink ?? null,
           agenda: meeting.agenda,

@@ -16,11 +16,21 @@ import {
   Building2, Users, BarChart2, FileText, CreditCard, Plus, Trash2,
   Edit2, Check, X, TrendingUp, TrendingDown, Minus, Star, Award,
   Loader2, ChevronDown, ChevronUp, AlertTriangle, CheckCircle,
-  Download, RefreshCw, Shield, Zap, Crown, Stethoscope
+  Download, RefreshCw, Shield, Zap, Crown, Stethoscope,
+  ClipboardCheck, HeartPulse, BookOpen, Activity, MapPin, Phone,
+  ChevronRight, Microscope, FlaskConical
 } from "lucide-react";
 import { toast } from "sonner";
 import { getLoginUrl } from "@/const";
 import BulkCsvUploadPanel, { type BulkResult } from "@/components/BulkCsvUploadPanel";
+import ImageQualityReviewTab from "./ImageQualityReview";
+import SonographerPeerReview from "./SonographerPeerReview";
+import PhysicianPeerReview from "./PhysicianPeerReview";
+import EchoCorrelationTab from "./EchoCorrelation";
+import QualityMeetingsTab from "./QualityMeetingsTab";
+import AccreditationReadiness from "./AccreditationReadiness";
+import CaseMixSubmission from "./CaseMixSubmission";
+import { PolicyBuilderTab, AppropriateUseTab } from "./AccreditationTool";
 import jsPDF from "jspdf";
 import {
   LineChart, Line, BarChart, Bar, RadarChart, Radar, PolarGrid,
@@ -1372,10 +1382,220 @@ function SeatsTab({ lab }: { lab: any }) {
   );
 }
 
+// ─── Sub-Tab Button ───────────────────────────────────────────────────────────
+function SubTabBtn({ active, onClick, icon: Icon, label }: {
+  active: boolean; onClick: () => void; icon: React.ElementType; label: string;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+        active ? "text-white shadow-sm" : "text-gray-600 hover:bg-white/70"
+      }`}
+      style={active ? { background: BRAND } : {}}
+    >
+      <Icon className="w-3.5 h-3.5" />
+      {label}
+    </button>
+  );
+}
+
+// ─── Organization Tab ─────────────────────────────────────────────────────────
+function OrganizationTab({ lab, members, snapshot, onRefresh }: { lab: any; members: any[]; snapshot: any[]; onRefresh: () => void }) {
+  const [subTab, setSubTab] = useState<"overview" | "facilities" | "personnel" | "policy" | "subscription" | "seats">("overview");
+
+  return (
+    <div className="space-y-4">
+      {/* Sub-tab nav */}
+      <div className="flex gap-1 p-1 rounded-lg overflow-x-auto" style={{ background: "#f0fbfc" }}>
+        <SubTabBtn active={subTab === "overview"} onClick={() => setSubTab("overview")} icon={Building2} label="Overview" />
+        <SubTabBtn active={subTab === "facilities"} onClick={() => setSubTab("facilities")} icon={MapPin} label="Facilities" />
+        <SubTabBtn active={subTab === "personnel"} onClick={() => setSubTab("personnel")} icon={Users} label="Personnel" />
+        <SubTabBtn active={subTab === "policy"} onClick={() => setSubTab("policy")} icon={FileText} label="Policy Builder" />
+        <SubTabBtn active={subTab === "subscription"} onClick={() => setSubTab("subscription")} icon={CreditCard} label="Subscription" />
+        <SubTabBtn active={subTab === "seats"} onClick={() => setSubTab("seats")} icon={Shield} label="User Seats" />
+      </div>
+
+      {subTab === "overview" && <OverviewTab lab={lab} members={members} snapshot={snapshot} />}
+      {subTab === "facilities" && <FacilitiesPanel lab={lab} onRefresh={onRefresh} />}
+      {subTab === "personnel" && <StaffTab lab={lab} members={members} onRefresh={onRefresh} />}
+      {subTab === "policy" && <PolicyBuilderTab />}
+      {subTab === "subscription" && <SubscriptionTab lab={lab} />}
+      {subTab === "seats" && <SeatsTab lab={lab} />}
+    </div>
+  );
+}
+
+// ─── Facilities Panel ─────────────────────────────────────────────────────────
+function FacilitiesPanel({ lab, onRefresh }: { lab: any; onRefresh: () => void }) {
+  const utils = trpc.useUtils();
+  const [addOpen, setAddOpen] = useState(false);
+  const [form, setForm] = useState({ name: "", address: "", phone: "", facilityType: "main" as "main" | "satellite" | "mobile" });
+
+  const updateLab = trpc.lab.updateLab.useMutation({
+    onSuccess: () => { toast.success("Lab information updated."); utils.lab.getMyLab.invalidate(); onRefresh(); },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const [editingInfo, setEditingInfo] = useState(false);
+  const [infoForm, setInfoForm] = useState({ labName: lab.labName ?? "", labAddress: lab.labAddress ?? "", labPhone: lab.labPhone ?? "" });
+
+  return (
+    <div className="space-y-4">
+      {/* Main Facility Info */}
+      <Card className="border border-[#189aa1]/20">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-bold text-gray-800 flex items-center gap-2">
+              <Building2 className="w-4 h-4" style={{ color: BRAND }} />
+              Main Facility
+            </CardTitle>
+            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setEditingInfo(v => !v)}>
+              {editingInfo ? "Cancel" : <><Edit2 className="w-3 h-3 mr-1" />Edit</>}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {editingInfo ? (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 mb-1 block">Facility Name</label>
+                  <Input className="h-8 text-xs" value={infoForm.labName} onChange={e => setInfoForm(f => ({ ...f, labName: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 mb-1 block">Phone</label>
+                  <Input className="h-8 text-xs" value={infoForm.labPhone} onChange={e => setInfoForm(f => ({ ...f, labPhone: e.target.value }))} />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="text-xs font-semibold text-gray-600 mb-1 block">Address</label>
+                  <Input className="h-8 text-xs" value={infoForm.labAddress} onChange={e => setInfoForm(f => ({ ...f, labAddress: e.target.value }))} />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" className="text-white h-8 text-xs" style={{ background: BRAND }}
+                  disabled={updateLab.isPending}
+                  onClick={() => updateLab.mutate({ labName: infoForm.labName, labAddress: infoForm.labAddress, labPhone: infoForm.labPhone })}>
+                  {updateLab.isPending ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Check className="w-3 h-3 mr-1" />}
+                  Save Changes
+                </Button>
+                <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => setEditingInfo(false)}>Cancel</Button>
+              </div>
+            </>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm">
+                <Building2 className="w-4 h-4 text-gray-400" />
+                <span className="font-semibold text-gray-800">{lab.labName}</span>
+                <span className="text-xs px-2 py-0.5 rounded-full font-semibold capitalize" style={{ background: BRAND + "18", color: BRAND }}>{lab.plan} Plan</span>
+              </div>
+              {lab.labAddress && (
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <MapPin className="w-3.5 h-3.5" />
+                  {lab.labAddress}
+                </div>
+              )}
+              {lab.labPhone && (
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <Phone className="w-3.5 h-3.5" />
+                  {lab.labPhone}
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Accreditation Type */}
+      <AccreditationTypeCard lab={lab} />
+
+      {/* Satellite / Additional Facilities placeholder */}
+      <Card className="border border-dashed border-gray-200">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold text-gray-700">Additional Facilities</p>
+              <p className="text-xs text-gray-400 mt-0.5">Manage satellite locations and mobile echo units</p>
+            </div>
+            <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5" onClick={() => toast.info("Multi-facility management coming soon.")}>
+              <Plus className="w-3.5 h-3.5" />
+              Add Facility
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ─── Quality Improvement Tab ─────────────────────────────────────────────────
+function QualityImprovementTab({ members: _members }: { members: any[] }) {
+  const [subTab, setSubTab] = useState<"iqr" | "sono_peer" | "phys_peer" | "correlations" | "appropriate_use" | "meetings">("iqr");
+
+  return (
+    <div className="space-y-4">
+      {/* Sub-tab nav */}
+      <div className="flex gap-1 p-1 rounded-lg overflow-x-auto" style={{ background: "#f0fbfc" }}>
+        <SubTabBtn active={subTab === "iqr"} onClick={() => setSubTab("iqr")} icon={Microscope} label="Image Quality Review" />
+        <SubTabBtn active={subTab === "sono_peer"} onClick={() => setSubTab("sono_peer")} icon={Activity} label="Sonographer Peer Review" />
+        <SubTabBtn active={subTab === "phys_peer"} onClick={() => setSubTab("phys_peer")} icon={Stethoscope} label="Physician Peer Review" />
+        <SubTabBtn active={subTab === "correlations"} onClick={() => setSubTab("correlations")} icon={FlaskConical} label="Echo Correlations" />
+        <SubTabBtn active={subTab === "appropriate_use"} onClick={() => setSubTab("appropriate_use")} icon={ClipboardCheck} label="Appropriate Use" />
+        <SubTabBtn active={subTab === "meetings"} onClick={() => setSubTab("meetings")} icon={BookOpen} label="Quality Meetings" />
+      </div>
+
+      {subTab === "iqr" && <ImageQualityReviewTab embedded={true} />}
+      {subTab === "sono_peer" && <SonographerPeerReview embedded={true} />}
+      {subTab === "phys_peer" && <PhysicianPeerReview />}
+      {subTab === "correlations" && <EchoCorrelationTab />}
+      {subTab === "appropriate_use" && <AppropriateUseTab />}
+      {subTab === "meetings" && <QualityMeetingsTab isDiyAdmin={true} />}
+    </div>
+  );
+}
+
+// ─── Accreditation Submission Tab ─────────────────────────────────────────────
+function AccreditationSubmissionTab() {
+  const [subTab, setSubTab] = useState<"case_studies" | "readiness">("case_studies");
+
+  return (
+    <div className="space-y-4">
+      {/* Sub-tab nav */}
+      <div className="flex gap-1 p-1 rounded-lg overflow-x-auto" style={{ background: "#f0fbfc" }}>
+        <SubTabBtn active={subTab === "case_studies"} onClick={() => setSubTab("case_studies")} icon={FileText} label="Case Studies" />
+        <SubTabBtn active={subTab === "readiness"} onClick={() => setSubTab("readiness")} icon={ClipboardCheck} label="Accreditation Readiness" />
+      </div>
+
+      {subTab === "case_studies" && <CaseMixSubmission />}
+      {subTab === "readiness" && <AccreditationReadiness />}
+    </div>
+  );
+}
+
+// ─── Analytics & Reporting Tab ────────────────────────────────────────────────
+function AnalyticsReportingTab({ lab, members }: { lab: any; members: any[] }) {
+  const [subTab, setSubTab] = useState<"analytics" | "cme" | "reports">("analytics");
+
+  return (
+    <div className="space-y-4">
+      {/* Sub-tab nav */}
+      <div className="flex gap-1 p-1 rounded-lg overflow-x-auto" style={{ background: "#f0fbfc" }}>
+        <SubTabBtn active={subTab === "analytics"} onClick={() => setSubTab("analytics")} icon={BarChart2} label="IQR Analytics" />
+        <SubTabBtn active={subTab === "cme"} onClick={() => setSubTab("cme")} icon={Award} label="CME Progress" />
+        <SubTabBtn active={subTab === "reports"} onClick={() => setSubTab("reports")} icon={Download} label="Reports & Export" />
+      </div>
+
+      {subTab === "analytics" && <AnalyticsTab members={members} />}
+      {subTab === "cme" && <CmeSummaryCard members={members} />}
+      {subTab === "reports" && <ReportsTab lab={lab} members={members} />}
+    </div>
+  );
+}
+
 // ─── Main Lab Admin Page ──────────────────────────────────────────────────────
 export default function LabAdmin() {
   const { user, loading, isAuthenticated } = useAuth();
-  const [tab, setTab] = useState<"overview" | "staff" | "reports-analytics" | "subscription" | "seats">("overview");
+  const [tab, setTab] = useState<"organization" | "quality" | "accreditation" | "analytics">("organization");
 
   const { data: lab, isLoading: labLoading, refetch: refetchLab } = trpc.lab.getMyLab.useQuery(undefined, { enabled: isAuthenticated });
   const { data: members = [], refetch: refetchMembers } = trpc.lab.getMembers.useQuery(undefined, { enabled: !!lab });
@@ -1431,35 +1651,19 @@ export default function LabAdmin() {
           </button>
         </div>
 
-        {/* Tabs */}
+        {/* Main Tabs */}
         <div className="flex gap-1 p-1 rounded-xl mb-6 overflow-x-auto" style={{ background: "#e6f7f8" }}>
-          <TabBtn active={tab === "overview"} onClick={() => setTab("overview")} icon={Building2} label="Overview" />
-          <TabBtn active={tab === "staff"} onClick={() => setTab("staff")} icon={Users} label="Staff" badge={members.length} />
-          <TabBtn active={tab === "reports-analytics"} onClick={() => setTab("reports-analytics")} icon={BarChart2} label="Reports & Analytics" />
-          <TabBtn active={tab === "subscription"} onClick={() => setTab("subscription")} icon={CreditCard} label="Subscription" />
-          <TabBtn active={tab === "seats"} onClick={() => setTab("seats")} icon={Shield} label="User Seats" />
+          <TabBtn active={tab === "organization"} onClick={() => setTab("organization")} icon={Building2} label="Organization" />
+          <TabBtn active={tab === "quality"} onClick={() => setTab("quality")} icon={ClipboardCheck} label="Quality Improvement" />
+          <TabBtn active={tab === "accreditation"} onClick={() => setTab("accreditation")} icon={HeartPulse} label="Accreditation Submission" />
+          <TabBtn active={tab === "analytics"} onClick={() => setTab("analytics")} icon={BarChart2} label="Analytics & Reporting" />
         </div>
 
         {/* Tab content */}
-        {tab === "overview" && <OverviewTab lab={lab} members={members} snapshot={snapshot} />}
-        {tab === "staff" && <StaffTab lab={lab} members={members} onRefresh={onRefresh} />}
-        {tab === "reports-analytics" && (
-          <div className="space-y-8">
-            <AnalyticsTab members={members} />
-            <div className="border-t border-gray-200 pt-6">
-              <CmeSummaryCard members={members} />
-            </div>
-            <div className="border-t border-gray-200 pt-6">
-              <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2 mb-4">
-                <FileText className="w-4 h-4" style={{ color: BRAND }} />
-                Lab Performance Reports
-              </h2>
-              <ReportsTab lab={lab} members={members} />
-            </div>
-          </div>
-        )}
-        {tab === "subscription" && <SubscriptionTab lab={lab} />}
-        {tab === "seats" && <SeatsTab lab={lab} />}
+        {tab === "organization" && <OrganizationTab lab={lab} members={members} snapshot={snapshot} onRefresh={onRefresh} />}
+        {tab === "quality" && <QualityImprovementTab members={members} />}
+        {tab === "accreditation" && <AccreditationSubmissionTab />}
+        {tab === "analytics" && <AnalyticsReportingTab lab={lab} members={members} />}
       </div>
     </Layout>
   );

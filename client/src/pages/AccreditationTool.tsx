@@ -801,7 +801,7 @@ function PeerReviewTab() {
 }
 
 // ─── Policy Builder Tab ───────────────────────────────────────────────────────
-function PolicyBuilderTab() {
+export function PolicyBuilderTab() {
   
   const [form, setForm] = useState({
     title: "",
@@ -1012,7 +1012,7 @@ const EMPTY_AUC_FORM = {
   reviewComments: "",
 };
 
-function AppropriateUseTab() {
+export function AppropriateUseTab() {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState(EMPTY_AUC_FORM);
   const [submitted, setSubmitted] = useState(false);
@@ -1356,7 +1356,7 @@ function scoreColor(score: number) {
 
 const PIE_COLORS = ["#16a34a", "#2563eb", "#d97706", "#dc2626"];
 
-function DIYReportsTab({ isProfessionalPlus = true }: { isProfessionalPlus?: boolean }) {
+export function DIYReportsTab({ isProfessionalPlus = true }: { isProfessionalPlus?: boolean }) {
   const [filterExamTypeQuery, setFilterExamTypeQuery] = useState<string>("");
   const [dateFromQuery, setDateFromQuery] = useState<string>("");
   const [dateToQuery, setDateToQuery] = useState<string>("");
@@ -1387,11 +1387,11 @@ function DIYReportsTab({ isProfessionalPlus = true }: { isProfessionalPlus?: boo
   const [staffExamType, setStaffExamType] = useState<string>("");
   const [staffExamTypeApplied, setStaffExamTypeApplied] = useState<string>("");
   const { data: staffTrend = [] } = trpc.lab.getIqrStaffTrend.useQuery(
-    { revieweeLabMemberId: selectedStaffId!, examType: staffExamTypeApplied || undefined },
+    { revieweeLabMemberId: selectedStaffId! },
     { enabled: selectedStaffId !== null }
   );
   const { data: staffDomainBreakdown = [] } = trpc.lab.getIqrDomainBreakdown.useQuery(
-    { revieweeLabMemberId: selectedStaffId!, examType: staffExamTypeApplied || undefined },
+    { revieweeLabMemberId: selectedStaffId! },
     { enabled: selectedStaffId !== null }
   );
   const { data: drilldownReviews = [] } = trpc.lab.getIqrDrilldown.useQuery(

@@ -210,7 +210,7 @@ export default function PossibleCaseStudies() {
     onError: (err) => toast.error(err.message),
   });
 
-  const set = (key: keyof CaseFormData, value: string) =>
+  const set = (key: keyof CaseFormData, value: string | boolean) =>
     setForm(prev => ({ ...prev, [key]: value }));
 
   const openCreate = () => {

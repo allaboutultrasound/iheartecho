@@ -2135,3 +2135,12 @@
 - [ ] Remove Manus-branded email from daily challenge — only iHeartEcho branded emails should be sent
 - [ ] Move daily challenge email from queue-add to publish time (when daily set is actually activated)
 - [ ] Archive the 5 old challenges, leave only the new queued one
+
+## LabAdmin Reorganization (Mar 11 2026)
+- [x] Restructure LabAdmin into 4 main tabs: Organization, Quality Improvement, Accreditation Submission, Analytics & Reporting
+- [x] Organization tab: sub-tabs for Overview, Facilities, Personnel (with Medical/Technical Director designation), Policy Builder, Subscription, Seats
+- [x] Quality Improvement tab: sub-tabs for Image Quality Review, Sonographer Peer Review, Physician Peer Review, Echo Correlations, Appropriate Use, Quality Meetings
+- [x] Accreditation Submission tab: sub-tabs for Case Studies and Accreditation Readiness
+- [x] Analytics & Reporting tab: sub-tabs for IQR Analytics, CME Progress, Reports & Export
+- [x] Export PolicyBuilderTab and AppropriateUseTab from AccreditationTool.tsx for use in LabAdmin
+- [x] Fix TypeScript errors in AccreditationTool.tsx, meetingRouter.ts, PossibleCaseStudies.tsx
