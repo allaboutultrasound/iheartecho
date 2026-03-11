@@ -26,6 +26,18 @@ if (SENDGRID_API_KEY) {
 let cronRunning = false;
 let lastAutoGenDate = ""; // tracks the last date we auto-generated a daily set
 
+// Tracks which user IDs have already received a 9am notification today (UTC date key)
+const notifiedToday = new Map<string, Set<number>>(); // key: "YYYY-MM-DD"
+
+function getNotifiedSet(utcDate: string): Set<number> {
+  // Purge old dates to prevent memory leak
+  for (const key of Array.from(notifiedToday.keys())) {
+    if (key !== utcDate) notifiedToday.delete(key);
+  }
+  if (!notifiedToday.has(utcDate)) notifiedToday.set(utcDate, new Set());
+  return notifiedToday.get(utcDate)!;
+}
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function todayUTC(): string {
   return new Date().toISOString().slice(0, 10);
@@ -309,17 +321,112 @@ function buildEmailHtml({
 }
 
 /**
+ * Sends 9am local-time challenge notifications.
+ * Runs every hour. For each opted-in user whose timezone currently shows
+ * hour=9 (9:00–9:59 AM), sends the live challenge email if not already sent today.
+ */
+async function send9amChallengeNotifications() {
+  if (!SENDGRID_API_KEY) return;
+  try {
+    const db = await getDb();
+    if (!db) return;
+
+    // Get the currently live challenge
+    const [liveChallenge] = await db
+      .select()
+      .from(quickfireChallenges)
+      .where(eq(quickfireChallenges.status, "live"))
+      .limit(1);
+
+    if (!liveChallenge) return; // no live challenge to notify about
+
+    const now = new Date();
+    const utcDate = todayUTC();
+    const alreadyNotified = getNotifiedSet(utcDate);
+
+    // Fetch all users with emails, notification prefs, and timezone
+    const allUsers = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        name: users.name,
+        displayName: users.displayName,
+        notificationPrefs: users.notificationPrefs,
+        timezone: users.timezone,
+      })
+      .from(users);
+
+    const toNotify = allUsers.filter((u) => {
+      if (!u.email) return false;
+      if (alreadyNotified.has(u.id)) return false;
+      try {
+        const prefs = u.notificationPrefs ? JSON.parse(u.notificationPrefs) : {};
+        if (prefs.quickfireReminder === false) return false;
+      } catch {
+        // default: opted in
+      }
+      // Check if it's currently 9am in the user's timezone
+      const tz = u.timezone ?? "America/New_York";
+      try {
+        const localHour = parseInt(
+          new Intl.DateTimeFormat("en-US", { hour: "numeric", hour12: false, timeZone: tz }).format(now),
+          10
+        );
+        return localHour === 9;
+      } catch {
+        return false; // invalid timezone string — skip
+      }
+    });
+
+    if (toNotify.length === 0) return;
+
+    const challengeUrl = `${APP_URL}/quickfire`;
+    const categoryTag = liveChallenge.category ? ` — ${liveChallenge.category}` : "";
+
+    const BATCH = 100;
+    for (let i = 0; i < toNotify.length; i += BATCH) {
+      const batch = toNotify.slice(i, i + BATCH);
+      const messages = batch.map((u) => ({
+        to: u.email!,
+        from: { email: SENDGRID_FROM_EMAIL, name: SENDGRID_FROM_NAME },
+        subject: `🔥 Daily Challenge: ${liveChallenge.title}${categoryTag}`,
+        html: buildEmailHtml({
+          userName: u.displayName ?? u.name ?? "Echo Learner",
+          challengeTitle: liveChallenge.title,
+          challengeDescription: liveChallenge.description ?? "",
+          challengeUrl,
+          category: liveChallenge.category ?? "General",
+        }),
+        text: `Daily Challenge: ${liveChallenge.title}\n\n${liveChallenge.description ?? ""}\n\nYou have 24 hours to complete it!\n\n${challengeUrl}`,
+      }));
+      await sgMail.send(messages as any);
+      // Mark as notified
+      batch.forEach((u) => alreadyNotified.add(u.id));
+      console.log(`[ChallengeCron] 9am notification sent to ${batch.length} users (batch ${Math.floor(i / BATCH) + 1}).`);
+    }
+  } catch (err) {
+    console.error("[ChallengeCron] 9am notification error:", err);
+  }
+}
+
+/**
  * Start the cron job — runs every 5 minutes.
  * Also runs daily auto-generation at midnight UTC.
  */
 export function startChallengeCron() {
   const INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
-  console.log("[ChallengeCron] Started — checking every 5 minutes.");
+  const HOUR_MS = 60 * 60 * 1000; // 1 hour
+  console.log("[ChallengeCron] Started — checking every 5 minutes. 9am notifications checked hourly.");
   // Run immediately on startup to catch any missed publishes and generate today's set
   runChallengeCron().catch(console.error);
   runDailyAutoGenerate().catch(console.error);
+  send9amChallengeNotifications().catch(console.error);
   setInterval(() => {
     runChallengeCron().catch(console.error);
     runDailyAutoGenerate().catch(console.error);
   }, INTERVAL_MS);
+  // Check 9am notifications every hour
+  setInterval(() => {
+    send9amChallengeNotifications().catch(console.error);
+  }, HOUR_MS);
 }

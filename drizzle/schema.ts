@@ -57,6 +57,8 @@ export const users = mysqlTable("users", {
   magicLinkExpiry: timestamp("magicLinkExpiry"),
   // Notification preferences (JSON: { quickfireReminder: boolean, reminderTime: "HH:MM" })
   notificationPrefs: text("notificationPrefs"),
+  // IANA timezone string for 9am local-time challenge notifications (e.g. "America/New_York")
+  timezone: varchar("timezone", { length: 64 }),
 });
 
 export type User = typeof users.$inferSelect;

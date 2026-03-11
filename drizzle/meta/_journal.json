@@ -421,6 +421,13 @@
       "when": 1773201269995,
       "tag": "0059_jittery_lucky_pierre",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "5",
+      "when": 1773247809896,
+      "tag": "0060_shocking_rogue",
+      "breakpoints": true
     }
   ]
 }

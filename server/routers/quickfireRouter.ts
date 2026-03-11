@@ -1073,20 +1073,21 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
   getNotificationPrefs: protectedProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
-    const [row] = await db
-      .select({ notificationPrefs: users.notificationPrefs })
+    const [userRow] = await db
+      .select({ notificationPrefs: users.notificationPrefs, timezone: users.timezone })
       .from(users)
       .where(eq(users.id, ctx.user.id))
       .limit(1);
-    if (!row) throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+    if (!userRow) throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
     try {
-      const prefs = row.notificationPrefs ? JSON.parse(row.notificationPrefs) : {};
+      const prefs = userRow.notificationPrefs ? JSON.parse(userRow.notificationPrefs) : {};
       return {
         quickfireReminder: prefs.quickfireReminder !== false,
-        reminderTime: typeof prefs.reminderTime === "string" ? prefs.reminderTime : "18:00",
+        reminderTime: typeof prefs.reminderTime === "string" ? prefs.reminderTime : "09:00",
+        timezone: userRow.timezone ?? "America/New_York",
       };
     } catch {
-      return { quickfireReminder: true, reminderTime: "18:00" };
+      return { quickfireReminder: true, reminderTime: "09:00", timezone: userRow.timezone ?? "America/New_York" };
     }
   }),
 
@@ -1098,15 +1099,20 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
         reminderTime: z
           .string()
           .regex(/^\d{2}:\d{2}$/, "Must be HH:MM format")
-          .default("18:00"),
+          .default("09:00"),
+        timezone: z.string().max(64).default("America/New_York"),
       })
     )
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const { timezone, ...prefsWithoutTimezone } = input;
       await db
         .update(users)
-        .set({ notificationPrefs: JSON.stringify(input) })
+        .set({
+          notificationPrefs: JSON.stringify(prefsWithoutTimezone),
+          timezone,
+        })
         .where(eq(users.id, ctx.user.id));
       return { success: true };
     }),

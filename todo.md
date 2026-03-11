@@ -2334,3 +2334,29 @@
 - [x] Fix Thinkific webhook: enrollment.created with sparse payload now looks up full enrollment details from Thinkific API
 - [x] Fix PremiumOverlay: now uses usePremium() (cached auth) instead of fresh tRPC query — eliminates flash and navigation bypass
 - [x] Confirm ScanCoach navigation is already correct: ScanCoachNavBar only has Back to Hub and Go to Navigator links (no cross-ScanCoach buttons)
+
+## Daily Challenge Notifications (Mar 11 2026)
+- [ ] Add timezone field to users table (IANA timezone string, e.g. "America/New_York")
+- [ ] Add notification preferences to user settings (opt-in/out of daily challenge notifications, timezone picker)
+- [ ] Build server-side daily challenge notification scheduler: runs every hour, sends to users where current UTC time = 9am local time
+- [ ] Use existing notifyOwner/SendGrid infrastructure to send notification emails
+- [ ] Include today's challenge title/category in the notification
+
+## Daily Challenge Notifications (Mar 11 2026)
+- [x] Add timezone column to users table (IANA string, e.g. "America/New_York")
+- [x] Run db:push to migrate timezone column to production database
+- [x] Update getNotificationPrefs procedure to return user timezone
+- [x] Update updateNotificationPrefs procedure to accept and save timezone
+- [x] Replace time picker in Profile notification settings with timezone selector (50+ timezones grouped by region)
+- [x] Build send9amChallengeNotifications() — hourly check, sends live challenge email to users whose local time is 9am
+- [x] Wire hourly 9am notification check into startChallengeCron()
+- [x] Deduplication: in-memory Set prevents duplicate sends per UTC day per user
+
+## Access Control & Gating Fixes (Mar 11 2026)
+- [x] Create BlurredOverlay component with mobile-first positioning (prompt near top of viewport on mobile)
+- [x] Update RoleGuard to use BlurredOverlay for unauthenticated users (login gate), premium-gated pages (upgrade prompt), and DIY-gated pages (DIY membership prompt)
+- [x] Case Library: unregistered users see registration modal on "View Case" click
+- [x] CaseDetail: direct URL access by unauthenticated users shows BlurredOverlay login gate
+- [x] Flashcard daily limit: fix double-counting bug (authenticated free users could reset limit on refresh)
+- [x] Flashcard daily limit: add server-side IP tracking for unauthenticated users (persists across refreshes)
+- [x] Add recordFlashcardView public tRPC procedure for IP-based unauthenticated tracking

@@ -85,11 +85,11 @@ export default function Profile() {
     { enabled: !!user }
   );
   const [notifEnabled, setNotifEnabled] = useState(true);
-  const [notifTime, setNotifTime] = useState("18:00");
+  const [notifTimezone, setNotifTimezone] = useState("America/New_York");
   useEffect(() => {
     if (notifPrefs) {
       setNotifEnabled(notifPrefs.quickfireReminder);
-      setNotifTime(notifPrefs.reminderTime);
+      setNotifTimezone(notifPrefs.timezone ?? "America/New_York");
     }
   }, [notifPrefs]);
   const updateNotifPrefsMutation = trpc.quickfire.updateNotificationPrefs.useMutation({
@@ -984,20 +984,70 @@ export default function Profile() {
                         </button>
                       </div>
 
-                      {/* Reminder Time */}
+                      {/* Timezone Selector */}
                       {notifEnabled && (
-                        <div className="flex items-center gap-4 pl-6">
-                          <div className="flex items-center gap-2">
+                        <div className="flex items-start gap-4 pl-6">
+                          <div className="flex items-center gap-2 mt-1.5">
                             <Clock className="w-4 h-4 text-gray-400" />
-                            <span className="text-xs font-medium text-gray-700">Preferred reminder time</span>
+                            <span className="text-xs font-medium text-gray-700">Your timezone</span>
                           </div>
-                          <input
-                            type="time"
-                            value={notifTime}
-                            onChange={(e) => setNotifTime(e.target.value)}
-                            className="text-xs border border-gray-200 rounded-md px-2 py-1.5 text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#189aa1]"
-                          />
-                          <span className="text-xs text-gray-400">(your local time)</span>
+                          <div className="flex-1">
+                            <select
+                              value={notifTimezone}
+                              onChange={(e) => setNotifTimezone(e.target.value)}
+                              className="w-full text-xs border border-gray-200 rounded-md px-2 py-1.5 text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#189aa1] bg-white"
+                            >
+                              <optgroup label="North America">
+                                <option value="America/New_York">Eastern Time (ET) — New York</option>
+                                <option value="America/Chicago">Central Time (CT) — Chicago</option>
+                                <option value="America/Denver">Mountain Time (MT) — Denver</option>
+                                <option value="America/Phoenix">Mountain Time, no DST — Phoenix</option>
+                                <option value="America/Los_Angeles">Pacific Time (PT) — Los Angeles</option>
+                                <option value="America/Anchorage">Alaska Time — Anchorage</option>
+                                <option value="Pacific/Honolulu">Hawaii Time — Honolulu</option>
+                                <option value="America/Toronto">Eastern Time — Toronto</option>
+                                <option value="America/Vancouver">Pacific Time — Vancouver</option>
+                              </optgroup>
+                              <optgroup label="Europe">
+                                <option value="Europe/London">GMT/BST — London</option>
+                                <option value="Europe/Paris">CET/CEST — Paris</option>
+                                <option value="Europe/Berlin">CET/CEST — Berlin</option>
+                                <option value="Europe/Amsterdam">CET/CEST — Amsterdam</option>
+                                <option value="Europe/Stockholm">CET/CEST — Stockholm</option>
+                                <option value="Europe/Helsinki">EET/EEST — Helsinki</option>
+                                <option value="Europe/Athens">EET/EEST — Athens</option>
+                                <option value="Europe/Istanbul">TRT — Istanbul</option>
+                                <option value="Europe/Moscow">MSK — Moscow</option>
+                              </optgroup>
+                              <optgroup label="Asia / Pacific">
+                                <option value="Asia/Dubai">GST — Dubai</option>
+                                <option value="Asia/Karachi">PKT — Karachi</option>
+                                <option value="Asia/Kolkata">IST — India</option>
+                                <option value="Asia/Dhaka">BST — Dhaka</option>
+                                <option value="Asia/Bangkok">ICT — Bangkok</option>
+                                <option value="Asia/Singapore">SGT — Singapore</option>
+                                <option value="Asia/Tokyo">JST — Tokyo</option>
+                                <option value="Asia/Seoul">KST — Seoul</option>
+                                <option value="Asia/Shanghai">CST — Shanghai</option>
+                                <option value="Australia/Sydney">AEST/AEDT — Sydney</option>
+                                <option value="Australia/Melbourne">AEST/AEDT — Melbourne</option>
+                                <option value="Pacific/Auckland">NZST/NZDT — Auckland</option>
+                              </optgroup>
+                              <optgroup label="Middle East / Africa">
+                                <option value="Africa/Cairo">EET — Cairo</option>
+                                <option value="Africa/Johannesburg">SAST — Johannesburg</option>
+                                <option value="Asia/Riyadh">AST — Riyadh</option>
+                                <option value="Asia/Jerusalem">IST/IDT — Jerusalem</option>
+                              </optgroup>
+                              <optgroup label="Latin America">
+                                <option value="America/Sao_Paulo">BRT/BRST — São Paulo</option>
+                                <option value="America/Argentina/Buenos_Aires">ART — Buenos Aires</option>
+                                <option value="America/Mexico_City">CST/CDT — Mexico City</option>
+                                <option value="America/Bogota">COT — Bogotá</option>
+                              </optgroup>
+                            </select>
+                            <p className="text-xs text-gray-400 mt-1">Notifications will be sent at 9:00 AM in your selected timezone.</p>
+                          </div>
                         </div>
                       )}
 
@@ -1007,7 +1057,8 @@ export default function Profile() {
                           onClick={() =>
                             updateNotifPrefsMutation.mutate({
                               quickfireReminder: notifEnabled,
-                              reminderTime: notifTime,
+                              reminderTime: "09:00",
+                              timezone: notifTimezone,
                             })
                           }
                           disabled={updateNotifPrefsMutation.isPending}
