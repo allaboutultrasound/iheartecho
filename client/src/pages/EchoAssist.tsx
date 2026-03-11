@@ -1484,10 +1484,7 @@ function RVFunctionEngine() {
         <CalcLink tabId="rvsp" label="RVSP / PAP" />
       </div>
 
-      {/* ─── Myocardial StrainAssist Sub-Section ──────────────────────────── */}
-      <StrainAssistSubSection />
-
-      <p className="text-xs text-gray-400 mt-3">Reference: <a href='https://www.asecho.org/wp-content/uploads/2025/03/PIIS0894731725000379.pdf' target='_blank' rel='noopener noreferrer' className='underline hover:text-[#189aa1]'>ASE 2025 Right Heart & PH Guidelines</a>; ASE 2025 Strain Guideline</p>
+      <p className="text-xs text-gray-400 mt-3">Reference: <a href='https://www.asecho.org/wp-content/uploads/2025/03/PIIS0894731725000379.pdf' target='_blank' rel='noopener noreferrer' className='underline hover:text-[#189aa1]'>ASE 2025 Right Heart &amp; PH Guidelines</a></p>
     </EngineSection>
   );
 }
@@ -3110,24 +3107,30 @@ export default function EchoAssist() {
           <DiastolicEngine />
           <LAPEstimationEngine />
           <DiastologySpecialPopulations />
-          {/* 3–7. Valve engines */}
-          <AorticStenosisEngine />
-          <AorticRegurgEngine />
-          <MitraStenosisEngine />
-          <MitralRegurgEngine />
-          <TricuspidRegurgEngine />
-          {/* 8. RV SystolicAssist (with Myocardial StrainAssist™ nested inside) */}
-          <RVFunctionEngine />
-          {/* 9. PulmonaryHTNAssist */}
-          <PulmonaryHTNEngine />
-          {/* 10. POCUS-Assist */}
-          <POCUSAssistEngine />
-          {/* 11. Frank-Starling */}
-          <FrankStarlingEngine />
-          {/* 12. Stress Echo (Premium) */}
+          {/* 3. StressEchoAssist™ (Premium) */}
           <PremiumOverlay featureName="StressEchoAssist™">
             <StressEchoAssistEngine />
           </PremiumOverlay>
+          {/* 4. Myocardial StrainAssist™ */}
+          <StrainEngine />
+          {/* 5. Aortic Stenosis */}
+          <AorticStenosisEngine />
+          {/* 6. Aortic Regurgitation */}
+          <AorticRegurgEngine />
+          {/* 7. Mitral Stenosis */}
+          <MitraStenosisEngine />
+          {/* 8. Mitral Regurgitation */}
+          <MitralRegurgEngine />
+          {/* 9. Tricuspid Regurgitation */}
+          <TricuspidRegurgEngine />
+          {/* 10. PulmonaryHypertensionAssist */}
+          <PulmonaryHTNEngine />
+          {/* 11. RV SystolicAssist™ */}
+          <RVFunctionEngine />
+          {/* 12. POCUS-Assist */}
+          <POCUSAssistEngine />
+          {/* 13. Frank-Starling */}
+          <FrankStarlingEngine />
         </div>
 
         {/* Footer */}
