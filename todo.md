@@ -2149,5 +2149,7 @@
 - [x] Fix bulk selection in Question Bank — hide action buttons in bulk mode so entire card is clickable; checkbox is now a proper button element
 - [x] Restore 24-hour timed access to Daily Challenge for free (unauthenticated/basic) users — countdown timer shown, MCQ options visible but require login to submit
 - [x] Expand AI Generator modal to support all question types (connect, order, identifier, true/false)
+- [x] Fix AI Generator preview to display pairs (Connect) and orderedItems (Order) in preview cards
+- [x] Fix AI Generator import to pass pairs/orderedItems/markers fields when creating questions
 - [x] Add New Challenge button to Challenge Queue tab header
 - [x] Remove date labels from archive challenge cards

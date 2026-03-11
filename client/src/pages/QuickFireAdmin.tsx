@@ -2130,6 +2130,7 @@ export default function QuickFireAdmin() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-800 leading-snug">{q.question}</p>
+                        {/* MCQ options */}
                         {q.options && (
                           <div className="mt-1.5 space-y-0.5">
                             {q.options.map((opt: string, oi: number) => (
@@ -2139,8 +2140,39 @@ export default function QuickFireAdmin() {
                             ))}
                           </div>
                         )}
+                        {/* Quick Review answer */}
                         {q.reviewAnswer && <p className="text-xs text-green-700 font-semibold mt-1">Answer: {q.reviewAnswer}</p>}
+                        {/* Connect pairs */}
+                        {q.pairs && Array.isArray(q.pairs) && (
+                          <div className="mt-1.5 space-y-0.5">
+                            <p className="text-xs font-semibold text-teal-600 mb-0.5">Matching pairs:</p>
+                            {q.pairs.map((pair: any, pi: number) => (
+                              <p key={pi} className="text-xs text-gray-600">
+                                <span className="font-medium text-gray-800">{pair.left}</span>
+                                <span className="text-gray-400 mx-1">→</span>
+                                <span className="text-teal-700">{pair.right}</span>
+                              </p>
+                            ))}
+                          </div>
+                        )}
+                        {/* Order items */}
+                        {q.orderedItems && Array.isArray(q.orderedItems) && (
+                          <div className="mt-1.5 space-y-0.5">
+                            <p className="text-xs font-semibold text-orange-600 mb-0.5">Correct order:</p>
+                            {q.orderedItems.map((item: string, oi: number) => (
+                              <p key={oi} className="text-xs text-gray-600">
+                                <span className="text-orange-500 font-bold mr-1">{oi + 1}.</span>{item}
+                              </p>
+                            ))}
+                          </div>
+                        )}
                         {q.explanation && <p className="text-xs text-gray-400 mt-1 italic">{q.explanation}</p>}
+                        {/* Tags */}
+                        {q.tags && q.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1.5">
+                            {q.tags.map((t: string) => <span key={t} className="text-xs text-gray-400">#{t}</span>)}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -2162,6 +2194,12 @@ export default function QuickFireAdmin() {
                             correctAnswer: q.correctAnswer,
                             explanation: q.explanation,
                             reviewAnswer: q.reviewAnswer,
+                            // Connect type
+                            pairs: q.pairs,
+                            // Order type
+                            orderedItems: q.orderedItems,
+                            // Identifier type (AI won't generate markers, but pass through if present)
+                            markers: q.markers,
                             difficulty: aiDifficulty,
                             tags: q.tags ?? [],
                           } as any)
