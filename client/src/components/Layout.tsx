@@ -141,7 +141,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   // Use appRoles (the authoritative role array from auth.me) for access checks
   const appRoles: string[] = (user as any)?.appRoles ?? [];
   const hasDiyAccess = appRoles.includes("diy_user") || appRoles.includes("diy_admin") || appRoles.includes("platform_admin") || isAdmin;
-  const hasDiyAdmin = appRoles.includes("diy_admin") || appRoles.includes("platform_admin") || isAdmin;
+  const hasDiyAdmin = appRoles.includes("diy_admin");
 
   return (
     <div className="flex min-h-screen bg-[#f0fbfc]">

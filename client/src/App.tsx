@@ -154,7 +154,7 @@ function Router() {
       <Route path="/accreditation-navigator">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><AccreditationNavigator /></RoleGuard>}</Route>
       <Route path="/lab-admin">
         {() => (
-          <RoleGuard roles={["diy_admin"]}>
+          <RoleGuard roles={["diy_admin"]} allowAdmin={false}>
             <LabAdmin />
           </RoleGuard>
         )}
@@ -199,8 +199,8 @@ function Router() {
       {/* ── DIY Accreditation™ ─────────────────────────────────────────── */}
       <Route path="/diy-accreditation-plans" component={DIYAccreditationPlans} />
       <Route path="/diy-register" component={DIYRegister} />
-      <Route path="/diy-lab-admin">{() => <RoleGuard roles={["diy_admin", "platform_admin"]}><DIYLabAdmin /></RoleGuard>}</Route>
-      <Route path="/diy-member">{() => <RoleGuard roles={["diy_user", "diy_admin", "platform_admin"]}><DIYMemberPortal /></RoleGuard>}</Route>
+      <Route path="/diy-lab-admin">{() => <RoleGuard roles={["diy_admin"]} allowAdmin={false}><DIYLabAdmin /></RoleGuard>}</Route>
+      <Route path="/diy-member">{() => <RoleGuard roles={["diy_user", "diy_admin"]} allowAdmin={false}><DIYMemberPortal /></RoleGuard>}</Route>
       {/* ── Premium Access ──────────────────────────────────────────────── */}
       <Route path="/premium" component={Premium} />
       <Route path="/upgrade-success" component={UpgradeSuccess} />
