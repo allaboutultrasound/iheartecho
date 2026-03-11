@@ -229,6 +229,7 @@ export async function runChallengeCron() {
             challengeDescription: toPublish.description ?? "",
             challengeUrl,
             category: toPublish.category ?? "General",
+            appUrl: APP_URL,
           }),
           text: `New Daily Challenge: ${toPublish.title}\n\n${toPublish.description ?? ""}\n\nYou have 24 hours to complete it!\n\n${challengeUrl}`,
         }));
@@ -251,12 +252,14 @@ function buildEmailHtml({
   challengeDescription,
   challengeUrl,
   category,
+  appUrl,
 }: {
   userName: string;
   challengeTitle: string;
   challengeDescription: string;
   challengeUrl: string;
   category: string;
+  appUrl: string;
 }) {
   return `<!DOCTYPE html>
 <html>
@@ -306,9 +309,12 @@ function buildEmailHtml({
           <tr>
             <td style="background:#f9fafb;padding:20px 40px;border-top:1px solid #e5e7eb;text-align:center;">
               <p style="margin:0;color:#9ca3af;font-size:12px;">
-                You're receiving this because you're subscribed to Daily Challenge notifications.<br/>
-                <a href="${challengeUrl}" style="color:#189aa1;text-decoration:none;">Manage preferences</a> · 
-                <a href="${challengeUrl}" style="color:#189aa1;text-decoration:none;">iHeartEcho™</a>
+                You're receiving this because you opted in to Daily Challenge notifications.<br/>
+                <a href="${appUrl}/profile#notifications" style="color:#189aa1;text-decoration:none;">Manage notification preferences</a>
+                &nbsp;·&nbsp;
+                <a href="${appUrl}/profile#notifications" style="color:#9ca3af;text-decoration:underline;">Unsubscribe</a>
+                &nbsp;·&nbsp;
+                <a href="${appUrl}" style="color:#189aa1;text-decoration:none;">iHeartEcho™</a>
               </p>
             </td>
           </tr>
@@ -396,6 +402,7 @@ async function send9amChallengeNotifications() {
           challengeDescription: liveChallenge.description ?? "",
           challengeUrl,
           category: liveChallenge.category ?? "General",
+          appUrl: APP_URL,
         }),
         text: `Daily Challenge: ${liveChallenge.title}\n\n${liveChallenge.description ?? ""}\n\nYou have 24 hours to complete it!\n\n${challengeUrl}`,
       }));

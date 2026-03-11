@@ -2360,3 +2360,6 @@
 - [x] Flashcard daily limit: fix double-counting bug (authenticated free users could reset limit on refresh)
 - [x] Flashcard daily limit: add server-side IP tracking for unauthenticated users (persists across refreshes)
 - [x] Add recordFlashcardView public tRPC procedure for IP-based unauthenticated tracking
+
+## Notification Email Unsubscribe Link (Mar 11 2026)
+- [x] Add unsubscribe link to daily challenge notification email pointing to /profile#notifications
