@@ -1,0 +1,40 @@
+{
+  "query": "SELECT u.id, u.name, u.email, ur.role FROM users u LEFT JOIN userRoles ur ON u.id = ur.userId WHERE u.name = 'larawilliams0501';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mhhtxpXA9Esras.root --database etVPnUidWNWG8W4GHnRqzv --execute SELECT u.id, u.name, u.email, ur.role FROM users u LEFT JOIN userRoles ur ON u.id = ur.userId WHERE u.name = 'larawilliams0501';",
+  "rows": [
+    {
+      "id": "1",
+      "name": "larawilliams0501",
+      "email": "larawilliams0501@gmail.com",
+      "role": "platform_admin"
+    },
+    {
+      "id": "1",
+      "name": "larawilliams0501",
+      "email": "larawilliams0501@gmail.com",
+      "role": "diy_admin"
+    },
+    {
+      "id": "1",
+      "name": "larawilliams0501",
+      "email": "larawilliams0501@gmail.com",
+      "role": "diy_user"
+    },
+    {
+      "id": "1",
+      "name": "larawilliams0501",
+      "email": "larawilliams0501@gmail.com",
+      "role": "premium_user"
+    },
+    {
+      "id": "1",
+      "name": "larawilliams0501",
+      "email": "larawilliams0501@gmail.com",
+      "role": "user"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\trole\n1\tlarawilliams0501\tlarawilliams0501@gmail.com\tplatform_admin\n1\tlarawilliams0501\tlarawilliams0501@gmail.com\tdiy_admin\n1\tlarawilliams0501\tlarawilliams0501@gmail.com\tdiy_user\n1\tlarawilliams0501\tlarawilliams0501@gmail.com\tpremium_user\n1\tlarawilliams0501\tlarawilliams0501@gmail.com\tuser\n",
+  "stderr": "",
+  "execution_time_ms": 369
+}

@@ -125,7 +125,7 @@ const hiddenNavItems = [
   { path: "/diy-accreditation-plans", label: "DIY Accreditation™ Plans" },
   { path: "/diy-accreditation-smart", label: "DIY Accreditation™" },
   { path: "/diy-register", label: "Register Your Lab" },
-  { path: "/diy-lab-admin", label: "Lab Admin Portal" },
+  { path: "/lab-admin", label: "Lab Admin Portal" },
   { path: "/diy-member", label: "Member Portal" },
 ];
 const navItems = [...navGroups.flatMap(g => g.items), ...hiddenNavItems];

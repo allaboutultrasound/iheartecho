@@ -1,0 +1,40 @@
+{
+  "query": "SELECT ur.id, ur.userId, ur.role, u.name FROM userRoles ur JOIN users u ON u.id = ur.userId WHERE u.name = 'larawilliams0501' ORDER BY ur.role;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mhhtxpXA9Esras.root --database etVPnUidWNWG8W4GHnRqzv --execute SELECT ur.id, ur.userId, ur.role, u.name FROM userRoles ur JOIN users u ON u.id = ur.userId WHERE u.name = 'larawilliams0501' ORDER BY ur.role;",
+  "rows": [
+    {
+      "id": "30001",
+      "userId": "1",
+      "role": "user",
+      "name": "larawilliams0501"
+    },
+    {
+      "id": "4",
+      "userId": "1",
+      "role": "premium_user",
+      "name": "larawilliams0501"
+    },
+    {
+      "id": "2",
+      "userId": "1",
+      "role": "diy_admin",
+      "name": "larawilliams0501"
+    },
+    {
+      "id": "3",
+      "userId": "1",
+      "role": "diy_user",
+      "name": "larawilliams0501"
+    },
+    {
+      "id": "1",
+      "userId": "1",
+      "role": "platform_admin",
+      "name": "larawilliams0501"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tuserId\trole\tname\n30001\t1\tuser\tlarawilliams0501\n4\t1\tpremium_user\tlarawilliams0501\n2\t1\tdiy_admin\tlarawilliams0501\n3\t1\tdiy_user\tlarawilliams0501\n1\t1\tplatform_admin\tlarawilliams0501\n",
+  "stderr": "",
+  "execution_time_ms": 351
+}
