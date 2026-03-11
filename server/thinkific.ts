@@ -147,6 +147,21 @@ export async function getUserByEmail(email: string): Promise<ThinkificUser | nul
 }
 
 /**
+ * Fetch a single enrollment by its ID.
+ * Used when the webhook payload only contains the enrollment ID.
+ */
+export async function getEnrollmentById(
+  enrollmentId: number
+): Promise<ThinkificEnrollment | null> {
+  try {
+    const data = await thinkificFetch<ThinkificEnrollment>(`/enrollments/${enrollmentId}`);
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Fetch all enrollments for a specific Thinkific user ID.
  */
 export async function getEnrollmentsByUserId(

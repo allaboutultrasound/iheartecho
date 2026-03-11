@@ -34,6 +34,7 @@ import { getDb } from "../db";
 import { webhookEvents } from "../../drizzle/schema";
 import { getUserByEmail, setPremiumStatus, createPendingUser, assignRole, removeRole, ensureUserRole, markThinkificEnrolled } from "../db";
 import { syncCatalogToDb } from "../routers/cmeRouter";
+import { getEnrollmentById } from "../thinkific";
 
 // ── Allowed event allowlist ──────────────────────────────────────────────────
 /** Only these resource+action pairs will be processed. Everything else is filtered. */
@@ -246,22 +247,44 @@ export function registerThinkificWebhook(app: Router) {
 
       // ── 2. enrollment.created / enrollment.updated → grant access ─────────
       if (resource === "enrollment" && (action === "created" || action === "updated")) {
+        // Thinkific sometimes sends a sparse payload with only { id: <enrollmentId> }.
+        // In that case, look up the full enrollment details from the Thinkific API.
+        let resolvedEmail = userEmail;
+        let resolvedProductName = productName;
+
+        if (!resolvedEmail && (p as any)?.id) {
+          const enrollmentId = Number((p as any).id);
+          console.log(`[Thinkific Webhook] enrollment.${action}: sparse payload — looking up enrollment ${enrollmentId} from Thinkific API`);
+          try {
+            const enrollment = await getEnrollmentById(enrollmentId);
+            if (enrollment) {
+              resolvedEmail = (enrollment.user_email ?? "").toLowerCase().trim();
+              resolvedProductName = enrollment.course_name ?? resolvedProductName;
+              console.log(`[Thinkific Webhook] enrollment.${action}: resolved email=${resolvedEmail} product="${resolvedProductName}" from API`);
+            } else {
+              console.warn(`[Thinkific Webhook] enrollment.${action}: could not fetch enrollment ${enrollmentId} from Thinkific API`);
+            }
+          } catch (lookupErr) {
+            console.error(`[Thinkific Webhook] enrollment.${action}: error fetching enrollment ${enrollmentId}:`, lookupErr);
+          }
+        }
+
         const enrollStatus = ((p as any)?.activated ?? (p as any)?.status ?? "").toString().toLowerCase();
 
-        // Only process active/completed enrollments
-        if (enrollStatus && !["true", "active", "completed", "1"].includes(enrollStatus)) {
+        // Only process active/completed enrollments (skip if explicitly inactive)
+        if (enrollStatus && !["true", "active", "completed", "1", ""].includes(enrollStatus)) {
           const msg = `ignored: enrollment status "${enrollStatus}" is not active`;
-          await logWebhookEvent({ resource, action, email: userEmail || undefined, productName, httpStatus: 200, outcome: "ignored", message: msg, rawPayload: payload });
+          await logWebhookEvent({ resource, action, email: resolvedEmail || undefined, productName: resolvedProductName, httpStatus: 200, outcome: "ignored", message: msg, rawPayload: payload });
           return res.status(200).json({ ok: true, message: msg });
         }
 
-        if (!userEmail) {
-          const msg = "ignored: no user email in enrollment payload";
-          await logWebhookEvent({ resource, action, productName, httpStatus: 200, outcome: "ignored", message: msg, rawPayload: payload });
+        if (!resolvedEmail) {
+          const msg = "ignored: no user email in enrollment payload and could not resolve from API";
+          await logWebhookEvent({ resource, action, productName: resolvedProductName, httpStatus: 200, outcome: "ignored", message: msg, rawPayload: payload });
           return res.status(200).json({ ok: true, message: msg });
         }
 
-        return await grantAccess({ resource, action, userEmail, productName, payload, res });
+        return await grantAccess({ resource, action, userEmail: resolvedEmail, productName: resolvedProductName, payload, res });
       }
 
       // ── 3. subscription.activated → re-grant access ───────────────────────

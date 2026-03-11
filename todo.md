@@ -2292,3 +2292,6 @@
 
 ## Profile Menu Fix (Mar 11 2026)
 - [x] Fix DIY Lab Admin link in profile dropdown menu — now correctly points to /diy-lab-admin (was incorrectly split into two entries pointing to /lab-admin and /diy-lab-admin)
+
+## Thinkific Webhook Fix (Mar 11 2026)
+- [x] Fix Thinkific webhook: enrollment.created with sparse payload (only {id}) now looks up full enrollment details from Thinkific API to get user email and course name
