@@ -2289,3 +2289,6 @@
 - [x] Fix PremiumOverlay bypass vulnerability — overlay shown by default during auth loading, content only revealed after confirmed premium status
 - [x] Remove Date Range filter from Challenge Archive filter panel
 - [x] Remove unused archiveDateFrom/archiveDateTo state variables from QuickFire.tsx
+
+## Profile Menu Fix (Mar 11 2026)
+- [x] Fix DIY Lab Admin link in profile dropdown menu — now correctly points to /diy-lab-admin (was incorrectly split into two entries pointing to /lab-admin and /diy-lab-admin)
