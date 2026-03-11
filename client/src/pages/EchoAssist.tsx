@@ -3049,10 +3049,17 @@ function LAPEstimationEngine() {
 // ─── DIASTOLOGYASSIST™ WRAPPER ─────────────────────────────────────────────────
 // Groups all three diastology calculators under a single collapsible parent section
 function DiastologyAssistEngine() {
-  const [open, setOpen] = useState(false);
+  const isTargeted = typeof window !== "undefined" &&
+    window.location.hash.replace("#", "") === "engine-diastologyassist";
+  const [open, setOpen] = useState(isTargeted);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Scroll into view on initial load if this section is the target
+    if (isTargeted) {
+      setTimeout(() => ref.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 120);
+    }
+    // Also respond to programmatic deep-link events fired by the parent page
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<string>).detail;
       if (detail === "engine-diastologyassist") {
