@@ -1618,6 +1618,11 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
         publishDate: input.publishDate ?? null,
         createdByUserId: ctx.user.id,
       });
+      // Remove from question bank — mark inactive so it no longer appears in the bank
+      await db
+        .update(quickfireQuestions)
+        .set({ isActive: false })
+        .where(eq(quickfireQuestions.id, input.questionId));
       return { id: (result as any).insertId };
     }),
 
@@ -1671,6 +1676,14 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
           createdByUserId: ctx.user.id,
         });
         results.push((result as any).insertId);
+      }
+
+      // Remove all pushed questions from the question bank
+      if (ordered.length > 0) {
+        await db
+          .update(quickfireQuestions)
+          .set({ isActive: false })
+          .where(inArray(quickfireQuestions.id, ordered.map((q) => q.id)));
       }
 
       return { added: results.length, ids: results };

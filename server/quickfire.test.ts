@@ -254,3 +254,65 @@ describe("quickfire.triggerStreakReminders", () => {
     expect(typeof result.total).toBe("number");
   });
 });
+
+
+describe("quickfire.adminApproveQuestionToQueue", () => {
+  it("throws UNAUTHORIZED when called without authentication", async () => {
+    const caller = appRouter.createCaller(makeCtx(null));
+    await expect(
+      caller.quickfire.adminApproveQuestionToQueue({ questionId: 1 })
+    ).rejects.toThrow();
+  });
+
+  it("throws FORBIDDEN for non-admin users", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeUser()));
+    await expect(
+      caller.quickfire.adminApproveQuestionToQueue({ questionId: 1 })
+    ).rejects.toThrow();
+  });
+
+  it("throws INTERNAL_SERVER_ERROR when DB unavailable (admin)", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeAdminUser()));
+    await expect(
+      caller.quickfire.adminApproveQuestionToQueue({ questionId: 1 })
+    ).rejects.toThrow("DB unavailable");
+  });
+});
+
+describe("quickfire.adminBatchApproveToQueue", () => {
+  it("throws UNAUTHORIZED when called without authentication", async () => {
+    const caller = appRouter.createCaller(makeCtx(null));
+    await expect(
+      caller.quickfire.adminBatchApproveToQueue({ questionIds: [1, 2] })
+    ).rejects.toThrow();
+  });
+
+  it("throws FORBIDDEN for non-admin users", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeUser()));
+    await expect(
+      caller.quickfire.adminBatchApproveToQueue({ questionIds: [1, 2] })
+    ).rejects.toThrow();
+  });
+
+  it("rejects empty questionIds array (min 1)", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeAdminUser()));
+    await expect(
+      caller.quickfire.adminBatchApproveToQueue({ questionIds: [] })
+    ).rejects.toThrow();
+  });
+
+  it("rejects questionIds array exceeding 100 items", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeAdminUser()));
+    const ids = Array.from({ length: 101 }, (_, i) => i + 1);
+    await expect(
+      caller.quickfire.adminBatchApproveToQueue({ questionIds: ids })
+    ).rejects.toThrow();
+  });
+
+  it("throws INTERNAL_SERVER_ERROR when DB unavailable (admin)", async () => {
+    const caller = appRouter.createCaller(makeCtx(makeAdminUser()));
+    await expect(
+      caller.quickfire.adminBatchApproveToQueue({ questionIds: [1, 2] })
+    ).rejects.toThrow("DB unavailable");
+  });
+});

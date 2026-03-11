@@ -2270,3 +2270,8 @@
 - [ ] Fix ReportBuilder: clean up broken JSX, wrap content in PremiumOverlay properly
 - [ ] Add PremiumOverlay to all premium ScanCoach pages (TEE, ICE, HOCM, Stress, StructuralHeart, POCUSRush, POCUSLung)
 - [ ] Fix StressEchoAssist card on EchoAssistHub: show card normally, overlay only on engine open
+
+## Queue Push — Remove from Bank
+- [ ] When a question is pushed to the Daily Challenge queue, mark it as inactive in the question bank (isActive = false)
+- [ ] Apply to: adminApproveQuestionToQueue, adminBatchApproveToQueue, adminCloneChallenge
+- [ ] Update tests to verify question is deactivated after queue push
