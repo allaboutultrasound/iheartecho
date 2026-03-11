@@ -2107,3 +2107,16 @@
 - [ ] Fix premium gate for EchoAccreditation Navigator
 - [ ] Make DIY Accreditation sidebar link context-aware: DIY/admin → /diy-accreditation, others → /premium (plans page)
 - [ ] Ensure all tRPC protected procedures reject unauthenticated requests (not just frontend gates)
+
+## Daily Challenge — New Question Types
+- [ ] Add "connect" question type to schema (pairs: [{left, right}], stored as JSON)
+- [ ] Add "identifier" question type to schema (imageUrl, markers: [{x, y, label}], stored as JSON)
+- [ ] Remove quickReview from Daily Challenge question type enum (keep in Flashcards only)
+- [ ] Build Connect Game player UI (drag-and-drop or click-to-match pairs)
+- [ ] Build Identifier Game player UI (click-to-place anatomy marker on image)
+- [ ] Admin: add Connect Game creation form (add/remove pairs)
+- [ ] Admin: add Identifier Game creation form (upload image, place markers)
+- [ ] Fix broken bulk select in Daily Challenge admin question bank
+- [ ] Add "order" question type to schema (orderedItems: string[], stored as JSON)
+- [ ] Build Order Game player UI (drag items into correct sequence)
+- [ ] Admin: add Order Game creation form (add/reorder items)

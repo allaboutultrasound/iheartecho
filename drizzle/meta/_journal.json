@@ -400,6 +400,20 @@
       "when": 1773172914180,
       "tag": "0056_sour_senator_kelly",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "5",
+      "when": 1773195089518,
+      "tag": "0057_fat_mojo",
+      "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "5",
+      "when": 1773195173463,
+      "tag": "0058_fancy_the_captain",
+      "breakpoints": true
     }
   ]
 }

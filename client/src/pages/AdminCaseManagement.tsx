@@ -553,6 +553,7 @@ export default function AdminCaseManagement() {
   const [tagInput, setTagInput] = useState("");
   const [modalityFilter, setModalityFilter] = useState<string>("all");
   const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
+  const [mediaFilter, setMediaFilter] = useState<"all" | "has_media" | "no_media">("all");
 
   // Preview dialog
   const [previewCaseId, setPreviewCaseId] = useState<number | null>(null);
@@ -589,6 +590,7 @@ export default function AdminCaseManagement() {
       tag: tagFilter || undefined,
       modality: (modalityFilter === "all" ? undefined : modalityFilter) as any,
       difficulty: (difficultyFilter === "all" ? undefined : difficultyFilter) as any,
+      mediaFilter: mediaFilter === "all" ? undefined : mediaFilter,
     },
     { enabled: tab === "all" }
   );
@@ -685,10 +687,11 @@ export default function AdminCaseManagement() {
     setModalityFilter("all");
     setDifficultyFilter("all");
     setStatusFilter("all");
+    setMediaFilter("all");
     setPage(1);
   };
 
-  const hasActiveFilters = search || tagFilter || modalityFilter !== "all" || difficultyFilter !== "all" || statusFilter !== "all";
+  const hasActiveFilters = search || tagFilter || modalityFilter !== "all" || difficultyFilter !== "all" || statusFilter !== "all" || mediaFilter !== "all";
 
   const CaseRow = ({ c, showActions = true }: { c: any; showActions?: boolean }) => (
     <div className="flex items-start gap-3 p-4 bg-white rounded-xl border border-gray-100 hover:border-[#189aa1]/30 transition-all">
@@ -1016,6 +1019,16 @@ export default function AdminCaseManagement() {
                     <SelectItem value="beginner">Beginner</SelectItem>
                     <SelectItem value="intermediate">Intermediate</SelectItem>
                     <SelectItem value="advanced">Advanced</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={mediaFilter} onValueChange={(v) => { setMediaFilter(v as any); setPage(1); }}>
+                  <SelectTrigger className="w-36">
+                    <SelectValue placeholder="All Media" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Media</SelectItem>
+                    <SelectItem value="has_media">Has Media</SelectItem>
+                    <SelectItem value="no_media">No Media</SelectItem>
                   </SelectContent>
                 </Select>
                 {hasActiveFilters && (

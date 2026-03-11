@@ -204,6 +204,9 @@ export const quickfireRouter = router({
         ...q,
         options: q.options ? JSON.parse(q.options) : null,
         tags: q.tags ? JSON.parse(q.tags) : [],
+        pairs: q.pairs ? JSON.parse(q.pairs) : null,
+        markers: q.markers ? JSON.parse(q.markers) : null,
+        orderedItems: q.orderedItems ? JSON.parse(q.orderedItems) : null,
         // Only reveal correct answer if user has already attempted
         correctAnswer: attempted ? q.correctAnswer : null,
         explanation: attempted ? q.explanation : null,
@@ -436,7 +439,7 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
   createQuestion: adminProcedure
     .input(
       z.object({
-        type: z.enum(["scenario", "image", "quickReview"]),
+        type: z.enum(["scenario", "image", "quickReview", "connect", "identifier", "order"]),
         question: z.string().min(5).max(2000),
         options: z.array(z.string().min(1)).min(2).max(6).optional(),
         correctAnswer: z.number().int().min(0).optional(),
@@ -444,6 +447,12 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
         reviewAnswer: z.string().max(2000).optional(),
         imageUrl: z.string().url().optional(),
         videoUrl: z.string().url().optional(),
+        // connect: array of {left, right} pairs
+        pairs: z.array(z.object({ left: z.string().min(1), right: z.string().min(1) })).optional(),
+        // identifier: array of {x, y, label, radius?} markers on an image
+        markers: z.array(z.object({ x: z.number(), y: z.number(), label: z.string().min(1), radius: z.number().optional() })).optional(),
+        // order: array of strings in the correct order
+        orderedItems: z.array(z.string().min(1)).min(2).max(10).optional(),
         difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("intermediate"),
         tags: z.array(z.string()).default([]),
         echoCategory: z.enum(["adult", "pediatric_congenital", "fetal"]).default("adult"),
@@ -461,6 +470,9 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
         reviewAnswer: input.reviewAnswer ?? null,
         imageUrl: input.imageUrl ?? null,
         videoUrl: input.videoUrl ?? null,
+        pairs: input.pairs ? JSON.stringify(input.pairs) : null,
+        markers: input.markers ? JSON.stringify(input.markers) : null,
+        orderedItems: input.orderedItems ? JSON.stringify(input.orderedItems) : null,
         difficulty: input.difficulty,
         tags: JSON.stringify(input.tags),
         echoCategory: input.echoCategory,
@@ -474,7 +486,7 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
     .input(
       z.object({
         id: z.number().int().positive(),
-        type: z.enum(["scenario", "image", "quickReview"]).optional(),
+        type: z.enum(["scenario", "image", "quickReview", "connect", "identifier", "order"]).optional(),
         question: z.string().min(5).max(2000).optional(),
         options: z.array(z.string().min(1)).min(2).max(6).optional(),
         correctAnswer: z.number().int().min(0).optional(),
@@ -482,6 +494,9 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
         reviewAnswer: z.string().max(2000).optional(),
         imageUrl: z.string().url().optional().nullable(),
         videoUrl: z.string().url().optional().nullable(),
+        pairs: z.array(z.object({ left: z.string().min(1), right: z.string().min(1) })).optional().nullable(),
+        markers: z.array(z.object({ x: z.number(), y: z.number(), label: z.string().min(1), radius: z.number().optional() })).optional().nullable(),
+        orderedItems: z.array(z.string().min(1)).min(2).max(10).optional().nullable(),
         difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
         tags: z.array(z.string()).optional(),
         isActive: z.boolean().optional(),
@@ -491,13 +506,16 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
     .mutation(async ({ input }) => {
       const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
-      const { id, options, tags, ...rest } = input;
+      const { id, options, tags, pairs, markers, orderedItems, ...rest } = input;
       await db
         .update(quickfireQuestions)
         .set({
           ...rest,
-          ...(options !== undefined ? { options: JSON.stringify(options) } : {}),
+          ...(options !== undefined ? { options: options ? JSON.stringify(options) : null } : {}),
           ...(tags !== undefined ? { tags: JSON.stringify(tags) } : {}),
+          ...(pairs !== undefined ? { pairs: pairs ? JSON.stringify(pairs) : null } : {}),
+          ...(markers !== undefined ? { markers: markers ? JSON.stringify(markers) : null } : {}),
+          ...(orderedItems !== undefined ? { orderedItems: orderedItems ? JSON.stringify(orderedItems) : null } : {}),
         })
         .where(eq(quickfireQuestions.id, id));
       return { success: true };
@@ -520,7 +538,7 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
       z.object({
         page: z.number().int().min(1).default(1),
         limit: z.number().int().min(1).max(100).default(20),
-        type: z.enum(["scenario", "image", "quickReview"]).optional(),
+        type: z.enum(["scenario", "image", "quickReview", "connect", "identifier", "order"]).optional(),
         includeInactive: z.boolean().default(false),
         search: z.string().max(200).optional(),
         echoCategory: z.enum(["adult", "pediatric_congenital", "fetal"]).optional(),
@@ -567,6 +585,9 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
           ...q,
           options: q.options ? JSON.parse(q.options) : null,
           tags: q.tags ? JSON.parse(q.tags) : [],
+          pairs: q.pairs ? JSON.parse(q.pairs) : null,
+          markers: q.markers ? JSON.parse(q.markers) : null,
+          orderedItems: q.orderedItems ? JSON.parse(q.orderedItems) : null,
         })),
         total: totalResult[0]?.count ?? 0,
         page: input.page,
@@ -583,7 +604,7 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
     .input(
       z.object({
         topic: z.string().min(3).max(500),
-        type: z.enum(["scenario", "image", "quickReview"]).default("scenario"),
+        type: z.enum(["scenario", "image", "quickReview", "connect", "identifier", "order"]).default("scenario"),
         difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("intermediate"),
         count: z.number().int().min(1).max(20).default(5),
         insertImmediately: z.boolean().default(false),

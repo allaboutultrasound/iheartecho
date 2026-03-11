@@ -922,6 +922,7 @@ export const caseLibraryRouter = router({
         tag: z.string().max(100).optional(),
         modality: z.enum(["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "Other"]).optional(),
         difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
+        mediaFilter: z.enum(["all", "has_media", "no_media"]).optional(),
       })
     )
     .query(async ({ input }) => {
@@ -934,6 +935,15 @@ export const caseLibraryRouter = router({
       if (input.status) conditions.push(eq(echoLibraryCases.status, input.status));
       if (input.modality) conditions.push(eq(echoLibraryCases.modality, input.modality));
       if (input.difficulty) conditions.push(eq(echoLibraryCases.difficulty, input.difficulty));
+      if (input.mediaFilter === "has_media") {
+        conditions.push(
+          sql`EXISTS (SELECT 1 FROM echoLibraryCaseMedia WHERE echoLibraryCaseMedia.caseId = ${echoLibraryCases.id})`
+        );
+      } else if (input.mediaFilter === "no_media") {
+        conditions.push(
+          sql`NOT EXISTS (SELECT 1 FROM echoLibraryCaseMedia WHERE echoLibraryCaseMedia.caseId = ${echoLibraryCases.id})`
+        );
+      }
       if (input.search) {
         conditions.push(
           or(

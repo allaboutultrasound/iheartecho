@@ -69,6 +69,9 @@ import {
   Tag,
   ListPlus,
   Calendar,
+  Target,
+  Link2,
+  ArrowUpDown,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -76,10 +79,17 @@ const TYPE_META = {
   scenario: { label: "Scenario (MCQ)", icon: Stethoscope, color: "bg-blue-100 text-blue-700" },
   image: { label: "Image-Based (MCQ)", icon: ImageIcon, color: "bg-purple-100 text-purple-700" },
   quickReview: { label: "Quick Review (Flashcard)", icon: FileText, color: "bg-teal-100 text-teal-700" },
+  connect: { label: "Connect Game (Matching)", icon: Link2, color: "bg-teal-100 text-teal-700" },
+  identifier: { label: "Identifier Game (Anatomy)", icon: Target, color: "bg-indigo-100 text-indigo-700" },
+  order: { label: "Order Game (Sequence)", icon: ArrowUpDown, color: "bg-orange-100 text-orange-700" },
 } as const;
 
 type QuestionType = keyof typeof TYPE_META;
 type Difficulty = "beginner" | "intermediate" | "advanced";
+
+interface ConnectPair { left: string; right: string; }
+interface IdentifierMarker { x: number; y: number; label: string; }
+interface OrderItem { text: string; }
 
 interface QuestionForm {
   type: QuestionType;
@@ -91,6 +101,12 @@ interface QuestionForm {
   imageUrl: string;
   difficulty: Difficulty;
   tags: string;
+  // Connect game
+  pairs: ConnectPair[];
+  // Identifier game
+  markers: IdentifierMarker[];
+  // Order game
+  orderedItems: OrderItem[];
 }
 
 const EMPTY_FORM: QuestionForm = {
@@ -103,6 +119,9 @@ const EMPTY_FORM: QuestionForm = {
   imageUrl: "",
   difficulty: "intermediate",
   tags: "",
+  pairs: [{ left: "", right: "" }, { left: "", right: "" }, { left: "", right: "" }, { left: "", right: "" }],
+  markers: [],
+  orderedItems: [{ text: "" }, { text: "" }, { text: "" }, { text: "" }],
 };
 
 export default function QuickFireAdmin() {
@@ -545,19 +564,22 @@ export default function QuickFireAdmin() {
       imageUrl: q.imageUrl ?? "",
       difficulty: q.difficulty,
       tags: (q.tags ?? []).join(", "),
+      pairs: q.pairs ?? [{ left: "", right: "" }, { left: "", right: "" }, { left: "", right: "" }, { left: "", right: "" }],
+      markers: q.markers ?? [],
+      orderedItems: q.orderedItems ?? [{ text: "" }, { text: "" }, { text: "" }, { text: "" }],
     });
     setFormOpen(true);
   };
 
   const handleSubmitForm = () => {
     const tags = form.tags.split(",").map((t) => t.trim()).filter(Boolean);
-    const isMCQ = form.type !== "quickReview";
+    const isMCQType = form.type === "scenario" || form.type === "image";
 
     if (form.question.trim().length < 5) {
       toast.error("Question text must be at least 5 characters.");
       return;
     }
-    if (isMCQ) {
+    if (isMCQType) {
       const validOptions = form.options.filter((o) => o.trim().length > 0);
       if (validOptions.length < 2) {
         toast.error("Please provide at least 2 answer options.");
@@ -576,23 +598,50 @@ export default function QuickFireAdmin() {
       toast.error("Please provide an image URL for image-based questions.");
       return;
     }
+    if (form.type === "connect") {
+      const validPairs = form.pairs.filter((p) => p.left.trim() && p.right.trim());
+      if (validPairs.length < 2) {
+        toast.error("Please provide at least 2 complete matching pairs.");
+        return;
+      }
+    }
+    if (form.type === "identifier") {
+      if (!form.imageUrl.trim()) {
+        toast.error("Please provide an image for the identifier game.");
+        return;
+      }
+      if (form.markers.length === 0) {
+        toast.error("Please place at least one marker on the image.");
+        return;
+      }
+    }
+    if (form.type === "order") {
+      const validItems = form.orderedItems.filter((i) => i.text.trim());
+      if (validItems.length < 2) {
+        toast.error("Please provide at least 2 items to order.");
+        return;
+      }
+    }
 
-    const payload = {
+    const payload: any = {
       type: form.type,
       question: form.question.trim(),
-      options: isMCQ ? form.options.filter((o) => o.trim().length > 0) : undefined,
-      correctAnswer: isMCQ ? (form.correctAnswer ?? undefined) : undefined,
+      options: isMCQType ? form.options.filter((o) => o.trim().length > 0) : undefined,
+      correctAnswer: isMCQType ? (form.correctAnswer ?? undefined) : undefined,
       explanation: form.explanation.trim() || undefined,
       reviewAnswer: form.type === "quickReview" ? form.reviewAnswer.trim() : undefined,
-      imageUrl: form.imageUrl.trim() || undefined,
+      imageUrl: (form.type === "image" || form.type === "identifier") ? form.imageUrl.trim() || undefined : undefined,
       difficulty: form.difficulty,
       tags,
+      pairs: form.type === "connect" ? form.pairs.filter((p) => p.left.trim() && p.right.trim()) : undefined,
+      markers: form.type === "identifier" ? form.markers : undefined,
+      orderedItems: form.type === "order" ? form.orderedItems.filter((i) => i.text.trim()) : undefined,
     };
 
     if (editingId !== null) {
       updateMutation.mutate({ id: editingId, ...payload });
     } else {
-      createMutation.mutate(payload as any);
+      createMutation.mutate(payload);
     }
   };
 
@@ -617,7 +666,7 @@ export default function QuickFireAdmin() {
     }));
   };
 
-  const isMCQ = form.type !== "quickReview";
+  const isMCQ = form.type === "scenario" || form.type === "image";
 
   return (
     <Layout>
@@ -861,8 +910,8 @@ export default function QuickFireAdmin() {
         {activeAdminTab === "questions" && (
         <div>
         {/* Stats bar */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          {(["scenario", "image", "quickReview"] as QuestionType[]).map((t) => {
+        <div className="grid grid-cols-5 gap-3 mb-6">
+          {(["scenario", "image", "connect", "identifier", "order"] as QuestionType[]).map((t) => {
             const meta = TYPE_META[t];
             const Icon = meta.icon;
             return (
@@ -893,6 +942,9 @@ export default function QuickFireAdmin() {
               <SelectItem value="scenario">Scenario (MCQ)</SelectItem>
               <SelectItem value="image">Image-Based (MCQ)</SelectItem>
               <SelectItem value="quickReview">Quick Review</SelectItem>
+              <SelectItem value="connect">Connect Game</SelectItem>
+              <SelectItem value="identifier">Identifier Game</SelectItem>
+              <SelectItem value="order">Order Game</SelectItem>
             </SelectContent>
           </Select>
           <Button
@@ -999,7 +1051,7 @@ export default function QuickFireAdmin() {
                     {/* Type badge */}
                     <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full flex-shrink-0 mt-0.5 ${meta.color}`}>
                       <Icon className="w-3 h-3" />
-                      {q.type === "quickReview" ? "QR" : q.type === "image" ? "IMG" : "MCQ"}
+                      {q.type === "quickReview" ? "QR" : q.type === "image" ? "IMG" : q.type === "connect" ? "MATCH" : q.type === "identifier" ? "ID" : q.type === "order" ? "ORDER" : "MCQ"}
                     </span>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-800 leading-snug line-clamp-2">{q.question}</p>
@@ -1019,18 +1071,19 @@ export default function QuickFireAdmin() {
 
                     <div className="flex items-center gap-1 flex-shrink-0">
                       {q.isActive && q.type !== "quickReview" && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 px-2 text-xs gap-1 text-[#189aa1] hover:bg-[#189aa1]/10 border border-[#189aa1]/30"
-                          title="Approve to daily queue"
-                          onClick={() => {
-                            if (confirm(`Add "${q.question.slice(0, 60)}..." to the daily challenge queue?`)) {
-                              approveToQueueMutation.mutate({ questionId: q.id });
-                            }
-                          }}
-                          disabled={approveToQueueMutation.isPending}
-                        >
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 px-2 text-xs gap-1 text-[#189aa1] hover:bg-[#189aa1]/10 border border-[#189aa1]/30"
+                        title="Approve to daily queue"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm(`Add "${q.question.slice(0, 60)}..." to the daily challenge queue?`)) {
+                            approveToQueueMutation.mutate({ questionId: q.id });
+                          }
+                        }}
+                        disabled={approveToQueueMutation.isPending}
+                      >
                           <ListPlus className="w-3.5 h-3.5" />
                           Queue
                         </Button>
@@ -1039,7 +1092,7 @@ export default function QuickFireAdmin() {
                         size="sm"
                         variant="ghost"
                         className="h-8 w-8 p-0 text-gray-400 hover:text-[#189aa1]"
-                        onClick={() => openEdit(q)}
+                        onClick={(e) => { e.stopPropagation(); openEdit(q); }}
                       >
                         <Pencil className="w-3.5 h-3.5" />
                       </Button>
@@ -1048,7 +1101,8 @@ export default function QuickFireAdmin() {
                           size="sm"
                           variant="ghost"
                           className="h-8 w-8 p-0 text-gray-400 hover:text-red-500"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             if (confirm("Deactivate this question?")) {
                               deleteMutation.mutate({ id: q.id });
                             }
@@ -1242,7 +1296,7 @@ export default function QuickFireAdmin() {
                 className="w-56"
               />
               <div className="flex gap-1 flex-wrap">
-                {(["all", "adult", "pediatric", "fetal"] as const).map((cat) => (
+                {(["all", "adult", "pediatric_congenital", "fetal"] as const).map((cat) => (
                   <button
                     key={cat}
                     onClick={() => setFlashcardEchoCategory(cat)}
@@ -1252,7 +1306,7 @@ export default function QuickFireAdmin() {
                         : "border-gray-200 bg-gray-50 text-gray-600 hover:border-[#189aa1] hover:text-[#189aa1]"
                     }`}
                   >
-                    {cat === "all" ? "All" : cat === "adult" ? "Adult Echo" : cat === "pediatric" ? "Pediatric/Congenital" : "Fetal Echo"}
+                    {cat === "all" ? "All" : cat === "adult" ? "Adult Echo" : cat === "pediatric_congenital" ? "Pediatric/Congenital" : "Fetal Echo"}
                   </button>
                 ))}
               </div>
@@ -1297,6 +1351,9 @@ export default function QuickFireAdmin() {
                               imageUrl: q.imageUrl ?? "",
                               difficulty: (q.difficulty as Difficulty) ?? "intermediate",
                               tags: tags.join(", "),
+                              pairs: [{ left: "", right: "" }, { left: "", right: "" }],
+                              markers: [],
+                              orderedItems: [{ text: "" }, { text: "" }],
                             });
                             setEditingFlashcardId(q.id);
                             setFlashcardFormOpen(true);
@@ -1628,6 +1685,216 @@ export default function QuickFireAdmin() {
                   placeholder="e.g. Normal LVEF is 52–72% (men) and 54–74% (women) per ASE guidelines."
                    minHeight="90px"
                 />
+              </div>
+            )}
+
+            {/* Connect Game Pairs */}
+            {form.type === "connect" && (
+              <div>
+                <label className="text-xs font-semibold text-gray-600 mb-1.5 block">
+                  Matching Pairs <span className="text-red-500">*</span>
+                  <span className="ml-1 font-normal text-gray-400">(left column matches right column)</span>
+                </label>
+                <div className="space-y-2">
+                  {form.pairs.map((pair, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-gray-400 w-4">{idx + 1}</span>
+                      <Input
+                        value={pair.left}
+                        onChange={(e) => {
+                          const newPairs = [...form.pairs];
+                          newPairs[idx] = { ...newPairs[idx], left: e.target.value };
+                          setForm((f) => ({ ...f, pairs: newPairs }));
+                        }}
+                        placeholder={`Left item ${idx + 1} (e.g. E/e' > 14)`}
+                        className="flex-1 text-xs"
+                      />
+                      <Link2 className="w-4 h-4 text-gray-300 flex-shrink-0" />
+                      <Input
+                        value={pair.right}
+                        onChange={(e) => {
+                          const newPairs = [...form.pairs];
+                          newPairs[idx] = { ...newPairs[idx], right: e.target.value };
+                          setForm((f) => ({ ...f, pairs: newPairs }));
+                        }}
+                        placeholder={`Right item ${idx + 1} (e.g. Elevated LAP)`}
+                        className="flex-1 text-xs"
+                      />
+                      {form.pairs.length > 2 && (
+                        <button
+                          type="button"
+                          onClick={() => setForm((f) => ({ ...f, pairs: f.pairs.filter((_, i) => i !== idx) }))}
+                          className="text-gray-300 hover:text-red-400 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {form.pairs.length < 8 && (
+                  <Button
+                    variant="ghost" size="sm" className="mt-2 text-gray-400 gap-1"
+                    onClick={() => setForm((f) => ({ ...f, pairs: [...f.pairs, { left: "", right: "" }] }))}
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Add Pair
+                  </Button>
+                )}
+              </div>
+            )}
+
+            {/* Identifier Game — Image + Marker Placement */}
+            {form.type === "identifier" && (
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 mb-1.5 block">
+                    Anatomy Image <span className="text-red-500">*</span>
+                  </label>
+                  <div
+                    className="border-2 border-dashed border-indigo-200 rounded-xl p-4 text-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50 transition-all"
+                    onClick={() => document.getElementById('identifier-image-input')?.click()}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const file = e.dataTransfer.files[0];
+                      if (file) handleImageUpload(file);
+                    }}
+                  >
+                    {imageUploading ? (
+                      <div className="flex items-center justify-center gap-2 text-indigo-600">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span className="text-sm">Uploading…</span>
+                      </div>
+                    ) : form.imageUrl ? (
+                      <div className="relative">
+                        <div
+                          className="relative inline-block"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const x = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+                            const y = Math.round(((e.clientY - rect.top) / rect.height) * 100);
+                            const label = prompt("Enter label for this marker (e.g. Mitral Valve):");
+                            if (label) {
+                              setForm((f) => ({ ...f, markers: [...f.markers, { x, y, label }] }));
+                            }
+                          }}
+                        >
+                          <img src={form.imageUrl} alt="Anatomy" className="w-full max-h-64 object-contain rounded-lg" />
+                          {form.markers.map((marker, idx) => (
+                            <div
+                              key={idx}
+                              className="absolute w-5 h-5 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center"
+                              style={{ left: `${marker.x}%`, top: `${marker.y}%` }}
+                            >
+                              <div className="w-4 h-4 rounded-full bg-indigo-500 border-2 border-white shadow-md flex items-center justify-center text-white text-[8px] font-bold cursor-pointer"
+                                title={`${marker.label} — click to remove`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setForm((f) => ({ ...f, markers: f.markers.filter((_, i) => i !== idx) }));
+                                }}
+                              >
+                                {idx + 1}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="text-xs text-indigo-600 mt-2">Click on the image to place markers. Click a marker to remove it.</p>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setForm((f) => ({ ...f, imageUrl: "", markers: [] })); }}
+                          className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
+                        >×</button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-1 py-2">
+                        <Target className="w-8 h-8 text-indigo-300" />
+                        <p className="text-sm text-gray-600 font-medium">Click or drag to upload anatomy image</p>
+                        <p className="text-xs text-gray-400">Then click on the image to place answer markers</p>
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    id="identifier-image-input"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleImageUpload(file);
+                      e.target.value = "";
+                    }}
+                  />
+                  <Input
+                    value={form.imageUrl}
+                    onChange={(e) => setForm((f) => ({ ...f, imageUrl: e.target.value }))}
+                    placeholder="Or paste a public image URL…"
+                    className="text-xs mt-2"
+                  />
+                </div>
+                {form.markers.length > 0 && (
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Placed Markers</label>
+                    <div className="space-y-1">
+                      {form.markers.map((marker, idx) => (
+                        <div key={idx} className="flex items-center gap-2 text-xs">
+                          <div className="w-5 h-5 rounded-full bg-indigo-500 text-white flex items-center justify-center font-bold text-[9px]">{idx + 1}</div>
+                          <span className="text-gray-700">{marker.label}</span>
+                          <span className="text-gray-400">({marker.x}%, {marker.y}%)</span>
+                          <button
+                            type="button"
+                            onClick={() => setForm((f) => ({ ...f, markers: f.markers.filter((_, i) => i !== idx) }))}
+                            className="text-gray-300 hover:text-red-400 ml-auto"
+                          ><X className="w-3.5 h-3.5" /></button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Order Game Items */}
+            {form.type === "order" && (
+              <div>
+                <label className="text-xs font-semibold text-gray-600 mb-1.5 block">
+                  Items to Order <span className="text-red-500">*</span>
+                  <span className="ml-1 font-normal text-gray-400">(enter in correct order — will be shuffled for players)</span>
+                </label>
+                <div className="space-y-2">
+                  {form.orderedItems.map((item, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-gray-400 w-4">{idx + 1}</span>
+                      <Input
+                        value={item.text}
+                        onChange={(e) => {
+                          const newItems = [...form.orderedItems];
+                          newItems[idx] = { text: e.target.value };
+                          setForm((f) => ({ ...f, orderedItems: newItems }));
+                        }}
+                        placeholder={`Step ${idx + 1} (e.g. Assess LV size)`}
+                        className="flex-1 text-xs"
+                      />
+                      {form.orderedItems.length > 2 && (
+                        <button
+                          type="button"
+                          onClick={() => setForm((f) => ({ ...f, orderedItems: f.orderedItems.filter((_, i) => i !== idx) }))}
+                          className="text-gray-300 hover:text-red-400 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {form.orderedItems.length < 8 && (
+                  <Button
+                    variant="ghost" size="sm" className="mt-2 text-gray-400 gap-1"
+                    onClick={() => setForm((f) => ({ ...f, orderedItems: [...f.orderedItems, { text: "" }] }))}
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Add Item
+                  </Button>
+                )}
               </div>
             )}
             {/* Explanation */}

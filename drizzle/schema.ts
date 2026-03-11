@@ -875,7 +875,7 @@ export type InsertCmeEnrollmentCache = typeof cmeEnrollmentCache.$inferInsert;
 // Types: scenario (text-only MCQ), image (image + MCQ), quickReview (flashcard).
 export const quickfireQuestions = mysqlTable("quickfireQuestions", {
   id: int("id").primaryKey().autoincrement(),
-  type: mysqlEnum("type", ["scenario", "image", "quickReview"]).notNull(),
+  type: mysqlEnum("type", ["scenario", "image", "quickReview", "connect", "identifier", "order"]).notNull(),
   question: text("question").notNull(),
   // JSON: string[] — answer choices (for scenario/image types)
   options: text("options"),
@@ -889,6 +889,12 @@ export const quickfireQuestions = mysqlTable("quickfireQuestions", {
   imageUrl: text("imageUrl"),
   // For video type: CDN URL of the echo video/clip
   videoUrl: text("videoUrl"),
+  // For connect type: JSON array of {left: string, right: string} pairs
+  pairs: text("pairs"),
+  // For identifier type: JSON array of {x: number, y: number, label: string, radius?: number} markers
+  markers: text("markers"),
+  // For order type: JSON array of strings in the correct order
+  orderedItems: text("orderedItems"),
   difficulty: mysqlEnum("difficulty", ["beginner", "intermediate", "advanced"]).default("intermediate").notNull(),
   // JSON: string[] — topic tags (e.g. ["AS", "LV function", "TEE"])
   tags: text("tags"),

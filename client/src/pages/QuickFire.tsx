@@ -66,6 +66,9 @@ const TYPE_LABELS: Record<string, { label: string; color: string; icon: React.Co
   scenario: { label: "Scenario", color: "bg-blue-100 text-blue-700", icon: ({ className }) => <span className={className}>📋</span> },
   image: { label: "Image", color: "bg-purple-100 text-purple-700", icon: ({ className }) => <span className={className}>🖼️</span> },
   quickReview: { label: "Quick Review", color: "bg-amber-100 text-amber-700", icon: ({ className }) => <span className={className}>⚡</span> },
+  connect: { label: "Connect", color: "bg-teal-100 text-teal-700", icon: ({ className }) => <span className={className}>🔗</span> },
+  identifier: { label: "Identifier", color: "bg-indigo-100 text-indigo-700", icon: ({ className }) => <span className={className}>🎯</span> },
+  order: { label: "Order", color: "bg-orange-100 text-orange-700", icon: ({ className }) => <span className={className}>📊</span> },
 };
 
 const DIFFICULTY_COLORS: Record<string, string> = {
@@ -132,6 +135,19 @@ export default function QuickFire() {
   const [showResults, setShowResults] = useState(false);
   const [flipped, setFlipped] = useState(false);
   const [activeTagFilter, setActiveTagFilter] = useState<string | null>(null);
+
+  // ── Game-type specific state ──────────────────────────────────────────────
+  // Connect: maps left item index → selected right item index
+  const [connectSelections, setConnectSelections] = useState<Record<number, number>>({});
+  const [connectActiveLeft, setConnectActiveLeft] = useState<number | null>(null);
+  const [connectSubmitted, setConnectSubmitted] = useState(false);
+  // Identifier: {x, y} of user's click as percentage of image dimensions
+  const [identifierClick, setIdentifierClick] = useState<{ x: number; y: number } | null>(null);
+  const [identifierSubmitted, setIdentifierSubmitted] = useState(false);
+  // Order: current ordering of items (array of original indices)
+  const [orderItems, setOrderItems] = useState<string[]>([]);
+  const [orderDragIdx, setOrderDragIdx] = useState<number | null>(null);
+  const [orderSubmitted, setOrderSubmitted] = useState(false);
 
   const allQuestions = data?.questions ?? [];
   const userAttempts = data?.userAttempts ?? {};
@@ -245,6 +261,15 @@ export default function QuickFire() {
       setAnswered(false);
       setAnswerResult(null);
       setFlipped(false);
+      // Reset game-type specific state
+      setConnectSelections({});
+      setConnectActiveLeft(null);
+      setConnectSubmitted(false);
+      setIdentifierClick(null);
+      setIdentifierSubmitted(false);
+      setOrderItems([]);
+      setOrderDragIdx(null);
+      setOrderSubmitted(false);
     } else {
       setShowResults(true);
     }
@@ -259,6 +284,14 @@ export default function QuickFire() {
     setShowResults(false);
     setFlipped(false);
     setActiveTagFilter(null);
+    setConnectSelections({});
+    setConnectActiveLeft(null);
+    setConnectSubmitted(false);
+    setIdentifierClick(null);
+    setIdentifierSubmitted(false);
+    setOrderItems([]);
+    setOrderDragIdx(null);
+    setOrderSubmitted(false);
     refetch();
   };
 
@@ -602,68 +635,36 @@ export default function QuickFire() {
                         />
                       )}
 
-                      {isQuickReview ? (
-                        <>
-                          {/* 3D Flip Card for Flashcard/QuickReview questions */}
-                          <div className="flashcard-scene mb-4" style={{ minHeight: 200 }}>
-                            <div className={`flashcard-card ${flipped ? "is-flipped" : ""}`} style={{ minHeight: 200 }}>
-                              {/* Front face — question prompt */}
-                              <div className="flashcard-face flashcard-face--front">
-                                <div className="mb-3">
-                                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-[#189aa1]/15 text-[#189aa1] mb-3">
-                                    ⚡ Flashcard
-                                  </span>
-                                </div>
-                                <p className="text-sm font-medium text-gray-600 mb-4">Think about your answer, then flip the card.</p>
-                                <Button
-                                  className="text-white shadow-md"
-                                  style={{ background: "#189aa1" }}
-                                  onClick={() => setFlipped(true)}
-                                >
-                                  Flip Card →
-                                </Button>
+                      {/* ─── QUICK REVIEW (Flashcard) ─── */}
+                      {isQuickReview && (
+                        <div className="flashcard-scene mb-4" style={{ minHeight: 200 }}>
+                          <div className={`flashcard-card ${flipped ? "is-flipped" : ""}`} style={{ minHeight: 200 }}>
+                            <div className="flashcard-face flashcard-face--front">
+                              <div className="mb-3">
+                                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-[#189aa1]/15 text-[#189aa1] mb-3">
+                                  ⚡ Flashcard
+                                </span>
                               </div>
-                              {/* Back face — answer */}
-                              <div className="flashcard-face flashcard-face--back">
-                                <div className="mb-3">
-                                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-white/20 text-white mb-2">
-                                    ✓ Answer
-                                  </span>
+                              <p className="text-sm font-medium text-gray-600 mb-4">Think about your answer, then flip the card.</p>
+                              <Button className="text-white shadow-md" style={{ background: "#189aa1" }} onClick={() => setFlipped(true)}>Flip Card →</Button>
+                            </div>
+                            <div className="flashcard-face flashcard-face--back">
+                              <div className="mb-3"><span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-white/20 text-white mb-2">✓ Answer</span></div>
+                              <p className="text-sm leading-relaxed text-white/95 mb-4">{currentQ.reviewAnswer}</p>
+                              {!answered && (
+                                <div className="flex gap-3 mt-2">
+                                  <Button size="sm" className="bg-green-400 hover:bg-green-500 text-white border-0" onClick={() => handleSelfMark(true)}><ThumbsUp className="w-3.5 h-3.5 mr-1.5" /> Got it</Button>
+                                  <Button size="sm" className="bg-red-400 hover:bg-red-500 text-white border-0" onClick={() => handleSelfMark(false)}><ThumbsDown className="w-3.5 h-3.5 mr-1.5" /> Missed it</Button>
                                 </div>
-                                <p className="text-sm leading-relaxed text-white/95 mb-4">{currentQ.reviewAnswer}</p>
-                                {!answered && (
-                                  <div className="flex gap-3 mt-2">
-                                    <Button
-                                      size="sm"
-                                      className="bg-green-400 hover:bg-green-500 text-white border-0"
-                                      onClick={() => handleSelfMark(true)}
-                                    >
-                                      <ThumbsUp className="w-3.5 h-3.5 mr-1.5" /> Got it
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      className="bg-red-400 hover:bg-red-500 text-white border-0"
-                                      onClick={() => handleSelfMark(false)}
-                                    >
-                                      <ThumbsDown className="w-3.5 h-3.5 mr-1.5" /> Missed it
-                                    </Button>
-                                  </div>
-                                )}
-                                {answered && (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="border-white/40 text-white hover:bg-white/10 mt-2"
-                                    onClick={() => setFlipped(false)}
-                                  >
-                                    ← Flip Back
-                                  </Button>
-                                )}
-                              </div>
+                              )}
+                              {answered && <Button size="sm" variant="outline" className="border-white/40 text-white hover:bg-white/10 mt-2" onClick={() => setFlipped(false)}>← Flip Back</Button>}
                             </div>
                           </div>
-                        </>
-                      ) : (
+                        </div>
+                      )}
+
+                      {/* ─── SCENARIO / IMAGE (MCQ) ─── */}
+                      {(currentQ.type === "scenario" || currentQ.type === "image") && (
                         options.map((opt, idx) => {
                           const isSelected = selectedAnswer === idx;
                           const isCorrect = answerResult?.correctAnswer === idx;
@@ -680,14 +681,8 @@ export default function QuickFire() {
                           return (
                             <button key={idx} className={btnClass} onClick={() => handleSelectAnswer(idx)} disabled={answered}>
                               <span className="flex items-center gap-3">
-                                <span
-                                  className="w-6 h-6 rounded-full border flex items-center justify-center text-xs font-bold flex-shrink-0"
-                                  style={
-                                    answered && isCorrect ? { borderColor: "#16a34a", background: "#16a34a", color: "white" } :
-                                    answered && isSelected && !isCorrect ? { borderColor: "#ef4444", background: "#ef4444", color: "white" } :
-                                    { borderColor: "#d1d5db" }
-                                  }
-                                >
+                                <span className="w-6 h-6 rounded-full border flex items-center justify-center text-xs font-bold flex-shrink-0"
+                                  style={answered && isCorrect ? { borderColor: "#16a34a", background: "#16a34a", color: "white" } : answered && isSelected && !isCorrect ? { borderColor: "#ef4444", background: "#ef4444", color: "white" } : { borderColor: "#d1d5db" }}>
                                   {String.fromCharCode(65 + idx)}
                                 </span>
                                 {opt}
@@ -698,6 +693,256 @@ export default function QuickFire() {
                           );
                         })
                       )}
+
+                      {/* ─── CONNECT GAME ─── */}
+                      {currentQ.type === "connect" && (() => {
+                        const pairs: Array<{ left: string; right: string }> = (currentQ as any).pairs ?? [];
+                        // Shuffle right column once (stable via useMemo would be ideal but inline is fine for game)
+                        const rightItems = pairs.map((p, i) => ({ text: p.right, origIdx: i }));
+                        // Check if all pairs are matched
+                        const allMatched = pairs.length > 0 && Object.keys(connectSelections).length === pairs.length;
+                        // Evaluate correctness after submit
+                        const getMatchResult = (leftIdx: number) => {
+                          if (!connectSubmitted) return null;
+                          return connectSelections[leftIdx] === leftIdx ? "correct" : "incorrect";
+                        };
+                        return (
+                          <div className="space-y-3">
+                            <p className="text-xs text-gray-500 mb-2">🔗 Select an item on the left, then select its match on the right.</p>
+                            <div className="grid grid-cols-2 gap-3">
+                              {/* Left column */}
+                              <div className="space-y-2">
+                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Items</p>
+                                {pairs.map((pair, li) => {
+                                  const result = getMatchResult(li);
+                                  const isActive = connectActiveLeft === li;
+                                  const isMatched = connectSelections[li] !== undefined;
+                                  return (
+                                    <button key={li}
+                                      className={`w-full text-left p-2.5 rounded-lg border-2 text-sm transition-all ${
+                                        connectSubmitted
+                                          ? result === "correct" ? "border-green-500 bg-green-50 text-green-800"
+                                          : "border-red-400 bg-red-50 text-red-700"
+                                          : isActive ? "border-[#189aa1] bg-[#189aa1]/10 text-[#189aa1] font-semibold"
+                                          : isMatched ? "border-[#189aa1]/40 bg-[#189aa1]/5 text-gray-700"
+                                          : "border-gray-200 bg-white text-gray-700 hover:border-[#189aa1]/50"
+                                      }`}
+                                      onClick={() => !connectSubmitted && setConnectActiveLeft(isActive ? null : li)}
+                                      disabled={connectSubmitted}
+                                    >
+                                      <span className="flex items-center gap-2">
+                                        <span className="w-5 h-5 rounded-full border text-xs flex items-center justify-center flex-shrink-0"
+                                          style={isActive ? { borderColor: "#189aa1", background: "#189aa1", color: "white" } : { borderColor: "#d1d5db" }}>
+                                          {li + 1}
+                                        </span>
+                                        {pair.left}
+                                        {connectSubmitted && result === "correct" && <CheckCircle2 className="w-3.5 h-3.5 text-green-500 ml-auto" />}
+                                        {connectSubmitted && result === "incorrect" && <XCircle className="w-3.5 h-3.5 text-red-400 ml-auto" />}
+                                      </span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                              {/* Right column (shuffled display) */}
+                              <div className="space-y-2">
+                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Matches</p>
+                                {rightItems.map((ri) => {
+                                  const isSelectedByLeft = Object.values(connectSelections).includes(ri.origIdx);
+                                  const matchingLeft = Object.entries(connectSelections).find(([, v]) => v === ri.origIdx)?.[0];
+                                  const result = connectSubmitted && matchingLeft !== undefined ? (connectSelections[Number(matchingLeft)] === Number(matchingLeft) ? "correct" : "incorrect") : null;
+                                  return (
+                                    <button key={ri.origIdx}
+                                      className={`w-full text-left p-2.5 rounded-lg border-2 text-sm transition-all ${
+                                        connectSubmitted
+                                          ? result === "correct" ? "border-green-500 bg-green-50 text-green-800"
+                                          : result === "incorrect" ? "border-red-400 bg-red-50 text-red-700"
+                                          : "border-gray-100 bg-gray-50 text-gray-400"
+                                          : connectActiveLeft !== null && !isSelectedByLeft ? "border-[#189aa1]/50 bg-[#189aa1]/5 hover:border-[#189aa1] cursor-pointer"
+                                          : isSelectedByLeft ? "border-[#189aa1]/40 bg-[#189aa1]/5 text-gray-700"
+                                          : "border-gray-200 bg-white text-gray-500"
+                                      }`}
+                                      onClick={() => {
+                                        if (connectSubmitted || connectActiveLeft === null) return;
+                                        setConnectSelections(prev => ({ ...prev, [connectActiveLeft]: ri.origIdx }));
+                                        setConnectActiveLeft(null);
+                                      }}
+                                      disabled={connectSubmitted || connectActiveLeft === null}
+                                    >
+                                      {ri.text}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                            {/* Submit button */}
+                            {!connectSubmitted && allMatched && (
+                              <Button className="w-full text-white mt-2" style={{ background: "#189aa1" }}
+                                onClick={async () => {
+                                  setConnectSubmitted(true);
+                                  const allCorrect = pairs.every((_, i) => connectSelections[i] === i);
+                                  setAnswered(true);
+                                  try {
+                                    const result = await submitMutation.mutateAsync({ questionId: currentQ.id, selfMarkedCorrect: allCorrect });
+                                    setAnswerResult(result);
+                                    setSessionResults(prev => [...prev, { correct: result.isCorrect }]);
+                                  } catch { toast.error("Failed to submit."); }
+                                }}>
+                                Check Matches
+                              </Button>
+                            )}
+                            {connectSubmitted && (
+                              <div className={`p-3 rounded-lg text-sm font-medium ${
+                                pairs.every((_, i) => connectSelections[i] === i) ? "bg-green-50 text-green-800 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"
+                              }`}>
+                                {pairs.every((_, i) => connectSelections[i] === i) ? (
+                                  <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> All matches correct!</span>
+                                ) : (
+                                  <div>
+                                    <span className="flex items-center gap-2 mb-2"><XCircle className="w-4 h-4" /> Some matches were incorrect. Correct pairs:</span>
+                                    {pairs.map((p, i) => <div key={i} className="text-xs mt-1">• {p.left} → {p.right}</div>)}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+
+                      {/* ─── IDENTIFIER GAME ─── */}
+                      {currentQ.type === "identifier" && (() => {
+                        const markers: Array<{ x: number; y: number; label: string; radius?: number }> = (currentQ as any).markers ?? [];
+                        const targetMarker = markers[0]; // First marker is the target
+                        const tolerance = targetMarker?.radius ?? 8; // % tolerance
+                        const isCorrectClick = identifierClick && targetMarker
+                          ? Math.abs(identifierClick.x - targetMarker.x) <= tolerance && Math.abs(identifierClick.y - targetMarker.y) <= tolerance
+                          : false;
+                        return (
+                          <div className="space-y-3">
+                            <p className="text-xs text-gray-500">🎯 Click on the correct anatomy in the image below.</p>
+                            {currentQ.imageUrl ? (
+                              <div className="relative rounded-lg overflow-hidden border-2 border-gray-200 cursor-crosshair select-none"
+                                onClick={(e) => {
+                                  if (identifierSubmitted) return;
+                                  const rect = e.currentTarget.getBoundingClientRect();
+                                  const x = ((e.clientX - rect.left) / rect.width) * 100;
+                                  const y = ((e.clientY - rect.top) / rect.height) * 100;
+                                  setIdentifierClick({ x, y });
+                                }}>
+                                <img src={currentQ.imageUrl} alt="Identify anatomy" className="w-full object-cover" style={{ maxHeight: 320 }} />
+                                {/* User click marker */}
+                                {identifierClick && (
+                                  <div className="absolute w-6 h-6 rounded-full border-4 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                                    style={{ left: `${identifierClick.x}%`, top: `${identifierClick.y}%`,
+                                      borderColor: identifierSubmitted ? (isCorrectClick ? "#16a34a" : "#ef4444") : "#189aa1",
+                                      background: identifierSubmitted ? (isCorrectClick ? "#16a34a33" : "#ef444433") : "#189aa133" }} />
+                                )}
+                                {/* Correct answer marker (shown after submit) */}
+                                {identifierSubmitted && targetMarker && (
+                                  <div className="absolute w-6 h-6 rounded-full border-4 border-green-500 bg-green-500/20 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+                                    style={{ left: `${targetMarker.x}%`, top: `${targetMarker.y}%` }}>
+                                    <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-green-700 whitespace-nowrap bg-white px-1 rounded">{targetMarker.label}</span>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="p-6 rounded-lg bg-gray-50 border border-gray-200 text-center text-sm text-gray-400">No image provided for this question.</div>
+                            )}
+                            {identifierClick && !identifierSubmitted && (
+                              <Button className="w-full text-white" style={{ background: "#189aa1" }}
+                                onClick={async () => {
+                                  setIdentifierSubmitted(true);
+                                  setAnswered(true);
+                                  try {
+                                    const result = await submitMutation.mutateAsync({ questionId: currentQ.id, selfMarkedCorrect: !!isCorrectClick });
+                                    setAnswerResult(result);
+                                    setSessionResults(prev => [...prev, { correct: result.isCorrect }]);
+                                  } catch { toast.error("Failed to submit."); }
+                                }}>
+                                Submit Placement
+                              </Button>
+                            )}
+                            {identifierSubmitted && (
+                              <div className={`p-3 rounded-lg text-sm font-medium ${isCorrectClick ? "bg-green-50 text-green-800 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"}`}>
+                                {isCorrectClick
+                                  ? <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Correct! You identified <strong>{targetMarker?.label}</strong> accurately.</span>
+                                  : <span className="flex items-center gap-2"><XCircle className="w-4 h-4" /> Not quite — the correct location is marked in green.</span>}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+
+                      {/* ─── ORDER GAME ─── */}
+                      {currentQ.type === "order" && (() => {
+                        const correctOrder: string[] = (currentQ as any).orderedItems ?? [];
+                        // Initialize shuffled order on first render
+                        if (orderItems.length === 0 && correctOrder.length > 0) {
+                          const shuffled = [...correctOrder].sort(() => Math.random() - 0.5);
+                          // Ensure it's actually shuffled (not same as correct)
+                          setOrderItems(shuffled.join("||") === correctOrder.join("||") ? [...shuffled.slice(1), shuffled[0]] : shuffled);
+                        }
+                        const isCorrectOrder = orderItems.join("||") === correctOrder.join("||");
+                        return (
+                          <div className="space-y-3">
+                            <p className="text-xs text-gray-500">📊 Drag items to arrange them in the correct order.</p>
+                            <div className="space-y-2">
+                              {orderItems.map((item, idx) => (
+                                <div key={item}
+                                  draggable={!orderSubmitted}
+                                  onDragStart={() => setOrderDragIdx(idx)}
+                                  onDragOver={(e) => e.preventDefault()}
+                                  onDrop={() => {
+                                    if (orderDragIdx === null || orderDragIdx === idx) return;
+                                    const newItems = [...orderItems];
+                                    const [removed] = newItems.splice(orderDragIdx, 1);
+                                    newItems.splice(idx, 0, removed);
+                                    setOrderItems(newItems);
+                                    setOrderDragIdx(null);
+                                  }}
+                                  className={`flex items-center gap-3 p-3 rounded-lg border-2 text-sm transition-all ${
+                                    orderSubmitted
+                                      ? item === correctOrder[idx] ? "border-green-500 bg-green-50 text-green-800" : "border-red-400 bg-red-50 text-red-700"
+                                      : orderDragIdx === idx ? "border-[#189aa1] bg-[#189aa1]/10 opacity-60" : "border-gray-200 bg-white text-gray-700 cursor-grab hover:border-[#189aa1]/50"
+                                  }`}>
+                                  <span className="w-6 h-6 rounded-full border flex items-center justify-center text-xs font-bold flex-shrink-0"
+                                    style={orderSubmitted && item === correctOrder[idx] ? { borderColor: "#16a34a", background: "#16a34a", color: "white" } : orderSubmitted ? { borderColor: "#ef4444", background: "#ef4444", color: "white" } : { borderColor: "#d1d5db" }}>
+                                    {idx + 1}
+                                  </span>
+                                  <span className="flex-1">{item}</span>
+                                  {!orderSubmitted && <span className="text-gray-300 text-xs">↕</span>}
+                                  {orderSubmitted && item === correctOrder[idx] && <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />}
+                                  {orderSubmitted && item !== correctOrder[idx] && <XCircle className="w-4 h-4 text-red-400 flex-shrink-0" />}
+                                </div>
+                              ))}
+                            </div>
+                            {!orderSubmitted && orderItems.length > 0 && (
+                              <Button className="w-full text-white" style={{ background: "#189aa1" }}
+                                onClick={async () => {
+                                  setOrderSubmitted(true);
+                                  setAnswered(true);
+                                  try {
+                                    const result = await submitMutation.mutateAsync({ questionId: currentQ.id, selfMarkedCorrect: isCorrectOrder });
+                                    setAnswerResult(result);
+                                    setSessionResults(prev => [...prev, { correct: result.isCorrect }]);
+                                  } catch { toast.error("Failed to submit."); }
+                                }}>
+                                Check Order
+                              </Button>
+                            )}
+                            {orderSubmitted && (
+                              <div className={`p-3 rounded-lg text-sm font-medium ${isCorrectOrder ? "bg-green-50 text-green-800 border border-green-200" : "bg-amber-50 text-amber-800 border border-amber-200"}`}>
+                                {isCorrectOrder
+                                  ? <span className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Perfect order!</span>
+                                  : <div>
+                                      <span className="flex items-center gap-2 mb-2"><XCircle className="w-4 h-4" /> Not quite. Correct order:</span>
+                                      {correctOrder.map((item, i) => <div key={i} className="text-xs mt-0.5">{i + 1}. {item}</div>)}
+                                    </div>
+                                }
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       {answered && answerResult?.explanation && (
                         <div className="mt-2 p-4 rounded-lg bg-[#189aa1]/8 border border-[#189aa1]/20">
