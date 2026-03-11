@@ -4,9 +4,11 @@
   so free users can see what they're missing before upgrading.
 
   Security model:
-  - The overlay is shown by DEFAULT during loading (no spinner flash)
-  - Content is only revealed once we have CONFIRMED the user is premium
-  - This prevents bypass via fast navigation or slow auth checks
+  - Uses the cached auth.me user object (appRoles + isPremium flag) as the
+    PRIMARY check — no extra network round-trip, no flash for premium users.
+  - The overlay is shown by DEFAULT while auth is loading (no spinner flash).
+  - Content is only revealed once we have CONFIRMED the user is premium.
+  - This prevents bypass via fast navigation or slow auth checks.
 
   Usage:
     <PremiumOverlay featureName="LAP Estimation">
@@ -16,8 +18,7 @@
 import { Link } from "wouter";
 import { Crown, Lock, Sparkles, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/_core/hooks/useAuth";
-import { trpc } from "@/lib/trpc";
+import { usePremium } from "@/hooks/usePremium";
 
 interface PremiumOverlayProps {
   children: React.ReactNode;
@@ -28,24 +29,17 @@ interface PremiumOverlayProps {
 }
 
 export function PremiumOverlay({ children, featureName, checkoutUrl }: PremiumOverlayProps) {
-  const { user, loading: authLoading } = useAuth();
-  const { data: status, isLoading: statusLoading } = trpc.premium.getStatus.useQuery(undefined, {
-    enabled: !!user,
-  });
+  const { isPremium, loading, isAuthenticated } = usePremium();
 
-  // Only reveal content once we have a CONFIRMED premium status.
-  // During any loading state, show the overlay (not a spinner) to prevent bypass.
-  const isConfirmedPremium = !authLoading && !statusLoading && !!user && !!status?.isPremium;
-
-  // If confirmed premium — render children normally with no overlay
-  if (isConfirmedPremium) {
+  // While auth is still loading, show the overlay with a spinner — never reveal content early.
+  // Once loaded: if premium, render children directly with no overlay at all.
+  if (!loading && isPremium) {
     return <>{children}</>;
   }
 
-  // Determine display state: loading vs. locked
-  const isLoading = authLoading || (!!user && statusLoading);
-  const isLoggedIn = !!user;
-  const upgradeUrl = checkoutUrl ?? status?.checkoutUrl ?? "https://member.allaboutultrasound.com/enroll/3703267?price_id=4651832";
+  const isLoading = loading;
+  const isLoggedIn = isAuthenticated;
+  const upgradeUrl = checkoutUrl ?? "https://member.allaboutultrasound.com/enroll/3703267?price_id=4651832";
 
   return (
     <div className="relative rounded-xl overflow-hidden">

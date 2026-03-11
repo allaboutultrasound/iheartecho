@@ -2295,3 +2295,12 @@
 
 ## Thinkific Webhook Fix (Mar 11 2026)
 - [x] Fix Thinkific webhook: enrollment.created with sparse payload (only {id}) now looks up full enrollment details from Thinkific API to get user email and course name
+
+## Premium Gating Fix (Mar 11 2026)
+- [x] Fix premium gating: overlay not showing when navigating to premium pages from other ScanCoach/navigator pages
+- [x] Fix LabAdmin page: owner gets 'no DIY access' error despite having diy_admin role in DB
+- [x] Fix PremiumOverlay: now uses usePremium() (cached auth) instead of a fresh tRPC query — eliminates flash for premium users and navigation bypass for free users. Covers StressEchoAssist, all ScanCoach pages, and all navigator pages.
+- [x] Fix LabAdmin DIY access: seeded diyOrganizations, diySubscriptions, diyOrgMembers for owner as super_admin
+
+## Flashcard Daily Limit Fix (Mar 11 2026)
+- [ ] Fix flashcard daily limit: persist across page refreshes, enforce server-side by IP (free/unregistered) and by userId (logged-in free users), 10/day hard limit
