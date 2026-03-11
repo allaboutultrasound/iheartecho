@@ -2304,3 +2304,33 @@
 
 ## Flashcard Daily Limit Fix (Mar 11 2026)
 - [ ] Fix flashcard daily limit: persist across page refreshes, enforce server-side by IP (free/unregistered) and by userId (logged-in free users), 10/day hard limit
+
+## ScanCoach Navigation Restructure (Mar 11 2026)
+- [ ] Remove direct ScanCoach-to-ScanCoach navigation buttons from all ScanCoach pages
+- [ ] Add "Back to EchoAssist Hub" button to each ScanCoach page
+- [ ] Keep contextual related ScanCoach/Navigator cross-links (not navigation buttons)
+- [ ] Fix BlurredOverlay mobile positioning: prompt card near top of viewport, no scrolling
+- [ ] Complete flashcard IP tracking: wire recordFlashcardView mutation to frontend for unauthenticated users
+
+## Pending Fixes (Mar 11 2026 — after sandbox reset)
+- [ ] Create BlurredOverlay component with mobile-first positioning for login/premium/DIY gates
+- [ ] Integrate BlurredOverlay into RoleGuard (replace redirect-to-login with blurred overlay)
+- [ ] Fix Case Library: show cards to all, gate View Case for unregistered users with registration modal
+- [ ] Fix CaseDetail: show blurred overlay with login prompt for unauthenticated users
+- [ ] Fix flashcard daily limit: server-side IP tracking for unauthenticated users, fix session reset on refresh
+- [ ] ScanCoach navigation restructure: remove direct ScanCoach-to-ScanCoach nav buttons, add Back to EchoAssist Hub
+- [ ] Keep contextual related ScanCoach/Navigator cross-links inside each ScanCoach
+
+## Access Control & Gating Fixes (Mar 11 2026)
+- [x] Create BlurredOverlay component with mobile-first positioning (prompt near top of viewport on mobile)
+- [x] Integrate BlurredOverlay into RoleGuard: unauthenticated users see login gate, free users see premium upgrade gate, non-DIY users see DIY membership gate
+- [x] Fix Case Library: unauthenticated users see registration modal when clicking View Case
+- [x] Fix CaseDetail: direct URL access by unauthenticated users shows BlurredOverlay login gate
+- [x] Fix flashcard daily limit persistence: server-side IP tracking for unauthenticated users (no longer resets on refresh)
+- [x] Fix flashcard double-counting bug: authenticated free users no longer get sessionAnsweredCount added on top of DB-tracked dailySeenCount
+- [x] Add recordFlashcardView public tRPC procedure for IP-based flashcard view tracking
+- [x] Fix LabAdmin DIY access: seeded diyOrganizations, diySubscriptions, diyOrgMembers for owner as super_admin
+- [x] Fix profile dropdown: roles read from appRoles (not thinkificRoles) — Lab Admin Portal now visible
+- [x] Fix Thinkific webhook: enrollment.created with sparse payload now looks up full enrollment details from Thinkific API
+- [x] Fix PremiumOverlay: now uses usePremium() (cached auth) instead of fresh tRPC query — eliminates flash and navigation bypass
+- [x] Confirm ScanCoach navigation is already correct: ScanCoachNavBar only has Back to Hub and Go to Navigator links (no cross-ScanCoach buttons)

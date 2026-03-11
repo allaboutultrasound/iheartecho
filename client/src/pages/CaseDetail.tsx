@@ -9,6 +9,7 @@ import { useState, useMemo } from "react";
 import { useParams, Link } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { BlurredOverlay } from "@/components/BlurredOverlay";
 import Layout from "@/components/Layout";
 import { RichTextDisplay } from "@/components/RichTextEditor";
 import { Button } from "@/components/ui/button";
@@ -63,7 +64,7 @@ type AnswerMap = Record<number, number>; // questionId -> selectedAnswer index
 export default function CaseDetail() {
   const { id } = useParams<{ id: string }>();
   const caseId = parseInt(id ?? "0", 10);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const utils = trpc.useUtils();
 
   const { data: caseData, isLoading, error } = trpc.caseLibrary.getCase.useQuery(
@@ -131,6 +132,28 @@ export default function CaseDetail() {
   const videos = media.filter((m: any) => m.type === "video");
   const allMedia = media; // already sorted by sortOrder
   const currentMedia = allMedia[mediaIndex];
+
+  // Auth gate: unauthenticated users see blurred overlay (don't gate while auth is still loading)
+  if (!authLoading && !isAuthenticated) {
+    return (
+      <Layout>
+        <BlurredOverlay type="login" featureName="Echo Case Library">
+          <div className="container py-8">
+            <div className="max-w-4xl mx-auto">
+              <div className="h-8 bg-gray-200 rounded w-3/4 mb-4" />
+              <div className="h-4 bg-gray-100 rounded w-1/2 mb-8" />
+              <div className="h-64 bg-gray-100 rounded-xl mb-6" />
+              <div className="space-y-3">
+                <div className="h-4 bg-gray-100 rounded w-full" />
+                <div className="h-4 bg-gray-100 rounded w-5/6" />
+                <div className="h-4 bg-gray-100 rounded w-4/6" />
+              </div>
+            </div>
+          </div>
+        </BlurredOverlay>
+      </Layout>
+    );
+  }
 
   const alreadyAttempted = !!userAttempt || submitted;
 

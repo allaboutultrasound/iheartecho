@@ -21,6 +21,7 @@ import { Loader2, ShieldAlert, ArrowLeft, CheckCircle2, Send, Crown } from "luci
 import { useEffect, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { BlurredOverlay } from "@/components/BlurredOverlay";
 
 type AppRole = "user" | "premium_user" | "diy_admin" | "diy_user" | "platform_admin";
 
@@ -67,14 +68,6 @@ export function RoleGuard({ roles, allowAdmin = true, children }: RoleGuardProps
     },
   });
 
-  // Redirect unauthenticated users to login
-  useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      // Use the app's login page which handles both OAuth and email/password
-      window.location.href = "/login";
-    }
-  }, [loading, isAuthenticated]);
-
   // Loading state — don't flash the access-denied page
   if (loading) {
     return (
@@ -87,12 +80,13 @@ export function RoleGuard({ roles, allowAdmin = true, children }: RoleGuardProps
     );
   }
 
-  // Not authenticated — show minimal loading while redirect fires
+  // Not authenticated — show blurred overlay with login CTA
   if (!isAuthenticated || !user) {
+    const isDiyGate = roles.some(r => ["diy_admin", "diy_user"].includes(r));
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-[#189aa1]" />
-      </div>
+      <BlurredOverlay type={isDiyGate ? "diy" : "login"}>
+        <div className="min-h-screen bg-background" />
+      </BlurredOverlay>
     );
   }
 
@@ -105,9 +99,17 @@ export function RoleGuard({ roles, allowAdmin = true, children }: RoleGuardProps
    if (isAuthorised) {
     return <>{children}</>;
   }
-  // If the required role is premium_user, show a premium upgrade CTA instead of the generic access-denied page
+  // If the required role is premium_user, show BlurredOverlay premium gate
   const isPremiumGate = roles.includes("premium_user") && !roles.some(r => ["diy_admin", "diy_user", "platform_admin"].includes(r));
   if (isPremiumGate) {
+    return (
+      <BlurredOverlay type="premium">
+        <div className="min-h-screen bg-background" />
+      </BlurredOverlay>
+    );
+  }
+  // DEAD CODE BELOW — kept for reference only, never reached for premium gate
+  if (false) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
         <div className="max-w-md w-full text-center space-y-6">
@@ -155,6 +157,16 @@ export function RoleGuard({ roles, allowAdmin = true, children }: RoleGuardProps
       </div>
     );
   }
+  // DIY gate — show BlurredOverlay with DIY membership CTA
+  const isDiyGate2 = roles.some(r => ["diy_admin", "diy_user"].includes(r));
+  if (isDiyGate2) {
+    return (
+      <BlurredOverlay type="diy">
+        <div className="min-h-screen bg-background" />
+      </BlurredOverlay>
+    );
+  }
+
   // Access denied — show clear message with contact CTA
   const requiredRoleLabels = roles.map(r => ROLE_LABELS[r]).join(" or ");
   const description = roles.map(r => ROLE_DESCRIPTIONS[r] ?? ROLE_LABELS[r]).join(" or ");

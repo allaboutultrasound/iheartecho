@@ -36,6 +36,32 @@ import { eq, and, desc, sql, gte, lte, count, inArray } from "drizzle-orm";
 import { sendStreakReminders } from "../streakReminders";
 import { generateVirtualLeaderboard } from "../leaderboardSeed";
 
+// ─── IP-based daily flashcard tracker for unauthenticated users ─────────────
+// Key: `${ip}:${YYYY-MM-DD}` → count of cards viewed today
+// Cleared automatically when date changes (entries from old dates are ignored)
+const ipFlashcardTracker = new Map<string, number>();
+
+function getIpFlashcardCount(ip: string): number {
+  const key = `${ip}:${todayDateStrSync()}`;
+  return ipFlashcardTracker.get(key) ?? 0;
+}
+
+function incrementIpFlashcardCount(ip: string): number {
+  const key = `${ip}:${todayDateStrSync()}`;
+  const next = (ipFlashcardTracker.get(key) ?? 0) + 1;
+  ipFlashcardTracker.set(key, next);
+  // Prune old keys (keep map small)
+  const today = todayDateStrSync();
+  Array.from(ipFlashcardTracker.keys()).forEach((k) => {
+    if (!k.endsWith(today)) ipFlashcardTracker.delete(k);
+  });
+  return next;
+}
+
+function todayDateStrSync(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function todayDateStr(): string {
@@ -1514,15 +1540,19 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
         };
       }
 
-      // Unauthenticated: date-seeded daily shuffle (changes each day)
+      // Unauthenticated: date-seeded daily shuffle + IP-based daily count
+      const clientIp = (ctx as any).req?.headers?.["x-forwarded-for"]?.split(",")?.[0]?.trim()
+        ?? (ctx as any).req?.socket?.remoteAddress
+        ?? "unknown";
       const anonSeed = todayDateStr();
       const shuffled = seededShuffle(filtered, anonSeed);
+      const dailySeenCount = getIpFlashcardCount(clientIp);
       return {
         cards: shuffled.map((c) => ({ ...c, tags: c.tags ? JSON.parse(c.tags) : [], gotIt: 0, missed: 0, lastSeen: null, lastResult: null })),
         totalCards: filtered.length,
         userStats: null,
         dailyLimit: FREE_DAILY_LIMIT,
-        dailySeenCount: 0,
+        dailySeenCount,
       };
     }),
 
@@ -1560,6 +1590,27 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       });
 
       return { success: true };
+    }),
+
+  /**
+   * Record that an unauthenticated user viewed a flashcard (IP-based daily limit tracking).
+   * For authenticated users this is a no-op (their limit is tracked via submitFlashcardReview).
+   */
+  recordFlashcardView: publicProcedure
+    .input(z.object({ count: z.number().int().min(1).max(1).default(1) }))
+    .mutation(async ({ ctx }) => {
+      // Only track unauthenticated users via IP
+      if (ctx.user) return { dailySeenCount: null }; // authenticated users tracked via DB
+      const clientIp = (ctx as any).req?.headers?.["x-forwarded-for"]?.split(",")?.[0]?.trim()
+        ?? (ctx as any).req?.socket?.remoteAddress
+        ?? "unknown";
+      const FREE_DAILY_LIMIT = 10;
+      const current = getIpFlashcardCount(clientIp);
+      if (current >= FREE_DAILY_LIMIT) {
+        return { dailySeenCount: current, limitReached: true };
+      }
+      const next = incrementIpFlashcardCount(clientIp);
+      return { dailySeenCount: next, limitReached: next >= FREE_DAILY_LIMIT };
     }),
 
   /** Clone an archived challenge back into the queue (push-to-queue) */

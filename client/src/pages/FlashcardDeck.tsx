@@ -62,6 +62,7 @@ export default function FlashcardDeck() {
   );
 
   const submitReview = trpc.quickfire.submitFlashcardReview.useMutation();
+  const recordView = trpc.quickfire.recordFlashcardView.useMutation();
 
   // Daily limit from server
   const dailyLimit = data?.dailyLimit ?? null; // null = unlimited (premium)
@@ -103,9 +104,14 @@ export default function FlashcardDeck() {
   const sessionAccuracy = answeredCount > 0 ? Math.round((gotItCount / answeredCount) * 100) : null;
   const progressPct = totalCards > 0 ? Math.round((answeredCount / totalCards) * 100) : 0;
 
-  // Daily limit enforcement: total seen = server-side already seen today + session answers
+  // Daily limit enforcement:
+  // - Authenticated free users: server tracks via DB, dailySeenCount is authoritative (no double-count)
+  // - Unauthenticated users: server tracks via IP, but we add sessionAnsweredCount as a local fallback
+  //   in case the IP count hasn't been incremented yet for this session
   const sessionAnsweredCount = Object.keys(sessionResults).length;
-  const totalDailyUsed = dailySeenCount + sessionAnsweredCount;
+  const totalDailyUsed = isAuthenticated
+    ? dailySeenCount // DB-tracked, already includes current session
+    : Math.max(dailySeenCount, sessionAnsweredCount); // IP-tracked or local fallback
   const isDailyLimitReached = dailyLimit !== null && totalDailyUsed >= dailyLimit;
 
   function handleCategoryChange(cat: EchoCategory) {
@@ -135,6 +141,9 @@ export default function FlashcardDeck() {
 
     if (isAuthenticated) {
       submitReview.mutate({ questionId: currentCard.id, gotIt });
+    } else {
+      // Track IP-based daily count for unauthenticated users
+      recordView.mutate({ count: 1 });
     }
 
     setFlipped(false);

@@ -7,9 +7,10 @@
  */
 
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { getLoginUrl } from "@/const";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +40,8 @@ import {
   Link2,
   TrendingUp,
   ArrowUpDown,
+  Lock,
+  LogIn,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { formatViewCount, getDisplayViewCount } from "@/lib/caseViewCount";
@@ -78,6 +81,8 @@ type TabType = "browse" | "mySubmissions";
 
 export default function CaseLibrary() {
   const { isAuthenticated } = useAuth();
+  const [, navigate] = useLocation();
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>("browse");
   const [search, setSearch] = useState("");
   const [modality, setModality] = useState("All");
@@ -127,6 +132,14 @@ export default function CaseLibrary() {
   const handleSortBy = (val: string) => {
     setSortBy(val as "newest" | "mostViewed");
     setPage(1);
+  };
+
+  const handleViewCase = (caseId: number) => {
+    if (!isAuthenticated) {
+      setShowRegisterModal(true);
+      return;
+    }
+    navigate(`/case-library/${caseId}`);
   };
 
   return (
@@ -273,8 +286,7 @@ export default function CaseLibrary() {
                 {cases.map((c: any) => {
                   const tags: string[] = Array.isArray(c.tags) ? c.tags : (c.tags ? JSON.parse(c.tags) : []);
                   return (
-                    <Link key={c.id} href={`/case-library/${c.id}`}>
-                      <div className="bg-white rounded-xl border border-gray-100 p-5 hover:shadow-md hover:border-[#189aa1]/30 transition-all cursor-pointer group h-full flex flex-col">
+                    <div key={c.id} onClick={() => handleViewCase(c.id)} className="bg-white rounded-xl border border-gray-100 p-5 hover:shadow-md hover:border-[#189aa1]/30 transition-all cursor-pointer group h-full flex flex-col">
                         {/* Media preview indicator */}
                         {c.mediaCount > 0 && (
                           <div className="flex items-center gap-1.5 mb-3">
@@ -332,8 +344,7 @@ export default function CaseLibrary() {
                             View Case <ChevronRight className="w-3 h-3" />
                           </div>
                         </div>
-                      </div>
-                    </Link>
+                    </div>
                   );
                 })}
               </div>
@@ -481,6 +492,58 @@ export default function CaseLibrary() {
           </div>
         )}
       </div>
+
+      {/* Registration gate modal for unauthenticated users */}
+      {showRegisterModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4 sm:items-center sm:pt-0"
+          style={{ background: "rgba(14, 30, 46, 0.85)", backdropFilter: "blur(6px)" }}
+          onClick={() => setShowRegisterModal(false)}
+        >
+          <div
+            className="rounded-2xl border shadow-2xl px-8 py-8 text-center max-w-md w-full"
+            style={{ background: "rgba(14, 30, 46, 0.97)", borderColor: "#4ad9e040" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
+              style={{ background: "linear-gradient(135deg, #0e4a50, #189aa1)" }}
+            >
+              <Lock className="w-7 h-7 text-white" />
+            </div>
+            <div
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 mb-3 text-xs font-semibold"
+              style={{ background: "#189aa125", color: "#4ad9e0", border: "1px solid #4ad9e030" }}
+            >
+              <LogIn className="w-3 h-3" />
+              Sign In Required
+            </div>
+            <h2 className="font-bold text-white text-xl mb-2" style={{ fontFamily: "Merriweather, serif" }}>
+              Sign In to View Cases
+            </h2>
+            <p className="text-white/60 text-sm mb-5 leading-relaxed">
+              Create a free account to access the Echo Case Library. Free members can view cases and submit their own. Upgrade to Premium for the full clinical suite.
+            </p>
+            <div className="flex flex-col gap-2">
+              <a href={getLoginUrl()} className="block">
+                <button
+                  className="w-full font-semibold text-white py-2.5 px-4 rounded-lg flex items-center justify-center gap-2"
+                  style={{ background: "linear-gradient(135deg, #189aa1, #0e7490)" }}
+                >
+                  <LogIn className="w-4 h-4" />
+                  Sign In or Create Free Account
+                </button>
+              </a>
+              <button
+                className="w-full text-white/50 text-sm py-2 hover:text-white/70 transition-colors"
+                onClick={() => setShowRegisterModal(false)}
+              >
+                Continue Browsing
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }
