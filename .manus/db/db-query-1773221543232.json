@@ -1,0 +1,22 @@
+{
+  "query": "SELECT status, COUNT(*) as count FROM quickfireChallenges GROUP BY status ORDER BY count DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mhhtxpXA9Esras.root --database etVPnUidWNWG8W4GHnRqzv --execute SELECT status, COUNT(*) as count FROM quickfireChallenges GROUP BY status ORDER BY count DESC;",
+  "rows": [
+    {
+      "status": "scheduled",
+      "count": "7"
+    },
+    {
+      "status": "archived",
+      "count": "1"
+    },
+    {
+      "status": "live",
+      "count": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "status\tcount\nscheduled\t7\narchived\t1\nlive\t1\n",
+  "stderr": "",
+  "execution_time_ms": 352
+}

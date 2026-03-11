@@ -1,0 +1,22 @@
+{
+  "query": "SHOW TABLES LIKE '%quickfire%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mhhtxpXA9Esras.root --database etVPnUidWNWG8W4GHnRqzv --execute SHOW TABLES LIKE '%quickfire%';",
+  "rows": [
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv (%quickfire%)": "quickfireAttempts"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv (%quickfire%)": "quickfireChallenges"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv (%quickfire%)": "quickfireDailySets"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv (%quickfire%)": "quickfireQuestions"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_etVPnUidWNWG8W4GHnRqzv (%quickfire%)\nquickfireAttempts\nquickfireChallenges\nquickfireDailySets\nquickfireQuestions\n",
+  "stderr": "",
+  "execution_time_ms": 365
+}

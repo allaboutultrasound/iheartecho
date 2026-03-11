@@ -2280,3 +2280,12 @@
 - [x] Audit all premium ScanCoach pages — verify PremiumOverlay wraps content at component level
 - [x] Audit all premium Navigator pages — verify PremiumOverlay wraps content at component level
 - [x] Fix any pages where PremiumOverlay is missing or not wrapping the correct content
+
+## Archive Backfill (no charge)
+- [ ] Generate 150 archived challenges from existing question bank and insert into DB
+- [ ] Remove date display from Challenge Archive UI
+
+## Premium Overlay & Archive Fixes (Mar 11 2026)
+- [x] Fix PremiumOverlay bypass vulnerability — overlay shown by default during auth loading, content only revealed after confirmed premium status
+- [x] Remove Date Range filter from Challenge Archive filter panel
+- [x] Remove unused archiveDateFrom/archiveDateTo state variables from QuickFire.tsx

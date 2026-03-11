@@ -1,0 +1,151 @@
+{
+  "query": "SHOW TABLES;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mhhtxpXA9Esras.root --database etVPnUidWNWG8W4GHnRqzv --execute SHOW TABLES;",
+  "rows": [
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "__drizzle_migrations"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "accreditationReadiness"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "accreditationReadinessNavigator"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "appropriateUseCases"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "caseMixSubmissions"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "caseViewEvents"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "cmeCourseMeta"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "cmeCoursesCache"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "cmeEnrollmentCache"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "diyConciergePurchases"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "diyOrgMembers"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "diyOrganizations"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "diySubscriptions"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "echoCases"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "echoCorrelations"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "echoLibraryCaseAttempts"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "echoLibraryCaseMedia"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "echoLibraryCaseQuestions"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "echoLibraryCases"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "imageQualityReviews"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "labMembers"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "labPeerReviews"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "labSubscriptions"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "meetingAttendees"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "meetingMinutesDrafts"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "meetingRecordings"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "meetingTranscripts"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "peerReviews"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "physicianComparisonReviews"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "physicianNotifications"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "physicianOverReadInvitations"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "physicianOverReadSubmissions"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "physicianPeerReviews"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "policies"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "possibleCaseStudies"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "qaLogs"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "qualityMeetings"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "quickfireAttempts"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "quickfireChallenges"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "quickfireDailySets"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "quickfireQuestions"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "scanCoachMedia"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "scanCoachOverrides"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "strainSnapshots"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "userRoles"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "users"
+    },
+    {
+      "Tables_in_etVPnUidWNWG8W4GHnRqzv": "webhookEvents"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_etVPnUidWNWG8W4GHnRqzv\n__drizzle_migrations\naccreditationReadiness\naccreditationReadinessNavigator\nappropriateUseCases\ncaseMixSubmissions\ncaseViewEvents\ncmeCourseMeta\ncmeCoursesCache\ncmeEnrollmentCache\ndiyConciergePurchases\ndiyOrgMembers\ndiyOrganizations\ndiySubscriptions\nechoCases\nechoCorrelations\nechoLibraryCaseAttempts\nechoLibraryCaseMedia\nechoLibraryCaseQuestions\nechoLibraryCases\nimageQualityReviews\nlabMembers\nlabPeerReviews\nlabSubscriptions\nmeetingAttendees\nmeetingMinutesDrafts\nmeetingRecordings\nmeetingTranscripts\npeerReviews\nphysicianComparisonReviews\nphysicianNotifications\nphysicianOverReadInvitations\nphysicianOverReadSubmissions\nphysicianPeerReviews\npolicies\npossibleCaseStudies\nqaLogs\nqualityMeetings\nquickfireAttempts\nquickfireChallenges\nquickfireDailySets\nquickfireQuestions\nscanCoachMedia\nscanCoachOverrides\nstrainSnapshots\nuserRoles\nusers\nwebhookEvents\n",
+  "stderr": "",
+  "execution_time_ms": 356
+}

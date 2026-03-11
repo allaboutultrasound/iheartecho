@@ -176,8 +176,6 @@ export default function QuickFire() {
   // Archive filters
   const [archiveCategoryFilter, setArchiveCategoryFilter] = useState<string | undefined>(undefined);
   const [archiveDifficultyFilter, setArchiveDifficultyFilter] = useState<"beginner" | "intermediate" | "advanced" | undefined>(undefined);
-  const [archiveDateFrom, setArchiveDateFrom] = useState<string | undefined>(undefined);
-  const [archiveDateTo, setArchiveDateTo] = useState<string | undefined>(undefined);
   const [showArchiveFilters, setShowArchiveFilters] = useState(false);
 
   const archiveListQuery = trpc.quickfire.getChallengeArchive.useQuery(
@@ -186,8 +184,6 @@ export default function QuickFire() {
       limit: 20,
       category: archiveCategoryFilter,
       difficulty: archiveDifficultyFilter,
-      dateFrom: archiveDateFrom,
-      dateTo: archiveDateTo,
     },
     { enabled: activeTab === "archive" && isAuthenticated }
   );
@@ -345,11 +341,9 @@ export default function QuickFire() {
   const clearArchiveFilters = () => {
     setArchiveCategoryFilter(undefined);
     setArchiveDifficultyFilter(undefined);
-    setArchiveDateFrom(undefined);
-    setArchiveDateTo(undefined);
   };
 
-  const hasArchiveFilters = !!(archiveCategoryFilter || archiveDifficultyFilter || archiveDateFrom || archiveDateTo);
+  const hasArchiveFilters = !!(archiveCategoryFilter || archiveDifficultyFilter);
 
   // ── 24-hour countdown for unauthenticated users ──────────────────────────
   const msRemaining = (data as any)?.msRemaining ?? null;
@@ -1235,35 +1229,13 @@ export default function QuickFire() {
                         ))}
                       </div>
                     </div>
-                    {/* Date range */}
-                    <div>
-                      <p className="text-xs font-semibold text-gray-500 mb-2">Date Range</p>
-                      <div className="flex gap-3 items-center flex-wrap">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-400">From</span>
-                          <input
-                            type="date"
-                            value={archiveDateFrom ?? ""}
-                            onChange={(e) => setArchiveDateFrom(e.target.value || undefined)}
-                            className="text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:border-[#189aa1]"
-                          />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-400">To</span>
-                          <input
-                            type="date"
-                            value={archiveDateTo ?? ""}
-                            onChange={(e) => setArchiveDateTo(e.target.value || undefined)}
-                            className="text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:border-[#189aa1]"
-                          />
-                        </div>
-                        {hasArchiveFilters && (
-                          <button onClick={clearArchiveFilters} className="text-xs text-red-500 hover:underline">
-                            Clear all
-                          </button>
-                        )}
+                    {hasArchiveFilters && (
+                      <div className="flex justify-end pt-1">
+                        <button onClick={clearArchiveFilters} className="text-xs text-red-500 hover:underline">
+                          Clear all filters
+                        </button>
                       </div>
-                    </div>
+                    )}
                   </div>
                 )}
 
