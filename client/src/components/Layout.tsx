@@ -315,7 +315,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
                 {/* Dropdown */}
                 {accountOpen && (() => {
-                  const roles: string[] = (user as any).thinkificRoles ?? [];
+                  const roles: string[] = (user as any).appRoles ?? [];
                   const isPremiumUser = (user as any).isPremium === true;
                   const hasDiyAdmin = roles.includes("diy_admin");
                   const hasPlatformAdmin = roles.includes("platform_admin") || (user as any).role === "admin";
