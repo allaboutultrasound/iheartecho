@@ -13,7 +13,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Link, useLocation } from "wouter";
-import { getLoginUrl } from "@/const";
 import {
   Shield, Zap, Star, Crown, Check, ChevronRight,
   Building2, Phone, Globe, ClipboardList, Users,
@@ -118,7 +117,7 @@ export default function DIYRegister() {
           <p className="text-sm text-gray-500 mb-6 max-w-sm mx-auto">
             You need a free iHeartEcho™ account to create a DIY Accreditation organization.
           </p>
-          <a href={getLoginUrl()}>
+          <a href="/login">
             <Button style={{ background: BRAND }} className="text-white">Sign In / Create Account</Button>
           </a>
         </div>

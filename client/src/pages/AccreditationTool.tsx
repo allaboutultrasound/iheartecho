@@ -34,7 +34,6 @@ import EchoCorrelationTab from "./EchoCorrelation";
 import AccreditationReadiness from "./AccreditationReadiness";
 import CaseMixSubmission from "./CaseMixSubmission";
 import { toast } from "sonner";
-import { getLoginUrl } from "@/const";
 import jsPDF from "jspdf";
 import { Link } from "wouter";
 

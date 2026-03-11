@@ -15,7 +15,6 @@ import {
   ChevronUp, ExternalLink
 } from "lucide-react";
 import { Link } from "wouter";
-import { getLoginUrl } from "@/const";
 
 const BRAND = "#189aa1";
 const BRAND_DARK = "#0e4a50";

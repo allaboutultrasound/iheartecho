@@ -22,7 +22,6 @@ import {
   Zap, Star, Lock, RefreshCw, ExternalLink, Info
 } from "lucide-react";
 import { toast } from "sonner";
-import { getLoginUrl } from "@/const";
 import { Link } from "wouter";
 
 const BRAND = "#189aa1";
@@ -126,7 +125,7 @@ export default function DIYLabAdmin() {
           <h2 className="text-xl font-bold mb-2">Sign In Required</h2>
           <p className="text-gray-500 mb-4">Please sign in to access the DIY Lab Admin portal.</p>
           <Button asChild style={{ background: BRAND }}>
-            <a href={getLoginUrl()}>Sign In</a>
+            <a href="/login">Sign In</a>
           </Button>
         </div>
       </Layout>

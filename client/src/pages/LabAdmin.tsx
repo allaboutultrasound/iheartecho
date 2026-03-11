@@ -21,7 +21,6 @@ import {
   ChevronRight, Microscope, FlaskConical
 } from "lucide-react";
 import { toast } from "sonner";
-import { getLoginUrl } from "@/const";
 import BulkCsvUploadPanel, { type BulkResult } from "@/components/BulkCsvUploadPanel";
 import ImageQualityReviewTab from "./ImageQualityReview";
 import SonographerPeerReview from "./SonographerPeerReview";

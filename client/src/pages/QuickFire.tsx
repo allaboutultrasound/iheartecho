@@ -44,7 +44,6 @@ import {
   ChevronDown,
   Timer,
 } from "lucide-react";
-import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -413,7 +412,7 @@ export default function QuickFire() {
               <p className="text-white font-semibold text-sm">Sign in to save your score &amp; streak</p>
               <p className="text-white/60 text-xs mt-0.5">Free members get access to today's challenge. Sign in to track progress, earn streak points, and compare on the leaderboard.</p>
             </div>
-            <a href={getLoginUrl()} className="flex-shrink-0">
+            <a href="/login" className="flex-shrink-0">
               <Button size="sm" className="text-white whitespace-nowrap" style={{ background: "#189aa1" }}>Sign In</Button>
             </a>
           </div>
@@ -426,9 +425,14 @@ export default function QuickFire() {
               </div>
               <h2 className="text-xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Today's Challenge Has Expired</h2>
               <p className="text-gray-500 text-sm">The 24-hour free access window for today's challenge has closed. Sign in to access the full challenge archive and never miss a day.</p>
-              <a href={getLoginUrl()}>
-                <Button style={{ background: "#189aa1" }} className="text-white">Sign In / Register</Button>
-              </a>
+              <div className="flex gap-2 flex-wrap justify-center">
+                <a href="/login">
+                  <Button style={{ background: "#189aa1" }} className="text-white">Sign In</Button>
+                </a>
+                <a href="https://member.allaboutultrasound.com/enroll/3241567?price_id=4133943" target="_blank" rel="noopener noreferrer">
+                  <Button variant="outline" style={{ borderColor: "#189aa1", color: "#189aa1" }}>Create Free Account</Button>
+                </a>
+              </div>
             </div>
           )}
 
@@ -474,7 +478,7 @@ export default function QuickFire() {
                   {(q?.type === "scenario" || q?.type === "image") && Array.isArray(q?.options) && (
                     <div className="space-y-2">
                       {q.options.map((opt: string, i: number) => (
-                        <a key={i} href={getLoginUrl()} className="block">
+                        <a key={i} href="/login" className="block">
                           <div className="flex items-center gap-3 p-3 rounded-xl border border-gray-200 hover:border-[#189aa1] hover:bg-[#f0fbfc] cursor-pointer transition-all group">
                             <div className="w-7 h-7 rounded-full border-2 border-gray-300 group-hover:border-[#189aa1] flex items-center justify-center flex-shrink-0">
                               <span className="text-xs font-bold text-gray-500 group-hover:text-[#189aa1]">{String.fromCharCode(65 + i)}</span>
@@ -484,7 +488,7 @@ export default function QuickFire() {
                           </div>
                         </a>
                       ))}
-                      <p className="text-xs text-center text-gray-400 mt-3"><a href={getLoginUrl()} className="text-[#189aa1] hover:underline font-medium">Sign in</a> to submit your answer and save your score.</p>
+                      <p className="text-xs text-center text-gray-400 mt-3"><a href="/login" className="text-[#189aa1] hover:underline font-medium">Sign in</a> to submit your answer and save your score.</p>
                     </div>
                   )}
 
@@ -493,7 +497,7 @@ export default function QuickFire() {
                     <div className="flex flex-col items-center gap-3 py-6 text-center">
                       <Lock className="w-8 h-8 text-gray-300" />
                       <p className="text-sm text-gray-500">Sign in to play this interactive challenge.</p>
-                      <a href={getLoginUrl()}>
+                      <a href="/login">
                         <Button size="sm" style={{ background: "#189aa1" }} className="text-white">Sign In to Play</Button>
                       </a>
                     </div>

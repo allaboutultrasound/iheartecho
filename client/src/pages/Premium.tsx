@@ -1,5 +1,5 @@
 /**
- * Premium Access page — explains the $19.97/month plan and handles checkout redirect.
+ * Premium Access page — explains the $9.97/month or $99.97/year plan and handles checkout redirect.
  * Also handles the post-checkout sync when the user returns from checkout.
  */
 import { useEffect, useState } from "react";
@@ -12,11 +12,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import { getLoginUrl } from "@/const";
 import Layout from "@/components/Layout";
 
-const CHECKOUT_URL =
+const CHECKOUT_URL_MONTHLY =
   "https://member.allaboutultrasound.com/enroll/3703267?price_id=4651832";
+const CHECKOUT_URL_ANNUAL =
+  "https://member.allaboutultrasound.com/enroll/3703267?price_id=4656275";
 
 const PREMIUM_FEATURES = [
   {
@@ -148,12 +149,6 @@ export default function Premium() {
     }
   }, [user]);
 
-  const handleCheckout = () => {
-    // Redirect to checkout; user returns to /upgrade-success
-    const returnUrl = encodeURIComponent(`${window.location.origin}/upgrade-success`);
-    window.location.href = `${CHECKOUT_URL}?return_url=${returnUrl}`;
-  };
-
   const handleManualSync = () => {
     if (!user) return;
     setSyncing(true);
@@ -187,62 +182,99 @@ export default function Premium() {
               calculators, cases, and AI tools — in one guideline-based platform.
             </p>
 
-            {/* Pricing card */}
-            <div className="inline-block bg-white rounded-2xl shadow-xl px-8 py-6 text-center mb-6">
-              <div className="text-5xl font-black text-[#189aa1] mb-1" style={{ fontFamily: "Merriweather, serif" }}>
-                $19.97
-              </div>
-              <div className="text-gray-500 text-sm mb-4">per month · cancel anytime</div>
-
-              {loading ? (
-                <div className="flex items-center justify-center gap-2 text-gray-400 text-sm py-2">
-                  <div className="w-4 h-4 border-2 border-[#189aa1] border-t-transparent rounded-full animate-spin" />
-                  Checking membership…
+            {/* Pricing cards */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
+              {/* Monthly */}
+              <div className="bg-white rounded-2xl shadow-xl px-7 py-6 text-center flex-1 max-w-xs">
+                <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Monthly</div>
+                <div className="text-5xl font-black text-[#189aa1] mb-0.5" style={{ fontFamily: "Merriweather, serif" }}>
+                  $9.97
                 </div>
-              ) : status?.isPremium ? (
-                <div className="flex flex-col items-center gap-3">
-                  <div className="flex items-center gap-2 text-emerald-600 font-semibold text-sm">
-                    <Check className="w-4 h-4" />
-                    Premium Access Active
+                <div className="text-gray-500 text-sm mb-4">per month · cancel anytime</div>
+                {loading ? (
+                  <div className="flex items-center justify-center gap-2 text-gray-400 text-sm py-2">
+                    <div className="w-4 h-4 border-2 border-[#189aa1] border-t-transparent rounded-full animate-spin" />
+                    Checking…
                   </div>
-                  <a href={status.manageUrl} target="_blank" rel="noopener noreferrer">
-                    <Button variant="outline" size="sm">
-                      Manage Subscription
+                ) : status?.isPremium ? (
+                  <div className="flex items-center justify-center gap-2 text-emerald-600 font-semibold text-sm">
+                    <Check className="w-4 h-4" /> Active
+                  </div>
+                ) : user ? (
+                  <a href={CHECKOUT_URL_MONTHLY} target="_blank" rel="noopener noreferrer">
+                    <Button className="bg-[#189aa1] hover:bg-[#147a80] text-white font-bold px-6 py-2.5 text-sm rounded-xl w-full">
+                      <Crown className="w-4 h-4 mr-1.5" /> Get Monthly
                     </Button>
                   </a>
-                </div>
-              ) : user ? (
-                <div className="flex flex-col items-center gap-3">
-                  <Button
-                    onClick={handleCheckout}
-                    className="bg-[#189aa1] hover:bg-[#147a80] text-white font-bold px-8 py-3 text-base rounded-xl"
-                  >
-                    <Crown className="w-4 h-4 mr-2" />
-                    Get Premium Access
-                  </Button>
-                  <button
-                    onClick={handleManualSync}
-                    disabled={syncing}
-                    className="text-xs text-gray-400 hover:text-[#189aa1] flex items-center gap-1 transition-colors"
-                  >
-                    <RefreshCw className={`w-3 h-3 ${syncing ? "animate-spin" : ""}`} />
-                    Already a member? Sync now
-                  </button>
-                  {syncMessage && (
-                    <p className="text-xs text-gray-500 max-w-xs">{syncMessage}</p>
-                  )}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center gap-3">
-                  <a href={getLoginUrl()}>
-                    <Button className="bg-[#189aa1] hover:bg-[#147a80] text-white font-bold px-8 py-3 text-base rounded-xl">
+                ) : (
+                  <a href="/login">
+                    <Button className="bg-[#189aa1] hover:bg-[#147a80] text-white font-bold px-6 py-2.5 text-sm rounded-xl w-full">
                       Sign In to Upgrade
                     </Button>
                   </a>
-                  <p className="text-xs text-gray-400">Create a free account first, then upgrade</p>
+                )}
+              </div>
+
+              {/* Annual — highlighted */}
+              <div className="bg-white rounded-2xl shadow-xl px-7 py-6 text-center flex-1 max-w-xs border-2 border-[#189aa1] relative">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#189aa1] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider whitespace-nowrap">
+                  Best Value — Save 16%
                 </div>
-              )}
+                <div className="text-xs font-semibold text-[#189aa1] uppercase tracking-wider mb-1">Annual</div>
+                <div className="text-5xl font-black text-[#189aa1] mb-0.5" style={{ fontFamily: "Merriweather, serif" }}>
+                  $99.97
+                </div>
+                <div className="text-gray-500 text-sm mb-4">per year · ~$8.33/mo</div>
+                {loading ? (
+                  <div className="flex items-center justify-center gap-2 text-gray-400 text-sm py-2">
+                    <div className="w-4 h-4 border-2 border-[#189aa1] border-t-transparent rounded-full animate-spin" />
+                    Checking…
+                  </div>
+                ) : status?.isPremium ? (
+                  <div className="flex items-center justify-center gap-2 text-emerald-600 font-semibold text-sm">
+                    <Check className="w-4 h-4" /> Active
+                  </div>
+                ) : user ? (
+                  <a href={CHECKOUT_URL_ANNUAL} target="_blank" rel="noopener noreferrer">
+                    <Button className="bg-[#189aa1] hover:bg-[#147a80] text-white font-bold px-6 py-2.5 text-sm rounded-xl w-full">
+                      <Crown className="w-4 h-4 mr-1.5" /> Get Annual
+                    </Button>
+                  </a>
+                ) : (
+                  <a href="/login">
+                    <Button className="bg-[#189aa1] hover:bg-[#147a80] text-white font-bold px-6 py-2.5 text-sm rounded-xl w-full">
+                      Sign In to Upgrade
+                    </Button>
+                  </a>
+                )}
+              </div>
             </div>
+
+            {/* Already a member sync */}
+            {user && !status?.isPremium && (
+              <div className="text-center mb-2">
+                <button
+                  onClick={handleManualSync}
+                  disabled={syncing}
+                  className="text-xs text-white/60 hover:text-white flex items-center gap-1 mx-auto transition-colors"
+                >
+                  <RefreshCw className={`w-3 h-3 ${syncing ? "animate-spin" : ""}`} />
+                  Already a member? Sync now
+                </button>
+                {syncMessage && (
+                  <p className="text-xs text-white/50 mt-1 max-w-xs mx-auto">{syncMessage}</p>
+                )}
+              </div>
+            )}
+            {status?.isPremium && (
+              <div className="text-center mb-2">
+                <a href={status.manageUrl} target="_blank" rel="noopener noreferrer">
+                  <Button variant="outline" size="sm" className="bg-white/10 border-white/30 text-white hover:bg-white/20">
+                    Manage Subscription
+                  </Button>
+                </a>
+              </div>
+            )}
 
             <div className="flex flex-wrap items-center justify-center gap-4 text-white/60 text-xs">
               <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> Secure checkout</span>
@@ -325,16 +357,24 @@ export default function Premium() {
         {!status?.isPremium && (
           <div className="mt-12 text-center">
             {user ? (
-              <Button
-                onClick={handleCheckout}
-                className="bg-[#189aa1] hover:bg-[#147a80] text-white font-bold px-10 py-3 text-base rounded-xl"
-              >
-                <Crown className="w-4 h-4 mr-2" />
-                Get Premium Access — $19.97/month
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <a href={CHECKOUT_URL_MONTHLY} target="_blank" rel="noopener noreferrer">
+                  <Button variant="outline" className="border-[#189aa1] text-[#189aa1] hover:bg-[#189aa1] hover:text-white font-bold px-8 py-3 text-base rounded-xl">
+                    <Crown className="w-4 h-4 mr-2" />
+                    Monthly — $9.97/mo
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </a>
+                <a href={CHECKOUT_URL_ANNUAL} target="_blank" rel="noopener noreferrer">
+                  <Button className="bg-[#189aa1] hover:bg-[#147a80] text-white font-bold px-8 py-3 text-base rounded-xl">
+                    <Crown className="w-4 h-4 mr-2" />
+                    Annual — $99.97/yr
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </a>
+              </div>
             ) : (
-              <a href={getLoginUrl()}>
+              <a href="/login">
                 <Button className="bg-[#189aa1] hover:bg-[#147a80] text-white font-bold px-10 py-3 text-base rounded-xl">
                   Sign In to Get Started
                   <ArrowRight className="w-4 h-4 ml-2" />

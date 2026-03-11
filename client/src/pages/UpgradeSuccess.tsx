@@ -19,7 +19,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import { getLoginUrl } from "@/const";
 import Layout from "@/components/Layout";
 
 export default function UpgradeSuccess() {
@@ -219,7 +218,7 @@ export default function UpgradeSuccess() {
                     </form>
                     <div className="mt-5 pt-5 border-t border-gray-100">
                       <p className="text-gray-400 text-xs mb-3">Already have an iHeartEcho™ account?</p>
-                      <a href={getLoginUrl()}>
+                      <a href="/login">
                         <Button variant="outline" size="sm" className="w-full">
                           Sign In
                         </Button>
@@ -238,7 +237,7 @@ export default function UpgradeSuccess() {
                         Your premium access has been activated. Sign in to start using all premium features.
                       </p>
                     </div>
-                    <a href={getLoginUrl()} className="w-full">
+                    <a href="/login" className="w-full">
                       <Button className="bg-[#189aa1] hover:bg-[#147a80] text-white font-bold w-full">
                         <Sparkles className="w-4 h-4 mr-2" />
                         Sign In to Access Premium
@@ -258,13 +257,13 @@ export default function UpgradeSuccess() {
                         <strong>{email}</strong> and premium will be activated automatically.
                       </p>
                     </div>
-                    <a href="/register" className="w-full">
+                    <a href="https://member.allaboutultrasound.com/enroll/3241567?price_id=4133943" target="_blank" rel="noopener noreferrer" className="w-full">
                       <Button className="bg-[#189aa1] hover:bg-[#147a80] text-white font-bold w-full">
                         <ArrowRight className="w-4 h-4 mr-2" />
-                        Create Account &amp; Activate Premium
+                        Create Free Account
                       </Button>
                     </a>
-                    <a href={getLoginUrl()} className="w-full">
+                    <a href="/login" className="w-full">
                       <Button variant="outline" size="sm" className="w-full">
                         Already have an account? Sign In
                       </Button>

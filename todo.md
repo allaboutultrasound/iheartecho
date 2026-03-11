@@ -2173,3 +2173,43 @@
 - [x] Add product name allowlist: Premium App Access (isPremiumProduct) + DIY Accreditation memberships (isDIYProduct)
 - [x] DIY product handler: assigns diy_admin for Lab Director/Admin tier, diy_user for sonographer seats
 - [x] Update Thinkific Webhook admin UI: Active Filter Rules panel with Gate 1 (event types) and Gate 2 (product names), Filtered stat card added
+
+## Identifier Question Type — Hotspot Fix
+- [x] Replaced window.prompt() with inline pendingMarker state + label input overlay on image click
+- [x] Label input bubble appears at click location with Add/Cancel buttons and Enter key support
+- [x] AI generator for Identifier type now produces hotspot questions (imageDescription, targetStructure, suggestedImageSearch) instead of MCQ
+- [x] AI generator note: marker coordinates must be placed manually by admin on actual image
+
+## OLD: Hotspot/Pin Fix
+- [ ] Audit current Identifier type in admin form, player, AI generator, and DB schema
+- [ ] Build hotspot pin picker in admin form: image upload + click-to-place pin with x/y % coordinates
+- [ ] Fix AI generator: Identifier type should suggest an echo image category + hotspot description (not MCQ)
+- [ ] Build hotspot pin answer UI in player: user clicks image to place pin, scored by proximity to correct coordinates
+- [ ] Update DB schema if markers field needs coordinate format change
+
+## Login Button Fix
+- [x] Diagnosed: all getLoginUrl() buttons redirect to Manus OAuth portal which may not respond in non-Manus browsers
+- [x] Fixed: replaced all getLoginUrl() href calls with href="/login" to use local email/password login page
+- [x] Removed unused getLoginUrl imports from 14 files
+
+## Bulk Queue Bug
+- [ ] Diagnose why questions marked for queue in bulk mode don't appear in Challenge Queue tab
+- [ ] Fix the bulk queue submission flow
+
+## Queue Bug (Critical)
+- [x] Root cause: adminListChallenges used raw SQL IN() with unbound ? placeholders — Drizzle never bound the status values so query returned empty
+- [x] Fixed: replaced raw sql template with inArray() helper in adminListChallenges and two other queue queries
+- [x] Verified: 6 challenges already exist in DB from previous queue actions, will now display correctly
+
+## Free Member Registration — Thinkific Link
+- [x] Replace local registration form with redirect page (auto-redirects to Thinkific after 2.5s, shows benefits + manual CTA)
+- [x] Thinkific enrollment URL: https://member.allaboutultrasound.com/enroll/3241567?price_id=4133943
+- [x] Thinkific membership page: https://member.allaboutultrasound.com/bundles/free-membership
+- [x] Updated all "Register" / "Sign Up" / "Create Account" CTAs in Layout, Login, QuickFire, UpgradeSuccess, VerifyEmail
+- [x] Added isFreeProduct() matcher to webhook handler — creates pending account on free enrollment, no additional role needed (user role is default)
+
+## Premium Pricing Page Update
+- [x] Updated /premium page: $9.97/mo (CHECKOUT_URL_MONTHLY) and $99.97/yr (CHECKOUT_URL_ANNUAL) with both Thinkific enrollment links
+- [x] Side-by-side pricing cards with Annual highlighted as Best Value
+- [x] Bottom CTA updated with both Monthly and Annual buttons
+- [x] Removed old handleCheckout/CHECKOUT_URL references

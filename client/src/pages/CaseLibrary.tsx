@@ -40,7 +40,6 @@ import {
   TrendingUp,
   ArrowUpDown,
 } from "lucide-react";
-import { getLoginUrl } from "@/const";
 import { formatDistanceToNow } from "date-fns";
 import { formatViewCount, getDisplayViewCount } from "@/lib/caseViewCount";
 
@@ -155,7 +154,7 @@ export default function CaseLibrary() {
               </Button>
             </Link>
           ) : (
-            <a href={getLoginUrl()}>
+            <a href="/login">
               <Button variant="outline" className="gap-2 border-[#189aa1] text-[#189aa1]">
                 <Plus className="w-4 h-4" /> Sign In to Submit
               </Button>

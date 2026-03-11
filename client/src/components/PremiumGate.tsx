@@ -14,7 +14,6 @@ import { Crown, Lock, Sparkles, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import { getLoginUrl } from "@/const";
 
 interface PremiumGateProps {
   children: React.ReactNode;
@@ -62,7 +61,7 @@ function NotLoggedInPrompt({ compact, featureName }: { compact: boolean; feature
       <div className="inline-flex items-center gap-1.5 text-xs text-gray-500">
         <Lock className="w-3 h-3" />
         <span>Sign in to access {featureName ?? "this feature"}</span>
-        <a href={getLoginUrl()} className="text-[#189aa1] font-medium hover:underline">Sign in</a>
+        <a href="/login" className="text-[#189aa1] font-medium hover:underline">Sign in</a>
       </div>
     );
   }
@@ -79,7 +78,7 @@ function NotLoggedInPrompt({ compact, featureName }: { compact: boolean; feature
           ? `${featureName} requires an account.`
           : "Please sign in to access this feature."}
       </p>
-      <a href={getLoginUrl()}>
+      <a href="/login">
         <Button className="bg-[#189aa1] hover:bg-[#147a80] text-white">
           Sign In <ArrowRight className="w-4 h-4 ml-1" />
         </Button>

@@ -189,12 +189,16 @@ export default function Login() {
             <div className="flex-1 h-px bg-gray-100" />
           </div>
 
-          <Link href="/register">
-            <button className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl font-semibold text-sm transition-all hover:bg-gray-50 border" style={{ color: "#189aa1", borderColor: "#189aa1" }}>
-              <Zap className="w-4 h-4" />
-              Create a free account
-            </button>
-          </Link>
+          <a
+            href="https://member.allaboutultrasound.com/enroll/3241567?price_id=4133943"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl font-semibold text-sm transition-all hover:bg-gray-50 border"
+            style={{ color: "#189aa1", borderColor: "#189aa1" }}
+          >
+            <Zap className="w-4 h-4" />
+            Create a free account
+          </a>
 
           <div className="flex items-center gap-3 my-4">
             <div className="flex-1 h-px bg-gray-100" />

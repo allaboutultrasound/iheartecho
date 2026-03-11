@@ -12,7 +12,6 @@ import { Crown, Lock, Sparkles, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-import { getLoginUrl } from "@/const";
 
 interface PremiumOverlayProps {
   children: React.ReactNode;
@@ -110,7 +109,7 @@ export function PremiumOverlay({ children, featureName, checkoutUrl }: PremiumOv
               </>
             ) : (
               <>
-                <a href={getLoginUrl()}>
+                <a href="/login">
                   <Button
                     className="w-full text-sm font-semibold text-white"
                     style={{ background: "linear-gradient(135deg, #189aa1, #0e7490)" }}

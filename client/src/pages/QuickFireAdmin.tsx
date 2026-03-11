@@ -150,6 +150,9 @@ export default function QuickFireAdmin() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<QuestionForm>(EMPTY_FORM);
   const [imageUploading, setImageUploading] = useState(false);
+  // Identifier hotspot: pending pin placement waiting for label input
+  const [pendingMarker, setPendingMarker] = useState<{ x: number; y: number } | null>(null);
+  const [pendingMarkerLabel, setPendingMarkerLabel] = useState("");
 
   async function handleImageUpload(file: File) {
     setImageUploading(true);
@@ -1820,13 +1823,12 @@ export default function QuickFireAdmin() {
                           className="relative inline-block"
                           onClick={(e) => {
                             e.stopPropagation();
+                            if (pendingMarker) return; // already placing a marker
                             const rect = e.currentTarget.getBoundingClientRect();
                             const x = Math.round(((e.clientX - rect.left) / rect.width) * 100);
                             const y = Math.round(((e.clientY - rect.top) / rect.height) * 100);
-                            const label = prompt("Enter label for this marker (e.g. Mitral Valve):");
-                            if (label) {
-                              setForm((f) => ({ ...f, markers: [...f.markers, { x, y, label }] }));
-                            }
+                            setPendingMarker({ x, y });
+                            setPendingMarkerLabel("");
                           }}
                         >
                           <img src={form.imageUrl} alt="Anatomy" className="w-full max-h-64 object-contain rounded-lg" />
@@ -1847,6 +1849,57 @@ export default function QuickFireAdmin() {
                               </div>
                             </div>
                           ))}
+                          {/* Pending marker — inline label input overlay */}
+                          {pendingMarker && (
+                            <div
+                              className="absolute z-20 -translate-x-1/2 -translate-y-full"
+                              style={{ left: `${pendingMarker.x}%`, top: `${pendingMarker.y}%` }}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {/* Pin indicator */}
+                              <div className="w-4 h-4 rounded-full bg-yellow-400 border-2 border-white shadow-md mx-auto mb-1" />
+                              {/* Label input bubble */}
+                              <div className="bg-white border border-indigo-300 rounded-xl shadow-xl p-2 w-52">
+                                <p className="text-[10px] text-gray-500 mb-1 font-medium">Label this marker</p>
+                                <input
+                                  autoFocus
+                                  type="text"
+                                  value={pendingMarkerLabel}
+                                  onChange={(e) => setPendingMarkerLabel(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter" && pendingMarkerLabel.trim()) {
+                                      setForm((f) => ({ ...f, markers: [...f.markers, { x: pendingMarker.x, y: pendingMarker.y, label: pendingMarkerLabel.trim() }] }));
+                                      setPendingMarker(null);
+                                      setPendingMarkerLabel("");
+                                    } else if (e.key === "Escape") {
+                                      setPendingMarker(null);
+                                      setPendingMarkerLabel("");
+                                    }
+                                  }}
+                                  placeholder="e.g. Mitral Valve"
+                                  className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1 mb-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-400"
+                                />
+                                <div className="flex gap-1">
+                                  <button
+                                    type="button"
+                                    disabled={!pendingMarkerLabel.trim()}
+                                    onClick={() => {
+                                      if (!pendingMarkerLabel.trim()) return;
+                                      setForm((f) => ({ ...f, markers: [...f.markers, { x: pendingMarker.x, y: pendingMarker.y, label: pendingMarkerLabel.trim() }] }));
+                                      setPendingMarker(null);
+                                      setPendingMarkerLabel("");
+                                    }}
+                                    className="flex-1 text-[10px] bg-indigo-500 hover:bg-indigo-600 disabled:opacity-40 text-white rounded-lg py-1 font-semibold"
+                                  >Add</button>
+                                  <button
+                                    type="button"
+                                    onClick={() => { setPendingMarker(null); setPendingMarkerLabel(""); }}
+                                    className="flex-1 text-[10px] bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg py-1 font-semibold"
+                                  >Cancel</button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                         <p className="text-xs text-indigo-600 mt-2">Click on the image to place markers. Click a marker to remove it.</p>
                         <button

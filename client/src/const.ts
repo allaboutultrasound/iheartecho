@@ -1,5 +1,9 @@
 export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 
+// Thinkific Free Membership enrollment — all new user registrations go here
+export const THINKIFIC_FREE_MEMBERSHIP_URL = "https://member.allaboutultrasound.com/enroll/3241567?price_id=4133943";
+export const THINKIFIC_FREE_MEMBERSHIP_PAGE = "https://member.allaboutultrasound.com/bundles/free-membership";
+
 // Generate login URL at runtime so redirect URI reflects the current origin.
 export const getLoginUrl = () => {
   const oauthPortalUrl = import.meta.env.VITE_OAUTH_PORTAL_URL;

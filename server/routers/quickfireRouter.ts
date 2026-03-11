@@ -86,8 +86,8 @@ async function ensureTodaySet(db: NonNullable<Awaited<ReturnType<typeof getDb>>>
   const queuedChallenges = await db
     .select()
     .from(quickfireChallenges)
-    .where(sql`${quickfireChallenges.status} IN ('draft', 'scheduled')` as any)
-    .orderBy(quickfireChallenges.priority, quickfireChallenges.createdAt)
+    .where(inArray(quickfireChallenges.status, ['draft', 'scheduled'] as any[]))
+      .orderBy(quickfireChallenges.priority, quickfireChallenges.createdAt)
     .limit(10);
 
   const nextChallenge =
@@ -840,8 +840,11 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
         } else if (type === "order") {
           typeInstructions = `Each item is an ordering/sequencing question. The 'question' field describes what to arrange. The 'orderedItems' field is an array of 4-6 strings in the CORRECT order. Include an 'explanation'. Do NOT include options or correctAnswer.`;
           jsonFormatInstructions = `{"questions":[{"question":"Arrange in the correct order:","orderedItems":["First","Second","Third","Fourth"],"explanation":"...","tags":["...","..."]}]}`;
+        } else if (type === "identifier") {
+          typeInstructions = `Each item is an anatomy hotspot/identifier question. The 'question' field asks the user to identify a specific anatomical structure on an echocardiographic image. The 'imageDescription' field describes the echo view and image that should be used (e.g. "PLAX view showing the left ventricle and aortic root"). The 'targetStructure' field names the exact anatomical structure the user must identify (e.g. "Mitral valve anterior leaflet"). The 'suggestedImageSearch' field provides a search query an admin can use to find an appropriate echo image. Include an 'explanation' describing how to identify the structure and its clinical significance. Do NOT include options, correctAnswer, or reviewAnswer. NOTE: Marker coordinates (x, y) cannot be set by AI and must be placed manually by the admin on the actual image.`;
+          jsonFormatInstructions = `{"questions":[{"question":"Identify the mitral valve anterior leaflet on this PLAX view.","imageDescription":"Parasternal long axis (PLAX) view showing the left ventricle, left atrium, and aortic root","targetStructure":"Mitral valve anterior leaflet","suggestedImageSearch":"echocardiography PLAX view mitral valve","explanation":"The anterior leaflet of the mitral valve is the longer of the two leaflets, seen in PLAX as the structure separating the left ventricular outflow tract from the left ventricle.","tags":["mitral valve","PLAX","anatomy"]}]}`;
         } else {
-          // scenario, image, identifier
+          // scenario, image
           typeInstructions = `Each item is a multiple-choice question with exactly 4 options in 'options', a 0-indexed correctAnswer as a number (0, 1, 2, or 3), and a clear explanation. Do NOT include reviewAnswer.`;
           jsonFormatInstructions = `{"questions":[{"question":"...","options":["A","B","C","D"],"correctAnswer":0,"explanation":"...","tags":["...","..."]}]}`;
         }
@@ -1229,7 +1232,7 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
         : ["draft", "scheduled", "live"];
 
       const rows = await db.select().from(quickfireChallenges)
-        .where(sql`${quickfireChallenges.status} IN (${statuses.map(() => "?").join(",")})` as any)
+        .where(inArray(quickfireChallenges.status, statuses as any[]))
         .orderBy(quickfireChallenges.priority, desc(quickfireChallenges.createdAt));
 
       return rows.map((r) => ({ ...r, questionIds: JSON.parse(r.questionIds || "[]") as number[] }));
@@ -1332,7 +1335,7 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       // 2. Pick next: prefer scheduled (has a publishDate), then draft, ordered by priority
       const today = now.toISOString().slice(0, 10);
       const candidates = await db.select().from(quickfireChallenges)
-        .where(sql`${quickfireChallenges.status} IN ('draft', 'scheduled')` as any)
+        .where(inArray(quickfireChallenges.status, ['draft', 'scheduled'] as any[]))
         .orderBy(quickfireChallenges.priority, quickfireChallenges.createdAt)
         .limit(10);
 

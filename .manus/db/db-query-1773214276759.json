@@ -1,0 +1,52 @@
+{
+  "query": "SELECT id, title, status, publishDate, createdAt FROM quickfireChallenges ORDER BY createdAt DESC LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mhhtxpXA9Esras.root --database etVPnUidWNWG8W4GHnRqzv --execute SELECT id, title, status, publishDate, createdAt FROM quickfireChallenges ORDER BY createdAt DESC LIMIT 20;",
+  "rows": [
+    {
+      "id": "6",
+      "title": "A 70-year-old has: E/e' average = 12, LAVi = 32 mL/m², TR...",
+      "status": "draft",
+      "publishDate": "NULL",
+      "createdAt": "2026-03-11 07:27:05"
+    },
+    {
+      "id": "5",
+      "title": "<p>Which of the following Doppler findings is most charac...",
+      "status": "draft",
+      "publishDate": "NULL",
+      "createdAt": "2026-03-11 07:25:49"
+    },
+    {
+      "id": "4",
+      "title": "<p>A 45-year-old male presents with dyspnea on exertion. ...",
+      "status": "draft",
+      "publishDate": "NULL",
+      "createdAt": "2026-03-11 07:25:35"
+    },
+    {
+      "id": "3",
+      "title": "<p>During a provocative maneuver for a patient with suspe...",
+      "status": "draft",
+      "publishDate": "NULL",
+      "createdAt": "2026-03-11 07:25:35"
+    },
+    {
+      "id": "2",
+      "title": "Which diastolic parameter is most affected by loading con...",
+      "status": "live",
+      "publishDate": "2026-03-11",
+      "createdAt": "2026-03-11 03:53:51"
+    },
+    {
+      "id": "1",
+      "title": "A patient has mitral stenosis. PHT is 220 ms. What is the...",
+      "status": "archived",
+      "publishDate": "2026-03-11",
+      "createdAt": "2026-03-11 03:53:22"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\tstatus\tpublishDate\tcreatedAt\n6\tA 70-year-old has: E/e' average = 12, LAVi = 32 mL/m², TR...\tdraft\tNULL\t2026-03-11 07:27:05\n5\t<p>Which of the following Doppler findings is most charac...\tdraft\tNULL\t2026-03-11 07:25:49\n4\t<p>A 45-year-old male presents with dyspnea on exertion. ...\tdraft\tNULL\t2026-03-11 07:25:35\n3\t<p>During a provocative maneuver for a patient with suspe...\tdraft\tNULL\t2026-03-11 07:25:35\n2\tWhich diastolic parameter is most affected by loading con...\tlive\t2026-03-11\t2026-03-11 03:53:51\n1\tA patient has mitral stenosis. PHT is 220 ms. What is the...\tarchived\t2026-03-11\t2026-03-11 03:53:22\n",
+  "stderr": "",
+  "execution_time_ms": 365
+}

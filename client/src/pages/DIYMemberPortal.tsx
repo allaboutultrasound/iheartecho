@@ -17,7 +17,6 @@ import {
   AlertTriangle, UserCheck, Zap, ArrowRight
 } from "lucide-react";
 import { toast } from "sonner";
-import { getLoginUrl } from "@/const";
 import { Link } from "wouter";
 
 const BRAND = "#189aa1";
@@ -131,7 +130,7 @@ export default function DIYMemberPortal() {
           <h2 className="text-xl font-bold mb-2">Sign In Required</h2>
           <p className="text-gray-500 mb-4">Please sign in to access your DIY Accreditation member portal.</p>
           <Button style={{ background: BRAND, color: "white" }} asChild>
-            <a href={getLoginUrl()}>Sign In</a>
+            <a href="/login">Sign In</a>
           </Button>
         </div>
       </Layout>

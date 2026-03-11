@@ -95,9 +95,26 @@ function diyRoleForProduct(name: string): "diy_admin" | "diy_user" {
   return "diy_user";
 }
 
-/** Returns true if the product is relevant to iHeartEcho (either premium or DIY). */
+/**
+ * Returns true if the product name matches the iHeartEcho™ Free Membership.
+ * This is the default membership granted to all new users who register via Thinkific.
+ * Thinkific bundle: https://member.allaboutultrasound.com/bundles/free-membership
+ */
+function isFreeProduct(name: string | null | undefined): boolean {
+  if (!name) return false;
+  const l = name.toLowerCase();
+  return (
+    l.includes("free membership") ||
+    l.includes("free-membership") ||
+    (l.includes("iheartecho") && l.includes("free")) ||
+    (l.includes("allaboutultrasound") && l.includes("free")) ||
+    l === "free"
+  );
+}
+
+/** Returns true if the product is relevant to iHeartEcho (premium, DIY, or free). */
 function isRelevantProduct(name: string | null | undefined): boolean {
-  return isPremiumProduct(name) || isDIYProduct(name);
+  return isPremiumProduct(name) || isDIYProduct(name) || isFreeProduct(name);
 }
 
 // ── Logger ───────────────────────────────────────────────────────────────────
@@ -261,6 +278,9 @@ export function registerThinkificWebhook(app: Router) {
         } else if (isDIYProduct(productName)) {
           const role = diyRoleForProduct(productName);
           await removeRole(user.id, role);
+        } else if (isFreeProduct(productName)) {
+          // Free membership cancelled — basic user role is retained; no action needed.
+          console.log(`[Thinkific Webhook] Free membership cancelled for ${userEmail} — no role changes required.`);
         }
 
         const msg = `access revoked from ${userEmail} (userId=${user.id}) for "${productName}"`;
@@ -305,6 +325,10 @@ async function grantAccess(params: {
       } else if (isDIYProduct(productName)) {
         const role = diyRoleForProduct(productName);
         await assignRole(pendingUserId, role, 0 /* system/webhook grant */);
+      } else if (isFreeProduct(productName)) {
+        // Free membership — user role is the default; no additional role needed.
+        // The pending account creation itself gives them basic access.
+        console.log(`[Thinkific Webhook] Free membership enrolled for ${userEmail} — basic access granted.`);
       }
       const msg = `pending account created and access granted for ${userEmail} ("${productName}")`;
       console.log(`[Thinkific Webhook] ${msg} (userId=${pendingUserId})`);
@@ -323,6 +347,9 @@ async function grantAccess(params: {
   } else if (isDIYProduct(productName)) {
     const role = diyRoleForProduct(productName);
     await assignRole(user.id, role, 0 /* system/webhook grant */);
+  } else if (isFreeProduct(productName)) {
+    // Free membership — user role is the default; no additional role needed.
+    console.log(`[Thinkific Webhook] Free membership enrolled for ${userEmail} (userId=${user.id}) — basic access confirmed.`);
   }
 
   const msg = `access granted to ${userEmail} (userId=${user.id}) for "${productName}"`;
