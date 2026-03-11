@@ -2091,3 +2091,19 @@
 - [x] Nest all three diastology engines under DiastologyAssist™ (Diastolic Function Assessment + LAP Estimation + Special Populations)
 - [x] Move Myocardial StrainAssist™ inside RV SystolicAssist section (no longer standalone)
 - [x] Fix main render order: LV SystolicAssist → DiastologyAssist → AS → AR → MS → MR → TR → RV Systolic → PulmHTN → POCUS-Assist → Frank-Starling → StressEchoAssist
+
+## TR Engine Enhancements
+- [ ] Add TR VTI input field for PISA-derived regurgitant volume (RVol = EROA × VTI)
+- [ ] Add prominent PISA calculation sub-panel showing EROA and RVol derived values
+- [ ] Add PISA aliasing velocity selector (default 28 cm/s, allow 40 cm/s option)
+- [ ] Display PISA-derived EROA and RVol as highlighted result chips (not just small text)
+- [ ] Add proximal isovelocity surface area formula display for educational context
+
+## Access Control & Premium Gating Fixes (Critical)
+- [ ] Audit all premium-gated content — verify unauthenticated users cannot access premium features
+- [ ] Fix EchoAssist premium engine gates (LAP Estimation, Diastology Special Populations, StressEchoAssist, Strain)
+- [ ] Fix DIY Accreditation Tool route guard — unauthenticated/basic users should not access it
+- [ ] Fix premium gate for Echo Case Library, Echo Flashcards (daily limit for free, locked for unauth)
+- [ ] Fix premium gate for EchoAccreditation Navigator
+- [ ] Make DIY Accreditation sidebar link context-aware: DIY/admin → /diy-accreditation, others → /premium (plans page)
+- [ ] Ensure all tRPC protected procedures reject unauthenticated requests (not just frontend gates)

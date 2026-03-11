@@ -71,6 +71,7 @@ export function RoleGuard({ roles, allowAdmin = true, children }: RoleGuardProps
   // Redirect unauthenticated users to login
   useEffect(() => {
     if (!loading && !isAuthenticated) {
+      // Use the app's login page which handles both OAuth and email/password
       window.location.href = "/login";
     }
   }, [loading, isAuthenticated]);

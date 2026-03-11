@@ -1498,6 +1498,8 @@ function TricuspidRegurgEngine() {
   const [eroaTr, setEroaTr] = useState("");
   const [regVolTr, setRegVolTr] = useState("");
   const [pisaRadiusTr, setPisaRadiusTr] = useState("");
+  const [trVti, setTrVti] = useState("");
+  const [pisaAlias, setPisaAlias] = useState<28 | 40>(28);
   const [trVmax, setTrVmax] = useState("");
   const [rvBasal, setRvBasal] = useState("");
   const [raArea, setRaArea] = useState("");
@@ -1506,9 +1508,13 @@ function TricuspidRegurgEngine() {
   const [hepaticVein, setHepaticVein] = useState<"" | "normal" | "blunted" | "reversal">("" );
   const [jetArea, setJetArea] = useState("");
 
-  // PISA EROA at 28 cm/s aliasing (standard for TR)
+  // PISA EROA — aliasing velocity selectable (28 cm/s standard, 40 cm/s for high-velocity jets)
   const pisaEroaTr = has(pisaRadiusTr, trVmax)
-    ? (2 * Math.PI * Math.pow(n(pisaRadiusTr), 2) * 28) / (n(trVmax) * 100)
+    ? (2 * Math.PI * Math.pow(n(pisaRadiusTr), 2) * pisaAlias) / (n(trVmax) * 100)
+    : null;
+  // PISA-derived regurgitant volume = EROA × TR VTI
+  const pisaRegVolTr = pisaEroaTr !== null && has(trVti)
+    ? pisaEroaTr * n(trVti)
     : null;
 
   // RVSP from TR Vmax (simplified Bernoulli)
@@ -1553,7 +1559,8 @@ function TricuspidRegurgEngine() {
 
     // EROA (entered directly or from PISA)
     const effectiveEroa = n(eroaTr) || pisaEroaTr || 0;
-    if (pisaEroaTr) criteria.push(`EROA by PISA = ${pisaEroaTr.toFixed(2)} cm²`);
+    if (pisaEroaTr) criteria.push(`EROA by PISA = ${pisaEroaTr.toFixed(2)} cm² (PISA r=${pisaRadiusTr} cm, alias=${pisaAlias} cm/s, Vmax=${trVmax} m/s)`);
+    if (pisaRegVolTr) criteria.push(`Regurgitant volume by PISA = ${pisaRegVolTr.toFixed(0)} mL (EROA ${pisaEroaTr!.toFixed(2)} cm² × VTI ${trVti} cm)`);
     if (has(eroaTr)) criteria.push(`EROA (entered) = ${eroaTr} cm²`);
     if (effectiveEroa > 0) {
       if (effectiveEroa >= 0.75) { criteria.push("EROA ≥0.75 cm² → massive/torrential"); sevScore = Math.max(sevScore, 4); votes++; }
@@ -1562,12 +1569,12 @@ function TricuspidRegurgEngine() {
       else { criteria.push("EROA <0.20 cm² → mild"); sevScore = Math.max(sevScore, 1); votes++; }
     }
 
-    // Regurgitant volume
-    if (has(regVolTr)) {
-      const rv = n(regVolTr);
-      criteria.push(`Regurgitant volume = ${regVolTr} mL`);
-      if (rv >= 45) { criteria.push("RVol ≥45 mL → severe"); sevScore = Math.max(sevScore, 3); votes++; }
-      else if (rv >= 30) { criteria.push("RVol 30–44 mL → moderate"); sevScore = Math.max(sevScore, 2); votes++; }
+    // Regurgitant volume (entered directly or from PISA)
+    const effectiveRegVol = n(regVolTr) || pisaRegVolTr || 0;
+    if (has(regVolTr)) criteria.push(`Regurgitant volume (entered) = ${regVolTr} mL`);
+    if (effectiveRegVol > 0) {
+      if (effectiveRegVol >= 45) { criteria.push("RVol ≥45 mL → severe"); sevScore = Math.max(sevScore, 3); votes++; }
+      else if (effectiveRegVol >= 30) { criteria.push("RVol 30–44 mL → moderate"); sevScore = Math.max(sevScore, 2); votes++; }
       else { criteria.push("RVol <30 mL → mild"); sevScore = Math.max(sevScore, 1); votes++; }
     }
 
@@ -1626,7 +1633,7 @@ function TricuspidRegurgEngine() {
 
     const vcStr = has(vcTr) ? ` (vena contracta ${vcTr} mm)` : "";
     const eroaStr = pisaEroaTr ? `, EROA ${pisaEroaTr.toFixed(2)} cm²` : has(eroaTr) ? `, EROA ${eroaTr} cm²` : "";
-    const rvStr = has(regVolTr) ? `, regurgitant volume ${regVolTr} mL` : "";
+    const rvStr = pisaRegVolTr ? `, regurgitant volume ${pisaRegVolTr.toFixed(0)} mL` : has(regVolTr) ? `, regurgitant volume ${regVolTr} mL` : "";
     const rvsStr = rvsWithRap ? ` Estimated RVSP ${rvsWithRap.toFixed(0)} mmHg.` : rvsp ? ` TR Vmax ${trVmax} m/s (RVSP gradient ${rvsp.toFixed(0)} mmHg).` : "";
 
     if (result.sev === "normal") return {
@@ -1662,13 +1669,76 @@ function TricuspidRegurgEngine() {
 
   return (
     <EngineSection id="engine-tr" title="Tricuspid Regurgitation" subtitle="Vena contracta · EROA · PISA · Regurgitant volume · Hepatic vein flow">
+
+      {/* ── Section 1: Primary Grading Parameters ── */}
+      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Primary Grading Parameters</p>
       <div className="grid grid-cols-2 gap-3">
         <NumInput label="Vena Contracta" value={vcTr} onChange={setVcTr} unit="mm" placeholder="sev ≥14" hint="(sev ≥14 mm)" />
-        <NumInput label="EROA" value={eroaTr} onChange={setEroaTr} unit="cm²" placeholder="sev ≥0.40" />
+        <NumInput label="EROA (direct entry)" value={eroaTr} onChange={setEroaTr} unit="cm²" placeholder="sev ≥0.40" />
         <NumInput label="Regurgitant Volume" value={regVolTr} onChange={setRegVolTr} unit="mL" placeholder="sev ≥45" />
-        <NumInput label="PISA Radius" value={pisaRadiusTr} onChange={setPisaRadiusTr} unit="cm" placeholder="e.g. 0.8" hint="(at 28 cm/s alias)" />
-        <NumInput label="TR Vmax" value={trVmax} onChange={setTrVmax} unit="m/s" placeholder="nl <2.8" hint="(for RVSP)" />
         <NumInput label="TR Jet Area" value={jetArea} onChange={setJetArea} unit="cm²" placeholder="sev ≥10" hint="(supportive)" />
+      </div>
+
+      {/* ── Section 2: PISA Method ── */}
+      <div className="mt-4 border border-[#189aa1]/20 rounded-xl p-3 bg-[#f0fbfc]/60">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-xs font-semibold text-[#189aa1] uppercase tracking-wide">PISA Method</p>
+          <div className="flex items-center gap-1 text-xs text-gray-500">
+            <span>Aliasing velocity:</span>
+            <button
+              onClick={() => setPisaAlias(28)}
+              className={`px-2 py-0.5 rounded text-xs font-semibold border transition-all ${
+                pisaAlias === 28 ? "bg-[#189aa1] text-white border-[#189aa1]" : "bg-white text-gray-500 border-gray-200 hover:border-[#189aa1]"
+              }`}
+            >28 cm/s</button>
+            <button
+              onClick={() => setPisaAlias(40)}
+              className={`px-2 py-0.5 rounded text-xs font-semibold border transition-all ${
+                pisaAlias === 40 ? "bg-[#189aa1] text-white border-[#189aa1]" : "bg-white text-gray-500 border-gray-200 hover:border-[#189aa1]"
+              }`}
+            >40 cm/s</button>
+          </div>
+        </div>
+        <p className="text-xs text-gray-400 mb-2">EROA = 2πr² × V<sub>alias</sub> / V<sub>max</sub> &nbsp;&nbsp;│&nbsp;&nbsp; RVol = EROA × TR VTI</p>
+        <div className="grid grid-cols-3 gap-3">
+          <NumInput label="PISA Radius (r)" value={pisaRadiusTr} onChange={setPisaRadiusTr} unit="cm" placeholder="e.g. 0.8" />
+          <NumInput label="TR Vmax" value={trVmax} onChange={setTrVmax} unit="m/s" placeholder="e.g. 2.5" hint="(also for RVSP)" />
+          <NumInput label="TR VTI" value={trVti} onChange={setTrVti} unit="cm" placeholder="e.g. 80" hint="(for RVol)" />
+        </div>
+        {/* PISA derived results */}
+        {(pisaEroaTr !== null || pisaRegVolTr !== null) && (
+          <div className="flex flex-wrap gap-2 mt-3">
+            {pisaEroaTr !== null && (
+              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border ${
+                pisaEroaTr >= 0.75 ? "bg-red-50 border-red-200 text-red-700" :
+                pisaEroaTr >= 0.40 ? "bg-orange-50 border-orange-200 text-orange-700" :
+                pisaEroaTr >= 0.20 ? "bg-yellow-50 border-yellow-200 text-yellow-700" :
+                "bg-green-50 border-green-200 text-green-700"
+              }`}>
+                <span>PISA EROA</span>
+                <span className="font-bold">{pisaEroaTr.toFixed(2)} cm²</span>
+                <span className="text-gray-400 font-normal">→ {pisaEroaTr >= 0.75 ? "massive" : pisaEroaTr >= 0.40 ? "severe" : pisaEroaTr >= 0.20 ? "moderate" : "mild"}</span>
+              </div>
+            )}
+            {pisaRegVolTr !== null && (
+              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border ${
+                pisaRegVolTr >= 45 ? "bg-orange-50 border-orange-200 text-orange-700" :
+                pisaRegVolTr >= 30 ? "bg-yellow-50 border-yellow-200 text-yellow-700" :
+                "bg-green-50 border-green-200 text-green-700"
+              }`}>
+                <span>PISA RVol</span>
+                <span className="font-bold">{pisaRegVolTr.toFixed(0)} mL</span>
+                <span className="text-gray-400 font-normal">→ {pisaRegVolTr >= 45 ? "severe" : pisaRegVolTr >= 30 ? "moderate" : "mild"}</span>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* ── Section 3: RV/RA Size & Hemodynamics ── */}
+      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">RV/RA Size &amp; Hemodynamics</p>
+      <div className="grid grid-cols-2 gap-3">
+        <NumInput label="TR Vmax" value={trVmax} onChange={setTrVmax} unit="m/s" placeholder="nl <2.8" hint="(for RVSP)" />
         <NumInput label="RV Basal Diameter" value={rvBasal} onChange={setRvBasal} unit="mm" placeholder="nl <41" />
         <NumInput label="RA Area" value={raArea} onChange={setRaArea} unit="cm²" placeholder="nl <18" />
         <NumInput label="IVC Diameter" value={ivcDiam} onChange={setIvcDiam} unit="mm" placeholder="nl ≤21" />
@@ -1703,8 +1773,29 @@ function TricuspidRegurgEngine() {
         </div>
       </div>
 
-      {pisaEroaTr && <p className="text-xs text-gray-400 mt-2">PISA-derived EROA (28 cm/s): {pisaEroaTr.toFixed(2)} cm²</p>}
-      {rvsWithRap !== null && <p className="text-xs text-gray-400 mt-1">Estimated RVSP (TR gradient + RAP {rap} mmHg): {rvsWithRap.toFixed(0)} mmHg</p>}
+      {/* Derived hemodynamic values */}
+      {(rvsWithRap !== null || rvsp !== null) && (
+        <div className="flex flex-wrap gap-2 mt-3">
+          {rvsWithRap !== null && (
+            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border ${
+              rvsWithRap > 60 ? "bg-red-50 border-red-200 text-red-700" :
+              rvsWithRap > 35 ? "bg-yellow-50 border-yellow-200 text-yellow-700" :
+              "bg-green-50 border-green-200 text-green-700"
+            }`}>
+              <span>Est. RVSP</span>
+              <span className="font-bold">{rvsWithRap.toFixed(0)} mmHg</span>
+              <span className="text-gray-400 font-normal">(gradient + RAP {rap} mmHg)</span>
+            </div>
+          )}
+          {rvsp !== null && rvsWithRap === null && (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border bg-gray-50 border-gray-200 text-gray-600">
+              <span>TR gradient</span>
+              <span className="font-bold">{rvsp.toFixed(0)} mmHg</span>
+              <span className="text-gray-400 font-normal">(add RAP for RVSP)</span>
+            </div>
+          )}
+        </div>
+      )}
 
       <ResultCard severity={result.sev} title="Tricuspid Regurgitation Severity" value={result.label} criteria={result.criteria} />
       <EchoAssistPanel output={getTrEchoAssist()} />

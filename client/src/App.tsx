@@ -143,7 +143,7 @@ function Router() {
       <Route path="/pocus-rush-scan-coach">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><POCUSRushScanCoach /></RoleGuard>}</Route>
       <Route path="/pocus-cardiac-scan-coach" component={POCUSCardiacScanCoach} />
       <Route path="/pocus-lung-scan-coach">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><POCUSLungScanCoach /></RoleGuard>}</Route>
-      <Route path="/strain" component={StrainNavigator} />
+      <Route path="/strain">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><StrainNavigator /></RoleGuard>}</Route>
       <Route path="/accreditation">
         {() => (
           <RoleGuard roles={["diy_admin", "diy_user"]}>
@@ -151,7 +151,7 @@ function Router() {
           </RoleGuard>
         )}
       </Route>
-      <Route path="/accreditation-navigator" component={AccreditationNavigator} />
+      <Route path="/accreditation-navigator">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><AccreditationNavigator /></RoleGuard>}</Route>
       <Route path="/lab-admin">
         {() => (
           <RoleGuard roles={["diy_admin"]}>
@@ -180,10 +180,10 @@ function Router() {
       <Route path="/hocm-navigator">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><HOCMNavigator /></RoleGuard>}</Route>
       <Route path="/hocm-scan-coach">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><HOCMScanCoach /></RoleGuard>}</Route>
       <Route path="/stress-scan-coach">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><StressScanCoach /></RoleGuard>}</Route>
-      <Route path="/stress-echo-assist" component={StressEchoAssistPage} />
+      <Route path="/stress-echo-assist">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><StressEchoAssistPage /></RoleGuard>}</Route>
       <Route path="/structural-heart-scan-coach">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><StructuralHeartScanCoach /></RoleGuard>}</Route>
       <Route path="/pulm-htn">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><PulmHTNNavigator /></RoleGuard>}</Route>
-      <Route path="/diastolic" component={DiastolicNavigator} />
+      <Route path="/diastolic">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><DiastolicNavigator /></RoleGuard>}</Route>
       <Route path="/echo-assist-hub" component={EchoAssistHub} />
       {/* ── LMS Engines ──────────────────────────────────────────────────── */}
       <Route path="/quickfire" component={QuickFire} />
@@ -192,15 +192,15 @@ function Router() {
       <Route path="/case-library/submit" component={SubmitCase} />
       <Route path="/case-library/edit/:id" component={SubmitCase} />
       <Route path="/case-library/:id" component={CaseDetail} />
-      <Route path="/admin/cases" component={AdminCaseManagement} />
-      <Route path="/admin/quickfire" component={QuickFireAdmin} />
-      <Route path="/admin/scancoach" component={ScanCoachEditor} />
-      <Route path="/admin/thinkific-webhook" component={ThinkificWebhookAdmin} />
+      <Route path="/admin/cases">{() => <RoleGuard roles={["platform_admin"]} allowAdmin={true}><AdminCaseManagement /></RoleGuard>}</Route>
+      <Route path="/admin/quickfire">{() => <RoleGuard roles={["platform_admin"]} allowAdmin={true}><QuickFireAdmin /></RoleGuard>}</Route>
+      <Route path="/admin/scancoach">{() => <RoleGuard roles={["platform_admin"]} allowAdmin={true}><ScanCoachEditor /></RoleGuard>}</Route>
+      <Route path="/admin/thinkific-webhook">{() => <RoleGuard roles={["platform_admin"]} allowAdmin={true}><ThinkificWebhookAdmin /></RoleGuard>}</Route>
       {/* ── DIY Accreditation™ ─────────────────────────────────────────── */}
       <Route path="/diy-accreditation-plans" component={DIYAccreditationPlans} />
       <Route path="/diy-register" component={DIYRegister} />
-      <Route path="/diy-lab-admin">{() => <RoleGuard roles={["diy_admin", "admin"]}><DIYLabAdmin /></RoleGuard>}</Route>
-      <Route path="/diy-member">{() => <RoleGuard roles={["diy_user", "diy_admin", "admin"]}><DIYMemberPortal /></RoleGuard>}</Route>
+      <Route path="/diy-lab-admin">{() => <RoleGuard roles={["diy_admin", "platform_admin"]}><DIYLabAdmin /></RoleGuard>}</Route>
+      <Route path="/diy-member">{() => <RoleGuard roles={["diy_user", "diy_admin", "platform_admin"]}><DIYMemberPortal /></RoleGuard>}</Route>
       {/* ── Premium Access ──────────────────────────────────────────────── */}
       <Route path="/premium" component={Premium} />
       <Route path="/upgrade-success" component={UpgradeSuccess} />

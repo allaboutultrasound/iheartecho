@@ -10,7 +10,7 @@ import {
   Scan, BookOpen, FileText, Menu, X, ChevronRight,
   Stethoscope, Zap, ExternalLink, ShoppingBag, FlaskConical, MessageCircle, Award, Shield, GraduationCap,
   BookMarked, Library, Plus, Crown, Droplets, Building2, Users, UserPlus,
-  LogIn, LogOut, Settings, ChevronDown, Webhook, Layers, CreditCard
+  LogIn, LogOut, Settings, ChevronDown, Webhook, Layers, CreditCard, Lock
 } from "lucide-react";
 
 import { trpc } from "@/lib/trpc";
@@ -138,9 +138,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [accountOpen, setAccountOpen] = useState(false);
   const { isAuthenticated, user, logout } = useAuth();
   const isAdmin = (user as any)?.role === "admin";
-  const userRoles: string[] = (user as any)?.thinkificRoles ?? [];
-  const hasDiyAccess = userRoles.includes("diy_user") || userRoles.includes("diy_admin");
-  const hasDiyAdmin = userRoles.includes("diy_admin");
+  // Use appRoles (the authoritative role array from auth.me) for access checks
+  const appRoles: string[] = (user as any)?.appRoles ?? [];
+  const hasDiyAccess = appRoles.includes("diy_user") || appRoles.includes("diy_admin") || appRoles.includes("platform_admin") || isAdmin;
+  const hasDiyAdmin = appRoles.includes("diy_admin") || appRoles.includes("platform_admin") || isAdmin;
 
   return (
     <div className="flex min-h-screen bg-[#f0fbfc]">
@@ -185,10 +186,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <div key={group.label}>
               <div className="text-xs font-semibold text-white/40 uppercase tracking-wider px-3 mb-1">{group.label}</div>
               {group.items.map(({ path, label, icon: Icon, external }) => {
-                // Smart DIY Accreditation link: resolve destination based on user access
-                const resolvedPath = path === "/diy-accreditation-smart"
+                // Smart DIY Accreditation link: resolve destination and label based on user access
+                const isDiySmartLink = path === "/diy-accreditation-smart";
+                const resolvedPath = isDiySmartLink
                   ? (hasDiyAccess ? "/accreditation" : "/diy-accreditation-plans")
                   : path;
+                const resolvedLabel = label; // Label stays constant; only the destination URL changes
 
                 // For paths with query params (e.g. /scan-coach?tab=tte), match full URL; otherwise use path-only match
                 const hasQuery = resolvedPath.includes("?");
@@ -208,7 +211,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     onClick={() => setSidebarOpen(false)}
                   >
                     <Icon className={`w-4 h-4 flex-shrink-0 ${active ? "text-white" : "text-[#4ad9e0] group-hover:text-white"}`} />
-                    <span className="text-sm md:text-base font-medium">{label}</span>
+                    <span className="text-sm md:text-base font-medium">{resolvedLabel}</span>
+                    {/* Lock icon for non-DIY users on the DIY smart link */}
+                    {isDiySmartLink && !hasDiyAccess && (
+                      <Lock className="w-3 h-3 ml-auto text-white/30 group-hover:text-white/60" />
+                    )}
                     {/* Pending badge for Echo Case Library — admin only, not shown when item is active */}
                     {isCaseLibrary && isAdmin && !active && <CasePendingBadge />}
                     {active && <ChevronRight className="w-3 h-3 ml-auto" />}
