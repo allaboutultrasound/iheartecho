@@ -2363,3 +2363,51 @@
 
 ## Notification Email Unsubscribe Link (Mar 11 2026)
 - [x] Add unsubscribe link to daily challenge notification email pointing to /profile#notifications
+
+## Notification UX Improvements (Mar 11 2026)
+- [ ] Auto-scroll Profile page to notifications section when URL has #notifications anchor
+- [ ] Build one-click unsubscribe endpoint (/api/unsubscribe?token=...) with signed token, update email footer
+- [ ] Add notification opt-in prompt on QuickFire page for users without a timezone set
+
+## Accreditation Form Builder — Platform Admin (Mar 11 2026)
+- [ ] DB schema: formDefinitions, formSections, formItems, formItemOptions, formBranchingRules tables
+- [ ] DB migration: pnpm db:push
+- [ ] tRPC CRUD: getFormDefinitions, getFormDefinition, createFormDefinition, updateFormDefinition, deleteFormDefinition
+- [ ] tRPC CRUD: createSection, updateSection, deleteSection, reorderSections
+- [ ] tRPC CRUD: createItem, updateItem, deleteItem, reorderItems (item types: text, select, multiselect, radio, checkbox, number, textarea)
+- [ ] tRPC CRUD: createBranchingRule, updateBranchingRule, deleteBranchingRule (show/hide item based on previous answer)
+- [ ] tRPC CRUD: updateItemOption score weights (per-option quality score contribution)
+- [ ] Platform Admin: Form Builder tab with form list and WYSIWYG editor
+- [ ] Form Builder UI: section management (add/rename/delete/reorder)
+- [ ] Form Builder UI: item management (add/edit/delete/reorder within sections)
+- [ ] Form Builder UI: item type selector (text, select, radio, checkbox, number, textarea)
+- [ ] Form Builder UI: option editor for select/radio/checkbox items (add/remove options, set labels)
+- [ ] Form Builder UI: quality score weight editor per option (0-100 contribution, N/A excluded from denominator)
+- [ ] Form Builder UI: branching rule editor (if [item X] answer is [value] → show/hide [item Y])
+- [ ] Form Builder UI: live preview panel showing the form as it will appear to reviewers
+- [ ] Wire dynamic forms into Accreditation Review form renderer (IQR, Peer Review, Appropriate Use)
+- [ ] Preserve backward compatibility: existing static form data continues to work alongside dynamic forms
+
+## Form Builder — Accreditation Review Forms (Completed)
+- [x] DB schema: accreditationFormTemplates, accreditationFormSections, accreditationFormItems, accreditationFormOptions, accreditationFormBranchRules, accreditationFormOrgVisibilityRules tables
+- [x] Schema: expanded itemType enum — text, textarea, email, richtext, radio, checkbox, select, scale, heading, info
+- [x] Schema: new columns — richTextContent (longtext), emailRoutingRules (JSON), placeholder, validationRegex
+- [x] tRPC router: formBuilder — listTemplates, getFullTemplate, createTemplate, updateTemplate, deleteTemplate
+- [x] tRPC router: formBuilder — createSection, updateSection, deleteSection, reorderSections
+- [x] tRPC router: formBuilder — createItem, updateItem, deleteItem, reorderItems
+- [x] tRPC router: formBuilder — saveFormOptions (with quality score weighting)
+- [x] tRPC router: formBuilder — saveBranchRules (item-level conditional show/hide)
+- [x] tRPC router: formBuilder — getOrgVisibilityRules, saveOrgVisibilityRule, deleteOrgVisibilityRule
+- [x] tRPC router: formBuilder — listOrganizations (for org-based rule builder)
+- [x] TipTap rich text editor component (RichTextEditor.tsx) — bold, italic, underline, headings, lists, blockquote, link, image (URL + file upload), video (URL), YouTube embed, HTML insert, text color, text alignment
+- [x] FormBuilderAdmin.tsx — Template list view with create/delete
+- [x] FormBuilderAdmin.tsx — Full editor with Sections tab, Branching Rules tab, Org Visibility Rules tab, Preview tab
+- [x] FormBuilderAdmin.tsx — ItemEditorDialog with all 10 field types including email routing JSON editor and rich text editor
+- [x] FormBuilderAdmin.tsx — OptionEditor with quality score weighting per option
+- [x] FormBuilderAdmin.tsx — BranchRuleBuilder (show/hide item based on another item's response)
+- [x] FormBuilderAdmin.tsx — OrgVisibilityRuleBuilder (show_only_for / hide_for per OrgID)
+- [x] FormPreview.tsx — Live preview with branching logic evaluation, org filter simulation, quality score live meter
+- [x] FormPreview.tsx — Renders all 10 field types including email (with routing indicator), richtext (HTML display), info (with rich content)
+- [x] Platform Admin hub — Form Builder card added to Admin Tools section
+- [x] App.tsx — Routes /admin/form-builder and /admin/form-builder/:id registered with RoleGuard
+- [x] Vitest tests — 22 tests covering templates, sections, items, options, branch rules, org visibility rules, quality score computation

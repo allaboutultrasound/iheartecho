@@ -810,6 +810,13 @@ export default function PlatformAdmin() {
                 description: "Manage course sync, webhook events, and enrollment",
                 color: "#d97706",
               },
+              {
+                href: "/admin/form-builder",
+                icon: ClipboardList,
+                label: "Form Builder",
+                description: "Create and edit accreditation review forms with branching logic and quality scoring",
+                color: "#0891b2",
+              },
             ].map(({ href, icon: Icon, label, description, color }) => (
               <Link key={href} href={href}>
                 <div className="group flex flex-col gap-3 p-4 rounded-xl border border-gray-100 bg-white shadow-sm hover:shadow-md hover:border-gray-200 cursor-pointer transition-all h-full">

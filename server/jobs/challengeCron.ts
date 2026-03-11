@@ -13,6 +13,7 @@ import { getDb } from "../db";
 import { quickfireChallenges, quickfireDailySets, quickfireQuestions, users } from "../../drizzle/schema";
 import { eq, and, asc, lte } from "drizzle-orm";
 import sgMail from "@sendgrid/mail";
+import { generateUnsubscribeToken } from "../routes/unsubscribe";
 
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY ?? "";
 const SENDGRID_FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL ?? "noreply@iheartecho.com";
@@ -193,7 +194,7 @@ export async function runChallengeCron() {
     try {
       // Fetch all users with emails who have opted in to quickfireReminder
       const usersWithEmail = await db
-        .select({ email: users.email, name: users.name, displayName: users.displayName, notificationPrefs: users.notificationPrefs })
+        .select({ id: users.id, email: users.email, name: users.name, displayName: users.displayName, notificationPrefs: users.notificationPrefs })
         .from(users);
 
       const recipients = usersWithEmail.filter((u) => {
@@ -230,6 +231,7 @@ export async function runChallengeCron() {
             challengeUrl,
             category: toPublish.category ?? "General",
             appUrl: APP_URL,
+            unsubscribeUrl: `${APP_URL}/api/unsubscribe?token=${generateUnsubscribeToken(u.id)}`,
           }),
           text: `New Daily Challenge: ${toPublish.title}\n\n${toPublish.description ?? ""}\n\nYou have 24 hours to complete it!\n\n${challengeUrl}`,
         }));
@@ -253,6 +255,7 @@ function buildEmailHtml({
   challengeUrl,
   category,
   appUrl,
+  unsubscribeUrl,
 }: {
   userName: string;
   challengeTitle: string;
@@ -260,6 +263,7 @@ function buildEmailHtml({
   challengeUrl: string;
   category: string;
   appUrl: string;
+  unsubscribeUrl: string;
 }) {
   return `<!DOCTYPE html>
 <html>
@@ -312,7 +316,7 @@ function buildEmailHtml({
                 You're receiving this because you opted in to Daily Challenge notifications.<br/>
                 <a href="${appUrl}/profile#notifications" style="color:#189aa1;text-decoration:none;">Manage notification preferences</a>
                 &nbsp;·&nbsp;
-                <a href="${appUrl}/profile#notifications" style="color:#9ca3af;text-decoration:underline;">Unsubscribe</a>
+                <a href="${unsubscribeUrl}" style="color:#9ca3af;text-decoration:underline;">Unsubscribe</a>
                 &nbsp;·&nbsp;
                 <a href="${appUrl}" style="color:#189aa1;text-decoration:none;">iHeartEcho™</a>
               </p>
@@ -403,6 +407,7 @@ async function send9amChallengeNotifications() {
           challengeUrl,
           category: liveChallenge.category ?? "General",
           appUrl: APP_URL,
+          unsubscribeUrl: `${APP_URL}/api/unsubscribe?token=${generateUnsubscribeToken(u.id)}`,
         }),
         text: `Daily Challenge: ${liveChallenge.title}\n\n${liveChallenge.description ?? ""}\n\nYou have 24 hours to complete it!\n\n${challengeUrl}`,
       }));

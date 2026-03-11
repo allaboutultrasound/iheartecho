@@ -1,6 +1,7 @@
 import {
   boolean,
   int,
+  longtext,
   mysqlEnum,
   mysqlTable,
   text,
@@ -1631,3 +1632,142 @@ export const meetingMinutesDrafts = mysqlTable("meetingMinutesDrafts", {
 });
 export type MeetingMinutesDraft = typeof meetingMinutesDrafts.$inferSelect;
 export type InsertMeetingMinutesDraft = typeof meetingMinutesDrafts.$inferInsert;
+
+// ─── Accreditation Form Builder ──────────────────────────────────────────────
+
+/**
+ * Top-level form template definitions.
+ * Each template represents a versioned, editable accreditation review form.
+ */
+export const accreditationFormTemplates = mysqlTable("accreditationFormTemplates", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 200 }).notNull(),
+  description: text("description"),
+  formType: varchar("formType", { length: 100 }).notNull(), // e.g. "image_quality", "peer_review", "physician_peer_review"
+  version: int("version").default(1).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdByUserId: int("createdByUserId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+export type AccreditationFormTemplate = typeof accreditationFormTemplates.$inferSelect;
+export type InsertAccreditationFormTemplate = typeof accreditationFormTemplates.$inferInsert;
+
+/**
+ * Sections within a form template (ordered groups of items).
+ */
+export const accreditationFormSections = mysqlTable("accreditationFormSections", {
+  id: int("id").autoincrement().primaryKey(),
+  templateId: int("templateId").notNull(),
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description"),
+  sortOrder: int("sortOrder").default(0).notNull(),
+  isCollapsible: boolean("isCollapsible").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type AccreditationFormSection = typeof accreditationFormSections.$inferSelect;
+export type InsertAccreditationFormSection = typeof accreditationFormSections.$inferInsert;
+
+/**
+ * Individual form items (questions/fields) within a section.
+ *
+ * itemType:
+ *   text       — short single-line text input
+ *   textarea   — multi-line plain text
+ *   email      — email input with optional routing rules
+ *   richtext   — WYSIWYG rich text editor (TipTap) with image/video/HTML support
+ *   radio      — single-choice radio buttons
+ *   checkbox   — multi-choice checkboxes
+ *   select     — dropdown select
+ *   scale      — numeric rating scale
+ *   heading    — visual section heading (non-input)
+ *   info       — informational rich text block (non-input)
+ *
+ * Extended columns:
+ *   richTextContent   — stored HTML for richtext/info items
+ *   emailRoutingRules — JSON [{label, conditionItemId, conditionValue, routeTo}]
+ *   placeholder       — placeholder text for text/email inputs
+ *   validationRegex   — optional client-side validation pattern
+ */
+export const accreditationFormItems = mysqlTable("accreditationFormItems", {
+  id: int("id").autoincrement().primaryKey(),
+  sectionId: int("sectionId").notNull(),
+  templateId: int("templateId").notNull(), // denormalized for fast queries
+  label: text("label").notNull(),
+  helpText: text("helpText"),
+  itemType: mysqlEnum("itemType", ["text", "textarea", "email", "richtext", "radio", "checkbox", "select", "scale", "heading", "info"]).notNull(),
+  isRequired: boolean("isRequired").default(false).notNull(),
+  sortOrder: int("sortOrder").default(0).notNull(),
+  scaleMin: int("scaleMin"),
+  scaleMax: int("scaleMax"),
+  scaleMinLabel: varchar("scaleMinLabel", { length: 100 }),
+  scaleMaxLabel: varchar("scaleMaxLabel", { length: 100 }),
+  scoreWeight: int("scoreWeight").default(1).notNull(),
+  richTextContent: longtext("richTextContent"),
+  emailRoutingRules: text("emailRoutingRules"),
+  placeholder: varchar("placeholder", { length: 300 }),
+  validationRegex: varchar("validationRegex", { length: 500 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type AccreditationFormItem = typeof accreditationFormItems.$inferSelect;
+export type InsertAccreditationFormItem = typeof accreditationFormItems.$inferInsert;
+
+/**
+ * Answer options for radio / checkbox / select items.
+ * Each option can carry a quality score value.
+ */
+export const accreditationFormOptions = mysqlTable("accreditationFormOptions", {
+  id: int("id").autoincrement().primaryKey(),
+  itemId: int("itemId").notNull(),
+  label: varchar("label", { length: 500 }).notNull(),
+  value: varchar("value", { length: 200 }).notNull(),
+  sortOrder: int("sortOrder").default(0).notNull(),
+  qualityScore: int("qualityScore").default(0).notNull(), // 0-100 score contribution when this option is selected
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type AccreditationFormOption = typeof accreditationFormOptions.$inferSelect;
+export type InsertAccreditationFormOption = typeof accreditationFormOptions.$inferInsert;
+
+/**
+ * Branching / conditional display rules.
+ * "Show item [targetItemId] only when item [conditionItemId] has value [conditionValue]"
+ */
+export const accreditationFormBranchRules = mysqlTable("accreditationFormBranchRules", {
+  id: int("id").autoincrement().primaryKey(),
+  templateId: int("templateId").notNull(),
+  targetItemId: int("targetItemId").notNull(),   // the item to show/hide
+  conditionItemId: int("conditionItemId").notNull(), // the item whose value is checked
+  conditionValue: varchar("conditionValue", { length: 500 }).notNull(), // the value that triggers visibility
+  action: mysqlEnum("action", ["show", "hide"]).default("show").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type AccreditationFormBranchRule = typeof accreditationFormBranchRules.$inferSelect;
+export type InsertAccreditationFormBranchRule = typeof accreditationFormBranchRules.$inferInsert;
+
+/**
+ * Organization-based visibility rules.
+ * Controls which form items/sections are shown to specific accreditation organizations.
+ *
+ * ruleType:
+ *   - "item"    => applies to a single form item
+ *   - "section" => applies to an entire section
+ *
+ * action:
+ *   - "show_only_for" => item/section is ONLY visible to the listed org(s)
+ *   - "hide_for"      => item/section is HIDDEN for the listed org(s), visible to all others
+ *
+ * orgIds: JSON array of diyOrganization IDs, e.g. [1, 5, 12]
+ */
+export const accreditationFormOrgVisibilityRules = mysqlTable("accreditationFormOrgVisibilityRules", {
+  id: int("id").autoincrement().primaryKey(),
+  templateId: int("templateId").notNull(),
+  ruleType: mysqlEnum("ruleType", ["item", "section"]).notNull(),
+  targetId: int("targetId").notNull(),
+  action: mysqlEnum("action", ["show_only_for", "hide_for"]).notNull(),
+  orgIds: text("orgIds").notNull(),
+  label: varchar("label", { length: 300 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+});
+export type AccreditationFormOrgVisibilityRule = typeof accreditationFormOrgVisibilityRules.$inferSelect;
+export type InsertAccreditationFormOrgVisibilityRule = typeof accreditationFormOrgVisibilityRules.$inferInsert;

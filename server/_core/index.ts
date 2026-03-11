@@ -10,6 +10,7 @@ import { registerStripeWebhook } from "../webhooks/stripe";
 import { registerUploadCaseMediaRoute } from "../routes/uploadCaseMedia";
 import { registerUploadQuestionImageRoute } from "../routes/uploadQuestionImage";
 import { registerUploadQuestionMediaRoute } from "../routes/uploadQuestionMedia";
+import { registerUnsubscribeRoute } from "../routes/unsubscribe";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -54,6 +55,8 @@ async function startServer() {
   registerUploadQuestionImageRoute(app);
   // Question media upload endpoint (images + videos, admin only)
   registerUploadQuestionMediaRoute(app);
+  // One-click unsubscribe from notification emails
+  registerUnsubscribeRoute(app);
   // tRPC API
   app.use(
     "/api/trpc",

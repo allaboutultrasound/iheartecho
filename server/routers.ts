@@ -14,6 +14,7 @@ import { premiumRouter } from "./routers/premiumRouter";
 import { scanCoachAdminRouter } from "./routers/scanCoachAdminRouter";
 import { diyRouter } from "./routers/diyRouter";
 import { meetingRouter } from "./routers/meetingRouter";
+import { formBuilderRouter } from "./routers/formBuilderRouter";
 import {
   getUserById,
   getUsersByIds,
@@ -1717,6 +1718,7 @@ export const appRouter = router({
 
   // ─── Platform Admin & Seat Management ────────────────────────────────────
   platformAdmin: platformAdminRouter,
+  formBuilder: formBuilderRouter,
   labSeats: labSeatsRouter,
 
   // ─── CME Hub (Thinkific Catalog) ──────────────────────────────────────────────

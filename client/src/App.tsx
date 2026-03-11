@@ -90,6 +90,7 @@ import DIYMemberPortal from "./pages/DIYMemberPortal";
 import DIYAccreditationPlans from "./pages/DIYAccreditationPlans";
 import DIYRegister from "./pages/DIYRegister";
 import Enrolled from "./pages/Enrolled";
+import FormBuilderAdmin from "./pages/FormBuilderAdmin";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -197,6 +198,8 @@ function Router() {
       <Route path="/admin/quickfire">{() => <RoleGuard roles={["platform_admin"]} allowAdmin={true}><QuickFireAdmin /></RoleGuard>}</Route>
       <Route path="/admin/scancoach">{() => <RoleGuard roles={["platform_admin"]} allowAdmin={true}><ScanCoachEditor /></RoleGuard>}</Route>
       <Route path="/admin/thinkific-webhook">{() => <RoleGuard roles={["platform_admin"]} allowAdmin={true}><ThinkificWebhookAdmin /></RoleGuard>}</Route>
+      <Route path="/admin/form-builder">{() => <RoleGuard roles={["platform_admin"]} allowAdmin={true}><FormBuilderAdmin /></RoleGuard>}</Route>
+      <Route path="/admin/form-builder/:id">{() => <RoleGuard roles={["platform_admin"]} allowAdmin={true}><FormBuilderAdmin /></RoleGuard>}</Route>
       {/* ── DIY Accreditation™ ─────────────────────────────────────────── */}
       <Route path="/diy-accreditation-plans" component={DIYAccreditationPlans} />
       <Route path="/diy-register" component={DIYRegister} />

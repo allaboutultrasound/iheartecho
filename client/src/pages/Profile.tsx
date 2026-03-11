@@ -122,6 +122,18 @@ export default function Profile() {
   const [avatarMime, setAvatarMime] = useState<AcceptedMime | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
 
+  // Auto-scroll to notifications section when URL has #notifications anchor
+  useEffect(() => {
+    if (window.location.hash === "#notifications") {
+      setActiveSection("notifications");
+      // Small delay to ensure the section is rendered before scrolling
+      setTimeout(() => {
+        const el = document.getElementById("notifications-section");
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 150);
+    }
+  }, []);
+
   useEffect(() => {
     if (user) {
       const u = user as any;
@@ -942,7 +954,7 @@ export default function Profile() {
 
             {/* Notifications Section */}
             {activeSection === "notifications" && (
-              <div className="bg-white rounded-xl border border-gray-100 shadow-sm"
+              <div id="notifications-section" className="bg-white rounded-xl border border-gray-100 shadow-sm"
                 style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
                 <div className="px-6 py-4 border-b border-gray-100">
                   <h2 className="text-sm font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
