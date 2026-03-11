@@ -760,7 +760,7 @@ export default function SubmitCase() {
                   value={summary}
                   onChange={setSummary}
                   placeholder="Brief overview of the case and key echo findings…"
-                  minHeight="140px"
+                  minHeight={140}
                 />
               </div>
 

@@ -1152,7 +1152,7 @@ export default function AdminCaseManagement() {
                   value={aiPrompt}
                   onChange={setAiPrompt}
                   placeholder="e.g. 72-year-old male with exertional dyspnea, systolic murmur, and syncope. Describe the echo findings and management..."
-                  minHeight="80px"
+                  minHeight={80}
                 />
               </div>
               <div className="grid grid-cols-3 gap-3">
@@ -1332,7 +1332,7 @@ export default function AdminCaseManagement() {
                 value={rejectReason}
                 onChange={setRejectReason}
                 placeholder="Explain why this case is being rejected (e.g. contains PHI, insufficient de-identification, incomplete information)…"
-                minHeight="80px"
+                minHeight={80}
               />
             </div>
           </div>

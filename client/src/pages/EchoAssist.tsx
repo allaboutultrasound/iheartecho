@@ -103,12 +103,19 @@ function EngineSection({
 }: {
   title: string; subtitle?: string; children: React.ReactNode; defaultOpen?: boolean; id?: string; premium?: boolean;
 }) {
-  const [open, setOpen] = useState(defaultOpen);
+  // Initialize open from hash on mount so direct deep-links work immediately
+  const isHashTarget = typeof window !== "undefined" && !!id &&
+    window.location.hash.replace("#", "") === id;
+  const [open, setOpen] = useState(defaultOpen || isHashTarget);
   const ref = useRef<HTMLDivElement>(null);
 
   // Listen for hash-based open events dispatched by the main page
   useEffect(() => {
     if (!id) return;
+    // Scroll into view on initial load if this section is the hash target
+    if (isHashTarget) {
+      setTimeout(() => ref.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+    }
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<string>).detail;
       if (detail === id) {
@@ -119,7 +126,7 @@ function EngineSection({
     };
     window.addEventListener("echoassist:open", handler);
     return () => window.removeEventListener("echoassist:open", handler);
-  }, [id]);
+  }, [id, isHashTarget]);
 
   return (
     <div id={id} ref={ref} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">

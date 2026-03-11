@@ -2455,3 +2455,12 @@
 - [x] Wire dynamic form menu items to Quality Improvement tab in LabAdmin
 - [x] Wire dynamic form menu items to DIY Member Portal "Your Access" section
 - [x] Add Accreditation Concierge prompt/CTA to Lab Admin portal (Organization tab contextual banner)
+
+## Preview Fix (Mar 11 2026)
+- [x] Diagnose and fix all errors causing Manus preview panel to fail
+- [x] Fix Vite cache cleared — stale ffunction error eliminated
+
+## Bug Fixes (Mar 11 2026)
+- [x] Fix /echoassist#engine-diastolic hash anchor to open Diastology section (EngineSection now initializes open from hash on mount)
+- [x] Fix Vite cache/preview errors — cleared node_modules/.vite, restarted server, 0 errors
+- [x] Fix pre-existing TS errors in QuickFireAdmin, SubmitCase, AdminCaseManagement, CaseEditorDialog (minHeight string→number)

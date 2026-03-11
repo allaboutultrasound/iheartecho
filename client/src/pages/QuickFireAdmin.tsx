@@ -1547,7 +1547,7 @@ export default function QuickFireAdmin() {
                 value={challengeForm.description}
                 onChange={(v) => setChallengeForm((f) => ({ ...f, description: v }))}
                 placeholder="Brief description shown to users before they start…"
-                minHeight="70px"
+                minHeight={70}
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -1763,7 +1763,7 @@ export default function QuickFireAdmin() {
                     ? "e.g. Based on this echo image, what is the most likely diagnosis?"
                     : "e.g. A 65-year-old presents with dyspnea. TTE shows LVEF 35%, E/e' ratio 18. What is the most likely diagnosis?"
                 }
-                minHeight="90px"
+                minHeight={90}
               />
             </div>
 
@@ -1826,7 +1826,7 @@ export default function QuickFireAdmin() {
                   value={form.reviewAnswer}
                   onChange={(v) => setForm((f) => ({ ...f, reviewAnswer: v }))}
                   placeholder="e.g. Normal LVEF is 52–72% (men) and 54–74% (women) per ASE guidelines."
-                   minHeight="90px"
+                   minHeight={90}
                 />
               </div>
             )}
@@ -2099,7 +2099,7 @@ export default function QuickFireAdmin() {
                 value={form.explanation}
                 onChange={(v) => setForm((f) => ({ ...f, explanation: v }))}
                 placeholder="Brief teaching point or guideline reference…"
-                minHeight="70px"
+                minHeight={70}
               />
             </div>
 
@@ -2244,7 +2244,7 @@ export default function QuickFireAdmin() {
                   value={aiTopic}
                   onChange={setAiTopic}
                   placeholder="e.g. Aortic stenosis severity grading by Doppler, diastolic dysfunction assessment, TAPSE and RV function..."
-                  minHeight="70px"
+                  minHeight={70}
                 />
               </div>
               {/* Single type mode */}
@@ -3003,7 +3003,7 @@ export default function QuickFireAdmin() {
                 value={flashcardForm.question}
                 onChange={(v) => setFlashcardForm((f) => ({ ...f, question: v }))}
                 placeholder="Enter the question or prompt shown on the front of the card..."
-                minHeight="100px"
+                minHeight={100}
               />
             </div>
 
@@ -3014,7 +3014,7 @@ export default function QuickFireAdmin() {
                 value={flashcardForm.reviewAnswer}
                 onChange={(v) => setFlashcardForm((f) => ({ ...f, reviewAnswer: v }))}
                 placeholder="Enter the answer shown on the back of the card..."
-                minHeight="120px"
+                minHeight={120}
               />
             </div>
 

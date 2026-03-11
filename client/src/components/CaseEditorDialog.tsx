@@ -514,7 +514,7 @@ export default function CaseEditorDialog({ caseId, open, onClose, onSaved }: Pro
                       value={summary}
                       onChange={setSummary}
                       placeholder="2–3 sentence case overview shown on the library card"
-                      minHeight="130px"
+                      minHeight={130}
                     />
                   </div>
 
