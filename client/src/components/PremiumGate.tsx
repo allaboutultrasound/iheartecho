@@ -29,12 +29,17 @@ export function PremiumGate({ children, featureName, compact = false }: PremiumG
     enabled: !!user,
   });
 
-  if (authLoading || statusLoading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <div className="w-6 h-6 border-2 border-[#189aa1] border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
+  // Only reveal content once we have CONFIRMED premium status.
+  // During loading, show the locked state (not a spinner) to prevent bypass.
+  const isConfirmedPremium = !authLoading && !statusLoading && !!user && !!status?.isPremium;
+
+  if (isConfirmedPremium) {
+    return <>{children}</>;
+  }
+
+  // During loading: show locked state (auth not yet resolved)
+  if (authLoading || (!!user && statusLoading)) {
+    return <NotLoggedInPrompt compact={compact} featureName={featureName} loading={true} />
   }
 
   // Not logged in
@@ -44,18 +49,13 @@ export function PremiumGate({ children, featureName, compact = false }: PremiumG
     );
   }
 
-  // Has premium
-  if (status?.isPremium) {
-    return <>{children}</>;
-  }
-
   // Not premium
   return <UpgradePrompt compact={compact} featureName={featureName} checkoutUrl={status?.checkoutUrl} />;
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function NotLoggedInPrompt({ compact, featureName }: { compact: boolean; featureName?: string }) {
+function NotLoggedInPrompt({ compact, featureName, loading = false }: { compact: boolean; featureName?: string; loading?: boolean }) {
   if (compact) {
     return (
       <div className="inline-flex items-center gap-1.5 text-xs text-gray-500">

@@ -2275,3 +2275,8 @@
 - [ ] When a question is pushed to the Daily Challenge queue, mark it as inactive in the question bank (isActive = false)
 - [ ] Apply to: adminApproveQuestionToQueue, adminBatchApproveToQueue, adminCloneChallenge
 - [ ] Update tests to verify question is deactivated after queue push
+
+## Premium Gate Bypass Fix
+- [x] Audit all premium ScanCoach pages — verify PremiumOverlay wraps content at component level
+- [x] Audit all premium Navigator pages — verify PremiumOverlay wraps content at component level
+- [x] Fix any pages where PremiumOverlay is missing or not wrapping the correct content
