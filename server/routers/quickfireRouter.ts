@@ -792,6 +792,177 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       };
     }),
 
+  aiGenerateMixed: adminProcedure
+    .input(
+      z.object({
+        topic: z.string().min(3).max(500),
+        typeCounts: z.record(
+          z.enum(["scenario", "image", "quickReview", "connect", "identifier", "order"]),
+          z.number().int().min(0).max(20)
+        ),
+        difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("intermediate"),
+        insertImmediately: z.boolean().default(false),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ENV.forgeApiKey || !ENV.forgeApiUrl) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "AI service not configured. Missing Forge API credentials.",
+        });
+      }
+
+      const forgeBaseUrl = (ENV.forgeApiUrl ?? "").replace(/\/+$/, "");
+      const forgeApiKey = ENV.forgeApiKey ?? "";
+
+      // Filter to only types with count > 0
+      const activeTypes = Object.entries(input.typeCounts).filter(([, count]) => count > 0) as [string, number][];
+      if (activeTypes.length === 0) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "At least one question type must have a count greater than 0." });
+      }
+
+      const totalCount = activeTypes.reduce((sum, [, c]) => sum + c, 0);
+      if (totalCount > 40) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Total question count cannot exceed 40 per generation run." });
+      }
+
+      // Helper: build prompt for a given type
+      function buildPrompt(type: string, count: number, difficulty: string, topic: string): string {
+        let typeInstructions: string;
+        let jsonFormatInstructions: string;
+
+        if (type === "quickReview") {
+          typeInstructions = `Each item is a flashcard: a short clinical question or fact prompt in 'question', and the concise answer in 'reviewAnswer'. Do NOT include options or correctAnswer.`;
+          jsonFormatInstructions = `{"questions":[{"question":"...","reviewAnswer":"...","tags":["...","..."]}]}`;
+        } else if (type === "connect") {
+          typeInstructions = `Each item is a matching/connect question. The 'question' field describes what to match. The 'pairs' field is an array of exactly 4 objects, each with 'left' and 'right' string properties representing matching pairs. Include an 'explanation'. Do NOT include options or correctAnswer.`;
+          jsonFormatInstructions = `{"questions":[{"question":"Match each finding with its condition:","pairs":[{"left":"...","right":"..."},{"left":"...","right":"..."},{"left":"...","right":"..."},{"left":"...","right":"..."}],"explanation":"...","tags":["...","..."]}]}`;
+        } else if (type === "order") {
+          typeInstructions = `Each item is an ordering/sequencing question. The 'question' field describes what to arrange. The 'orderedItems' field is an array of 4-6 strings in the CORRECT order. Include an 'explanation'. Do NOT include options or correctAnswer.`;
+          jsonFormatInstructions = `{"questions":[{"question":"Arrange in the correct order:","orderedItems":["First","Second","Third","Fourth"],"explanation":"...","tags":["...","..."]}]}`;
+        } else {
+          // scenario, image, identifier
+          typeInstructions = `Each item is a multiple-choice question with exactly 4 options in 'options', a 0-indexed correctAnswer as a number (0, 1, 2, or 3), and a clear explanation. Do NOT include reviewAnswer.`;
+          jsonFormatInstructions = `{"questions":[{"question":"...","options":["A","B","C","D"],"correctAnswer":0,"explanation":"...","tags":["...","..."]}]}`;
+        }
+
+        return `You are an expert echocardiography educator creating ${count} ${difficulty} ${type} questions about: "${topic}".
+
+${typeInstructions}
+
+Guidelines:
+- Use accurate, up-to-date ASE/AHA/ACC guidelines where applicable
+- Questions should be clinically relevant and educational
+- For MCQ: distractors should be plausible but clearly distinguishable from the correct answer
+- Tags: 2-4 specific clinical terms (e.g. "aortic stenosis", "ASE 2021", "Doppler")
+- Difficulty: ${difficulty} (beginner=basic concepts, intermediate=clinical application, advanced=complex interpretation)
+
+Return exactly ${count} questions as a valid JSON object:
+${jsonFormatInstructions}
+
+Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
+      }
+
+      // Helper: call Forge API and parse response
+      async function callForge(prompt: string): Promise<any[]> {
+        const aiResp = await fetch(`${forgeBaseUrl}/v1/chat/completions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${forgeApiKey}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-4o",
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.7,
+            response_format: { type: "json_object" },
+          }),
+        });
+        if (!aiResp.ok) {
+          const errBody = await aiResp.text();
+          throw new Error(`Forge API returned ${aiResp.status}: ${errBody.substring(0, 200)}`);
+        }
+        const aiData = await aiResp.json() as { choices?: { message?: { content?: string } }[]; error?: { message?: string } };
+        if (aiData.error) throw new Error(`Forge API error: ${aiData.error.message}`);
+        const text = aiData.choices?.[0]?.message?.content ?? "";
+        if (!text) throw new Error("Forge API returned empty content");
+
+        // Parse JSON — strip fences, extract outermost object
+        let cleaned = text.replace(/^```(?:json)?\s*/im, "").replace(/\s*```\s*$/im, "").trim();
+        const startObj = cleaned.indexOf('{');
+        const startArr = cleaned.indexOf('[');
+        if (startObj !== -1 || startArr !== -1) {
+          const start = (startObj === -1) ? startArr : (startArr === -1) ? startObj : Math.min(startObj, startArr);
+          const openChar = cleaned[start];
+          const closeChar = openChar === '{' ? '}' : ']';
+          let depth = 0, inString = false, escape = false;
+          for (let i = start; i < cleaned.length; i++) {
+            const c = cleaned[i];
+            if (escape) { escape = false; continue; }
+            if (c === '\\' && inString) { escape = true; continue; }
+            if (c === '"') { inString = !inString; continue; }
+            if (inString) continue;
+            if (c === openChar) depth++;
+            else if (c === closeChar) { depth--; if (depth === 0) { cleaned = cleaned.slice(start, i + 1); break; } }
+          }
+        }
+        const raw = JSON.parse(cleaned);
+        if (Array.isArray(raw)) return raw;
+        if (raw && Array.isArray(raw.questions)) return raw.questions;
+        throw new Error("Response is not a questions array");
+      }
+
+      // Run all type generations in parallel
+      let allResults: Array<{ type: string; question: any }>;
+      try {
+        const results = await Promise.all(
+          activeTypes.map(async ([type, count]) => {
+            const prompt = buildPrompt(type, count, input.difficulty, input.topic);
+            const questions = await callForge(prompt);
+            return questions.map((q: any) => ({ type, question: q }));
+          })
+        );
+        allResults = results.flat();
+      } catch (err) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `AI generation failed: ${errMsg.substring(0, 300)}`,
+        });
+      }
+
+      // If insertImmediately, bulk-insert all
+      const insertedIds: number[] = [];
+      if (input.insertImmediately) {
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+        for (const { type, question: q } of allResults) {
+          const [result] = await db.insert(quickfireQuestions).values({
+            type: type as any,
+            question: q.question,
+            options: q.options ? JSON.stringify(q.options) : null,
+            correctAnswer: q.correctAnswer ?? null,
+            explanation: q.explanation ?? null,
+            reviewAnswer: q.reviewAnswer ?? null,
+            pairs: q.pairs ? JSON.stringify(q.pairs) : null,
+            orderedItems: q.orderedItems ? JSON.stringify(q.orderedItems) : null,
+            imageUrl: null,
+            difficulty: input.difficulty,
+            tags: JSON.stringify(q.tags ?? []),
+            isActive: true,
+            createdByUserId: ctx.user.id,
+          });
+          insertedIds.push((result as any).insertId);
+        }
+      }
+
+      return {
+        questions: allResults,
+        insertedIds,
+        inserted: insertedIds.length,
+      };
+    }),
+
   bulkImportQuestions: adminProcedure
     .input(
       z.object({

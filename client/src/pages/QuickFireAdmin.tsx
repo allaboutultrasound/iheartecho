@@ -428,6 +428,19 @@ export default function QuickFireAdmin() {
   const [aiPreview, setAiPreview] = useState<any[]>([]);
   const [aiSelected, setAiSelected] = useState<Set<number>>(new Set());
   const [aiImporting, setAiImporting] = useState(false);
+  // Mixed-type AI generation
+  const [aiMixedMode, setAiMixedMode] = useState(false);
+  const [aiTypeCounts, setAiTypeCounts] = useState<Record<string, number>>({
+    scenario: 3,
+    connect: 1,
+    order: 1,
+    identifier: 0,
+    image: 0,
+    quickReview: 0,
+  });
+  const [aiMixedPreview, setAiMixedPreview] = useState<Array<{ type: string; question: any }>>([]);
+  const [aiMixedSelected, setAiMixedSelected] = useState<Set<number>>(new Set());
+  const [aiMixedImporting, setAiMixedImporting] = useState(false);
 
   // Queries
   const listQuery = trpc.quickfire.listAllQuestions.useQuery({
@@ -521,6 +534,16 @@ export default function QuickFireAdmin() {
         setAiSelected(new Set(data.questions.map((_: any, i: number) => i)));
       }
       toast.success(`Generated ${data.questions.length} ${flashcardAiOpen ? "flashcard" : "question"}${data.questions.length !== 1 ? "s" : ""} — review and import below.`);
+    },
+    onError: (err: any) => toast.error(err.message || "AI generation failed."),
+  });
+
+  const aiGenerateMixedMutation = trpc.quickfire.aiGenerateMixed.useMutation({
+    onSuccess: (data: any) => {
+      setAiMixedPreview(data.questions);
+      setAiMixedSelected(new Set(data.questions.map((_: any, i: number) => i)));
+      const total = data.questions.length;
+      toast.success(`Generated ${total} question${total !== 1 ? "s" : ""} across ${Object.keys(aiTypeCounts).filter(k => aiTypeCounts[k] > 0).length} type(s) — review and import below.`);
     },
     onError: (err: any) => toast.error(err.message || "AI generation failed."),
   });
@@ -2017,8 +2040,29 @@ export default function QuickFireAdmin() {
           </DialogHeader>
           <div className="space-y-4 py-2">
             <p className="text-sm text-gray-500">
-              Describe a clinical topic and the AI will generate ready-to-use Daily Challenge questions with options, correct answers, and explanations.
+              Describe a clinical topic and the AI will generate ready-to-use Daily Challenge questions. Use <strong>Single Type</strong> for one question format, or <strong>Mixed Types</strong> to generate multiple formats in one run.
             </p>
+            {/* Mode toggle */}
+            <div className="flex gap-1 p-1 bg-gray-100 rounded-lg w-fit">
+              <button
+                type="button"
+                onClick={() => { setAiMixedMode(false); setAiMixedPreview([]); }}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                  !aiMixedMode ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Single Type
+              </button>
+              <button
+                type="button"
+                onClick={() => { setAiMixedMode(true); setAiPreview([]); }}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                  aiMixedMode ? "bg-white text-gray-800 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                Mixed Types
+              </button>
+            </div>
             <div className="space-y-3">
               <div>
                 <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Clinical Topic <span className="text-red-500">*</span></label>
@@ -2059,44 +2103,104 @@ export default function QuickFireAdmin() {
                   minHeight="70px"
                 />
               </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Question Type</label>
-                  <Select value={aiType} onValueChange={(v) => setAiType(v as QuestionType)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="scenario">Scenario (MCQ)</SelectItem>
-                      <SelectItem value="image">Image-Based (MCQ)</SelectItem>
-                      <SelectItem value="quickReview">Quick Review (Flashcard)</SelectItem>
-                      <SelectItem value="connect">Connect (Matching)</SelectItem>
-                      <SelectItem value="order">Order (Sequence)</SelectItem>
-                      <SelectItem value="identifier">Identifier (MCQ)</SelectItem>
-                    </SelectContent>
-                  </Select>
+              {/* Single type mode */}
+              {!aiMixedMode && (
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Question Type</label>
+                    <Select value={aiType} onValueChange={(v) => setAiType(v as QuestionType)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="scenario">Scenario (MCQ)</SelectItem>
+                        <SelectItem value="image">Image-Based (MCQ)</SelectItem>
+                        <SelectItem value="quickReview">Quick Review (Flashcard)</SelectItem>
+                        <SelectItem value="connect">Connect (Matching)</SelectItem>
+                        <SelectItem value="order">Order (Sequence)</SelectItem>
+                        <SelectItem value="identifier">Identifier (MCQ)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Difficulty</label>
+                    <Select value={aiDifficulty} onValueChange={(v) => setAiDifficulty(v as Difficulty)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="beginner">Beginner</SelectItem>
+                        <SelectItem value="intermediate">Intermediate</SelectItem>
+                        <SelectItem value="advanced">Advanced</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Count (1–20)</label>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={20}
+                      value={aiCount}
+                      onChange={(e) => setAiCount(Math.min(20, Math.max(1, parseInt(e.target.value) || 1)))}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Difficulty</label>
-                  <Select value={aiDifficulty} onValueChange={(v) => setAiDifficulty(v as Difficulty)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="beginner">Beginner</SelectItem>
-                      <SelectItem value="intermediate">Intermediate</SelectItem>
-                      <SelectItem value="advanced">Advanced</SelectItem>
-                    </SelectContent>
-                  </Select>
+              )}
+              {/* Mixed type mode */}
+              {aiMixedMode && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 mb-2 block">Question Counts by Type <span className="text-gray-400 font-normal">(set to 0 to skip a type, max 40 total)</span></label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {([
+                        { key: "scenario", label: "Scenario (MCQ)" },
+                        { key: "connect", label: "Connect (Matching)" },
+                        { key: "order", label: "Order (Sequence)" },
+                        { key: "identifier", label: "Identifier (MCQ)" },
+                        { key: "image", label: "Image-Based (MCQ)" },
+                        { key: "quickReview", label: "Quick Review (Flashcard)" },
+                      ] as { key: string; label: string }[]).map(({ key, label }) => (
+                        <div key={key} className="flex items-center gap-2 p-2 rounded-lg border border-gray-100 bg-gray-50">
+                          <div className="flex-1">
+                            <p className="text-xs font-medium text-gray-700">{label}</p>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              className="w-6 h-6 rounded border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 flex items-center justify-center text-sm font-bold"
+                              onClick={() => setAiTypeCounts(prev => ({ ...prev, [key]: Math.max(0, (prev[key] ?? 0) - 1) }))}
+                            >-</button>
+                            <span className={`w-6 text-center text-sm font-bold ${
+                              (aiTypeCounts[key] ?? 0) > 0 ? "text-purple-600" : "text-gray-300"
+                            }`}>{aiTypeCounts[key] ?? 0}</span>
+                            <button
+                              type="button"
+                              className="w-6 h-6 rounded border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 flex items-center justify-center text-sm font-bold"
+                              onClick={() => setAiTypeCounts(prev => ({ ...prev, [key]: Math.min(20, (prev[key] ?? 0) + 1) }))}
+                            >+</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1.5">
+                      Total: <span className={`font-bold ${
+                        Object.values(aiTypeCounts).reduce((a, b) => a + b, 0) > 40 ? "text-red-500" : "text-purple-600"
+                      }`}>{Object.values(aiTypeCounts).reduce((a, b) => a + b, 0)}</span> questions
+                    </p>
+                  </div>
+                  <div className="w-48">
+                    <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Difficulty</label>
+                    <Select value={aiDifficulty} onValueChange={(v) => setAiDifficulty(v as Difficulty)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="beginner">Beginner</SelectItem>
+                        <SelectItem value="intermediate">Intermediate</SelectItem>
+                        <SelectItem value="advanced">Advanced</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <div>
-                  <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Count (1–20)</label>
-                  <Input
-                    type="number"
-                    min={1}
-                    max={20}
-                    value={aiCount}
-                    onChange={(e) => setAiCount(Math.min(20, Math.max(1, parseInt(e.target.value) || 1)))}
-                  />
-                </div>
-              </div>
+              )}
             </div>
+            {/* Generate button */}
+            {!aiMixedMode ? (
             <Button
               className="w-full gap-2 text-white"
               style={{ background: "#7c3aed" }}
@@ -2107,6 +2211,23 @@ export default function QuickFireAdmin() {
                 ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating…</>
                 : <><Sparkles className="w-4 h-4" /> Generate Questions</>}
             </Button>
+            ) : (
+            <Button
+              className="w-full gap-2 text-white"
+              style={{ background: "#7c3aed" }}
+              onClick={() => aiGenerateMixedMutation.mutate({
+                topic: aiTopic,
+                typeCounts: Object.fromEntries(Object.entries(aiTypeCounts).filter(([, v]) => v > 0)) as any,
+                difficulty: aiDifficulty,
+                insertImmediately: false,
+              })}
+              disabled={!aiTopic.trim() || aiGenerateMixedMutation.isPending || Object.values(aiTypeCounts).reduce((a, b) => a + b, 0) === 0 || Object.values(aiTypeCounts).reduce((a, b) => a + b, 0) > 40}
+            >
+              {aiGenerateMixedMutation.isPending
+                ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating {Object.values(aiTypeCounts).reduce((a, b) => a + b, 0)} questions…</>
+                : <><Sparkles className="w-4 h-4" /> Generate {Object.values(aiTypeCounts).reduce((a, b) => a + b, 0)} Mixed Questions</>}
+            </Button>
+            )}
             {aiPreview.length > 0 && (
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -2223,9 +2344,132 @@ export default function QuickFireAdmin() {
                 </Button>
               </div>
             )}
+            {/* Mixed preview */}
+            {aiMixedPreview.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-gray-700">{aiMixedPreview.length} questions generated — select which to import:</p>
+                  <div className="flex gap-2">
+                    <button className="text-xs text-[#189aa1] hover:underline" onClick={() => setAiMixedSelected(new Set(aiMixedPreview.map((_, i) => i)))}>All</button>
+                    <button className="text-xs text-gray-400 hover:underline" onClick={() => setAiMixedSelected(new Set())}>None</button>
+                  </div>
+                </div>
+                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                  {aiMixedPreview.map(({ type, question: q }, i) => {
+                    const typeMeta: Record<string, { label: string; color: string }> = {
+                      scenario: { label: "Scenario", color: "bg-blue-50 text-blue-700" },
+                      image: { label: "Image", color: "bg-indigo-50 text-indigo-700" },
+                      connect: { label: "Connect", color: "bg-teal-50 text-teal-700" },
+                      order: { label: "Order", color: "bg-orange-50 text-orange-700" },
+                      identifier: { label: "Identifier", color: "bg-purple-50 text-purple-700" },
+                      quickReview: { label: "Flashcard", color: "bg-green-50 text-green-700" },
+                    };
+                    const meta = typeMeta[type] ?? { label: type, color: "bg-gray-50 text-gray-700" };
+                    return (
+                      <div
+                        key={i}
+                        className={`flex gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
+                          aiMixedSelected.has(i) ? "border-purple-300 bg-purple-50" : "border-gray-100 bg-white opacity-60"
+                        }`}
+                        onClick={() => setAiMixedSelected((prev) => { const next = new Set(prev); if (next.has(i)) next.delete(i); else next.add(i); return next; })}
+                      >
+                        <div className="flex-shrink-0 mt-0.5">
+                          {aiMixedSelected.has(i) ? <CheckSquare className="w-4 h-4 text-purple-500" /> : <Square className="w-4 h-4 text-gray-300" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${meta.color}`}>{meta.label}</span>
+                          </div>
+                          <p className="text-sm font-medium text-gray-800 leading-snug">{q.question}</p>
+                          {q.options && (
+                            <div className="mt-1.5 space-y-0.5">
+                              {q.options.map((opt: string, oi: number) => (
+                                <p key={oi} className={`text-xs ${oi === q.correctAnswer ? "text-green-700 font-semibold" : "text-gray-500"}`}>
+                                  {oi === q.correctAnswer ? "✓" : "○"} {opt}
+                                </p>
+                              ))}
+                            </div>
+                          )}
+                          {q.reviewAnswer && <p className="text-xs text-green-700 font-semibold mt-1">Answer: {q.reviewAnswer}</p>}
+                          {q.pairs && Array.isArray(q.pairs) && (
+                            <div className="mt-1.5 space-y-0.5">
+                              <p className="text-xs font-semibold text-teal-600 mb-0.5">Matching pairs:</p>
+                              {q.pairs.map((pair: any, pi: number) => (
+                                <p key={pi} className="text-xs text-gray-600">
+                                  <span className="font-medium text-gray-800">{pair.left}</span>
+                                  <span className="text-gray-400 mx-1">→</span>
+                                  <span className="text-teal-700">{pair.right}</span>
+                                </p>
+                              ))}
+                            </div>
+                          )}
+                          {q.orderedItems && Array.isArray(q.orderedItems) && (
+                            <div className="mt-1.5 space-y-0.5">
+                              <p className="text-xs font-semibold text-orange-600 mb-0.5">Correct order:</p>
+                              {q.orderedItems.map((item: string, oi: number) => (
+                                <p key={oi} className="text-xs text-gray-600">
+                                  <span className="text-orange-500 font-bold mr-1">{oi + 1}.</span>{item}
+                                </p>
+                              ))}
+                            </div>
+                          )}
+                          {q.explanation && <p className="text-xs text-gray-400 mt-1 italic">{q.explanation}</p>}
+                          {q.tags && q.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1.5">
+                              {q.tags.map((t: string) => <span key={t} className="text-xs text-gray-400">#{t}</span>)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <Button
+                  className="w-full gap-2 text-white"
+                  style={{ background: "#189aa1" }}
+                  disabled={aiMixedSelected.size === 0 || aiMixedImporting}
+                  onClick={async () => {
+                    const selectedQs = aiMixedPreview.filter((_, i) => aiMixedSelected.has(i));
+                    setAiMixedImporting(true);
+                    try {
+                      await Promise.all(
+                        selectedQs.map(({ type, question: q }) =>
+                          createMutation.mutateAsync({
+                            type: type as any,
+                            question: q.question,
+                            options: q.options,
+                            correctAnswer: q.correctAnswer,
+                            explanation: q.explanation,
+                            reviewAnswer: q.reviewAnswer,
+                            pairs: q.pairs,
+                            orderedItems: q.orderedItems,
+                            markers: q.markers,
+                            difficulty: aiDifficulty,
+                            tags: q.tags ?? [],
+                          } as any)
+                        )
+                      );
+                      toast.success(`${selectedQs.length} question${selectedQs.length !== 1 ? "s" : ""} imported.`);
+                      utils.quickfire.listAllQuestions.invalidate();
+                      setAiOpen(false);
+                      setAiMixedPreview([]);
+                      setAiTopic("");
+                    } catch (err: any) {
+                      toast.error(err.message || "Import failed.");
+                    } finally {
+                      setAiMixedImporting(false);
+                    }
+                  }}
+                >
+                  {aiMixedImporting
+                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Importing…</>
+                    : <><CheckCircle2 className="w-4 h-4" /> Import {aiMixedSelected.size} Question{aiMixedSelected.size !== 1 ? "s" : ""}</>}
+                </Button>
+              </div>
+            )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setAiOpen(false); setAiPreview([]); setAiTopic(""); }}>Close</Button>
+            <Button variant="outline" onClick={() => { setAiOpen(false); setAiPreview([]); setAiMixedPreview([]); setAiTopic(""); }}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -2153,3 +2153,10 @@
 - [x] Fix AI Generator import to pass pairs/orderedItems/markers fields when creating questions
 - [x] Add New Challenge button to Challenge Queue tab header
 - [x] Remove date labels from archive challenge cards
+
+## Bulk Mixed-Type AI Generation
+- [x] Server: add aiGenerateMixed procedure accepting per-type counts (e.g. {scenario:3, connect:2}) — runs parallel Forge API calls per type
+- [x] UI: Single Type / Mixed Types toggle in AI Generator modal
+- [x] UI: Mixed Types mode shows +/- stepper for each of 6 question types with live total count
+- [x] UI: preview shows all generated questions with type badge and correct rendering (pairs, orderedItems, options)
+- [x] UI: import passes correct type-specific fields per question
