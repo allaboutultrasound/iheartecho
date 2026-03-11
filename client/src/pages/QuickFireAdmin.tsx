@@ -779,6 +779,14 @@ export default function QuickFireAdmin() {
               />
               <div className="flex items-center gap-2">
                 <Button
+                  size="sm"
+                  className="gap-1.5 text-white"
+                  style={{ background: "#189aa1" }}
+                  onClick={() => { setEditingChallengeId(null); setChallengeFormOpen(true); }}
+                >
+                  <Plus className="w-4 h-4" /> New Challenge
+                </Button>
+                <Button
                   variant="outline"
                   size="sm"
                   className="gap-1.5 border-green-500 text-green-600"
@@ -1038,15 +1046,20 @@ export default function QuickFireAdmin() {
                   >
                     {/* Bulk checkbox */}
                     {bulkMode && (
-                      <div className="flex-shrink-0 mt-0.5">
+                      <button
+                        type="button"
+                        className="flex-shrink-0 mt-0.5 focus:outline-none"
+                        onClick={(e) => { e.stopPropagation(); if (isEligibleForBulk) toggleBulkSelect(q.id); }}
+                        disabled={!isEligibleForBulk}
+                      >
                         {isEligibleForBulk ? (
                           isChecked
                             ? <CheckSquare className="w-4 h-4 text-[#189aa1]" />
-                            : <Square className="w-4 h-4 text-gray-300" />
+                            : <Square className="w-4 h-4 text-gray-300 hover:text-[#189aa1]" />
                         ) : (
                           <Square className="w-4 h-4 text-gray-100" />
                         )}
-                      </div>
+                      </button>
                     )}
                     {/* Type badge */}
                     <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full flex-shrink-0 mt-0.5 ${meta.color}`}>
@@ -1069,6 +1082,8 @@ export default function QuickFireAdmin() {
                       </div>
                     </div>
 
+                    {/* Action buttons — hidden in bulk mode */}
+                    {!bulkMode && (
                     <div className="flex items-center gap-1 flex-shrink-0">
                       {q.isActive && q.type !== "quickReview" && (
                       <Button
@@ -1113,6 +1128,7 @@ export default function QuickFireAdmin() {
                         </Button>
                       )}
                     </div>
+                    )}
                   </div>
                 );
               })}
@@ -2051,7 +2067,10 @@ export default function QuickFireAdmin() {
                     <SelectContent>
                       <SelectItem value="scenario">Scenario (MCQ)</SelectItem>
                       <SelectItem value="image">Image-Based (MCQ)</SelectItem>
-                      <SelectItem value="quickReview">Quick Review</SelectItem>
+                      <SelectItem value="quickReview">Quick Review (Flashcard)</SelectItem>
+                      <SelectItem value="connect">Connect (Matching)</SelectItem>
+                      <SelectItem value="order">Order (Sequence)</SelectItem>
+                      <SelectItem value="identifier">Identifier (MCQ)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

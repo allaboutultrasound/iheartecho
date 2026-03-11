@@ -620,15 +620,23 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
       const forgeBaseUrl = (ENV.forgeApiUrl ?? "").replace(/\/+$/, "");
       const forgeApiKey = ENV.forgeApiKey ?? "";
 
-      const typeInstructions =
-        input.type === "quickReview"
-          ? `Each item is a flashcard: a short clinical question or fact prompt in 'question', and the concise answer in 'reviewAnswer'. Do NOT include options or correctAnswer.`
-          : `Each item is a multiple-choice question with exactly 4 options in 'options', a 0-indexed correctAnswer as a number (0, 1, 2, or 3), and a clear explanation. Do NOT include reviewAnswer.`;
+      let typeInstructions: string;
+      let jsonFormatInstructions: string;
 
-      const jsonFormatInstructions =
-        input.type === "quickReview"
-          ? `{"questions":[{"question":"...","reviewAnswer":"...","tags":["...","..."]}]}`
-          : `{"questions":[{"question":"...","options":["A","B","C","D"],"correctAnswer":0,"explanation":"...","tags":["...","..."]}]}`;
+      if (input.type === "quickReview") {
+        typeInstructions = `Each item is a flashcard: a short clinical question or fact prompt in 'question', and the concise answer in 'reviewAnswer'. Do NOT include options or correctAnswer.`;
+        jsonFormatInstructions = `{"questions":[{"question":"...","reviewAnswer":"...","tags":["...","..."]}]}`;
+      } else if (input.type === "connect") {
+        typeInstructions = `Each item is a matching/connect question. The 'question' field describes what to match. The 'pairs' field is an array of exactly 4 objects, each with 'left' and 'right' string properties representing matching pairs. Include an 'explanation' describing why each pair matches. Do NOT include options or correctAnswer.`;
+        jsonFormatInstructions = `{"questions":[{"question":"Match each echocardiographic finding with its associated condition:","pairs":[{"left":"...","right":"..."},{"left":"...","right":"..."},{"left":"...","right":"..."},{"left":"...","right":"..."}],"explanation":"...","tags":["...","..."]}]}`;
+      } else if (input.type === "order") {
+        typeInstructions = `Each item is an ordering/sequencing question. The 'question' field describes what to arrange. The 'orderedItems' field is an array of 4-6 strings listed in the CORRECT order. Include an 'explanation' describing why this order is correct. Do NOT include options or correctAnswer.`;
+        jsonFormatInstructions = `{"questions":[{"question":"Arrange the following in the correct order:","orderedItems":["First item","Second item","Third item","Fourth item"],"explanation":"...","tags":["...","..."]}]}`;
+      } else {
+        // scenario, image, identifier
+        typeInstructions = `Each item is a multiple-choice question with exactly 4 options in 'options', a 0-indexed correctAnswer as a number (0, 1, 2, or 3), and a clear explanation. Do NOT include reviewAnswer.`;
+        jsonFormatInstructions = `{"questions":[{"question":"...","options":["A","B","C","D"],"correctAnswer":0,"explanation":"...","tags":["...","..."]}]}`;
+      }
 
       const promptText = `You are an expert echocardiography educator creating ${input.count} ${input.difficulty} ${input.type} questions about: "${input.topic}".
 
@@ -757,7 +765,7 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       if (input.insertImmediately) {
         const db = await getDb();
         if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
-        for (const q of object.questions) {
+        for (const q of (object.questions as any[])) {
           const [result] = await db.insert(quickfireQuestions).values({
             type: input.type,
             question: q.question,
@@ -765,6 +773,8 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
             correctAnswer: q.correctAnswer ?? null,
             explanation: q.explanation ?? null,
             reviewAnswer: q.reviewAnswer ?? null,
+            pairs: q.pairs ? JSON.stringify(q.pairs) : null,
+            orderedItems: q.orderedItems ? JSON.stringify(q.orderedItems) : null,
             imageUrl: null,
             difficulty: input.difficulty,
             tags: JSON.stringify(q.tags),

@@ -2144,3 +2144,10 @@
 - [x] Analytics & Reporting tab: sub-tabs for IQR Analytics, CME Progress, Reports & Export
 - [x] Export PolicyBuilderTab and AppropriateUseTab from AccreditationTool.tsx for use in LabAdmin
 - [x] Fix TypeScript errors in AccreditationTool.tsx, meetingRouter.ts, PossibleCaseStudies.tsx
+
+## Daily Challenge Fixes (Current Session)
+- [x] Fix bulk selection in Question Bank — hide action buttons in bulk mode so entire card is clickable; checkbox is now a proper button element
+- [x] Restore 24-hour timed access to Daily Challenge for free (unauthenticated/basic) users — countdown timer shown, MCQ options visible but require login to submit
+- [x] Expand AI Generator modal to support all question types (connect, order, identifier, true/false)
+- [x] Add New Challenge button to Challenge Queue tab header
+- [x] Remove date labels from archive challenge cards
