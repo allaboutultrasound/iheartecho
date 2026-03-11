@@ -149,7 +149,7 @@ export const appropriateUseCases = mysqlTable("appropriateUseCases", {
   examTypes: text("examTypes"),
   limitedOrComplete: varchar("limitedOrComplete", { length: 50 }),
   // Indication appropriateness — A9/A8/A7/U6/U5/U4/I3/I2/I1
-  indicationAppropriateness: varchar("indicationAppropriateness", { length: 20 }),
+  indicationAppropriateness: varchar("indicationAppropriateness", { length: 300 }),
   reviewComments: text("reviewComments"),
   // Legacy fields kept for backward compatibility
   modality: mysqlEnum("modality", ["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS"]),
@@ -333,8 +333,8 @@ export const imageQualityReviews = mysqlTable("imageQualityReviews", {
   examScope: varchar("examScope", { length: 50 }),
   stressType: varchar("stressType", { length: 100 }),
   examIndication: text("examIndication"),
-  indicationAppropriateness: varchar("indicationAppropriateness", { length: 20 }),
-  demographicsAccurate: varchar("demographicsAccurate", { length: 5 }),
+  indicationAppropriateness: varchar("indicationAppropriateness", { length: 300 }),
+  demographicsAccurate: varchar("demographicsAccurate", { length: 300 }),
   protocolViews: text("protocolViews"),
   protocolViewsOther: varchar("protocolViewsOther", { length: 300 }),
   gainSettings: varchar("gainSettings", { length: 50 }),

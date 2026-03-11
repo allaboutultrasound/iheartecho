@@ -414,6 +414,13 @@
       "when": 1773195173463,
       "tag": "0058_fancy_the_captain",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "5",
+      "when": 1773201269995,
+      "tag": "0059_jittery_lucky_pierre",
+      "breakpoints": true
     }
   ]
 }
