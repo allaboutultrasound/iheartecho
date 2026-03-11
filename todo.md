@@ -2475,3 +2475,10 @@
 - [x] Audit IQR, Sonographer Peer Review, Physician Peer Review, Case Mix form structures
 - [x] Write seed script to create all four templates in the database
 - [x] Run seed script and verify templates appear in Form Builder Admin
+
+## Platform Admin Edit — Daily Challenge Archive (Mar 11 2026)
+- [x] Review DailyChallengeArchive page and related backend procedures
+- [x] Add adminUpdateArchivedChallenge and adminUpdateArchivedQuestion tRPC procedures (admin-gated)
+- [x] Build admin edit dialog with RichTextEditor, options editor, difficulty/category selects
+- [x] Add Edit buttons to archive list items, archive detail header, and question cards (admin-only)
+- [x] Write Vitest tests for admin edit procedures

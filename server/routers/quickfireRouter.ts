@@ -1245,8 +1245,10 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
         ...q,
         options: q.options ? JSON.parse(q.options) : null,
         tags: q.tags ? JSON.parse(q.tags) : [],
+        pairs: q.pairs ? JSON.parse(q.pairs) : null,
+        markers: q.markers ? JSON.parse(q.markers) : null,
+        orderedItems: q.orderedItems ? JSON.parse(q.orderedItems) : null,
       }));
-
       return { ...challenge, questions: withAnswers };
     }),
 
@@ -1396,11 +1398,78 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       return { success: true };
     }),
 
-  // ─── Flashcard Deck ─────────────────────────────────────────────────────────────────────────────
+  /**
+   * Edit an archived challenge's metadata (title, description, category, difficulty).
+   * Preserves the `archived` status — does NOT re-schedule the challenge.
+   * Also allows replacing the linked question (questionIds).
+   */
+  adminUpdateArchivedChallenge: adminProcedure
+    .input(z.object({
+      id: z.number().int().positive(),
+      title: z.string().min(3).max(300).optional(),
+      description: z.string().max(5000).optional().nullable(),
+      category: z.string().max(64).optional().nullable(),
+      difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional().nullable(),
+      questionIds: z.array(z.number().int().positive()).min(1).max(1).optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const [ch] = await db.select({ status: quickfireChallenges.status })
+        .from(quickfireChallenges).where(eq(quickfireChallenges.id, input.id)).limit(1);
+      if (!ch) throw new TRPCError({ code: "NOT_FOUND", message: "Challenge not found" });
+      if (ch.status !== "archived") throw new TRPCError({ code: "BAD_REQUEST", message: "Only archived challenges can be edited via this endpoint" });
+      const { id, questionIds, ...rest } = input;
+      await db.update(quickfireChallenges).set({
+        ...rest,
+        ...(questionIds !== undefined ? { questionIds: JSON.stringify(questionIds) } : {}),
+        // Explicitly keep status as archived — never change it here
+      }).where(eq(quickfireChallenges.id, id));
+      return { success: true };
+    }),
 
   /**
-   * Returns all active quickReview-type flashcards, ordered by spaced-repetition priority.
-   * Cards the user has missed most recently appear first.
+   * Edit a question that belongs to an archived challenge.
+   * Allows updating all rich-text fields (question, explanation, options, reviewAnswer, etc.).
+   */
+  adminUpdateArchivedQuestion: adminProcedure
+    .input(z.object({
+      id: z.number().int().positive(),
+      question: z.string().min(1).max(5000).optional(),
+      options: z.array(z.string().min(1)).min(2).max(6).optional().nullable(),
+      correctAnswer: z.number().int().min(0).optional().nullable(),
+      explanation: z.string().max(5000).optional().nullable(),
+      reviewAnswer: z.string().max(5000).optional().nullable(),
+      imageUrl: z.string().url().optional().nullable(),
+      videoUrl: z.string().url().optional().nullable(),
+      pairs: z.array(z.object({ left: z.string().min(1), right: z.string().min(1) })).optional().nullable(),
+      markers: z.array(z.object({ x: z.number(), y: z.number(), label: z.string().min(1), radius: z.number().optional() })).optional().nullable(),
+      orderedItems: z.array(z.string().min(1)).min(2).max(10).optional().nullable(),
+      difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
+      tags: z.array(z.string()).optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const [q] = await db.select({ id: quickfireQuestions.id })
+        .from(quickfireQuestions).where(eq(quickfireQuestions.id, input.id)).limit(1);
+      if (!q) throw new TRPCError({ code: "NOT_FOUND", message: "Question not found" });
+      const { id, options, tags, pairs, markers, orderedItems, ...rest } = input;
+      await db.update(quickfireQuestions).set({
+        ...rest,
+        ...(options !== undefined ? { options: options ? JSON.stringify(options) : null } : {}),
+        ...(tags !== undefined ? { tags: JSON.stringify(tags) } : {}),
+        ...(pairs !== undefined ? { pairs: pairs ? JSON.stringify(pairs) : null } : {}),
+        ...(markers !== undefined ? { markers: markers ? JSON.stringify(markers) : null } : {}),
+        ...(orderedItems !== undefined ? { orderedItems: orderedItems ? JSON.stringify(orderedItems) : null } : {}),
+      }).where(eq(quickfireQuestions.id, id));
+      return { success: true };
+    }),
+
+  // ─── Flashcard Deck ───────────────────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Returns all active quickReview-type flashcards, ordered by spaced-repetition priority.  * Cards the user has missed most recently appear first.
    * Unauthenticated users get a random order.
    */
   getFlashcardDeck: publicProcedure

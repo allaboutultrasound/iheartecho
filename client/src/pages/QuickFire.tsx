@@ -47,6 +47,23 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
+import RichTextEditor from "@/components/RichTextEditor";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Pencil, Loader2 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -177,6 +194,94 @@ export default function QuickFire() {
   const alreadyCompleted =
     questions.length > 0 && questions.every((q) => userAttempts[q.id] !== undefined);
 
+  // ── Admin edit state (archive) ────────────────────────────────────────────
+  const isAdmin = user?.role === "admin";
+  const [archiveEditOpen, setArchiveEditOpen] = useState(false);
+  const [archiveEditTarget, setArchiveEditTarget] = useState<"challenge" | "question" | null>(null);
+  const [archiveEditChallengeForm, setArchiveEditChallengeForm] = useState({
+    title: "",
+    description: "",
+    category: "",
+    difficulty: "" as "" | "beginner" | "intermediate" | "advanced",
+  });
+  const [archiveEditQuestionForm, setArchiveEditQuestionForm] = useState({
+    question: "",
+    explanation: "",
+    reviewAnswer: "",
+    imageUrl: "",
+    options: [] as string[],
+    correctAnswer: null as number | null,
+    tags: [] as string[],
+    difficulty: "" as "" | "beginner" | "intermediate" | "advanced",
+  });
+  const [archiveEditQuestionId, setArchiveEditQuestionId] = useState<number | null>(null);
+  const updateArchivedChallengeMutation = trpc.quickfire.adminUpdateArchivedChallenge.useMutation({
+    onSuccess: () => {
+      toast.success("Challenge updated.");
+      archiveListQuery.refetch();
+      archiveDetailQuery.refetch();
+      setArchiveEditOpen(false);
+    },
+    onError: (err) => toast.error(err.message || "Failed to update challenge."),
+  });
+  const updateArchivedQuestionMutation = trpc.quickfire.adminUpdateArchivedQuestion.useMutation({
+    onSuccess: () => {
+      toast.success("Question updated.");
+      archiveDetailQuery.refetch();
+      setArchiveEditOpen(false);
+    },
+    onError: (err) => toast.error(err.message || "Failed to update question."),
+  });
+  function openEditArchivedChallenge(challenge: any) {
+    setArchiveEditTarget("challenge");
+    setArchiveEditChallengeForm({
+      title: challenge.title ?? "",
+      description: challenge.description ?? "",
+      category: challenge.category ?? "",
+      difficulty: challenge.difficulty ?? "",
+    });
+    setArchiveEditOpen(true);
+  }
+  function openEditArchivedQuestion(question: any) {
+    setArchiveEditTarget("question");
+    setArchiveEditQuestionId(question.id);
+    setArchiveEditQuestionForm({
+      question: question.question ?? "",
+      explanation: question.explanation ?? "",
+      reviewAnswer: question.reviewAnswer ?? "",
+      imageUrl: question.imageUrl ?? "",
+      options: Array.isArray(question.options) ? question.options : [],
+      correctAnswer: question.correctAnswer ?? null,
+      tags: Array.isArray(question.tags) ? question.tags : [],
+      difficulty: question.difficulty ?? "",
+    });
+    setArchiveEditOpen(true);
+  }
+  function handleSaveArchivedChallenge() {
+    if (!selectedArchiveId) return;
+    if (!archiveEditChallengeForm.title.trim()) { toast.error("Title is required."); return; }
+    updateArchivedChallengeMutation.mutate({
+      id: selectedArchiveId,
+      title: archiveEditChallengeForm.title.trim(),
+      description: archiveEditChallengeForm.description.trim() || null,
+      category: archiveEditChallengeForm.category || null,
+      difficulty: (archiveEditChallengeForm.difficulty as any) || null,
+    });
+  }
+  function handleSaveArchivedQuestion() {
+    if (!archiveEditQuestionId) return;
+    updateArchivedQuestionMutation.mutate({
+      id: archiveEditQuestionId,
+      question: archiveEditQuestionForm.question.trim() || undefined,
+      explanation: archiveEditQuestionForm.explanation.trim() || null,
+      reviewAnswer: archiveEditQuestionForm.reviewAnswer.trim() || null,
+      imageUrl: archiveEditQuestionForm.imageUrl.trim() || null,
+      options: archiveEditQuestionForm.options.length >= 2 ? archiveEditQuestionForm.options : undefined,
+      correctAnswer: archiveEditQuestionForm.correctAnswer,
+      tags: archiveEditQuestionForm.tags,
+      difficulty: (archiveEditQuestionForm.difficulty as any) || undefined,
+    });
+  }
   // ── Archive state ──────────────────────────────────────────────────────────
   const [selectedArchiveId, setSelectedArchiveId] = useState<number | null>(null);
   const [archiveQIndex, setArchiveQIndex] = useState(0);
@@ -1378,7 +1483,18 @@ export default function QuickFire() {
                               )}
                             </div>
                           </div>
-                          <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            {isAdmin && (
+                              <button
+                                className="p-1.5 rounded-lg text-gray-400 hover:text-[#189aa1] hover:bg-[#189aa1]/10 transition-colors"
+                                title="Edit challenge (admin)"
+                                onClick={(e) => { e.stopPropagation(); openEditArchivedChallenge(challenge); }}
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                            <ChevronRight className="w-4 h-4 text-gray-400" />
+                          </div>
                         </div>
                       );
                     })}
@@ -1398,10 +1514,20 @@ export default function QuickFire() {
                     ← Back to Archive
                   </button>
                   {archiveDetailQuery.data && (
-                    <div className="flex-1">
-                      <span className="font-semibold text-sm text-gray-800">{archiveDetailQuery.data.title}</span>
-                      {archiveDetailQuery.data.category && (
-                        <span className="ml-2 text-xs text-gray-400">· {archiveDetailQuery.data.category}</span>
+                    <div className="flex-1 flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <span className="font-semibold text-sm text-gray-800">{archiveDetailQuery.data.title}</span>
+                        {archiveDetailQuery.data.category && (
+                          <span className="ml-2 text-xs text-gray-400">· {archiveDetailQuery.data.category}</span>
+                        )}
+                      </div>
+                      {isAdmin && (
+                        <button
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-[#189aa1]/40 text-[#189aa1] hover:bg-[#189aa1]/10 transition-colors flex-shrink-0"
+                          onClick={() => openEditArchivedChallenge(archiveDetailQuery.data)}
+                        >
+                          <Pencil className="w-3 h-3" /> Edit Challenge
+                        </button>
                       )}
                     </div>
                   )}
@@ -1476,15 +1602,25 @@ export default function QuickFire() {
 
                       <Card className="shadow-sm border-gray-100">
                         <CardHeader className="pb-3">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className={`flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${typeInfo.color}`}>
-                              <TypeIcon className="w-3 h-3" />
-                              {typeInfo.label}
-                            </span>
-                            {archiveCurrentQ.difficulty && (
-                              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${DIFFICULTY_COLORS[archiveCurrentQ.difficulty] ?? "bg-gray-100 text-gray-600"}`}>
-                                {archiveCurrentQ.difficulty}
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className={`flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${typeInfo.color}`}>
+                                <TypeIcon className="w-3 h-3" />
+                                {typeInfo.label}
                               </span>
+                              {archiveCurrentQ.difficulty && (
+                                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${DIFFICULTY_COLORS[archiveCurrentQ.difficulty] ?? "bg-gray-100 text-gray-600"}`}>
+                                  {archiveCurrentQ.difficulty}
+                                </span>
+                              )}
+                            </div>
+                            {isAdmin && (
+                              <button
+                                className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold border border-gray-200 text-gray-500 hover:text-[#189aa1] hover:border-[#189aa1]/40 transition-colors flex-shrink-0"
+                                onClick={() => openEditArchivedQuestion(archiveCurrentQ)}
+                              >
+                                <Pencil className="w-3 h-3" /> Edit
+                              </button>
                             )}
                           </div>
                           <CardTitle className="text-base font-semibold text-gray-800 leading-snug mt-2" dangerouslySetInnerHTML={{ __html: archiveCurrentQ.question ?? "" }} />
@@ -1886,6 +2022,181 @@ export default function QuickFire() {
           </>
         )}
       </div>
+
+      {/* ── Admin: Archive Edit Dialog ─────────────────────────────────────── */}
+      <Dialog open={archiveEditOpen} onOpenChange={(open) => { if (!open) setArchiveEditOpen(false); }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle style={{ fontFamily: "Merriweather, serif" }}>
+              {archiveEditTarget === "challenge" ? "Edit Archived Challenge" : "Edit Archived Question"}
+            </DialogTitle>
+          </DialogHeader>
+
+          {archiveEditTarget === "challenge" && (
+            <div className="space-y-4 py-2">
+              <div>
+                <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Title <span className="text-red-500">*</span></label>
+                <Input
+                  value={archiveEditChallengeForm.title}
+                  onChange={(e) => setArchiveEditChallengeForm((f) => ({ ...f, title: e.target.value }))}
+                  placeholder="Challenge title"
+                  maxLength={300}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Description <span className="text-gray-400 font-normal">(optional)</span></label>
+                <RichTextEditor
+                  value={archiveEditChallengeForm.description}
+                  onChange={(v) => setArchiveEditChallengeForm((f) => ({ ...f, description: v }))}
+                  placeholder="Brief description of this challenge"
+                  minHeight={80}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Category</label>
+                  <Select
+                    value={archiveEditChallengeForm.category || "none"}
+                    onValueChange={(v) => setArchiveEditChallengeForm((f) => ({ ...f, category: v === "none" ? "" : v }))}
+                  >
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {CATEGORY_TAGS.map((c) => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Difficulty</label>
+                  <Select
+                    value={archiveEditChallengeForm.difficulty || "none"}
+                    onValueChange={(v) => setArchiveEditChallengeForm((f) => ({ ...f, difficulty: v === "none" ? "" : v as any }))}
+                  >
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Select difficulty" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {DIFFICULTY_OPTIONS.map((d) => (
+                        <SelectItem key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {archiveEditTarget === "question" && (
+            <div className="space-y-4 py-2">
+              <div>
+                <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Question Text <span className="text-red-500">*</span></label>
+                <RichTextEditor
+                  value={archiveEditQuestionForm.question}
+                  onChange={(v) => setArchiveEditQuestionForm((f) => ({ ...f, question: v }))}
+                  placeholder="Question text"
+                  minHeight={80}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Explanation <span className="text-gray-400 font-normal">(optional)</span></label>
+                <RichTextEditor
+                  value={archiveEditQuestionForm.explanation}
+                  onChange={(v) => setArchiveEditQuestionForm((f) => ({ ...f, explanation: v }))}
+                  placeholder="Explanation shown after answering"
+                  minHeight={60}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Review Answer (Quick Review) <span className="text-gray-400 font-normal">(optional)</span></label>
+                <RichTextEditor
+                  value={archiveEditQuestionForm.reviewAnswer}
+                  onChange={(v) => setArchiveEditQuestionForm((f) => ({ ...f, reviewAnswer: v }))}
+                  placeholder="Model answer for self-marking"
+                  minHeight={60}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Image URL <span className="text-gray-400 font-normal">(optional)</span></label>
+                <Input
+                  value={archiveEditQuestionForm.imageUrl}
+                  onChange={(e) => setArchiveEditQuestionForm((f) => ({ ...f, imageUrl: e.target.value }))}
+                  placeholder="https://..."
+                />
+              </div>
+              {archiveEditQuestionForm.options.length > 0 && (
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Answer Options</label>
+                  <div className="space-y-2">
+                    {archiveEditQuestionForm.options.map((opt, idx) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        <button
+                          className={`w-7 h-7 rounded-full flex-shrink-0 text-xs font-bold border-2 transition-colors ${
+                            archiveEditQuestionForm.correctAnswer === idx
+                              ? "bg-[#189aa1] border-[#189aa1] text-white"
+                              : "border-gray-300 text-gray-500 hover:border-[#189aa1]"
+                          }`}
+                          title="Mark as correct"
+                          onClick={() => setArchiveEditQuestionForm((f) => ({ ...f, correctAnswer: idx }))}
+                        >
+                          {String.fromCharCode(65 + idx)}
+                        </button>
+                        <Input
+                          value={opt}
+                          onChange={(e) => {
+                            const newOpts = [...archiveEditQuestionForm.options];
+                            newOpts[idx] = e.target.value;
+                            setArchiveEditQuestionForm((f) => ({ ...f, options: newOpts }));
+                          }}
+                          placeholder={`Option ${String.fromCharCode(65 + idx)}`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">Click a letter to mark it as the correct answer.</p>
+                </div>
+              )}
+              <div>
+                <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Difficulty</label>
+                <Select
+                  value={archiveEditQuestionForm.difficulty || "none"}
+                  onValueChange={(v) => setArchiveEditQuestionForm((f) => ({ ...f, difficulty: v === "none" ? "" : v as any }))}
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue placeholder="Select difficulty" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {DIFFICULTY_OPTIONS.map((d) => (
+                      <SelectItem key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setArchiveEditOpen(false)}>Cancel</Button>
+            <Button
+              className="text-white"
+              style={{ background: "#189aa1" }}
+              disabled={updateArchivedChallengeMutation.isPending || updateArchivedQuestionMutation.isPending}
+              onClick={archiveEditTarget === "challenge" ? handleSaveArchivedChallenge : handleSaveArchivedQuestion}
+            >
+              {(updateArchivedChallengeMutation.isPending || updateArchivedQuestionMutation.isPending) ? (
+                <><Loader2 className="w-4 h-4 animate-spin mr-1" /> Saving…</>
+              ) : (
+                "Save Changes"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }
