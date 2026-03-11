@@ -433,6 +433,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                               </button>
                             </WouterLink>
                           )}
+                          {/* Organizational Profile — diy_admin only */}
+                          {hasDiyAdmin && (
+                            <WouterLink href="/diy-lab-admin">
+                              <button onClick={() => setAccountOpen(false)}
+                                className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-all text-left">
+                                <Building2 className="w-3.5 h-3.5 text-orange-500" />
+                                Organizational Profile
+                              </button>
+                            </WouterLink>
+                          )}
                           {/* DIY Accreditation Tool — all DIY users (diy_user + diy_admin) */}
                           <WouterLink href="/accreditation">
                             <button onClick={() => setAccountOpen(false)}
