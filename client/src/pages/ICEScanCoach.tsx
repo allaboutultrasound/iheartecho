@@ -4,6 +4,7 @@
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
 import { useState, useMemo } from "react";
+import { PremiumOverlay } from "@/components/PremiumOverlay";
 import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
@@ -708,6 +709,7 @@ export default function ICEScanCoach() {
     <Layout>
       <ScanCoachNavBar navigatorPath="/ice" navigatorLabel="ICE Navigator" />
 {/* Main Layout */}
+      <PremiumOverlay featureName="ICE ScanCoach™">
       <div className="container py-6">
         <div className="flex gap-5">
           {/* View Selector Sidebar */}
@@ -778,6 +780,7 @@ export default function ICEScanCoach() {
           </div>
         </div>
       </div>
+      </PremiumOverlay>
     </Layout>
   );
 }

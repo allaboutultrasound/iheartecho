@@ -8,6 +8,7 @@
   views, and post-procedure assessment views.
 */
 import { useState, useMemo } from "react";
+import { PremiumOverlay } from "@/components/PremiumOverlay";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
@@ -706,6 +707,7 @@ export default function StructuralHeartScanCoach() {
     <Layout>
       <ScanCoachNavBar navigatorPath="/device" navigatorLabel="Device Navigator" />
 {/* Main Layout */}
+      <PremiumOverlay featureName="Structural Heart ScanCoach™">
       <div className="container py-6">
         <div className="flex gap-5">
           {/* Sidebar */}
@@ -774,6 +776,7 @@ export default function StructuralHeartScanCoach() {
           </div>
         </div>
       </div>
+      </PremiumOverlay>
     </Layout>
   );
 }

@@ -7,6 +7,7 @@
   Doppler guidance, pitfalls, and critical findings.
 */
 import { useState, useMemo } from "react";
+import { PremiumOverlay } from "@/components/PremiumOverlay";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
@@ -734,6 +735,7 @@ export default function StressScanCoach() {
       <ScanCoachNavBar navigatorPath="/stress" navigatorLabel="Stress Navigator" />
 
       {/* Hero Banner */}
+      <PremiumOverlay featureName="Stress Echo ScanCoach™">
       <div
         className="relative overflow-hidden"
         style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}
@@ -835,6 +837,7 @@ export default function StressScanCoach() {
           </div>
         </div>
       </div>
+      </PremiumOverlay>
     </Layout>
   );
 }

@@ -4,6 +4,7 @@
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
 import { useState, useMemo } from "react";
+import { PremiumOverlay } from "@/components/PremiumOverlay";
 import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
@@ -754,6 +755,7 @@ export default function TEEScanCoach() {
     <Layout>
       <ScanCoachNavBar navigatorPath="/tee" navigatorLabel="TEE Navigator" />
 {/* Main Layout */}
+      <PremiumOverlay featureName="TEE ScanCoach™">
       <div className="container py-6">
         <div className="flex gap-5">
           {/* View Selector Sidebar */}
@@ -822,6 +824,7 @@ export default function TEEScanCoach() {
           </div>
         </div>
       </div>
+      </PremiumOverlay>
     </Layout>
   );
 }

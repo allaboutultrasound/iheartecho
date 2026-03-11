@@ -1257,13 +1257,12 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
         questionIds: JSON.stringify(input.questionIds),
         priority: input.priority,
         category: input.category ?? null,
-        status: input.publishDate ? "scheduled" : "draft",
+         status: "scheduled",  // Always scheduled — ready for auto-publication in queue order
         publishDate: input.publishDate ?? null,
         createdByUserId: ctx.user.id,
       });
       return { id: (result as any).insertId };
     }),
-
   /** Update a challenge (title, description, questions, priority, category, publishDate) */
   adminUpdateChallenge: adminProcedure
     .input(z.object({
@@ -1282,7 +1281,8 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       await db.update(quickfireChallenges).set({
         ...rest,
         ...(questionIds !== undefined ? { questionIds: JSON.stringify(questionIds) } : {}),
-        ...(rest.publishDate !== undefined ? { status: rest.publishDate ? "scheduled" : "draft" } : {}),
+        // When publishDate is cleared, keep as scheduled (not draft) — still ready for auto-publication
+        ...(rest.publishDate !== undefined ? { status: "scheduled" } : {}),
       }).where(eq(quickfireChallenges.id, id));
       return { success: true };
     }),
@@ -1576,7 +1576,7 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
         questionIds: original.questionIds,
         priority: 100,
         category: original.category,
-        status: "draft",
+        status: "scheduled",  // Always scheduled — ready for auto-publication in queue order
         publishDate: null,
         publishedAt: null,
         archivedAt: null,
@@ -1614,7 +1614,7 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
         questionIds: JSON.stringify([input.questionId]),
         priority: 100,
         category: null,
-        status: input.publishDate ? "scheduled" : "draft",
+        status: "scheduled",  // Always scheduled — ready for auto-publication in queue order
         publishDate: input.publishDate ?? null,
         createdByUserId: ctx.user.id,
       });
@@ -1666,7 +1666,7 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
           questionIds: JSON.stringify([q.id]),
           priority: 100,
           category: null,
-          status: publishDate ? "scheduled" : "draft",
+          status: "scheduled",  // Always scheduled — ready for auto-publication in queue order
           publishDate: publishDate ?? null,
           createdByUserId: ctx.user.id,
         });
@@ -1674,6 +1674,35 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       }
 
       return { added: results.length, ids: results };
+    }),
+
+  /**
+   * Reorder the queue by updating priority values.
+   * Accepts an ordered array of challenge IDs; assigns priority 1, 2, 3... in that order.
+   * Only operates on scheduled/draft challenges — live/archived are ignored.
+   */
+  adminReorderQueue: adminProcedure
+    .input(
+      z.object({
+        orderedIds: z.array(z.number().int().positive()).min(1),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      // Update each challenge's priority based on its position in the ordered array
+      for (let i = 0; i < input.orderedIds.length; i++) {
+        await db
+          .update(quickfireChallenges)
+          .set({ priority: i + 1 })
+          .where(
+            and(
+              eq(quickfireChallenges.id, input.orderedIds[i]),
+              inArray(quickfireChallenges.status, ["scheduled", "draft"] as any[])
+            )
+          );
+      }
+      return { success: true, updated: input.orderedIds.length };
     }),
 
   /** List only archived challenges for the archive tab */

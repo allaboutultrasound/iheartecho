@@ -2251,3 +2251,22 @@
 
 ## Enrolled Decision-Tree Landing Page
 - [x] Redesign /enrolled as a post-enrollment decision-tree: two paths — All About Ultrasound Community and iHeartEcho App
+## Daily Challenge Queue Fixes
+- [ ] Fix push-to-queue: items pushed from question bank should be 'scheduled' not 'draft'
+- [ ] Add drag-to-reorder to the queue so admins can interleave questions from different categories
+- [ ] Persist reordered queue positions to the database
+
+## Report Builder Auth Gate Fix
+- [ ] Replace redirect-to-login with PremiumOverlay blur gate in Report Builder (no redirect to Manus sign-up)
+
+## Auth Gate Overlay Fixes (ScanCoach + Report Builder)
+- [ ] Fix Report Builder: remove redirect, wrap content in PremiumOverlay blur gate
+- [ ] Fix all ScanCoach pages: remove login redirects, wrap content in PremiumOverlay blur gate
+- [ ] Fix queue drag-to-reorder: remove stale moveChallengeUp/Down references, complete DnD implementation
+
+## Overlay & Display Fixes (no-charge corrections)
+- [ ] Fix HOCMScanCoach route type error (_noLayout prop incompatible with wouter Route component)
+- [ ] Fix QuickFireAdmin stale moveChallengeUp/moveChallengeDown references (TS errors)
+- [ ] Fix ReportBuilder: clean up broken JSX, wrap content in PremiumOverlay properly
+- [ ] Add PremiumOverlay to all premium ScanCoach pages (TEE, ICE, HOCM, Stress, StructuralHeart, POCUSRush, POCUSLung)
+- [ ] Fix StressEchoAssist card on EchoAssistHub: show card normally, overlay only on engine open

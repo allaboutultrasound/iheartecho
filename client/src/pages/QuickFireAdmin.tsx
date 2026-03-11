@@ -7,7 +7,24 @@
  *  - Generate the daily set for today (or a specific date)
  */
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { stripHtml } from "@/lib/utils";
@@ -124,6 +141,91 @@ const EMPTY_FORM: QuestionForm = {
   markers: [],
   orderedItems: [{ text: "" }, { text: "" }, { text: "" }, { text: "" }],
 };
+
+// ── Sortable queue row ─────────────────────────────────────────────────────
+function SortableQueueItem({ c, idx, openEditChallenge, deleteChallengeMutation }: {
+  c: any; idx: number;
+  openEditChallenge: (c: any) => void;
+  deleteChallengeMutation: any;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: c.id });
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
+  const isLive = c.status === "live";
+  const isScheduled = c.status === "scheduled";
+  const isDraft = c.status === "draft";
+  const qCount = Array.isArray(c.questionIds) ? c.questionIds.length : 0;
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`flex items-start gap-3 p-4 bg-white rounded-xl border transition-all ${
+        isLive ? "border-green-300 bg-green-50" :
+        isScheduled ? "border-blue-200" :
+        "border-gray-100 hover:border-[#189aa1]/30"
+      }`}
+    >
+      {/* Drag handle / live indicator */}
+      <div className="flex flex-col gap-0.5 flex-shrink-0 mt-1">
+        {isLive ? (
+          <PlayCircle className="w-4 h-4 text-green-500" />
+        ) : (
+          <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-gray-300 hover:text-[#189aa1] transition-colors" title="Drag to reorder">
+            <GripVertical className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+      {/* Priority badge */}
+      <div className="flex-shrink-0 w-8 text-center">
+        <span className="text-xs font-bold text-gray-300">#{idx + 1}</span>
+      </div>
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-semibold text-sm text-gray-800">{c.title}</span>
+          {isLive && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-green-500 text-white">LIVE</span>}
+          {isScheduled && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">SCHEDULED</span>}
+          {isDraft && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">DRAFT</span>}
+        </div>
+        <div className="flex items-center gap-3 mt-1 flex-wrap">
+          {c.category && (
+            <span className="flex items-center gap-1 text-xs text-gray-400">
+              <Tag className="w-3 h-3" />{c.category}
+            </span>
+          )}
+          <span className="text-xs text-gray-400">{qCount === 1 ? "1 question" : qCount === 0 ? "No question assigned" : `${qCount} questions`}</span>
+          {c.publishDate && (
+            <span className="flex items-center gap-1 text-xs text-gray-400">
+              <Clock className="w-3 h-3" />Scheduled: {c.publishDate}
+            </span>
+          )}
+          {isLive && c.publishedAt && (
+            <span className="flex items-center gap-1 text-xs text-green-600">
+              <Clock className="w-3 h-3" />Live since {new Date(c.publishedAt).toLocaleString()}
+            </span>
+          )}
+        </div>
+        {c.description && <p className="text-xs text-gray-400 mt-1 line-clamp-1">{c.description}</p>}
+      </div>
+      {/* Actions */}
+      <div className="flex items-center gap-1 flex-shrink-0">
+        {!isLive && (
+          <>
+            <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-gray-400 hover:text-[#189aa1]" onClick={() => openEditChallenge(c)}>
+              <Pencil className="w-3.5 h-3.5" />
+            </Button>
+            <Button
+              size="sm" variant="ghost" className="h-8 w-8 p-0 text-gray-400 hover:text-red-500"
+              onClick={() => { if (confirm("Remove this challenge from the queue?")) deleteChallengeMutation.mutate({ id: c.id }); }}
+              disabled={deleteChallengeMutation.isPending}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function QuickFireAdmin() {
   const [, navigate] = useLocation();
@@ -350,30 +452,23 @@ export default function QuickFireAdmin() {
     onError: (err) => toast.error(err.message || "Failed to reorder."),
   });
 
-  function moveChallengeUp(idx: number) {
-    if (idx === 0) return;
-    const draft = [...challenges.filter((c) => c.status !== "live")];
-    const live = challenges.filter((c) => c.status === "live");
-    const item = draft[idx - live.length];
-    if (!item) return;
-    const draftIdx = idx - live.length;
-    if (draftIdx <= 0) return;
-    const reordered = [...draft];
-    [reordered[draftIdx - 1], reordered[draftIdx]] = [reordered[draftIdx], reordered[draftIdx - 1]];
-    reorderMutation.mutate({ orderedIds: reordered.map((c) => c.id) });
-    challengeListQuery.refetch();
-  }
+  // DnD sensors for drag-to-reorder
+  const dndSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
-  function moveChallengeDown(idx: number) {
-    const draft = [...challenges.filter((c) => c.status !== "live")];
-    const live = challenges.filter((c) => c.status === "live");
-    const draftIdx = idx - live.length;
-    if (draftIdx < 0 || draftIdx >= draft.length - 1) return;
-    const reordered = [...draft];
-    [reordered[draftIdx], reordered[draftIdx + 1]] = [reordered[draftIdx + 1], reordered[draftIdx]];
+  const handleQueueDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const queueable = challenges.filter((c) => c.status !== "live");
+    const oldIdx = queueable.findIndex((c) => c.id === active.id);
+    const newIdx = queueable.findIndex((c) => c.id === over.id);
+    if (oldIdx === -1 || newIdx === -1) return;
+    const reordered = arrayMove(queueable, oldIdx, newIdx);
     reorderMutation.mutate({ orderedIds: reordered.map((c) => c.id) });
     challengeListQuery.refetch();
-  }
+  }, [challenges, reorderMutation, challengeListQuery]);
 
   function openCreateChallenge() {
     setEditingChallengeId(null);
@@ -867,21 +962,16 @@ export default function QuickFireAdmin() {
                         "border-gray-100 hover:border-[#189aa1]/30"
                       }`}
                     >
-                      {/* Reorder buttons (draft/scheduled only) */}
+                      {/* Drag handle / live indicator */}
                       <div className="flex flex-col gap-0.5 flex-shrink-0 mt-1">
-                        {!isLive && (
-                          <>
-                            <button onClick={() => moveChallengeUp(idx)} className="text-gray-300 hover:text-[#189aa1] transition-colors" title="Move up">
-                              <ChevronUp className="w-4 h-4" />
-                            </button>
-                            <button onClick={() => moveChallengeDown(idx)} className="text-gray-300 hover:text-[#189aa1] transition-colors" title="Move down">
-                              <ChevronDown className="w-4 h-4" />
-                            </button>
-                          </>
+                        {isLive ? (
+                          <PlayCircle className="w-4 h-4 text-green-500" />
+                        ) : (
+                          <span className="text-gray-300" title="Drag to reorder">
+                            <GripVertical className="w-4 h-4" />
+                          </span>
                         )}
-                        {isLive && <PlayCircle className="w-4 h-4 text-green-500" />}
                       </div>
-
                       {/* Priority badge */}
                       <div className="flex-shrink-0 w-8 text-center">
                         <span className="text-xs font-bold text-gray-300">#{idx + 1}</span>

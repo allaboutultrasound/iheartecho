@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import ScanCoachNavBar from "@/components/ScanCoachNavBar";
+import { PremiumOverlay } from "@/components/PremiumOverlay";
 
 const BRAND = "#189aa1";
 const PURPLE = "#189aa1";
@@ -1739,7 +1740,9 @@ export default function HOCMScanCoach({ _noLayout }: { _noLayout?: boolean } = {
   return (
     <Layout>
       <ScanCoachNavBar navigatorPath="/hocm-navigator" navigatorLabel="HOCM Navigator" />
-      {inner}
+      <PremiumOverlay featureName="HOCM ScanCoach™">
+        {inner}
+      </PremiumOverlay>
     </Layout>
   );
 }

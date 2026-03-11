@@ -5,6 +5,7 @@
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
 import { useState, useMemo } from "react";
+import { PremiumOverlay } from "@/components/PremiumOverlay";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import { PremiumGate } from "@/components/PremiumGate";
@@ -460,6 +461,7 @@ export default function POCUSRushScanCoach() {
 
   return (
     <Layout>
+      <PremiumOverlay featureName="POCUS Rush ScanCoach™">
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 bg-white">
         <Link href="/pocus-assist-hub">
           <span className="inline-flex items-center gap-1.5 text-xs font-semibold cursor-pointer hover:opacity-75 transition-opacity" style={{ color: BRAND }}>
@@ -528,6 +530,7 @@ export default function POCUSRushScanCoach() {
           </div>
         </div>
       </PremiumGate>
+      </PremiumOverlay>
     </Layout>
   );
 }

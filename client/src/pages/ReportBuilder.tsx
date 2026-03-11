@@ -6,7 +6,7 @@
 */
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { getLoginUrl } from "@/const";
+import { PremiumOverlay } from "@/components/PremiumOverlay";
 import Layout from "@/components/Layout";
 import { FileText, Copy, Download, CheckCircle2, ChevronDown, ChevronUp, Printer, MessageSquarePlus, Trash2, Bold, Italic, Underline as UnderlineIcon, AlignLeft, AlignCenter, AlignRight, Type, ClipboardCopy, FileDown } from "lucide-react";
 import { toast } from "sonner";
@@ -894,12 +894,7 @@ const EMPTY: ReportData = {
 };
 
 export default function ReportBuilder() {
-  const { isAuthenticated, loading: authLoading } = useAuth();
-  if (authLoading) return null;
-  if (!isAuthenticated) {
-    window.location.href = getLoginUrl();
-    return null;
-  }
+  const { loading: authLoading } = useAuth();
   const [data, setData] = useState<ReportData>(EMPTY);
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<"worksheet" | "report">("worksheet");
@@ -1010,19 +1005,24 @@ export default function ReportBuilder() {
     win.print();
   };
 
+  if (authLoading) return null;
+
   return (
     <Layout>
       <div className="container py-6">
-        {/* Header */}
-        <div className="mb-5 flex items-start justify-between flex-wrap gap-3">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800 mb-1" style={{ fontFamily: "Merriweather, serif" }}>
-              Echo Report Builder
-            </h1>
-            <p className="text-sm text-gray-500">
-              Enter measurements and findings — a complete structured report is generated automatically.
-            </p>
-          </div>
+        {/* Page title — always visible */}
+        <div className="mb-5">
+          <h1 className="text-2xl font-bold text-gray-800 mb-1" style={{ fontFamily: "Merriweather, serif" }}>
+            Echo Report Builder
+          </h1>
+          <p className="text-sm text-gray-500">
+            Enter measurements and findings — a complete structured report is generated automatically.
+          </p>
+        </div>
+        <PremiumOverlay featureName="Echo Report Builder">
+        <div>
+        {/* Header actions */}
+        <div className="mb-5 flex items-end justify-end flex-wrap gap-3">
           {/* Actions */}
           <div className="flex items-center gap-2">
             <button onClick={clearAll}
@@ -1324,6 +1324,8 @@ export default function ReportBuilder() {
             </div>
           </div>
         )}
+        </div>
+        </PremiumOverlay>
       </div>
     </Layout>
   );
