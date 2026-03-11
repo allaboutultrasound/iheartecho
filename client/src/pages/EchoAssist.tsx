@@ -205,9 +205,10 @@ const calcTabToEngineId: Record<string, string> = {
   ar: "engine-ar",
   mva: "engine-ms",
   rvsp: "engine-ph",
-  diastology: "engine-diastolic",
-  lap_estimation: "engine-lap",
-  diastology_special: "engine-diastology-special",
+  diastology: "engine-diastologyassist",
+  lap_estimation: "engine-diastologyassist",
+  diastology_special: "engine-diastologyassist",
+  diastologyassist: "engine-diastologyassist",
   lv: "engine-lv",
   rv: "engine-rv",
   sv: "engine-sv",
@@ -3049,8 +3050,22 @@ function LAPEstimationEngine() {
 // Groups all three diastology calculators under a single collapsible parent section
 function DiastologyAssistEngine() {
   const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<string>).detail;
+      if (detail === "engine-diastologyassist") {
+        setOpen(true);
+        setTimeout(() => ref.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+      }
+    };
+    window.addEventListener("echoassist:open", handler);
+    return () => window.removeEventListener("echoassist:open", handler);
+  }, []);
+
   return (
-    <div id="engine-diastologyassist" className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+    <div id="engine-diastologyassist" ref={ref} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
       <button
         onClick={() => setOpen(o => !o)}
         className="w-full teal-header px-5 py-3 flex items-center justify-between"
