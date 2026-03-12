@@ -315,6 +315,8 @@ async function send9amChallengeNotifications() {
 
     // Fetch all users who:
     //  - have an email address
+    //  - are NOT pending (isPending = false) — pending accounts are webhook/admin stubs that have never signed in
+    //  - have verified their email if they registered via email/password
     //  - have NOT already received a notification today (lastChallengeNotifDate != todayDateET)
     const allUsers = await db
       .select({
@@ -324,11 +326,18 @@ async function send9amChallengeNotifications() {
         displayName: users.displayName,
         notificationPrefs: users.notificationPrefs,
         lastChallengeNotifDate: users.lastChallengeNotifDate,
+        isPending: users.isPending,
+        emailVerified: users.emailVerified,
+        passwordHash: users.passwordHash,
       })
       .from(users);
 
     const toNotify = allUsers.filter((u) => {
       if (!u.email) return false;
+      // Skip pending accounts — webhook/admin-created stubs that have never signed in
+      if (u.isPending) return false;
+      // Skip email/password accounts that haven't verified their email yet
+      if (u.passwordHash && !u.emailVerified) return false;
       // DB-backed dedup: skip if already sent today (survives server restarts)
       if (u.lastChallengeNotifDate === todayDateET) return false;
       try {

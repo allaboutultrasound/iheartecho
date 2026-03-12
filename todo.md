@@ -2547,3 +2547,7 @@
 
 ## Image Quality Review Hero Banner Fix (Mar 12, 2026)
 - [x] Hide hero banner in ImageQualityReview when embedded prop is true
+
+## Daily Challenge Notification — Active Members Only (Mar 12, 2026)
+- [x] Filter out isPending users from daily challenge notifications
+- [x] Filter out email/password users with unverified email from daily challenge notifications
