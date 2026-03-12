@@ -1918,34 +1918,36 @@ export default function ImageQualityReview({ embedded = false }: Props) {
 
   const content = (
     <div ref={formTopRef}>
-      {/* Hero Banner */}
-      <div
-        className="relative overflow-hidden"
-        style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}
-      >
-        <div className="container py-8 md:py-10">
-          <div className="flex items-center gap-2 mb-2">
-            <Link href="/diy-accreditation-plans">
-              <button className="flex items-center gap-1.5 text-white/60 hover:text-white text-xs transition-colors">
-                <ArrowLeft className="w-3.5 h-3.5" /> DIY Accreditation
-              </button>
-            </Link>
-            <ChevronRight className="w-3 h-3 text-white/30" />
-            <span className="text-white/60 text-xs">Image Quality Review</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(255,255,255,0.15)" }}>
-              <ClipboardList className="w-5 h-5 text-white" />
+      {/* Hero Banner — hidden when embedded inside another page */}
+      {!embedded && (
+        <div
+          className="relative overflow-hidden"
+          style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}
+        >
+          <div className="container py-8 md:py-10">
+            <div className="flex items-center gap-2 mb-2">
+              <Link href="/diy-accreditation-plans">
+                <button className="flex items-center gap-1.5 text-white/60 hover:text-white text-xs transition-colors">
+                  <ArrowLeft className="w-3.5 h-3.5" /> DIY Accreditation
+                </button>
+              </Link>
+              <ChevronRight className="w-3 h-3 text-white/30" />
+              <span className="text-white/60 text-xs">Image Quality Review</span>
             </div>
-            <div>
-              <h1 className="text-xl md:text-2xl font-black text-white" style={{ fontFamily: "Merriweather, serif" }}>
-                Image Quality Review
-              </h1>
-              <p className="text-[#4ad9e0] text-sm font-medium">Quality Review — Step {step} of {TOTAL_STEPS}</p>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "rgba(255,255,255,0.15)" }}>
+                <ClipboardList className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl md:text-2xl font-black text-white" style={{ fontFamily: "Merriweather, serif" }}>
+                  Image Quality Review
+                </h1>
+                <p className="text-[#4ad9e0] text-sm font-medium">Quality Review — Step {step} of {TOTAL_STEPS}</p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Progress bar */}
       <div className="h-1.5 bg-gray-100">

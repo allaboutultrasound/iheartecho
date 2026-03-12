@@ -2544,3 +2544,6 @@
 - [x] Add user.created to ALLOWED_EVENTS allowlist in thinkific webhook
 - [x] Add user.created handler: silently creates free iHeartEcho account, no email sent
 - [x] Update Thinkific setup instructions in webhook comment block
+
+## Image Quality Review Hero Banner Fix (Mar 12, 2026)
+- [x] Hide hero banner in ImageQualityReview when embedded prop is true
