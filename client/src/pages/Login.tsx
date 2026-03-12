@@ -212,7 +212,7 @@ export default function Login() {
           </div>
 
           <a
-            href="https://member.allaboutultrasound.com/enroll/3241567?price_id=4133943"
+            href="https://member.allaboutultrasound.com/enroll/3707211?price_id=4656299"
             target="_blank"
             rel="noopener noreferrer"
             className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl font-semibold text-sm transition-all hover:bg-gray-50 border"

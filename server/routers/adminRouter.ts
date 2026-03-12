@@ -295,6 +295,49 @@ export const platformAdminRouter = router({
     const count = await syncCatalogToDb();
     return { count, syncedAt: new Date() };
   }),
+
+  /**
+   * Bulk backfill: fetch all users from Thinkific and create iHeartEcho accounts
+   * for anyone not already registered. Runs silently (no emails sent).
+   * Returns counts of created, skipped (already existed), and errors.
+   */
+  syncAllThinkificMembers: protectedProcedure.mutation(async ({ ctx }) => {
+    const myRoles = await getUserRoles(ctx.user.id);
+    const isOwner = ctx.user.role === "admin";
+    const isPlatformAdmin = myRoles.includes("platform_admin");
+    if (!isOwner && !isPlatformAdmin) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "Platform admin access required" });
+    }
+
+    const { getAllThinkificUsers } = await import("../thinkific");
+    const { findUserByEmail, ensureUserRole } = await import("../db");
+
+    const thinkificUsers = await getAllThinkificUsers();
+    let created = 0;
+    let skipped = 0;
+    let errors = 0;
+
+    for (const tUser of thinkificUsers) {
+      if (!tUser.email) { errors++; continue; }
+      try {
+        const existing = await findUserByEmail(tUser.email);
+        if (existing) {
+          await ensureUserRole(existing.id);
+          skipped++;
+        } else {
+          const newId = await createPendingUser(tUser.email);
+          await ensureUserRole(newId);
+          created++;
+        }
+      } catch (err) {
+        console.error(`[SyncThinkific] Error processing ${tUser.email}:`, err);
+        errors++;
+      }
+    }
+
+    console.log(`[SyncThinkific] Bulk sync complete: ${created} created, ${skipped} skipped, ${errors} errors out of ${thinkificUsers.length} Thinkific users`);
+    return { total: thinkificUsers.length, created, skipped, errors, syncedAt: new Date() };
+  }),
 });
 
 // ─── Lab Seat Management Router ───────────────────────────────────────────────

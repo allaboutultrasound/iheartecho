@@ -618,6 +618,14 @@ export default function PlatformAdmin() {
 
   const [lastSyncResult, setLastSyncResult] = useState<{ count: number; syncedAt: Date } | null>(null);
   const [lastRegistrySyncResult, setLastRegistrySyncResult] = useState<{ count: number; syncedAt: Date } | null>(null);
+  const [lastMemberSyncResult, setLastMemberSyncResult] = useState<{ total: number; created: number; skipped: number; errors: number; syncedAt: Date } | null>(null);
+  const syncAllMembersMutation = trpc.platformAdmin.syncAllThinkificMembers.useMutation({
+    onSuccess: (data) => {
+      setLastMemberSyncResult(data);
+      toast.success(`Member sync complete: ${data.created} new accounts created, ${data.skipped} already existed.`);
+    },
+    onError: (err) => toast.error(`Member sync failed: ${err.message}`),
+  });
   const syncCoursesMutation = trpc.platformAdmin.syncThinkificCourses.useMutation({
     onSuccess: (data) => {
       setLastSyncResult(data);
@@ -953,6 +961,44 @@ export default function PlatformAdmin() {
               >
                 <RefreshCw className={`w-4 h-4 ${syncRegistryMutation.isPending ? "animate-spin" : ""}`} />
                 {syncRegistryMutation.isPending ? "Syncing…" : "Sync Now"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Sync All Thinkific Members */}
+        <Card className="mb-6 border-0 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              Sync All Thinkific Members
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className="flex-1">
+                <p className="text-sm text-gray-600 mb-1">
+                  Create iHeartEcho accounts for all existing Thinkific members who don&apos;t have one yet.
+                  No emails are sent. Future members are handled automatically via webhook.
+                </p>
+                {lastMemberSyncResult ? (
+                  <p className="text-xs text-[#189aa1] font-medium">
+                    Last sync: {lastMemberSyncResult.created} created, {lastMemberSyncResult.skipped} already existed
+                    {lastMemberSyncResult.errors > 0 ? `, ${lastMemberSyncResult.errors} errors` : ""} &mdash;{" "}
+                    {new Date(lastMemberSyncResult.syncedAt).toLocaleString()}
+                  </p>
+                ) : (
+                  <p className="text-xs text-gray-400">No sync performed this session.</p>
+                )}
+              </div>
+              <Button
+                onClick={() => syncAllMembersMutation.mutate()}
+                disabled={syncAllMembersMutation.isPending}
+                className="flex items-center gap-2 flex-shrink-0"
+                style={{ background: "#189aa1" }}
+              >
+                <Users className={`w-4 h-4 ${syncAllMembersMutation.isPending ? "animate-spin" : ""}`} />
+                {syncAllMembersMutation.isPending ? "Syncing…" : "Sync Members"}
               </Button>
             </div>
           </CardContent>

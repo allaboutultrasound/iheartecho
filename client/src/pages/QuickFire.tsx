@@ -541,7 +541,7 @@ export default function QuickFire() {
                 <a href="/login">
                   <Button style={{ background: "#189aa1" }} className="text-white">Sign In</Button>
                 </a>
-                <a href="https://member.allaboutultrasound.com/enroll/3241567?price_id=4133943" target="_blank" rel="noopener noreferrer">
+                <a href="https://member.allaboutultrasound.com/enroll/3707211?price_id=4656299" target="_blank" rel="noopener noreferrer">
                   <Button variant="outline" style={{ borderColor: "#189aa1", color: "#189aa1" }}>Create Free Account</Button>
                 </a>
               </div>

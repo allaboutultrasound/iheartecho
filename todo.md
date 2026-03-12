@@ -2522,3 +2522,20 @@
 - [x] After sending email to each user, set lastChallengeNotifDate = todayET() in DB
 - [x] On each hourly tick, filter out users where lastChallengeNotifDate == todayET()
 - [x] Verified: 0 TypeScript errors, 691 tests pass
+
+## Thinkific Universal Member Sync
+- [ ] Update webhook: create free iHeartEcho account for ANY Thinkific enrollment/order (silent, no email)
+- [ ] Update webhook: send welcome email only for "iHeartEcho™ App" product enrollments
+- [ ] Add isIHeartEchoAppProduct() matcher for "iHeartEcho™ App" membership
+- [ ] Remove Gate 2 product relevance filter so all enrollments create accounts
+- [ ] Add syncAllThinkificMembers admin procedure for bulk backfill of existing members
+- [ ] Add Sync All Members button to PlatformAdmin UI
+
+## Thinkific Universal Member Sync (Mar 12, 2026)
+- [x] Update registration links to new iHeartEcho App product URL (https://member.allaboutultrasound.com/enroll/3707211?price_id=4656299)
+- [x] Webhook: create iHeartEcho account for ANY Thinkific enrollment/order (not just free membership)
+- [x] Webhook: send welcome email ONLY for "iHeartEcho™ App" product enrollment
+- [x] Remove isRelevantProduct gate from order.created handler so all orders create accounts
+- [x] Add getAllThinkificUsers() export to thinkific.ts
+- [x] Add syncAllThinkificMembers procedure to platformAdminRouter (bulk backfill, no emails)
+- [x] Add "Sync All Thinkific Members" card to PlatformAdmin UI

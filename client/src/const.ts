@@ -1,8 +1,8 @@
 export { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 
 // Thinkific Free Membership enrollment — all new user registrations go here
-export const THINKIFIC_FREE_MEMBERSHIP_URL = "https://member.allaboutultrasound.com/enroll/3241567?price_id=4133943";
-export const THINKIFIC_FREE_MEMBERSHIP_PAGE = "https://member.allaboutultrasound.com/bundles/free-membership";
+export const THINKIFIC_FREE_MEMBERSHIP_URL = "https://member.allaboutultrasound.com/enroll/3707211?price_id=4656299";
+export const THINKIFIC_FREE_MEMBERSHIP_PAGE = "https://member.allaboutultrasound.com/enroll/3707211?price_id=4656299";
 
 /**
  * Free membership enrollment URL with origin-tracking redirect.

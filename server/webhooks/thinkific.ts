@@ -35,6 +35,7 @@ import { webhookEvents } from "../../drizzle/schema";
 import { getUserByEmail, setPremiumStatus, createPendingUser, assignRole, removeRole, ensureUserRole, markThinkificEnrolled } from "../db";
 import { syncCatalogToDb } from "../routers/cmeRouter";
 import { getEnrollmentById } from "../thinkific";
+import { sendEmail, buildWelcomeEmail } from "../_core/email";
 
 // ── Allowed event allowlist ──────────────────────────────────────────────────
 /** Only these resource+action pairs will be processed. Everything else is filtered. */
@@ -118,9 +119,26 @@ function isFreeProduct(name: string | null | undefined): boolean {
   );
 }
 
+/**
+ * Returns true if the product is the new iHeartEcho™ App free membership product.
+ * Canonical Thinkific name: "iHeartEcho™ App"
+ * This is the only product that triggers a welcome email from iHeartEcho.
+ */
+function isIHeartEchoAppProduct(name: string | null | undefined): boolean {
+  if (!name) return false;
+  const l = name.toLowerCase().trim();
+  // Match exact product name or close variants
+  return (
+    l === "iheartecho™ app" ||
+    l === "iheartecho app" ||
+    l === "iheartecho™app" ||
+    (l.startsWith("iheartecho") && (l.endsWith("app") || l.endsWith("app™") || l.endsWith("™ app")))
+  );
+}
+
 /** Returns true if the product is relevant to iHeartEcho (premium, DIY, or free). */
 function isRelevantProduct(name: string | null | undefined): boolean {
-  return isPremiumProduct(name) || isDIYProduct(name) || isFreeProduct(name);
+  return isPremiumProduct(name) || isDIYProduct(name) || isFreeProduct(name) || isIHeartEchoAppProduct(name);
 }
 
 // ── Logger ───────────────────────────────────────────────────────────────────
@@ -198,8 +216,10 @@ export function registerThinkificWebhook(app: Router) {
         return res;
       }
 
-      // ── Gate 2: Product relevance filter ─────────────────────────────────
-      // For all allowed events, extract the product name and reject irrelevant products.
+      // ── Gate 2: Extract user email and product name ───────────────────────
+      // NOTE: Gate 2 no longer filters by product — ALL enrollments/orders from
+      // Thinkific create a free iHeartEcho account. Premium/DIY role grants are
+      // applied on top of the base account creation.
       const p = payload as {
         product_name?: string;
         status?: string;
@@ -212,23 +232,12 @@ export function registerThinkificWebhook(app: Router) {
       const productName = (p?.product_name ?? "").trim();
       const userEmail = ((p?.user_email ?? p?.user?.email) ?? "").toLowerCase().trim();
 
-      if (productName && !isRelevantProduct(productName)) {
-        const msg = `filtered: "${productName}" is not an iHeartEcho membership product`;
-        console.log(`[Thinkific Webhook] ${msg}`);
-        await logWebhookEvent({ resource, action, email: userEmail || undefined, productName, httpStatus: 200, outcome: "filtered", message: msg, rawPayload: payload });
-        return res.status(200).json({ ok: true, message: msg });
-      }
-
       // ── 1. order.created → grant access ──────────────────────────────────
       if (resource === "order" && action === "created") {
         const orderStatus = (p?.status ?? "").toLowerCase();
 
-        if (!isRelevantProduct(productName)) {
-          const msg = `ignored: order for "${productName}" is not a relevant membership`;
-          await logWebhookEvent({ resource, action, email: userEmail || undefined, productName, httpStatus: 200, outcome: "ignored", message: msg, rawPayload: payload });
-          return res.status(200).json({ ok: true, message: msg });
-        }
-
+        // All orders (any product) create an iHeartEcho account.
+        // Product-specific role grants (premium, DIY) are applied inside grantAccess.
         if (orderStatus !== "complete") {
           const msg = `ignored: order status is "${orderStatus}", not "complete"`;
           await logWebhookEvent({ resource, action, email: userEmail || undefined, productName, httpStatus: 200, outcome: "ignored", message: msg, rawPayload: payload });
@@ -350,6 +359,36 @@ export function registerThinkificWebhook(app: Router) {
   });
 }
 
+// ── Welcome email helper ────────────────────────────────────────────────────
+
+/**
+ * Send a welcome email for the iHeartEcho™ App product enrollment.
+ * Only called when the product is the "iHeartEcho™ App" free membership.
+ */
+async function sendIHeartEchoAppWelcome(email: string): Promise<void> {
+  try {
+    const appUrl = process.env.VITE_APP_URL ?? "https://app.iheartecho.com";
+    const payload = buildWelcomeEmail({
+      firstName: email.split("@")[0],
+      loginUrl: `${appUrl}/login`,
+      roles: [], // free account — no special roles to list
+    });
+    const sent = await sendEmail({
+      to: { name: email, email },
+      subject: payload.subject,
+      htmlBody: payload.htmlBody,
+      previewText: payload.previewText,
+    });
+    if (!sent) {
+      console.warn(`[Thinkific Webhook] Welcome email to ${email} could not be sent (SendGrid unavailable)`);
+    } else {
+      console.log(`[Thinkific Webhook] Welcome email sent to ${email} for iHeartEcho™ App enrollment`);
+    }
+  } catch (err) {
+    console.error(`[Thinkific Webhook] Failed to send welcome email to ${email}:`, err);
+  }
+}
+
 // ── Shared grant helper ───────────────────────────────────────────────────────
 
 async function grantAccess(params: {
@@ -369,17 +408,20 @@ async function grantAccess(params: {
     console.log(`[Thinkific Webhook] user ${userEmail} not found — creating pending account`);
     try {
       const pendingUserId = await createPendingUser(userEmail);
+      // Always ensure base user role for ANY Thinkific member
+      await ensureUserRole(pendingUserId);
+      // Apply product-specific role grants on top
       if (isPremiumProduct(productName)) {
         await setPremiumStatus(pendingUserId, true, "thinkific");
       } else if (isDIYProduct(productName)) {
         const role = diyRoleForProduct(productName);
         await assignRole(pendingUserId, role, 0 /* system/webhook grant */);
-      } else if (isFreeProduct(productName)) {
-        // Free membership — ensure base "user" role is assigned and mark enrollment timestamp.
-        // No email is sent — Thinkific handles all enrollment communications.
-        await ensureUserRole(pendingUserId);
+      } else if (isFreeProduct(productName) || isIHeartEchoAppProduct(productName)) {
         await markThinkificEnrolled(pendingUserId);
-        console.log(`[Thinkific Webhook] Free membership enrolled for ${userEmail} (userId=${pendingUserId}) — user role confirmed, thinkificEnrolledAt set.`);
+      }
+      // Send welcome email ONLY for the iHeartEcho™ App product
+      if (isIHeartEchoAppProduct(productName)) {
+        sendIHeartEchoAppWelcome(userEmail).catch(() => {});
       }
       const msg = `pending account created and access granted for ${userEmail} ("${productName}")`;
       console.log(`[Thinkific Webhook] ${msg} (userId=${pendingUserId})`);
@@ -393,17 +435,19 @@ async function grantAccess(params: {
     }
   }
 
+  // User already exists — ensure base user role and apply product-specific grants
+  await ensureUserRole(user.id);
   if (isPremiumProduct(productName)) {
     await setPremiumStatus(user.id, true, "thinkific");
   } else if (isDIYProduct(productName)) {
     const role = diyRoleForProduct(productName);
     await assignRole(user.id, role, 0 /* system/webhook grant */);
-  } else if (isFreeProduct(productName)) {
-    // Free membership — ensure base "user" role is assigned and mark enrollment timestamp.
-    // No email is sent — Thinkific handles all enrollment communications.
-    await ensureUserRole(user.id);
+  } else if (isFreeProduct(productName) || isIHeartEchoAppProduct(productName)) {
     await markThinkificEnrolled(user.id);
-    console.log(`[Thinkific Webhook] Free membership enrolled for ${userEmail} (userId=${user.id}) — user role confirmed, thinkificEnrolledAt set.`);
+  }
+  // Send welcome email ONLY for the iHeartEcho™ App product (new enrollments only)
+  if (isIHeartEchoAppProduct(productName) && action === "created") {
+    sendIHeartEchoAppWelcome(userEmail).catch(() => {});
   }
 
   const msg = `access granted to ${userEmail} (userId=${user.id}) for "${productName}"`;
