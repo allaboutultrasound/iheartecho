@@ -2602,3 +2602,9 @@
 
 ## ScanCoach HOCM Update
 - [x] Add aortic valve M-mode systolic notching (mid-systolic closure) to HOCM ScanCoach content
+
+## Demo User Flagging
+- [x] Add isDemo boolean column to users table schema and migrate
+- [x] Mark DIY demo lab admins + staff (labs 30001 & 30002) with isDemo=true in DB
+- [x] Show "Demo" badge on demo users in Platform Admin user list
+- [x] Update seed script to set isDemo=true on insert

@@ -57,6 +57,7 @@ import {
   Zap,
   Scan,
   Webhook,
+  FlaskConical,
 } from "lucide-react";
 import { Link } from "wouter";
 import BulkCsvUploadPanel, { type BulkResult } from "@/components/BulkCsvUploadPanel";
@@ -125,6 +126,7 @@ type UserWithRoles = {
   createdAt: Date;
   lastSignedIn: Date;
   isPending: boolean;
+  isDemo: boolean;
   roles: AppRole[];
 };
 
@@ -1091,6 +1093,12 @@ export default function PlatformAdmin() {
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
                             <Clock className="w-3 h-3" />
                             Pending Sign-In
+                          </span>
+                        )}
+                        {(u as UserWithRoles).isDemo && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                            <FlaskConical className="w-3 h-3" />
+                            Demo
                           </span>
                         )}
                       </div>

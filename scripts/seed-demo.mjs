@@ -177,8 +177,8 @@ async function main() {
         const adminPwHash = await bcrypt.hash("LabAdmin2026!", 10);
         const [r] = await conn.execute(
           `INSERT INTO users (email, name, displayName, credentials, loginMethod, passwordHash,
-            emailVerified, isPremium, role, createdAt, updatedAt, lastSignedIn)
-           VALUES (?, ?, ?, ?, 'email', ?, 1, 1, 'user', NOW(), NOW(), NOW())`,
+            emailVerified, isPremium, role, isDemo, createdAt, updatedAt, lastSignedIn)
+           VALUES (?, ?, ?, ?, 'email', ?, 1, 1, 'user', 1, NOW(), NOW(), NOW())`,
           [lab.adminEmail, lab.adminName, lab.adminName, lab.adminCredentials, adminPwHash]
         );
         labAdminUserId = r.insertId;
@@ -234,8 +234,8 @@ async function main() {
           const memberPwHash = await bcrypt.hash("Member2026!", 10);
           const [r] = await conn.execute(
             `INSERT INTO users (email, name, displayName, credentials, loginMethod, passwordHash,
-              emailVerified, isPremium, role, createdAt, updatedAt, lastSignedIn)
-             VALUES (?, ?, ?, ?, 'email', ?, 1, 1, 'user', NOW(), NOW(), NOW())`,
+              emailVerified, isPremium, role, isDemo, createdAt, updatedAt, lastSignedIn)
+             VALUES (?, ?, ?, ?, 'email', ?, 1, 1, 'user', 1, NOW(), NOW(), NOW())`,
             [m.email, m.displayName, m.displayName, m.credentials, memberPwHash]
           );
           memberUserId = r.insertId;
