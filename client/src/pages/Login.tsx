@@ -105,7 +105,7 @@ export default function Login() {
           />
           <div>
             <div className="text-2xl font-black text-white" style={{ fontFamily: "Merriweather, serif" }}>iHeartEcho™</div>
-            <div className="text-xs font-medium" style={{ color: "#4ad9e0" }}>Echocardiography Clinical Companion</div>
+            <div className="text-xs font-medium" style={{ color: "#4ad9e0" }}>EchoAssist™ Echocardiography Clinical Companion</div>
           </div>
         </div>
         {/* Hero */}

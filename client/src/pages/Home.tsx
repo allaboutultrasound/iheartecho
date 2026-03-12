@@ -162,7 +162,7 @@ export default function Home() {
                 <h1 className="text-3xl md:text-4xl font-black text-white leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
                   iHeartEcho™
                 </h1>
-                <p className="text-lg text-[#4ad9e0] font-semibold">Echocardiography Clinical Companion</p>
+                <p className="text-lg text-[#4ad9e0] font-semibold">EchoAssist™ Echocardiography Clinical Companion</p>
               </div>
             </div>
             <p className="text-white/70 text-sm md:text-base leading-relaxed mb-6 max-w-lg">

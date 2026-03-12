@@ -195,7 +195,7 @@ export default function TTENavigator() {
       });
     });
     lines.push("\n" + "=".repeat(50));
-    lines.push("Per ASE/ACC/AHA Guidelines | iHeartEcho™ Clinical Companion");
+    lines.push("Per ASE/ACC/AHA Guidelines | iHeartEcho™ EchoAssist™ Echocardiography Clinical Companion");
     const blob = new Blob([lines.join("\n")], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

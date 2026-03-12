@@ -1,7 +1,7 @@
 /*
   iHeartEcho™ — Post-Enrollment Decision-Tree Landing Page
   Shown after completing the free All About Ultrasound membership enrollment.
-  Two paths: All About Ultrasound Community | iHeartEcho Clinical Companion App
+  Two paths: All About Ultrasound Community | iHeartEcho™ EchoAssist™ App
   Brand: Teal #189aa1, Aqua #4ad9e0, Dark navy #0e1e2e
 */
 import { useEffect } from "react";
@@ -157,7 +157,7 @@ export default function Enrolled() {
           <div className="flex-1 h-px lg:h-auto lg:w-px bg-white/10" />
         </div>
 
-        {/* ── Path 2: iHeartEcho Clinical Companion App ── */}
+        {/* ── Path 2: iHeartEcho™ EchoAssist™ App ── */}
         <div
           className="group flex flex-col flex-1 rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl cursor-pointer"
           style={{
@@ -191,7 +191,7 @@ export default function Enrolled() {
                 className="text-xl font-bold text-white leading-snug"
                 style={{ fontFamily: "Merriweather, serif" }}
               >
-                iHeartEcho™ Clinical Companion
+                iHeartEcho™ EchoAssist™ Echocardiography Clinical Companion
               </h2>
             </div>
             <p className="text-white/60 text-sm leading-relaxed">

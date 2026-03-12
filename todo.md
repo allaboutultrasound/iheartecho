@@ -2551,3 +2551,11 @@
 ## Daily Challenge Notification — Active Members Only (Mar 12, 2026)
 - [x] Filter out isPending users from daily challenge notifications
 - [x] Filter out email/password users with unverified email from daily challenge notifications
+
+## Branding Update — EchoAssist™ (Mar 12, 2026)
+- [x] Update sidebar subtext in Layout.tsx (lines 173, 281)
+- [x] Update Home.tsx hero subtext
+- [x] Update Login.tsx subtext
+- [x] Update index.html page title
+- [x] Update EchoCorrelation, TTENavigator, TEENavigator PDF footers
+- [x] Update Enrolled.tsx references
