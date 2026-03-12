@@ -2587,3 +2587,15 @@
 - [x] Update Home.tsx hero description to include: cardiac ultrasound students, sonographers, echocardiographers, cardiologists, physicians, residents, ACS professionals, and echo educators
 - [x] Update Login.tsx left panel description with same professional categories
 - [x] Update manifest.json description with same professional categories
+
+## Demo Accreditation Seed (admin@allaboutultrasound.com as SuperAdmin)
+- [x] SuperAdmin account (admin@allaboutultrasound.com) set as platform_admin + diy_admin
+- [x] Lab 1: Heartland Cardiovascular Imaging Center (id=30001, professional plan, adult_echo)
+- [x] Lab 2: Pacific Coast Pediatric Echo Lab (id=30002, enterprise plan, adult_echo + pediatric_fetal_echo)
+- [x] 8 lab members per lab (4 physicians + 4 sonographers) with accepted invites
+- [x] 60 IQR records per lab (6 months of data)
+- [x] 40 Physician Peer Review records per lab (6 months)
+- [x] 30 Echo Correlation records per lab (6 months), labId backfilled
+- [x] 120 Case Mix submissions per lab (all modalities)
+- [x] Accreditation Readiness seeded (75-85% complete)
+- [x] Duplicate userRoles cleaned up (2385 duplicates removed)
