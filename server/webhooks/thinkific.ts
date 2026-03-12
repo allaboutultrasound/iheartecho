@@ -9,7 +9,7 @@
  *   • subscription.activated     (re-activation after pause/lapse)
  *   • enrollment.created         (direct enrollment, e.g. gifted access)
  *   • enrollment.updated         (status change on an existing enrollment)
- *   • user.created               (new Thinkific registration without purchase — creates free iHeartEcho account silently)
+ *   • user.signup               (new Thinkific registration without purchase — creates free iHeartEcho account silently)
  *
  * Allowed products (matched by name substring — case-insensitive):
  *   • iHeartEcho™ App — Premium Access  → grants/revokes "premium_user" role
@@ -29,7 +29,7 @@
  *     subscription.activated
  *     enrollment.created
  *     enrollment.updated
- *     user.created
+ *     user.signup
  */
 import { Router, Request, Response } from "express";
 import { getDb } from "../db";
@@ -47,8 +47,8 @@ const ALLOWED_EVENTS: Array<{ resource: string; action: string }> = [
   { resource: "subscription", action: "activated" },
   { resource: "enrollment",   action: "created"   },
   { resource: "enrollment",   action: "updated"   },
-  // user.created — fired when a user registers on Thinkific without purchasing
-  { resource: "user",         action: "created"   },
+  // user.signup — fired when a user registers on Thinkific without purchasing
+  { resource: "user",         action: "signup"    },
   // product.* events trigger a background catalog re-sync
   { resource: "product",      action: "created"   },
   { resource: "product",      action: "updated"   },
@@ -220,14 +220,14 @@ export function registerThinkificWebhook(app: Router) {
         return res;
       }
 
-      // ── 0b. user.created → silently create iHeartEcho account ─────────────
+      // ── 0b. user.signup → silently create iHeartEcho account ─────────────
       // Fired when a user registers on Thinkific without purchasing anything.
       // Creates a free iHeartEcho account with base "user" role. No email sent.
-      if (resource === "user" && action === "created") {
+      if (resource === "user" && action === "signup") {
         const up = payload as { email?: string; first_name?: string; last_name?: string } | undefined;
         const newUserEmail = (up?.email ?? "").toLowerCase().trim();
         if (!newUserEmail) {
-          const msg = "ignored: no email in user.created payload";
+          const msg = "ignored: no email in user.signup payload";
           await logWebhookEvent({ resource, action, httpStatus: 200, outcome: "ignored", message: msg, rawPayload: payload });
           return res.status(200).json({ ok: true, message: msg });
         }
@@ -235,19 +235,19 @@ export function registerThinkificWebhook(app: Router) {
           const existing = await getUserByEmail(newUserEmail);
           if (existing) {
             await ensureUserRole(existing.id);
-            const msg = `user.created: account already exists for ${newUserEmail} (userId=${existing.id}) — ensured base role`;
+            const msg = `user.signup: account already exists for ${newUserEmail} (userId=${existing.id}) — ensured base role`;
             console.log(`[Thinkific Webhook] ${msg}`);
             await logWebhookEvent({ resource, action, email: newUserEmail, httpStatus: 200, outcome: "ignored", message: msg, rawPayload: payload });
             return res.status(200).json({ ok: true, message: msg, userId: existing.id });
           }
           const newId = await createPendingUser(newUserEmail);
           await ensureUserRole(newId);
-          const msg = `user.created: pending iHeartEcho account created for ${newUserEmail} (userId=${newId})`;
+          const msg = `user.signup: pending iHeartEcho account created for ${newUserEmail} (userId=${newId})`;
           console.log(`[Thinkific Webhook] ${msg}`);
           await logWebhookEvent({ resource, action, email: newUserEmail, httpStatus: 200, outcome: "pending_created", message: msg, rawPayload: payload });
           return res.status(200).json({ ok: true, message: msg, userId: newId });
         } catch (err) {
-          const msg = `user.created: failed to create account for ${newUserEmail}`;
+          const msg = `user.signup: failed to create account for ${newUserEmail}`;
           console.error(`[Thinkific Webhook] ${msg}:`, err);
           await logWebhookEvent({ resource, action, email: newUserEmail, httpStatus: 200, outcome: "error", message: msg, rawPayload: payload });
           return res.status(200).json({ ok: true, message: msg });
