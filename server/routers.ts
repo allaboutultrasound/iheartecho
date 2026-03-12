@@ -2194,6 +2194,14 @@ export const appRouter = router({
         return { success: true };
       }),
   }),
+
+  stats: router({
+    /** Total user count (active + pending) — refreshed by the client daily */
+    userCount: publicProcedure.query(async () => {
+      const total = await countUsers();
+      return { total };
+    }),
+  }),
 });
 export type AppRouter = typeof appRouter;
 

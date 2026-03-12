@@ -2559,3 +2559,7 @@
 - [x] Update index.html page title
 - [x] Update EchoCorrelation, TTENavigator, TEENavigator PDF footers
 - [x] Update Enrolled.tsx references
+
+## Real-time User Count on Dashboard (Mar 12, 2026)
+- [x] Add getTotalUserCount public procedure to server/routers.ts
+- [x] Update Home.tsx stats to use live count with daily staleTime

@@ -117,11 +117,10 @@ const sortedModules = [
   ...modules.filter(m => m.pinLast),
 ];
 
-const stats = [
+const STATIC_STATS = [
   { label: "Clinical Calculators", value: "20+", icon: Calculator },
   { label: "Echo Cases", value: "500+", icon: BookOpen },
   { label: "Protocols Covered", value: "15", icon: ClipboardList },
-  { label: "Active Members", value: "13,000+", icon: Users },
 ];
 
 export default function Home() {
@@ -131,6 +130,22 @@ export default function Home() {
     staleTime: 60_000,
   });
   const isPremium = premiumStatus?.isPremium ?? false;
+
+  // Live user count — cached for 24 hours so it refreshes daily
+  const { data: userCountData } = trpc.stats.userCount.useQuery(undefined, {
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours
+    refetchOnWindowFocus: false,
+  });
+  const totalMembers = userCountData?.total ?? null;
+
+  const stats = [
+    ...STATIC_STATS,
+    {
+      label: "Members",
+      value: totalMembers !== null ? totalMembers.toLocaleString() : "...",
+      icon: Users,
+    },
+  ];
   return (
     <Layout>
       {/* Hero Banner */}
