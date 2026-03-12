@@ -121,7 +121,7 @@ function Router() {
       <Route path="/tee" component={TEENavigator} />
       <Route path="/ice" component={ICENavigator} />
       <Route path="/device" component={DeviceNavigator} />
-      <Route path="/achd" component={ACHDNavigator} />
+      <Route path="/achd">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><ACHDNavigator /></RoleGuard>}</Route>
       <Route path="/stress" component={StressNavigator} />
       <Route path="/protocol" component={TTENavigatorRedirect} />
       <Route path="/hemodynamics" component={HemodynamicsLab} />
@@ -141,10 +141,10 @@ function Router() {
       <Route path="/pocus-rush">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><POCUSRushNavigator /></RoleGuard>}</Route>
       <Route path="/pocus-cardiac" component={POCUSCardiacNavigator} />
       <Route path="/pocus-lung">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><POCUSLungNavigator /></RoleGuard>}</Route>
-      <Route path="/pocus-efast-scan-coach" component={POCUSEfastScanCoach} />
-      <Route path="/pocus-rush-scan-coach" component={POCUSRushScanCoach} />
-      <Route path="/pocus-cardiac-scan-coach" component={POCUSCardiacScanCoach} />
-      <Route path="/pocus-lung-scan-coach" component={POCUSLungScanCoach} />
+      <Route path="/pocus-efast-scan-coach">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><POCUSEfastScanCoach /></RoleGuard>}</Route>
+      <Route path="/pocus-rush-scan-coach">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><POCUSRushScanCoach /></RoleGuard>}</Route>
+      <Route path="/pocus-cardiac-scan-coach">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><POCUSCardiacScanCoach /></RoleGuard>}</Route>
+      <Route path="/pocus-lung-scan-coach">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><POCUSLungScanCoach /></RoleGuard>}</Route>
       <Route path="/strain">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><StrainNavigator /></RoleGuard>}</Route>
       <Route path="/accreditation">
         {() => (
@@ -174,16 +174,16 @@ function Router() {
       {/* Legacy redirects — old Navigator and ScanCoach hub URLs now point to unified EchoAssist™ hub */}
       <Route path="/echo-navigators">{() => { window.location.replace("/echo-assist-hub"); return null; }}</Route>
       <Route path="/scan-coach-hub" component={ScanCoachHub} />
-      <Route path="/strain-scan-coach" component={StrainScanCoach} />
-      <Route path="/tee-scan-coach" component={TEEScanCoach} />
-      <Route path="/ice-scan-coach" component={ICEScanCoach} />
-      <Route path="/uea-navigator" component={UEANavigator} />
-      <Route path="/uea-scan-coach" component={UEAScanCoach} />
-      <Route path="/hocm-navigator" component={HOCMNavigator} />
-      <Route path="/hocm-scan-coach">{() => <HOCMScanCoach />}</Route>
-      <Route path="/stress-scan-coach" component={StressScanCoach} />
-      <Route path="/stress-echo-assist" component={StressEchoAssistPage} />
-      <Route path="/structural-heart-scan-coach" component={StructuralHeartScanCoach} />
+      <Route path="/strain-scan-coach">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><StrainScanCoach /></RoleGuard>}</Route>
+      <Route path="/tee-scan-coach">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><TEEScanCoach /></RoleGuard>}</Route>
+      <Route path="/ice-scan-coach">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><ICEScanCoach /></RoleGuard>}</Route>
+      <Route path="/uea-navigator">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><UEANavigator /></RoleGuard>}</Route>
+      <Route path="/uea-scan-coach">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><UEAScanCoach /></RoleGuard>}</Route>
+      <Route path="/hocm-navigator">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><HOCMNavigator /></RoleGuard>}</Route>
+      <Route path="/hocm-scan-coach">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><HOCMScanCoach /></RoleGuard>}</Route>
+      <Route path="/stress-scan-coach">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><StressScanCoach /></RoleGuard>}</Route>
+      <Route path="/stress-echo-assist">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><StressEchoAssistPage /></RoleGuard>}</Route>
+      <Route path="/structural-heart-scan-coach">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><StructuralHeartScanCoach /></RoleGuard>}</Route>
       <Route path="/pulm-htn" component={PulmHTNNavigator} />
       <Route path="/diastolic">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><DiastolicNavigator /></RoleGuard>}</Route>
       <Route path="/echo-assist-hub" component={EchoAssistHub} />

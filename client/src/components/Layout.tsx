@@ -136,7 +136,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const fullLocation = rawLocation; // includes query string, used for tab-specific active state
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, loading: authLoading, logout } = useAuth();
   const isAdmin = (user as any)?.role === "admin";
   // Use appRoles (the authoritative role array from auth.me) for access checks
   const appRoles: string[] = (user as any)?.appRoles ?? [];
@@ -281,7 +281,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <span className="text-xs text-gray-400 hidden sm:block">Echocardiography Clinical Companion</span>
             {isAuthenticated && <NotificationBell />}
             {/* Account / Login in header */}
-            {isAuthenticated && user ? (
+            {authLoading ? null : isAuthenticated ? (
               <div className="relative">
                 {/* Avatar trigger — click to toggle */}
                 <button
@@ -298,12 +298,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
                       style={{ background: "linear-gradient(135deg, #189aa1, #4ad9e0)" }}>
                       <span className="text-xs font-bold text-white">
-                        {(user.displayName || user.name || "?").charAt(0).toUpperCase()}
+                        {(user?.displayName || user?.name || "?").charAt(0).toUpperCase()}
                       </span>
                     </div>
                   )}
                   <span className="text-xs font-semibold text-gray-700 hidden sm:block max-w-[100px] truncate">
-                    {user.displayName || user.name || "Account"}
+                    {user?.displayName || user?.name || "Account"}
                   </span>
                   <ChevronDown className={`w-3 h-3 text-gray-400 transition-transform hidden sm:block ${accountOpen ? "rotate-180" : ""}`} />
                 </button>
@@ -342,13 +342,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                           <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
                             style={{ background: "linear-gradient(135deg, #189aa1, #4ad9e0)" }}>
                             <span className="text-base font-bold text-white">
-                              {(user.displayName || user.name || "?").charAt(0).toUpperCase()}
+                              {(user?.displayName || user?.name || "?").charAt(0).toUpperCase()}
                             </span>
                           </div>
                         )}
                         <div className="flex-1 min-w-0">
                           <div className="text-sm md:text-base font-semibold text-gray-800 truncate flex items-center gap-1.5">
-                            {user.displayName || user.name || "Account"}
+                            {user?.displayName || user?.name || "Account"}
                             {isPremiumUser && (
                               <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold"
                                 style={{ background: "#189aa115", color: "#189aa1", border: "1px solid #189aa140" }}>
@@ -357,7 +357,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                               </span>
                             )}
                           </div>
-                          <div className="text-xs md:text-sm text-gray-400 truncate">{user.email}</div>
+                          <div className="text-xs md:text-sm text-gray-400 truncate">{user?.email}</div>
                         </div>
                       </div>
 

@@ -16,15 +16,15 @@ const BRAND = "#189aa1";
 
 const freeCoaches = [
   { tab: "tte",       icon: Stethoscope, label: "Adult TTE",          views: 10 },
-  { tab: "uea",       icon: Droplets,    label: "UEA",                views: 7  },
-  { tab: "strain",    icon: Activity,    label: "Strain",             views: 4  },
   { tab: "chd",       icon: Users,       label: "Pediatric CHD",      views: 14 },
   { tab: "fetal",     icon: Baby,        label: "Fetal Echo",         views: 13 },
-  { tab: "achd",      icon: Heart,       label: "Adult Congenital",   views: 13 },
-  { tab: "diastolic", icon: Wind,        label: "Diastolic Function", views: 7  },
 ];
 
 const premiumCoaches = [
+  { tab: "uea",       icon: Droplets,    label: "UEA",                views: 7,  route: "/uea-scan-coach" },
+  { tab: "strain",    icon: Activity,    label: "Strain",             views: 4,  route: "/strain-scan-coach" },
+  { tab: "achd",      icon: Heart,       label: "Adult Congenital",   views: 13, route: null as string | null },
+  { tab: "diastolic", icon: Wind,        label: "Diastolic Function", views: 7,  route: null as string | null },
   { tab: "stress",    icon: Zap,         label: "Stress Echo",        views: 13, route: "/stress-scan-coach" },
   { tab: "pulm",      icon: Wind,        label: "Pulm HTN & PE",      views: 8,  route: null as string | null },
   { tab: "hocm",      icon: Heart,       label: "HOCM",               views: 14, route: null as string | null },

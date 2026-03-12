@@ -2509,3 +2509,7 @@
 - [x] Fix POCUS ScanCoach auth gates — all 4 POCUS ScanCoach pages now require registration
 - [x] Fix POCUS ScanCoach mobile layout — flex-col on mobile so dropdown appears above content
 - [x] Fix login cookie — added trust proxy to Express server so Secure flag is set correctly on deployed HTTPS site
+
+## Bug Fix — ScanCoach Auth Gates via Navigator Links (Mar 12 2026)
+- [ ] Gate all ScanCoach routes in App.tsx that should require sign-in (TEE, ICE, Strain, Stress, HOCM, UEA, Device/Structural Heart, POCUS, ACHD, PulmHTN)
+- [ ] Keep /scan-coach (main) free — TTE, Pediatric, and Fetal tabs are free; other tabs gated inside the component

@@ -23,13 +23,6 @@ const freeNavigators = [
     badge: "Adult Echo",
   },
   {
-    path: "/strain",
-    icon: BarChart3,
-    title: "Strain Navigator",
-    description: "Protocol checklist, scanning tips, basic pathology overview, and LV/RV/LA strain reference values.",
-    badge: "Adult Echo",
-  },
-  {
     path: "/pediatric",
     icon: Users,
     title: "Pediatric Navigator",
@@ -43,6 +36,9 @@ const freeNavigators = [
     description: "Fetal cardiac findings, CHD differentials, biometry Z-scores, situs, arch patterns, and scan coach.",
     badge: "Congenital Heart",
   },
+];
+
+const premiumNavigators = [
   {
     path: "/achd",
     icon: Heart,
@@ -51,15 +47,19 @@ const freeNavigators = [
     badge: "Congenital Heart",
   },
   {
+    path: "/strain",
+    icon: BarChart3,
+    title: "Strain Navigator",
+    description: "Protocol checklist, scanning tips, basic pathology overview, and LV/RV/LA strain reference values.",
+    badge: "Adult Echo",
+  },
+  {
     path: "/uea-navigator",
     icon: Droplets,
     title: "UEA Navigator",
     description: "Contrast echo protocol: safety screening, agent preparation, view-by-view LVO and myocardial perfusion assessment, and reporting guidance.",
     badge: "Contrast Echo",
   },
-];
-
-const premiumNavigators = [
   {
     path: "/stress",
     icon: Zap,

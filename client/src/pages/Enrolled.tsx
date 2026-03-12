@@ -22,8 +22,8 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 
 const COMMUNITY_FEATURES = [
+  { icon: BookOpen,      text: "Access all your enrolled All About Ultrasound courses" },
   { icon: MessageCircle, text: "Connect with sonographers & cardiologists worldwide" },
-  { icon: BookOpen,      text: "Access exclusive All About Ultrasound member content" },
   { icon: Users,         text: "Join live Q&A sessions and community discussions" },
 ];
 
@@ -81,7 +81,7 @@ export default function Enrolled() {
 
         {/* ── Path 1: All About Ultrasound Community ── */}
         <a
-          href="https://member.allaboutultrasound.com/hub/community/2601"
+          href="https://member.allaboutultrasound.com/enrollments"
           target="_blank"
           rel="noopener noreferrer"
           className="group flex flex-col flex-1 rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl"
@@ -103,17 +103,17 @@ export default function Enrolled() {
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: "#4ad9e0" }}>
-                Community
+                All About Ultrasound
               </p>
               <h2
                 className="text-xl font-bold text-white leading-snug"
                 style={{ fontFamily: "Merriweather, serif" }}
               >
-                All About Ultrasound Community
+                All About Ultrasound Dashboard
               </h2>
             </div>
             <p className="text-white/60 text-sm leading-relaxed">
-              Join the All About Ultrasound member community — connect, learn, and grow alongside fellow ultrasound professionals.
+              Access your All About Ultrasound member dashboard — view your enrolled courses, continue learning, and connect with the community.
             </p>
           </div>
 
@@ -139,7 +139,7 @@ export default function Enrolled() {
               style={{ background: "rgba(74,217,224,0.15)", color: "#4ad9e0", border: "1px solid rgba(74,217,224,0.3)" }}
             >
               <ExternalLink className="w-4 h-4" />
-              Go to Community
+              Go to Dashboard
               <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
             </div>
           </div>
