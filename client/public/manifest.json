@@ -21,5 +21,11 @@
     }
   ],
   "categories": ["medical", "health", "education"],
-  "lang": "en-AU"
+  "lang": "en-AU",
+  "related_applications": [
+    {
+      "platform": "play",
+      "id": "com.iheartecho.app"
+    }
+  ]
 }
