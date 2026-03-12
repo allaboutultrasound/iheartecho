@@ -69,10 +69,10 @@ export default function Enrolled() {
           className="text-3xl md:text-4xl font-bold text-white mb-3 max-w-xl leading-tight"
           style={{ fontFamily: "Merriweather, serif" }}
         >
-          Welcome to All About Ultrasound!
+          Welcome to <br />All About Ultrasound!
         </h1>
         <p className="text-white/60 text-base max-w-md leading-relaxed">
-          Your free membership is active. Choose where you'd like to go next.
+          Your free membership is active. <br />Choose where you'd like to go next.
         </p>
       </div>
 
