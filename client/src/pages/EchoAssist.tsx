@@ -2456,7 +2456,7 @@ function StressEchoAssistEngine() {
 
   return (
     <EngineSection id="engine-stress" title="StressEchoAssist™" subtitle="17-Segment WMSI · Target HR · Protocol Dosing · Interpretation · Save as Case" premium>
-      <div>
+      <PremiumOverlay featureName="StressEchoAssist™"><div>
             <div className="flex flex-wrap gap-2 mb-5">
               {(["wmsi", "target_hr", "interpretation"] as const).map(t => (
                 <button key={t} onClick={() => setInnerTab(t)}
@@ -2699,12 +2699,11 @@ function StressEchoAssistEngine() {
                 ))}
               </div>
             )}
-      </div>
+      </div></PremiumOverlay>
     </EngineSection>
   );
 }
-
-// ─── STROKE VOLUME / CO ENGINE ────────────────────────────────────────────────────
+// ─── STROKE VOLUME / CO ENGINEE ────────────────────────────────────────────────────
 function StrokeVolumeEngine() {
   const [lvotD, setLvotD] = useState("");
   const [lvotVti, setLvotVti] = useState("");
@@ -3151,9 +3150,7 @@ export default function EchoAssist() {
           {/* 2. DiastologyAssist™ — single collapsible parent containing all 3 diastology calculators */}
           <DiastologyAssistEngine />
           {/* 3. StressEchoAssist™ (Premium) */}
-          <PremiumOverlay featureName="StressEchoAssist™">
-            <StressEchoAssistEngine />
-          </PremiumOverlay>
+          <StressEchoAssistEngine />
           {/* 4. Myocardial StrainAssist™ */}
           <StrainEngine />
           {/* 5. Aortic Stenosis */}

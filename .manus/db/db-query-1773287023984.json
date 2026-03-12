@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE users SET isPending = 0, emailVerified = 1 WHERE email = 'testuser@iheartecho.com';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mhhtxpXA9Esras.root --database etVPnUidWNWG8W4GHnRqzv --execute UPDATE users SET isPending = 0, emailVerified = 1 WHERE email = 'testuser@iheartecho.com';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 424
+}

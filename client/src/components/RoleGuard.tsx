@@ -82,9 +82,12 @@ export function RoleGuard({ roles, allowAdmin = true, children }: RoleGuardProps
 
   // Not authenticated — show blurred overlay with login CTA over actual content
   if (!isAuthenticated || !user) {
-    const isDiyGate = roles.some(r => ["diy_admin", "diy_user"].includes(r));
+    // If premium_user is in roles, always show login overlay (not DIY)
+    // so unauthenticated users are prompted to sign in, not to join DIY
+    const hasPremiumRole = roles.includes("premium_user");
+    const isDiyOnlyGate = !hasPremiumRole && roles.some(r => ["diy_admin", "diy_user"].includes(r));
     return (
-      <BlurredOverlay type={isDiyGate ? "diy" : "login"}>
+      <BlurredOverlay type={isDiyOnlyGate ? "diy" : "login"}>
         {children}
       </BlurredOverlay>
     );
@@ -100,7 +103,8 @@ export function RoleGuard({ roles, allowAdmin = true, children }: RoleGuardProps
     return <>{children}</>;
   }
   // If the required role is premium_user, show BlurredOverlay premium gate over actual content
-  const isPremiumGate = roles.includes("premium_user") && !roles.some(r => ["diy_admin", "diy_user", "platform_admin"].includes(r));
+  // This applies even when diy roles are also listed — premium_user takes precedence for the overlay type
+  const isPremiumGate = roles.includes("premium_user");
   if (isPremiumGate) {
     return (
       <BlurredOverlay type="premium">

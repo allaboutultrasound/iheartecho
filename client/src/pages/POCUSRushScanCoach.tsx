@@ -5,10 +5,10 @@
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
 import { useState, useMemo } from "react";
-import { PremiumOverlay } from "@/components/PremiumOverlay";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
-import { PremiumGate } from "@/components/PremiumGate";
+import { BlurredOverlay } from "@/components/BlurredOverlay";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 import {
   Zap, ChevronDown, ChevronUp, Info, AlertTriangle,
@@ -448,6 +448,7 @@ function ViewDetail({ view }: { view: typeof RUSH_VIEWS[0] }) {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function POCUSRushScanCoach() {
+  const { loading, isAuthenticated } = useAuth();
   const [selectedViewId, setSelectedViewId] = useState<string>(RUSH_VIEWS[0].id);
   const _selectedViewRaw = RUSH_VIEWS.find((v) => v.id === selectedViewId) ?? RUSH_VIEWS[0];
   const { mergeView } = useScanCoachOverrides("pocus_rush");
@@ -461,7 +462,6 @@ export default function POCUSRushScanCoach() {
 
   return (
     <Layout>
-      <PremiumOverlay featureName="POCUS Rush ScanCoach™">
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 bg-white">
         <Link href="/pocus-assist-hub">
           <span className="inline-flex items-center gap-1.5 text-xs font-semibold cursor-pointer hover:opacity-75 transition-opacity" style={{ color: BRAND }}>
@@ -474,8 +474,6 @@ export default function POCUSRushScanCoach() {
           </span>
         </Link>
       </div>
-
-      <PremiumGate featureName="RUSH ScanCoach">
         <div className="relative overflow-hidden" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}>
           <div className="container py-6 md:py-8">
             <div className="flex items-center gap-3">
@@ -490,8 +488,9 @@ export default function POCUSRushScanCoach() {
           </div>
         </div>
 
-        <div className="container py-6">
-          <div className="flex gap-5">
+        <BlurredOverlay type="login" featureName="RUSH Protocol ScanCoach™" disabled={loading || isAuthenticated}>
+      <div className="container py-6">
+          <div className="flex flex-col md:flex-row gap-5">
             <div className="w-56 flex-shrink-0 hidden md:block">
               <div className="sticky top-4">
                 {groups.map((group) => (
@@ -529,8 +528,7 @@ export default function POCUSRushScanCoach() {
             </div>
           </div>
         </div>
-      </PremiumGate>
-      </PremiumOverlay>
+      </BlurredOverlay>
     </Layout>
   );
 }

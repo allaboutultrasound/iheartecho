@@ -2500,3 +2500,12 @@
 - [x] Fix Case Library — add auth/upgrade overlay for unauthenticated/unregistered users
 - [x] Fix Flashcards — persist session via IP tracking so score does not reset on page reload
 - [x] Fix Sign-in button — ensure it triggers the auth flow correctly
+
+## Bug Fixes — Round 2 (Mar 12 2026)
+- [x] Fix StressEchoAssist overlay — PremiumOverlay moved inside EngineSection so teal header button is always clickable
+- [x] Fix Adult TTE ScanCoach tab — added BlurredOverlay auth gate (unauthenticated users see login prompt)
+- [x] Fix Fetal Echo ScanCoach tab — added BlurredOverlay auth gate (unauthenticated users see login prompt)
+- [x] Fix Diastology/Strain Navigator DIY redirect — broken /diy-plans link fixed to /diy-accreditation-plans
+- [x] Fix POCUS ScanCoach auth gates — all 4 POCUS ScanCoach pages now require registration
+- [x] Fix POCUS ScanCoach mobile layout — flex-col on mobile so dropdown appears above content
+- [x] Fix login cookie — added trust proxy to Express server so Secure flag is set correctly on deployed HTTPS site

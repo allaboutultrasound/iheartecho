@@ -1,0 +1,9 @@
+{
+  "query": "SELECT id, email, emailVerified, passwordHash IS NOT NULL as hasPassword FROM users WHERE email = 'test@iheartecho.com' LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mhhtxpXA9Esras.root --database etVPnUidWNWG8W4GHnRqzv --execute SELECT id, email, emailVerified, passwordHash IS NOT NULL as hasPassword FROM users WHERE email = 'test@iheartecho.com' LIMIT 1;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 355
+}

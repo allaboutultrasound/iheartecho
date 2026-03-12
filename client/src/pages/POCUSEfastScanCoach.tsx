@@ -7,6 +7,8 @@
 import { useState, useMemo } from "react";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
+import { BlurredOverlay } from "@/components/BlurredOverlay";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 import {
   Shield, ChevronDown, ChevronUp, Info, AlertTriangle,
@@ -458,6 +460,7 @@ function ViewDetail({ view }: { view: typeof EFAST_VIEWS[0] }) {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function POCUSEfastScanCoach() {
+  const { loading, isAuthenticated } = useAuth();
   const [selectedViewId, setSelectedViewId] = useState<string>(EFAST_VIEWS[0].id);
   const _selectedViewRaw = EFAST_VIEWS.find((v) => v.id === selectedViewId) ?? EFAST_VIEWS[0];
   const { mergeView } = useScanCoachOverrides("pocus_efast");
@@ -494,9 +497,10 @@ export default function POCUSEfastScanCoach() {
         </div>
       </div>
 
+      <BlurredOverlay type="login" featureName="eFAST ScanCoach™" disabled={loading || isAuthenticated}>
       {/* Main Layout */}
       <div className="container py-6">
-        <div className="flex gap-5">
+        <div className="flex flex-col md:flex-row gap-5">
           {/* View Selector Sidebar */}
           <div className="w-56 flex-shrink-0 hidden md:block">
             <div className="sticky top-4">
@@ -533,6 +537,7 @@ export default function POCUSEfastScanCoach() {
           </div>
         </div>
       </div>
+      </BlurredOverlay>
     </Layout>
   );
 }

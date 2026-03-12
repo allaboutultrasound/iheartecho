@@ -70,7 +70,7 @@ const CONFIGS: Record<
     description:
       "This tool is available to DIY Accreditation members. Join to access the Lab Admin portal, accreditation navigator, quality review tools, and seat management.",
     primaryLabel: "View DIY Plans",
-    primaryHref: "/diy-plans",
+    primaryHref: "/diy-accreditation-plans",
     secondaryLabel: "Back to Dashboard",
     secondaryHref: "/",
     gradient: "linear-gradient(135deg, #0e4a50, #189aa1)",

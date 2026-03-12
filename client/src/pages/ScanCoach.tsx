@@ -1345,7 +1345,7 @@ export default function ScanCoach() {
 
         {/* ─── ADULT TTE TAB ─── */}
         {activeTab === "tte" && (
-          <div>
+          <BlurredOverlay type="login" featureName="Adult TTE ScanCoach" disabled={loading || isAuthenticated}><div>
 
            <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 items-start">
             {/* Detail panel — order-first on mobile so it appears at top */}
@@ -1975,12 +1975,12 @@ export default function ScanCoach() {
             </div>
             </div>}{/* end arExpanded */}
           </div>{/* end AR section */}
-          </div>
+          </div></BlurredOverlay>
         )}
 
         {/* ─── FETAL ECHO TAB ─── */}
         {activeTab === "fetal" && (
-          <div>
+          <BlurredOverlay type="login" featureName="Fetal Echo ScanCoach" disabled={loading || isAuthenticated}><div>
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 items-start">
             {/* Fetal detail panel — order-first on mobile so it appears at top */}
@@ -2157,7 +2157,7 @@ export default function ScanCoach() {
               </div>
             </div>
           </div>
-          </div>
+          </div></BlurredOverlay>
         )}
         {/* ─── PEDIATRIC CHD TAB ─── */}
         {activeTab === "chd" && (

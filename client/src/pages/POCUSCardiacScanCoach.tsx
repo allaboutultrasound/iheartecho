@@ -7,6 +7,8 @@
 import { useState, useMemo } from "react";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
+import { BlurredOverlay } from "@/components/BlurredOverlay";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 import {
   Heart, ChevronDown, ChevronUp, Info, AlertTriangle,
@@ -443,6 +445,7 @@ function ViewDetail({ view }: { view: typeof CARDIAC_VIEWS[0] }) {
 }
 
 export default function POCUSCardiacScanCoach() {
+  const { loading, isAuthenticated } = useAuth();
   const [selectedViewId, setSelectedViewId] = useState<string>(CARDIAC_VIEWS[0].id);
   const _selectedViewRaw = CARDIAC_VIEWS.find((v) => v.id === selectedViewId) ?? CARDIAC_VIEWS[0];
   const { mergeView } = useScanCoachOverrides("pocus_cardiac");
@@ -477,8 +480,9 @@ export default function POCUSCardiacScanCoach() {
         </div>
       </div>
 
+      <BlurredOverlay type="login" featureName="Cardiac POCUS ScanCoach™" disabled={loading || isAuthenticated}>
       <div className="container py-6">
-        <div className="flex gap-5">
+        <div className="flex flex-col md:flex-row gap-5">
           <div className="w-56 flex-shrink-0 hidden md:block">
             <div className="sticky top-4">
               <p className="text-xs font-bold text-gray-500 uppercase tracking-wider px-1 mb-3">Select View</p>
@@ -512,6 +516,7 @@ export default function POCUSCardiacScanCoach() {
           </div>
         </div>
       </div>
+      </BlurredOverlay>
     </Layout>
   );
 }
