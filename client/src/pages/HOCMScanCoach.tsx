@@ -183,7 +183,7 @@ const views = [
       { label: "SAM identification", text: "Look for anterior motion of MV leaflet toward IVS in systole. Use M-mode through MV for timing and duration of SAM-septal contact." },
       { label: "Wall thickness", text: "Measure IVS at end-diastole, perpendicular to septum, at the level of MV chordae. Measure at multiple levels if asymmetric hypertrophy." },
       { label: "LVOT diameter", text: "Measure LVOT diameter 1 cm below AV at end-systole, inner edge to inner edge. Required for stroke volume calculation." },
-      { label: "Midsystolic AV closure", text: "M-mode through aortic valve: midsystolic notch or partial closure of AV leaflets confirms dynamic LVOT obstruction." },
+      { label: "AV M-mode: Systolic Notching", text: "Place the M-mode cursor through the aortic valve leaflets in PLAX. Normal pattern: leaflets open fully in early systole and remain open (smooth box shape) until end-systole. In HOCM with dynamic LVOT obstruction, the AV leaflets open normally in early systole, then show a mid-systolic notch (partial or complete closure) as the LVOT gradient peaks and the Venturi effect — combined with SAM-septal contact — reduces outflow. The leaflets partially close mid-systole, creating a characteristic notch or 'W' shape on M-mode, then may reopen slightly before final closure at end-systole. Degree of notching correlates with gradient severity: mild notch = moderate obstruction; complete mid-systolic closure = severe obstruction (gradient often >50 mmHg). Provocation (Valsalva, amyl nitrite) worsens the notching. Distinguish from AS: AS shows globally reduced leaflet separation throughout systole (no notch, no normal early opening); HOCM shows full early opening followed by mid-systolic notch." },
     ],
     pitfalls: [
       "Foreshortening of LVOT — ensure beam is truly parallel to septum",
@@ -224,6 +224,14 @@ const views = [
         abnormal: "< 1.7 cm (narrowed LVOT — increases obstruction risk)",
         provocationTrigger: false,
         note: "Measure 1 cm below AV at end-systole, inner edge to inner edge. Required for VTI-based stroke volume.",
+      },
+      {
+        parameter: "AV M-mode: Systolic Notching",
+        normal: "Smooth box-shaped opening — leaflets fully open throughout systole",
+        borderline: "Mild mid-systolic notch — partial leaflet closure, leaflets remain partially open",
+        abnormal: "Prominent notch or complete mid-systolic closure ('W' pattern on M-mode)",
+        provocationTrigger: true,
+        note: "Place M-mode cursor through the aortic valve leaflets in PLAX. Normal: leaflets open fully in early systole and remain open (box shape) until end-systole. HOCM: as the LVOT gradient peaks in mid-systole, the Venturi effect and SAM-septal contact cause partial or complete AV leaflet re-closure — producing a notch or 'W' shape on M-mode. Severity of notching correlates with gradient: mild notch = moderate obstruction; complete mid-systolic closure = severe obstruction (gradient often >50 mmHg). Provocation (Valsalva, amyl nitrite) worsens the notching. Key distinction from AS: AS shows globally reduced leaflet separation throughout systole (no notch, no normal early opening); HOCM shows full early opening followed by mid-systolic notch.",
       },
     ],
   },

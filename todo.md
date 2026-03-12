@@ -2599,3 +2599,6 @@
 - [x] 120 Case Mix submissions per lab (all modalities)
 - [x] Accreditation Readiness seeded (75-85% complete)
 - [x] Duplicate userRoles cleaned up (2385 duplicates removed)
+
+## ScanCoach HOCM Update
+- [x] Add aortic valve M-mode systolic notching (mid-systolic closure) to HOCM ScanCoach content
