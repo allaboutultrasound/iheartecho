@@ -142,9 +142,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const appRoles: string[] = (user as any)?.appRoles ?? [];
   const hasDiyAccess = appRoles.includes("diy_user") || appRoles.includes("diy_admin") || appRoles.includes("platform_admin") || isAdmin;
   const hasDiyAdmin = appRoles.includes("diy_admin");
+  const isDemoMode = !!(user as any)?.demoMode;
 
   return (
-    <div className="flex min-h-screen bg-[#f0fbfc]">
+    <div className={`flex min-h-screen bg-[#f0fbfc]${isDemoMode ? ' pt-10' : ''}`}>
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div

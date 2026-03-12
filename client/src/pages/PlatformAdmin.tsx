@@ -59,7 +59,7 @@ import {
   Webhook,
   FlaskConical,
 } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import BulkCsvUploadPanel, { type BulkResult } from "@/components/BulkCsvUploadPanel";
 
 type AppRole = "user" | "premium_user" | "diy_admin" | "diy_user" | "platform_admin";
@@ -599,6 +599,92 @@ function DIYOrgsPanel() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </Card>
+  );
+}
+
+// ─── Demo Mode Panel ─────────────────────────────────────────────────────────
+
+function DemoModePanel() {
+  const { data: demoUsers, isLoading, refetch } = trpc.demo.listDemoUsers.useQuery();
+  const [, navigate] = useLocation();
+  const startDemo = trpc.demo.start.useMutation({
+    onSuccess: async (data) => {
+      toast.success(`Entering demo mode as ${data.targetUser.displayName ?? 'demo user'}…`);
+      // Small delay to let the cookie settle before navigating
+      setTimeout(() => navigate('/accreditation'), 300);
+    },
+    onError: (err) => toast.error(`Failed to start demo: ${err.message}`),
+  });
+
+  // Group by lab
+  const byLab = (demoUsers ?? []).reduce<Record<string, typeof demoUsers>>((acc, u) => {
+    const key = u.labName ?? 'Unassigned';
+    if (!acc[key]) acc[key] = [];
+    acc[key]!.push(u);
+    return acc;
+  }, {});
+
+  return (
+    <Card className="mb-6 border-0 shadow-sm">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base font-semibold text-gray-800 flex items-center gap-2">
+            <FlaskConical className="w-4 h-4 text-purple-600" />
+            Demo Mode
+          </CardTitle>
+          <Button variant="outline" size="sm" onClick={() => refetch()} className="flex items-center gap-1 text-xs">
+            <RefreshCw className="w-3 h-3" /> Refresh
+          </Button>
+        </div>
+        <p className="text-xs text-gray-500 mt-1">
+          Enter the DIY Accreditation experience as a demo user. A purple banner will appear — click <strong>Exit Demo</strong> to return to your admin account.
+        </p>
+      </CardHeader>
+      <CardContent className="pt-0">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <RefreshCw className="w-5 h-5 animate-spin text-purple-500" />
+          </div>
+        ) : !demoUsers || demoUsers.length === 0 ? (
+          <div className="text-center py-8 text-gray-400 text-sm">
+            No demo users found. Run the seed script to create demo accounts.
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {Object.entries(byLab).map(([labName, members]) => (
+              <div key={labName}>
+                <div className="flex items-center gap-2 mb-2">
+                  <Building2 className="w-3.5 h-3.5 text-gray-400" />
+                  <span className="text-xs font-semibold text-gray-600">{labName}</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {(members ?? []).map((u) => (
+                    <button
+                      key={u.id}
+                      onClick={() => startDemo.mutate({ targetUserId: u.id })}
+                      disabled={startDemo.isPending}
+                      className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 bg-white hover:border-purple-200 hover:bg-purple-50/50 transition-all text-left group disabled:opacity-60"
+                    >
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold text-white" style={{ background: 'linear-gradient(135deg, #7c3aed, #6d28d9)' }}>
+                        {(u.displayName ?? '?').charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs font-semibold text-gray-800 truncate">{u.displayName}</div>
+                        {u.credentials && <div className="text-[10px] text-gray-400 truncate">{u.credentials}</div>}
+                        <div className="text-[10px] text-purple-500 font-medium mt-0.5 capitalize">
+                          {u.memberRole === 'admin' ? 'Lab Admin' : u.memberRole ?? 'Member'}
+                        </div>
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-purple-400 flex-shrink-0" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
     </Card>
   );
 }
@@ -1168,6 +1254,9 @@ export default function PlatformAdmin() {
 
         {/* DIY Organizations */}
         <DIYOrgsPanel />
+
+        {/* Demo Mode */}
+        <DemoModePanel />
 
       </div>
 

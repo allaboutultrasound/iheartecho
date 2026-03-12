@@ -1,6 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { COOKIE_NAME } from "@shared/const";
+import { COOKIE_NAME, DEMO_COOKIE_NAME, TWO_HOURS_MS } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
@@ -142,11 +142,18 @@ export const appRouter = router({
       const PREMIUM_ROLES = new Set(["premium_user", "diy_user", "diy_admin", "platform_admin"]);
       const isPremiumByRole = roles.some(r => PREMIUM_ROLES.has(r));
       const isPremium = (fullUser?.isPremium ?? false) || isPremiumByRole;
+      // Include demo mode metadata if active
+      let demoModeInfo: { demoMode: true; realAdminId: number; realAdminName: string | null } | { demoMode: false } = { demoMode: false };
+      if (opts.ctx.demoMode && opts.ctx.realAdminId) {
+        const realAdmin = await getUserById(opts.ctx.realAdminId);
+        demoModeInfo = { demoMode: true, realAdminId: opts.ctx.realAdminId, realAdminName: realAdmin?.displayName ?? realAdmin?.name ?? null };
+      }
       return {
         ...opts.ctx.user,
         pendingEmail: fullUser?.pendingEmail ?? null,
         appRoles: roles,
         isPremium,
+        ...demoModeInfo,
       };
     }),
     logout: publicProcedure.mutation(({ ctx }) => {
@@ -2200,6 +2207,89 @@ export const appRouter = router({
     userCount: publicProcedure.query(async () => {
       const total = await countUsers();
       return { total };
+    }),
+  }),
+
+  // ─── Demo Mode ──────────────────────────────────────────────────────────────
+  demo: router({
+    /** List all demo users (isDemo=true) with their lab info — platform admin only */
+    listDemoUsers: protectedProcedure.query(async ({ ctx }) => {
+      if (ctx.user.role !== 'admin') {
+        const roles = await getUserRoles(ctx.user.id);
+        if (!roles.includes('platform_admin')) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Platform admin only' });
+        }
+      }
+      const { getDb } = await import('./db');
+      const db = await getDb();
+      if (!db) return [];
+      const { users, labMembers, labSubscriptions } = await import('../drizzle/schema');
+      const { eq, and } = await import('drizzle-orm');
+      const demoUsers = await db.select().from(users).where(eq(users.isDemo, true));
+      // Enrich with lab info
+      const enriched = await Promise.all(demoUsers.map(async (u) => {
+        const memberRows = await db.select().from(labMembers).where(eq(labMembers.userId, u.id));
+        const labId = memberRows[0]?.labId ?? null;
+        let labName: string | null = null;
+        let memberRole: string | null = memberRows[0]?.role ?? null;
+        if (labId) {
+          const labRows = await db.select().from(labSubscriptions).where(eq(labSubscriptions.id, labId));
+          labName = labRows[0]?.labName ?? null;
+        } else {
+          // Check if this user is a lab admin
+          const adminLabRows = await db.select().from(labSubscriptions).where(eq(labSubscriptions.adminUserId, u.id));
+          if (adminLabRows.length > 0) {
+            labName = adminLabRows[0]?.labName ?? null;
+            memberRole = 'admin';
+          }
+        }
+        return {
+          id: u.id,
+          displayName: u.displayName ?? u.name ?? u.email ?? 'Unknown',
+          email: u.email,
+          credentials: u.credentials,
+          labName,
+          memberRole,
+        };
+      }));
+      return enriched.sort((a, b) => (a.labName ?? '').localeCompare(b.labName ?? '') || (a.displayName).localeCompare(b.displayName));
+    }),
+
+    /** Start a demo session as a specific demo user — platform admin only */
+    start: protectedProcedure
+      .input(z.object({ targetUserId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        // Only platform admins or owners can start demo mode
+        if (ctx.user.role !== 'admin') {
+          const roles = await getUserRoles(ctx.user.id);
+          if (!roles.includes('platform_admin')) {
+            throw new TRPCError({ code: 'FORBIDDEN', message: 'Platform admin only' });
+          }
+        }
+        // Verify target is a demo user
+        const targetUser = await getUserById(input.targetUserId);
+        if (!targetUser?.isDemo) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Target user is not a demo account' });
+        }
+        // Issue a short-lived demo JWT
+        const { SignJWT } = await import('jose');
+        const { ENV } = await import('./_core/env');
+        const secretKey = new TextEncoder().encode(ENV.cookieSecret);
+        const expiresAt = Math.floor((Date.now() + TWO_HOURS_MS) / 1000);
+        const demoToken = await new SignJWT({ targetUserId: input.targetUserId, adminId: ctx.user.id })
+          .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
+          .setExpirationTime(expiresAt)
+          .sign(secretKey);
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(DEMO_COOKIE_NAME, demoToken, { ...cookieOptions, maxAge: TWO_HOURS_MS });
+        return { success: true, targetUser: { id: targetUser.id, displayName: targetUser.displayName ?? targetUser.name } };
+      }),
+
+    /** Stop demo mode and return to the real admin session */
+    stop: publicProcedure.mutation(({ ctx }) => {
+      const cookieOptions = getSessionCookieOptions(ctx.req);
+      ctx.res.clearCookie(DEMO_COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
+      return { success: true };
     }),
   }),
 });

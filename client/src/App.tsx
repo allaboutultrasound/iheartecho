@@ -9,6 +9,7 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch, useLocation } from "wouter";
 import { useEffect } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
+import DemoModeBanner from "./components/DemoModeBanner";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 // EchoCalculator merged into EchoAssist — redirect handled below
@@ -224,6 +225,7 @@ function App() {
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
+          <DemoModeBanner />
           <Router />
         </TooltipProvider>
       </ThemeProvider>

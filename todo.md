@@ -2608,3 +2608,11 @@
 - [x] Mark DIY demo lab admins + staff (labs 30001 & 30002) with isDemo=true in DB
 - [x] Show "Demo" badge on demo users in Platform Admin user list
 - [x] Update seed script to set isDemo=true on insert
+
+## Demo Mode (DIY Accreditation Impersonation)
+- [x] Add getDemoUsers procedure to return all isDemo users with their lab info
+- [x] Add startDemoMode / stopDemoMode procedures (issue short-lived impersonation JWT stored in cookie)
+- [x] Build Demo Mode picker in Platform Admin (select user → enter demo)
+- [x] Persistent demo banner (purple) shown on all pages while in demo mode with Exit button
+- [x] Auth context reads demo session cookie and returns impersonated user
+- [x] Verify DIY Accreditation pages render correctly under demo session
