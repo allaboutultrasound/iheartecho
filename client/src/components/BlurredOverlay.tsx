@@ -20,6 +20,8 @@ interface BlurredOverlayProps {
   type: OverlayType;
   featureName?: string;
   children: React.ReactNode;
+  /** When true, renders children directly without any overlay (passthrough mode) */
+  disabled?: boolean;
 }
 
 const CONFIGS: Record<
@@ -76,8 +78,13 @@ const CONFIGS: Record<
   },
 };
 
-export function BlurredOverlay({ type, featureName, children }: BlurredOverlayProps) {
-  const cfg = CONFIGS[type];
+export function BlurredOverlay({ type, featureName, children, disabled }: BlurredOverlayProps) {
+  if (disabled) return <>{children}</>;
+  // Build config lazily so getLoginUrl() is called at render time (not module init),
+  // ensuring window.location.origin is available and up-to-date.
+  const cfg = type === "login"
+    ? { ...CONFIGS.login, primaryHref: getLoginUrl() }
+    : CONFIGS[type];
 
   return (
     <div className="relative">

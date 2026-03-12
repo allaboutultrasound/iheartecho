@@ -2315,7 +2315,7 @@
 ## Pending Fixes (Mar 11 2026 — after sandbox reset)
 - [ ] Create BlurredOverlay component with mobile-first positioning for login/premium/DIY gates
 - [ ] Integrate BlurredOverlay into RoleGuard (replace redirect-to-login with blurred overlay)
-- [ ] Fix Case Library: show cards to all, gate View Case for unregistered users with registration modal
+- [x] Fix Case Library: show cards to all, gate View Case for unregistered users with registration modal
 - [ ] Fix CaseDetail: show blurred overlay with login prompt for unauthenticated users
 - [ ] Fix flashcard daily limit: server-side IP tracking for unauthenticated users, fix session reset on refresh
 - [ ] ScanCoach navigation restructure: remove direct ScanCoach-to-ScanCoach nav buttons, add Back to EchoAssist Hub
@@ -2492,3 +2492,11 @@
 - [ ] Build signed AAB for Google Play upload
 - [ ] Add assetlinks.json to web app for Digital Asset Links verification
 - [ ] Prepare Play Store listing package (description, screenshots, privacy policy URL)
+
+## Bug Fixes — Persistent Issues (Mar 12 2026)
+- [x] Fix Stress Echo upgrade overlay — should only block the engine, not the menu link
+- [x] Fix ScanCoach auth gate — remove free sub-menus, add EchoAssist/Navigator back-links on hero banner
+- [x] Fix Accreditation Navigator and DIY tool — show content with upgrade overlay instead of redirecting to login/upgrade
+- [x] Fix Case Library — add auth/upgrade overlay for unauthenticated/unregistered users
+- [x] Fix Flashcards — persist session via IP tracking so score does not reset on page reload
+- [x] Fix Sign-in button — ensure it triggers the auth flow correctly

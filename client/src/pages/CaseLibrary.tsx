@@ -12,6 +12,7 @@ import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import Layout from "@/components/Layout";
+import { BlurredOverlay } from "@/components/BlurredOverlay";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -80,7 +81,7 @@ const DIFFICULTIES = ["All", "beginner", "intermediate", "advanced"];
 type TabType = "browse" | "mySubmissions";
 
 export default function CaseLibrary() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [, navigate] = useLocation();
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>("browse");
@@ -204,7 +205,7 @@ export default function CaseLibrary() {
 
         {/* ── Browse Tab ─────────────────────────────────────────────────────── */}
         {activeTab === "browse" && (
-          <>
+          <BlurredOverlay type="login" featureName="Echo Case Library" disabled={authLoading || isAuthenticated}>
             {/* Filters */}
             <div className="flex flex-col sm:flex-row gap-3 mb-6">
               <div className="relative flex-1">
@@ -373,10 +374,9 @@ export default function CaseLibrary() {
                   Next
                 </Button>
               </div>
-            )}
-          </>
+             )}
+          </BlurredOverlay>
         )}
-
         {/* ── My Submissions Tab ─────────────────────────────────────────────── */}
         {activeTab === "mySubmissions" && (
           <div>

@@ -8,6 +8,7 @@ import {
   timestamp,
   varchar,
   bigint,
+  uniqueIndex,
 } from "drizzle-orm/mysql-core";
 
 // ─── Core Auth ────────────────────────────────────────────────────────────────
@@ -1804,3 +1805,20 @@ export const accreditationFormSubmissions = mysqlTable("accreditationFormSubmiss
 });
 export type AccreditationFormSubmission = typeof accreditationFormSubmissions.$inferSelect;
 export type InsertAccreditationFormSubmission = typeof accreditationFormSubmissions.$inferInsert;
+
+// ── Flashcard guest (unauthenticated) daily usage tracking ───────────────────
+// Replaces in-memory Map so counts survive server restarts.
+export const flashcardGuestDailyUsage = mysqlTable(
+  "flashcardGuestDailyUsage",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    ipHash: varchar("ipHash", { length: 64 }).notNull(),
+    dateStr: varchar("dateStr", { length: 10 }).notNull(),
+    viewCount: int("viewCount").default(0).notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+  },
+  (t) => ({
+    uniqIpDate: uniqueIndex("uniqIpDate").on(t.ipHash, t.dateStr),
+  })
+);
+export type FlashcardGuestDailyUsage = typeof flashcardGuestDailyUsage.$inferSelect;

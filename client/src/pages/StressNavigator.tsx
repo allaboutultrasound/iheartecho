@@ -451,8 +451,8 @@ export default function StressNavigator() {
         </div>
       </div>
 
-      <PremiumOverlay featureName="Stress Echo Navigator">
       <div className="container py-6">
+      <PremiumOverlay featureName="Stress Echo Navigator">
         {/* Tabs */}
         <div className="flex flex-wrap gap-2 mb-5">
           {tabs.map(t => (
@@ -642,8 +642,8 @@ export default function StressNavigator() {
             </div>
           </div>
         )}
-      </div>
       </PremiumOverlay>
+      </div>
     </Layout>
   );
 }

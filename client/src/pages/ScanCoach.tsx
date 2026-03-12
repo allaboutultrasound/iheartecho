@@ -17,6 +17,8 @@ import { DiastolicScanCoachContent } from "@/pages/DiastolicNavigator";
 import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 import { TEEIceScanCoachContent } from "@/pages/TEEIceScanCoach";
 import { ICEScanCoachContent } from "@/pages/ICEScanCoach";
+import { BlurredOverlay } from "@/components/BlurredOverlay";
+import { usePremium } from "@/hooks/usePremium";
 
 // ─── Helper: render image or video based on URL extension ───────────────────
 function MediaDisplay({ src, alt, className, style }: { src: string; alt: string; className?: string; style?: React.CSSProperties }) {
@@ -1195,6 +1197,7 @@ function ACHDScanCoach() {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function ScanCoach() {
+  const { isPremium, isAuthenticated, loading } = usePremium();
   const search = useSearch();
   const _params = new URLSearchParams(search);
   const _initialTab = (_params.get("tab") as "tte" | "fetal" | "chd" | "achd" | "diastolic" | "pulm" | "strain" | "hocm" | "uea") || "tte";
@@ -2157,24 +2160,71 @@ export default function ScanCoach() {
           </div>
         )}
         {/* ─── PEDIATRIC CHD TAB ─── */}
-        {activeTab === "chd" && <PedCHDCoach />}
+        {activeTab === "chd" && (
+          !loading && !isAuthenticated
+            ? <BlurredOverlay type="login" featureName="Pediatric CHD ScanCoach"><PedCHDCoach /></BlurredOverlay>
+            : <PedCHDCoach />
+        )}
         {/* ─── ADULT CONGENITAL TAB ─── */}
-        {activeTab === "achd" && <ACHDScanCoach />}
-
+        {activeTab === "achd" && (
+          !loading && !isAuthenticated
+            ? <BlurredOverlay type="login" featureName="Adult Congenital ScanCoach"><ACHDScanCoach /></BlurredOverlay>
+            : <ACHDScanCoach />
+        )}
         {/* ─── PULMONARY HTN & PE TAB ─── */}
-        {activeTab === "pulm" && <PulmHTNScanCoach />}
+        {activeTab === "pulm" && (
+          !loading && !isAuthenticated
+            ? <BlurredOverlay type="login" featureName="Pulmonary HTN & PE ScanCoach"><PulmHTNScanCoach /></BlurredOverlay>
+            : !loading && !isPremium
+              ? <BlurredOverlay type="premium" featureName="Pulmonary HTN & PE ScanCoach"><PulmHTNScanCoach /></BlurredOverlay>
+              : <PulmHTNScanCoach />
+        )}
         {/* ─── STRAIN TAB ─── */}
-        {activeTab === "strain" && <StrainScanCoachContent />}
+        {activeTab === "strain" && (
+          !loading && !isAuthenticated
+            ? <BlurredOverlay type="login" featureName="Strain ScanCoach"><StrainScanCoachContent /></BlurredOverlay>
+            : !loading && !isPremium
+              ? <BlurredOverlay type="premium" featureName="Strain ScanCoach"><StrainScanCoachContent /></BlurredOverlay>
+              : <StrainScanCoachContent />
+        )}
         {/* ─── HOCM TAB ─── */}
-        {activeTab === "hocm" && <HOCMScanCoachContent />}
+        {activeTab === "hocm" && (
+          !loading && !isAuthenticated
+            ? <BlurredOverlay type="login" featureName="HOCM ScanCoach"><HOCMScanCoachContent /></BlurredOverlay>
+            : !loading && !isPremium
+              ? <BlurredOverlay type="premium" featureName="HOCM ScanCoach"><HOCMScanCoachContent /></BlurredOverlay>
+              : <HOCMScanCoachContent />
+        )}
         {/* ─── UEA TAB ─── */}
-        {activeTab === "uea" && <UEAScanCoachContent />}
+        {activeTab === "uea" && (
+          !loading && !isAuthenticated
+            ? <BlurredOverlay type="login" featureName="UEA ScanCoach"><UEAScanCoachContent /></BlurredOverlay>
+            : !loading && !isPremium
+              ? <BlurredOverlay type="premium" featureName="UEA ScanCoach"><UEAScanCoachContent /></BlurredOverlay>
+              : <UEAScanCoachContent />
+        )}
         {/* ─── DIASTOLIC FUNCTION TAB ─── */}
-        {activeTab === "diastolic" && <DiastolicScanCoachContent />}
+        {activeTab === "diastolic" && (
+          !loading && !isAuthenticated
+            ? <BlurredOverlay type="login" featureName="Diastolic Function ScanCoach"><DiastolicScanCoachContent /></BlurredOverlay>
+            : <DiastolicScanCoachContent />
+        )}
         {/* ─── TEE TAB ─── */}
-        {activeTab === "tee" && <TEEIceScanCoachContent />}
+        {activeTab === "tee" && (
+          !loading && !isAuthenticated
+            ? <BlurredOverlay type="login" featureName="TEE ScanCoach"><TEEIceScanCoachContent /></BlurredOverlay>
+            : !loading && !isPremium
+              ? <BlurredOverlay type="premium" featureName="TEE ScanCoach"><TEEIceScanCoachContent /></BlurredOverlay>
+              : <TEEIceScanCoachContent />
+        )}
         {/* ─── ICE TAB ─── */}
-        {activeTab === "ice" && <ICEScanCoachContent />}
+        {activeTab === "ice" && (
+          !loading && !isAuthenticated
+            ? <BlurredOverlay type="login" featureName="ICE ScanCoach"><ICEScanCoachContent /></BlurredOverlay>
+            : !loading && !isPremium
+              ? <BlurredOverlay type="premium" featureName="ICE ScanCoach"><ICEScanCoachContent /></BlurredOverlay>
+              : <ICEScanCoachContent />
+        )}
       </div>
     </Layout>
   );

@@ -35,31 +35,44 @@ import {
 import { eq, and, desc, sql, gte, lte, count, inArray } from "drizzle-orm";
 import { sendStreakReminders } from "../streakReminders";
 import { generateVirtualLeaderboard } from "../leaderboardSeed";
+import { createHash } from "crypto";
+import { flashcardGuestDailyUsage } from "../../drizzle/schema";
 
-// ─── IP-based daily flashcard tracker for unauthenticated users ─────────────
-// Key: `${ip}:${YYYY-MM-DD}` → count of cards viewed today
-// Cleared automatically when date changes (entries from old dates are ignored)
-const ipFlashcardTracker = new Map<string, number>();
-
-function getIpFlashcardCount(ip: string): number {
-  const key = `${ip}:${todayDateStrSync()}`;
-  return ipFlashcardTracker.get(key) ?? 0;
+// ─── IP-based daily flashcard tracker (DB-backed, survives server restarts) ───────
+/** Hash IP for privacy before storing in DB */
+function hashIp(ip: string): string {
+  return createHash("sha256").update(ip).digest("hex");
 }
 
-function incrementIpFlashcardCount(ip: string): number {
-  const key = `${ip}:${todayDateStrSync()}`;
-  const next = (ipFlashcardTracker.get(key) ?? 0) + 1;
-  ipFlashcardTracker.set(key, next);
-  // Prune old keys (keep map small)
-  const today = todayDateStrSync();
-  Array.from(ipFlashcardTracker.keys()).forEach((k) => {
-    if (!k.endsWith(today)) ipFlashcardTracker.delete(k);
-  });
-  return next;
+async function getIpFlashcardCount(ip: string): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+  const today = todayDateStr();
+  const ipHash = hashIp(ip);
+  const rows = await db
+    .select({ viewCount: flashcardGuestDailyUsage.viewCount })
+    .from(flashcardGuestDailyUsage)
+    .where(and(eq(flashcardGuestDailyUsage.ipHash, ipHash), eq(flashcardGuestDailyUsage.dateStr, today)))
+    .limit(1);
+  return rows[0]?.viewCount ?? 0;
 }
 
-function todayDateStrSync(): string {
-  return new Date().toISOString().slice(0, 10);
+async function incrementIpFlashcardCount(ip: string): Promise<number> {
+  const db = await getDb();
+  if (!db) return 1;
+  const today = todayDateStr();
+  const ipHash = hashIp(ip);
+  await db.execute(
+    sql`INSERT INTO flashcardGuestDailyUsage (ipHash, dateStr, viewCount, updatedAt)
+        VALUES (${ipHash}, ${today}, 1, NOW())
+        ON DUPLICATE KEY UPDATE viewCount = viewCount + 1, updatedAt = NOW()`
+  );
+  const rows = await db
+    .select({ viewCount: flashcardGuestDailyUsage.viewCount })
+    .from(flashcardGuestDailyUsage)
+    .where(and(eq(flashcardGuestDailyUsage.ipHash, ipHash), eq(flashcardGuestDailyUsage.dateStr, today)))
+    .limit(1);
+  return rows[0]?.viewCount ?? 1;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -1621,7 +1634,7 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
         ?? "unknown";
       const anonSeed = todayDateStr();
       const shuffled = seededShuffle(filtered, anonSeed);
-      const dailySeenCount = getIpFlashcardCount(clientIp);
+      const dailySeenCount = await getIpFlashcardCount(clientIp);
       return {
         cards: shuffled.map((c) => ({ ...c, tags: c.tags ? JSON.parse(c.tags) : [], gotIt: 0, missed: 0, lastSeen: null, lastResult: null })),
         totalCards: filtered.length,
@@ -1680,11 +1693,11 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
         ?? (ctx as any).req?.socket?.remoteAddress
         ?? "unknown";
       const FREE_DAILY_LIMIT = 10;
-      const current = getIpFlashcardCount(clientIp);
+      const current = await getIpFlashcardCount(clientIp);
       if (current >= FREE_DAILY_LIMIT) {
         return { dailySeenCount: current, limitReached: true };
       }
-      const next = incrementIpFlashcardCount(clientIp);
+      const next = await incrementIpFlashcardCount(clientIp);
       return { dailySeenCount: next, limitReached: next >= FREE_DAILY_LIMIT };
     }),
 

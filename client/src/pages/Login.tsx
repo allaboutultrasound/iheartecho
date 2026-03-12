@@ -52,7 +52,9 @@ export default function Login() {
     loginMutation.mutate({ email, password });
   };
 
-  if (loading) {
+  // Show a redirect spinner only when we KNOW the user is authenticated.
+  // Don't block on loading — show the form immediately so the sign-in button is always accessible.
+  if (!loading && isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "#0e1e2e" }}>
         <div className="w-8 h-8 border-2 border-[#189aa1] border-t-transparent rounded-full animate-spin" />

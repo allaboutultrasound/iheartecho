@@ -80,12 +80,12 @@ export function RoleGuard({ roles, allowAdmin = true, children }: RoleGuardProps
     );
   }
 
-  // Not authenticated — show blurred overlay with login CTA
+  // Not authenticated — show blurred overlay with login CTA over actual content
   if (!isAuthenticated || !user) {
     const isDiyGate = roles.some(r => ["diy_admin", "diy_user"].includes(r));
     return (
       <BlurredOverlay type={isDiyGate ? "diy" : "login"}>
-        <div className="min-h-screen bg-background" />
+        {children}
       </BlurredOverlay>
     );
   }
@@ -99,12 +99,12 @@ export function RoleGuard({ roles, allowAdmin = true, children }: RoleGuardProps
    if (isAuthorised) {
     return <>{children}</>;
   }
-  // If the required role is premium_user, show BlurredOverlay premium gate
+  // If the required role is premium_user, show BlurredOverlay premium gate over actual content
   const isPremiumGate = roles.includes("premium_user") && !roles.some(r => ["diy_admin", "diy_user", "platform_admin"].includes(r));
   if (isPremiumGate) {
     return (
       <BlurredOverlay type="premium">
-        <div className="min-h-screen bg-background" />
+        {children}
       </BlurredOverlay>
     );
   }
@@ -157,12 +157,12 @@ export function RoleGuard({ roles, allowAdmin = true, children }: RoleGuardProps
       </div>
     );
   }
-  // DIY gate — show BlurredOverlay with DIY membership CTA
+  // DIY gate — show BlurredOverlay with DIY membership CTA over actual content
   const isDiyGate2 = roles.some(r => ["diy_admin", "diy_user"].includes(r));
   if (isDiyGate2) {
     return (
       <BlurredOverlay type="diy">
-        <div className="min-h-screen bg-background" />
+        {children}
       </BlurredOverlay>
     );
   }
