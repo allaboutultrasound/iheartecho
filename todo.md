@@ -2539,3 +2539,8 @@
 - [x] Add getAllThinkificUsers() export to thinkific.ts
 - [x] Add syncAllThinkificMembers procedure to platformAdminRouter (bulk backfill, no emails)
 - [x] Add "Sync All Thinkific Members" card to PlatformAdmin UI
+
+## user.created Webhook (Mar 12, 2026)
+- [x] Add user.created to ALLOWED_EVENTS allowlist in thinkific webhook
+- [x] Add user.created handler: silently creates free iHeartEcho account, no email sent
+- [x] Update Thinkific setup instructions in webhook comment block
