@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.iheartecho.app",
+    "sha256_cert_fingerprints": [
+      "3F:37:B1:FA:E6:59:DD:08:EF:29:64:E7:D7:35:D4:C9:D1:37:7E:87:0E:87:91:83:78:0F:7A:43:ED:8B:3C:BB"
+    ]
+  }
+}]

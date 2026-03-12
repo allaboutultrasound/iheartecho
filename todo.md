@@ -2482,3 +2482,13 @@
 - [x] Build admin edit dialog with RichTextEditor, options editor, difficulty/category selects
 - [x] Add Edit buttons to archive list items, archive detail header, and question cards (admin-only)
 - [x] Write Vitest tests for admin edit procedures
+
+## Android App — TWA (Mar 11 2026)
+- [ ] Set up TWA Android project (bubblewrap / manual Gradle)
+- [ ] Configure package name: com.iheartecho.app
+- [ ] Set launch URL: https://app.iheartecho.com
+- [ ] Generate app icons (all densities) and splash screen
+- [ ] Generate store listing graphics (feature graphic, screenshots)
+- [ ] Build signed AAB for Google Play upload
+- [ ] Add assetlinks.json to web app for Digital Asset Links verification
+- [ ] Prepare Play Store listing package (description, screenshots, privacy policy URL)
