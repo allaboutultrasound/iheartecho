@@ -2563,3 +2563,27 @@
 ## Real-time User Count on Dashboard (Mar 12, 2026)
 - [x] Add getTotalUserCount public procedure to server/routers.ts
 - [x] Update Home.tsx stats to use live count with daily staleTime
+
+## Platform Admin User Type Filter (Mar 12, 2026)
+- [ ] Add userType filter param to admin.listUsers procedure
+- [ ] Add user type filter dropdown to PlatformAdmin.tsx user search UI
+- [ ] Fix server-side search in listUsers (was client-side only, missed users outside first 200)
+- [ ] Add userType filter dropdown to Platform Admin user list
+- [ ] Fix assignRole to use INSERT IGNORE / upsert to prevent duplicate roles
+- [ ] Add DB cleanup: deduplicate userRoles and backfill missing user roles
+- [ ] Add admin procedure cleanupUserRoles for one-time DB fix
+
+## Platform Admin Improvements — Completed (Mar 12, 2026)
+- [x] Add userType filter param to admin.listUsers procedure (server-side)
+- [x] Add server-side search to listUsers (replaces client-side filter)
+- [x] Add cleanupUserRoles procedure to platformAdminRouter (dedup + backfill)
+- [x] Add cleanupUserRolesDb() to db.ts (removes duplicate user roles, backfills missing user role)
+- [x] Add useEffect import to PlatformAdmin.tsx (debounced search)
+- [x] Add user type filter dropdown to PlatformAdmin.tsx
+- [x] Fix auth.logout.test.ts — update sameSite assertion from "none" to "lax"
+- [x] 691 tests passing, 0 TypeScript errors
+
+## Description Text Update (Mar 12, 2026)
+- [x] Update Home.tsx hero description to include: cardiac ultrasound students, sonographers, echocardiographers, cardiologists, physicians, residents, ACS professionals, and echo educators
+- [x] Update Login.tsx left panel description with same professional categories
+- [x] Update manifest.json description with same professional categories

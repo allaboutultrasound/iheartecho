@@ -118,7 +118,7 @@ export default function Login() {
             The complete echo<br /><span style={{ color: "#4ad9e0" }}>clinical companion</span>
           </h1>
           <p className="text-white/70 text-sm leading-relaxed max-w-sm">
-            Guideline-based interpretation, structured protocols, accreditation tools, and CME — built for sonographers, cardiologists, and ACS professionals.
+            Guideline-based interpretation, structured protocols, accreditation tools, and CME — built for cardiac ultrasound students, sonographers, echocardiographers, cardiologists, physicians, residents, ACS professionals, and echo educators.
           </p>
         </div>
         {/* Features */}

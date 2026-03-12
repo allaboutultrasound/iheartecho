@@ -1,4 +1,4 @@
-import { and, avg, count, desc, eq, gte, inArray, lte, or, sql } from "drizzle-orm";
+import { and, avg, count, desc, eq, gte, inArray, like, lte, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   InsertUser,
@@ -1841,12 +1841,64 @@ export async function markThinkificEnrolled(userId: number): Promise<void> {
 }
 
 /** List all users with their roles (for admin panel) */
-export async function listUsersWithRoles(limit = 100, offset = 0) {
+export type UserTypeFilter =
+  | 'all'
+  | 'pending'
+  | 'active'
+  | 'premium'
+  | 'diy_admin'
+  | 'diy_user'
+  | 'platform_admin'
+  | 'free';
+
+export async function listUsersWithRoles(
+  limit = 100,
+  offset = 0,
+  userType: UserTypeFilter = 'all',
+  searchQuery = '',
+) {
   const db = await getDb();
   if (!db) return [];
-  const allUsers = await db.select().from(users)
-    .orderBy(desc(users.createdAt)).limit(limit).offset(offset);
+
+  // For role-based filters, get matching userIds first
+  const ROLE_FILTERS: Partial<Record<UserTypeFilter, AppRole>> = {
+    premium: 'premium_user',
+    diy_admin: 'diy_admin',
+    diy_user: 'diy_user',
+    platform_admin: 'platform_admin',
+  };
+
+  let roleFilteredIds: number[] | null = null;
+  if (userType in ROLE_FILTERS) {
+    const role = ROLE_FILTERS[userType as keyof typeof ROLE_FILTERS]!;
+    const rows = await db.select({ userId: userRoles.userId }).from(userRoles).where(eq(userRoles.role, role));
+    roleFilteredIds = rows.map(r => r.userId);
+    if (roleFilteredIds.length === 0) return [];
+  }
+
+  // Build WHERE conditions
+  const conditions: any[] = [];
+  if (userType === 'pending') conditions.push(eq(users.isPending, true));
+  if (userType === 'active') conditions.push(eq(users.isPending, false));
+  if (roleFilteredIds !== null) {
+    conditions.push(or(...roleFilteredIds.map(id => eq(users.id, id))));
+  }
+  if (searchQuery.trim()) {
+    const q = `%${searchQuery.trim()}%`;
+    conditions.push(or(
+      like(users.name, q),
+      like(users.email, q),
+      like(users.displayName, q),
+    ));
+  }
+
+  const baseQuery = db.select().from(users).orderBy(desc(users.createdAt)).limit(limit).offset(offset);
+  const allUsers = conditions.length > 0
+    ? await baseQuery.where(and(...conditions))
+    : await baseQuery;
+
   if (allUsers.length === 0) return [];
+
   const userIds = allUsers.map(u => u.id);
   const allRoles = await db.select().from(userRoles)
     .where(or(...userIds.map(id => eq(userRoles.userId, id))));
@@ -1856,10 +1908,18 @@ export async function listUsersWithRoles(limit = 100, offset = 0) {
     list.push(r.role as AppRole);
     roleMap.set(r.userId, list);
   }
-  return allUsers.map(u => ({
+
+  let result = allUsers.map(u => ({
     ...u,
     roles: roleMap.get(u.id) ?? [],
   }));
+
+  // 'free' = active users with no special roles
+  if (userType === 'free') {
+    result = result.filter(u => u.roles.length === 0 && !u.isPending);
+  }
+
+  return result;
 }
 
 /** Count total users */
@@ -2786,3 +2846,49 @@ export async function getFormSubmissionStaffList(labId: number) {
 }
 
 export type { AccreditationFormTemplateAssignment, InsertAccreditationFormTemplateAssignment, AccreditationFormSubmission, InsertAccreditationFormSubmission };
+
+/** Deduplicate userRoles and backfill missing 'user' roles for all non-pending users */
+export async function cleanupUserRolesDb(): Promise<{ deduped: number; backfilled: number }> {
+  const db = await getDb();
+  if (!db) return { deduped: 0, backfilled: 0 };
+
+  // Step 1: Find duplicate userRoles rows (same userId + role, keep lowest id)
+  const allRoles = await db.select().from(userRoles);
+  const seen = new Map<string, number>(); // key -> min id to keep
+  const toDelete: number[] = [];
+  for (const r of allRoles) {
+    const key = `${r.userId}:${r.role}`;
+    const existing = seen.get(key);
+    if (existing === undefined) {
+      seen.set(key, r.id);
+    } else {
+      // Keep the lower id, delete the higher
+      if (r.id < existing) {
+        toDelete.push(existing);
+        seen.set(key, r.id);
+      } else {
+        toDelete.push(r.id);
+      }
+    }
+  }
+  if (toDelete.length > 0) {
+    await db.delete(userRoles).where(inArray(userRoles.id, toDelete));
+  }
+
+  // Step 2: Backfill 'user' role for all non-pending users who don't have it
+  const allUsers = await db.select({ id: users.id, isPending: users.isPending }).from(users);
+  const usersWithUserRole = new Set(
+    allRoles
+      .filter(r => r.role === 'user')
+      .map(r => r.userId)
+  );
+  let backfilled = 0;
+  for (const u of allUsers) {
+    if (!u.isPending && !usersWithUserRole.has(u.id)) {
+      await db.insert(userRoles).values({ userId: u.id, role: 'user', assignedByUserId: u.id });
+      backfilled++;
+    }
+  }
+
+  return { deduped: toDelete.length, backfilled };
+}

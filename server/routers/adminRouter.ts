@@ -12,7 +12,9 @@ import {
   findUserByEmailWithRoles,
   createPendingUser,
   countPendingUsers,
+  cleanupUserRolesDb,
   type AppRole,
+  type UserTypeFilter,
 } from "../db";
 import { syncCatalogToDb } from "./cmeRouter";
 import { sendEmail, buildWelcomeEmail } from "../_core/email";
@@ -56,18 +58,20 @@ export const platformAdminRouter = router({
     return countPendingUsers();
   }),
 
-  /** List all users with their roles (paginated) */
+  /** List all users with their roles (paginated, with optional search and type filter) */
   listUsers: protectedProcedure
     .input(z.object({
-      limit: z.number().max(200).default(50),
+      limit: z.number().max(500).default(50),
       offset: z.number().default(0),
+      search: z.string().optional().default(''),
+      userType: z.enum(['all','pending','active','premium','diy_admin','diy_user','platform_admin','free']).optional().default('all'),
     }))
     .query(async ({ ctx, input }) => {
       const roles = await getUserRoles(ctx.user.id);
       if (ctx.user.role !== "admin" && !roles.includes("platform_admin")) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Platform admin access required" });
       }
-      return listUsersWithRoles(input.limit, input.offset);
+      return listUsersWithRoles(input.limit, input.offset, input.userType as UserTypeFilter, input.search);
     }),
 
   /** Get total user count */
@@ -297,6 +301,22 @@ export const platformAdminRouter = router({
   }),
 
   /**
+   * Clean up duplicate and missing user roles.
+   * - Removes duplicate 'user' role entries (keeps the lowest id)
+   * - Backfills missing 'user' role for all non-pending accounts
+   * Returns counts of deduped and backfilled rows.
+   */
+  cleanupUserRoles: protectedProcedure.mutation(async ({ ctx }) => {
+    const myRoles = await getUserRoles(ctx.user.id);
+    const isOwner = ctx.user.role === "admin";
+    const isPlatformAdmin = myRoles.includes("platform_admin");
+    if (!isOwner && !isPlatformAdmin) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "Platform admin access required" });
+    }
+    return cleanupUserRolesDb();
+  }),
+
+  /**
    * Bulk backfill: fetch all users from Thinkific and create iHeartEcho accounts
    * for anyone not already registered. Runs silently (no emails sent).
    * Returns counts of created, skipped (already existed), and errors.
@@ -457,6 +477,14 @@ export const labSeatsRouter = router({
         seatUsage: { used: currentSeats.length, total: seatLimit },
       };
     }),
+
+  /** One-time cleanup: deduplicate userRoles and backfill missing 'user' roles */
+  cleanupUserRoles: protectedProcedure.mutation(async ({ ctx }) => {
+    if (ctx.user.role !== "admin") {
+      throw new TRPCError({ code: "FORBIDDEN", message: "Owner only" });
+    }
+    return cleanupUserRolesDb();
+  }),
 
   /** Get seat usage for current lab */
   seatUsage: protectedProcedure.query(async ({ ctx }) => {

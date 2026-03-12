@@ -8,7 +8,7 @@
   - Stats overview
 */
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import Layout from "@/components/Layout";
@@ -606,6 +606,8 @@ function DIYOrgsPanel() {
 export default function PlatformAdmin() {
   const { user, isAuthenticated, loading } = useAuth();
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [userType, setUserType] = useState<'all'|'pending'|'active'|'premium'|'diy_admin'|'diy_user'|'platform_admin'|'free'>('all');
   const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
   const [addRoleDialogOpen, setAddRoleDialogOpen] = useState(false);
   const [roleToAdd, setRoleToAdd] = useState<AppRole>("premium_user");
@@ -647,14 +649,28 @@ export default function PlatformAdmin() {
     { enabled: isAuthenticated },
   );
 
+  // Debounce search input so we don't fire a query on every keystroke
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 400);
+    return () => clearTimeout(t);
+  }, [search]);
+
   const {
     data: users,
     isLoading: loadingUsers,
     refetch: refetchUsers,
   } = trpc.platformAdmin.listUsers.useQuery(
-    { limit: 200, offset: 0 },
+    { limit: 500, offset: 0, search: debouncedSearch, userType },
     { enabled: !!isAdmin },
   );
+
+  const cleanupRolesMutation = trpc.platformAdmin.cleanupUserRoles.useMutation({
+    onSuccess: (data: { deduped: number; backfilled: number }) => {
+      toast.success(`Roles fixed: ${data.deduped} duplicates removed, ${data.backfilled} missing roles backfilled.`);
+      refetchUsers();
+    },
+    onError: (err) => toast.error(`Cleanup failed: ${err.message}`),
+  });
 
   const { data: userCount } = trpc.platformAdmin.userCount.useQuery(
     undefined,
@@ -716,15 +732,8 @@ export default function PlatformAdmin() {
     );
   }
 
-  const filteredUsers = (users ?? []).filter((u) => {
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return (
-      (u.name ?? "").toLowerCase().includes(q) ||
-      (u.email ?? "").toLowerCase().includes(q) ||
-      (u.displayName ?? "").toLowerCase().includes(q)
-    );
-  });
+  // Search and filtering is now server-side — use the result directly
+  const filteredUsers = users ?? [];
 
   const handleAddRole = () => {
     if (!selectedUser) return;
