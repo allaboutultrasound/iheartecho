@@ -2,12 +2,14 @@
  * MagicLinkCallback.tsx — Handles the magic link callback
  * URL: /auth/magic?token=...
  *
- * Automatically calls verifyMagicLink on mount, then redirects to the app.
+ * Automatically calls /api/auth/magic-verify on mount, then redirects to the app.
+ *
+ * NOTE: Uses /api/auth/magic-verify (server-side route) instead of the tRPC mutation.
+ * Reason: Cloudflare strips Set-Cookie headers from JavaScript fetch/XHR responses.
  */
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "wouter";
-import { CheckCircle2, XCircle, Heart, Loader2 } from "lucide-react";
-import { trpc } from "@/lib/trpc";
+import { Link } from "wouter";
+import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const LOGO = import.meta.env.VITE_APP_LOGO as string;
@@ -15,24 +17,9 @@ const LOGO = import.meta.env.VITE_APP_LOGO as string;
 type Status = "verifying" | "success" | "error";
 
 export default function MagicLinkCallback() {
-  const [, navigate] = useLocation();
   const [status, setStatus] = useState<Status>("verifying");
   const [errorMessage, setErrorMessage] = useState("");
   const hasVerified = useRef(false);
-
-  const verifyMutation = trpc.auth.verifyMagicLink.useMutation({
-    onSuccess: () => {
-      setStatus("success");
-      // Redirect to home after a short delay so the user sees the success state
-      setTimeout(() => {
-        window.location.href = "/";
-      }, 1500);
-    },
-    onError: (err) => {
-      setStatus("error");
-      setErrorMessage(err.message || "The magic link is invalid or has expired.");
-    },
-  });
 
   useEffect(() => {
     if (hasVerified.current) return;
@@ -47,7 +34,30 @@ export default function MagicLinkCallback() {
       return;
     }
 
-    verifyMutation.mutate({ token });
+    // Use the server-side endpoint so the cookie is set correctly through Cloudflare
+    fetch("/api/auth/magic-verify", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    })
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) {
+          setStatus("error");
+          setErrorMessage(data.error || "The magic link is invalid or has expired.");
+          return;
+        }
+        setStatus("success");
+        // Redirect to home after a short delay so the user sees the success state
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 1500);
+      })
+      .catch(() => {
+        setStatus("error");
+        setErrorMessage("An unexpected error occurred. Please try again.");
+      });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (

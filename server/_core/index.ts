@@ -11,6 +11,7 @@ import { registerUploadCaseMediaRoute } from "../routes/uploadCaseMedia";
 import { registerUploadQuestionImageRoute } from "../routes/uploadQuestionImage";
 import { registerUploadQuestionMediaRoute } from "../routes/uploadQuestionMedia";
 import { registerUnsubscribeRoute } from "../routes/unsubscribe";
+import { registerAuthLoginRoute } from "../routes/authLogin";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -59,6 +60,8 @@ async function startServer() {
   registerUploadQuestionMediaRoute(app);
   // One-click unsubscribe from notification emails
   registerUnsubscribeRoute(app);
+  // Server-side login/magic-verify routes (bypasses Cloudflare fetch-response cookie stripping)
+  registerAuthLoginRoute(app);
   // tRPC API
   app.use(
     "/api/trpc",

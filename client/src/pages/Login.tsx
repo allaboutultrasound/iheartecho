@@ -2,15 +2,18 @@
  * Login.tsx — iHeartEcho™ branded sign-in page (email/password)
  * Fully white-labelled — no Manus/Meta branding.
  * Brand: Teal #189aa1, Aqua #4ad9e0, Dark navy #0e1e2e
+ *
+ * NOTE: Uses /api/auth/login (server-side route) instead of the tRPC mutation.
+ * Reason: Cloudflare strips Set-Cookie headers from JavaScript fetch/XHR responses.
+ * The server-side route sets the cookie and the browser stores it correctly.
  */
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, Loader2, Stethoscope, Activity, BookOpen, Shield, Heart, Zap } from "lucide-react";
+import { Eye, EyeOff, Loader2, Stethoscope, Activity, BookOpen, Shield, Zap } from "lucide-react";
 import { toast } from "sonner";
 
 const LOGO = import.meta.env.VITE_APP_LOGO as string;
@@ -29,6 +32,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isPending, setIsPending] = useState(false);
 
   // Redirect if already signed in
   useEffect(() => {
@@ -37,19 +41,35 @@ export default function Login() {
     }
   }, [isAuthenticated, loading, navigate]);
 
-  const loginMutation = trpc.emailAuth.login.useMutation({
-    onSuccess: () => {
-      window.location.href = "/";
-    },
-    onError: (err) => {
-      toast.error(err.message || "Sign in failed");
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) return;
-    loginMutation.mutate({ email, password });
+    if (!email || !password || isPending) return;
+
+    setIsPending(true);
+    try {
+      // Use the server-side login endpoint so the cookie is set on a navigation
+      // response — Cloudflare strips Set-Cookie from JavaScript fetch responses.
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.error || "Sign in failed. Please check your credentials.");
+        return;
+      }
+
+      // Cookie is now set — navigate to dashboard
+      window.location.href = "/";
+    } catch {
+      toast.error("Sign in failed. Please try again.");
+    } finally {
+      setIsPending(false);
+    }
   };
 
   // Show a redirect spinner only when we KNOW the user is authenticated.
@@ -175,11 +195,11 @@ export default function Login() {
 
             <Button
               type="submit"
-              disabled={loginMutation.isPending || !email || !password}
+              disabled={isPending || !email || !password}
               className="w-full h-11 font-semibold text-white"
               style={{ background: "linear-gradient(135deg, #189aa1 0%, #0e7a80 100%)" }}
             >
-              {loginMutation.isPending ? (
+              {isPending ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Signing in…</>
               ) : "Sign In"}
             </Button>
