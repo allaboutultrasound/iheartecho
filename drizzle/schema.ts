@@ -61,6 +61,9 @@ export const users = mysqlTable("users", {
   notificationPrefs: text("notificationPrefs"),
   // IANA timezone string for 9am local-time challenge notifications (e.g. "America/New_York")
   timezone: varchar("timezone", { length: 64 }),
+  // Last date (YYYY-MM-DD ET) a daily challenge notification email was sent to this user.
+  // DB-backed deduplication so server restarts within the 9am ET window don't re-send.
+  lastChallengeNotifDate: varchar("lastChallengeNotifDate", { length: 10 }),
 });
 
 export type User = typeof users.$inferSelect;

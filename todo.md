@@ -2513,3 +2513,12 @@
 ## Bug Fix — ScanCoach Auth Gates via Navigator Links (Mar 12 2026)
 - [ ] Gate all ScanCoach routes in App.tsx that should require sign-in (TEE, ICE, Strain, Stress, HOCM, UEA, Device/Structural Heart, POCUS, ACHD, PulmHTN)
 - [ ] Keep /scan-coach (main) free — TTE, Pediatric, and Fetal tabs are free; other tabs gated inside the component
+
+## Bug Fix — Daily Challenge Email Deduplication (Mar 12 2026)
+- [x] Add lastChallengeNotifDate column to users table (VARCHAR 10, YYYY-MM-DD ET)
+- [x] Run db:push migration to apply schema change
+- [x] Update challengeCron.ts to use DB-backed deduplication instead of in-memory Map
+- [x] Remove in-memory notifiedToday Map — replaced by users.lastChallengeNotifDate
+- [x] After sending email to each user, set lastChallengeNotifDate = todayET() in DB
+- [x] On each hourly tick, filter out users where lastChallengeNotifDate == todayET()
+- [x] Verified: 0 TypeScript errors, 691 tests pass

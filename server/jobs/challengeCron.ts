@@ -6,12 +6,15 @@
  *  2. Auto-publish the next "scheduled" or highest-priority "draft" challenge
  *     if no challenge is currently live.
  *  3. Send a SendGrid notification email to all users who have opted in
- *     when a new challenge goes live.
+ *     when a new challenge goes live — at 9 AM Eastern Time only.
+ *
+ * Deduplication is DB-backed (users.lastChallengeNotifDate = "YYYY-MM-DD" ET).
+ * This prevents duplicate sends even if the server restarts during the 9am window.
  */
 
 import { getDb } from "../db";
 import { quickfireChallenges, quickfireDailySets, quickfireQuestions, users } from "../../drizzle/schema";
-import { eq, and, asc, lte } from "drizzle-orm";
+import { eq, and, asc, lte, ne } from "drizzle-orm";
 import sgMail from "@sendgrid/mail";
 import { generateUnsubscribeToken } from "../routes/unsubscribe";
 
@@ -27,19 +30,14 @@ if (SENDGRID_API_KEY) {
 let cronRunning = false;
 let lastAutoGenDate = ""; // tracks the last date we auto-generated a daily set
 
-// Tracks which user IDs have already received a 9am notification today (UTC date key)
-const notifiedToday = new Map<string, Set<number>>(); // key: "YYYY-MM-DD"
+// ── Helpers ──────────────────────────────────────────────────────────────────
 
-function getNotifiedSet(utcDate: string): Set<number> {
-  // Purge old dates to prevent memory leak
-  for (const key of Array.from(notifiedToday.keys())) {
-    if (key !== utcDate) notifiedToday.delete(key);
-  }
-  if (!notifiedToday.has(utcDate)) notifiedToday.set(utcDate, new Set());
-  return notifiedToday.get(utcDate)!;
+/** Returns today's date in YYYY-MM-DD format in Eastern Time. */
+function todayET(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(new Date());
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+/** Returns today's date in YYYY-MM-DD format in UTC (for daily set generation). */
 function todayUTC(): string {
   return new Date().toISOString().slice(0, 10);
 }
@@ -183,64 +181,7 @@ export async function runChallengeCron() {
       .set({ status: "live", publishedAt: now, publishDate: todayStr })
       .where(eq(quickfireChallenges.id, toPublish.id));
 
-    console.log(`[ChallengeCron] Published challenge #${toPublish.id}: "${toPublish.title}"`);
-
-    // ── Step 5: Send email notifications to opted-in users ───────────────────
-    if (!SENDGRID_API_KEY) {
-      console.log("[ChallengeCron] SendGrid not configured — skipping user emails.");
-      return;
-    }
-
-    try {
-      // Fetch all users with emails who have opted in to quickfireReminder
-      const usersWithEmail = await db
-        .select({ id: users.id, email: users.email, name: users.name, displayName: users.displayName, notificationPrefs: users.notificationPrefs })
-        .from(users);
-
-      const recipients = usersWithEmail.filter((u) => {
-        if (!u.email) return false;
-        try {
-          const prefs = u.notificationPrefs ? JSON.parse(u.notificationPrefs) : {};
-          // Default: opted in unless explicitly set to false
-          return prefs.quickfireReminder !== false;
-        } catch {
-          return true;
-        }
-      });
-
-      if (recipients.length === 0) {
-        console.log("[ChallengeCron] No opted-in users to notify.");
-        return;
-      }
-
-      const challengeUrl = `${APP_URL}/quickfire`;
-      const categoryTag = toPublish.category ? ` — ${toPublish.category}` : "";
-
-      // Send in batches of 100 to stay within SendGrid rate limits
-      const BATCH = 100;
-      for (let i = 0; i < recipients.length; i += BATCH) {
-        const batch = recipients.slice(i, i + BATCH);
-        const messages = batch.map((u) => ({
-          to: u.email!,
-          from: { email: SENDGRID_FROM_EMAIL, name: SENDGRID_FROM_NAME },
-          subject: `🔥 New Daily Challenge: ${toPublish.title}${categoryTag}`,
-          html: buildEmailHtml({
-            userName: u.displayName ?? u.name ?? "Echo Learner",
-            challengeTitle: toPublish.title,
-            challengeDescription: toPublish.description ?? "",
-            challengeUrl,
-            category: toPublish.category ?? "General",
-            appUrl: APP_URL,
-            unsubscribeUrl: `${APP_URL}/api/unsubscribe?token=${generateUnsubscribeToken(u.id)}`,
-          }),
-          text: `New Daily Challenge: ${toPublish.title}\n\n${toPublish.description ?? ""}\n\nYou have 24 hours to complete it!\n\n${challengeUrl}`,
-        }));
-        await sgMail.send(messages as any);
-        console.log(`[ChallengeCron] Sent challenge notification to ${batch.length} users (batch ${Math.floor(i / BATCH) + 1}).`);
-      }
-    } catch (emailErr) {
-      console.error("[ChallengeCron] Email send error:", emailErr);
-    }
+    console.log(`[ChallengeCron] Published challenge #${toPublish.id}: "${toPublish.title}" — email will go out at 9 AM ET via scheduled notification.`);
   } catch (err) {
     console.error("[ChallengeCron] Error:", err);
   } finally {
@@ -331,15 +272,31 @@ function buildEmailHtml({
 }
 
 /**
- * Sends 9am local-time challenge notifications.
- * Runs every hour. For each opted-in user whose timezone currently shows
- * hour=9 (9:00–9:59 AM), sends the live challenge email if not already sent today.
+ * Sends 9am Eastern Time challenge notifications.
+ * Runs every hour. Fires only when it is currently 9:00–9:59 AM Eastern Time.
+ *
+ * Deduplication is DB-backed: each user's `lastChallengeNotifDate` column is
+ * set to today's ET date (YYYY-MM-DD) after their email is sent. On the next
+ * hourly tick (or after a server restart), users whose column already equals
+ * today's ET date are skipped — guaranteeing exactly one email per user per day
+ * regardless of restarts or cron drift.
  */
 async function send9amChallengeNotifications() {
   if (!SENDGRID_API_KEY) return;
   try {
     const db = await getDb();
     if (!db) return;
+
+    // Only fire when it is 9:00–9:59 AM Eastern Time
+    const now = new Date();
+    const etHour = parseInt(
+      new Intl.DateTimeFormat("en-US", { hour: "numeric", hour12: false, timeZone: "America/New_York" }).format(now),
+      10
+    );
+    if (etHour !== 9) {
+      console.log(`[ChallengeCron] 9am ET check: current ET hour is ${etHour}, skipping.`);
+      return;
+    }
 
     // Get the currently live challenge
     const [liveChallenge] = await db
@@ -348,13 +305,17 @@ async function send9amChallengeNotifications() {
       .where(eq(quickfireChallenges.status, "live"))
       .limit(1);
 
-    if (!liveChallenge) return; // no live challenge to notify about
+    if (!liveChallenge) {
+      console.log("[ChallengeCron] 9am ET: no live challenge to notify about.");
+      return;
+    }
 
-    const now = new Date();
-    const utcDate = todayUTC();
-    const alreadyNotified = getNotifiedSet(utcDate);
+    // Today's date in ET (YYYY-MM-DD) — used as the dedup key
+    const todayDateET = todayET();
 
-    // Fetch all users with emails, notification prefs, and timezone
+    // Fetch all users who:
+    //  - have an email address
+    //  - have NOT already received a notification today (lastChallengeNotifDate != todayDateET)
     const allUsers = await db
       .select({
         id: users.id,
@@ -362,33 +323,27 @@ async function send9amChallengeNotifications() {
         name: users.name,
         displayName: users.displayName,
         notificationPrefs: users.notificationPrefs,
-        timezone: users.timezone,
+        lastChallengeNotifDate: users.lastChallengeNotifDate,
       })
       .from(users);
 
     const toNotify = allUsers.filter((u) => {
       if (!u.email) return false;
-      if (alreadyNotified.has(u.id)) return false;
+      // DB-backed dedup: skip if already sent today (survives server restarts)
+      if (u.lastChallengeNotifDate === todayDateET) return false;
       try {
         const prefs = u.notificationPrefs ? JSON.parse(u.notificationPrefs) : {};
         if (prefs.quickfireReminder === false) return false;
       } catch {
         // default: opted in
       }
-      // Check if it's currently 9am in the user's timezone
-      const tz = u.timezone ?? "America/New_York";
-      try {
-        const localHour = parseInt(
-          new Intl.DateTimeFormat("en-US", { hour: "numeric", hour12: false, timeZone: tz }).format(now),
-          10
-        );
-        return localHour === 9;
-      } catch {
-        return false; // invalid timezone string — skip
-      }
+      return true;
     });
 
-    if (toNotify.length === 0) return;
+    if (toNotify.length === 0) {
+      console.log("[ChallengeCron] 9am ET: all eligible users already notified today.");
+      return;
+    }
 
     const challengeUrl = `${APP_URL}/quickfire`;
     const categoryTag = liveChallenge.category ? ` — ${liveChallenge.category}` : "";
@@ -411,11 +366,21 @@ async function send9amChallengeNotifications() {
         }),
         text: `Daily Challenge: ${liveChallenge.title}\n\n${liveChallenge.description ?? ""}\n\nYou have 24 hours to complete it!\n\n${challengeUrl}`,
       }));
+
       await sgMail.send(messages as any);
-      // Mark as notified
-      batch.forEach((u) => alreadyNotified.add(u.id));
-      console.log(`[ChallengeCron] 9am notification sent to ${batch.length} users (batch ${Math.floor(i / BATCH) + 1}).`);
+
+      // Mark each user as notified in the DB (DB-backed dedup)
+      for (const u of batch) {
+        await db
+          .update(users)
+          .set({ lastChallengeNotifDate: todayDateET })
+          .where(eq(users.id, u.id));
+      }
+
+      console.log(`[ChallengeCron] 9am ET notification sent to ${batch.length} users (batch ${Math.floor(i / BATCH) + 1}).`);
     }
+
+    console.log(`[ChallengeCron] 9am ET: notified ${toNotify.length} users for challenge "${liveChallenge.title}" on ${todayDateET}.`);
   } catch (err) {
     console.error("[ChallengeCron] 9am notification error:", err);
   }
@@ -428,16 +393,17 @@ async function send9amChallengeNotifications() {
 export function startChallengeCron() {
   const INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
   const HOUR_MS = 60 * 60 * 1000; // 1 hour
-  console.log("[ChallengeCron] Started — checking every 5 minutes. 9am notifications checked hourly.");
+  console.log("[ChallengeCron] Started — checking every 5 minutes. 9am ET notifications checked hourly (no startup send). DB-backed deduplication active.");
   // Run immediately on startup to catch any missed publishes and generate today's set
+  // NOTE: send9amChallengeNotifications is NOT called on startup to prevent duplicate
+  // emails when the server restarts. It only runs on the hourly interval.
   runChallengeCron().catch(console.error);
   runDailyAutoGenerate().catch(console.error);
-  send9amChallengeNotifications().catch(console.error);
   setInterval(() => {
     runChallengeCron().catch(console.error);
     runDailyAutoGenerate().catch(console.error);
   }, INTERVAL_MS);
-  // Check 9am notifications every hour
+  // Check 9am ET notifications every hour (never on startup)
   setInterval(() => {
     send9amChallengeNotifications().catch(console.error);
   }, HOUR_MS);
