@@ -625,7 +625,11 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
         isActive: true,
         createdByUserId: ctx.user.id,
       });
-      return { id: (result as any).insertId };
+      const newId = (result as any).insertId as number;
+      // Auto-assign QID: QID-XXXX (zero-padded to 4 digits, grows beyond 4 digits for large IDs)
+      const qid = `QID-${String(newId).padStart(4, '0')}`;
+      await db.update(quickfireQuestions).set({ qid }).where(eq(quickfireQuestions.id, newId));
+      return { id: newId, qid };
     }),
 
   updateQuestion: adminProcedure
@@ -668,6 +672,48 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
       return { success: true };
     }),
 
+  /**
+   * Duplicate a question: creates a copy with a new unique QID and "[Copy]" prefix.
+   * The copy starts as active so it appears in the question bank immediately.
+   */
+  duplicateQuestion: adminProcedure
+    .input(z.object({ id: z.number().int().positive() }))
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const [original] = await db.select().from(quickfireQuestions)
+        .where(eq(quickfireQuestions.id, input.id)).limit(1);
+      if (!original) throw new TRPCError({ code: "NOT_FOUND" });
+      const [result] = await db.insert(quickfireQuestions).values({
+        type: original.type,
+        question: `[Copy] ${original.question}`,
+        options: original.options,
+        correctAnswer: original.correctAnswer,
+        explanation: original.explanation,
+        reviewAnswer: original.reviewAnswer,
+        imageUrl: original.imageUrl,
+        videoUrl: original.videoUrl,
+        pairs: original.pairs,
+        markers: original.markers,
+        orderedItems: original.orderedItems,
+        difficulty: original.difficulty,
+        tags: original.tags,
+        echoCategory: original.echoCategory,
+        category: original.category,
+        isActive: true,
+        deletedAt: null,
+        createdByUserId: ctx.user.id,
+      });
+      const newId = (result as any).insertId as number;
+      const qid = `QID-${String(newId).padStart(4, '0')}`;
+      await db.update(quickfireQuestions).set({ qid }).where(eq(quickfireQuestions.id, newId));
+      return { id: newId, qid };
+    }),
+
+  /**
+   * Soft-delete a question: moves it to the trash (sets deletedAt + isActive=false).
+   * Permanently purged after 30 days via the trash purge procedure.
+   */
   deleteQuestion: adminProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ input }) => {
@@ -675,13 +721,13 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
       await db
         .update(quickfireQuestions)
-        .set({ isActive: false })
+        .set({ isActive: false, deletedAt: new Date() })
         .where(eq(quickfireQuestions.id, input.id));
       return { success: true };
     }),
 
   /**
-   * Bulk soft-delete multiple questions by ID (sets isActive = false).
+   * Bulk soft-delete multiple questions by ID — moves them to trash.
    */
   bulkDeleteQuestions: adminProcedure
     .input(z.object({ ids: z.array(z.number().int().positive()).min(1).max(200) }))
@@ -690,9 +736,71 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
       await db
         .update(quickfireQuestions)
-        .set({ isActive: false })
+        .set({ isActive: false, deletedAt: new Date() })
         .where(inArray(quickfireQuestions.id, input.ids));
       return { deleted: input.ids.length };
+    }),
+
+  /** List trashed questions (deletedAt is set, not yet permanently purged). */
+  listTrashedQuestions: adminProcedure
+    .query(async () => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const rows = await db
+        .select()
+        .from(quickfireQuestions)
+        .where(sql`${quickfireQuestions.deletedAt} IS NOT NULL`)
+        .orderBy(desc(quickfireQuestions.deletedAt));
+      return rows.map((q) => ({
+        ...q,
+        options: q.options ? JSON.parse(q.options) : null,
+        tags: q.tags ? JSON.parse(q.tags) : [],
+        daysUntilPurge: Math.max(0, 30 - Math.floor((Date.now() - new Date(q.deletedAt!).getTime()) / 86_400_000)),
+      }));
+    }),
+
+  /** Restore a trashed question back to the active bank. */
+  restoreQuestion: adminProcedure
+    .input(z.object({ id: z.number().int().positive() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      await db
+        .update(quickfireQuestions)
+        .set({ isActive: true, deletedAt: null })
+        .where(eq(quickfireQuestions.id, input.id));
+      return { success: true };
+    }),
+
+  /** Permanently delete a single trashed question immediately. */
+  purgeQuestion: adminProcedure
+    .input(z.object({ id: z.number().int().positive() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      // Only allow purging trashed questions
+      const [q] = await db.select({ deletedAt: quickfireQuestions.deletedAt })
+        .from(quickfireQuestions).where(eq(quickfireQuestions.id, input.id)).limit(1);
+      if (!q) throw new TRPCError({ code: "NOT_FOUND" });
+      if (!q.deletedAt) throw new TRPCError({ code: "BAD_REQUEST", message: "Question is not in trash" });
+      await db.delete(quickfireQuestions).where(eq(quickfireQuestions.id, input.id));
+      return { success: true };
+    }),
+
+  /** Auto-purge questions that have been in trash for more than 30 days. Called by cron or manually. */
+  purgeExpiredTrash: adminProcedure
+    .mutation(async () => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      const expired = await db
+        .select({ id: quickfireQuestions.id })
+        .from(quickfireQuestions)
+        .where(sql`${quickfireQuestions.deletedAt} IS NOT NULL AND ${quickfireQuestions.deletedAt} <= ${cutoff}`);
+      if (expired.length === 0) return { purged: 0 };
+      await db.delete(quickfireQuestions)
+        .where(inArray(quickfireQuestions.id, expired.map((q) => q.id)));
+      return { purged: expired.length };
     }),
 
   listAllQuestions: adminProcedure
@@ -714,6 +822,8 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
       const offset = (input.page - 1) * input.limit;
 
       const conditions: any[] = [];
+      // Always exclude trashed questions from the bank (they live in the Trash tab only)
+      conditions.push(sql`${quickfireQuestions.deletedAt} IS NULL`);
       // When fetching by specific IDs, skip the active filter so inactive questions are included
       if (!input.includeInactive && !input.ids?.length) {
         conditions.push(eq(quickfireQuestions.isActive, true));
@@ -723,6 +833,9 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
       }
       if (input.type) {
         conditions.push(eq(quickfireQuestions.type, input.type));
+      } else {
+        // Exclude quickReview (flashcard) type from the Question Bank — they live in Flashcard Management only
+        conditions.push(sql`${quickfireQuestions.type} != 'quickReview'`);
       }
       if (input.echoCategory) {
         conditions.push(eq(quickfireQuestions.echoCategory, input.echoCategory));
@@ -1454,7 +1567,19 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
         .where(inArray(quickfireChallenges.status, statuses as any[]))
         .orderBy(quickfireChallenges.priority, desc(quickfireChallenges.createdAt));
 
-      return rows.map((r) => ({ ...r, questionIds: JSON.parse(r.questionIds || "[]") as number[] }));
+      // Enrich with linked question difficulty
+      const parsed = rows.map((r) => ({ ...r, questionIds: JSON.parse(r.questionIds || "[]") as number[] }));
+      const allQIds = Array.from(new Set(parsed.flatMap((r) => r.questionIds)));
+      const questionMeta = allQIds.length > 0
+        ? await db.select({ id: quickfireQuestions.id, difficulty: quickfireQuestions.difficulty, type: quickfireQuestions.type })
+            .from(quickfireQuestions).where(inArray(quickfireQuestions.id, allQIds))
+        : [];
+      const qMetaMap = new Map(questionMeta.map((q) => [q.id, q]));
+      return parsed.map((r) => ({
+        ...r,
+        questionDifficulty: r.questionIds[0] != null ? (qMetaMap.get(r.questionIds[0])?.difficulty ?? null) : null,
+        questionType: r.questionIds[0] != null ? (qMetaMap.get(r.questionIds[0])?.type ?? null) : null,
+      }));
     }),
 
   /** Create a new challenge in the queue */
@@ -1470,13 +1595,28 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      // Duplicate prevention: check if any active/scheduled/draft challenge already uses these question IDs
+      const activeChallenges = await db
+        .select({ id: quickfireChallenges.id, questionIds: quickfireChallenges.questionIds, title: quickfireChallenges.title })
+        .from(quickfireChallenges)
+        .where(inArray(quickfireChallenges.status, ["draft", "scheduled", "live"] as any[]));
+      for (const ch of activeChallenges) {
+        const existingIds: number[] = JSON.parse(ch.questionIds || "[]");
+        const conflict = input.questionIds.find((qid) => existingIds.includes(qid));
+        if (conflict) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: `Question is already used in challenge "${ch.title}" (ID #${ch.id}). Each question can only appear once in the active queue.`,
+          });
+        }
+      }
       const [result] = await db.insert(quickfireChallenges).values({
         title: input.title,
         description: input.description ?? null,
         questionIds: JSON.stringify(input.questionIds),
         priority: input.priority,
         category: (input.category as any) ?? "Adult Echo",
-        status: "queued",
+        status: "scheduled",
         queuePosition: input.queuePosition ?? null,
         createdByUserId: ctx.user.id,
       });
@@ -1497,6 +1637,24 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
       const { id, questionIds, ...rest } = input;
+      // Duplicate prevention: if questionIds are being changed, ensure no other active challenge uses them
+      if (questionIds && questionIds.length > 0) {
+        const activeChallenges = await db
+          .select({ id: quickfireChallenges.id, questionIds: quickfireChallenges.questionIds, title: quickfireChallenges.title })
+          .from(quickfireChallenges)
+          .where(inArray(quickfireChallenges.status, ["draft", "scheduled", "live"] as any[]));
+        for (const ch of activeChallenges) {
+          if (ch.id === id) continue; // skip self
+          const existingIds: number[] = JSON.parse(ch.questionIds || "[]");
+          const conflict = questionIds.find((qid) => existingIds.includes(qid));
+          if (conflict) {
+            throw new TRPCError({
+              code: "CONFLICT",
+              message: `Question is already used in challenge "${ch.title}" (ID #${ch.id}). Each question can only appear once in the active queue.`,
+            });
+          }
+        }
+      }
       await db.update(quickfireChallenges).set({
         ...rest,
         ...(questionIds !== undefined ? { questionIds: JSON.stringify(questionIds) } : {}),
@@ -1504,21 +1662,29 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       return { success: true };
     }),
 
-  /** Delete a draft challenge */
+  /** Delete a draft/scheduled challenge and restore its linked questions to the bank */
   adminDeleteChallenge: adminProcedure
     .input(z.object({ id: z.number().int().positive() }))
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
       // Only allow deleting drafts/scheduled — never live/archived
-      const [ch] = await db.select({ status: quickfireChallenges.status }).from(quickfireChallenges)
+      const [ch] = await db.select({ status: quickfireChallenges.status, questionIds: quickfireChallenges.questionIds })
+        .from(quickfireChallenges)
         .where(eq(quickfireChallenges.id, input.id)).limit(1);
       if (!ch) throw new TRPCError({ code: "NOT_FOUND" });
       if (ch.status === "live" || ch.status === "archived") {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Cannot delete a live or archived challenge" });
       }
+      // Reactivate linked questions so they return to the question bank
+      const linkedIds: number[] = JSON.parse(ch.questionIds || "[]");
+      if (linkedIds.length > 0) {
+        await db.update(quickfireQuestions)
+          .set({ isActive: true })
+          .where(inArray(quickfireQuestions.id, linkedIds));
+      }
       await db.delete(quickfireChallenges).where(eq(quickfireChallenges.id, input.id));
-      return { success: true };
+      return { success: true, restoredQuestions: linkedIds.length };
     }),
 
   /** Reorder challenge priorities — accepts an ordered array of IDs */
@@ -1915,15 +2081,16 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
         .where(eq(quickfireQuestions.id, input.questionId))
         .limit(1);
       if (!q) throw new TRPCError({ code: "NOT_FOUND", message: "Question not found" });
-      const autoTitle =
-        q.question.length > 60 ? q.question.slice(0, 57) + "..." : q.question;
+      // Strip HTML tags from question text for the challenge title
+      const rawTitle = q.question.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").trim();
+      const autoTitle = rawTitle.length > 60 ? rawTitle.slice(0, 57) + "..." : rawTitle;
       const [result] = await db.insert(quickfireChallenges).values({
         title: autoTitle,
         description: null,
         questionIds: JSON.stringify([input.questionId]),
         priority: 100,
         category: "Adult Echo",
-        status: "draft",
+        status: "scheduled",
         publishDate: input.publishDate ?? null,
         createdByUserId: ctx.user.id,
       });
@@ -1967,7 +2134,9 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       const results: number[] = [];
       for (let i = 0; i < ordered.length; i++) {
         const q = ordered[i];
-        const autoTitle = q.question.length > 60 ? q.question.slice(0, 57) + "..." : q.question;
+        // Strip HTML tags from question text for the challenge title
+        const rawTitle = q.question.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").trim();
+        const autoTitle = rawTitle.length > 60 ? rawTitle.slice(0, 57) + "..." : rawTitle;
         let publishDate: string | null = null;
         if (input.startDate) {
           const d = new Date(input.startDate);
@@ -1980,7 +2149,7 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
           questionIds: JSON.stringify([q.id]),
           priority: 100,
           category: "Adult Echo",
-         status: "draft",
+         status: "scheduled",
           publishDate: publishDate ?? null,
           createdByUserId: ctx.user.id,
         });
@@ -2035,6 +2204,17 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       const rows = await db.select().from(quickfireChallenges)
         .where(eq(quickfireChallenges.status, "archived"))
         .orderBy(desc(quickfireChallenges.archivedAt));
-      return rows.map((r) => ({ ...r, questionIds: JSON.parse(r.questionIds || "[]") as number[] }));
+      const parsed = rows.map((r) => ({ ...r, questionIds: JSON.parse(r.questionIds || "[]") as number[] }));
+      const allQIds = Array.from(new Set(parsed.flatMap((r) => r.questionIds)));
+      const questionMeta = allQIds.length > 0
+        ? await db.select({ id: quickfireQuestions.id, difficulty: quickfireQuestions.difficulty, type: quickfireQuestions.type })
+            .from(quickfireQuestions).where(inArray(quickfireQuestions.id, allQIds))
+        : [];
+      const qMetaMap = new Map(questionMeta.map((q) => [q.id, q]));
+      return parsed.map((r) => ({
+        ...r,
+        questionDifficulty: r.questionIds[0] != null ? (qMetaMap.get(r.questionIds[0])?.difficulty ?? null) : null,
+        questionType: r.questionIds[0] != null ? (qMetaMap.get(r.questionIds[0])?.type ?? null) : null,
+      }));
     }),
 });

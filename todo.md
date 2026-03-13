@@ -37,3 +37,16 @@
 
 ## Magic Link Browser Fix
 - [ ] Force magic link email to open in default browser, not in-app mail browser
+- [ ] Show difficulty badges (Advanced/Intermediate/Beginner) on challenge queue, archive, and question bank items in QuickFireAdmin
+- [ ] Full question editor accessible from challenge queue and archive rows (view full question, edit text/options/answer key, add/replace images)
+- [ ] When a challenge is deleted from the queue, reactivate the linked question(s) so they return to the question bank
+- [ ] Soft-delete trash system for question bank: deletedAt column, 30-day recovery window, auto-purge after 30 days
+- [ ] Trash tab in QuickFireAdmin with restore and permanent delete actions
+- [ ] Question numbering system (QID): unique auto-assigned ID displayed on every question in bank/queue/archive
+- [ ] Duplicate prevention in challenge queue: block adding a question already in an active/scheduled challenge
+- [ ] Copy & Edit action in question bank: creates a new question pre-filled with the original's content and a new unique QID
+- [ ] Filter Quick Review (QR) type questions out of Question Bank and challenge queue picker — QR questions only visible in Flashcard Management tab
+- [ ] Server-side: exclude type=quickReview from listAllQuestions unless explicitly requested
+- [x] Fix: HTML tags (e.g. <p>) showing in challenge queue question titles — strip HTML for display
+- [x] Fix: Challenges created via queue should default to "scheduled" status, not "draft"
+- [x] Daily challenge: display one question per category (ACS, Adult Echo, Pediatric Echo, Fetal Echo, POCUS) — fixed POCUS key mapping bug and inline player key lookup

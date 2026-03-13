@@ -218,6 +218,7 @@ export default function QuickFire() {
     "Adult Echo": "adultEcho",
     "Pediatric Echo": "pediatricEcho",
     "Fetal Echo": "fetalEcho",
+    "POCUS": "pocus",
   };
   const activeCatMapKey = activeCategory ? (CAT_DISPLAY_TO_KEY[activeCategory] ?? activeCategory) : null;
   const activeCatQId = activeCatMapKey ? todayCategoryMap[activeCatMapKey] : null;
@@ -1089,7 +1090,8 @@ export default function QuickFire() {
               const categoryMap: Record<string, number> = (todaySet as any)?.categoryMap ?? {};
               const todayQuestions: any[] = (todaySet as any)?.questions ?? [];
               const todayAttempts: Record<number, any> = (todaySet as any)?.userAttempts ?? {};
-              const qId = categoryMap[activeCategory];
+              const catMapKey = CAT_DISPLAY_TO_KEY[activeCategory] ?? activeCategory;
+              const qId = categoryMap[catMapKey];
               const catQ = todayQuestions.find((q: any) => q.id === qId);
               if (!catQ) return (
                 <div className="text-center py-12">

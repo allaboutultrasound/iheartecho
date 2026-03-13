@@ -91,6 +91,7 @@ import {
   Link2,
   ArrowUpDown,
   AlertTriangle,
+  Copy,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -196,6 +197,13 @@ function SortableQueueItem({ c, idx, openEditChallenge, deleteChallengeMutation 
             <span className="flex items-center gap-1 text-xs text-gray-400">
               <Tag className="w-3 h-3" />{c.category}
             </span>
+          )}
+          {c.questionDifficulty && (
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+              c.questionDifficulty === "advanced" ? "bg-red-50 text-red-600" :
+              c.questionDifficulty === "beginner" ? "bg-green-50 text-green-600" :
+              "bg-blue-50 text-blue-600"
+            }`}>{c.questionDifficulty.charAt(0).toUpperCase() + c.questionDifficulty.slice(1)}</span>
           )}
           <span className="text-xs text-gray-400">{qCount === 1 ? "1 question" : qCount === 0 ? "No question assigned" : `${qCount} questions`}</span>
           {c.queuePosition != null && (
@@ -386,11 +394,35 @@ export default function QuickFireAdmin() {
   }
 
   // ── Challenge Queue state ────────────────────────────────────────────────
-  const [activeAdminTab, setActiveAdminTab] = useState<"questions" | "challenges" | "archive" | "flashcards">("questions");
+  const [activeAdminTab, setActiveAdminTab] = useState<"questions" | "challenges" | "archive" | "flashcards" | "trash">("questions");
 
   // ── Challenge Archive state ──────────────────────────────────────────────
   const archivedChallengesQuery = trpc.quickfire.adminListArchivedChallenges.useQuery();
   const archivedChallenges = archivedChallengesQuery.data ?? [];
+
+  // ── Trash state ─────────────────────────────────────────────────────────
+  const trashQuery = trpc.quickfire.listTrashedQuestions.useQuery(
+    undefined,
+    { enabled: activeAdminTab === "trash" }
+  );
+  const trashedQuestions = trashQuery.data ?? [];
+
+  const restoreQuestionMutation = trpc.quickfire.restoreQuestion.useMutation({
+    onSuccess: () => {
+      toast.success("Question restored to the bank.");
+      trashQuery.refetch();
+      utils.quickfire.listAllQuestions.invalidate();
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to restore question."),
+  });
+
+  const purgeQuestionMutation = trpc.quickfire.purgeQuestion.useMutation({
+    onSuccess: () => {
+      toast.success("Question permanently deleted.");
+      trashQuery.refetch();
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to permanently delete question."),
+  });
 
   const cloneChallengeMutation = trpc.quickfire.adminCloneChallenge.useMutation({
     onSuccess: () => {
@@ -612,10 +644,25 @@ export default function QuickFireAdmin() {
 
   const deleteMutation = trpc.quickfire.deleteQuestion.useMutation({
     onSuccess: () => {
-      toast.success("Question deactivated.");
+      toast.success("Question moved to Trash. It will be permanently deleted after 30 days.");
       utils.quickfire.listAllQuestions.invalidate();
     },
-    onError: (err) => toast.error(err.message || "Failed to deactivate question."),
+    onError: (err) => toast.error(err.message || "Failed to delete question."),
+  });
+
+  const duplicateMutation = trpc.quickfire.duplicateQuestion.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Question copied as ${data.qid}. Opening editor…`);
+      utils.quickfire.listAllQuestions.invalidate();
+      // Open the new question in the editor after a short delay for the query to refresh
+      setTimeout(() => {
+        utils.quickfire.listAllQuestions.fetch({ page: 1, limit: 20 }).then((res) => {
+          const newQ = res?.questions?.find((q: any) => q.id === data.id);
+          if (newQ) openEdit(newQ);
+        });
+      }, 600);
+    },
+    onError: (err) => toast.error(err.message || "Failed to copy question."),
   });
 
   const approveToQueueMutation = trpc.quickfire.adminApproveQuestionToQueue.useMutation({
@@ -924,6 +971,17 @@ export default function QuickFireAdmin() {
           >
             <FileText className="w-4 h-4" /> Flashcard Management
           </button>
+          <button
+            onClick={() => setActiveAdminTab("trash")}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+              activeAdminTab === "trash" ? "bg-white text-red-500 shadow-sm" : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            <Trash2 className="w-4 h-4" /> Trash
+            {trashedQuestions.length > 0 && (
+              <span className="ml-1 bg-red-400 text-white text-xs rounded-full px-1.5 py-0.5">{trashedQuestions.length}</span>
+            )}
+          </button>
         </div>
 
         {/* ── CHALLENGE QUEUE TAB ──────────────────────────────────────────── */}
@@ -1197,6 +1255,9 @@ export default function QuickFireAdmin() {
                       {q.type === "quickReview" ? "QR" : q.type === "image" ? "IMG" : q.type === "connect" ? "MATCH" : q.type === "identifier" ? "ID" : q.type === "order" ? "ORDER" : "MCQ"}
                     </span>
                     <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        {q.qid && <span className="text-[10px] font-mono font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded select-all">{q.qid}</span>}
+                      </div>
                       <p className="text-sm font-medium text-gray-800 leading-snug line-clamp-2" dangerouslySetInnerHTML={{ __html: q.question ?? "" }} />
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
                         <span className={`text-xs px-1.5 py-0.5 rounded ${
@@ -1247,18 +1308,35 @@ export default function QuickFireAdmin() {
                         size="sm"
                         variant="ghost"
                         className="h-8 w-8 p-0 text-gray-400 hover:text-[#189aa1]"
+                        title="Edit question"
                         onClick={(e) => { e.stopPropagation(); openEdit(q); }}
                       >
                         <Pencil className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0 text-gray-400 hover:text-purple-500"
+                        title="Copy & Edit — creates a duplicate with a new QID"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm(`Copy "${stripHtml(q.question ?? "").slice(0, 60)}..." and open the editor?`)) {
+                            duplicateMutation.mutate({ id: q.id });
+                          }
+                        }}
+                        disabled={duplicateMutation.isPending}
+                      >
+                        <Copy className="w-3.5 h-3.5" />
                       </Button>
                       {q.isActive && (
                         <Button
                           size="sm"
                           variant="ghost"
                           className="h-8 w-8 p-0 text-gray-400 hover:text-red-500"
+                          title="Delete — moves to Trash (30-day recovery)"
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (confirm("Deactivate this question?")) {
+                            if (confirm("Move this question to Trash? It can be recovered within 30 days.")) {
                               deleteMutation.mutate({ id: q.id });
                             }
                           }}
@@ -1401,15 +1479,22 @@ export default function QuickFireAdmin() {
                         {challenge.description && (
                           <p className="text-xs text-gray-500 mb-2 line-clamp-2" dangerouslySetInnerHTML={{ __html: challenge.description }} />
                         )}
-                        <div className="flex items-center gap-3 text-[10px] text-gray-400">
-                          <span className="flex items-center gap-1"><FileText className="w-3 h-3" />{challenge.questionIds.length} questions</span>
-                          {challenge.archivedAt && (
-                            <span className="flex items-center gap-1"><Clock className="w-3 h-3" />Archived {new Date(challenge.archivedAt).toLocaleDateString()}</span>
-                          )}
-                          {challenge.publishedAt && (
-                            <span className="flex items-center gap-1"><PlayCircle className="w-3 h-3" />Published {new Date(challenge.publishedAt).toLocaleDateString()}</span>
-                          )}
-                        </div>
+                        <div className="flex items-center gap-3 flex-wrap text-[10px] text-gray-400">
+                           <span className="flex items-center gap-1"><FileText className="w-3 h-3" />{challenge.questionIds.length} question{challenge.questionIds.length !== 1 ? "s" : ""}</span>
+                           {(challenge as any).questionDifficulty && (
+                             <span className={`font-semibold px-1.5 py-0.5 rounded-full ${
+                               (challenge as any).questionDifficulty === "advanced" ? "bg-red-50 text-red-600" :
+                               (challenge as any).questionDifficulty === "beginner" ? "bg-green-50 text-green-600" :
+                               "bg-blue-50 text-blue-600"
+                             }`}>{(challenge as any).questionDifficulty.charAt(0).toUpperCase() + (challenge as any).questionDifficulty.slice(1)}</span>
+                           )}
+                           {challenge.archivedAt && (
+                             <span className="flex items-center gap-1"><Clock className="w-3 h-3" />Archived {new Date(challenge.archivedAt).toLocaleDateString()}</span>
+                           )}
+                           {challenge.publishedAt && (
+                             <span className="flex items-center gap-1"><PlayCircle className="w-3 h-3" />Published {new Date(challenge.publishedAt).toLocaleDateString()}</span>
+                           )}
+                         </div>
                       </div>
                       <Button
                         size="sm"
@@ -1557,6 +1642,99 @@ export default function QuickFireAdmin() {
                     <p className="text-sm">No flashcards found. Create your first one or use AI Generate.</p>
                   </div>
                 )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── TRASH TAB ──────────────────────────────────────────────────────────── */}
+        {activeAdminTab === "trash" && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Trash</h2>
+                <p className="text-xs text-gray-400 mt-0.5">Questions deleted from the bank. Automatically purged after 30 days. Restore to recover them.</p>
+              </div>
+            </div>
+
+            {trashQuery.isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-6 h-6 animate-spin text-gray-300" />
+              </div>
+            ) : trashedQuestions.length === 0 ? (
+              <div className="text-center py-16 text-gray-400">
+                <Trash2 className="w-10 h-10 mx-auto mb-3 opacity-20" />
+                <p className="text-sm font-medium">Trash is empty</p>
+                <p className="text-xs mt-1">Deleted questions will appear here for 30 days before being permanently removed.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {trashedQuestions.map((q: any) => {
+                  const meta = TYPE_META[q.type as QuestionType] ?? TYPE_META.scenario;
+                  const Icon = meta.icon;
+                  const deletedDate = q.deletedAt ? new Date(q.deletedAt) : null;
+                  const daysLeft = q.daysUntilPurge ?? 30;
+                  return (
+                    <div key={q.id} className="flex items-start gap-3 p-4 bg-white rounded-xl border border-red-100 opacity-80">
+                      <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full flex-shrink-0 mt-0.5 ${meta.color}`}>
+                        <Icon className="w-3 h-3" />
+                        {q.type === "quickReview" ? "QR" : q.type === "image" ? "IMG" : q.type === "connect" ? "MATCH" : q.type === "identifier" ? "ID" : q.type === "order" ? "ORDER" : "MCQ"}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          {q.qid && <span className="text-[10px] font-mono font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{q.qid}</span>}
+                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
+                            daysLeft <= 3 ? "bg-red-100 text-red-600" :
+                            daysLeft <= 7 ? "bg-orange-100 text-orange-600" :
+                            "bg-gray-100 text-gray-500"
+                          }`}>
+                            {daysLeft === 0 ? "Purges today" : `${daysLeft}d until purge`}
+                          </span>
+                        </div>
+                        <p className="text-sm font-medium text-gray-600 leading-snug line-clamp-2" dangerouslySetInnerHTML={{ __html: q.question ?? "" }} />
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          <span className={`text-xs px-1.5 py-0.5 rounded ${
+                            q.difficulty === "beginner" ? "bg-green-50 text-green-600" :
+                            q.difficulty === "advanced" ? "bg-red-50 text-red-600" :
+                            "bg-blue-50 text-blue-600"
+                          }`}>{q.difficulty}</span>
+                          {q.category && <span className="text-xs text-gray-400">{q.category}</span>}
+                          {deletedDate && <span className="text-xs text-gray-400">Deleted {deletedDate.toLocaleDateString()}</span>}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 px-2 text-xs gap-1 text-[#189aa1] hover:bg-[#189aa1]/10 border border-[#189aa1]/30"
+                          title="Restore to Question Bank"
+                          onClick={() => {
+                            if (confirm("Restore this question to the bank?")) {
+                              restoreQuestionMutation.mutate({ id: q.id });
+                            }
+                          }}
+                          disabled={restoreQuestionMutation.isPending}
+                        >
+                          <RefreshCw className="w-3.5 h-3.5" /> Restore
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 text-gray-400 hover:text-red-600"
+                          title="Permanently delete now"
+                          onClick={() => {
+                            if (confirm("Permanently delete this question? This cannot be undone.")) {
+                              purgeQuestionMutation.mutate({ id: q.id });
+                            }
+                          }}
+                          disabled={purgeQuestionMutation.isPending}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

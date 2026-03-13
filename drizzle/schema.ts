@@ -900,6 +900,8 @@ export type InsertCmeEnrollmentCache = typeof cmeEnrollmentCache.$inferInsert;
 // Types: scenario (text-only MCQ), image (image + MCQ), quickReview (flashcard).
 export const quickfireQuestions = mysqlTable("quickfireQuestions", {
   id: int("id").primaryKey().autoincrement(),
+  // Human-readable question ID, e.g. QID-0001. Auto-assigned on creation, unique, never reused.
+  qid: varchar("qid", { length: 20 }).unique(),
   type: mysqlEnum("type", ["scenario", "image", "quickReview", "connect", "identifier", "order"]).notNull(),
   question: text("question").notNull(),
   // JSON: string[] — answer choices (for scenario/image types)
@@ -929,6 +931,8 @@ export const quickfireQuestions = mysqlTable("quickfireQuestions", {
   category: mysqlEnum("category", ["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "POCUS", "General"]).default("Adult Echo"),
   // Whether this question is active and eligible for daily sets
   isActive: boolean("isActive").default(true).notNull(),
+  // Soft-delete: set when question is deleted from the bank. Permanently purged after 30 days.
+  deletedAt: timestamp("deletedAt"),
   createdByUserId: int("createdByUserId"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
