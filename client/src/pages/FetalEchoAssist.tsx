@@ -57,14 +57,14 @@ function ResultPanel({ suggests, note, tip }: { suggests?: string; note?: string
         </div>
       )}
       {note && (
-        <div className="flex gap-2 p-3 rounded-lg" style={{ background: "#0284c712", borderLeft: "3px solid #0284c7" }}>
-          <Info className="w-4 h-4 flex-shrink-0 mt-0.5 text-blue-600" />
+        <div className="flex gap-2 p-3 rounded-lg" style={{ background: AQUA + "18", borderLeft: `3px solid ${AQUA}` }}>
+          <Info className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: AQUA }} />
           <p className="text-xs leading-relaxed text-gray-700">{note}</p>
         </div>
       )}
       {tip && (
-        <div className="flex gap-2 p-3 rounded-lg bg-amber-50" style={{ borderLeft: "3px solid #d97706" }}>
-          <Lightbulb className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-600" />
+        <div className="flex gap-2 p-3 rounded-lg" style={{ background: BRAND + "0d", borderLeft: `3px solid ${BRAND}` }}>
+          <Lightbulb className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: BRAND }} />
           <p className="text-xs leading-relaxed text-gray-700">{tip}</p>
         </div>
       )}
@@ -1165,16 +1165,16 @@ export default function FetalEchoAssist() {
 
   const engines = [
     { id: "engine-celermajer", title: "Celermajer Index", badge: "Cardiomegaly", color: BRAND, key: "celermajer", component: (onResult: (r: CalcResult | null) => void) => <CelermajerIndex onResult={onResult} /> },
-    { id: "engine-cvps", title: "Fetal Cardiovascular Profile Score (CVPS)", badge: "Global Assessment", color: "#dc2626", key: "cvps", component: (onResult: (r: CalcResult | null) => void) => <CVPSCalculator onResult={onResult} /> },
+    { id: "engine-cvps", title: "Fetal Cardiovascular Profile Score (CVPS)", badge: "Global Assessment", color: BRAND, key: "cvps", component: (onResult: (r: CalcResult | null) => void) => <CVPSCalculator onResult={onResult} /> },
     { id: "engine-ctr", title: "Cardiothoracic Ratio (CTR)", badge: "Cardiomegaly", color: BRAND, key: "ctr", component: (onResult: (r: CalcResult | null) => void) => <CardiothoracicRatio onResult={onResult} /> },
-    { id: "engine-tei", title: "Tei Index (MPI) — Fetal", badge: "Global Function", color: "#7c3aed", key: "tei", component: (onResult: (r: CalcResult | null) => void) => <FetalTeiIndex onResult={onResult} /> },
-    { id: "engine-ea", title: "E/A Ratio (AV Inflow)", badge: "Diastolic Function", color: "#0284c7", key: "ea", component: (onResult: (r: CalcResult | null) => void) => <EARatioCalculator onResult={onResult} /> },
-    { id: "engine-dv", title: "Ductus Venosus PIV", badge: "Venous Doppler", color: "#0369a1", key: "dv", component: (onResult: (r: CalcResult | null) => void) => <DuctusVenosusPIV onResult={onResult} /> },
-    { id: "engine-ua", title: "Umbilical Artery S/D Ratio & PI", badge: "Placental Resistance", color: "#d97706", key: "ua", component: (onResult: (r: CalcResult | null) => void) => <UmbilicalArteryDoppler onResult={onResult} /> },
-    { id: "engine-mca", title: "MCA PSV (MoM) — Fetal Anemia Screen", badge: "Fetal Anemia", color: "#dc2626", key: "mca", component: (onResult: (r: CalcResult | null) => void) => <MCAPSVCalculator onResult={onResult} /> },
-    { id: "engine-fhr", title: "Fetal Heart Rate Classification", badge: "Rhythm", color: "#16a34a", key: "fhr", component: (onResult: (r: CalcResult | null) => void) => <FetalHRZScore onResult={onResult} /> },
-    { id: "engine-paao", title: "PA/Ao Ratio", badge: "Outflow Tracts", color: "#0891b2", key: "paao", component: (onResult: (r: CalcResult | null) => void) => <PAAoRatio onResult={onResult} /> },
-    { id: "engine-wallthick", title: "Ventricular Wall Thickness Z-score", badge: "Hypertrophy", color: "#7c3aed", key: "wallthick", component: (onResult: (r: CalcResult | null) => void) => <VentricularWallThickness onResult={onResult} /> },
+    { id: "engine-tei", title: "Tei Index (MPI) — Fetal", badge: "Global Function", color: BRAND, key: "tei", component: (onResult: (r: CalcResult | null) => void) => <FetalTeiIndex onResult={onResult} /> },
+    { id: "engine-ea", title: "E/A Ratio (AV Inflow)", badge: "Diastolic Function", color: BRAND, key: "ea", component: (onResult: (r: CalcResult | null) => void) => <EARatioCalculator onResult={onResult} /> },
+    { id: "engine-dv", title: "Ductus Venosus PIV", badge: "Venous Doppler", color: BRAND, key: "dv", component: (onResult: (r: CalcResult | null) => void) => <DuctusVenosusPIV onResult={onResult} /> },
+    { id: "engine-ua", title: "Umbilical Artery S/D Ratio & PI", badge: "Placental Resistance", color: BRAND, key: "ua", component: (onResult: (r: CalcResult | null) => void) => <UmbilicalArteryDoppler onResult={onResult} /> },
+    { id: "engine-mca", title: "MCA PSV (MoM) — Fetal Anemia Screen", badge: "Fetal Anemia", color: BRAND, key: "mca", component: (onResult: (r: CalcResult | null) => void) => <MCAPSVCalculator onResult={onResult} /> },
+    { id: "engine-fhr", title: "Fetal Heart Rate Classification", badge: "Rhythm", color: BRAND, key: "fhr", component: (onResult: (r: CalcResult | null) => void) => <FetalHRZScore onResult={onResult} /> },
+    { id: "engine-paao", title: "PA/Ao Ratio", badge: "Outflow Tracts", color: BRAND, key: "paao", component: (onResult: (r: CalcResult | null) => void) => <PAAoRatio onResult={onResult} /> },
+    { id: "engine-wallthick", title: "Ventricular Wall Thickness Z-score", badge: "Hypertrophy", color: BRAND, key: "wallthick", component: (onResult: (r: CalcResult | null) => void) => <VentricularWallThickness onResult={onResult} /> },
     { id: "engine-sf", title: "Shortening Fraction (SF) — Fetal", badge: "Systolic Function", color: BRAND, key: "sf", component: (onResult: (r: CalcResult | null) => void) => <FetalSF onResult={onResult} /> },
   ];
 

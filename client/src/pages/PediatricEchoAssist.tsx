@@ -101,7 +101,7 @@ function InputRow({ label, unit, value, onChange, placeholder }: { label: string
 function ResultBox({ result, source }: { result: CalcResult | null; source?: string }) {
   if (!result) return null;
   return (
-    <div className={`mt-4 rounded-xl p-4 border ${result.normal === false ? "bg-red-50 border-red-200" : result.normal === true ? "bg-green-50 border-green-200" : "bg-blue-50 border-blue-200"}`}>
+    <div className={`mt-4 rounded-xl p-4 border ${result.normal === false ? "bg-red-50 border-red-200" : result.normal === true ? "bg-green-50 border-green-200" : ""}`} style={result.normal === null ? { background: "#189aa108", borderColor: "#189aa130" } : undefined}>
       <div className="flex items-center gap-2 mb-1 flex-wrap">
         <span className="font-bold text-sm text-gray-800">{result.label}: {result.value}</span>
         <ResultBadge normal={result.normal} />
@@ -196,10 +196,10 @@ function ZScoreAorticRoot({ onResult }: { onResult: (r: CalcResult | null) => vo
   };
 
   return (
-    <CalcCard id="engine-zscore-ao" title="Z-Score — Aortic Root / Annulus" badge="Z-Score" color="#7c3aed">
+    <CalcCard id="engine-zscore-ao" title="Z-Score — Aortic Root / Annulus" badge="Z-Score" color={BRAND}>
       <InputRow label="BSA" unit="m²" value={bsa} onChange={setBsa} placeholder="e.g. 0.85" />
       <InputRow label="Aortic Root Diameter" unit="cm" value={diameter} onChange={setDiameter} placeholder="e.g. 2.1" />
-      <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: "#7c3aed" }}>Calculate Z-Score</Button>
+      <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: BRAND }}>Calculate Z-Score</Button>
       <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
@@ -230,10 +230,10 @@ function ZScorePulmonaryAnnulus({ onResult }: { onResult: (r: CalcResult | null)
   };
 
   return (
-    <CalcCard id="engine-zscore-pa" title="Z-Score — Pulmonary Valve Annulus" badge="Z-Score" color="#7c3aed">
+    <CalcCard id="engine-zscore-pa" title="Z-Score — Pulmonary Valve Annulus" badge="Z-Score" color={BRAND}>
       <InputRow label="BSA" unit="m²" value={bsa} onChange={setBsa} placeholder="e.g. 0.85" />
       <InputRow label="PA Annulus Diameter" unit="cm" value={diameter} onChange={setDiameter} placeholder="e.g. 1.8" />
-      <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: "#7c3aed" }}>Calculate Z-Score</Button>
+      <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: BRAND }}>Calculate Z-Score</Button>
       <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
@@ -263,10 +263,10 @@ function ZScoreMitralAnnulus({ onResult }: { onResult: (r: CalcResult | null) =>
   };
 
   return (
-    <CalcCard id="engine-zscore-mv" title="Z-Score — Mitral Valve Annulus" badge="Z-Score" color="#7c3aed">
+    <CalcCard id="engine-zscore-mv" title="Z-Score — Mitral Valve Annulus" badge="Z-Score" color={BRAND}>
       <InputRow label="BSA" unit="m²" value={bsa} onChange={setBsa} placeholder="e.g. 0.85" />
       <InputRow label="MV Annulus Diameter" unit="cm" value={diameter} onChange={setDiameter} placeholder="e.g. 2.0" />
-      <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: "#7c3aed" }}>Calculate Z-Score</Button>
+      <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: BRAND }}>Calculate Z-Score</Button>
       <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
@@ -296,10 +296,10 @@ function ZScoreTricuspidAnnulus({ onResult }: { onResult: (r: CalcResult | null)
   };
 
   return (
-    <CalcCard id="engine-zscore-tv" title="Z-Score — Tricuspid Valve Annulus" badge="Z-Score" color="#7c3aed">
+    <CalcCard id="engine-zscore-tv" title="Z-Score — Tricuspid Valve Annulus" badge="Z-Score" color={BRAND}>
       <InputRow label="BSA" unit="m²" value={bsa} onChange={setBsa} placeholder="e.g. 0.85" />
       <InputRow label="TV Annulus Diameter" unit="cm" value={diameter} onChange={setDiameter} placeholder="e.g. 2.2" />
-      <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: "#7c3aed" }}>Calculate Z-Score</Button>
+      <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: BRAND }}>Calculate Z-Score</Button>
       <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
@@ -330,10 +330,10 @@ function ZScoreLVEDD({ onResult }: { onResult: (r: CalcResult | null) => void })
   };
 
   return (
-    <CalcCard id="engine-zscore-lvedd" title="Z-Score — LV End-Diastolic Dimension" badge="Z-Score" color="#7c3aed">
+    <CalcCard id="engine-zscore-lvedd" title="Z-Score — LV End-Diastolic Dimension" badge="Z-Score" color={BRAND}>
       <InputRow label="BSA" unit="m²" value={bsa} onChange={setBsa} placeholder="e.g. 0.85" />
       <InputRow label="LVEDD" unit="cm" value={lvedd} onChange={setLvedd} placeholder="e.g. 3.5" />
-      <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: "#7c3aed" }}>Calculate Z-Score</Button>
+      <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: BRAND }}>Calculate Z-Score</Button>
       <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
@@ -374,12 +374,12 @@ function CoronaryZScore({ onResult }: { onResult: (r: CalcResult | null) => void
   };
 
   return (
-    <CalcCard id="engine-coronary-zscore" title="Coronary Artery Z-Score (Kawasaki)" badge="Kawasaki" color="#dc2626">
+    <CalcCard id="engine-coronary-zscore" title="Coronary Artery Z-Score (Kawasaki)" badge="Kawasaki" color={BRAND}>
       <div className="mb-3">
         <label className="text-xs font-semibold text-gray-600 block mb-1">Vessel</label>
         <div className="flex gap-2">
           {(["lmca", "lad", "rca"] as const).map((v) => (
-            <button key={v} onClick={() => setVessel(v)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${vessel === v ? "text-white border-transparent" : "bg-white text-gray-600 border-gray-200"}`} style={vessel === v ? { background: "#dc2626" } : {}}>
+            <button key={v} onClick={() => setVessel(v)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${vessel === v ? "text-white border-transparent" : "bg-white text-gray-600 border-gray-200"}`} style={vessel === v ? { background: BRAND } : {}}>
               {v.toUpperCase()}
             </button>
           ))}
@@ -387,7 +387,7 @@ function CoronaryZScore({ onResult }: { onResult: (r: CalcResult | null) => void
       </div>
       <InputRow label="BSA" unit="m²" value={bsa} onChange={setBsa} placeholder="e.g. 0.85" />
       <InputRow label="Vessel Diameter" unit="mm" value={diameter} onChange={setDiameter} placeholder="e.g. 3.2" />
-      <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: "#dc2626" }}>Calculate Z-Score</Button>
+      <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: BRAND }}>Calculate Z-Score</Button>
       <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
@@ -424,13 +424,13 @@ function QpQsCalculator({ onResult }: { onResult: (r: CalcResult | null) => void
   };
 
   return (
-    <CalcCard id="engine-qpqs" title="Qp:Qs Shunt Ratio" badge="Shunt" color="#0284c7">
+    <CalcCard id="engine-qpqs" title="Qp:Qs Shunt Ratio" badge="Shunt" color={BRAND}>
       <p className="text-xs text-gray-500 mb-3">Measure RVOT (pulmonary) and LVOT (systemic) diameters and VTI by PW Doppler.</p>
       <InputRow label="RVOT VTI" unit="cm" value={rvotVti} onChange={setRvotVti} placeholder="e.g. 18" />
       <InputRow label="RVOT Diameter" unit="cm" value={rvotD} onChange={setRvotD} placeholder="e.g. 1.8" />
       <InputRow label="LVOT VTI" unit="cm" value={lvotVti} onChange={setLvotVti} placeholder="e.g. 22" />
       <InputRow label="LVOT Diameter" unit="cm" value={lvotD} onChange={setLvotD} placeholder="e.g. 1.5" />
-      <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: "#0284c7" }}>Calculate Qp:Qs</Button>
+      <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: BRAND }}>Calculate Qp:Qs</Button>
       <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
@@ -460,10 +460,10 @@ function RVSPCalculator({ onResult }: { onResult: (r: CalcResult | null) => void
   };
 
   return (
-    <CalcCard id="engine-rvsp" title="RVSP / PASP via TR Jet" badge="Hemodynamics" color="#0284c7">
+    <CalcCard id="engine-rvsp" title="RVSP / PASP via TR Jet" badge="Hemodynamics" color={BRAND}>
       <InputRow label="TR Vmax" unit="m/s" value={trVmax} onChange={setTrVmax} placeholder="e.g. 3.0" />
       <InputRow label="RAP Estimate" unit="mmHg" value={rap} onChange={setRap} placeholder="5" />
-      <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: "#0284c7" }}>Calculate RVSP</Button>
+      <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: BRAND }}>Calculate RVSP</Button>
       <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
@@ -501,7 +501,7 @@ function RpRsCalculator({ onResult }: { onResult: (r: CalcResult | null) => void
   };
 
   return (
-    <CalcCard id="engine-rprs" title="Pulmonary-to-Systemic Resistance Ratio (Rp:Rs)" badge="Hemodynamics" color="#0284c7">
+    <CalcCard id="engine-rprs" title="Pulmonary-to-Systemic Resistance Ratio (Rp:Rs)" badge="Hemodynamics" color={BRAND}>
       <p className="text-xs text-gray-500 mb-3">Catheterization data required. PVR = (mPAP − PCWP) / Qp; SVR = (mAoP − CVP) / Qs.</p>
       <InputRow label="Mean PAP" unit="mmHg" value={mPAP} onChange={setMPAP} placeholder="e.g. 35" />
       <InputRow label="PCWP" unit="mmHg" value={pcwp} onChange={setPcwp} placeholder="e.g. 10" />
@@ -509,7 +509,7 @@ function RpRsCalculator({ onResult }: { onResult: (r: CalcResult | null) => void
       <InputRow label="Mean Aortic Pressure" unit="mmHg" value={mAoP} onChange={setMAoP} placeholder="e.g. 70" />
       <InputRow label="CVP / RAP" unit="mmHg" value={cvp} onChange={setCvp} placeholder="e.g. 5" />
       <InputRow label="Qs" unit="L/min/m²" value={qs} onChange={setQs} placeholder="e.g. 3.0" />
-      <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: "#0284c7" }}>Calculate Rp:Rs</Button>
+      <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: BRAND }}>Calculate Rp:Rs</Button>
       <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
@@ -615,12 +615,12 @@ function PediatricTeiIndex({ onResult }: { onResult: (r: CalcResult | null) => v
   };
 
   return (
-    <CalcCard id="engine-tei-ped" title="Tei Index (MPI) — Pediatric LV & RV" badge="Global Function" color="#7c3aed">
+    <CalcCard id="engine-tei-ped" title="Tei Index (MPI) — Pediatric LV & RV" badge="Global Function" color={BRAND}>
       <div className="mb-3">
         <label className="text-xs font-semibold text-gray-600 block mb-1">Chamber</label>
         <div className="flex gap-2">
           {(["lv", "rv"] as const).map((c) => (
-            <button key={c} onClick={() => setChamber(c)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${chamber === c ? "text-white border-transparent" : "bg-white text-gray-600 border-gray-200"}`} style={chamber === c ? { background: "#7c3aed" } : {}}>
+            <button key={c} onClick={() => setChamber(c)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${chamber === c ? "text-white border-transparent" : "bg-white text-gray-600 border-gray-200"}`} style={chamber === c ? { background: BRAND } : {}}>
               {c.toUpperCase()}
             </button>
           ))}
@@ -629,7 +629,7 @@ function PediatricTeiIndex({ onResult }: { onResult: (r: CalcResult | null) => v
       <InputRow label="ICT" unit="ms" value={ict} onChange={setIct} placeholder="e.g. 35" />
       <InputRow label="IRT" unit="ms" value={irt} onChange={setIrt} placeholder="e.g. 40" />
       <InputRow label="ET" unit="ms" value={et} onChange={setEt} placeholder="e.g. 220" />
-      <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: "#7c3aed" }}>Calculate Tei Index</Button>
+      <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: BRAND }}>Calculate Tei Index</Button>
       <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
@@ -724,11 +724,11 @@ function NakataIndex({ onResult }: { onResult: (r: CalcResult | null) => void })
   };
 
   return (
-    <CalcCard id="engine-nakata" title="Nakata Index — PA Size for TOF Repair" badge="Congenital" color="#d97706">
+    <CalcCard id="engine-nakata" title="Nakata Index — PA Size for TOF Repair" badge="Congenital" color={BRAND}>
       <InputRow label="RPA Diameter" unit="mm" value={rpaD} onChange={setRpaD} placeholder="e.g. 8.0" />
       <InputRow label="LPA Diameter" unit="mm" value={lpaD} onChange={setLpaD} placeholder="e.g. 7.5" />
       <InputRow label="BSA" unit="m²" value={bsa} onChange={setBsa} placeholder="e.g. 0.85" />
-      <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: "#d97706" }}>Calculate Nakata Index</Button>
+      <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: BRAND }}>Calculate Nakata Index</Button>
       <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
@@ -758,11 +758,11 @@ function McGoonRatio({ onResult }: { onResult: (r: CalcResult | null) => void })
   };
 
   return (
-    <CalcCard id="engine-mcgoon" title="McGoon Ratio — PA Adequacy" badge="Congenital" color="#d97706">
+    <CalcCard id="engine-mcgoon" title="McGoon Ratio — PA Adequacy" badge="Congenital" color={BRAND}>
       <InputRow label="RPA Diameter" unit="mm" value={rpaD} onChange={setRpaD} placeholder="e.g. 8.0" />
       <InputRow label="LPA Diameter" unit="mm" value={lpaD} onChange={setLpaD} placeholder="e.g. 7.5" />
       <InputRow label="Descending Aorta Diameter" unit="mm" value={daoD} onChange={setDaoD} placeholder="e.g. 10.0" />
-      <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: "#d97706" }}>Calculate McGoon Ratio</Button>
+      <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: BRAND }}>Calculate McGoon Ratio</Button>
       <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
@@ -788,10 +788,10 @@ function CoarctationGradient({ onResult }: { onResult: (r: CalcResult | null) =>
   };
 
   return (
-    <CalcCard id="engine-coa" title="Coarctation Gradient Estimator" badge="Congenital" color="#d97706">
+    <CalcCard id="engine-coa" title="Coarctation Gradient Estimator" badge="Congenital" color={BRAND}>
       <p className="text-xs text-gray-500 mb-3">Use CW Doppler from suprasternal notch. Note: collateral flow may underestimate gradient — use diastolic tail pattern as additional marker.</p>
       <InputRow label="CoA Vmax" unit="m/s" value={vmax} onChange={setVmax} placeholder="e.g. 3.5" />
-      <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: "#d97706" }}>Calculate Gradient</Button>
+      <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: BRAND }}>Calculate Gradient</Button>
       <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
@@ -823,11 +823,11 @@ function PediatricAVA({ onResult }: { onResult: (r: CalcResult | null) => void }
   };
 
   return (
-    <CalcCard id="engine-ped-ava" title="Aortic Valve Area — Pediatric (Continuity Equation)" badge="Congenital" color="#d97706">
+    <CalcCard id="engine-ped-ava" title="Aortic Valve Area — Pediatric (Continuity Equation)" badge="Congenital" color={BRAND}>
       <InputRow label="AV VTI" unit="cm" value={vtiAV} onChange={setVtiAV} placeholder="e.g. 80" />
       <InputRow label="LVOT VTI" unit="cm" value={vtiLVOT} onChange={setVtiLVOT} placeholder="e.g. 22" />
       <InputRow label="LVOT Diameter" unit="cm" value={lvotD} onChange={setLvotD} placeholder="e.g. 1.5" />
-      <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: "#d97706" }}>Calculate AVA</Button>
+      <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: BRAND }}>Calculate AVA</Button>
       <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
@@ -867,7 +867,7 @@ function RossScore({ onResult }: { onResult: (r: CalcResult | null) => void }) {
   };
 
   return (
-    <CalcCard id="engine-ross" title="Ross Score — Infant Heart Failure" badge="HF Severity" color="#dc2626">
+    <CalcCard id="engine-ross" title="Ross Score — Infant Heart Failure" badge="HF Severity" color={BRAND}>
       <p className="text-xs text-gray-500 mb-3">Check all signs present. Score 0 = no HF; 1–2 = mild; 3–6 = moderate; 7–12 = severe.</p>
       <div className="space-y-2 mb-4">
         {rossItems.map((item) => (
@@ -878,7 +878,7 @@ function RossScore({ onResult }: { onResult: (r: CalcResult | null) => void }) {
           </label>
         ))}
       </div>
-      <Button onClick={calculate} className="text-white w-full" style={{ background: "#dc2626" }}>Calculate Ross Score</Button>
+      <Button onClick={calculate} className="text-white w-full" style={{ background: BRAND }}>Calculate Ross Score</Button>
       <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
@@ -1052,25 +1052,25 @@ export default function PediatricEchoAssist() {
 
   const engines = [
     { id: "engine-bsa",        title: "BSA Calculator",                              badge: "Growth",        color: BRAND,     key: "bsa",        component: (fn: (r: CalcResult | null) => void) => <BSACalculator onResult={fn} /> },
-    { id: "engine-zscore-ao",  title: "Z-Score — Aortic Root",                       badge: "Z-Score",       color: "#7c3aed", key: "zscore_ao",  component: (fn: (r: CalcResult | null) => void) => <ZScoreAorticRoot onResult={fn} /> },
-    { id: "engine-zscore-pa",  title: "Z-Score — Pulmonary Annulus",                 badge: "Z-Score",       color: "#7c3aed", key: "zscore_pa",  component: (fn: (r: CalcResult | null) => void) => <ZScorePulmonaryAnnulus onResult={fn} /> },
-    { id: "engine-zscore-mv",  title: "Z-Score — Mitral Annulus",                    badge: "Z-Score",       color: "#7c3aed", key: "zscore_mv",  component: (fn: (r: CalcResult | null) => void) => <ZScoreMitralAnnulus onResult={fn} /> },
-    { id: "engine-zscore-tv",  title: "Z-Score — Tricuspid Annulus",                 badge: "Z-Score",       color: "#7c3aed", key: "zscore_tv",  component: (fn: (r: CalcResult | null) => void) => <ZScoreTricuspidAnnulus onResult={fn} /> },
-    { id: "engine-zscore-lvedd", title: "Z-Score — LVEDD",                           badge: "Z-Score",       color: "#7c3aed", key: "zscore_lvedd", component: (fn: (r: CalcResult | null) => void) => <ZScoreLVEDD onResult={fn} /> },
-    { id: "engine-coronary-zscore", title: "Coronary Z-Score (Kawasaki)",            badge: "Kawasaki",      color: "#dc2626", key: "coronary_z", component: (fn: (r: CalcResult | null) => void) => <CoronaryZScore onResult={fn} /> },
-    { id: "engine-qpqs",       title: "Qp:Qs Shunt Ratio",                           badge: "Shunt",         color: "#0284c7", key: "qpqs",       component: (fn: (r: CalcResult | null) => void) => <QpQsCalculator onResult={fn} /> },
-    { id: "engine-rvsp",       title: "RVSP via TR Jet",                             badge: "Hemodynamics",  color: "#0284c7", key: "rvsp",       component: (fn: (r: CalcResult | null) => void) => <RVSPCalculator onResult={fn} /> },
-    { id: "engine-rprs",       title: "Rp:Rs Resistance Ratio",                      badge: "Hemodynamics",  color: "#0284c7", key: "rprs",       component: (fn: (r: CalcResult | null) => void) => <RpRsCalculator onResult={fn} /> },
+    { id: "engine-zscore-ao",  title: "Z-Score — Aortic Root",                       badge: "Z-Score",       color: BRAND, key: "zscore_ao",  component: (fn: (r: CalcResult | null) => void) => <ZScoreAorticRoot onResult={fn} /> },
+    { id: "engine-zscore-pa",  title: "Z-Score — Pulmonary Annulus",                 badge: "Z-Score",       color: BRAND, key: "zscore_pa",  component: (fn: (r: CalcResult | null) => void) => <ZScorePulmonaryAnnulus onResult={fn} /> },
+    { id: "engine-zscore-mv",  title: "Z-Score — Mitral Annulus",                    badge: "Z-Score",       color: BRAND, key: "zscore_mv",  component: (fn: (r: CalcResult | null) => void) => <ZScoreMitralAnnulus onResult={fn} /> },
+    { id: "engine-zscore-tv",  title: "Z-Score — Tricuspid Annulus",                 badge: "Z-Score",       color: BRAND, key: "zscore_tv",  component: (fn: (r: CalcResult | null) => void) => <ZScoreTricuspidAnnulus onResult={fn} /> },
+    { id: "engine-zscore-lvedd", title: "Z-Score — LVEDD",                           badge: "Z-Score",       color: BRAND, key: "zscore_lvedd", component: (fn: (r: CalcResult | null) => void) => <ZScoreLVEDD onResult={fn} /> },
+    { id: "engine-coronary-zscore", title: "Coronary Z-Score (Kawasaki)",            badge: "Kawasaki",      color: BRAND, key: "coronary_z", component: (fn: (r: CalcResult | null) => void) => <CoronaryZScore onResult={fn} /> },
+    { id: "engine-qpqs",       title: "Qp:Qs Shunt Ratio",                           badge: "Shunt",         color: BRAND, key: "qpqs",       component: (fn: (r: CalcResult | null) => void) => <QpQsCalculator onResult={fn} /> },
+    { id: "engine-rvsp",       title: "RVSP via TR Jet",                             badge: "Hemodynamics",  color: BRAND, key: "rvsp",       component: (fn: (r: CalcResult | null) => void) => <RVSPCalculator onResult={fn} /> },
+    { id: "engine-rprs",       title: "Rp:Rs Resistance Ratio",                      badge: "Hemodynamics",  color: BRAND, key: "rprs",       component: (fn: (r: CalcResult | null) => void) => <RpRsCalculator onResult={fn} /> },
     { id: "engine-sf",         title: "Shortening Fraction — Pediatric LV",          badge: "LV Function",   color: BRAND,     key: "sf",         component: (fn: (r: CalcResult | null) => void) => <ShorteningFraction onResult={fn} /> },
     { id: "engine-bullet-ef",  title: "Bullet EF — 5/6 AL Method",                  badge: "LV Function",   color: BRAND,     key: "bullet_ef",  component: (fn: (r: CalcResult | null) => void) => <BulletEF onResult={fn} /> },
-    { id: "engine-tei-ped",    title: "Tei Index (MPI) — Pediatric",                 badge: "Global Fn",     color: "#7c3aed", key: "tei_ped",    component: (fn: (r: CalcResult | null) => void) => <PediatricTeiIndex onResult={fn} /> },
+    { id: "engine-tei-ped",    title: "Tei Index (MPI) — Pediatric",                 badge: "Global Fn",     color: BRAND, key: "tei_ped",    component: (fn: (r: CalcResult | null) => void) => <PediatricTeiIndex onResult={fn} /> },
     { id: "engine-tapse-z",    title: "TAPSE Z-Score",                               badge: "RV Function",   color: BRAND,     key: "tapse_z",    component: (fn: (r: CalcResult | null) => void) => <TAPSEZScore onResult={fn} /> },
     { id: "engine-rv-fac",     title: "RV FAC",                                      badge: "RV Function",   color: BRAND,     key: "rv_fac",     component: (fn: (r: CalcResult | null) => void) => <RVFACCalculator onResult={fn} /> },
-    { id: "engine-nakata",     title: "Nakata Index",                                badge: "Congenital",    color: "#d97706", key: "nakata",     component: (fn: (r: CalcResult | null) => void) => <NakataIndex onResult={fn} /> },
-    { id: "engine-mcgoon",     title: "McGoon Ratio",                                badge: "Congenital",    color: "#d97706", key: "mcgoon",     component: (fn: (r: CalcResult | null) => void) => <McGoonRatio onResult={fn} /> },
-    { id: "engine-coa",        title: "Coarctation Gradient",                        badge: "Congenital",    color: "#d97706", key: "coa",        component: (fn: (r: CalcResult | null) => void) => <CoarctationGradient onResult={fn} /> },
-    { id: "engine-ped-ava",    title: "Pediatric AVA (Continuity Equation)",         badge: "Congenital",    color: "#d97706", key: "ped_ava",    component: (fn: (r: CalcResult | null) => void) => <PediatricAVA onResult={fn} /> },
-    { id: "engine-ross",       title: "Ross Score — Infant Heart Failure",           badge: "HF Severity",   color: "#dc2626", key: "ross",       component: (fn: (r: CalcResult | null) => void) => <RossScore onResult={fn} /> },
+    { id: "engine-nakata",     title: "Nakata Index",                                badge: "Congenital",    color: BRAND, key: "nakata",     component: (fn: (r: CalcResult | null) => void) => <NakataIndex onResult={fn} /> },
+    { id: "engine-mcgoon",     title: "McGoon Ratio",                                badge: "Congenital",    color: BRAND, key: "mcgoon",     component: (fn: (r: CalcResult | null) => void) => <McGoonRatio onResult={fn} /> },
+    { id: "engine-coa",        title: "Coarctation Gradient",                        badge: "Congenital",    color: BRAND, key: "coa",        component: (fn: (r: CalcResult | null) => void) => <CoarctationGradient onResult={fn} /> },
+    { id: "engine-ped-ava",    title: "Pediatric AVA (Continuity Equation)",         badge: "Congenital",    color: BRAND, key: "ped_ava",    component: (fn: (r: CalcResult | null) => void) => <PediatricAVA onResult={fn} /> },
+    { id: "engine-ross",       title: "Ross Score — Infant Heart Failure",           badge: "HF Severity",   color: BRAND, key: "ross",       component: (fn: (r: CalcResult | null) => void) => <RossScore onResult={fn} /> },
   ];
 
   return (
