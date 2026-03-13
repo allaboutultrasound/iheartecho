@@ -598,15 +598,18 @@ export const accreditationManagerRouter = router({
 
   /** ─── Cross-org Reporting Dashboard ─────────────────────────────────────── */
 
-  /** KPI summary: total orgs, avg quality score, avg readiness, open tasks */
-  reportingKpis: protectedProcedure.query(async ({ ctx }) => {
+  /** KPI summary across all orgs */
+  reportingKpis: protectedProcedure
+    .input(z.object({ months: z.number().int().min(1).max(24).default(12) }))
+    .query(async ({ ctx, input }) => {
     await assertAccreditationManager(ctx);
     const db = await getDb();
     if (!db) return { totalOrgs: 0, avgQualityScore: 0, avgReadinessPct: 0, openTasks: 0, totalIqrReviews: 0, totalPeerReviews: 0 };
 
+    const dateFilter = sql`created_at >= DATE_SUB(NOW(), INTERVAL ${input.months} MONTH)`;
     const [orgsResult] = await db.select({ cnt: sql<number>`COUNT(*)` }).from(diyOrganizations);
-    const [iqrResult] = await db.select({ avg: sql<number>`AVG(quality_score)`, cnt: sql<number>`COUNT(*)` }).from(imageQualityReviews).where(sql`lab_id IS NOT NULL`);
-    const [pprResult] = await db.select({ cnt: sql<number>`COUNT(*)` }).from(physicianPeerReviews).where(sql`lab_id IS NOT NULL`);
+    const [iqrResult] = await db.select({ avg: sql<number>`AVG(quality_score)`, cnt: sql<number>`COUNT(*)` }).from(imageQualityReviews).where(sql`lab_id IS NOT NULL AND ${dateFilter}`);
+    const [pprResult] = await db.select({ cnt: sql<number>`COUNT(*)` }).from(physicianPeerReviews).where(sql`lab_id IS NOT NULL AND ${dateFilter}`);
     const [readinessResult] = await db.select({ avg: sql<number>`AVG(completion_pct)` }).from(accreditationReadiness);
     const [tasksResult] = await db.select({ cnt: sql<number>`COUNT(*)` }).from(accreditationTasks).where(sql`status IN ('pending','in_progress','overdue')`);
 
@@ -621,7 +624,9 @@ export const accreditationManagerRouter = router({
   }),
 
   /** Per-org summary table: name, plan, IQR count, avg quality, peer review count, avg concordance, readiness % */
-  reportingOrgTable: protectedProcedure.query(async ({ ctx }) => {
+  reportingOrgTable: protectedProcedure
+    .input(z.object({ months: z.number().int().min(1).max(24).default(12) }))
+    .query(async ({ ctx, input }) => {
     await assertAccreditationManager(ctx);
     const db = await getDb();
     if (!db) return [];
@@ -644,7 +649,7 @@ export const accreditationManagerRouter = router({
         avgQS: sql<number>`AVG(quality_score)`,
       })
       .from(imageQualityReviews)
-      .where(sql`lab_id IS NOT NULL`)
+      .where(sql`lab_id IS NOT NULL AND created_at >= DATE_SUB(NOW(), INTERVAL ${input.months} MONTH)`)
       .groupBy(imageQualityReviews.labId);
     const iqrMap = new Map(iqrStats.map((r) => [r.labId!, r]));
 
@@ -655,7 +660,7 @@ export const accreditationManagerRouter = router({
         avgCS: sql<number>`AVG(concordance_score)`,
       })
       .from(physicianPeerReviews)
-      .where(sql`lab_id IS NOT NULL`)
+      .where(sql`lab_id IS NOT NULL AND created_at >= DATE_SUB(NOW(), INTERVAL ${input.months} MONTH)`)
       .groupBy(physicianPeerReviews.labId);
     const pprMap = new Map(pprStats.map((r) => [r.labId!, r]));
 
@@ -691,8 +696,10 @@ export const accreditationManagerRouter = router({
     });
   }),
 
-  /** Monthly IQR quality score trend per org (last 12 months) */
-  reportingIqrTrend: protectedProcedure.query(async ({ ctx }) => {
+  /** Monthly IQR quality score trend per org */
+  reportingIqrTrend: protectedProcedure
+    .input(z.object({ months: z.number().int().min(1).max(24).default(12) }))
+    .query(async ({ ctx, input }) => {
     await assertAccreditationManager(ctx);
     const db = await getDb();
     if (!db) return [];
@@ -705,7 +712,7 @@ export const accreditationManagerRouter = router({
         cnt: sql<number>`COUNT(*)`,
       })
       .from(imageQualityReviews)
-      .where(sql`lab_id IS NOT NULL AND created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)`)
+      .where(sql`lab_id IS NOT NULL AND created_at >= DATE_SUB(NOW(), INTERVAL ${input.months} MONTH)`)
       .groupBy(imageQualityReviews.labId, sql`DATE_FORMAT(created_at, '%Y-%m')`)
       .orderBy(sql`DATE_FORMAT(created_at, '%Y-%m')`);
 
@@ -717,8 +724,10 @@ export const accreditationManagerRouter = router({
     }));
   }),
 
-  /** Monthly peer review concordance trend per org (last 12 months) */
-  reportingPprTrend: protectedProcedure.query(async ({ ctx }) => {
+  /** Monthly peer review concordance trend per org */
+  reportingPprTrend: protectedProcedure
+    .input(z.object({ months: z.number().int().min(1).max(24).default(12) }))
+    .query(async ({ ctx, input }) => {
     await assertAccreditationManager(ctx);
     const db = await getDb();
     if (!db) return [];
@@ -731,7 +740,7 @@ export const accreditationManagerRouter = router({
         cnt: sql<number>`COUNT(*)`,
       })
       .from(physicianPeerReviews)
-      .where(sql`lab_id IS NOT NULL AND created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)`)
+      .where(sql`lab_id IS NOT NULL AND created_at >= DATE_SUB(NOW(), INTERVAL ${input.months} MONTH)`)
       .groupBy(physicianPeerReviews.labId, sql`DATE_FORMAT(created_at, '%Y-%m')`)
       .orderBy(sql`DATE_FORMAT(created_at, '%Y-%m')`);
 
@@ -744,7 +753,9 @@ export const accreditationManagerRouter = router({
   }),
 
   /** Case mix distribution across all orgs (modality breakdown) */
-  reportingCaseMix: protectedProcedure.query(async ({ ctx }) => {
+  reportingCaseMix: protectedProcedure
+    .input(z.object({ months: z.number().int().min(1).max(24).default(12) }))
+    .query(async ({ ctx, input }) => {
     await assertAccreditationManager(ctx);
     const db = await getDb();
     if (!db) return [];
@@ -756,7 +767,7 @@ export const accreditationManagerRouter = router({
         cnt: sql<number>`COUNT(*)`,
       })
       .from(caseMixSubmissions)
-      .where(sql`lab_id IS NOT NULL`)
+      .where(sql`lab_id IS NOT NULL AND created_at >= DATE_SUB(NOW(), INTERVAL ${input.months} MONTH)`)
       .groupBy(caseMixSubmissions.labId, caseMixSubmissions.modality)
       .orderBy(caseMixSubmissions.labId, caseMixSubmissions.modality);
 
@@ -768,7 +779,9 @@ export const accreditationManagerRouter = router({
   }),
 
   /** Task summary per org: open, completed, overdue counts */
-  reportingTaskSummary: protectedProcedure.query(async ({ ctx }) => {
+  reportingTaskSummary: protectedProcedure
+    .input(z.object({ months: z.number().int().min(1).max(24).default(12) }))
+    .query(async ({ ctx, input }) => {
     await assertAccreditationManager(ctx);
     const db = await getDb();
     if (!db) return [];
@@ -780,11 +793,39 @@ export const accreditationManagerRouter = router({
         cnt: sql<number>`COUNT(*)`,
       })
       .from(accreditationTasks)
-      .where(sql`diy_org_id IS NOT NULL`)
+      .where(sql`diy_org_id IS NOT NULL AND created_at >= DATE_SUB(NOW(), INTERVAL ${input.months} MONTH)`)
       .groupBy(accreditationTasks.diyOrgId, accreditationTasks.status);
 
     return rows.map((r) => ({
       diyOrgId: r.diyOrgId,
+      status: r.status,
+      count: Number(r.cnt),
+    }));
+  }),
+
+  /** Tasks by type per org: open/completed/overdue split by taskType */
+  reportingTasksByType: protectedProcedure
+    .input(z.object({ months: z.number().int().min(1).max(24).default(12) }))
+    .query(async ({ ctx, input }) => {
+    await assertAccreditationManager(ctx);
+    const db = await getDb();
+    if (!db) return [];
+
+    const rows = await db
+      .select({
+        diyOrgId: accreditationTasks.diyOrgId,
+        taskType: accreditationTasks.taskType,
+        status: accreditationTasks.status,
+        cnt: sql<number>`COUNT(*)`,
+      })
+      .from(accreditationTasks)
+      .where(sql`diy_org_id IS NOT NULL AND created_at >= DATE_SUB(NOW(), INTERVAL ${input.months} MONTH)`)
+      .groupBy(accreditationTasks.diyOrgId, accreditationTasks.taskType, accreditationTasks.status)
+      .orderBy(accreditationTasks.diyOrgId, accreditationTasks.taskType);
+
+    return rows.map((r) => ({
+      diyOrgId: r.diyOrgId,
+      taskType: r.taskType,
       status: r.status,
       count: Number(r.cnt),
     }));

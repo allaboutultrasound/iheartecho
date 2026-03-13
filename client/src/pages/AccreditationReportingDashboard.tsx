@@ -1,14 +1,18 @@
 /*
   Accreditation Manager — Reporting Dashboard
   Cross-org metrics: KPI cards, IQR trend, peer review concordance trend,
-  case mix distribution, readiness progress, org comparison table.
+  case mix distribution, readiness progress, tasks by type, org comparison table.
   Brand: Teal #189aa1, Aqua #4ad9e0, Dark Navy #0e1e2e
 */
-import { useMemo } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, TrendingUp, Users, CheckCircle, ClipboardList, BarChart2, Activity } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Loader2, TrendingUp, Users, CheckCircle, ClipboardList,
+  BarChart2, Activity, Download, Calendar,
+} from "lucide-react";
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -16,7 +20,6 @@ import {
 
 const BRAND = "#189aa1";
 const AQUA = "#4ad9e0";
-const NAVY = "#0e1e2e";
 
 const ORG_COLORS = [BRAND, AQUA, "#f59e0b", "#8b5cf6", "#ef4444", "#10b981", "#3b82f6", "#f97316"];
 
@@ -36,6 +39,31 @@ const MODALITY_COLORS: Record<string, string> = {
   PTTE: "#8b5cf6",
   PTEE: "#3b82f6",
   FETAL: "#ec4899",
+};
+
+const TASK_TYPE_COLORS: Record<string, string> = {
+  iqr: BRAND,
+  peer_review: AQUA,
+  echo_correlation: "#f59e0b",
+  case_mix: "#8b5cf6",
+  policy: "#10b981",
+  other: "#94a3b8",
+};
+
+const TASK_TYPE_LABELS: Record<string, string> = {
+  iqr: "IQR",
+  peer_review: "Peer Review",
+  echo_correlation: "Echo Correlation",
+  case_mix: "Case Mix",
+  policy: "Policy",
+  other: "Other",
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  pending: "#f59e0b",
+  in_progress: BRAND,
+  completed: "#10b981",
+  overdue: "#ef4444",
 };
 
 function scoreColor(score: number | null) {
@@ -82,13 +110,86 @@ function KpiCard({
   );
 }
 
+// ─── Date Range Toggle ────────────────────────────────────────────────────────
+function DateRangeToggle({
+  months, onChange,
+}: {
+  months: number;
+  onChange: (m: number) => void;
+}) {
+  const options = [
+    { label: "Last 3 Months", value: 3 },
+    { label: "Last 6 Months", value: 6 },
+    { label: "Last 12 Months", value: 12 },
+  ];
+  return (
+    <div className="flex items-center gap-2">
+      <Calendar className="w-4 h-4 text-gray-400" />
+      <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+        {options.map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => onChange(opt.value)}
+            className={`px-3 py-1.5 text-xs font-semibold transition-colors ${
+              months === opt.value
+                ? "text-white"
+                : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+            }`}
+            style={months === opt.value ? { background: BRAND } : {}}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── CSV Export ───────────────────────────────────────────────────────────────
+function exportTableToCsv(
+  orgTable: Array<{
+    id: number; name: string; plan: string | null; memberCount: number;
+    iqrCount: number; avgQualityScore: number | null; peerReviewCount: number;
+    avgConcordanceScore: number | null; readinessPct: number | null;
+  }>,
+  months: number,
+) {
+  const headers = [
+    "Organization", "Plan", "Members", "IQR Reviews",
+    "Avg Quality Score (%)", "Peer Reviews", "Avg Concordance (%)", "Readiness (%)",
+  ];
+  const rows = orgTable.map((o) => [
+    `"${o.name}"`,
+    o.plan ?? "",
+    o.memberCount,
+    o.iqrCount,
+    o.avgQualityScore ?? "",
+    o.peerReviewCount,
+    o.avgConcordanceScore ?? "",
+    o.readinessPct ?? "",
+  ]);
+  const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `accreditation-org-comparison-${months}mo-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 // ─── Main Dashboard ───────────────────────────────────────────────────────────
 export default function AccreditationReportingDashboard() {
-  const { data: kpis, isLoading: kpisLoading } = trpc.accreditationManager.reportingKpis.useQuery();
-  const { data: orgTable, isLoading: orgTableLoading } = trpc.accreditationManager.reportingOrgTable.useQuery();
-  const { data: iqrTrend, isLoading: iqrLoading } = trpc.accreditationManager.reportingIqrTrend.useQuery();
-  const { data: pprTrend, isLoading: pprLoading } = trpc.accreditationManager.reportingPprTrend.useQuery();
-  const { data: caseMix, isLoading: caseMixLoading } = trpc.accreditationManager.reportingCaseMix.useQuery();
+  const [months, setMonths] = useState(12);
+
+  const input = useMemo(() => ({ months }), [months]);
+
+  const { data: kpis, isLoading: kpisLoading } = trpc.accreditationManager.reportingKpis.useQuery(input);
+  const { data: orgTable, isLoading: orgTableLoading } = trpc.accreditationManager.reportingOrgTable.useQuery(input);
+  const { data: iqrTrend, isLoading: iqrLoading } = trpc.accreditationManager.reportingIqrTrend.useQuery(input);
+  const { data: pprTrend, isLoading: pprLoading } = trpc.accreditationManager.reportingPprTrend.useQuery(input);
+  const { data: caseMix, isLoading: caseMixLoading } = trpc.accreditationManager.reportingCaseMix.useQuery(input);
+  const { data: tasksByType, isLoading: tasksLoading } = trpc.accreditationManager.reportingTasksByType.useQuery(input);
 
   // Build org name map from orgTable
   const orgNameMap = useMemo(() => {
@@ -114,8 +215,8 @@ export default function AccreditationReportingDashboard() {
   // Pivot IQR trend: [{ month, orgId: score, ... }]
   const iqrChartData = useMemo(() => {
     if (!iqrTrend) return [];
-    const months = Array.from(new Set(iqrTrend.map((r) => r.month))).sort();
-    return months.map((month) => {
+    const allMonths = Array.from(new Set(iqrTrend.map((r) => r.month))).sort();
+    return allMonths.map((month) => {
       const row: Record<string, string | number> = { month };
       iqrTrend.filter((r) => r.month === month).forEach((r) => {
         if (r.labId) row[`org_${r.labId}`] = r.avgQualityScore;
@@ -127,8 +228,8 @@ export default function AccreditationReportingDashboard() {
   // Pivot PPR trend
   const pprChartData = useMemo(() => {
     if (!pprTrend) return [];
-    const months = Array.from(new Set(pprTrend.map((r) => r.month))).sort();
-    return months.map((month) => {
+    const allMonths = Array.from(new Set(pprTrend.map((r) => r.month))).sort();
+    return allMonths.map((month) => {
       const row: Record<string, string | number> = { month };
       pprTrend.filter((r) => r.month === month).forEach((r) => {
         if (r.labId) row[`org_${r.labId}`] = r.avgConcordanceScore;
@@ -169,7 +270,58 @@ export default function AccreditationReportingDashboard() {
     return Array.from(new Set(caseMix.map((r) => r.modality)));
   }, [caseMix]);
 
-  const isLoading = kpisLoading || orgTableLoading || iqrLoading || pprLoading || caseMixLoading;
+  // Tasks by type per org — stacked bar: one bar per org, segments = task types, colored by status
+  // We'll show a grouped bar: one group per org, bars = open / completed / overdue per task type
+  // Simpler: per-org stacked bar where each segment = a task type's total count
+  const tasksByTypeChartData = useMemo(() => {
+    if (!tasksByType || !orgTable) return { data: [], taskTypes: [] };
+    // Group by diyOrgId → taskType → status → count
+    const orgMap = new Map<number, Record<string, Record<string, number>>>();
+    tasksByType.forEach((r) => {
+      if (!r.diyOrgId) return;
+      if (!orgMap.has(r.diyOrgId)) orgMap.set(r.diyOrgId, {});
+      const orgData = orgMap.get(r.diyOrgId)!;
+      if (!orgData[r.taskType]) orgData[r.taskType] = {};
+      orgData[r.taskType][r.status] = (orgData[r.taskType][r.status] ?? 0) + r.count;
+    });
+
+    // Build chart rows: one row per org, columns = taskType_status combos
+    const taskTypes = Array.from(new Set(tasksByType.map((r) => r.taskType)));
+    const statuses = ["pending", "in_progress", "completed", "overdue"];
+
+    const data = Array.from(orgMap.entries()).map(([orgId, orgData]) => {
+      const row: Record<string, string | number> = {
+        org: orgNameMap.get(orgId) ?? `Lab ${orgId}`,
+      };
+      taskTypes.forEach((tt) => {
+        statuses.forEach((st) => {
+          row[`${TASK_TYPE_LABELS[tt] ?? tt} (${st.replace("_", " ")})`] = orgData[tt]?.[st] ?? 0;
+        });
+      });
+      return row;
+    });
+
+    // Build bar definitions: group by task type, show open (pending+in_progress+overdue) vs completed
+    const simplifiedData = Array.from(orgMap.entries()).map(([orgId, orgData]) => {
+      const row: Record<string, string | number> = {
+        org: orgNameMap.get(orgId) ?? `Lab ${orgId}`,
+      };
+      taskTypes.forEach((tt) => {
+        const counts = orgData[tt] ?? {};
+        row[`${TASK_TYPE_LABELS[tt] ?? tt} — Open`] = (counts.pending ?? 0) + (counts.in_progress ?? 0) + (counts.overdue ?? 0);
+        row[`${TASK_TYPE_LABELS[tt] ?? tt} — Done`] = counts.completed ?? 0;
+      });
+      return row;
+    });
+
+    return { data: simplifiedData, taskTypes };
+  }, [tasksByType, orgTable, orgNameMap]);
+
+  const handleExportCsv = useCallback(() => {
+    if (orgTable) exportTableToCsv(orgTable, months);
+  }, [orgTable, months]);
+
+  const isLoading = kpisLoading || orgTableLoading || iqrLoading || pprLoading || caseMixLoading || tasksLoading;
 
   if (isLoading) {
     return (
@@ -182,6 +334,17 @@ export default function AccreditationReportingDashboard() {
 
   return (
     <div className="space-y-8">
+      {/* ── Date Range Filter ────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
+            Reporting Dashboard
+          </h2>
+          <p className="text-xs text-gray-400 mt-0.5">Cross-organization accreditation metrics</p>
+        </div>
+        <DateRangeToggle months={months} onChange={setMonths} />
+      </div>
+
       {/* ── KPI Summary ─────────────────────────────────────────────────────── */}
       <section>
         <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Platform Overview</h3>
@@ -217,14 +380,14 @@ export default function AccreditationReportingDashboard() {
           <KpiCard
             title="IQR Reviews"
             value={kpis?.totalIqrReviews ?? 0}
-            subtitle="Total submitted"
+            subtitle={`Last ${months} months`}
             icon={BarChart2}
             color={BRAND}
           />
           <KpiCard
             title="Peer Reviews"
             value={kpis?.totalPeerReviews ?? 0}
-            subtitle="Total submitted"
+            subtitle={`Last ${months} months`}
             icon={Activity}
             color={AQUA}
           />
@@ -234,12 +397,12 @@ export default function AccreditationReportingDashboard() {
       {/* ── IQR Quality Score Trend ──────────────────────────────────────────── */}
       <section>
         <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
-          IQR Quality Score — Monthly Trend (Last 12 Months)
+          IQR Quality Score — Monthly Trend (Last {months} Months)
         </h3>
         <Card className="border border-gray-100 shadow-sm">
           <CardContent className="p-5">
             {iqrChartData.length === 0 ? (
-              <div className="flex items-center justify-center h-48 text-gray-400 text-sm">No IQR data available</div>
+              <div className="flex items-center justify-center h-48 text-gray-400 text-sm">No IQR data in this date range</div>
             ) : (
               <ResponsiveContainer width="100%" height={280}>
                 <LineChart data={iqrChartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
@@ -273,12 +436,12 @@ export default function AccreditationReportingDashboard() {
       {/* ── Peer Review Concordance Trend ───────────────────────────────────── */}
       <section>
         <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
-          Physician Peer Review Concordance — Monthly Trend (Last 12 Months)
+          Physician Peer Review Concordance — Monthly Trend (Last {months} Months)
         </h3>
         <Card className="border border-gray-100 shadow-sm">
           <CardContent className="p-5">
             {pprChartData.length === 0 ? (
-              <div className="flex items-center justify-center h-48 text-gray-400 text-sm">No peer review data available</div>
+              <div className="flex items-center justify-center h-48 text-gray-400 text-sm">No peer review data in this date range</div>
             ) : (
               <ResponsiveContainer width="100%" height={280}>
                 <LineChart data={pprChartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
@@ -311,7 +474,9 @@ export default function AccreditationReportingDashboard() {
 
       {/* ── Case Mix ────────────────────────────────────────────────────────── */}
       <section>
-        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Case Mix Distribution</h3>
+        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+          Case Mix Distribution (Last {months} Months)
+        </h3>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Aggregate donut */}
           <Card className="border border-gray-100 shadow-sm">
@@ -320,7 +485,7 @@ export default function AccreditationReportingDashboard() {
             </CardHeader>
             <CardContent className="p-5 pt-0">
               {caseMixDonut.length === 0 ? (
-                <div className="flex items-center justify-center h-48 text-gray-400 text-sm">No case mix data</div>
+                <div className="flex items-center justify-center h-48 text-gray-400 text-sm">No case mix data in this range</div>
               ) : (
                 <ResponsiveContainer width="100%" height={240}>
                   <PieChart>
@@ -355,7 +520,7 @@ export default function AccreditationReportingDashboard() {
             </CardHeader>
             <CardContent className="p-5 pt-0">
               {caseMixBarData.length === 0 ? (
-                <div className="flex items-center justify-center h-48 text-gray-400 text-sm">No case mix data</div>
+                <div className="flex items-center justify-center h-48 text-gray-400 text-sm">No case mix data in this range</div>
               ) : (
                 <ResponsiveContainer width="100%" height={240}>
                   <BarChart data={caseMixBarData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
@@ -378,6 +543,51 @@ export default function AccreditationReportingDashboard() {
             </CardContent>
           </Card>
         </div>
+      </section>
+
+      {/* ── Tasks by Type ───────────────────────────────────────────────────── */}
+      <section>
+        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
+          Tasks by Type — Open vs. Completed per Organization (Last {months} Months)
+        </h3>
+        <Card className="border border-gray-100 shadow-sm">
+          <CardContent className="p-5">
+            {tasksByTypeChartData.data.length === 0 ? (
+              <div className="flex items-center justify-center h-48 text-gray-400 text-sm">
+                No task data in this date range
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={tasksByTypeChartData.data}
+                  margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="org" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                  <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 12 }} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  {tasksByTypeChartData.taskTypes.flatMap((tt, i) => [
+                    <Bar
+                      key={`${tt}_open`}
+                      dataKey={`${TASK_TYPE_LABELS[tt] ?? tt} — Open`}
+                      stackId={`tt_${i}`}
+                      fill={TASK_TYPE_COLORS[tt] ?? ORG_COLORS[i % ORG_COLORS.length]}
+                      fillOpacity={0.85}
+                    />,
+                    <Bar
+                      key={`${tt}_done`}
+                      dataKey={`${TASK_TYPE_LABELS[tt] ?? tt} — Done`}
+                      stackId={`tt_${i}`}
+                      fill="#10b981"
+                      fillOpacity={0.6}
+                    />,
+                  ])}
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
       </section>
 
       {/* ── Readiness Progress ──────────────────────────────────────────────── */}
@@ -436,7 +646,22 @@ export default function AccreditationReportingDashboard() {
 
       {/* ── Org Comparison Table ────────────────────────────────────────────── */}
       <section>
-        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Organization Comparison</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">
+            Organization Comparison (Last {months} Months)
+          </h3>
+          {orgTable && orgTable.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCsv}
+              className="flex items-center gap-1.5 text-xs"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Export CSV
+            </Button>
+          )}
+        </div>
         <Card className="border border-gray-100 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -457,9 +682,6 @@ export default function AccreditationReportingDashboard() {
                   <tr key={org.id} className={i % 2 === 0 ? "bg-white" : "bg-gray-50/50"}>
                     <td className="px-4 py-3">
                       <div className="font-medium text-gray-800">{org.name}</div>
-                      {org.city && (
-                        <div className="text-xs text-gray-400">{org.city}{org.state ? `, ${org.state}` : ""}</div>
-                      )}
                     </td>
                     <td className="px-3 py-3 text-center">
                       {org.plan ? (

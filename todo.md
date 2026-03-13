@@ -2643,3 +2643,26 @@
 - [x] Build case mix distribution donut chart (aggregate across all orgs)
 - [x] Build readiness progress bar chart (per org, sorted by % complete)
 - [x] Wire as dedicated "Reporting Dashboard" tab in AccreditationManager hub
+
+## Daily Challenge Queue Ordering Fix
+- [ ] Fix drag-and-drop reordering in daily challenge queue (was supposed to be implemented already)
+- [ ] Ensure sortOrder is persisted to DB when items are reordered
+- [ ] Verify up/down controls work as fallback
+
+## Reporting Dashboard Enhancements
+- [ ] Add Last 3 / 6 / 12 months date-range toggle filter to Reporting Dashboard
+- [ ] Update server aggregation procedures to accept startDate/endDate params
+- [ ] Add CSV export button to org comparison table
+- [ ] Add Tasks by Type stacked bar chart (open/completed/overdue by task type per org)
+
+## Reporting Dashboard Enhancements (completed Mar 13)
+- [x] Add 3/6/12 month date-range filter toggle to Reporting Dashboard
+- [x] Update all server reporting procedures to accept months parameter
+- [x] Add CSV export button to org comparison table
+- [x] Add Tasks by Type stacked bar chart (open/completed/overdue per org)
+- [x] Add reportingTasksByType procedure to accreditationManagerRouter
+
+## Daily Challenge Queue Ordering Fix (completed Mar 13)
+- [x] Replace plain map render with DndContext + SortableContext + SortableQueueItem
+- [x] Live challenge shown at top (not draggable), queued items fully drag-and-drop sortable
+- [x] Drag end calls adminReorderChallenges to persist priority order to DB

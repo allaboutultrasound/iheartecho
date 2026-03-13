@@ -947,86 +947,43 @@ export default function QuickFireAdmin() {
                 </Button>
               </div>
             ) : (
-              <div className="space-y-2">
-                {challenges.filter((c: any) => !challengeSearch.trim() || c.title?.toLowerCase().includes(challengeSearch.toLowerCase()) || c.description?.toLowerCase().includes(challengeSearch.toLowerCase())).map((c: any, idx: number) => {
-                  const isLive = c.status === "live";
-                  const isScheduled = c.status === "scheduled";
-                  const isDraft = c.status === "draft";
-                  const qCount = Array.isArray(c.questionIds) ? c.questionIds.length : 0;
-                  return (
-                    <div
-                      key={c.id}
-                      className={`flex items-start gap-3 p-4 bg-white rounded-xl border transition-all ${
-                        isLive ? "border-green-300 bg-green-50" :
-                        isScheduled ? "border-blue-200" :
-                        "border-gray-100 hover:border-[#189aa1]/30"
-                      }`}
-                    >
-                      {/* Drag handle / live indicator */}
-                      <div className="flex flex-col gap-0.5 flex-shrink-0 mt-1">
-                        {isLive ? (
-                          <PlayCircle className="w-4 h-4 text-green-500" />
-                        ) : (
-                          <span className="text-gray-300" title="Drag to reorder">
-                            <GripVertical className="w-4 h-4" />
-                          </span>
-                        )}
-                      </div>
-                      {/* Priority badge */}
-                      <div className="flex-shrink-0 w-8 text-center">
-                        <span className="text-xs font-bold text-gray-300">#{idx + 1}</span>
-                      </div>
-
-                      {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-semibold text-sm text-gray-800">{c.title}</span>
-                          {isLive && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-green-500 text-white">LIVE</span>}
-                          {isScheduled && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">SCHEDULED</span>}
-                          {isDraft && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">DRAFT</span>}
-                        </div>
-                        <div className="flex items-center gap-3 mt-1 flex-wrap">
-                          {c.category && (
-                            <span className="flex items-center gap-1 text-xs text-gray-400">
-                              <Tag className="w-3 h-3" />{c.category}
-                            </span>
-                          )}
-                          <span className="text-xs text-gray-400">{qCount === 1 ? "1 question" : qCount === 0 ? "No question assigned" : `${qCount} questions`}</span>
-                          {c.publishDate && (
-                            <span className="flex items-center gap-1 text-xs text-gray-400">
-                              <Clock className="w-3 h-3" />Scheduled: {c.publishDate}
-                            </span>
-                          )}
-                          {isLive && c.publishedAt && (
-                            <span className="flex items-center gap-1 text-xs text-green-600">
-                              <Clock className="w-3 h-3" />Live since {new Date(c.publishedAt).toLocaleString()}
-                            </span>
-                          )}
-                        </div>
-                        {c.description && <p className="text-xs text-gray-400 mt-1 line-clamp-1">{c.description}</p>}
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        {!isLive && (
-                          <>
-                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-gray-400 hover:text-[#189aa1]" onClick={() => openEditChallenge(c)}>
-                              <Pencil className="w-3.5 h-3.5" />
-                            </Button>
-                            <Button
-                              size="sm" variant="ghost" className="h-8 w-8 p-0 text-gray-400 hover:text-red-500"
-                              onClick={() => { if (confirm("Remove this challenge from the queue?")) deleteChallengeMutation.mutate({ id: c.id }); }}
-                              disabled={deleteChallengeMutation.isPending}
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              <DndContext
+                sensors={dndSensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleQueueDragEnd}
+              >
+                <SortableContext
+                  items={challenges.filter((c: any) => c.status !== "live").map((c: any) => c.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="space-y-2">
+                    {/* Live challenge (not sortable) */}
+                    {challenges.filter((c: any) => c.status === "live").map((c: any, idx: number) => (
+                      <SortableQueueItem
+                        key={c.id}
+                        c={c}
+                        idx={idx}
+                        openEditChallenge={openEditChallenge}
+                        deleteChallengeMutation={deleteChallengeMutation}
+                      />
+                    ))}
+                    {/* Queued challenges (sortable) */}
+                    {challenges
+                      .filter((c: any) => c.status !== "live")
+                      .filter((c: any) => !challengeSearch.trim() || c.title?.toLowerCase().includes(challengeSearch.toLowerCase()) || c.description?.toLowerCase().includes(challengeSearch.toLowerCase()))
+                      .map((c: any, idx: number) => (
+                        <SortableQueueItem
+                          key={c.id}
+                          c={c}
+                          idx={idx + challenges.filter((ch: any) => ch.status === "live").length}
+                          openEditChallenge={openEditChallenge}
+                          deleteChallengeMutation={deleteChallengeMutation}
+                        />
+                      ))
+                    }
+                  </div>
+                </SortableContext>
+              </DndContext>
             )}
           </div>
         )}
