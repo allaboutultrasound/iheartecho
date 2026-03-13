@@ -2830,4 +2830,18 @@
 - [x] Add challengeCategoryPrefs to users table (DB + schema)
 - [x] Add category column to quickfireQuestions (DB + schema)
 - [x] Add category preference settings (opt-out toggles) for users (duplicate removed)
-- [ ] Update streak/scoring to count per-category completions
+- [x] Update streak/scoring to count per-category completions
+
+## ScanCoach Editor Fixes (Current)
+- [ ] Fix CHD registry to match all 40+ views in PedCHDCoach viewer
+- [x] Make ScanCoach editor WYSIWYG live - show actual rendered view content in preview mode
+
+## ScanCoach Editor & Daily Challenge Fixes (Session Mar 13)
+- [x] ScanCoach Editor: replace static WYSIWYG preview with live iframe showing actual rendered view
+- [x] ScanCoach Editor: iframe preview shows saved overrides immediately, with "Open in new tab" link
+- [x] ScanCoach Editor: override status badges shown above iframe (which fields are saved)
+- [x] Daily Challenge stats: per-category streak displayed in Performance by Category section (🔥 Xd streak)
+- [x] Daily Challenge stats: per-category best streak shown below accuracy bar
+- [x] QuickFire Admin: category reminder banner added to challenge form (explains 1 question per category slot)
+- [x] QuickFire Admin: category-question mismatch warning when selected question category ≠ challenge category
+- [x] QuickFire Admin: category field now shows helper text "Determines which daily slot this challenge fills"

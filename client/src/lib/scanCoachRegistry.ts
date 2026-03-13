@@ -214,20 +214,61 @@ export const SCANCOACH_MODULES: ScanCoachModuleMeta[] = [
     label: "Pediatric CHD ScanCoach",
     path: "/scan-coach?tab=chd",
     views: [
-      { id: "asd",               name: "ASD Assessment",                    group: "CHD Lesions" },
-      { id: "vsd",               name: "VSD Assessment",                    group: "CHD Lesions" },
-      { id: "tof",               name: "Tetralogy of Fallot",               group: "CHD Lesions" },
-      { id: "coa",               name: "Coarctation of the Aorta",          group: "CHD Lesions" },
-      { id: "tga",               name: "Transposition of Great Arteries",   group: "CHD Lesions" },
-      { id: "fontan",            name: "Fontan Circulation",                group: "CHD Lesions" },
-      { id: "psax-av",           name: "PSAX — Aortic Valve Level",         group: "Views" },
-      { id: "a4ch-rv",           name: "Apical 4-Chamber — RV Focus",       group: "Views" },
-      { id: "a5ch-cw",           name: "Apical 5-Chamber — CW Doppler",     group: "Views" },
-      { id: "psax-pap",          name: "PSAX — Papillary Muscle Level",     group: "Views" },
-      { id: "subcostal-ivc",     name: "Subcostal — IVC",                   group: "Views" },
-      { id: "subcostal-rv",      name: "Subcostal — RV",                    group: "Views" },
-      { id: "plax-rv",           name: "PLAX — RV Focus",                   group: "Views" },
-      { id: "suprasternal",      name: "Suprasternal",                      group: "Views" },
+      // Tetralogy of Fallot
+      { id: "tof",                    name: "Tetralogy of Fallot",                              group: "Tetralogy of Fallot" },
+      { id: "tof-preop",              name: "ToF — Pre-Op Assessment",                          group: "Tetralogy of Fallot" },
+      { id: "tof-postop",             name: "ToF — Post-Op: Complete Repair",                   group: "Tetralogy of Fallot" },
+      { id: "tof-surveillance",       name: "ToF — Long-Term Surveillance",                     group: "Tetralogy of Fallot" },
+      // HLHS
+      { id: "hlhs",                   name: "Hypoplastic Left Heart Syndrome",                  group: "HLHS" },
+      { id: "hlhs-prenatal-neonatal", name: "HLHS — Pre-Op: Neonatal",                          group: "HLHS" },
+      { id: "hlhs-post-norwood",      name: "HLHS — Post-Op: Norwood Stage 1",                  group: "HLHS" },
+      { id: "hlhs-interstage",        name: "HLHS — Inter-Stage: Norwood → Glenn",              group: "HLHS" },
+      { id: "hlhs-post-glenn",        name: "HLHS — Post-Op: Bidirectional Glenn (Stage 2)",    group: "HLHS" },
+      { id: "hlhs-post-fontan",       name: "HLHS — Post-Op: Fontan Completion (Stage 3)",      group: "HLHS" },
+      // d-TGA
+      { id: "dtga",                   name: "d-Transposition of the Great Arteries",            group: "d-TGA" },
+      { id: "dtga-preop",             name: "d-TGA — Pre-Op Assessment",                        group: "d-TGA" },
+      { id: "dtga-post-aso",          name: "d-TGA — Post-Op: Arterial Switch Operation",       group: "d-TGA" },
+      // AV Septal Defect
+      { id: "cavsd",                  name: "AV Septal Defect (AVSD)",                          group: "AV Septal Defect" },
+      { id: "cavsd-preop",            name: "AVSD — Pre-Op Assessment",                         group: "AV Septal Defect" },
+      { id: "cavsd-postop",           name: "AVSD — Post-Op: Complete Repair",                  group: "AV Septal Defect" },
+      // Coarctation
+      { id: "coa",                    name: "Coarctation of the Aorta",                         group: "Coarctation" },
+      { id: "coa-diagnosis",          name: "CoA — Diagnosis / Pre-Intervention",               group: "Coarctation" },
+      { id: "coa-postop",             name: "CoA — Post-Op / Post-Intervention",                group: "Coarctation" },
+      // TAPVR
+      { id: "tapvr",                  name: "Total Anomalous Pulmonary Venous Return",          group: "TAPVR" },
+      { id: "tapvr-preop",            name: "TAPVR — Pre-Op Assessment",                        group: "TAPVR" },
+      { id: "tapvr-postop",           name: "TAPVR — Post-Op: Surgical Repair",                 group: "TAPVR" },
+      // Truncus Arteriosus
+      { id: "truncus",                name: "Truncus Arteriosus",                               group: "Truncus Arteriosus" },
+      { id: "truncus-preop",          name: "Truncus — Pre-Op Assessment",                      group: "Truncus Arteriosus" },
+      { id: "truncus-postop",         name: "Truncus — Post-Op: Rastelli-Type Repair",          group: "Truncus Arteriosus" },
+      // Ebstein's Anomaly
+      { id: "ebstein",                name: "Ebstein's Anomaly",                                group: "Ebstein's Anomaly" },
+      { id: "ebstein-assessment",     name: "Ebstein — Initial Assessment",                     group: "Ebstein's Anomaly" },
+      { id: "ebstein-postop",         name: "Ebstein — Post-Op: TV Repair (Cone Procedure)",    group: "Ebstein's Anomaly" },
+      // PA-IVS
+      { id: "paivs",                  name: "Pulmonary Atresia with Intact Ventricular Septum", group: "PA-IVS" },
+      { id: "paivs-preop",            name: "PA-IVS — Pre-Op Assessment",                       group: "PA-IVS" },
+      { id: "paivs-postop",           name: "PA-IVS — Post-Op / Staged Management",             group: "PA-IVS" },
+      // DORV
+      { id: "dorv",                   name: "Double Outlet Right Ventricle",                    group: "DORV" },
+      { id: "dorv-preop",             name: "DORV — Pre-Op Assessment",                         group: "DORV" },
+      { id: "dorv-postop",            name: "DORV — Post-Op: Repair",                           group: "DORV" },
+      // Tricuspid Atresia
+      { id: "tricuspid-atresia",      name: "Tricuspid Atresia",                                group: "Tricuspid Atresia" },
+      { id: "ta-preop",               name: "TA — Pre-Op Assessment",                           group: "Tricuspid Atresia" },
+      { id: "ta-fontan",              name: "TA — Post-Fontan Surveillance",                     group: "Tricuspid Atresia" },
+      // IAA
+      { id: "iaa",                    name: "Interrupted Aortic Arch",                          group: "IAA" },
+      { id: "iaa-preop",              name: "IAA — Pre-Op Assessment",                          group: "IAA" },
+      { id: "iaa-postop",             name: "IAA — Post-Op: Arch Reconstruction + VSD Closure", group: "IAA" },
+      // Heterotaxy
+      { id: "heterotaxy",             name: "Heterotaxy / Isomerism",                           group: "Heterotaxy" },
+      { id: "heterotaxy-assessment",  name: "Heterotaxy — Segmental Assessment",                group: "Heterotaxy" },
     ],
   },
   // ─── Diastolic Function ───────────────────────────────────────────────────

@@ -90,6 +90,7 @@ import {
   Target,
   Link2,
   ArrowUpDown,
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -1564,9 +1565,20 @@ export default function QuickFireAdmin() {
                 minHeight={70}
               />
             </div>
+            {/* Category reminder banner */}
+            <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg bg-amber-50 border border-amber-200">
+              <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-xs font-semibold text-amber-700">Category assignment is required</p>
+                <p className="text-xs text-amber-600 mt-0.5">
+                  The Daily Challenge shows <strong>one question per category</strong> (ACS, Adult Echo, Pediatric Echo, Fetal Echo).
+                  Set the correct category so this challenge appears in the right slot for users.
+                </p>
+              </div>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Category</label>
+                <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Category <span className="text-red-500">*</span></label>
                 <Select value={challengeForm.category} onValueChange={(v) => setChallengeForm((f) => ({ ...f, category: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -1577,6 +1589,7 @@ export default function QuickFireAdmin() {
                     <SelectItem value="Mixed">Mixed</SelectItem>
                   </SelectContent>
                 </Select>
+                <p className="text-[10px] text-gray-400 mt-1">Determines which daily slot this challenge fills</p>
               </div>
               <div>
                 <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Scheduled Publish Date <span className="text-gray-400 font-normal">(optional)</span></label>
@@ -1636,13 +1649,29 @@ export default function QuickFireAdmin() {
                   })}
                 </div>
               )}
-              <p className="text-xs text-gray-400 mt-1">
-                {challengeForm.selectedQuestionIds.length === 1 ? (
-                  <span className="text-teal-600 font-semibold">✓ 1 question selected</span>
-                ) : (
-                  <span className="text-gray-400">No question selected</span>
-                )}
-              </p>
+              {/* Category mismatch warning */}
+              {(() => {
+                const selectedId = challengeForm.selectedQuestionIds[0];
+                if (!selectedId) return <p className="text-xs text-gray-400 mt-1">No question selected</p>;
+                const selectedQ = (listQuery.data?.questions ?? []).find((q: any) => q.id === selectedId);
+                const qCat = selectedQ?.category;
+                const formCat = challengeForm.category;
+                const mismatch = qCat && formCat && qCat !== formCat && formCat !== "Mixed";
+                return (
+                  <div className="mt-1 space-y-1">
+                    <p className="text-xs text-teal-600 font-semibold">✓ 1 question selected{qCat ? ` — category: ${qCat}` : ""}</p>
+                    {mismatch && (
+                      <div className="flex items-start gap-1.5 px-2 py-1.5 rounded bg-amber-50 border border-amber-200">
+                        <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
+                        <p className="text-xs text-amber-700">
+                          <strong>Category mismatch:</strong> The selected question is tagged <strong>{qCat}</strong> but the challenge category is <strong>{formCat}</strong>.
+                          Consider updating the challenge category or selecting a question from the <strong>{formCat}</strong> pool.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           </div>
           <DialogFooter>

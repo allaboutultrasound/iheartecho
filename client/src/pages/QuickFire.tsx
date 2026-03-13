@@ -2128,7 +2128,7 @@ export default function QuickFire() {
                       <h3 className="text-sm font-bold text-gray-800 mb-4" style={{ fontFamily: "Merriweather, serif" }}>
                         Performance by Category
                       </h3>
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                         {Object.entries(stats.categoryStats)
                           .sort(([, a], [, b]) => b.total - a.total)
                           .map(([cat, s]) => {
@@ -2136,11 +2136,18 @@ export default function QuickFire() {
                             const barColor = pct >= 80 ? "#189aa1" : pct >= 60 ? "#4ad9e0" : "#f59e0b";
                             return (
                               <div key={cat}>
-                                <div className="flex items-center justify-between mb-1">
+                                <div className="flex items-center justify-between mb-1.5">
                                   <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${CATEGORY_COLORS[cat] ?? "bg-gray-100 text-gray-600"}`}>
                                     {cat}
                                   </span>
-                                  <span className="text-xs text-gray-500">{s.correct}/{s.total} correct · <span className="font-bold" style={{ color: barColor }}>{pct}%</span></span>
+                                  <div className="flex items-center gap-3">
+                                    {s.streak > 0 && (
+                                      <span className="flex items-center gap-1 text-xs text-orange-500 font-semibold">
+                                        🔥 {s.streak}d streak
+                                      </span>
+                                    )}
+                                    <span className="text-xs text-gray-500">{s.correct}/{s.total} · <span className="font-bold" style={{ color: barColor }}>{pct}%</span></span>
+                                  </div>
                                 </div>
                                 <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                                   <div
@@ -2148,6 +2155,9 @@ export default function QuickFire() {
                                     style={{ width: `${pct}%`, background: barColor }}
                                   />
                                 </div>
+                                {s.bestStreak > 1 && (
+                                  <p className="text-[10px] text-gray-400 mt-0.5 text-right">Best: {s.bestStreak} days</p>
+                                )}
                               </div>
                             );
                           })}

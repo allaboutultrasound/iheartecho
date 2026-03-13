@@ -4,7 +4,7 @@
   Design: Teal/aqua graduated palette, Merriweather headings, Open Sans body
   Focus: CHD scanning tips, criteria, staged palliation surveillance
 */
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { AlertTriangle, ChevronRight, ChevronLeft, Heart, Activity, Eye, Info, Stethoscope } from "lucide-react";
 import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 
@@ -552,8 +552,24 @@ function StageTab({ stage, isSelected, color, onClick }: { stage: ScanStage; isS
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function PedCHDCoach() {
-  const [selectedDefect, setSelectedDefect] = useState(chdDefects[0]);
-  const [selectedStage, setSelectedStage] = useState(chdDefects[0].stages[0]);
+  // Support deep-linking via URL params: ?defect=tof&stage=tof-preop
+  const getInitialFromParams = () => {
+    const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+    const defectId = params.get('defect');
+    const stageId = params.get('stage');
+    const defect = (defectId ? chdDefects.find(d => d.id === defectId) : null) ?? chdDefects[0];
+    const stage = (stageId ? defect.stages.find(s => s.id === stageId) : null) ?? defect.stages[0];
+    return { defect, stage };
+  };
+  const { defect: _initDefect, stage: _initStage } = getInitialFromParams();
+  const [selectedDefect, setSelectedDefect] = useState(_initDefect);
+  const [selectedStage, setSelectedStage] = useState(_initStage);
+  // Re-sync when URL params change (e.g. iframe src update)
+  useEffect(() => {
+    const { defect, stage } = getInitialFromParams();
+    setSelectedDefect(defect);
+    setSelectedStage(stage);
+  }, [typeof window !== 'undefined' ? window.location.search : '']);
   const detailRef = useRef<HTMLDivElement>(null);
   const scrollOnChange = useRef(false);
 

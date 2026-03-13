@@ -440,21 +440,50 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
       }
       if (tempStreak > bestStreak) bestStreak = tempStreak;
     }
-    // Per-category accuracy
+    // Per-category accuracy + per-category streak tracking
     const questionIds = Array.from(new Set(allAttempts.map((a) => a.questionId)));
-    const categoryStats: Record<string, { correct: number; total: number }> = {};
+    const categoryStats: Record<string, { correct: number; total: number; streak: number; bestStreak: number }> = {};
     if (questionIds.length > 0) {
-      const questions = await db
-        .select({ id: quickfireQuestions.id, tags: quickfireQuestions.tags })
+      const qs = await db
+        .select({ id: quickfireQuestions.id, category: quickfireQuestions.category })
         .from(quickfireQuestions)
         .where(inArray(quickfireQuestions.id, questionIds));
-      const tagMap = new Map(questions.map((q) => [q.id, q.tags ? JSON.parse(q.tags) as string[] : []]));
+      const catMap = new Map(qs.map((q) => [q.id, q.category ?? "General"]));
+      // Build per-category date sets for streak calculation
+      const catDateSets: Record<string, Set<string>> = {};
       for (const attempt of allAttempts) {
-        const tags = tagMap.get(attempt.questionId) ?? [];
-        for (const tag of tags) {
-          if (!categoryStats[tag]) categoryStats[tag] = { correct: 0, total: 0 };
-          categoryStats[tag].total++;
-          if (attempt.isCorrect) categoryStats[tag].correct++;
+        const cat = catMap.get(attempt.questionId) ?? "General";
+        if (!categoryStats[cat]) categoryStats[cat] = { correct: 0, total: 0, streak: 0, bestStreak: 0 };
+        categoryStats[cat].total++;
+        if (attempt.isCorrect) categoryStats[cat].correct++;
+        if (!catDateSets[cat]) catDateSets[cat] = new Set();
+        catDateSets[cat].add(attempt.setDate);
+      }
+      // Calculate per-category streaks
+      const todayStr = todayDateStr();
+      for (const [cat, dateSet] of Object.entries(catDateSets)) {
+        const sortedCatDates = Array.from(dateSet).sort().reverse();
+        let catStreak = 0;
+        let catBestStreak = 0;
+        let catTempStreak = 0;
+        for (let i = 0; i < sortedCatDates.length; i++) {
+          const expected = new Date(todayStr);
+          expected.setDate(expected.getDate() - i);
+          if (sortedCatDates[i] === expected.toISOString().slice(0, 10)) { catStreak++; } else { break; }
+        }
+        const sortedCatAsc = Array.from(dateSet).sort();
+        for (let i = 0; i < sortedCatAsc.length; i++) {
+          if (i === 0) { catTempStreak = 1; }
+          else {
+            const prev = new Date(sortedCatAsc[i - 1]);
+            prev.setDate(prev.getDate() + 1);
+            if (prev.toISOString().slice(0, 10) === sortedCatAsc[i]) { catTempStreak++; } else { catTempStreak = 1; }
+          }
+          if (catTempStreak > catBestStreak) catBestStreak = catTempStreak;
+        }
+        if (categoryStats[cat]) {
+          categoryStats[cat].streak = catStreak;
+          categoryStats[cat].bestStreak = catBestStreak;
         }
       }
     }

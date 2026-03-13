@@ -116,18 +116,141 @@ function parseToStringArray(value: string | null): string[] {
 }
 
 // ─── Preview as User ─────────────────────────────────────────────────────────
-// Renders the selected view exactly as end-users see it in the ScanCoach pages.
+// Renders the selected view as a live iframe of the actual ScanCoach page.
+
+/**
+ * Build the preview URL for a given module + view.
+ * Each module has a different URL structure:
+ *   - /scan-coach?tab=X  → append &view=viewId
+ *   - /tee-scan-coach    → append ?view=viewId
+ *   - /scan-coach?tab=chd → use ?tab=chd&defect=viewId&stage=viewId
+ */
+function buildPreviewUrl(modulePath: string, moduleKey: string, viewId: string): string {
+  const base = window.location.origin;
+  if (moduleKey === "chd") {
+    // CHD uses defect + stage params
+    return `${base}/scan-coach?tab=chd&defect=${encodeURIComponent(viewId)}&stage=${encodeURIComponent(viewId)}&preview=1`;
+  }
+  if (modulePath.includes("?")) {
+    // Already has query params (e.g. /scan-coach?tab=tte)
+    return `${base}${modulePath}&view=${encodeURIComponent(viewId)}&preview=1`;
+  }
+  // Dedicated page (e.g. /tee-scan-coach)
+  return `${base}${modulePath}?view=${encodeURIComponent(viewId)}&preview=1`;
+}
 
 function ScanCoachViewPreview({
   viewId,
   viewName,
   override,
+  moduleKey,
+  modulePath,
 }: {
   viewId: string;
   viewName: string;
   override: Override | undefined;
+  moduleKey: string;
+  modulePath: string;
 }) {
-  // Build a merged "view" object from override fields (falling back to empty defaults)
+  const [iframeLoading, setIframeLoading] = useState(true);
+  const [iframeError, setIframeError] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const previewUrl = buildPreviewUrl(modulePath, moduleKey, viewId);
+
+  // Reset loading state when view changes
+  React.useEffect(() => {
+    setIframeLoading(true);
+    setIframeError(false);
+  }, [viewId, moduleKey]);
+
+  return (
+    <div className="space-y-3">
+      {/* Preview banner */}
+      <div className="flex items-center justify-between gap-2 px-4 py-2.5 rounded-lg bg-amber-50 border border-amber-200">
+        <div className="flex items-center gap-2">
+          <Eye className="w-4 h-4 text-amber-500 flex-shrink-0" />
+          <p className="text-xs text-amber-700 font-medium">
+            <strong>Live Preview</strong> — this is exactly what end-users see for <em>{viewName}</em>.
+            Saved overrides are reflected immediately.
+          </p>
+        </div>
+        <a
+          href={previewUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-shrink-0 flex items-center gap-1 text-xs text-amber-600 hover:text-amber-800 font-semibold"
+        >
+          <ExternalLink className="w-3 h-3" /> Open in new tab
+        </a>
+      </div>
+
+      {/* Override status */}
+      {override && (
+        <div className="flex flex-wrap gap-1.5 px-1">
+          {override.echoImageUrl && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Echo Image</Badge>}
+          {override.anatomyImageUrl && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Anatomy Image</Badge>}
+          {override.transducerImageUrl && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Transducer Image</Badge>}
+          {override.description && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Description</Badge>}
+          {override.howToGet && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>How To Get</Badge>}
+          {override.tips && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Tips</Badge>}
+          {override.pitfalls && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Pitfalls</Badge>}
+          {override.structures && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Structures</Badge>}
+          {override.measurements && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Measurements</Badge>}
+          {override.criticalFindings && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Critical Findings</Badge>}
+          <span className="text-[10px] text-gray-400 self-center ml-1">Last saved: {new Date(override.updatedAt).toLocaleString()}</span>
+        </div>
+      )}
+      {!override && (
+        <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-50 border border-gray-200">
+          <AlertCircle className="w-3.5 h-3.5 text-gray-400" />
+          <p className="text-xs text-gray-500">No overrides saved yet — showing default content from the component.</p>
+        </div>
+      )}
+
+      {/* Live iframe */}
+      <div className="relative rounded-xl border border-gray-200 overflow-hidden bg-white shadow-sm" style={{ height: "75vh", minHeight: 480 }}>
+        {iframeLoading && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10">
+            <Loader2 className="w-8 h-8 animate-spin mb-3" style={{ color: BRAND }} />
+            <p className="text-sm text-gray-500">Loading live preview…</p>
+            <p className="text-xs text-gray-400 mt-1">{viewName}</p>
+          </div>
+        )}
+        {iframeError && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10">
+            <AlertCircle className="w-8 h-8 text-red-400 mb-3" />
+            <p className="text-sm text-gray-600 font-semibold">Preview unavailable</p>
+            <p className="text-xs text-gray-400 mt-1 mb-3">The page could not be loaded in the preview frame.</p>
+            <a
+              href={previewUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-white text-sm font-semibold"
+              style={{ background: BRAND }}
+            >
+              <ExternalLink className="w-4 h-4" /> Open in new tab
+            </a>
+          </div>
+        )}
+        <iframe
+          ref={iframeRef}
+          src={previewUrl}
+          title={`Live preview: ${viewName}`}
+          className="w-full h-full border-0"
+          onLoad={() => setIframeLoading(false)}
+          onError={() => { setIframeLoading(false); setIframeError(true); }}
+          sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+        />
+      </div>
+    </div>
+  );
+}
+
+// ─── (Legacy static preview helpers — kept for reference, no longer used in UI) ─
+function _legacyStaticPreviewContent({
+  viewId, viewName, override,
+}: { viewId: string; viewName: string; override: Override | undefined }) {
   const abbr = viewId.toUpperCase().slice(0, 4);
   const echoImageUrl = override?.echoImageUrl ?? null;
   const anatomyImageUrl = override?.anatomyImageUrl ?? null;
@@ -158,15 +281,6 @@ function ScanCoachViewPreview({
 
   return (
     <div className="space-y-4">
-      {/* Preview banner */}
-      <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-amber-50 border border-amber-200">
-        <Eye className="w-4 h-4 text-amber-500 flex-shrink-0" />
-        <p className="text-xs text-amber-700 font-medium">
-          <strong>Preview as User</strong> — this is exactly what end-users see for this view, with all saved overrides applied.
-          Unsaved draft changes are not reflected here.
-        </p>
-      </div>
-
       {/* View header */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b" style={{ borderColor: BRAND + "30", background: BRAND + "08" }}>
@@ -884,6 +998,8 @@ export default function ScanCoachEditor() {
                     viewId={selectedViewId}
                     viewName={selectedViewName}
                     override={currentOverride}
+                    moduleKey={selectedModule}
+                    modulePath={moduleMeta.path}
                   />
                 ) : (
                   <>
