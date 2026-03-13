@@ -596,6 +596,200 @@ export const accreditationManagerRouter = router({
       return { success: true };
     }),
 
+  /** ─── Cross-org Reporting Dashboard ─────────────────────────────────────── */
+
+  /** KPI summary: total orgs, avg quality score, avg readiness, open tasks */
+  reportingKpis: protectedProcedure.query(async ({ ctx }) => {
+    await assertAccreditationManager(ctx);
+    const db = await getDb();
+    if (!db) return { totalOrgs: 0, avgQualityScore: 0, avgReadinessPct: 0, openTasks: 0, totalIqrReviews: 0, totalPeerReviews: 0 };
+
+    const [orgsResult] = await db.select({ cnt: sql<number>`COUNT(*)` }).from(diyOrganizations);
+    const [iqrResult] = await db.select({ avg: sql<number>`AVG(quality_score)`, cnt: sql<number>`COUNT(*)` }).from(imageQualityReviews).where(sql`lab_id IS NOT NULL`);
+    const [pprResult] = await db.select({ cnt: sql<number>`COUNT(*)` }).from(physicianPeerReviews).where(sql`lab_id IS NOT NULL`);
+    const [readinessResult] = await db.select({ avg: sql<number>`AVG(completion_pct)` }).from(accreditationReadiness);
+    const [tasksResult] = await db.select({ cnt: sql<number>`COUNT(*)` }).from(accreditationTasks).where(sql`status IN ('pending','in_progress','overdue')`);
+
+    return {
+      totalOrgs: Number(orgsResult?.cnt ?? 0),
+      avgQualityScore: Math.round(Number(iqrResult?.avg ?? 0)),
+      avgReadinessPct: Math.round(Number(readinessResult?.avg ?? 0)),
+      openTasks: Number(tasksResult?.cnt ?? 0),
+      totalIqrReviews: Number(iqrResult?.cnt ?? 0),
+      totalPeerReviews: Number(pprResult?.cnt ?? 0),
+    };
+  }),
+
+  /** Per-org summary table: name, plan, IQR count, avg quality, peer review count, avg concordance, readiness % */
+  reportingOrgTable: protectedProcedure.query(async ({ ctx }) => {
+    await assertAccreditationManager(ctx);
+    const db = await getDb();
+    if (!db) return [];
+
+    const orgs = await db
+      .select({
+        id: diyOrganizations.id,
+        name: diyOrganizations.name,
+      })
+      .from(diyOrganizations)
+      .orderBy(diyOrganizations.name);
+
+    const subs = await db.select().from(diySubscriptions);
+    const subMap = new Map(subs.map((s) => [s.orgId, s]));
+
+    const iqrStats = await db
+      .select({
+        labId: imageQualityReviews.labId,
+        cnt: sql<number>`COUNT(*)`,
+        avgQS: sql<number>`AVG(quality_score)`,
+      })
+      .from(imageQualityReviews)
+      .where(sql`lab_id IS NOT NULL`)
+      .groupBy(imageQualityReviews.labId);
+    const iqrMap = new Map(iqrStats.map((r) => [r.labId!, r]));
+
+    const pprStats = await db
+      .select({
+        labId: physicianPeerReviews.labId,
+        cnt: sql<number>`COUNT(*)`,
+        avgCS: sql<number>`AVG(concordance_score)`,
+      })
+      .from(physicianPeerReviews)
+      .where(sql`lab_id IS NOT NULL`)
+      .groupBy(physicianPeerReviews.labId);
+    const pprMap = new Map(pprStats.map((r) => [r.labId!, r]));
+
+    const readinessRows = await db.select().from(accreditationReadiness);
+    const readinessMap = new Map(readinessRows.map((r) => [r.labId, r]));
+
+    const memberCounts = await db
+      .select({ orgId: diyOrgMembers.orgId, cnt: sql<number>`COUNT(*)` })
+      .from(diyOrgMembers)
+      .where(eq(diyOrgMembers.isActive, true))
+      .groupBy(diyOrgMembers.orgId);
+    const memberMap = new Map(memberCounts.map((r) => [r.orgId, Number(r.cnt)]));
+
+    return orgs.map((org) => {
+      const sub = subMap.get(org.id);
+      const iqr = iqrMap.get(org.id);
+      const ppr = pprMap.get(org.id);
+      const readiness = readinessMap.get(org.id);
+      return {
+        id: org.id,
+        name: org.name,
+        city: null as string | null,
+        state: null as string | null,
+        plan: sub?.plan ?? null,
+        status: sub?.status ?? null,
+        memberCount: memberMap.get(org.id) ?? 0,
+        iqrCount: Number(iqr?.cnt ?? 0),
+        avgQualityScore: iqr ? Math.round(Number(iqr.avgQS)) : null,
+        peerReviewCount: Number(ppr?.cnt ?? 0),
+        avgConcordanceScore: ppr ? Math.round(Number(ppr.avgCS)) : null,
+        readinessPct: readiness?.completionPct ?? null,
+      };
+    });
+  }),
+
+  /** Monthly IQR quality score trend per org (last 12 months) */
+  reportingIqrTrend: protectedProcedure.query(async ({ ctx }) => {
+    await assertAccreditationManager(ctx);
+    const db = await getDb();
+    if (!db) return [];
+
+    const rows = await db
+      .select({
+        labId: imageQualityReviews.labId,
+        month: sql<string>`DATE_FORMAT(created_at, '%Y-%m')`,
+        avgQS: sql<number>`AVG(quality_score)`,
+        cnt: sql<number>`COUNT(*)`,
+      })
+      .from(imageQualityReviews)
+      .where(sql`lab_id IS NOT NULL AND created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)`)
+      .groupBy(imageQualityReviews.labId, sql`DATE_FORMAT(created_at, '%Y-%m')`)
+      .orderBy(sql`DATE_FORMAT(created_at, '%Y-%m')`);
+
+    return rows.map((r) => ({
+      labId: r.labId,
+      month: r.month,
+      avgQualityScore: Math.round(Number(r.avgQS)),
+      count: Number(r.cnt),
+    }));
+  }),
+
+  /** Monthly peer review concordance trend per org (last 12 months) */
+  reportingPprTrend: protectedProcedure.query(async ({ ctx }) => {
+    await assertAccreditationManager(ctx);
+    const db = await getDb();
+    if (!db) return [];
+
+    const rows = await db
+      .select({
+        labId: physicianPeerReviews.labId,
+        month: sql<string>`DATE_FORMAT(created_at, '%Y-%m')`,
+        avgCS: sql<number>`AVG(concordance_score)`,
+        cnt: sql<number>`COUNT(*)`,
+      })
+      .from(physicianPeerReviews)
+      .where(sql`lab_id IS NOT NULL AND created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)`)
+      .groupBy(physicianPeerReviews.labId, sql`DATE_FORMAT(created_at, '%Y-%m')`)
+      .orderBy(sql`DATE_FORMAT(created_at, '%Y-%m')`);
+
+    return rows.map((r) => ({
+      labId: r.labId,
+      month: r.month,
+      avgConcordanceScore: Math.round(Number(r.avgCS)),
+      count: Number(r.cnt),
+    }));
+  }),
+
+  /** Case mix distribution across all orgs (modality breakdown) */
+  reportingCaseMix: protectedProcedure.query(async ({ ctx }) => {
+    await assertAccreditationManager(ctx);
+    const db = await getDb();
+    if (!db) return [];
+
+    const rows = await db
+      .select({
+        labId: caseMixSubmissions.labId,
+        modality: caseMixSubmissions.modality,
+        cnt: sql<number>`COUNT(*)`,
+      })
+      .from(caseMixSubmissions)
+      .where(sql`lab_id IS NOT NULL`)
+      .groupBy(caseMixSubmissions.labId, caseMixSubmissions.modality)
+      .orderBy(caseMixSubmissions.labId, caseMixSubmissions.modality);
+
+    return rows.map((r) => ({
+      labId: r.labId,
+      modality: r.modality,
+      count: Number(r.cnt),
+    }));
+  }),
+
+  /** Task summary per org: open, completed, overdue counts */
+  reportingTaskSummary: protectedProcedure.query(async ({ ctx }) => {
+    await assertAccreditationManager(ctx);
+    const db = await getDb();
+    if (!db) return [];
+
+    const rows = await db
+      .select({
+        diyOrgId: accreditationTasks.diyOrgId,
+        status: accreditationTasks.status,
+        cnt: sql<number>`COUNT(*)`,
+      })
+      .from(accreditationTasks)
+      .where(sql`diy_org_id IS NOT NULL`)
+      .groupBy(accreditationTasks.diyOrgId, accreditationTasks.status);
+
+    return rows.map((r) => ({
+      diyOrgId: r.diyOrgId,
+      status: r.status,
+      count: Number(r.cnt),
+    }));
+  }),
+
   /** List all accreditation managers (for assignment dropdowns) */
   listManagers: protectedProcedure.query(async ({ ctx }) => {
     await assertAccreditationManager(ctx);

@@ -2633,3 +2633,13 @@
 - [x] Server-side: only platform_admin can assign/remove accreditation_manager role
 - [x] UI: accreditation_manager option hidden in all role dropdowns unless user is platform_admin or owner
 - [x] Applies to: found-user dropdown, not-found dropdown, bulk CSV dropdown, user row dropdown
+
+## Accreditation Manager Reporting Dashboard
+- [x] Add cross-org aggregation procedures: IQR quality scores, peer review concordance, case mix, readiness, tasks
+- [x] Build KPI summary cards (total orgs, avg quality score, avg readiness %, open tasks)
+- [x] Build org comparison table (sortable by quality score, readiness, peer review count)
+- [x] Build monthly trend chart (IQR quality score over time, all orgs overlaid)
+- [x] Build peer review concordance bar chart (per org)
+- [x] Build case mix distribution donut chart (aggregate across all orgs)
+- [x] Build readiness progress bar chart (per org, sorted by % complete)
+- [x] Wire as dedicated "Reporting Dashboard" tab in AccreditationManager hub

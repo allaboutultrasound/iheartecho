@@ -29,17 +29,18 @@ import {
   Building2, Users, Settings, ChevronRight, ChevronLeft, Loader2,
   AlertTriangle, CheckCircle, Plus, ClipboardList, BarChart2,
   FileText, Zap, Shield, Crown, Star, Mail, Calendar, Clock,
-  RefreshCw, Trash2, Edit, UserPlus, Activity, BookOpen,
+  RefreshCw, Trash2, Edit, UserPlus, Activity, BookOpen, TrendingUp,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "wouter";
+import AccreditationReportingDashboard from "./AccreditationReportingDashboard";
 
 const BRAND = "#189aa1";
 const NAVY = "#0e1e2e";
 const AQUA = "#4ad9e0";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type Section = "diy-orgs" | "managed-accounts" | "create-account";
+type Section = "diy-orgs" | "managed-accounts" | "create-account" | "reports";
 type OrgTab = "overview" | "seats" | "facility" | "readiness" | "forms" | "analytics" | "tasks";
 
 const PLAN_LABELS: Record<string, { label: string; color: string }> = {
@@ -954,6 +955,7 @@ export default function AccreditationManager() {
     { id: "diy-orgs", label: "DIY Organizations", icon: Building2, description: "Drill into every DIY org — seats, facility info, readiness, forms, analytics, and task assignment" },
     { id: "managed-accounts", label: "Managed Accounts", icon: Shield, description: "Full-service (non-DIY) facilities managed directly by the accreditation team" },
     { id: "create-account", label: "Create Account", icon: UserPlus, description: "Create a pending user account without requiring SuperAdmin" },
+    { id: "reports", label: "Reporting Dashboard", icon: TrendingUp, description: "Cross-organization metrics: quality scores, peer review concordance, case mix, readiness, and task status" },
   ];
 
   return (
@@ -1006,6 +1008,7 @@ export default function AccreditationManager() {
           {activeSection === "diy-orgs" && <DiyOrgsPanel />}
           {activeSection === "managed-accounts" && <ManagedAccountsPanel />}
           {activeSection === "create-account" && <CreateAccountPanel />}
+          {activeSection === "reports" && <AccreditationReportingDashboard />}
         </div>
       </div>
     </Layout>
