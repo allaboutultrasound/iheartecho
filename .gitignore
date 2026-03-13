@@ -105,3 +105,11 @@ temp/
 *.db
 *.sqlite
 *.sqlite3
+
+# Drizzle migration snapshots (large, not needed in deployment)
+drizzle/meta/
+drizzle/*.sql
+
+# Mobile app folders (not part of web deployment)
+ios/
+android/

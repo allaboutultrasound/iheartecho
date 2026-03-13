@@ -1,1 +1,0 @@
-ALTER TABLE `users` ADD `timezone` varchar(64);

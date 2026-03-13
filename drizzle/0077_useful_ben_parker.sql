@@ -1,2 +1,0 @@
-ALTER TABLE `quickfireChallenges` MODIFY COLUMN `category` enum('ACS','Adult Echo','Pediatric Echo','Fetal Echo','POCUS','General') NOT NULL DEFAULT 'Adult Echo';--> statement-breakpoint
-ALTER TABLE `quickfireQuestions` MODIFY COLUMN `category` enum('ACS','Adult Echo','Pediatric Echo','Fetal Echo','POCUS','General') DEFAULT 'Adult Echo';

@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">iHeartEcho</string>
-    <string name="title_activity_main">iHeartEcho</string>
-    <string name="package_name">com.allaboutultrasound.iheartecho</string>
-    <string name="custom_url_scheme">com.allaboutultrasound.iheartecho</string>
-</resources>

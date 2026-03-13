@@ -1,1 +1,0 @@
-ALTER TABLE `cmeCoursesCache` ADD `collectionIds` text;

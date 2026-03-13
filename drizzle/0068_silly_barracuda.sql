@@ -1,1 +1,0 @@
-ALTER TABLE `users` ADD `isDemo` boolean DEFAULT false NOT NULL;

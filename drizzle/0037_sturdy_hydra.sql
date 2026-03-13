@@ -1,1 +1,0 @@
-ALTER TABLE `quickfireChallenges` ADD `difficulty` enum('beginner','intermediate','advanced') DEFAULT 'intermediate';

@@ -1,2 +1,0 @@
-ALTER TABLE `accreditationReadiness` MODIFY COLUMN `checklistProgress` text NOT NULL DEFAULT ('{}');--> statement-breakpoint
-ALTER TABLE `accreditationReadiness` MODIFY COLUMN `itemNotes` text NOT NULL DEFAULT ('{}');

@@ -1,2 +1,0 @@
-ALTER TABLE `quickfireQuestions` MODIFY COLUMN `type` enum('scenario','image','quickReview','connect','identifier','order') NOT NULL;--> statement-breakpoint
-ALTER TABLE `quickfireQuestions` ADD `orderedItems` text;

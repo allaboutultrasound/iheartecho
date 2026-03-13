@@ -1,1 +1,0 @@
-ALTER TABLE `qualityMeetings` ADD `meetingLink` varchar(1024);

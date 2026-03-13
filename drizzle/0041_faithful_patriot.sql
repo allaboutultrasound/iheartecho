@@ -1,1 +1,0 @@
-ALTER TABLE `quickfireQuestions` ADD `videoUrl` text;

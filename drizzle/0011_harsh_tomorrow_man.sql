@@ -1,1 +1,0 @@
-ALTER TABLE `labMembers` MODIFY COLUMN `role` enum('admin','reviewer','sonographer','physician') NOT NULL DEFAULT 'sonographer';

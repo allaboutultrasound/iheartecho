@@ -1,1 +1,0 @@
-ALTER TABLE `users` ADD `isPremium` boolean DEFAULT false NOT NULL;
