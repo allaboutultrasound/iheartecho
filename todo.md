@@ -86,7 +86,7 @@
 - [x] Tricuspid Regurgitation engine in EchoAssist™ — vena contracta, EROA, regurgitant volume, jet area, hepatic vein flow, TR Vmax/RVSP, RV/RA size, ASE/AHA 2021 grading, Suggests/Note/Tip output
 
 ## POCUS Modules (In Progress)
-- [ ] Cardiac POCUS Navigator — PSL, PSS, A4C, Subcostal, IVC views; LV/RV/Pericardium/Volume assessment; RUSH protocol
+- [x] Cardiac POCUS Navigator — PSL, PSS, A4C, Subcostal, IVC views; LV/RV/Pericardium/Volume assessment; RUSH protocol
 - [ ] Lung POCUS Navigator — 8-zone protocol, B-lines, A-lines, pleural sliding, consolidation, BLUE protocol
 - [ ] eFAST POCUS Navigator — RUQ/LUQ/Pelvis/Subxiphoid/Bilateral thorax windows; free fluid grading; pneumothorax
 - [ ] POCUS EchoAssist engines — IVC collapsibility, B-line scoring, eFAST free fluid grading
@@ -2890,3 +2890,22 @@
 - [x] Replace with "Guideline-Based" or descriptive labels (e.g. "Guideline-Based Grading", "Diastolic Assessment Algorithm")
 - [x] Files updated: EchoCalculator.tsx, EchoAssist.tsx, DiastolicNavigator.tsx, StrainNavigator.tsx, StrainScanCoach.tsx, ScanCoach.tsx, PulmHTNNavigator.tsx, StressNavigator.tsx, TEENavigator.tsx, TTENavigator.tsx, UEANavigator.tsx, PediatricEchoAssist.tsx, HOCMNavigator.tsx, ACHDNavigator.tsx
 - [x] Body text, clinical notes, algorithm comments, and reference sections at bottom of pages left untouched
+
+## Magic Link Only Authentication (Session Mar 13)
+- [ ] Remove password login form from Login/Auth page
+- [ ] Remove OAuth (Manus/All About Ultrasound) login button
+- [ ] Keep only: email input → send magic link → click link → logged in
+- [ ] Update server: disable password auth route, disable OAuth callback
+- [ ] Keep magic link generation and verification endpoints
+- [ ] Update registration flow to magic-link-only (no password field)
+- [ ] Remove password-related fields from profile settings
+- [ ] Update "forgot password" flow — no longer needed (magic link IS the login)
+
+## Branding & Category Updates (Completed)
+- [x] Add POCUS as 5th challenge/interest category — DB schema, emailCampaignRouter, QuickFireAdmin, Profile interests, EmailAdmin, challengeCron
+- [x] Replace "Premium" badge on DIY Accreditation card (Home.tsx) with "Accreditation Subscription"
+- [x] Replace "Premium Add-On" badge in LabAdmin.tsx with "Accreditation Subscription"
+- [x] Replace "Premium App access" language in DIYAccreditationPlans.tsx with "iHeartEcho™ App access included"
+- [x] Add spam/junk folder reminder to magic link login page (pre-send note + post-send confirmation)
+- [x] Add ™ to ECG-Assist Suite in EchoAssistHub.tsx
+- [x] Fix broken JSX comment in EchoAssistHub.tsx

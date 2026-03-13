@@ -110,7 +110,7 @@ interface ConnectPair { left: string; right: string; }
 interface IdentifierMarker { x: number; y: number; label: string; }
 interface OrderItem { text: string; }
 
-type QuestionCategory = "ACS" | "Adult Echo" | "Pediatric Echo" | "Fetal Echo" | "General";
+type QuestionCategory = "ACS" | "Adult Echo" | "Pediatric Echo" | "Fetal Echo" | "POCUS" | "General";
 
 interface QuestionForm {
   type: QuestionType;
@@ -240,7 +240,7 @@ export default function QuickFireAdmin() {
   // List state
   const [page, setPage] = useState(1);
   const [typeFilter, setTypeFilter] = useState<QuestionType | "all">("all");
-  const [categoryFilter, setCategoryFilter] = useState<"all" | "ACS" | "Adult Echo" | "Pediatric Echo" | "Fetal Echo" | "General">("all");
+  const [categoryFilter, setCategoryFilter] = useState<"all" | "ACS" | "Adult Echo" | "Pediatric Echo" | "Fetal Echo" | "POCUS" | "General">("all");
   const [includeInactive, setIncludeInactive] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [challengeSearch, setChallengeSearch] = useState("");
@@ -1058,6 +1058,7 @@ export default function QuickFireAdmin() {
               <SelectItem value="Adult Echo">Adult Echo</SelectItem>
               <SelectItem value="Pediatric Echo">Pediatric Echo</SelectItem>
               <SelectItem value="Fetal Echo">Fetal Echo</SelectItem>
+              <SelectItem value="POCUS">POCUS</SelectItem>
               <SelectItem value="General">General</SelectItem>
             </SelectContent>
           </Select>
@@ -1186,6 +1187,7 @@ export default function QuickFireAdmin() {
                             q.category === "Adult Echo" ? "bg-teal-50 text-teal-700" :
                             q.category === "Pediatric Echo" ? "bg-purple-50 text-purple-700" :
                             q.category === "Fetal Echo" ? "bg-pink-50 text-pink-700" :
+                            q.category === "POCUS" ? "bg-blue-50 text-blue-700" :
                             "bg-gray-50 text-gray-600"
                           }`}>{q.category}</span>
                         )}
@@ -1586,6 +1588,7 @@ export default function QuickFireAdmin() {
                     <SelectItem value="Adult Echo">Adult Echo</SelectItem>
                     <SelectItem value="Pediatric Echo">Pediatric Echo</SelectItem>
                     <SelectItem value="Fetal Echo">Fetal Echo</SelectItem>
+                    <SelectItem value="POCUS">POCUS</SelectItem>
                     <SelectItem value="Mixed">Mixed</SelectItem>
                   </SelectContent>
                 </Select>
@@ -2161,6 +2164,7 @@ export default function QuickFireAdmin() {
                   <SelectItem value="Adult Echo">Adult Echo</SelectItem>
                   <SelectItem value="Pediatric Echo">Pediatric Echo</SelectItem>
                   <SelectItem value="Fetal Echo">Fetal Echo</SelectItem>
+                  <SelectItem value="POCUS">POCUS</SelectItem>
                   <SelectItem value="General">General</SelectItem>
                 </SelectContent>
               </Select>
@@ -2186,7 +2190,7 @@ export default function QuickFireAdmin() {
                   Tags <span className="text-gray-400 font-normal">(comma-separated)</span>
                 </label>
                 <div className="flex flex-wrap gap-1.5 mb-2">
-                  {["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo"].map((cat) => {
+                  {["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "POCUS"].map((cat) => {
                     const currentTags = form.tags.split(",").map((t) => t.trim()).filter(Boolean);
                     const isActive = currentTags.includes(cat);
                     return (
@@ -2288,6 +2292,7 @@ export default function QuickFireAdmin() {
                     { label: "Pulmonary Embolism", topic: "Pulmonary embolism — RV strain pattern, McConnell sign, D-sign, TR, IVC, risk stratification by echo" },
                     { label: "Pediatric Echo", topic: "Pediatric echocardiography — congenital heart disease, Z-scores, shunt assessment, CHD lesions" },
                     { label: "Fetal Echo", topic: "Fetal echocardiography — fetal cardiac anatomy, CHD screening, biometry, situs, arch patterns" },
+                    { label: "POCUS", topic: "Point-of-care ultrasound (POCUS) — eFAST, RUSH protocol, lung POCUS, bedside cardiac assessment, IVC assessment, pleural effusion" },
                   ].map(({ label, topic }) => (
                     <button
                       key={label}

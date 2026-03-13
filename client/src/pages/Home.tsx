@@ -41,7 +41,7 @@ const modules: Module[] = [
     path: "/echoassist",
     icon: Calculator,
     title: "EchoAssist™ Calculators",
-    description: "Guideline-based severity calculators for AS, MR, AR, TR, MS, LV function, diastology, strain, RV function, PA pressure, SV/CO, LAP estimation, and more — ASE 2025.",
+    description: "Guideline-based severity calculators for AS, MR, AR, TR, MS, LV function, diastology, strain, RV function, PA pressure, SV/CO, and LAP estimation.",
     badge: "Guideline-Based",
     color: BRAND,
     interests: ["adultEcho", "acs"],
@@ -252,8 +252,8 @@ export default function Home() {
               <div className="module-card bg-white rounded-xl p-5 cursor-pointer group h-full relative overflow-hidden">
                 {premium && (
                   <div className="absolute top-0 right-0">
-                    <div className="bg-gradient-to-r from-amber-500 to-yellow-400 text-white text-[10px] font-bold px-3 py-0.5 rounded-bl-lg tracking-wide uppercase shadow-sm">
-                      Premium
+                    <div className="bg-gradient-to-r from-[#0e4a50] to-[#189aa1] text-white text-[10px] font-bold px-3 py-0.5 rounded-bl-lg tracking-wide uppercase shadow-sm">
+                      Accreditation Subscription
                     </div>
                   </div>
                 )}

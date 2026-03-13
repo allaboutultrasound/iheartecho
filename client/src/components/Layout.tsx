@@ -124,7 +124,7 @@ const hiddenNavItems = [
   { path: "/pocus-lung-scan-coach", label: "Lung POCUS ScanCoach™" },
   { path: "/ecg-navigator", label: "ECG Navigator" },
   { path: "/ecg-coach", label: "ECG Coach" },
-  { path: "/ecg-assist", label: "ECG Calculators" },
+  { path: "/ecg-assist", label: "ECG-Assist™" },
   { path: "/fetal-echo-assist", label: "FetalEchoAssist™" },
   { path: "/pediatric-echo-assist", label: "PediatricEchoAssist™" },
   { path: "/achd-echo-assist", label: "ACHDEchoAssist™" },

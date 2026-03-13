@@ -4,7 +4,7 @@
  * Runs every 5 minutes to:
  *  1. Archive any "live" challenges whose 24-hour window has expired.
  *  2. At 6 AM Eastern Time: auto-publish the next queued challenge from EACH
- *     category (ACS, Adult Echo, Pediatric Echo, Fetal Echo) — picking the
+ *     category (ACS, Adult Echo, Pediatric Echo, Fetal Echo, POCUS) — picking the
  *     lowest queuePosition per category. No publishDate required from admin.
  *  3. Send a SendGrid notification email to opted-in users at 6 AM ET when
  *     new challenges go live.
@@ -122,7 +122,7 @@ export async function runChallengeCron() {
     }
 
     // ── Step 4: Pick the next queued challenge per category ───────────────────
-    const categories = ["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo"] as const;
+    const categories = ["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "POCUS"] as const;
     const toPublish: typeof quickfireChallenges.$inferSelect[] = [];
 
     for (const category of categories) {

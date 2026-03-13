@@ -84,9 +84,9 @@ export default function Profile() {
     undefined,
     { enabled: !!user }
   );
-  const [interests, setInterests] = useState({ acs: false, adultEcho: false, pediatricEcho: false, fetalEcho: false });
+  const [interests, setInterests] = useState<{ acs: boolean; adultEcho: boolean; pediatricEcho: boolean; fetalEcho: boolean; pocus: boolean }>({ acs: false, adultEcho: false, pediatricEcho: false, fetalEcho: false, pocus: false });
   useEffect(() => {
-    if (interestPrefs) setInterests(interestPrefs);
+    if (interestPrefs) setInterests((prev) => ({ ...prev, ...interestPrefs }));
   }, [interestPrefs]);
   const updateInterestsMutation = trpc.emailCampaign.updateInterestPrefs.useMutation({
     onSuccess: () => toast.success("Interests saved"),
@@ -994,10 +994,11 @@ export default function Profile() {
                   ) : (
                     <>
                       {([
-                        { key: "acs" as const, label: "ACS / Critical Care Echo", description: "Point-of-care ultrasound, POCUS, ICU echo, hemodynamic assessment, and critical care applications.", icon: "🫀" },
+                        { key: "acs" as const, label: "ACS", description: "Acute care echo, ICU echo, hemodynamic assessment, and critical care applications.", icon: "🫀" },
                         { key: "adultEcho" as const, label: "Adult Echocardiography", description: "TTE, TEE, stress echo, valvular disease, cardiomyopathy, and adult structural heart.", icon: "❤️" },
                         { key: "pediatricEcho" as const, label: "Pediatric Echocardiography", description: "Congenital heart disease, CHD protocols, pediatric measurements, and neonatal echo.", icon: "🧒" },
                         { key: "fetalEcho" as const, label: "Fetal Echocardiography", description: "Fetal cardiac screening, CHD detection, biometry, and fetal hemodynamics.", icon: "🤰" },
+                        { key: "pocus" as const, label: "POCUS", description: "Point-of-care ultrasound, eFAST, RUSH, lung POCUS, and bedside cardiac assessment.", icon: "🔍" },
                       ] as const).map(({ key, label, description, icon }) => (
                         <label
                           key={key}

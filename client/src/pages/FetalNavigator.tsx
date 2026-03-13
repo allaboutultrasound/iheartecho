@@ -446,7 +446,7 @@ export default function FetalNavigator() {
                       <Crown className="w-3 h-3" /> Premium
                     </span>
                   </div>
-                  <p className="text-white/70 text-xs mt-0.5">12 fetal echo calculators with 2023 ASE guideline-based feedback</p>
+                  <p className="text-white/70 text-xs mt-0.5">12 fetal echo calculators with guideline-based interpretation</p>
                 </div>
               </div>
               <div className="p-6">

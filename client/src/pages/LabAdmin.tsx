@@ -1744,7 +1744,7 @@ function AccreditationConciergeCard() {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
           <span className="text-xs font-bold uppercase tracking-widest text-[#4ad9e0]">Accreditation Concierge</span>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-[#4ad9e0]/20 text-[#4ad9e0] font-semibold">Premium Add-On</span>
+          <span className="text-xs px-2 py-0.5 rounded-full bg-white/20 text-white font-semibold">Accreditation Subscription</span>
         </div>
         <h3 className="text-white font-bold text-base mb-1" style={{ fontFamily: "Merriweather, serif" }}>
           Get Expert Guidance Through IAC Accreditation

@@ -925,8 +925,8 @@ export const quickfireQuestions = mysqlTable("quickfireQuestions", {
   tags: text("tags"),
   // Echo specialty category for flashcard filtering
   echoCategory: mysqlEnum("echoCategory", ["adult", "pediatric_congenital", "fetal"]).default("adult"),
-  // Broad clinical category for admin filtering (ACS, Adult Echo, Pediatric Echo, Fetal Echo, General)
-  category: mysqlEnum("category", ["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "General"]).default("Adult Echo"),
+  // Broad clinical category for admin filtering (ACS, Adult Echo, Pediatric Echo, Fetal Echo, POCUS, General)
+  category: mysqlEnum("category", ["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "POCUS", "General"]).default("Adult Echo"),
   // Whether this question is active and eligible for daily sets
   isActive: boolean("isActive").default(true).notNull(),
   createdByUserId: int("createdByUserId"),
@@ -1068,8 +1068,8 @@ export const quickfireChallenges = mysqlTable("quickfireChallenges", {
   questionIds: text("questionIds").notNull(),
   // Admin-assigned priority — lower number = published first (1 = highest)
   priority: int("priority").default(100).notNull(),
-  // Category tag for filtering (ACS | Adult Echo | Pediatric Echo | Fetal Echo | General)
-  category: mysqlEnum("category", ["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "General"]).default("Adult Echo").notNull(),
+  // Category tag for filtering (ACS | Adult Echo | Pediatric Echo | Fetal Echo | POCUS | General)
+  category: mysqlEnum("category", ["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "POCUS", "General"]).default("Adult Echo").notNull(),
   // Difficulty level for filtering
   difficulty: mysqlEnum("difficulty", ["beginner", "intermediate", "advanced"]).default("intermediate"),
   // Lifecycle status — queued = in the auto-publish queue, waiting for its turn

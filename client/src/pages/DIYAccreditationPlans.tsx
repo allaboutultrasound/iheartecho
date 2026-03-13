@@ -78,7 +78,7 @@ const PLANS = [
       "Case Studies manager",
       "DIY Accreditation Readiness tracker",
       "IAC-ready PDF bundles",
-      "Lab Admin Premium App access",
+      "Lab Admin — iHeartEcho™ App access included",
     ],
     checkoutUrl: "https://member.allaboutultrasound.com/enroll/3706397?price_id=4655406",
   },
@@ -105,7 +105,7 @@ const PLANS = [
       "Advanced analytics & benchmarking",
       "Dedicated policy library",
       "Priority support",
-      "All Lab Admins get Premium App access",
+      "All Lab Admins — iHeartEcho™ App access included",
       "Accreditation Concierge™ add-on available",
     ],
     checkoutUrl: "https://member.allaboutultrasound.com/enroll/3706392?price_id=4655402",
@@ -134,7 +134,7 @@ const PLANS = [
       "Expert guidance on policies & procedures",
       "Accreditation readiness monitoring & review",
       "Dedicated account manager",
-      "All Lab Admins get Premium App access",
+      "All Lab Admins — iHeartEcho™ App access included",
       "Accreditation Concierge™ add-on available",
     ],
     checkoutUrl: "https://member.allaboutultrasound.com/enroll/3706344?price_id=4655349",
@@ -145,14 +145,14 @@ const PLANS = [
 const FAQS = [
   {
     q: "What is the difference between a Lab Admin and a DIY Member?",
-    a: "Lab Admins manage the accreditation workflow — they upload policies, assign case reviews, manage staff access, and access analytics and reporting. DIY Members participate in case reviews, submit documentation, and complete workflow tasks. Lab Admins also receive full Premium App access.",
+    a: "Lab Admins manage the accreditation workflow — they upload policies, assign case reviews, manage staff access, and access analytics and reporting. DIY Members participate in case reviews, submit documentation, and complete workflow tasks. Lab Admins also receive full iHeartEcho™ App access as part of their Accreditation Subscription.",
   },
   {
     q: "What is the SuperAdmin role?",
     a: "Each organization has exactly one SuperAdmin — the account owner who subscribes. The SuperAdmin has full control over org settings, billing, and can invite/revoke Lab Admins. The SuperAdmin seat counts as one of the Lab Admin seats in your plan.",
   },
   {
-    q: "Can a DIY Member also have Premium App access?",
+    q: "Can a DIY Member also access iHeartEcho™ Premium features?",
     a: "Yes. DIY Members can independently upgrade to a Premium App subscription. Multiple membership types are supported — a user can be both a DIY Member and a Premium subscriber.",
   },
   {
@@ -161,7 +161,7 @@ const FAQS = [
   },
   {
     q: "Do I get access to iHeartEcho™ app features?",
-    a: "All DIY Accreditation subscribers get access to the DIY tools. Lab Admins additionally receive Premium App access. DIY Members have free-tier app access unless they independently upgrade.",
+    a: "All DIY Accreditation subscribers get access to the DIY tools. Lab Admins additionally receive full iHeartEcho™ App access as part of their Accreditation Subscription. DIY Members have free-tier app access unless they independently upgrade.",
   },
 ];
 
@@ -222,7 +222,7 @@ export default function DIYAccreditationPlans() {
                 icon: Shield,
                 role: "Lab Admin",
                 color: BRAND,
-                desc: "Manage workflows, upload policies, assign tasks, manage staff, access analytics. Includes Premium App access.",
+                desc: "Manage workflows, upload policies, assign tasks, manage staff, access analytics. Includes iHeartEcho™ App access.",
               },
               {
                 icon: Users,
@@ -356,7 +356,7 @@ export default function DIYAccreditationPlans() {
                   ["Case Studies Manager", false, true, true, true],
                   ["DIY Readiness Tracker", false, true, true, true],
                   ["IAC-Ready PDF Bundles", false, true, true, true],
-                  ["Lab Admin Premium App Access", true, true, true, true],
+                  ["Lab Admin — iHeartEcho™ App Access", true, true, true, true],
                   ["Expert Consulting", false, false, false, true],
                   ["Monthly Advisory Meeting", false, false, false, true],
                   ["Accreditation Concierge™ Add-on", false, false, true, true],

@@ -1070,7 +1070,7 @@ async function generatePDFReport(
   doc.text("FetalEchoAssist\u2122 Clinical Report", margin, 14);
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
-  doc.text("Fetal Echo Calculator Engine \u2014 2023 ASE Guideline-Based Feedback", margin, 21);
+  doc.text("Fetal Echo Calculator Engine \u2014 Guideline-Based Interpretation", margin, 21);
   doc.text("iHeartEcho\u2122 | All About Ultrasound | www.iheartecho.com", margin, 27);
   y = 38;
 
@@ -1219,7 +1219,7 @@ async function generatePDFReport(
     doc.setFont("helvetica", "normal");
     doc.text("FetalEchoAssist\u2122 \u2014 iHeartEcho\u2122 | All About Ultrasound | www.iheartecho.com", margin, 293);
     doc.text(`Page ${i} of ${pageCount}`, pageW - margin - 15, 293);
-    doc.text("2023 ASE Fetal Echo Guidelines (Donofrio MT et al. JASE 2024;37:1-75)", margin, 297);
+    doc.text("Reference: Donofrio MT et al. J Am Soc Echocardiogr. 2024;37(1):1-75", margin, 297);
   }
 
   const dateStr = new Date().toISOString().slice(0, 10);
@@ -1311,12 +1311,12 @@ export default function FetalEchoAssist() {
                 </span>
               </div>
               <p className="text-sm" style={{ color: AQUA }}>
-                Fetal Echo Calculator Engine — 2023 ASE Guideline-Based Feedback
+                Fetal Echo Calculator Engine — Guideline-Based Interpretation
               </p>
             </div>
           </div>
           <p className="text-white/60 text-xs max-w-2xl mt-2">
-            Enter raw fetal echo measurements for instant guideline-based interpretation. All calculators reference the 2023 ASE Fetal Echocardiography Guidelines (Donofrio MT et al. JASE 2024;37:1-75).
+            Enter raw fetal echo measurements for instant guideline-based interpretation. References and normal ranges are cited within each calculator.
           </p>
         </div>
       </div>
@@ -1365,7 +1365,7 @@ export default function FetalEchoAssist() {
                     {hasAbnormal ? ` — ${Object.values(results).filter(r => r.normal === false).length} abnormal result(s)` : " — all within normal limits"}
                   </span>
                 </div>
-                <p className="text-xs text-gray-500">Generate a consolidated PDF report with all results and ASE guideline interpretations.</p>
+                <p className="text-xs text-gray-500">Generate a consolidated PDF report with all results and guideline-based interpretations.</p>
               </div>
               <Button
                 onClick={handleGeneratePDF}

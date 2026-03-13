@@ -36,11 +36,12 @@ const InterestPrefsSchema = z.object({
   adultEcho: z.boolean().default(false),
   pediatricEcho: z.boolean().default(false),
   fetalEcho: z.boolean().default(false),
+  pocus: z.boolean().default(false),
 });
 
 const AudienceFilterSchema = z.object({
   /** Interest categories — only users who have at least one of these selected */
-  interests: z.array(z.enum(["acs", "adultEcho", "pediatricEcho", "fetalEcho"])).default([]),
+  interests: z.array(z.enum(["acs", "adultEcho", "pediatricEcho", "fetalEcho", "pocus"])).default([]),
   /** App roles to filter by — empty means all roles */
   roles: z.array(z.string()).default([]),
   /** Subscription type: "all" | "premium" | "free" */
@@ -328,12 +329,12 @@ export const emailCampaignRouter = router({
       .where(eq(users.id, ctx.user.id))
       .limit(1);
     if (!u?.interestPrefs) {
-      return { acs: false, adultEcho: false, pediatricEcho: false, fetalEcho: false };
+      return { acs: false, adultEcho: false, pediatricEcho: false, fetalEcho: false, pocus: false };
     }
     try {
       return InterestPrefsSchema.parse(JSON.parse(u.interestPrefs));
     } catch {
-      return { acs: false, adultEcho: false, pediatricEcho: false, fetalEcho: false };
+      return { acs: false, adultEcho: false, pediatricEcho: false, fetalEcho: false, pocus: false };
     }
   }),
 

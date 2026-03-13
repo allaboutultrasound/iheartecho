@@ -429,7 +429,7 @@ export default function EchoAssistHub() {
                 FetalEchoAssist™
               </h3>
               <p className="text-sm text-gray-500 mb-3">
-                12 fetal echo calculators with 2023 ASE guideline-based feedback — Celermajer Index, CVPS, CTR, Tei Index, E/A Ratio, Ductus Venosus PIV, UA Doppler, MCA PSV (MoM), FHR Classification, PA/Ao Ratio, Wall Thickness Z-score, and Shortening Fraction.
+                12 fetal echo calculators with guideline-based interpretation — Celermajer Index, CVPS, CTR, Tei Index, E/A Ratio, Ductus Venosus PIV, UA Doppler, MCA PSV (MoM), FHR Classification, PA/Ao Ratio, Wall Thickness Z-score, and Shortening Fraction.
               </p>
               <div className="flex flex-wrap gap-2">
                 <Link href="/fetal-echo-assist">
@@ -511,7 +511,7 @@ export default function EchoAssistHub() {
           </div>
         </div>
 
-        {/* ── ECG-Assist Suite Cross-Promotion ─────────────────────────── */}
+        {/* ── ECG-Assist™ Suite Cross-Promotion ─────────────────────────── */}
         <div
           className="mt-8 rounded-xl p-5 border"
           style={{ borderColor: "#189aa1" + "40", background: "#f0fbfc" }}
@@ -532,7 +532,7 @@ export default function EchoAssistHub() {
                 </span>
               </div>
               <h3 className="font-bold text-gray-900 text-base mb-1" style={{ fontFamily: "Merriweather, serif" }}>
-                ECG-Assist Suite
+                ECG-Assist™ Suite
               </h3>
               <p className="text-sm text-gray-500 mb-3">
                 Three-part ECG suite — ECG Navigator (free, 9 clinical sections covering rate/rhythm, ST-T changes, Brugada, Sgarbossa, pacemaker ECGs), ECG Coach (premium, lead placement and neonatal ECG guidance), and ECG Calculators (premium, 12 guideline-based calculators including QTc, LVH voltage criteria, HEART score, GRACE score, and Brugada VT criteria).

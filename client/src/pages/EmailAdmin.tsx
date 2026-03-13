@@ -121,14 +121,15 @@ const SEED_TEMPLATES = [
 ];
 
 // ─── Audience filter types ────────────────────────────────────────────────────
-type InterestKey = "acs" | "adultEcho" | "pediatricEcho" | "fetalEcho";
+type InterestKey = "acs" | "adultEcho" | "pediatricEcho" | "fetalEcho" | "pocus";
 type SubscriptionType = "all" | "premium" | "free";
 
 const INTEREST_OPTIONS: { key: InterestKey; label: string }[] = [
-  { key: "acs", label: "ACS / Critical Care Echo" },
+  { key: "acs", label: "ACS" },
   { key: "adultEcho", label: "Adult Echocardiography" },
   { key: "pediatricEcho", label: "Pediatric Echocardiography" },
   { key: "fetalEcho", label: "Fetal Echocardiography" },
+  { key: "pocus", label: "POCUS" },
 ];
 
 const ROLE_OPTIONS = [

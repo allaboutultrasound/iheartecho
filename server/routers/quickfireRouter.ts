@@ -107,7 +107,7 @@ function seededShuffle<T>(arr: T[], seed: string): T[] {
 }
 
 // Category keys used throughout the daily challenge system
-export const CHALLENGE_CATEGORIES = ["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo"] as const;
+export const CHALLENGE_CATEGORIES = ["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "POCUS"] as const;
 export type ChallengeCategory = typeof CHALLENGE_CATEGORIES[number];
 
 // Map category label -> JSON key used in questionIds object
@@ -116,6 +116,7 @@ const CAT_KEY: Record<ChallengeCategory, string> = {
   "Adult Echo": "adultEcho",
   "Pediatric Echo": "pediatricEcho",
   "Fetal Echo": "fetalEcho",
+  "POCUS": "pocus",
 };
 
 /**
@@ -283,8 +284,8 @@ export const quickfireRouter = router({
       .from(quickfireQuestions)
       .where(and(eq(quickfireQuestions.isActive, true), inArray(quickfireQuestions.id, allIds)));
 
-    // Order: ACS, Adult Echo, Pediatric Echo, Fetal Echo
-    const catOrder = ["acs", "adultEcho", "pediatricEcho", "fetalEcho"];
+    // Order: ACS, Adult Echo, Pediatric Echo, Fetal Echo, POCUS
+    const catOrder = ["acs", "adultEcho", "pediatricEcho", "fetalEcho", "pocus"];
     const orderedQuestions = catOrder
       .filter((key) => enabledCats.has(key) && questionMap[key] !== null)
       .map((key) => questions.find((q) => q.id === questionMap[key]))
@@ -599,7 +600,7 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
         difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("intermediate"),
         tags: z.array(z.string()).default([]),
         echoCategory: z.enum(["adult", "pediatric_congenital", "fetal"]).default("adult"),
-        category: z.enum(["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "General"]).default("Adult Echo"),
+        category: z.enum(["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "POCUS", "General"]).default("Adult Echo"),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -646,7 +647,7 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
         tags: z.array(z.string()).optional(),
         isActive: z.boolean().optional(),
         echoCategory: z.enum(["adult", "pediatric_congenital", "fetal"]).optional(),
-        category: z.enum(["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "General"]).optional(),
+        category: z.enum(["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "POCUS", "General"]).optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -703,7 +704,7 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
         includeInactive: z.boolean().default(false),
         search: z.string().max(200).optional(),
         echoCategory: z.enum(["adult", "pediatric_congenital", "fetal"]).optional(),
-        category: z.enum(["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "General"]).optional(),
+        category: z.enum(["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "POCUS", "General"]).optional(),
       })
     )
     .query(async ({ input }) => {
@@ -1457,7 +1458,7 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       description: z.string().max(2000).optional(),
       questionIds: z.array(z.number().int().positive()).min(1).max(1),  // exactly 1 question per challenge
       priority: z.number().int().min(1).default(100),
-      category: z.enum(["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "General"]).optional(),
+      category: z.enum(["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "POCUS", "General"]).optional(),
       queuePosition: z.number().int().min(1).optional(),
     }))
     .mutation(async ({ ctx, input }) => {
@@ -1483,7 +1484,7 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       description: z.string().max(2000).optional().nullable(),
       questionIds: z.array(z.number().int().positive()).min(1).max(1).optional(),  // exactly 1 question per challenge
       priority: z.number().int().min(1).optional(),
-      category: z.enum(["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "General"]).optional(),
+      category: z.enum(["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "POCUS", "General"]).optional(),
       queuePosition: z.number().int().min(1).optional().nullable(),
     }))
     .mutation(async ({ input }) => {
@@ -1584,7 +1585,7 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       id: z.number().int().positive(),
       title: z.string().min(3).max(300).optional(),
       description: z.string().max(5000).optional().nullable(),
-      category: z.enum(["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "General"]).optional(),
+      category: z.enum(["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "POCUS", "General"]).optional(),
       difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional().nullable(),
       questionIds: z.array(z.number().int().positive()).min(1).max(1).optional(),
     }))
