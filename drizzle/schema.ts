@@ -69,6 +69,10 @@ export const users = mysqlTable("users", {
   // JSON: {acs:bool, adultEcho:bool, pediatricEcho:bool, fetalEcho:bool} — false means opted out of that category
   // null/missing means opted in to all categories (default)
   challengeCategoryPrefs: text("challengeCategoryPrefs"),
+  // JSON: {acs:bool, adultEcho:bool, pediatricEcho:bool, fetalEcho:bool}
+  // Content interest preferences — used to filter platform emails and personalize content
+  // null/missing means no preferences set (all content shown)
+  interestPrefs: text("interestPrefs"),
 });
 
 export type User = typeof users.$inferSelect;
@@ -1952,3 +1956,43 @@ export const accreditationTasks = mysqlTable("accreditationTasks", {
 });
 export type AccreditationTask = typeof accreditationTasks.$inferSelect;
 export type InsertAccreditationTask = typeof accreditationTasks.$inferInsert;
+
+// ─── Platform Email Templates ────────────────────────────────────────────────────────────────────────────────
+
+export const emailTemplates = mysqlTable("emailTemplates", {
+  id: int("id").autoincrement().primaryKey(),
+  createdByUserId: int("createdByUserId").notNull(),
+  name: varchar("name", { length: 200 }).notNull(),
+  subject: varchar("subject", { length: 500 }).notNull(),
+  // Rich HTML body (from TipTap editor)
+  htmlBody: longtext("htmlBody").notNull(),
+  // Optional plain-text version
+  previewText: varchar("previewText", { length: 300 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type EmailTemplate = typeof emailTemplates.$inferSelect;
+export type InsertEmailTemplate = typeof emailTemplates.$inferInsert;
+
+// ─── Platform Email Campaigns ────────────────────────────────────────────────────────────────────────────────
+
+export const emailCampaigns = mysqlTable("emailCampaigns", {
+  id: int("id").autoincrement().primaryKey(),
+  sentByUserId: int("sentByUserId").notNull(),
+  subject: varchar("subject", { length: 500 }).notNull(),
+  htmlBody: longtext("htmlBody").notNull(),
+  previewText: varchar("previewText", { length: 300 }),
+  // Audience filter snapshot (JSON)
+  // { interests: string[], roles: string[], subscriptionType: string, specificEmails: string[] }
+  audienceFilter: text("audienceFilter").notNull(),
+  // Resolved recipient count at send time
+  recipientCount: int("recipientCount").default(0).notNull(),
+  // Status: draft | sending | sent | failed
+  status: mysqlEnum("status", ["draft", "sending", "sent", "failed"]).default("draft").notNull(),
+  sentAt: timestamp("sentAt"),
+  errorMessage: text("errorMessage"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type EmailCampaign = typeof emailCampaigns.$inferSelect;
+export type InsertEmailCampaign = typeof emailCampaigns.$inferInsert;

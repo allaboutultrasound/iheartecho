@@ -92,6 +92,7 @@ import DIYAccreditationPlans from "./pages/DIYAccreditationPlans";
 import DIYRegister from "./pages/DIYRegister";
 import Enrolled from "./pages/Enrolled";
 import FormBuilderAdmin from "./pages/FormBuilderAdmin";
+import EmailAdmin from "./pages/EmailAdmin";
 import AccreditationManagerPage from "./pages/AccreditationManager";
 import FetalEchoAssist from "./pages/FetalEchoAssist";
 import PediatricEchoAssist from "./pages/PediatricEchoAssist";
@@ -209,6 +210,7 @@ function Router() {
       <Route path="/admin/thinkific-webhook">{() => <RoleGuard roles={["platform_admin"]} allowAdmin={true}><ThinkificWebhookAdmin /></RoleGuard>}</Route>
       <Route path="/admin/form-builder">{() => <RoleGuard roles={["platform_admin"]} allowAdmin={true}><FormBuilderAdmin /></RoleGuard>}</Route>
       <Route path="/admin/form-builder/:id">{() => <RoleGuard roles={["platform_admin"]} allowAdmin={true}><FormBuilderAdmin /></RoleGuard>}</Route>
+      <Route path="/admin/email">{() => <RoleGuard roles={["platform_admin"]} allowAdmin={true}><EmailAdmin /></RoleGuard>}</Route>
       <Route path="/accreditation-manager">{() => <RoleGuard roles={["platform_admin", "accreditation_manager"]} allowAdmin={true}><AccreditationManagerPage /></RoleGuard>}</Route>
       <Route path="/pediatric-echo-assist" component={PediatricEchoAssist} />
       <Route path="/fetal-echo-assist" component={FetalEchoAssist} />

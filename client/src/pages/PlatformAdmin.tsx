@@ -928,6 +928,13 @@ export default function PlatformAdmin() {
                 description: "Create and edit accreditation review forms with branching logic and quality scoring",
                 color: "#0891b2",
               },
+              {
+                href: "/admin/email",
+                icon: Mail,
+                label: "Email Campaigns",
+                description: "Compose and send targeted emails to users filtered by interest, role, and subscription",
+                color: "#7c3aed",
+              },
             ].map(({ href, icon: Icon, label, description, color }) => (
               <Link key={href} href={href}>
                 <div className="group flex flex-col gap-3 p-4 rounded-xl border border-gray-100 bg-white shadow-sm hover:shadow-md hover:border-gray-200 cursor-pointer transition-all h-full">

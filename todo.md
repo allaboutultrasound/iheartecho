@@ -2850,3 +2850,13 @@
 - [x] Add ASD (Atrial Septal Defect) pathology entry to top of CHD view list with echo views, structures, measurements, how-to-get, tips, pitfalls, critical findings
 - [x] Add VSD (Ventricular Septal Defect) pathology entry to top of CHD view list with echo views, structures, measurements, how-to-get, tips, pitfalls, critical findings
 - [x] Register ASD and VSD in scanCoachRegistry.ts CHD module view list
+
+## User Interest Preferences & Platform Email System (Session Mar 13)
+- [x] Add interestPrefs JSON field to users table (acs, adultEcho, pediatricEcho, fetalEcho)
+- [x] Add emailCampaigns and emailTemplates tables to DB schema
+- [x] Run db:push to migrate schema
+- [x] Add tRPC procedures: updateInterestPrefs, getInterestPrefs, listEmailTemplates, saveEmailTemplate, deleteEmailTemplate, sendEmailCampaign, listEmailCampaigns
+- [x] Profile page: add "Interests" tab with multi-select checkboxes for 4 categories
+- [x] Platform Admin: add "Email Campaigns" tab with audience filters, rich text composer, template save/load, send
+- [x] Email sending: filter recipients by interests, subscription, role, or specific email addresses
+- [x] Email campaign history: show sent campaigns with recipient count, status, timestamp

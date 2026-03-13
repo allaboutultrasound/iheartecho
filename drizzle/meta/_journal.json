@@ -519,6 +519,13 @@
       "when": 1773384065114,
       "tag": "0073_slim_daredevil",
       "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "5",
+      "when": 1773418126272,
+      "tag": "0074_wet_hobgoblin",
+      "breakpoints": true
     }
   ]
 }

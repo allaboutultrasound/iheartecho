@@ -16,6 +16,7 @@ import { diyRouter } from "./routers/diyRouter";
 import { meetingRouter } from "./routers/meetingRouter";
 import { formBuilderRouter } from "./routers/formBuilderRouter";
 import { accreditationManagerRouter } from "./routers/accreditationManagerRouter";
+import { emailCampaignRouter } from "./routers/emailCampaignRouter";
 import {
   getUserById,
   getUsersByIds,
@@ -1757,6 +1758,7 @@ export const appRouter = router({
 
   // ─── Accreditation Manager ────────────────────────────────────────────────────────
   accreditationManager: accreditationManagerRouter,
+  emailCampaign: emailCampaignRouter,
 
   // ─── Physician Over-Read Workflow (Step 1 & Step 2) ──────────────────────────
   physicianOverRead: router({
