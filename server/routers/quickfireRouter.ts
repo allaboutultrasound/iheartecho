@@ -129,11 +129,11 @@ function parseDailySetIds(raw: string): Record<string, number | null> {
     const parsed = JSON.parse(raw || "{}");
     if (Array.isArray(parsed)) {
       // Legacy: single-question array — treat as Adult Echo
-      return { acs: null, adultEcho: parsed[0] ?? null, pediatricEcho: null, fetalEcho: null };
+      return { acs: null, adultEcho: parsed[0] ?? null, pediatricEcho: null, fetalEcho: null, pocus: null };
     }
-    return { acs: null, adultEcho: null, pediatricEcho: null, fetalEcho: null, ...parsed };
+    return { acs: null, adultEcho: null, pediatricEcho: null, fetalEcho: null, pocus: null, ...parsed };
   } catch {
-    return { acs: null, adultEcho: null, pediatricEcho: null, fetalEcho: null };
+    return { acs: null, adultEcho: null, pediatricEcho: null, fetalEcho: null, pocus: null };
   }
 }
 
@@ -155,7 +155,7 @@ async function ensureTodaySet(db: NonNullable<Awaited<ReturnType<typeof getDb>>>
   if (existing.length > 0) return existing[0];
 
   const questionMap: Record<string, number | null> = {
-    acs: null, adultEcho: null, pediatricEcho: null, fetalEcho: null,
+    acs: null, adultEcho: null, pediatricEcho: null, fetalEcho: null, pocus: null,
   };
 
   // 1. Check for queued challenges per category
@@ -247,7 +247,7 @@ export const quickfireRouter = router({
     const questionMap = parseDailySetIds(set.questionIds);
 
     // Determine which categories the user has opted into (default: all)
-    let enabledCats: Set<string> = new Set(["acs", "adultEcho", "pediatricEcho", "fetalEcho"]);
+    let enabledCats: Set<string> = new Set(["acs", "adultEcho", "pediatricEcho", "fetalEcho", "pocus"]);
     if (ctx.user) {
       const [userRow] = await db
         .select({ challengeCategoryPrefs: users.challengeCategoryPrefs })
@@ -265,7 +265,7 @@ export const quickfireRouter = router({
               .map(([k]) => k)
           );
           // If user opted out of everything, show all anyway
-          if (enabledCats.size === 0) enabledCats = new Set(["acs", "adultEcho", "pediatricEcho", "fetalEcho"]);
+          if (enabledCats.size === 0) enabledCats = new Set(["acs", "adultEcho", "pediatricEcho", "fetalEcho", "pocus"]);
         } catch { /* ignore parse errors */ }
       }
     }
