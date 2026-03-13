@@ -456,8 +456,7 @@ function ViewDetail({ view }: { view: typeof ICE_VIEWS[0] }) {
                 <img
                   src={(view as any).echoImageUrl}
                   alt="Echo reference"
-                  className="w-full rounded-lg object-contain"
-                  style={{ maxHeight: 220 }}
+                  className="max-h-64 object-contain rounded-lg w-full"
                   onContextMenu={e => e.preventDefault()}
                 />
               </div>
@@ -468,8 +467,7 @@ function ViewDetail({ view }: { view: typeof ICE_VIEWS[0] }) {
                 <img
                   src={(view as any).anatomyImageUrl}
                   alt="Anatomy diagram"
-                  className="w-full rounded-lg object-contain"
-                  style={{ maxHeight: 220 }}
+                  className="max-h-64 object-contain rounded-lg w-full"
                   onContextMenu={e => e.preventDefault()}
                 />
               </div>

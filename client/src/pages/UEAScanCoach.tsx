@@ -599,19 +599,19 @@ function UEAScanCoachInner() {
                         {(currentView as any).echoImageUrl && (
                           <div>
                             <p className="text-[10px] text-gray-400 mb-1 font-medium">Echo Image</p>
-                            <img src={(currentView as any).echoImageUrl} alt="Echo reference" className="w-full rounded-lg object-contain" style={{ maxHeight: 220 }} onContextMenu={e => e.preventDefault()} />
+                            <img src={(currentView as any).echoImageUrl} alt="Echo reference" className="max-h-64 object-contain rounded-lg w-full" onContextMenu={e => e.preventDefault()} />
                           </div>
                         )}
                         {(currentView as any).anatomyImageUrl && (
                           <div>
                             <p className="text-[10px] text-gray-400 mb-1 font-medium">Anatomy Diagram</p>
-                            <img src={(currentView as any).anatomyImageUrl} alt="Anatomy diagram" className="w-full rounded-lg object-contain" style={{ maxHeight: 220 }} onContextMenu={e => e.preventDefault()} />
+                            <img src={(currentView as any).anatomyImageUrl} alt="Anatomy diagram" className="max-h-64 object-contain rounded-lg w-full" onContextMenu={e => e.preventDefault()} />
                           </div>
                         )}
                         {(currentView as any).transducerImageUrl && (
                           <div>
                             <p className="text-[10px] text-gray-400 mb-1 font-medium">Probe Position</p>
-                            <img src={(currentView as any).transducerImageUrl} alt="Probe position" className="w-full rounded-lg object-contain" style={{ maxHeight: 220 }} onContextMenu={e => e.preventDefault()} />
+                            <img src={(currentView as any).transducerImageUrl} alt="Probe position" className="max-h-64 object-contain rounded-lg w-full" onContextMenu={e => e.preventDefault()} />
                           </div>
                         )}
                       </div>

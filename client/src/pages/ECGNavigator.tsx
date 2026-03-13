@@ -182,7 +182,7 @@ const sections: Section[] = [
     id: "bundle-branch",
     title: "Bundle Branch Blocks",
     icon: Zap,
-    color: "#7c3aed",
+    color: "#189aa1",
     patterns: [
       {
         name: "Right Bundle Branch Block (RBBB)",
@@ -233,7 +233,7 @@ const sections: Section[] = [
     id: "p-wave",
     title: "P Wave Analysis",
     icon: BarChart3,
-    color: "#0369a1",
+    color: "#189aa1",
     patterns: [
       {
         name: "Left Atrial Enlargement (LAE)",
@@ -358,7 +358,7 @@ const sections: Section[] = [
     id: "qt",
     title: "QT Interval",
     icon: Activity,
-    color: "#0f766e",
+    color: "#189aa1",
     patterns: [
       {
         name: "QTc Normal Ranges",
@@ -410,7 +410,7 @@ const sections: Section[] = [
     id: "axis",
     title: "Electrical Axis",
     icon: ArrowRight,
-    color: "#b45309",
+    color: "#189aa1",
     patterns: [
       {
         name: "Normal Axis",
@@ -455,7 +455,7 @@ const sections: Section[] = [
     id: "special-patterns",
     title: "Special Patterns",
     icon: Info,
-    color: "#6d28d9",
+    color: "#189aa1",
     patterns: [
       {
         name: "Wolff-Parkinson-White (WPW)",
@@ -516,7 +516,7 @@ const sections: Section[] = [
     id: "pacemaker",
     title: "Pacemaker ECGs",
     icon: Heart,
-    color: "#0891b2",
+    color: "#189aa1",
     patterns: [
       {
         name: "VVI Pacemaker (Ventricular Demand)",
@@ -573,7 +573,7 @@ const sections: Section[] = [
     id: "lvh-rvh",
     title: "Ventricular Hypertrophy",
     icon: BarChart3,
-    color: "#059669",
+    color: "#189aa1",
     patterns: [
       {
         name: "Left Ventricular Hypertrophy (LVH)",
@@ -789,16 +789,16 @@ export default function ECGNavigator() {
               </button>
             </Link>
           </div>
-          <div className="rounded-xl p-5 border" style={{ borderColor: "#7c3aed40", background: "#faf5ff" }}>
+          <div className="rounded-xl p-5 border" style={{ borderColor: "#189aa140", background: "#f0fbfc" }}>
             <div className="flex items-center gap-2 mb-2">
-              <Zap className="w-4 h-4" style={{ color: "#7c3aed" }} />
-              <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#7c3aed" }}>Premium</span>
+              <Zap className="w-4 h-4" style={{ color: "#189aa1" }} />
+              <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#189aa1" }}>Premium</span>
             </div>
             <h3 className="font-bold text-gray-900 text-sm mb-1" style={{ fontFamily: "Merriweather, serif" }}>ECG Calculators</h3>
             <p className="text-xs text-gray-500 mb-3">QTc (4 formulas), TIMI, GRACE, HEART Score, Sgarbossa, LVH voltage criteria, axis calculator, and more.</p>
             <Link href="/ecg-assist">
               <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold text-xs text-white transition-all hover:opacity-90"
-                style={{ background: "#7c3aed" }}>
+                style={{ background: "#189aa1" }}>
                 Open ECG Calculators <ArrowRight className="w-3 h-3" />
               </button>
             </Link>

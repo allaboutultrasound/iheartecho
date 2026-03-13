@@ -85,8 +85,8 @@ function ResultPanel({ suggests, note, tip }: { suggests?: string; note?: string
         </div>
       )}
       {note && (
-        <div className="flex gap-2 p-3 rounded-lg" style={{ background: "#0284c712", borderLeft: "3px solid #0284c7" }}>
-          <Info className="w-4 h-4 flex-shrink-0 mt-0.5 text-blue-600" />
+        <div className="flex gap-2 p-3 rounded-lg" style={{ background: BRAND + "12", borderLeft: `3px solid ${BRAND}` }}>
+          <Info className="w-4 h-4 flex-shrink-0 mt-0.5 text-[#189aa1]" />
           <p className="text-xs leading-relaxed text-gray-700">{note}</p>
         </div>
       )}
@@ -1148,18 +1148,18 @@ export default function ACHDEchoAssist({ embedded = false }: { embedded?: boolea
   };
 
   const engines = [
-    { id: "engine-qpqs", title: "Qp:Qs Shunt Ratio", badge: "Shunt", color: "#0284c7", key: "qpqs", component: (fn: (r: CalcResult | null) => void) => <QpQsACHD onResult={fn} /> },
-    { id: "engine-rvsp", title: "RVSP / PASP via TR Jet", badge: "Hemodynamics", color: "#0284c7", key: "rvsp", component: (fn: (r: CalcResult | null) => void) => <RVSPCalculator onResult={fn} /> },
+    { id: "engine-qpqs", title: "Qp:Qs Shunt Ratio", badge: "Shunt", color: "#189aa1", key: "qpqs", component: (fn: (r: CalcResult | null) => void) => <QpQsACHD onResult={fn} /> },
+    { id: "engine-rvsp", title: "RVSP / PASP via TR Jet", badge: "Hemodynamics", color: "#189aa1", key: "rvsp", component: (fn: (r: CalcResult | null) => void) => <RVSPCalculator onResult={fn} /> },
     { id: "engine-rprs", title: "Rp:Rs Resistance Ratio", badge: "Operability", color: "#dc2626", key: "rprs", component: (fn: (r: CalcResult | null) => void) => <RpRsCalculator onResult={fn} /> },
     { id: "engine-asd", title: "ASD Hemodynamic Significance", badge: "ASD", color: BRAND, key: "asd", component: (fn: (r: CalcResult | null) => void) => <ASDHemodynamics onResult={fn} /> },
     { id: "engine-vsd", title: "VSD Hemodynamic Significance", badge: "VSD", color: BRAND, key: "vsd", component: (fn: (r: CalcResult | null) => void) => <VSDHemodynamics onResult={fn} /> },
-    { id: "engine-fontan", title: "Fontan Hemodynamic Assessment", badge: "Fontan", color: "#7c3aed", key: "fontan", component: (fn: (r: CalcResult | null) => void) => <FontanPressure onResult={fn} /> },
+    { id: "engine-fontan", title: "Fontan Hemodynamic Assessment", badge: "Fontan", color: "#189aa1", key: "fontan", component: (fn: (r: CalcResult | null) => void) => <FontanPressure onResult={fn} /> },
     { id: "engine-ebstein", title: "Ebstein's Severity Index (ESI)", badge: "Ebstein's", color: "#d97706", key: "ebstein", component: (fn: (r: CalcResult | null) => void) => <EbsteinSeverity onResult={fn} /> },
-    { id: "engine-coa", title: "CoA Re-coarctation Assessment", badge: "CoA", color: "#0891b2", key: "coa", component: (fn: (r: CalcResult | null) => void) => <CoARecoarctation onResult={fn} /> },
+    { id: "engine-coa", title: "CoA Re-coarctation Assessment", badge: "CoA", color: "#189aa1", key: "coa", component: (fn: (r: CalcResult | null) => void) => <CoARecoarctation onResult={fn} /> },
     { id: "engine-tof", title: "TOF Post-Repair RV Assessment", badge: "TOF / PVR", color: "#dc2626", key: "tof", component: (fn: (r: CalcResult | null) => void) => <TOFRVAssessment onResult={fn} /> },
-    { id: "engine-systemic-rv", title: "Systemic RV Assessment (d-TGA)", badge: "d-TGA", color: "#7c3aed", key: "systemic_rv", component: (fn: (r: CalcResult | null) => void) => <SystemicRVAssessment onResult={fn} /> },
+    { id: "engine-systemic-rv", title: "Systemic RV Assessment (d-TGA)", badge: "d-TGA", color: "#189aa1", key: "systemic_rv", component: (fn: (r: CalcResult | null) => void) => <SystemicRVAssessment onResult={fn} /> },
     { id: "engine-achd-class", title: "ACHD Complexity Classification", badge: "Classification", color: BRAND, key: "achd_class", component: (fn: (r: CalcResult | null) => void) => <ACHDComplexity onResult={fn} /> },
-    { id: "engine-pvr-echo", title: "Echo-Derived PVR Estimate (Abbas)", badge: "PVR", color: "#0284c7", key: "pvr_echo", component: (fn: (r: CalcResult | null) => void) => <EchoPVREstimate onResult={fn} /> },
+    { id: "engine-pvr-echo", title: "Echo-Derived PVR Estimate (Abbas)", badge: "PVR", color: "#189aa1", key: "pvr_echo", component: (fn: (r: CalcResult | null) => void) => <EchoPVREstimate onResult={fn} /> },
   ];
 
   const content = (

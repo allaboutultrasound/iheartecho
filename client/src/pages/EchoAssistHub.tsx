@@ -45,14 +45,14 @@ const specialties: Specialty[] = [
 
 const badgeColors: Record<string, string> = {
   "Adult TTE": "#189aa1",
-  "Congenital Heart": "#0369a1",
-  "Fetal": "#0369a1",
-  "Stress Echo": "#0f766e",
+  "Congenital Heart": "#189aa1",
+  "Fetal": "#189aa1",
+  "Stress Echo": "#189aa1",
   "Strain": "#189aa1",
-  "Contrast Echo": "#0e7490",
-  "Cardiomyopathy": "#b45309",
-  "Pulmonary": "#0e7490",
-  "Structural Heart": "#0e7490",
+  "Contrast Echo": "#189aa1",
+  "Cardiomyopathy": "#189aa1",
+  "Pulmonary": "#189aa1",
+  "Structural Heart": "#189aa1",
   "TEE": "#189aa1",
   "ICE": "#189aa1",
   "Diastology": "#189aa1",
@@ -178,7 +178,7 @@ export default function EchoAssistHub() {
                           style={{ borderColor: BRAND + "40", color: BRAND }}
                         >
                           <Activity className="w-3.5 h-3.5" />
-                          {badge === "Fetal" ? "FetalEchoAssist™ Calculators" : "DiastologyAssist™ Calculators"}
+                          {badge === "Fetal" ? "FetalEchoAssist™ Calculators" : badge === "Congenital Heart" ? "PediatricEchoAssist™ Calculators" : badge === "Diastology" ? "DiastologyAssist™ Calculators" : "EchoAssist™ Calculators"}
                         </button>
                       </Link>
                     )}
@@ -308,7 +308,7 @@ export default function EchoAssistHub() {
         {/* ── ACHDEchoAssist™ Cross-Promotion ──────────────────────────── */}
         <div
           className="mt-8 rounded-xl p-5 border"
-          style={{ borderColor: "#b45309" + "40", background: "#fffbeb" }}
+          style={{ borderColor: "#189aa1" + "40", background: "#fffbeb" }}
         >
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <div className="flex-shrink-0">
@@ -321,7 +321,7 @@ export default function EchoAssistHub() {
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#b45309" }}>
+                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#189aa1" }}>
                   Adult Congenital Heart Disease Calculators
                 </span>
               </div>
@@ -335,7 +335,7 @@ export default function EchoAssistHub() {
                 <Link href="/achd-echo-assist">
                   <button
                     className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
-                    style={{ background: "#b45309" }}
+                    style={{ background: "#189aa1" }}
                   >
                     <Heart className="w-3.5 h-3.5" />
                     Open ACHDEchoAssist™
@@ -344,7 +344,7 @@ export default function EchoAssistHub() {
                 <Link href="/achd">
                   <button
                     className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm border bg-white transition-all hover:bg-amber-50"
-                    style={{ borderColor: "#b45309" + "50", color: "#b45309" }}
+                    style={{ borderColor: "#189aa1" + "50", color: "#189aa1" }}
                   >
                     <Activity className="w-3.5 h-3.5" />
                     ACHD Navigator
@@ -358,20 +358,20 @@ export default function EchoAssistHub() {
         {/* ── PediatricEchoAssist™ Cross-Promotion ─────────────────────── */}
         <div
           className="mt-8 rounded-xl p-5 border"
-          style={{ borderColor: "#7c3aed" + "40", background: "#faf5ff" }}
+          style={{ borderColor: "#189aa1" + "40", background: "#f0fbfc" }}
         >
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <div className="flex-shrink-0">
               <div
                 className="w-14 h-14 rounded-xl flex items-center justify-center"
-                style={{ background: "linear-gradient(135deg, #0e1e2e, #7c3aed)" }}
+                style={{ background: "linear-gradient(135deg, #0e1e2e, #189aa1)" }}
               >
-                <Baby className="w-7 h-7 text-purple-200" />
+                <Baby className="w-7 h-7 text-[#4ad9e0]" />
               </div>
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#7c3aed" }}>
+                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#189aa1" }}>
                   Pediatric &amp; Congenital Echo Calculators
                 </span>
               </div>
@@ -385,7 +385,7 @@ export default function EchoAssistHub() {
                 <Link href="/pediatric-echo-assist">
                   <button
                     className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
-                    style={{ background: "#7c3aed" }}
+                    style={{ background: "#189aa1" }}
                   >
                     <Baby className="w-3.5 h-3.5" />
                     Open PediatricEchoAssist™
@@ -393,8 +393,8 @@ export default function EchoAssistHub() {
                 </Link>
                 <Link href="/pediatric">
                   <button
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm border bg-white transition-all hover:bg-purple-50"
-                    style={{ borderColor: "#7c3aed" + "50", color: "#7c3aed" }}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm border bg-white transition-all hover:bg-[#f0fbfc]"
+                    style={{ borderColor: "#189aa1" + "50", color: "#189aa1" }}
                   >
                     <Activity className="w-3.5 h-3.5" />
                     Pediatric Navigator
@@ -408,7 +408,7 @@ export default function EchoAssistHub() {
         {/* ── FetalEchoAssist™ Cross-Promotion ─────────────────────────── */}
         <div
           className="mt-8 rounded-xl p-5 border"
-          style={{ borderColor: "#0369a1" + "40", background: "#eff6ff" }}
+          style={{ borderColor: "#189aa1" + "40", background: "#f0fbfc" }}
         >
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <div className="flex-shrink-0">
@@ -421,7 +421,7 @@ export default function EchoAssistHub() {
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#0369a1" }}>
+                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#189aa1" }}>
                   Fetal Echo Calculators
                 </span>
               </div>
@@ -435,7 +435,7 @@ export default function EchoAssistHub() {
                 <Link href="/fetal-echo-assist">
                   <button
                     className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
-                    style={{ background: "#0369a1" }}
+                    style={{ background: "#189aa1" }}
                   >
                     <Baby className="w-3.5 h-3.5" />
                     Open FetalEchoAssist™
@@ -444,69 +444,10 @@ export default function EchoAssistHub() {
                 <Link href="/fetal">
                   <button
                     className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm border bg-white transition-all hover:bg-[#0369a1]/5"
-                    style={{ borderColor: "#0369a1" + "50", color: "#0369a1" }}
+                    style={{ borderColor: "#189aa1" + "50", color: "#189aa1" }}
                   >
                     <Activity className="w-3.5 h-3.5" />
                     Fetal Echo Navigator
-                  </button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* ── ECG-Assist Suite Cross-Promotion ─────────────────────────── */}
-        <div
-          className="mt-8 rounded-xl p-5 border"
-          style={{ borderColor: "#7c3aed" + "40", background: "#faf5ff" }}
-        >
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <div className="flex-shrink-0">
-              <div
-                className="w-14 h-14 rounded-xl flex items-center justify-center"
-                style={{ background: "linear-gradient(135deg, #1e1b4b, #7c3aed)" }}
-              >
-                <Radio className="w-7 h-7 text-violet-200" />
-              </div>
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#7c3aed" }}>
-                  ECG Interpretation Suite
-                </span>
-              </div>
-              <h3 className="font-bold text-gray-900 text-base mb-1" style={{ fontFamily: "Merriweather, serif" }}>
-                ECG-Assist Suite
-              </h3>
-              <p className="text-sm text-gray-500 mb-3">
-                Three-part ECG suite — ECG Navigator (free, 9 clinical sections covering rate/rhythm, ST-T changes, Brugada, Sgarbossa, pacemaker ECGs), ECG Coach (premium, lead placement and neonatal ECG guidance), and ECG Calculators (premium, 12 guideline-based calculators including QTc, LVH voltage criteria, HEART score, GRACE score, and Brugada VT criteria).
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <Link href="/ecg-navigator">
-                  <button
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
-                    style={{ background: "#7c3aed" }}
-                  >
-                    <Radio className="w-3.5 h-3.5" />
-                    ECG Navigator
-                  </button>
-                </Link>
-                <Link href="/ecg-coach">
-                  <button
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm border bg-white transition-all hover:bg-violet-50"
-                    style={{ borderColor: "#7c3aed" + "50", color: "#7c3aed" }}
-                  >
-                    <BookOpen className="w-3.5 h-3.5" />
-                    ECG Coach
-                  </button>
-                </Link>
-                <Link href="/ecg-assist">
-                  <button
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm border bg-white transition-all hover:bg-violet-50"
-                    style={{ borderColor: "#7c3aed" + "50", color: "#7c3aed" }}
-                  >
-                    <Cpu className="w-3.5 h-3.5" />
-                    ECG Calculators
                   </button>
                 </Link>
               </div>
@@ -563,6 +504,65 @@ export default function EchoAssistHub() {
                   >
                     <Droplets className="w-3.5 h-3.5" />
                     POCUS Engine Calculators
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── ECG-Assist Suite Cross-Promotion ─────────────────────────── */}
+        <div
+          className="mt-8 rounded-xl p-5 border"
+          style={{ borderColor: "#189aa1" + "40", background: "#f0fbfc" }}
+        >
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="flex-shrink-0">
+              <div
+                className="w-14 h-14 rounded-xl flex items-center justify-center"
+                style={{ background: "linear-gradient(135deg, #0e1e2e, #189aa1)" }}
+              >
+                <Radio className="w-7 h-7 text-[#4ad9e0]" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#189aa1" }}>
+                  ECG Interpretation Suite
+                </span>
+              </div>
+              <h3 className="font-bold text-gray-900 text-base mb-1" style={{ fontFamily: "Merriweather, serif" }}>
+                ECG-Assist Suite
+              </h3>
+              <p className="text-sm text-gray-500 mb-3">
+                Three-part ECG suite — ECG Navigator (free, 9 clinical sections covering rate/rhythm, ST-T changes, Brugada, Sgarbossa, pacemaker ECGs), ECG Coach (premium, lead placement and neonatal ECG guidance), and ECG Calculators (premium, 12 guideline-based calculators including QTc, LVH voltage criteria, HEART score, GRACE score, and Brugada VT criteria).
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Link href="/ecg-navigator">
+                  <button
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
+                    style={{ background: "#189aa1" }}
+                  >
+                    <Radio className="w-3.5 h-3.5" />
+                    ECG Navigator
+                  </button>
+                </Link>
+                <Link href="/ecg-coach">
+                  <button
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm border bg-white transition-all hover:bg-[#f0fbfc]"
+                    style={{ borderColor: "#189aa1" + "50", color: "#189aa1" }}
+                  >
+                    <BookOpen className="w-3.5 h-3.5" />
+                    ECG Coach
+                  </button>
+                </Link>
+                <Link href="/ecg-assist">
+                  <button
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm border bg-white transition-all hover:bg-[#f0fbfc]"
+                    style={{ borderColor: "#189aa1" + "50", color: "#189aa1" }}
+                  >
+                    <Cpu className="w-3.5 h-3.5" />
+                    ECG Calculators
                   </button>
                 </Link>
               </div>

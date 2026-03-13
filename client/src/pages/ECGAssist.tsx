@@ -1118,15 +1118,15 @@ export default function ECGAssist() {
               <QTcCalc onResult={makeOnResult("QTc Calculator")} />
             </CalcCard>
 
-            <CalcCard id="hr" title="Heart Rate from RR Interval" badge="Rate Analysis" badgeColor="#0891b2">
+            <CalcCard id="hr" title="Heart Rate from RR Interval" badge="Rate Analysis" badgeColor="#189aa1">
               <HRCalc onResult={makeOnResult("Heart Rate Calculator")} />
             </CalcCard>
 
-            <CalcCard id="axis" title="Electrical Axis Calculator" badge="Frontal Plane Axis" badgeColor="#7c3aed">
+            <CalcCard id="axis" title="Electrical Axis Calculator" badge="Frontal Plane Axis" badgeColor="#189aa1">
               <AxisCalc onResult={makeOnResult("Electrical Axis Calculator")} />
             </CalcCard>
 
-            <CalcCard id="lvh" title="LVH Voltage Criteria" badge="Sokolow-Lyon + Cornell" badgeColor="#b45309">
+            <CalcCard id="lvh" title="LVH Voltage Criteria" badge="Sokolow-Lyon + Cornell" badgeColor="#189aa1">
               <LVHCalc onResult={makeOnResult("LVH Voltage Criteria")} />
             </CalcCard>
 
@@ -1138,15 +1138,15 @@ export default function ECGAssist() {
               <SgarbossaCalc onResult={makeOnResult("Sgarbossa Criteria")} />
             </CalcCard>
 
-            <CalcCard id="timi" title="TIMI Risk Score (NSTEMI/UA)" badge="ACS Risk Stratification" badgeColor="#0891b2">
+            <CalcCard id="timi" title="TIMI Risk Score (NSTEMI/UA)" badge="ACS Risk Stratification" badgeColor="#189aa1">
               <TIMICalc onResult={makeOnResult("TIMI Risk Score")} />
             </CalcCard>
 
-            <CalcCard id="grace" title="GRACE Score (ACS)" badge="In-Hospital Mortality" badgeColor="#7c3aed">
+            <CalcCard id="grace" title="GRACE Score (ACS)" badge="In-Hospital Mortality" badgeColor="#189aa1">
               <GRACECalc onResult={makeOnResult("GRACE Score")} />
             </CalcCard>
 
-            <CalcCard id="heart" title="HEART Score" badge="Chest Pain — ED Risk" badgeColor="#b45309">
+            <CalcCard id="heart" title="HEART Score" badge="Chest Pain — ED Risk" badgeColor="#189aa1">
               <HEARTCalc onResult={makeOnResult("HEART Score")} />
             </CalcCard>
 
@@ -1154,7 +1154,7 @@ export default function ECGAssist() {
               <BrugadaVTCalc onResult={makeOnResult("Brugada VT vs SVT Algorithm")} />
             </CalcCard>
 
-            <CalcCard id="ped-qtc" title="Pediatric / Neonatal QTc" badge="Age-Corrected QTc" badgeColor="#0891b2">
+            <CalcCard id="ped-qtc" title="Pediatric / Neonatal QTc" badge="Age-Corrected QTc" badgeColor="#189aa1">
               <PedQTcCalc onResult={makeOnResult("Pediatric QTc")} />
             </CalcCard>
 

@@ -681,19 +681,19 @@ export default function HOCMScanCoach({ _noLayout }: { _noLayout?: boolean } = {
                     {currentView.echoImageUrl && (
                       <div>
                         <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Echo Image</p>
-                        <img src={currentView.echoImageUrl} alt="Echo reference" className="w-full rounded-lg border border-gray-100 object-cover" style={{ maxHeight: 160 }} />
+                        <img src={currentView.echoImageUrl} alt="Echo reference" className="max-h-64 object-contain rounded-lg w-full" />
                       </div>
                     )}
                     {currentView.transducerImageUrl && (
                       <div>
                         <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Probe Position</p>
-                        <img src={currentView.transducerImageUrl} alt="Transducer position" className="w-full rounded-lg border border-gray-100 object-cover" style={{ maxHeight: 160 }} />
+                        <img src={currentView.transducerImageUrl} alt="Transducer position" className="max-h-64 object-contain rounded-lg w-full" />
                       </div>
                     )}
                     {currentView.anatomyImageUrl && (
                       <div>
                         <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Anatomy Reference</p>
-                        <img src={currentView.anatomyImageUrl} alt="Anatomy diagram" className="w-full rounded-lg border border-gray-100 object-cover" style={{ maxHeight: 160 }} />
+                        <img src={currentView.anatomyImageUrl} alt="Anatomy diagram" className="max-h-64 object-contain rounded-lg w-full" />
                       </div>
                     )}
                   </div>

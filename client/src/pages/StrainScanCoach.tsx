@@ -1339,7 +1339,7 @@ function StrainScanCoachInner() {
                         <div className="flex justify-center items-center p-3 border-r border-gray-800">
                           <div className="text-center">
                             <p className="text-xs text-gray-400 mb-1.5">Anatomy Diagram</p>
-                            <img src={(selectedAcqViewMerged as any).anatomyImageUrl} alt={`${selectedAcqView.name} diagram`} className="max-h-56 object-contain rounded" style={{ background: "#030712" }} />
+                            <img src={(selectedAcqViewMerged as any).anatomyImageUrl} alt={`${selectedAcqView.name} diagram`} className="max-h-64 object-contain rounded" style={{ background: "#030712" }} />
                           </div>
                         </div>
                       )}
@@ -1347,7 +1347,7 @@ function StrainScanCoachInner() {
                         <div className="flex justify-center items-center p-3">
                           <div className="text-center">
                             <p className="text-xs text-gray-400 mb-1.5">Clinical Echo Image</p>
-                            <img src={(selectedAcqViewMerged as any).echoImageUrl} alt={`${selectedAcqView.name} echo`} className="max-h-56 object-contain rounded" style={{ background: "#030712" }} />
+                            <img src={(selectedAcqViewMerged as any).echoImageUrl} alt={`${selectedAcqView.name} echo`} className="max-h-64 object-contain rounded" style={{ background: "#030712" }} />
                           </div>
                         </div>
                       )}

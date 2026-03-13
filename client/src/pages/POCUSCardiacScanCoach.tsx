@@ -302,19 +302,19 @@ function ViewDetail({ view }: { view: typeof CARDIAC_VIEWS[0] }) {
           <div className={`mt-3 grid gap-2 ${[(view as any).echoImageUrl, (view as any).anatomyImageUrl, (view as any).transducerImageUrl].filter(Boolean).length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
             {(view as any).echoImageUrl && (
               <div className="rounded-lg overflow-hidden bg-black/20">
-                <img src={(view as any).echoImageUrl} alt="POCUS image" className="w-full object-cover max-h-48" />
+                <img src={(view as any).echoImageUrl} alt="POCUS image" className="max-h-64 object-contain rounded-lg w-full" />
                 <p className="text-[10px] text-white/60 text-center py-1">Ultrasound Image</p>
               </div>
             )}
             {(view as any).anatomyImageUrl && (
               <div className="rounded-lg overflow-hidden bg-black/20">
-                <img src={(view as any).anatomyImageUrl} alt="Anatomy diagram" className="w-full object-cover max-h-48" />
+                <img src={(view as any).anatomyImageUrl} alt="Anatomy diagram" className="max-h-64 object-contain rounded-lg w-full" />
                 <p className="text-[10px] text-white/60 text-center py-1">Anatomy Diagram</p>
               </div>
             )}
             {(view as any).transducerImageUrl && (
               <div className="rounded-lg overflow-hidden bg-black/20">
-                <img src={(view as any).transducerImageUrl} alt="Probe position" className="w-full object-cover max-h-48" />
+                <img src={(view as any).transducerImageUrl} alt="Probe position" className="max-h-64 object-contain rounded-lg w-full" />
                 <p className="text-[10px] text-white/60 text-center py-1">Probe Position</p>
               </div>
             )}

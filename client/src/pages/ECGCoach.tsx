@@ -60,7 +60,7 @@ const leadSections: LeadSection[] = [
     title: "Precordial (Chest) Leads",
     subtitle: "V1–V6 Standard Placement",
     icon: Heart,
-    color: "#7c3aed",
+    color: "#189aa1",
     steps: [
       { step: "V1", detail: "4th intercostal space, RIGHT sternal border. Palpate the sternal angle (angle of Louis) → 2nd ICS → count down to 4th ICS.", tip: "V1 is the most commonly misplaced lead — too high placement is the #1 error. Always count ribs from the sternal angle." },
       { step: "V2", detail: "4th intercostal space, LEFT sternal border. Directly opposite V1.", tip: "V2 should be at the same horizontal level as V1." },
@@ -102,7 +102,7 @@ const leadSections: LeadSection[] = [
     title: "Posterior Leads",
     subtitle: "V7–V9 — Posterior MI Detection",
     icon: Activity,
-    color: "#b45309",
+    color: "#189aa1",
     steps: [
       { step: "V7", detail: "Same horizontal level as V4–V6, posterior axillary line (left side). Continue the V4–V6 horizontal line around the back.", tip: "The horizontal level of V4 is the reference — all posterior leads must be at the same level." },
       { step: "V8", detail: "Same horizontal level, tip of left scapula (midscapular line).", tip: "V8 is at the tip of the scapula — palpate the inferior angle of the scapula." },
@@ -142,7 +142,7 @@ const leadSections: LeadSection[] = [
     title: "Neonatal & Pediatric ECG Differences",
     subtitle: "Normal variants and age-specific interpretation",
     icon: Baby,
-    color: "#0891b2",
+    color: "#189aa1",
     steps: [
       { step: "Heart Rate — Neonates (0–1 month)", detail: "Normal: 100–160 bpm. Bradycardia: <100 bpm. Tachycardia: >180 bpm.", tip: "Neonatal heart rate is much faster than adults. A rate of 120 bpm is normal in a neonate." },
       { step: "Heart Rate — Infants (1–12 months)", detail: "Normal: 100–150 bpm. Decreases gradually with age.", tip: "By 1 year: 80–130 bpm. By 5 years: 70–110 bpm. By 10 years: 60–100 bpm." },
@@ -360,16 +360,16 @@ export default function ECGCoach() {
             ))}
 
             {/* Cross-promo */}
-            <div className="mt-6 rounded-xl p-5 border" style={{ borderColor: "#7c3aed40", background: "#faf5ff" }}>
+            <div className="mt-6 rounded-xl p-5 border" style={{ borderColor: "#189aa140", background: "#f0fbfc" }}>
               <div className="flex items-center gap-2 mb-2">
-                <Zap className="w-4 h-4" style={{ color: "#7c3aed" }} />
-                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#7c3aed" }}>Premium</span>
+                <Zap className="w-4 h-4" style={{ color: "#189aa1" }} />
+                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#189aa1" }}>Premium</span>
               </div>
               <h3 className="font-bold text-gray-900 text-sm mb-1" style={{ fontFamily: "Merriweather, serif" }}>ECG Calculators</h3>
               <p className="text-xs text-gray-500 mb-3">QTc (4 formulas), TIMI, GRACE, HEART Score, Sgarbossa, LVH voltage criteria, axis calculator, and more — with guideline-based interpretation.</p>
               <Link href="/ecg-assist">
                 <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold text-xs text-white transition-all hover:opacity-90"
-                  style={{ background: "#7c3aed" }}>
+                  style={{ background: "#189aa1" }}>
                   Open ECG Calculators <ArrowRight className="w-3 h-3" />
                 </button>
               </Link>
