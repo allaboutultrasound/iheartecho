@@ -106,11 +106,44 @@ function seededShuffle<T>(arr: T[], seed: string): T[] {
   return result;
 }
 
+// Category keys used throughout the daily challenge system
+export const CHALLENGE_CATEGORIES = ["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo"] as const;
+export type ChallengeCategory = typeof CHALLENGE_CATEGORIES[number];
+
+// Map category label -> JSON key used in questionIds object
+const CAT_KEY: Record<ChallengeCategory, string> = {
+  "ACS": "acs",
+  "Adult Echo": "adultEcho",
+  "Pediatric Echo": "pediatricEcho",
+  "Fetal Echo": "fetalEcho",
+};
+
 /**
- * Ensure exactly 1 daily question exists for the given date.
- * Priority order:
- *   1. Next queued challenge (draft/scheduled) from quickfireChallenges — uses its first question
- *   2. Fallback: random active non-flashcard question from the bank
+ * Parse questionIds from a daily set row.
+ * Handles both the legacy array format [id] and the new object format
+ * { acs: id|null, adultEcho: id|null, pediatricEcho: id|null, fetalEcho: id|null }.
+ */
+function parseDailySetIds(raw: string): Record<string, number | null> {
+  try {
+    const parsed = JSON.parse(raw || "{}");
+    if (Array.isArray(parsed)) {
+      // Legacy: single-question array — treat as Adult Echo
+      return { acs: null, adultEcho: parsed[0] ?? null, pediatricEcho: null, fetalEcho: null };
+    }
+    return { acs: null, adultEcho: null, pediatricEcho: null, fetalEcho: null, ...parsed };
+  } catch {
+    return { acs: null, adultEcho: null, pediatricEcho: null, fetalEcho: null };
+  }
+}
+
+/**
+ * Ensure a daily set exists for the given date.
+ * Stores one question per category:
+ *   questionIds = JSON object: { acs: id|null, adultEcho: id|null, pediatricEcho: id|null, fetalEcho: id|null }
+ *
+ * Priority order per category:
+ *   1. Next queued challenge with matching category (draft/scheduled)
+ *   2. Fallback: random active non-flashcard question from that category
  */
 async function ensureTodaySet(db: NonNullable<Awaited<ReturnType<typeof getDb>>>, date: string) {
   const existing = await db
@@ -118,68 +151,79 @@ async function ensureTodaySet(db: NonNullable<Awaited<ReturnType<typeof getDb>>>
     .from(quickfireDailySets)
     .where(eq(quickfireDailySets.setDate, date))
     .limit(1);
-
   if (existing.length > 0) return existing[0];
 
-  // 1. Check for a queued challenge ready to go live
+  const questionMap: Record<string, number | null> = {
+    acs: null, adultEcho: null, pediatricEcho: null, fetalEcho: null,
+  };
+
+  // 1. Check for queued challenges per category
   const queuedChallenges = await db
     .select()
     .from(quickfireChallenges)
-    .where(inArray(quickfireChallenges.status, ['draft', 'scheduled'] as any[]))
-      .orderBy(quickfireChallenges.priority, quickfireChallenges.createdAt)
-    .limit(10);
+    .where(inArray(quickfireChallenges.status, ["draft", "scheduled"] as any[]))
+    .orderBy(quickfireChallenges.priority, quickfireChallenges.createdAt)
+    .limit(50);
 
-  const nextChallenge =
-    queuedChallenges.find((c) => !c.publishDate || c.publishDate <= date) ??
-    queuedChallenges[0];
+  const usedChallengeIds: number[] = [];
 
-  if (nextChallenge) {
-    const ids: number[] = JSON.parse(nextChallenge.questionIds || "[]");
-    const finalIds = ids.slice(0, 1); // always exactly 1
-    if (finalIds.length > 0) {
-      // Archive any currently live challenge first
-      await db
-        .update(quickfireChallenges)
-        .set({ status: "archived", archivedAt: new Date() })
-        .where(eq(quickfireChallenges.status, "live"));
-      // Mark this challenge as live
-      await db
-        .update(quickfireChallenges)
-        .set({ status: "live", publishDate: nextChallenge.publishDate ?? date, publishedAt: new Date(), archivedAt: null })
-        .where(eq(quickfireChallenges.id, nextChallenge.id));
-      const [inserted] = await db.insert(quickfireDailySets).values({
-        setDate: date,
-        questionIds: JSON.stringify(finalIds),
-      });
-      return { setDate: date, questionIds: JSON.stringify(finalIds), id: (inserted as any).insertId };
+  for (const cat of CHALLENGE_CATEGORIES) {
+    const key = CAT_KEY[cat];
+    const match = queuedChallenges.find(
+      (c) =>
+        !usedChallengeIds.includes(c.id) &&
+        (c.category === cat || (!c.category && cat === "Adult Echo")) &&
+        (!c.publishDate || c.publishDate <= date)
+    );
+    if (match) {
+      const ids: number[] = JSON.parse(match.questionIds || "[]");
+      if (ids.length > 0) {
+        questionMap[key] = ids[0];
+        usedChallengeIds.push(match.id);
+        await db
+          .update(quickfireChallenges)
+          .set({ status: "live", publishDate: match.publishDate ?? date, publishedAt: new Date(), archivedAt: null })
+          .where(eq(quickfireChallenges.id, match.id));
+      }
     }
   }
 
-  // 2. Fallback: pick 1 random active non-flashcard question
-  const allQuestions = await db
-    .select({ id: quickfireQuestions.id, type: quickfireQuestions.type })
-    .from(quickfireQuestions)
-    .where(
-      and(
-        eq(quickfireQuestions.isActive, true),
-        sql`${quickfireQuestions.type} != 'quickReview'` as any,
-      )
-    );
-
-  if (allQuestions.length === 0) {
-    const [inserted] = await db.insert(quickfireDailySets).values({
-      setDate: date,
-      questionIds: "[]",
-    });
-    return { setDate: date, questionIds: "[]", id: (inserted as any).insertId };
+  // Archive previously live challenges not re-used today
+  const liveRows = await db
+    .select({ id: quickfireChallenges.id })
+    .from(quickfireChallenges)
+    .where(eq(quickfireChallenges.status, "live"));
+  for (const row of liveRows) {
+    if (!usedChallengeIds.includes(row.id)) {
+      await db
+        .update(quickfireChallenges)
+        .set({ status: "archived", archivedAt: new Date() })
+        .where(eq(quickfireChallenges.id, row.id));
+    }
   }
 
-  const finalIds = sampleN(allQuestions, 1).map((q) => q.id);
-  await db.insert(quickfireDailySets).values({
-    setDate: date,
-    questionIds: JSON.stringify(finalIds),
-  });
-  return { setDate: date, questionIds: JSON.stringify(finalIds) };
+  // 2. Fallback: for any category still null, pick a random active question
+  for (const cat of CHALLENGE_CATEGORIES) {
+    const key = CAT_KEY[cat];
+    if (questionMap[key] !== null) continue;
+    const pool = await db
+      .select({ id: quickfireQuestions.id })
+      .from(quickfireQuestions)
+      .where(
+        and(
+          eq(quickfireQuestions.isActive, true),
+          sql`${quickfireQuestions.type} != 'quickReview'` as any,
+          sql`${quickfireQuestions.category} = ${cat}` as any
+        )
+      );
+    if (pool.length > 0) {
+      questionMap[key] = sampleN(pool, 1)[0].id;
+    }
+  }
+
+  const questionIds = JSON.stringify(questionMap);
+  await db.insert(quickfireDailySets).values({ setDate: date, questionIds });
+  return { setDate: date, questionIds };
 }
 
 // ─── Admin guard ─────────────────────────────────────────────────────────────
@@ -193,25 +237,57 @@ const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
 // ─── Router ──────────────────────────────────────────────────────────────────
 
 export const quickfireRouter = router({
-  /** Returns today's question set with full question data */
+  /** Returns today's question set with full question data, grouped by category */
   getTodaySet: publicProcedure.query(async ({ ctx }) => {
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
     const date = todayDateStr();
     const set = await ensureTodaySet(db, date);
-    const ids: number[] = JSON.parse(set.questionIds || "[]");
+    const questionMap = parseDailySetIds(set.questionIds);
 
-    if (ids.length === 0) {
-      return { setDate: date, questions: [], userAttempts: {} };
+    // Determine which categories the user has opted into (default: all)
+    let enabledCats: Set<string> = new Set(["acs", "adultEcho", "pediatricEcho", "fetalEcho"]);
+    if (ctx.user) {
+      const [userRow] = await db
+        .select({ challengeCategoryPrefs: users.challengeCategoryPrefs })
+        .from(users)
+        .where(eq(users.id, ctx.user.id))
+        .limit(1);
+      if (userRow?.challengeCategoryPrefs) {
+        try {
+          const prefs = JSON.parse(userRow.challengeCategoryPrefs);
+          // prefs: { acs: bool, adultEcho: bool, pediatricEcho: bool, fetalEcho: bool }
+          // false = opted out
+          enabledCats = new Set(
+            Object.entries(prefs)
+              .filter(([, v]) => v !== false)
+              .map(([k]) => k)
+          );
+          // If user opted out of everything, show all anyway
+          if (enabledCats.size === 0) enabledCats = new Set(["acs", "adultEcho", "pediatricEcho", "fetalEcho"]);
+        } catch { /* ignore parse errors */ }
+      }
+    }
+
+    // Collect all question IDs for enabled categories
+    const allIds: number[] = Object.entries(questionMap)
+      .filter(([key, id]) => enabledCats.has(key) && id !== null)
+      .map(([, id]) => id as number);
+
+    if (allIds.length === 0) {
+      return { setDate: date, questions: [], userAttempts: {}, categoryMap: questionMap };
     }
 
     const questions = await db
       .select()
       .from(quickfireQuestions)
-      .where(eq(quickfireQuestions.isActive, true));
+      .where(and(eq(quickfireQuestions.isActive, true), inArray(quickfireQuestions.id, allIds)));
 
-    const orderedQuestions = ids
-      .map((id) => questions.find((q) => q.id === id))
+    // Order: ACS, Adult Echo, Pediatric Echo, Fetal Echo
+    const catOrder = ["acs", "adultEcho", "pediatricEcho", "fetalEcho"];
+    const orderedQuestions = catOrder
+      .filter((key) => enabledCats.has(key) && questionMap[key] !== null)
+      .map((key) => questions.find((q) => q.id === questionMap[key]))
       .filter(Boolean) as typeof questions;
 
     // If user is authenticated, fetch their attempts for today
@@ -252,7 +328,7 @@ export const quickfireRouter = router({
       };
     });
 
-    return { setDate: date, questions: sanitized, userAttempts };
+    return { setDate: date, questions: sanitized, userAttempts, categoryMap: questionMap };
   }),
 
   /** Submit an answer for a question in today's set */
@@ -494,6 +570,7 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
         difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("intermediate"),
         tags: z.array(z.string()).default([]),
         echoCategory: z.enum(["adult", "pediatric_congenital", "fetal"]).default("adult"),
+        category: z.enum(["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "General"]).default("Adult Echo"),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -514,6 +591,7 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
         difficulty: input.difficulty,
         tags: JSON.stringify(input.tags),
         echoCategory: input.echoCategory,
+        category: input.category as any,
         isActive: true,
         createdByUserId: ctx.user.id,
       });
@@ -539,6 +617,7 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
         tags: z.array(z.string()).optional(),
         isActive: z.boolean().optional(),
         echoCategory: z.enum(["adult", "pediatric_congenital", "fetal"]).optional(),
+        category: z.enum(["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "General"]).optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -571,6 +650,21 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
       return { success: true };
     }),
 
+  /**
+   * Bulk soft-delete multiple questions by ID (sets isActive = false).
+   */
+  bulkDeleteQuestions: adminProcedure
+    .input(z.object({ ids: z.array(z.number().int().positive()).min(1).max(200) }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      await db
+        .update(quickfireQuestions)
+        .set({ isActive: false })
+        .where(inArray(quickfireQuestions.id, input.ids));
+      return { deleted: input.ids.length };
+    }),
+
   listAllQuestions: adminProcedure
     .input(
       z.object({
@@ -580,6 +674,7 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
         includeInactive: z.boolean().default(false),
         search: z.string().max(200).optional(),
         echoCategory: z.enum(["adult", "pediatric_congenital", "fetal"]).optional(),
+        category: z.enum(["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "General"]).optional(),
       })
     )
     .query(async ({ input }) => {
@@ -596,6 +691,9 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
       }
       if (input.echoCategory) {
         conditions.push(eq(quickfireQuestions.echoCategory, input.echoCategory));
+      }
+      if (input.category) {
+        conditions.push(sql`${quickfireQuestions.category} = ${input.category}` as any);
       }
       if (input.search) {
         const term = `%${input.search.toLowerCase()}%`;
@@ -1130,8 +1228,46 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       return { success: true };
     }),
 
-  // ─── Challenge Queue ─────────────────────────────────────────────────────────
+   // ─── Category Preferences ─────────────────────────────────────────────────────
+  /** Get the current user's daily challenge category preferences */
+  getCategoryPrefs: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+    const [userRow] = await db
+      .select({ challengeCategoryPrefs: users.challengeCategoryPrefs })
+      .from(users)
+      .where(eq(users.id, ctx.user.id))
+      .limit(1);
+    const defaults = { acs: true, adultEcho: true, pediatricEcho: true, fetalEcho: true };
+    if (!userRow?.challengeCategoryPrefs) return defaults;
+    try {
+      return { ...defaults, ...JSON.parse(userRow.challengeCategoryPrefs) };
+    } catch {
+      return defaults;
+    }
+  }),
 
+  /** Update the current user's daily challenge category preferences */
+  updateCategoryPrefs: protectedProcedure
+    .input(
+      z.object({
+        acs: z.boolean().default(true),
+        adultEcho: z.boolean().default(true),
+        pediatricEcho: z.boolean().default(true),
+        fetalEcho: z.boolean().default(true),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      await db
+        .update(users)
+        .set({ challengeCategoryPrefs: JSON.stringify(input) })
+        .where(eq(users.id, ctx.user.id));
+      return { success: true };
+    }),
+
+  // ─── Challenge Queue ─────────────────────────────────────────────────────────
   /** Get the currently live challenge (status = 'live') with full question data */
   getLiveChallenge: publicProcedure.query(async ({ ctx }) => {
     const db = await getDb();

@@ -941,7 +941,7 @@ export default function SubmitCase() {
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*,video/*,.webm,.mp4,.mov,.avi,.mkv"
+                  accept="image/*,video/*,.webm,.mp4,.mov,.avi,.mkv,.wmv"
                   multiple
                   className="hidden"
                   onChange={handleFileSelect}

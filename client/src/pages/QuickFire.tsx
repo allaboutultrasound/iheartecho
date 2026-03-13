@@ -152,6 +152,19 @@ export default function QuickFire() {
   const { data, isLoading, error, refetch } = trpc.quickfire.getLiveChallenge.useQuery(undefined, {
     refetchInterval: 5 * 60 * 1000, // re-check every 5 min in case a new challenge goes live
   });
+
+  // ── New 4-category daily set ──────────────────────────────────────────────
+  const todaySetQuery = trpc.quickfire.getTodaySet.useQuery(undefined, {
+    refetchInterval: 5 * 60 * 1000,
+  });
+  const categoryPrefsQuery = trpc.quickfire.getCategoryPrefs.useQuery(undefined, { enabled: isAuthenticated });
+  const updateCategoryPrefsMutation = trpc.quickfire.updateCategoryPrefs.useMutation({
+    onSuccess: () => trpc.useUtils().quickfire.getCategoryPrefs.invalidate(),
+  });
+  // Which category card is currently being played
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [showCategoryPrefs, setShowCategoryPrefs] = useState(false);
+
   const statsQuery = trpc.quickfire.getUserStats.useQuery(undefined, {
     enabled: isAuthenticated,
   });
@@ -186,14 +199,35 @@ export default function QuickFire() {
     allQuestions.some((q) => Array.isArray(q.tags) && q.tags.includes(cat))
   );
 
-  const questions = activeTagFilter
+  const legacyQuestions = activeTagFilter
     ? allQuestions.filter((q) => Array.isArray(q.tags) && q.tags.includes(activeTagFilter))
     : allQuestions;
+
+  // When a category is selected, use the category question from getTodaySet
+  const todayCategoryMap: Record<string, number> = (todaySetQuery.data as any)?.categoryMap ?? {};
+  const todayAllQuestions: any[] = (todaySetQuery.data as any)?.questions ?? [];
+  const todayUserAttempts: Record<number, any> = (todaySetQuery.data as any)?.userAttempts ?? {};
+  // Map display names to server camelCase keys
+  const CAT_DISPLAY_TO_KEY: Record<string, string> = {
+    "ACS": "acs",
+    "Adult Echo": "adultEcho",
+    "Pediatric Echo": "pediatricEcho",
+    "Fetal Echo": "fetalEcho",
+  };
+  const activeCatMapKey = activeCategory ? (CAT_DISPLAY_TO_KEY[activeCategory] ?? activeCategory) : null;
+  const activeCatQId = activeCatMapKey ? todayCategoryMap[activeCatMapKey] : null;
+  const activeCatQ = activeCatQId ? todayAllQuestions.find((q: any) => q.id === activeCatQId) : null;
+
+  const questions = activeCategory
+    ? (activeCatQ ? [activeCatQ] : [])
+    : legacyQuestions;
+
+  const effectiveUserAttempts = activeCategory ? todayUserAttempts : userAttempts;
 
   const currentQ = questions[currentIndex];
 
   const alreadyCompleted =
-    questions.length > 0 && questions.every((q) => userAttempts[q.id] !== undefined);
+    questions.length > 0 && questions.every((q) => effectiveUserAttempts[q.id] !== undefined);
 
   // ── Admin edit state (archive) ────────────────────────────────────────────
   const isAdmin = user?.role === "admin";
@@ -326,8 +360,9 @@ export default function QuickFire() {
     { period: lbPeriod },
     { enabled: activeTab === "leaderboard" }
   );
+  const trpcUtils = trpc.useUtils();
 
-  // ── Handlers: Daily Challenge ──────────────────────────────────────────────
+  // ── Handlers: Daily Challenge ──────────────────────────────────────────────────
   const handleSelectAnswer = async (idx: number) => {
     if (answered || !currentQ) return;
     setSelectedAnswer(idx);
@@ -336,8 +371,9 @@ export default function QuickFire() {
       const result = await submitMutation.mutateAsync({ questionId: currentQ.id, selectedAnswer: idx });
       setAnswerResult(result);
       setSessionResults((prev) => [...prev, { correct: result.isCorrect }]);
+      if (activeCategory) trpcUtils.quickfire.getTodaySet.invalidate();
     } catch {
-      const existing = userAttempts[currentQ.id];
+      const existing = effectiveUserAttempts[currentQ.id];
       if (existing) {
         setAnswerResult({
           isCorrect: existing.isCorrect,
@@ -361,6 +397,7 @@ export default function QuickFire() {
       const result = await submitMutation.mutateAsync({ questionId: currentQ.id, selfMarkedCorrect: correct });
       setAnswerResult(result);
       setSessionResults((prev) => [...prev, { correct: result.isCorrect }]);
+      if (activeCategory) trpcUtils.quickfire.getTodaySet.invalidate();
     } catch {
       toast.error("Failed to record answer.");
       setAnswered(false);
@@ -384,6 +421,16 @@ export default function QuickFire() {
       setOrderItems([]);
       setOrderDragIdx(null);
       setOrderSubmitted(false);
+    } else if (activeCategory) {
+      // In category mode: go back to category cards after completing the single question
+      setActiveCategory(null);
+      setCurrentIndex(0);
+      setSelectedAnswer(null);
+      setAnswered(false);
+      setAnswerResult(null);
+      setSessionResults([]);
+      setShowResults(false);
+      setFlipped(false);
     } else {
       setShowResults(true);
     }
@@ -803,17 +850,259 @@ export default function QuickFire() {
           ))}
         </div>
 
-        {/* ── TAB: Daily Challenge ─────────────────────────────────────────── */}
+        {/* ── TAB: Daily Challenge ─────────────────────────────────────────────────── */}
         {activeTab === "challenge" && (
           <>
-            {isLoading && (
+            {/* ── Category Preference Settings Panel ───────────────────────────── */}
+            {showCategoryPrefs && isAuthenticated && (
+              <div className="mb-6 bg-white rounded-xl border border-[#189aa1]/20 p-5 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Category Preferences</h3>
+                    <p className="text-xs text-gray-500 mt-0.5">Choose which categories appear in your daily challenge. You are opted into all by default.</p>
+                  </div>
+                  <button onClick={() => setShowCategoryPrefs(false)} className="text-gray-400 hover:text-gray-600">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {([
+                    { cat: "ACS" as const, prefKey: "acs" as const },
+                    { cat: "Adult Echo" as const, prefKey: "adultEcho" as const },
+                    { cat: "Pediatric Echo" as const, prefKey: "pediatricEcho" as const },
+                    { cat: "Fetal Echo" as const, prefKey: "fetalEcho" as const },
+                  ]).map(({ cat, prefKey }) => {
+                    const prefs = categoryPrefsQuery.data ?? { acs: true, adultEcho: true, pediatricEcho: true, fetalEcho: true };
+                    const isEnabled = prefs[prefKey] !== false;
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => {
+                          const current = categoryPrefsQuery.data ?? { acs: true, adultEcho: true, pediatricEcho: true, fetalEcho: true };
+                          updateCategoryPrefsMutation.mutate({ ...current, [prefKey]: !isEnabled });
+                        }}
+                        className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${
+                          isEnabled
+                            ? "border-[#189aa1] bg-[#f0fbfc]"
+                            : "border-gray-200 bg-gray-50 opacity-60"
+                        }`}
+                      >
+                        <span className={`text-2xl`}>
+                          {cat === "ACS" ? "❤️" : cat === "Adult Echo" ? "🫕" : cat === "Pediatric Echo" ? "👶" : "🐶"}
+                        </span>
+                        <span className="text-xs font-semibold text-gray-700">{cat}</span>
+                        <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                          isEnabled ? "bg-[#189aa1] text-white" : "bg-gray-200 text-gray-500"
+                        }`}>{isEnabled ? "On" : "Off"}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* ── 4-Category Daily Set Cards ───────────────────────────────────────── */}
+            {!activeCategory && (
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-lg font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Today's Daily Challenge</h2>
+                    <p className="text-xs text-gray-500 mt-0.5">One question per category — complete all four to finish today's challenge</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {isAuthenticated && (
+                      <button
+                        onClick={() => setShowCategoryPrefs((v) => !v)}
+                        className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-[#189aa1] transition-colors"
+                      >
+                        <Filter className="w-3.5 h-3.5" />
+                        Preferences
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {todaySetQuery.isLoading && (
+                  <div className="flex flex-col items-center gap-4 py-12">
+                    <div className="w-10 h-10 rounded-full border-4 border-[#189aa1] border-t-transparent animate-spin" />
+                    <p className="text-gray-500 text-sm">Loading today's challenge…</p>
+                  </div>
+                )}
+
+                {!todaySetQuery.isLoading && (() => {
+                  const todaySet = todaySetQuery.data;
+                  const categoryMap: Record<string, number> = (todaySet as any)?.categoryMap ?? {};
+                  const todayQuestions: any[] = (todaySet as any)?.questions ?? [];
+                  const todayAttempts: Record<number, any> = (todaySet as any)?.userAttempts ?? {};
+                  const catPrefs = categoryPrefsQuery.data ?? { acs: true, adultEcho: true, pediatricEcho: true, fetalEcho: true };
+
+                  const CATS = [
+                    { key: "ACS", label: "ACS", emoji: "❤️", desc: "Acute Coronary Syndrome", prefKey: "acs" as const, mapKey: "acs" },
+                    { key: "Adult Echo", label: "Adult Echo", emoji: "🫕", desc: "Adult Echocardiography", prefKey: "adultEcho" as const, mapKey: "adultEcho" },
+                    { key: "Pediatric Echo", label: "Pediatric Echo", emoji: "👶", desc: "Pediatric & Congenital", prefKey: "pediatricEcho" as const, mapKey: "pediatricEcho" },
+                    { key: "Fetal Echo", label: "Fetal Echo", emoji: "🐶", desc: "Fetal Echocardiography", prefKey: "fetalEcho" as const, mapKey: "fetalEcho" },
+                  ];
+
+                  const enabledCats = CATS.filter((c) => catPrefs[c.prefKey] !== false);
+                  const allDone = enabledCats.length > 0 && enabledCats.every((c) => {
+                    const qId = categoryMap[c.mapKey];
+                    return qId && todayAttempts[qId] !== undefined;
+                  });
+
+                  if (allDone) {
+                    const correctCount = enabledCats.filter((c) => {
+                      const qId = categoryMap[c.mapKey];
+                      return qId && todayAttempts[qId]?.isCorrect === true;
+                    }).length;
+                    return (
+                      <div className="rounded-2xl p-8 text-center" style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}>
+                        <Trophy className="w-14 h-14 text-[#4ad9e0] mx-auto mb-4" />
+                        <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "Merriweather, serif" }}>Today's Challenge Complete!</h2>
+                        <p className="text-white/60 text-sm mb-1">Today's score</p>
+                        <div className="text-5xl font-black text-white mb-1" style={{ fontFamily: "JetBrains Mono, monospace" }}>{correctCount}/{enabledCats.length}</div>
+                        <p className="text-[#4ad9e0] font-semibold mb-6">{Math.round((correctCount / enabledCats.length) * 100)}% correct</p>
+                        <div className="flex flex-wrap gap-3 justify-center">
+                          <Button className="text-white" style={{ background: "#189aa1" }} onClick={() => setActiveTab("performance")}>
+                            <BarChart3 className="w-4 h-4 mr-2" /> View My Stats
+                          </Button>
+                          <Button variant="outline" className="border-white/30 text-white hover:bg-white/10" onClick={() => setActiveTab("leaderboard")}>
+                            <Trophy className="w-4 h-4 mr-2" /> Leaderboard
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {CATS.map((cat) => {
+                        const isDisabled = catPrefs[cat.prefKey] === false;
+                        const qId = categoryMap[cat.mapKey];
+                        const q = todayQuestions.find((q: any) => q.id === qId);
+                        const attempt = qId ? todayAttempts[qId] : undefined;
+                        const isDone = attempt !== undefined;
+                        const isCorrect = attempt?.isCorrect === true;
+
+                        return (
+                          <div
+                            key={cat.key}
+                            className={`relative rounded-xl border-2 p-5 cursor-pointer transition-all ${
+                              isDisabled
+                                ? "border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed"
+                                : isDone
+                                ? isCorrect
+                                  ? "border-green-200 bg-green-50"
+                                  : "border-orange-200 bg-orange-50"
+                                : "border-[#189aa1]/30 bg-white hover:border-[#189aa1] hover:shadow-md"
+                            }`}
+                            onClick={() => {
+                              if (!isDisabled && q) setActiveCategory(cat.key);
+                            }}
+                          >
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <span className="text-2xl">{cat.emoji}</span>
+                                <div>
+                                  <p className="text-sm font-bold text-gray-800">{cat.label}</p>
+                                  <p className="text-xs text-gray-500">{cat.desc}</p>
+                                </div>
+                              </div>
+                              {isDone ? (
+                                isCorrect
+                                  ? <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
+                                  : <XCircle className="w-5 h-5 text-orange-400 flex-shrink-0" />
+                              ) : isDisabled ? (
+                                <Lock className="w-4 h-4 text-gray-300 flex-shrink-0" />
+                              ) : (
+                                <ChevronRight className="w-5 h-5 text-[#189aa1] flex-shrink-0" />
+                              )}
+                            </div>
+                            {q ? (
+                              <div className="mt-2">
+                                <p className="text-xs text-gray-500 line-clamp-2" dangerouslySetInnerHTML={{ __html: q.question ?? "" }} />
+                                <div className="flex items-center gap-2 mt-2">
+                                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
+                                    q.difficulty === "beginner" ? "bg-green-100 text-green-700" :
+                                    q.difficulty === "advanced" ? "bg-red-100 text-red-700" :
+                                    "bg-blue-100 text-blue-700"
+                                  }`}>{q.difficulty}</span>
+                                  {isDone && (
+                                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
+                                      isCorrect ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"
+                                    }`}>{isCorrect ? "Correct" : "Incorrect"}</span>
+                                  )}
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="text-xs text-gray-400 mt-2 italic">
+                                {isDisabled ? "Category disabled in preferences" : "No question available today"}
+                              </p>
+                            )}
+                            {!isDisabled && !isDone && q && (
+                              <div className="mt-3 flex items-center gap-1 text-xs font-semibold text-[#189aa1]">
+                                Start Question <ChevronRight className="w-3 h-3" />
+                              </div>
+                            )}
+                            {!isDisabled && isDone && (
+                              <div className="mt-3 flex items-center gap-1 text-xs font-semibold text-gray-500">
+                                <button
+                                  className="hover:text-[#189aa1] transition-colors"
+                                  onClick={(e) => { e.stopPropagation(); if (q) setActiveCategory(cat.key); }}
+                                >Review Answer</button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
+            {/* ── Active category question player ─────────────────────────────────────── */}
+            {activeCategory && (() => {
+              const todaySet = todaySetQuery.data;
+              const categoryMap: Record<string, number> = (todaySet as any)?.categoryMap ?? {};
+              const todayQuestions: any[] = (todaySet as any)?.questions ?? [];
+              const todayAttempts: Record<number, any> = (todaySet as any)?.userAttempts ?? {};
+              const qId = categoryMap[activeCategory];
+              const catQ = todayQuestions.find((q: any) => q.id === qId);
+              if (!catQ) return (
+                <div className="text-center py-12">
+                  <p className="text-gray-500">No question available for this category today.</p>
+                  <Button variant="outline" className="mt-4" onClick={() => setActiveCategory(null)}>Back to Categories</Button>
+                </div>
+              );
+              return (
+                <div>
+                  <button
+                    className="flex items-center gap-1.5 text-sm text-[#189aa1] font-semibold mb-4 hover:underline"
+                    onClick={() => setActiveCategory(null)}
+                  >
+                    ← Back to Categories
+                  </button>
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${CATEGORY_COLORS[activeCategory] ?? "bg-gray-100 text-gray-600"}`}>
+                      {activeCategory}
+                    </span>
+                    <span className="text-xs text-gray-400">Today's {activeCategory} Question</span>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* ── Legacy getLiveChallenge question player (shown when activeCategory is set) ── */}
+            {/* We reuse the existing question player below but feed it the category question */}
+            {/* For now, show the existing player only when no activeCategory (legacy mode) */}
+            {!activeCategory && isLoading && (
               <div className="flex flex-col items-center gap-4 py-16">
                 <div className="w-12 h-12 rounded-full border-4 border-[#189aa1] border-t-transparent animate-spin" />
                 <p className="text-gray-500 text-sm">Loading today's challenge…</p>
               </div>
             )}
 
-            {error && (
+            {!activeCategory && error && (
               <div className="flex flex-col items-center gap-4 py-16 text-center">
                 <XCircle className="w-12 h-12 text-red-400" />
                 <p className="text-gray-600">Failed to load today's challenge. Please try again.</p>
@@ -823,19 +1112,9 @@ export default function QuickFire() {
               </div>
             )}
 
-            {!isLoading && !error && questions.length === 0 && (
-              <div className="flex flex-col items-center gap-6 py-16 text-center max-w-lg mx-auto">
-                <div className="w-16 h-16 rounded-full bg-[#189aa1]/10 flex items-center justify-center">
-                  <Zap className="w-8 h-8 text-[#189aa1]" />
-                </div>
-                <h2 className="text-xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-                  No Challenge Today Yet
-                </h2>
-                <p className="text-gray-500 text-sm">
-                  Today's challenge is being prepared. Check back soon.
-                  {isPremium && " In the meantime, browse past challenges in the archive."}
-                </p>
-                {isPremium && (
+            {!activeCategory && !isLoading && !error && questions.length === 0 && (
+              <div className="flex flex-col items-center gap-6 py-4 text-center max-w-lg mx-auto">
+                <p className="text-gray-400 text-sm">No legacy challenge active today. Use the category cards above.</p>            {isPremium && (
                   <Button variant="outline" onClick={() => setActiveTab("archive")}>
                     <Archive className="w-4 h-4 mr-2" /> Browse Archive
                   </Button>
@@ -844,7 +1123,7 @@ export default function QuickFire() {
             )}
 
             {/* Already completed */}
-            {!isLoading && !error && alreadyCompleted && !showResults && sessionResults.length === 0 && (
+            {(activeCategory ? !todaySetQuery.isLoading : !isLoading && !error) && alreadyCompleted && !showResults && sessionResults.length === 0 && (
               <div className="rounded-2xl p-8 text-center" style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}>
                 <Trophy className="w-14 h-14 text-[#4ad9e0] mx-auto mb-4" />
                 <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "Merriweather, serif" }}>
@@ -852,10 +1131,10 @@ export default function QuickFire() {
                 </h2>
                 <p className="text-white/60 text-sm mb-1">Today's score</p>
                 <div className="text-5xl font-black text-white mb-1" style={{ fontFamily: "JetBrains Mono, monospace" }}>
-                  {questions.filter((q) => userAttempts[q.id]?.isCorrect === true).length}/{questions.length}
+                  {questions.filter((q) => effectiveUserAttempts[q.id]?.isCorrect === true).length}/{questions.length}
                 </div>
                 <p className="text-[#4ad9e0] font-semibold mb-6">
-                  {Math.round((questions.filter((q) => userAttempts[q.id]?.isCorrect === true).length / questions.length) * 100)}% correct
+                  {Math.round((questions.filter((q) => effectiveUserAttempts[q.id]?.isCorrect === true).length / questions.length) * 100)}% correct
                 </p>
                 <div className="flex flex-wrap gap-3 justify-center">
                   <Button
@@ -879,6 +1158,15 @@ export default function QuickFire() {
                   >
                     <RefreshCw className="w-4 h-4 mr-2" /> Review
                   </Button>
+                  {activeCategory && (
+                    <Button
+                      variant="outline"
+                      className="border-white/30 text-white hover:bg-white/10"
+                      onClick={() => { setActiveCategory(null); setCurrentIndex(0); setAnswered(false); setAnswerResult(null); setSessionResults([]); setShowResults(false); }}
+                    >
+                      ← All Categories
+                    </Button>
+                  )}
                 </div>
               </div>
             )}
@@ -918,7 +1206,7 @@ export default function QuickFire() {
             })()}
 
             {/* Question card */}
-            {!isLoading && !error && currentQ && !showResults && (() => {
+            {(activeCategory ? !todaySetQuery.isLoading : !isLoading && !error) && currentQ && !showResults && (() => {
               const typeInfo = TYPE_LABELS[currentQ.type] ?? TYPE_LABELS.scenario;
               const TypeIcon = typeInfo.icon;
               const options: string[] = Array.isArray(currentQ.options) ? currentQ.options : [];

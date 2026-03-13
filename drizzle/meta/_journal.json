@@ -505,6 +505,20 @@
       "when": 1773379476376,
       "tag": "0071_mixed_moonstone",
       "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "5",
+      "when": 1773381788834,
+      "tag": "0072_boring_madame_web",
+      "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "5",
+      "when": 1773384065114,
+      "tag": "0073_slim_daredevil",
+      "breakpoints": true
     }
   ]
 }

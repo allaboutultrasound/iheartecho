@@ -1,0 +1,9 @@
+{
+  "query": "\nALTER TABLE `quickfireQuestions` ADD COLUMN `category` ENUM('ACS', 'Adult Echo', 'Pediatric Echo', 'Fetal Echo', 'General') DEFAULT 'Adult Echo';\nALTER TABLE `users` ADD COLUMN `challengeCategoryPrefs` TEXT NULL COMMENT 'JSON: {acs:bool, adultEcho:bool, pediatricEcho:bool, fetalEcho:bool} — false means opted out';\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mhhtxpXA9Esras.root --database etVPnUidWNWG8W4GHnRqzv --execute \nALTER TABLE `quickfireQuestions` ADD COLUMN `category` ENUM('ACS', 'Adult Echo', 'Pediatric Echo', 'Fetal Echo', 'General') DEFAULT 'Adult Echo';\nALTER TABLE `users` ADD COLUMN `challengeCategoryPrefs` TEXT NULL COMMENT 'JSON: {acs:bool, adultEcho:bool, pediatricEcho:bool, fetalEcho:bool} — false means opted out';\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 699
+}

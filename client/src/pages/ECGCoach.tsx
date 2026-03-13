@@ -4,6 +4,7 @@
   Brand: iHeartEcho Teal #189aa1, Aqua #4ad9e0
 */
 import { useState } from "react";
+import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import { PremiumGate } from "@/components/PremiumGate";
@@ -166,6 +167,16 @@ const leadSections: LeadSection[] = [
   },
 ];
 
+// Map ECGCoach section IDs to ECG ScanCoach registry view IDs
+const SECTION_TO_VIEW_ID: Record<string, string> = {
+  "standard-limb":  "limb-leads",
+  "precordial":     "precordial-leads",
+  "right-sided":    "right-sided",
+  "posterior":      "posterior-leads",
+  "artifact":       "normal-ecg",
+  "neonatal":       "neonatal-leads",
+};
+
 // ─── Components ───────────────────────────────────────────────────────────────
 function StepCard({ step, index }: { step: LeadStep; index: number }) {
   return (
@@ -188,9 +199,12 @@ function StepCard({ step, index }: { step: LeadStep; index: number }) {
   );
 }
 
-function SectionCard({ section }: { section: LeadSection }) {
+function SectionCard({ section, mergeView }: { section: LeadSection; mergeView: (v: any) => any }) {
   const [open, setOpen] = useState(false);
   const Icon = section.icon;
+  const viewId = SECTION_TO_VIEW_ID[section.id];
+  const override = viewId ? (mergeView({ id: viewId, name: section.title }) as any) : null;
+  const hasImages = override && (override.echoImageUrl || override.anatomyImageUrl || override.transducerImageUrl);
   return (
     <div className="rounded-xl border overflow-hidden shadow-sm" style={{ borderColor: section.color + "30" }}>
       <button
@@ -232,6 +246,29 @@ function SectionCard({ section }: { section: LeadSection }) {
             </div>
           )}
 
+          {/* Admin-uploaded reference images (via ScanCoach Editor) */}
+          {hasImages && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+              {override.echoImageUrl && (
+                <div className="rounded-lg overflow-hidden bg-gray-900">
+                  <img src={override.echoImageUrl} alt={section.title} className="w-full max-h-64 object-contain" />
+                  <div className="px-2 py-1 text-[10px] text-gray-400">Clinical Reference</div>
+                </div>
+              )}
+              {override.anatomyImageUrl && (
+                <div className="rounded-lg overflow-hidden bg-gray-900">
+                  <img src={override.anatomyImageUrl} alt={`${section.title} anatomy`} className="w-full max-h-64 object-contain" />
+                  <div className="px-2 py-1 text-[10px] text-gray-400">Anatomy / Diagram</div>
+                </div>
+              )}
+              {override.transducerImageUrl && (
+                <div className="rounded-lg overflow-hidden bg-gray-900">
+                  <img src={override.transducerImageUrl} alt={`${section.title} placement`} className="w-full max-h-64 object-contain" />
+                  <div className="px-2 py-1 text-[10px] text-gray-400">Lead Placement</div>
+                </div>
+              )}
+            </div>
+          )}
           {/* Common errors */}
           {section.commonErrors && section.commonErrors.length > 0 && (
             <div className="rounded-lg border border-red-100 overflow-hidden">
@@ -301,11 +338,12 @@ function QuickReferenceTable() {
   );
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+
+// ─── Main Component ───────────────────────────────────────────────────────────────
 export default function ECGCoach() {
+  const { mergeView } = useScanCoachOverrides("ecg");
   return (
     <Layout>
-      {/* Header */}
       <div
         className="relative overflow-hidden"
         style={{ background: `linear-gradient(135deg, #0e1e2e 0%, ${BRAND_DARK} 60%, ${BRAND} 100%)` }}
@@ -356,7 +394,7 @@ export default function ECGCoach() {
               <span className="text-xs text-gray-400">Tap any section to expand</span>
             </div>
             {leadSections.map((section) => (
-              <SectionCard key={section.id} section={section} />
+              <SectionCard key={section.id} section={section} mergeView={mergeView} />
             ))}
 
             {/* Cross-promo */}

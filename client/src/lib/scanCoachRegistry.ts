@@ -118,10 +118,12 @@ export const SCANCOACH_MODULES: ScanCoachModuleMeta[] = [
     label: "Strain ScanCoach",
     path: "/strain-scan-coach",
     views: [
-      { id: "plax",     name: "Parasternal Long Axis (PLAX)",               group: "Acquisition" },
-      { id: "a4c",      name: "Apical 4-Chamber (A4C)",                     group: "Acquisition" },
-      { id: "a2c",      name: "Apical 2-Chamber (A2C)",                     group: "Acquisition" },
-      { id: "a3c",      name: "Apical 3-Chamber (APLAX)",                   group: "Acquisition" },
+      { id: "psax_base", name: "PSAX — Basal Level (Mitral Valve)",          group: "Radial & Circumferential" },
+      { id: "psax_mid",  name: "PSAX — Mid Level (Papillary Muscles)",       group: "Radial & Circumferential" },
+      { id: "psax_apex", name: "PSAX — Apical Level",                        group: "Radial & Circumferential" },
+      { id: "a4c",       name: "Apical 4-Chamber (A4C)",                     group: "Longitudinal" },
+      { id: "a2c",       name: "Apical 2-Chamber (A2C)",                     group: "Longitudinal" },
+      { id: "a3c",       name: "Apical 3-Chamber (APLAX)",                   group: "Longitudinal" },
     ],
   },
   // ─── HOCM ─────────────────────────────────────────────────────────────────

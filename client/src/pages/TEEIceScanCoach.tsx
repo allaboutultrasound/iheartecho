@@ -542,7 +542,7 @@ function AdminMediaPanel({ viewId }: { viewId: string }) {
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
+          accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/x-ms-wmv,.wmv"
           className="hidden"
           onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
         />

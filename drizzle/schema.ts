@@ -66,6 +66,9 @@ export const users = mysqlTable("users", {
   lastChallengeNotifDate: varchar("lastChallengeNotifDate", { length: 10 }),
   // Demo/test account flag — marks seeded demo users so they are visually distinguished in admin UI
   isDemo: boolean("isDemo").default(false).notNull(),
+  // JSON: {acs:bool, adultEcho:bool, pediatricEcho:bool, fetalEcho:bool} — false means opted out of that category
+  // null/missing means opted in to all categories (default)
+  challengeCategoryPrefs: text("challengeCategoryPrefs"),
 });
 
 export type User = typeof users.$inferSelect;
@@ -914,6 +917,8 @@ export const quickfireQuestions = mysqlTable("quickfireQuestions", {
   tags: text("tags"),
   // Echo specialty category for flashcard filtering
   echoCategory: mysqlEnum("echoCategory", ["adult", "pediatric_congenital", "fetal"]).default("adult"),
+  // Broad clinical category for admin filtering (ACS, Adult Echo, Pediatric Echo, Fetal Echo, General)
+  category: mysqlEnum("category", ["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "General"]).default("Adult Echo"),
   // Whether this question is active and eligible for daily sets
   isActive: boolean("isActive").default(true).notNull(),
   createdByUserId: int("createdByUserId"),
@@ -1115,6 +1120,15 @@ export const scanCoachOverrides = mysqlTable("scanCoachOverrides", {
   probe: text("probe"),
   // Key anatomy description text
   anatomy: text("anatomy"),
+  // ── Editable section labels ──────────────────────────────────────────────────
+  // Custom label for the clinical echo image section (default: "Clinical Echo")
+  echoLabel: varchar("echoLabel", { length: 128 }),
+  // Custom label for the probe positioning section (default: "Probe Positioning")
+  probeLabel: varchar("probeLabel", { length: 128 }),
+  // Custom label for the anatomy section (default: "Anatomy Reference")
+  anatomyLabel: varchar("anatomyLabel", { length: 128 }),
+  // Custom label for the transducer image section (default: "Transducer Position")
+  transducerLabel: varchar("transducerLabel", { length: 128 }),
   // ── Additional educational media ─────────────────────────────────────────────
   // JSON array of AdditionalMedia objects: {id, url, fileKey, caption, mediaType, section, sortOrder}
   // section values: "echo" | "anatomy" | "transducer" | "tips" | "structures" | "measurements" | "howToGet" | "criticalFindings" | "general"

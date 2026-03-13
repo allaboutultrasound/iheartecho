@@ -2810,3 +2810,24 @@
 - [ ] Add image management (admin upload/manage) to ECG ScanCoach (ECGNavigator)
 - [ ] Add image management (admin upload/manage) to ACHD ScanCoach (ACHDNavigator)
 - [ ] Verify all other ScanCoach pages have image management available
+- [x] Fix Daily Challenge question type filter not working
+- [x] Add category filter (ACS, Adult Echo, Pediatric Echo, Fetal Echo) to Daily Challenge editor question list
+- [x] Add Delete Selected button to Daily Challenge editor bulk select toolbar (already existed, now confirmed visible in bulk mode)
+
+## Daily Challenge Redesign — 4 Categories Per Day
+- [x] Add `category` enum to quickfireQuestions (ACS, Adult Echo, Pediatric Echo, Fetal Echo, General)
+- [x] Add `challengeCategoryPrefs` JSON field to users table (opt-out per category)
+- [x] Update quickfireDailySets to store 4 questionIds (one per category) as JSON object
+- [x] Add category filter to listAllQuestions server procedure
+- [x] Update daily set generation to pick one question per category
+- [x] Add user category preference tRPC procedures (get/update)
+- [x] Add category field to question create/edit form in admin
+- [x] Add category filter + Delete Selected to Question Bank admin tab
+- [x] Update Challenge Queue admin to show category badges on each challenge (already implemented)
+- [x] Update Daily Challenge user UI to show 4 category cards per day
+- [x] Add WMV video format support (server + all upload UIs)
+- [x] Add category preference settings (opt-out toggles) for users
+- [x] Add challengeCategoryPrefs to users table (DB + schema)
+- [x] Add category column to quickfireQuestions (DB + schema)
+- [x] Add category preference settings (opt-out toggles) for users (duplicate removed)
+- [ ] Update streak/scoring to count per-category completions

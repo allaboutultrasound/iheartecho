@@ -501,7 +501,7 @@ function ImageUploadZone({
       <input
         ref={inputRef}
         type="file"
-        accept="image/*,video/mp4,video/webm,video/ogg,video/quicktime"
+        accept="image/*,video/mp4,video/webm,video/ogg,video/quicktime,video/x-ms-wmv,.wmv"
         className="hidden"
         onChange={(e) => {
           const file = e.target.files?.[0];

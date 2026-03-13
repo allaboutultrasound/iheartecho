@@ -9,10 +9,8 @@ import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import {
   Activity, ChevronDown, ChevronUp, AlertTriangle, CheckCircle2,
-  Heart, Zap, BarChart3, ArrowRight, Info, BookOpen, Radio, Image as ImageIcon
+  Heart, Zap, BarChart3, ArrowRight, Info, BookOpen, Radio
 } from "lucide-react";
-import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
-import { getModuleMeta } from "@/lib/scanCoachRegistry";
 
 const BRAND = "#189aa1";
 const BRAND_DARK = "#0e4a50";
@@ -701,108 +699,6 @@ function SectionPanel({ section }: { section: Section }) {
   );
 }
 
-// ─── ECG ScanCoach Image Panel ──────────────────────────────────────────────
-const ECG_MODULE = getModuleMeta("ecg");
-
-function ECGImagePanel() {
-  const { mergeView } = useScanCoachOverrides("ecg");
-  const views = ECG_MODULE?.views ?? [];
-  const groups = useMemo(() => {
-    const map = new Map<string, typeof views>();
-    for (const v of views) {
-      const g = v.group ?? "Other";
-      if (!map.has(g)) map.set(g, []);
-      map.get(g)!.push(v);
-    }
-    return map;
-  }, [views]);
-
-  const [selectedViewId, setSelectedViewId] = useState<string>(views[0]?.id ?? "");
-  const selectedView = useMemo(() => {
-    const base = views.find((v) => v.id === selectedViewId);
-    if (!base) return null;
-    return mergeView({ id: base.id, name: base.name } as any);
-  }, [selectedViewId, mergeView, views]);
-
-  const hasAnyImage = views.some((v) => {
-    const merged = mergeView({ id: v.id, name: v.name } as any) as any;
-    return merged.echoImageUrl || merged.anatomyImageUrl || merged.transducerImageUrl;
-  });
-
-  if (!hasAnyImage) return null;
-
-  const sv = selectedView as any;
-
-  return (
-    <div className="mt-8 rounded-xl border overflow-hidden" style={{ borderColor: BRAND + "30" }}>
-      <div className="px-5 py-3 flex items-center gap-2" style={{ background: BRAND + "0d" }}>
-        <ImageIcon className="w-4 h-4" style={{ color: BRAND }} />
-        <span className="font-bold text-sm" style={{ color: BRAND, fontFamily: "Merriweather, serif" }}>ECG Reference Images</span>
-      </div>
-      <div className="flex flex-col md:flex-row bg-white">
-        {/* Sidebar */}
-        <div className="md:w-56 flex-shrink-0 border-r border-gray-100 p-3 space-y-1">
-          {Array.from(groups.entries()).map(([group, gViews]) => (
-            <div key={group}>
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 px-2 py-1">{group}</div>
-              {gViews.map((v) => {
-                const merged = mergeView({ id: v.id, name: v.name } as any) as any;
-                const hasImg = merged.echoImageUrl || merged.anatomyImageUrl || merged.transducerImageUrl;
-                if (!hasImg) return null;
-                return (
-                  <button
-                    key={v.id}
-                    onClick={() => setSelectedViewId(v.id)}
-                    className={`w-full text-left px-2 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                      selectedViewId === v.id ? "text-white" : "text-gray-600 hover:bg-gray-50"
-                    }`}
-                    style={selectedViewId === v.id ? { background: BRAND } : {}}
-                  >
-                    {v.name}
-                  </button>
-                );
-              })}
-            </div>
-          ))}
-        </div>
-        {/* Image display */}
-        <div className="flex-1 p-4">
-          {sv ? (
-            <div>
-              <h4 className="font-bold text-sm text-gray-800 mb-3" style={{ fontFamily: "Merriweather, serif" }}>{sv.name}</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {sv.echoImageUrl && (
-                  <div className="rounded-lg overflow-hidden bg-gray-900">
-                    <img src={sv.echoImageUrl} alt={sv.name} className="w-full max-h-64 object-contain" />
-                    <div className="px-2 py-1 text-[10px] text-gray-400">Clinical Reference</div>
-                  </div>
-                )}
-                {sv.anatomyImageUrl && (
-                  <div className="rounded-lg overflow-hidden bg-gray-900">
-                    <img src={sv.anatomyImageUrl} alt={`${sv.name} anatomy`} className="w-full max-h-64 object-contain" />
-                    <div className="px-2 py-1 text-[10px] text-gray-400">Anatomy / Diagram</div>
-                  </div>
-                )}
-                {sv.transducerImageUrl && (
-                  <div className="rounded-lg overflow-hidden bg-gray-900">
-                    <img src={sv.transducerImageUrl} alt={`${sv.name} lead placement`} className="w-full max-h-64 object-contain" />
-                    <div className="px-2 py-1 text-[10px] text-gray-400">Lead Placement</div>
-                  </div>
-                )}
-              </div>
-              {sv.description && (
-                <p className="mt-3 text-xs text-gray-600 leading-relaxed">{sv.description}</p>
-              )}
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-32 text-gray-400 text-sm">Select a view</div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function ECGNavigator() {
   return (
@@ -878,7 +774,6 @@ export default function ECGNavigator() {
         ))}
 
         {/* ECG Reference Images (admin-uploaded via ScanCoach Editor) */}
-        <ECGImagePanel />
 
         {/* Cross-promo to ECG Coach and Calculators */}
         <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">

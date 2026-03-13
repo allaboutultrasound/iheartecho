@@ -1395,20 +1395,44 @@ function StrainScanCoachInner() {
                     </div>
                   </div>
                 </div>
-                {/* View selector */}
-                <div className="px-5 pt-4 flex flex-wrap gap-2">
-                  {STRAIN_ACQ_VIEWS.map(v => (
-                    <button
-                      key={v.id}
-                      onClick={() => setSelectedAcqView(v)}
-                      className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-                      style={selectedAcqView.id === v.id
-                        ? { background: BRAND, color: "white" }
-                        : { background: "#f0fbfc", color: BRAND, border: "1px solid " + BRAND + "30" }}
-                    >
-                      {v.name.split(" ")[0]}
-                    </button>
-                  ))}
+                {/* View selector — grouped by strain type */}
+                <div className="px-5 pt-4 space-y-3">
+                  {/* Radial & Circumferential group */}
+                  <div>
+                    <div className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: "#7c3aed" }}>Radial &amp; Circumferential Strain — PSAX Views</div>
+                    <div className="flex flex-wrap gap-2">
+                      {STRAIN_ACQ_VIEWS.filter(v => v.strainTypes.includes("Radial")).map(v => (
+                        <button
+                          key={v.id}
+                          onClick={() => setSelectedAcqView(v)}
+                          className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                          style={selectedAcqView.id === v.id
+                            ? { background: "#7c3aed", color: "white" }
+                            : { background: "#f5f3ff", color: "#7c3aed", border: "1px solid #7c3aed30" }}
+                        >
+                          {v.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Longitudinal group */}
+                  <div>
+                    <div className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: BRAND }}>Longitudinal Strain — Apical Views</div>
+                    <div className="flex flex-wrap gap-2">
+                      {STRAIN_ACQ_VIEWS.filter(v => v.strainTypes.includes("Longitudinal")).map(v => (
+                        <button
+                          key={v.id}
+                          onClick={() => setSelectedAcqView(v)}
+                          className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                          style={selectedAcqView.id === v.id
+                            ? { background: BRAND, color: "white" }
+                            : { background: "#f0fbfc", color: BRAND, border: "1px solid " + BRAND + "30" }}
+                        >
+                          {v.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
                 {/* Admin-uploaded reference images */}
                 {((selectedAcqViewMerged as any).echoImageUrl || (selectedAcqViewMerged as any).anatomyImageUrl) && (

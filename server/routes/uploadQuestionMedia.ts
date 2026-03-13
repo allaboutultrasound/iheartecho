@@ -2,7 +2,7 @@
  * POST /api/upload-question-media
  *
  * Admin-only endpoint for uploading echo images OR video clips for questions.
- * Accepts: JPEG, PNG, WEBP, GIF (images) or MP4, WEBM, MOV (videos).
+ * Accepts: JPEG, PNG, WEBP, GIF (images) or MP4, WEBM, MOV, WMV, AVI (videos).
  * Returns { url, fileKey, mediaType: "image" | "video" }.
  */
 import { Router, Request, Response } from "express";
@@ -18,11 +18,11 @@ const upload = multer({
   limits: { fileSize: 100 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     const allowedImages = /^image\/(jpeg|jpg|png|webp|gif)$/;
-    const allowedVideos = /^video\/(mp4|webm|quicktime|x-msvideo|x-matroska)$/;
+    const allowedVideos = /^video\/(mp4|webm|quicktime|x-msvideo|x-matroska|x-ms-wmv|avi)$/;
     if (allowedImages.test(file.mimetype) || allowedVideos.test(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error(`Unsupported file type: ${file.mimetype}. Allowed: JPEG, PNG, WEBP, GIF, MP4, WEBM, MOV.`));
+      cb(new Error(`Unsupported file type: ${file.mimetype}. Allowed: JPEG, PNG, WEBP, GIF, MP4, WEBM, MOV, WMV, AVI.`));
     }
   },
 });

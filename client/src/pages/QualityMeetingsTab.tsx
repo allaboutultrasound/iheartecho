@@ -360,7 +360,7 @@ function RecordingUploadSection({ meetingId, onUploaded }: { meetingId: number; 
         onDrop={onDrop}
         onClick={() => !uploading && fileInputRef.current?.click()}
       >
-        <input ref={fileInputRef} type="file" className="hidden" accept="audio/*,video/*,.mp3,.mp4,.wav,.ogg,.webm,.m4a,.mov" onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
+        <input ref={fileInputRef} type="file" className="hidden" accept="audio/*,video/*,.mp3,.mp4,.wav,.ogg,.webm,.m4a,.mov,.wmv" onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
         {uploading ? (
           <div className="space-y-2">
             <Loader2 className="w-8 h-8 animate-spin mx-auto" style={{ color: BRAND }} />

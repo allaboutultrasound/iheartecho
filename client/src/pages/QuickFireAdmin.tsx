@@ -109,6 +109,8 @@ interface ConnectPair { left: string; right: string; }
 interface IdentifierMarker { x: number; y: number; label: string; }
 interface OrderItem { text: string; }
 
+type QuestionCategory = "ACS" | "Adult Echo" | "Pediatric Echo" | "Fetal Echo" | "General";
+
 interface QuestionForm {
   type: QuestionType;
   question: string;
@@ -119,6 +121,7 @@ interface QuestionForm {
   imageUrl: string;
   difficulty: Difficulty;
   tags: string;
+  category: QuestionCategory;
   // Connect game
   pairs: ConnectPair[];
   // Identifier game
@@ -137,6 +140,7 @@ const EMPTY_FORM: QuestionForm = {
   imageUrl: "",
   difficulty: "intermediate",
   tags: "",
+  category: "Adult Echo",
   pairs: [{ left: "", right: "" }, { left: "", right: "" }, { left: "", right: "" }, { left: "", right: "" }],
   markers: [],
   orderedItems: [{ text: "" }, { text: "" }, { text: "" }, { text: "" }],
@@ -235,6 +239,7 @@ export default function QuickFireAdmin() {
   // List state
   const [page, setPage] = useState(1);
   const [typeFilter, setTypeFilter] = useState<QuestionType | "all">("all");
+  const [categoryFilter, setCategoryFilter] = useState<"all" | "ACS" | "Adult Echo" | "Pediatric Echo" | "Fetal Echo" | "General">("all");
   const [includeInactive, setIncludeInactive] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [challengeSearch, setChallengeSearch] = useState("");
@@ -546,6 +551,7 @@ export default function QuickFireAdmin() {
     page,
     limit: 20,
     type: typeFilter === "all" ? undefined : typeFilter,
+    category: categoryFilter === "all" ? undefined : categoryFilter,
     includeInactive,
     search: searchQuery.trim() || undefined,
   });
@@ -612,6 +618,16 @@ export default function QuickFireAdmin() {
       challengeListQuery.refetch();
     },
     onError: (err) => toast.error(err.message || "Failed to batch-approve questions."),
+  });
+
+  const bulkDeleteMutation = trpc.quickfire.bulkDeleteQuestions.useMutation({
+    onSuccess: (data: any) => {
+      toast.success(`${data.deleted} question${data.deleted !== 1 ? "s" : ""} deleted.`);
+      setBulkSelected(new Set());
+      setBulkMode(false);
+      utils.quickfire.listAllQuestions.invalidate();
+    },
+    onError: (err) => toast.error(err.message || "Failed to delete questions."),
   });
 
   function toggleBulkSelect(id: number) {
@@ -686,6 +702,7 @@ export default function QuickFireAdmin() {
       imageUrl: q.imageUrl ?? "",
       difficulty: q.difficulty,
       tags: (q.tags ?? []).join(", "),
+      category: (q.category as QuestionCategory) ?? "Adult Echo",
       pairs: q.pairs ?? [{ left: "", right: "" }, { left: "", right: "" }, { left: "", right: "" }, { left: "", right: "" }],
       markers: q.markers ?? [],
       orderedItems: q.orderedItems ?? [{ text: "" }, { text: "" }, { text: "" }, { text: "" }],
@@ -755,6 +772,7 @@ export default function QuickFireAdmin() {
       imageUrl: (form.type === "image" || form.type === "identifier") ? form.imageUrl.trim() || undefined : undefined,
       difficulty: form.difficulty,
       tags,
+      category: form.category,
       pairs: form.type === "connect" ? form.pairs.filter((p) => p.left.trim() && p.right.trim()) : undefined,
       markers: form.type === "identifier" ? form.markers : undefined,
       orderedItems: form.type === "order" ? form.orderedItems.filter((i) => i.text.trim()) : undefined,
@@ -1029,6 +1047,19 @@ export default function QuickFireAdmin() {
               <SelectItem value="order">Order Game</SelectItem>
             </SelectContent>
           </Select>
+          <Select value={categoryFilter} onValueChange={(v) => { setCategoryFilter(v as any); setPage(1); }}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              <SelectItem value="ACS">ACS</SelectItem>
+              <SelectItem value="Adult Echo">Adult Echo</SelectItem>
+              <SelectItem value="Pediatric Echo">Pediatric Echo</SelectItem>
+              <SelectItem value="Fetal Echo">Fetal Echo</SelectItem>
+              <SelectItem value="General">General</SelectItem>
+            </SelectContent>
+          </Select>
           <Button
             variant="outline"
             size="sm"
@@ -1148,6 +1179,15 @@ export default function QuickFireAdmin() {
                           q.difficulty === "advanced" ? "bg-red-50 text-red-600" :
                           "bg-blue-50 text-blue-600"
                         }`}>{q.difficulty}</span>
+                        {q.category && (
+                          <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${
+                            q.category === "ACS" ? "bg-red-50 text-red-600" :
+                            q.category === "Adult Echo" ? "bg-teal-50 text-teal-700" :
+                            q.category === "Pediatric Echo" ? "bg-purple-50 text-purple-700" :
+                            q.category === "Fetal Echo" ? "bg-pink-50 text-pink-700" :
+                            "bg-gray-50 text-gray-600"
+                          }`}>{q.category}</span>
+                        )}
                         {q.imageUrl && <ImageIcon className="w-3 h-3 text-purple-400" />}
                         {(q.tags ?? []).slice(0, 3).map((t: string) => (
                           <span key={t} className="text-xs text-gray-400">#{t}</span>
@@ -1269,6 +1309,22 @@ export default function QuickFireAdmin() {
                     ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     : <ListPlus className="w-3.5 h-3.5" />}
                   Add {bulkSelected.size} to Queue
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1.5 px-4 border-red-400/50 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                  disabled={bulkDeleteMutation.isPending}
+                  onClick={() => {
+                    if (confirm(`Delete ${bulkSelected.size} question${bulkSelected.size !== 1 ? "s" : ""}? This cannot be undone.`)) {
+                      bulkDeleteMutation.mutate({ ids: Array.from(bulkSelected) });
+                    }
+                  }}
+                >
+                  {bulkDeleteMutation.isPending
+                    ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    : <Trash2 className="w-3.5 h-3.5" />}
+                  Delete {bulkSelected.size}
                 </Button>
                 <button
                   className="text-white/50 hover:text-white ml-1"
@@ -1441,6 +1497,7 @@ export default function QuickFireAdmin() {
                               imageUrl: q.imageUrl ?? "",
                               difficulty: (q.difficulty as Difficulty) ?? "intermediate",
                               tags: tags.join(", "),
+                              category: (q.category as QuestionCategory) ?? "Adult Echo",
                               pairs: [{ left: "", right: "" }, { left: "", right: "" }],
                               markers: [],
                               orderedItems: [{ text: "" }, { text: "" }],
@@ -2058,6 +2115,23 @@ export default function QuickFireAdmin() {
                 placeholder="Brief teaching point or guideline reference…"
                 minHeight={70}
               />
+            </div>
+
+            {/* Category */}
+            <div>
+              <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Category</label>
+              <Select value={form.category} onValueChange={(v) => setForm((f) => ({ ...f, category: v as QuestionCategory }))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ACS">ACS</SelectItem>
+                  <SelectItem value="Adult Echo">Adult Echo</SelectItem>
+                  <SelectItem value="Pediatric Echo">Pediatric Echo</SelectItem>
+                  <SelectItem value="Fetal Echo">Fetal Echo</SelectItem>
+                  <SelectItem value="General">General</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Difficulty + Tags */}
@@ -3101,7 +3175,7 @@ export default function QuickFireAdmin() {
                   videoUrl: (flashcardForm as any).videoUrl || undefined,
                   difficulty: flashcardForm.difficulty,
                   tags: flashcardForm.tags ? flashcardForm.tags.split(",").map((t: string) => t.trim()).filter(Boolean) : [],
-                  category: "Flashcard",
+                  category: "General" as const,
                 };
                 if (editingFlashcardId !== null) {
                   updateMutation.mutate({ id: editingFlashcardId, ...payload }, {
