@@ -479,6 +479,7 @@ export default function QuickFireAdmin() {
   function openCreateChallenge() {
     setEditingChallengeId(null);
     setChallengeForm({ title: "", description: "", category: "Adult Echo", queuePosition: undefined, priority: 100, selectedQuestionIds: [] });
+    setChallengeQSearch("");
     setChallengeFormOpen(true);
   }
 
@@ -492,6 +493,7 @@ export default function QuickFireAdmin() {
       priority: c.priority ?? 100,
       selectedQuestionIds: Array.isArray(c.questionIds) ? c.questionIds : [],
     });
+    setChallengeQSearch("");
     setChallengeFormOpen(true);
   }
 
@@ -546,6 +548,27 @@ export default function QuickFireAdmin() {
   const [aiMixedPreview, setAiMixedPreview] = useState<Array<{ type: string; question: any }>>([]);
   const [aiMixedSelected, setAiMixedSelected] = useState<Set<number>>(new Set());
   const [aiMixedImporting, setAiMixedImporting] = useState(false);
+
+  // Challenge form question picker search
+  const [challengeQSearch, setChallengeQSearch] = useState("");
+
+  // Fetch the currently-linked question when editing a challenge (may be inactive/off-page)
+  const linkedQuestionQuery = trpc.quickfire.listAllQuestions.useQuery(
+    { ids: challengeForm.selectedQuestionIds, limit: 10, page: 1 },
+    { enabled: challengeFormOpen && challengeForm.selectedQuestionIds.length > 0 }
+  );
+  const linkedQuestion = linkedQuestionQuery.data?.questions?.[0] ?? null;
+
+  // Challenge form question picker — separate from the main question bank list
+  const challengePickerQuery = trpc.quickfire.listAllQuestions.useQuery(
+    {
+      page: 1,
+      limit: 50,
+      includeInactive: false,
+      search: challengeQSearch.trim() || undefined,
+    },
+    { enabled: challengeFormOpen }
+  );
 
   // Queries
   const listQuery = trpc.quickfire.listAllQuestions.useQuery({
@@ -1609,11 +1632,58 @@ export default function QuickFireAdmin() {
             <div>
               <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Select Question <span className="text-red-500">*</span></label>
               <p className="text-xs text-gray-400 mb-2">Each challenge contains exactly <strong>1 question</strong> — one question is served per day.</p>
-              {listQuery.isLoading ? (
+              {/* Search box for question picker */}
+              <Input
+                value={challengeQSearch}
+                onChange={(e) => setChallengeQSearch(e.target.value)}
+                placeholder="Search questions…"
+                className="mb-2 text-xs"
+              />
+              {challengePickerQuery.isLoading ? (
                 <div className="h-32 bg-gray-100 rounded-lg animate-pulse" />
               ) : (
                 <div className="max-h-64 overflow-y-auto border rounded-lg divide-y">
-                  {(listQuery.data?.questions ?? []).filter((q: any) => q.type !== "quickReview").map((q: any) => {
+                  {/* Pinned: currently-linked question (shown at top when editing, even if inactive) */}
+                  {linkedQuestion && !challengePickerQuery.data?.questions?.some((q: any) => q.id === linkedQuestion.id) && (() => {
+                    const q = linkedQuestion;
+                    const selected = challengeForm.selectedQuestionIds[0] === q.id;
+                    const meta = TYPE_META[q.type as QuestionType] ?? TYPE_META.scenario;
+                    const Icon = meta.icon;
+                    return (
+                      <div
+                        key={`pinned-${q.id}`}
+                        className={`flex items-start gap-3 px-3 py-2.5 cursor-pointer transition-colors border-b-2 border-teal-200 ${
+                          selected ? "bg-teal-50" : "bg-teal-50/40 hover:bg-teal-50"
+                        }`}
+                        onClick={() => setChallengeForm((f) => ({ ...f, selectedQuestionIds: selected ? [] : [q.id] }))}
+                      >
+                        <div className={`mt-0.5 w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${
+                          selected ? "border-[#189aa1] bg-[#189aa1]" : "border-gray-300"
+                        }`}>
+                          {selected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                        </div>
+                        <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${meta.color}`}>
+                          <Icon className="w-3 h-3" />{q.type === "connect" ? "CONNECT" : q.type === "identifier" ? "ID" : q.type === "order" ? "ORDER" : q.type === "image" ? "IMG" : "MCQ"}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span className="text-[10px] font-semibold text-teal-600 bg-teal-100 px-1.5 py-0.5 rounded">Current</span>
+                            {!q.isActive && <span className="text-[10px] font-semibold text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">Inactive</span>}
+                          </div>
+                          <p className="text-xs text-gray-800 line-clamp-2" dangerouslySetInnerHTML={{ __html: q.question }} />
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className={`text-xs px-1 rounded ${
+                              q.difficulty === "beginner" ? "bg-green-50 text-green-600" :
+                              q.difficulty === "advanced" ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-600"
+                            }`}>{q.difficulty}</span>
+                            {(q.tags ?? []).slice(0, 2).map((t: string) => <span key={t} className="text-xs text-gray-400">#{t}</span>)}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                  {/* Regular question list from picker query */}
+                  {(challengePickerQuery.data?.questions ?? []).filter((q: any) => q.type !== "quickReview").map((q: any) => {
                     const selected = challengeForm.selectedQuestionIds[0] === q.id;
                     const meta = TYPE_META[q.type as QuestionType] ?? TYPE_META.scenario;
                     const Icon = meta.icon;
@@ -1653,13 +1723,19 @@ export default function QuickFireAdmin() {
                       </div>
                     );
                   })}
+                  {(challengePickerQuery.data?.questions ?? []).filter((q: any) => q.type !== "quickReview").length === 0 && !linkedQuestion && (
+                    <div className="px-4 py-6 text-center text-xs text-gray-400">No questions found. Try a different search.</div>
+                  )}
                 </div>
               )}
               {/* Category mismatch warning */}
               {(() => {
                 const selectedId = challengeForm.selectedQuestionIds[0];
                 if (!selectedId) return <p className="text-xs text-gray-400 mt-1">No question selected</p>;
-                const selectedQ = (listQuery.data?.questions ?? []).find((q: any) => q.id === selectedId);
+                // Look up from picker query OR the pinned linked question
+                const selectedQ =
+                  (challengePickerQuery.data?.questions ?? []).find((q: any) => q.id === selectedId) ??
+                  (linkedQuestion?.id === selectedId ? linkedQuestion : null);
                 const qCat = selectedQ?.category;
                 const formCat = challengeForm.category;
                 const mismatch = qCat && formCat && qCat !== formCat && formCat !== "Mixed";

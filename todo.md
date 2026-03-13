@@ -9,6 +9,7 @@
 - [x] ECG-Assist™ trademark added in EchoAssistHub
 - [x] Daily Challenge category icons: teal lucide icons (Heart/ACS, Stethoscope/Adult Echo, Baby/Pediatric, Activity/Fetal, Scan/POCUS)
 - [x] Custom PNG icons integrated for Fetal Echo (ultrasound fetus) and POCUS (probe) — CDN hosted, shown in category cards and prefs toggle
+- [x] QuickFireAdmin challenge edit flow fixed — linked question now pinned at top of picker (visible even if inactive/off-page), with search box and correct pre-selection
 - [x] Emoji picker added to RichTextEditor toolbar
 - [x] Fetal Echo ASE labels replaced with generic "Guideline-Based" language
 - [x] POCUS category wired in QuickFire prefs panel and CATS array

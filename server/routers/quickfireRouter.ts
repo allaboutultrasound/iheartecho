@@ -705,6 +705,7 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
         search: z.string().max(200).optional(),
         echoCategory: z.enum(["adult", "pediatric_congenital", "fetal"]).optional(),
         category: z.enum(["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "POCUS", "General"]).optional(),
+        ids: z.array(z.number().int().positive()).max(50).optional(),
       })
     )
     .query(async ({ input }) => {
@@ -713,8 +714,12 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
       const offset = (input.page - 1) * input.limit;
 
       const conditions: any[] = [];
-      if (!input.includeInactive) {
+      // When fetching by specific IDs, skip the active filter so inactive questions are included
+      if (!input.includeInactive && !input.ids?.length) {
         conditions.push(eq(quickfireQuestions.isActive, true));
+      }
+      if (input.ids?.length) {
+        conditions.push(inArray(quickfireQuestions.id, input.ids));
       }
       if (input.type) {
         conditions.push(eq(quickfireQuestions.type, input.type));
