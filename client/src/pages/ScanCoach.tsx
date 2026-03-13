@@ -1090,7 +1090,7 @@ function PulmHTNScanCoach() {
 function ACHDScanCoach() {
   const [selectedLesion, setSelectedLesion] = useState(achdLesions[0]);
   const [selectedView, setSelectedView] = useState(achdLesions[0].views[0]);
-  const { mergeView: mergeACHDView } = useScanCoachOverrides("chd");
+  const { mergeView: mergeACHDView } = useScanCoachOverrides("achd");
   const selectedLesionMerged = useMemo(() => mergeACHDView({ ...selectedLesion, id: selectedLesion.id } as any), [selectedLesion, mergeACHDView]);
   return (
     <div>

@@ -2805,3 +2805,8 @@
 - [x] Verify ACHDEchoAssist tab renders correctly in ACHDNavigator with embedded mode
 - [x] Verify standalone /achd-echo-assist route works correctly
 - [x] Verify ECG Navigator, ECG Coach, ECG Calculators all render correctly
+
+## ScanCoach Image Management (Mar 13 2026)
+- [ ] Add image management (admin upload/manage) to ECG ScanCoach (ECGNavigator)
+- [ ] Add image management (admin upload/manage) to ACHD ScanCoach (ACHDNavigator)
+- [ ] Verify all other ScanCoach pages have image management available

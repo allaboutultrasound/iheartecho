@@ -22,7 +22,10 @@ export type ScanCoachModule =
   | "pocus_efast"
   | "pocus_rush"
   | "pocus_cardiac"
-  | "pocus_lung";
+  | "pocus_lung"
+  // ACHD & ECG
+  | "achd"
+  | "ecg";
 
 export interface ScanCoachViewMeta {
   id: string;
@@ -317,6 +320,43 @@ export const SCANCOACH_MODULES: ScanCoachModuleMeta[] = [
       { id: "ll_plaps",     name: "Left Lateral — PLAPS Point",      group: "Left Lung" },
       { id: "diaphragm_r",  name: "Right Diaphragm",                 group: "Diaphragm" },
       { id: "diaphragm_l",  name: "Left Diaphragm",                  group: "Diaphragm" },
+    ],
+  },
+  // ─── ACHD ─────────────────────────────────────────────────────────────────────────────────
+  {
+    key: "achd",
+    label: "ACHD ScanCoach",
+    path: "/scan-coach?tab=achd",
+    views: [
+      { id: "asd",             name: "ASD Assessment",                      group: "Shunt Lesions" },
+      { id: "vsd",             name: "VSD Assessment",                      group: "Shunt Lesions" },
+      { id: "tof",             name: "Tetralogy of Fallot (ToF)",           group: "Complex CHD" },
+      { id: "coa",             name: "Coarctation of the Aorta (CoA)",      group: "Obstructive" },
+      { id: "tga",             name: "d-TGA / Mustard / Senning",           group: "Complex CHD" },
+      { id: "fontan",          name: "Fontan Circulation",                  group: "Complex CHD" },
+      { id: "ebstein",         name: "Ebstein Anomaly",                     group: "Complex CHD" },
+      { id: "psax-av",         name: "PSAX — Aortic Valve Level",           group: "Key Views" },
+      { id: "a4c-rv",          name: "Apical 4-Chamber — RV Focus",         group: "Key Views" },
+      { id: "subcostal-ivc",   name: "Subcostal — IVC",                     group: "Key Views" },
+      { id: "suprasternal",    name: "Suprasternal — Aortic Arch",          group: "Key Views" },
+    ],
+  },
+  // ─── ECG ScanCoach (Lead Placement & Reference) ───────────────────────────────────────────
+  {
+    key: "ecg",
+    label: "ECG ScanCoach",
+    path: "/ecg-navigator",
+    views: [
+      { id: "limb-leads",       name: "Limb Lead Placement (I, II, III, aVR, aVL, aVF)",   group: "Lead Placement" },
+      { id: "precordial-leads", name: "Precordial Lead Placement (V1–V6)",                group: "Lead Placement" },
+      { id: "right-sided",      name: "Right-Sided Leads (V3R, V4R)",                      group: "Supplemental Leads" },
+      { id: "posterior-leads",  name: "Posterior Leads (V7, V8, V9)",                      group: "Supplemental Leads" },
+      { id: "neonatal-leads",   name: "Neonatal / Pediatric Lead Placement",               group: "Supplemental Leads" },
+      { id: "normal-ecg",       name: "Normal 12-Lead ECG Reference",                      group: "ECG Reference" },
+      { id: "stemi-patterns",   name: "STEMI Territory Reference",                         group: "ECG Reference" },
+      { id: "lbbb-rbbb",        name: "LBBB vs RBBB Morphology Reference",                 group: "ECG Reference" },
+      { id: "brugada-pattern",  name: "Brugada Pattern (Type 1, 2, 3)",                    group: "ECG Reference" },
+      { id: "sgarbossa",        name: "Sgarbossa Criteria Reference",                      group: "ECG Reference" },
     ],
   },
 ];
