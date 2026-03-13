@@ -1,9 +1,0 @@
-{
-  "query": "UPDATE quickfireQuestions SET question = REPLACE(question, 'LARDS', 'LARS'), explanation = REPLACE(explanation, 'LARDS', 'LARS'), reviewAnswer = REPLACE(reviewAnswer, 'LARDS', 'LARS') WHERE question LIKE '%LARDS%' OR explanation LIKE '%LARDS%' OR reviewAnswer LIKE '%LARDS%';",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mhhtxpXA9Esras.root --database etVPnUidWNWG8W4GHnRqzv --execute UPDATE quickfireQuestions SET question = REPLACE(question, 'LARDS', 'LARS'), explanation = REPLACE(explanation, 'LARDS', 'LARS'), reviewAnswer = REPLACE(reviewAnswer, 'LARDS', 'LARS') WHERE question LIKE '%LARDS%' OR explanation LIKE '%LARDS%' OR reviewAnswer LIKE '%LARDS%';",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 60
-}

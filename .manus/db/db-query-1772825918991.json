@@ -1,9 +1,0 @@
-{
-  "query": "\nINSERT IGNORE INTO userRoles (userId, role, assignedByUserId, grantedByLabId, createdAt)\nVALUES \n  (1, 'platform_admin', 1, NULL, NOW()),\n  (1, 'diy_admin', 1, NULL, NOW()),\n  (1, 'diy_user', 1, NULL, NOW()),\n  (1, 'premium_user', 1, NULL, NOW());\n",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mhhtxpXA9Esras.root --database etVPnUidWNWG8W4GHnRqzv --execute \nINSERT IGNORE INTO userRoles (userId, role, assignedByUserId, grantedByLabId, createdAt)\nVALUES \n  (1, 'platform_admin', 1, NULL, NOW()),\n  (1, 'diy_admin', 1, NULL, NOW()),\n  (1, 'diy_user', 1, NULL, NOW()),\n  (1, 'premium_user', 1, NULL, NOW());\n",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 70
-}

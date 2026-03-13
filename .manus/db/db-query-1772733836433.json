@@ -1,9 +1,0 @@
-{
-  "query": "UPDATE communities SET description = 'Fetal, Pediatric and Adult congenital heart disease — CHD imaging, cases and more.' WHERE slug = 'congenital';",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mhhtxpXA9Esras.root --database etVPnUidWNWG8W4GHnRqzv --execute UPDATE communities SET description = 'Fetal, Pediatric and Adult congenital heart disease — CHD imaging, cases and more.' WHERE slug = 'congenital';",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 117
-}

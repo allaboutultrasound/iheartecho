@@ -1,8 +1,0 @@
-{
-  "query": "SELECT id, question, explanation, category, difficulty, type FROM quickfireQuestions WHERE status = 'published' ORDER BY id ASC LIMIT 100;",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mhhtxpXA9Esras.root --database etVPnUidWNWG8W4GHnRqzv --execute SELECT id, question, explanation, category, difficulty, type FROM quickfireQuestions WHERE status = 'published' ORDER BY id ASC LIMIT 100;",
-  "returncode": 1,
-  "logs": [
-    "ERROR 1054 (42S22) at line 1: Unknown column 'status' in 'where clause'"
-  ]
-}
