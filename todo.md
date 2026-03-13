@@ -50,5 +50,8 @@
 - [x] Fix: HTML tags (e.g. <p>) showing in challenge queue question titles — strip HTML for display
 - [x] Fix: Challenges created via queue should default to "scheduled" status, not "draft"
 - [x] Daily challenge: display one question per category (ACS, Adult Echo, Pediatric Echo, Fetal Echo, POCUS) — fixed POCUS key mapping bug and inline player key lookup
-- [ ] Admin queue: show all currently live challenges (not just scheduled), with a distinct "Live" badge
-- [ ] Admin queue: Unpublish button on live challenges to move them back to scheduled status
+- [x] Admin queue: show all currently live challenges (not just scheduled), with a distinct "Live" badge
+- [x] Admin queue: Unpublish button on live challenges to move them back to scheduled status
+- [x] Fix: question explanation showing raw HTML tags — render as HTML not plain text (dangerouslySetInnerHTML in both main and archive players)
+- [x] Fix: Edit Challenge button visible to all users in archive — now only shows for platform_admin appRole
+- [x] Fix: archive drill-down now works — getArchivedChallenge fetches questions regardless of isActive status

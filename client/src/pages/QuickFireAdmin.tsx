@@ -92,6 +92,7 @@ import {
   ArrowUpDown,
   AlertTriangle,
   Copy,
+  ArrowUpCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -149,10 +150,11 @@ const EMPTY_FORM: QuestionForm = {
 };
 
 // ── Sortable queue row ─────────────────────────────────────────────────────
-function SortableQueueItem({ c, idx, openEditChallenge, deleteChallengeMutation }: {
+function SortableQueueItem({ c, idx, openEditChallenge, deleteChallengeMutation, unpublishChallengeMutation }: {
   c: any; idx: number;
   openEditChallenge: (c: any) => void;
   deleteChallengeMutation: any;
+  unpublishChallengeMutation?: any;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: c.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
@@ -221,7 +223,19 @@ function SortableQueueItem({ c, idx, openEditChallenge, deleteChallengeMutation 
       </div>
       {/* Actions */}
       <div className="flex items-center gap-1 flex-shrink-0">
-        {!isLive && (
+        {isLive ? (
+          unpublishChallengeMutation && (
+            <Button
+              size="sm" variant="ghost"
+              className="h-8 px-2 text-xs font-semibold text-amber-600 hover:text-amber-700 hover:bg-amber-50 gap-1"
+              onClick={() => { if (confirm("Unpublish this live challenge and return it to the queue?")) unpublishChallengeMutation.mutate({ id: c.id }); }}
+              disabled={unpublishChallengeMutation.isPending}
+              title="Move back to scheduled queue"
+            >
+              <ArrowUpCircle className="w-3.5 h-3.5" /> Unpublish
+            </Button>
+          )
+        ) : (
           <>
             <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-gray-400 hover:text-[#189aa1]" onClick={() => openEditChallenge(c)}>
               <Pencil className="w-3.5 h-3.5" />
@@ -475,6 +489,11 @@ export default function QuickFireAdmin() {
   const deleteChallengeMutation = trpc.quickfire.adminDeleteChallenge.useMutation({
     onSuccess: () => { toast.success("Challenge removed from queue."); challengeListQuery.refetch(); },
     onError: (err) => toast.error(err.message || "Failed to delete challenge."),
+  });
+
+  const unpublishChallengeMutation = trpc.quickfire.adminUnpublishChallenge.useMutation({
+    onSuccess: () => { toast.success("Challenge unpublished and returned to queue."); challengeListQuery.refetch(); },
+    onError: (err) => toast.error(err.message || "Failed to unpublish challenge."),
   });
 
   const publishNextMutation = trpc.quickfire.adminPublishNextChallenge.useMutation({
@@ -1065,6 +1084,7 @@ export default function QuickFireAdmin() {
                         idx={idx}
                         openEditChallenge={openEditChallenge}
                         deleteChallengeMutation={deleteChallengeMutation}
+                        unpublishChallengeMutation={unpublishChallengeMutation}
                       />
                     ))}
                     {/* Queued challenges (sortable) */}

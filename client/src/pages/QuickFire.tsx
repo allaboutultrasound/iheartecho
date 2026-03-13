@@ -236,7 +236,7 @@ export default function QuickFire() {
     questions.length > 0 && questions.every((q) => effectiveUserAttempts[q.id] !== undefined);
 
   // ── Admin edit state (archive) ────────────────────────────────────────────
-  const isAdmin = user?.role === "admin";
+  const isAdmin = appRoles.includes("platform_admin");
   const [archiveEditOpen, setArchiveEditOpen] = useState(false);
   const [archiveEditTarget, setArchiveEditTarget] = useState<"challenge" | "question" | null>(null);
   const [archiveEditChallengeForm, setArchiveEditChallengeForm] = useState({
@@ -1307,7 +1307,7 @@ export default function QuickFire() {
                             </div>
                             <div className="flashcard-face flashcard-face--back">
                               <div className="mb-3"><span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-white/20 text-white mb-2">✓ Answer</span></div>
-                              <p className="text-sm leading-relaxed text-white/95 mb-4">{currentQ.reviewAnswer}</p>
+                              <p className="text-sm leading-relaxed text-white/95 mb-4" dangerouslySetInnerHTML={{ __html: currentQ.reviewAnswer ?? "" }} />
                               {!answered && (
                                 <div className="flex gap-3 mt-2">
                                   <Button size="sm" className="bg-green-400 hover:bg-green-500 text-white border-0" onClick={() => handleSelfMark(true)}><ThumbsUp className="w-3.5 h-3.5 mr-1.5" /> Got it</Button>
@@ -1604,7 +1604,7 @@ export default function QuickFire() {
                       {answered && answerResult?.explanation && (
                         <div className="mt-2 p-4 rounded-lg bg-[#189aa1]/8 border border-[#189aa1]/20">
                           <p className="text-xs font-semibold text-[#189aa1] mb-1">Explanation</p>
-                          <p className="text-sm text-gray-700 leading-relaxed">{answerResult.explanation}</p>
+                          <p className="text-sm text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: answerResult.explanation }} />
                         </div>
                       )}
                     </CardContent>
@@ -1989,7 +1989,7 @@ export default function QuickFire() {
                                         ✓ Answer
                                       </span>
                                     </div>
-                                    <p className="text-sm leading-relaxed text-white/95 mb-4">{archiveCurrentQ.reviewAnswer}</p>
+                                    <p className="text-sm leading-relaxed text-white/95 mb-4" dangerouslySetInnerHTML={{ __html: archiveCurrentQ.reviewAnswer ?? "" }} />
                                     {!archiveAnswered && (
                                       <div className="flex gap-3 mt-2">
                                         <Button
@@ -2061,7 +2061,7 @@ export default function QuickFire() {
                           {archiveAnswered && archiveCurrentQ.explanation && (
                             <div className="mt-2 p-4 rounded-lg bg-[#189aa1]/8 border border-[#189aa1]/20">
                               <p className="text-xs font-semibold text-[#189aa1] mb-1">Explanation</p>
-                              <p className="text-sm text-gray-700 leading-relaxed">{archiveCurrentQ.explanation}</p>
+                              <p className="text-sm text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: archiveCurrentQ.explanation ?? "" }} />
                             </div>
                           )}
                         </CardContent>

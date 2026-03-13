@@ -32,7 +32,7 @@ import {
   quickfireChallenges,
   users,
 } from "../../drizzle/schema";
-import { eq, and, desc, sql, gte, lte, count, inArray } from "drizzle-orm";
+import { eq, and, desc, sql, gte, lte, count, inArray, isNull } from "drizzle-orm";
 import { sendStreakReminders } from "../streakReminders";
 import { generateVirtualLeaderboard } from "../leaderboardSeed";
 import { createHash } from "crypto";
@@ -1535,7 +1535,12 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       }
 
       const ids: number[] = JSON.parse(challenge.questionIds || "[]");
-      const allQ = await db.select().from(quickfireQuestions).where(eq(quickfireQuestions.isActive, true));
+      // Fetch questions by ID regardless of isActive — archived questions were valid when published.
+      // Only exclude soft-deleted questions (deletedAt IS NOT NULL).
+      const allQ = ids.length > 0
+        ? await db.select().from(quickfireQuestions)
+            .where(and(inArray(quickfireQuestions.id, ids), isNull(quickfireQuestions.deletedAt)))
+        : [];
       const questions = ids.map((id) => allQ.find((q) => q.id === id)).filter(Boolean) as typeof allQ;
 
       // For archived challenges, always reveal answers
@@ -1744,6 +1749,28 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
       await db.update(quickfireChallenges).set({ status: "archived", archivedAt: new Date() })
         .where(and(eq(quickfireChallenges.id, input.id), eq(quickfireChallenges.status, "live")));
+      return { success: true };
+    }),
+
+  /**
+   * Unpublish a live challenge — moves it back to "scheduled" so it can be re-queued.
+   * Also removes it from today's daily set cache so it won't be served again today.
+   */
+  adminUnpublishChallenge: adminProcedure
+    .input(z.object({ id: z.number().int().positive() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const [ch] = await db.select().from(quickfireChallenges)
+        .where(and(eq(quickfireChallenges.id, input.id), eq(quickfireChallenges.status, "live"))).limit(1);
+      if (!ch) throw new TRPCError({ code: "NOT_FOUND", message: "Live challenge not found" });
+      // Move back to scheduled
+      await db.update(quickfireChallenges)
+        .set({ status: "scheduled", publishedAt: null })
+        .where(eq(quickfireChallenges.id, input.id));
+      // Remove from today's daily set cache so it won't be served again today
+      const today = new Date().toISOString().slice(0, 10);
+      await db.delete(quickfireDailySets).where(eq(quickfireDailySets.setDate, today));
       return { success: true };
     }),
 
