@@ -872,12 +872,12 @@ export default function QuickFire() {
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {([
-                    { cat: "ACS" as const, prefKey: "acs" as const, Icon: Heart },
+                    { cat: "ACS" as const, prefKey: "acs" as const, Icon: Heart, label: "Advanced Cardiac Sonographer" },
                     { cat: "Adult Echo" as const, prefKey: "adultEcho" as const, Icon: Stethoscope },
                     { cat: "Pediatric Echo" as const, prefKey: "pediatricEcho" as const, Icon: Baby },
                     { cat: "Fetal Echo" as const, prefKey: "fetalEcho" as const, Icon: Activity },
                     { cat: "POCUS" as const, prefKey: "pocus" as const, Icon: Scan },
-                  ]).map(({ cat, prefKey, Icon }) => {
+                  ] as { cat: string; prefKey: "acs" | "adultEcho" | "pediatricEcho" | "fetalEcho" | "pocus"; Icon: (props: { className?: string }) => import('react').ReactElement; label?: string }[]).map(({ cat, prefKey, Icon, label }) => {
                     const prefs = categoryPrefsQuery.data ?? { acs: true, adultEcho: true, pediatricEcho: true, fetalEcho: true, pocus: true };
                     const isEnabled = (prefs as any)[prefKey] !== false;
                     return (
@@ -896,7 +896,7 @@ export default function QuickFire() {
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isEnabled ? "bg-[#189aa1]" : "bg-gray-200"}`}>
                           <Icon className="w-5 h-5 text-white" />
                         </div>
-                        <span className="text-xs font-semibold text-gray-700">{cat}</span>
+                        <span className="text-xs font-semibold text-gray-700 text-center leading-tight">{label ?? cat}</span>
                         <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
                           isEnabled ? "bg-[#189aa1] text-white" : "bg-gray-200 text-gray-500"
                         }`}>{isEnabled ? "On" : "Off"}</span>
@@ -913,7 +913,7 @@ export default function QuickFire() {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h2 className="text-lg font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Today's Daily Challenge</h2>
-                    <p className="text-xs text-gray-500 mt-0.5">One question per category — complete all four to finish today's challenge</p>
+                    <p className="text-xs text-gray-500 mt-0.5">One question per category — complete all to finish today's challenge</p>
                   </div>
                   <div className="flex items-center gap-2">
                     {isAuthenticated && (
@@ -940,10 +940,10 @@ export default function QuickFire() {
                   const categoryMap: Record<string, number> = (todaySet as any)?.categoryMap ?? {};
                   const todayQuestions: any[] = (todaySet as any)?.questions ?? [];
                   const todayAttempts: Record<number, any> = (todaySet as any)?.userAttempts ?? {};
-                  const catPrefs = categoryPrefsQuery.data ?? { acs: true, adultEcho: true, pediatricEcho: true, fetalEcho: true };
+                  const catPrefs = categoryPrefsQuery.data ?? { acs: true, adultEcho: true, pediatricEcho: true, fetalEcho: true, pocus: true };
 
                   const CATS = [
-                    { key: "ACS", label: "ACS", Icon: Heart, desc: "Advanced Cardiac Sonographer", prefKey: "acs" as const, mapKey: "acs" },
+                    { key: "ACS", label: "Advanced Cardiac Sonographer", Icon: Heart, desc: "ACS", prefKey: "acs" as const, mapKey: "acs" },
                     { key: "Adult Echo", label: "Adult Echo", Icon: Stethoscope, desc: "Adult Echocardiography", prefKey: "adultEcho" as const, mapKey: "adultEcho" },
                     { key: "Pediatric Echo", label: "Pediatric Echo", Icon: Baby, desc: "Pediatric & Congenital", prefKey: "pediatricEcho" as const, mapKey: "pediatricEcho" },
                     { key: "Fetal Echo", label: "Fetal Echo", Icon: Activity, desc: "Fetal Echocardiography", prefKey: "fetalEcho" as const, mapKey: "fetalEcho" },
