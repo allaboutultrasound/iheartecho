@@ -46,6 +46,11 @@ import {
   Timer,
   Bell,
   X,
+  Heart,
+  Stethoscope,
+  Baby,
+  Scan,
+  Activity,
 } from "lucide-react";
 import { toast } from "sonner";
 import RichTextEditor from "@/components/RichTextEditor";
@@ -867,18 +872,19 @@ export default function QuickFire() {
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {([
-                    { cat: "ACS" as const, prefKey: "acs" as const },
-                    { cat: "Adult Echo" as const, prefKey: "adultEcho" as const },
-                    { cat: "Pediatric Echo" as const, prefKey: "pediatricEcho" as const },
-                    { cat: "Fetal Echo" as const, prefKey: "fetalEcho" as const },
-                  ]).map(({ cat, prefKey }) => {
-                    const prefs = categoryPrefsQuery.data ?? { acs: true, adultEcho: true, pediatricEcho: true, fetalEcho: true };
-                    const isEnabled = prefs[prefKey] !== false;
+                    { cat: "ACS" as const, prefKey: "acs" as const, Icon: Heart },
+                    { cat: "Adult Echo" as const, prefKey: "adultEcho" as const, Icon: Stethoscope },
+                    { cat: "Pediatric Echo" as const, prefKey: "pediatricEcho" as const, Icon: Baby },
+                    { cat: "Fetal Echo" as const, prefKey: "fetalEcho" as const, Icon: Activity },
+                    { cat: "POCUS" as const, prefKey: "pocus" as const, Icon: Scan },
+                  ]).map(({ cat, prefKey, Icon }) => {
+                    const prefs = categoryPrefsQuery.data ?? { acs: true, adultEcho: true, pediatricEcho: true, fetalEcho: true, pocus: true };
+                    const isEnabled = (prefs as any)[prefKey] !== false;
                     return (
                       <button
                         key={cat}
                         onClick={() => {
-                          const current = categoryPrefsQuery.data ?? { acs: true, adultEcho: true, pediatricEcho: true, fetalEcho: true };
+                          const current = categoryPrefsQuery.data ?? { acs: true, adultEcho: true, pediatricEcho: true, fetalEcho: true, pocus: true };
                           updateCategoryPrefsMutation.mutate({ ...current, [prefKey]: !isEnabled });
                         }}
                         className={`flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all ${
@@ -887,9 +893,9 @@ export default function QuickFire() {
                             : "border-gray-200 bg-gray-50 opacity-60"
                         }`}
                       >
-                        <span className={`text-2xl`}>
-                          {cat === "ACS" ? "❤️" : cat === "Adult Echo" ? "🫕" : cat === "Pediatric Echo" ? "👶" : "🐶"}
-                        </span>
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isEnabled ? "bg-[#189aa1]" : "bg-gray-200"}`}>
+                          <Icon className="w-5 h-5 text-white" />
+                        </div>
                         <span className="text-xs font-semibold text-gray-700">{cat}</span>
                         <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
                           isEnabled ? "bg-[#189aa1] text-white" : "bg-gray-200 text-gray-500"
@@ -937,10 +943,11 @@ export default function QuickFire() {
                   const catPrefs = categoryPrefsQuery.data ?? { acs: true, adultEcho: true, pediatricEcho: true, fetalEcho: true };
 
                   const CATS = [
-                    { key: "ACS", label: "ACS", emoji: "❤️", desc: "Acute Coronary Syndrome", prefKey: "acs" as const, mapKey: "acs" },
-                    { key: "Adult Echo", label: "Adult Echo", emoji: "🫕", desc: "Adult Echocardiography", prefKey: "adultEcho" as const, mapKey: "adultEcho" },
-                    { key: "Pediatric Echo", label: "Pediatric Echo", emoji: "👶", desc: "Pediatric & Congenital", prefKey: "pediatricEcho" as const, mapKey: "pediatricEcho" },
-                    { key: "Fetal Echo", label: "Fetal Echo", emoji: "🐶", desc: "Fetal Echocardiography", prefKey: "fetalEcho" as const, mapKey: "fetalEcho" },
+                    { key: "ACS", label: "ACS", Icon: Heart, desc: "Acute Coronary Syndrome", prefKey: "acs" as const, mapKey: "acs" },
+                    { key: "Adult Echo", label: "Adult Echo", Icon: Stethoscope, desc: "Adult Echocardiography", prefKey: "adultEcho" as const, mapKey: "adultEcho" },
+                    { key: "Pediatric Echo", label: "Pediatric Echo", Icon: Baby, desc: "Pediatric & Congenital", prefKey: "pediatricEcho" as const, mapKey: "pediatricEcho" },
+                    { key: "Fetal Echo", label: "Fetal Echo", Icon: Activity, desc: "Fetal Echocardiography", prefKey: "fetalEcho" as const, mapKey: "fetalEcho" },
+                    { key: "POCUS", label: "POCUS", Icon: Scan, desc: "Point-of-Care Ultrasound", prefKey: "pocus" as const, mapKey: "pocus" },
                   ];
 
                   const enabledCats = CATS.filter((c) => catPrefs[c.prefKey] !== false);
@@ -1001,7 +1008,11 @@ export default function QuickFire() {
                           >
                             <div className="flex items-start justify-between mb-3">
                               <div className="flex items-center gap-2">
-                                <span className="text-2xl">{cat.emoji}</span>
+                                <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                  isDone ? (isCorrect ? "bg-green-500" : "bg-orange-400") : "bg-[#189aa1]"
+                                }`}>
+                                  <cat.Icon className="w-4.5 h-4.5 text-white" />
+                                </div>
                                 <div>
                                   <p className="text-sm font-bold text-gray-800">{cat.label}</p>
                                   <p className="text-xs text-gray-500">{cat.desc}</p>

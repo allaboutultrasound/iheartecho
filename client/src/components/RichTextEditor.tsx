@@ -66,8 +66,11 @@ import {
   FileCode,
   X,
   Upload,
+  Smile,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Picker from "@emoji-mart/react";
+import data from "@emoji-mart/data";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -144,6 +147,7 @@ export default function RichTextEditor({
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const editor = useEditor({
@@ -363,6 +367,29 @@ export default function RichTextEditor({
           <ToolbarBtn title="Insert raw HTML code" onClick={() => setHtmlDialogOpen(true)}>
             <FileCode className="w-3.5 h-3.5" />
           </ToolbarBtn>
+
+          <Sep />
+
+          {/* Emoji Picker */}
+          <div className="relative">
+            <ToolbarBtn title="Insert emoji" onClick={() => setEmojiPickerOpen(p => !p)}>
+              <Smile className="w-3.5 h-3.5" />
+            </ToolbarBtn>
+            {emojiPickerOpen && (
+              <div className="absolute top-9 right-0 z-50 shadow-xl rounded-xl overflow-hidden" style={{ minWidth: 320 }}>
+                <Picker
+                  data={data}
+                  onEmojiSelect={(emoji: any) => {
+                    editor.chain().focus().insertContent(emoji.native).run();
+                    setEmojiPickerOpen(false);
+                  }}
+                  theme="light"
+                  previewPosition="none"
+                  skinTonePosition="none"
+                />
+              </div>
+            )}
+          </div>
         </div>
       )}
 

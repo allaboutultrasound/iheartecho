@@ -2909,3 +2909,11 @@
 - [x] Add spam/junk folder reminder to magic link login page (pre-send note + post-send confirmation)
 - [x] Add ™ to ECG-Assist Suite in EchoAssistHub.tsx
 - [x] Fix broken JSX comment in EchoAssistHub.tsx
+
+## Daily Challenge Icon Update (Completed)
+- [x] Replace emoji category icons with teal lucide-react icons: Heart (ACS), Stethoscope (Adult Echo), Baby (Pediatric Echo), Activity (Fetal Echo), Scan (POCUS)
+- [x] Add POCUS to category prefs panel and CATS array in QuickFire.tsx
+- [x] Icon color: teal (#189aa1) by default, green when correct, orange when incorrect
+
+## Email Rich Text Emoji Support
+- [x] Add emoji picker button to RichTextEditor toolbar for email sections
