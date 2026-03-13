@@ -6,7 +6,8 @@ import { useState } from "react";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
-import { Baby, AlertCircle, CheckCircle2, HelpCircle, Scan, ClipboardList, ChevronDown, ChevronUp, Calculator } from "lucide-react";
+import { Baby, AlertCircle, CheckCircle2, HelpCircle, Scan, ClipboardList, ChevronDown, ChevronUp, Calculator, Crown } from "lucide-react";
+import { PremiumGate } from "@/components/PremiumGate";
 
 const findings3VV = [
   {
@@ -434,29 +435,36 @@ export default function FetalNavigator() {
         </div>
 
         {view === "fetalassist" ? (
-          <div className="bg-white rounded-xl border border-[#0369a1]/20 shadow-sm overflow-hidden">
-            <div className="px-5 py-4 flex items-center gap-3" style={{ background: "linear-gradient(135deg, #0e1e2e, #0369a1)" }}>
-              <Calculator className="w-5 h-5 text-[#4ad9e0]" />
-              <div>
-                <h3 className="font-bold text-white text-base" style={{ fontFamily: "Merriweather, serif" }}>FetalEchoAssist™ Calculator Engine</h3>
-                <p className="text-white/70 text-xs mt-0.5">12 fetal echo calculators with 2023 ASE guideline-based feedback</p>
+          <PremiumGate featureName="FetalEchoAssist™ Calculator Engine">
+            <div className="bg-white rounded-xl border border-[#0369a1]/20 shadow-sm overflow-hidden">
+              <div className="px-5 py-4 flex items-center gap-3" style={{ background: "linear-gradient(135deg, #0e1e2e, #0369a1)" }}>
+                <Calculator className="w-5 h-5 text-[#4ad9e0]" />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-white text-base" style={{ fontFamily: "Merriweather, serif" }}>FetalEchoAssist™ Calculator Engine</h3>
+                    <span className="inline-flex items-center gap-1 bg-amber-400/20 border border-amber-400/40 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                      <Crown className="w-3 h-3" /> Premium
+                    </span>
+                  </div>
+                  <p className="text-white/70 text-xs mt-0.5">12 fetal echo calculators with 2023 ASE guideline-based feedback</p>
+                </div>
+              </div>
+              <div className="p-6">
+                <p className="text-sm text-gray-600 mb-4">
+                  The FetalEchoAssist™ engine provides guideline-based interpretation for Celermajer Index, Cardiovascular Profile Score, Cardiothoracic Ratio, Tei Index, E/A Ratio, Ductus Venosus PIV, Umbilical Artery Doppler, MCA PSV (MoM), Fetal Heart Rate Classification, PA/Ao Ratio, Ventricular Wall Thickness Z-score, and Shortening Fraction.
+                </p>
+                <Link href="/fetal-echo-assist">
+                  <button
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
+                    style={{ background: "#0369a1" }}
+                  >
+                    <Calculator className="w-4 h-4" />
+                    Open FetalEchoAssist™
+                  </button>
+                </Link>
               </div>
             </div>
-            <div className="p-6">
-              <p className="text-sm text-gray-600 mb-4">
-                The FetalEchoAssist™ engine provides guideline-based interpretation for Celermajer Index, Cardiovascular Profile Score, Cardiothoracic Ratio, Tei Index, E/A Ratio, Ductus Venosus PIV, Umbilical Artery Doppler, MCA PSV (MoM), Fetal Heart Rate Classification, PA/Ao Ratio, Ventricular Wall Thickness Z-score, and Shortening Fraction.
-              </p>
-              <Link href="/fetal-echo-assist">
-                <button
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
-                  style={{ background: "#0369a1" }}
-                >
-                  <Calculator className="w-4 h-4" />
-                  Open FetalEchoAssist™
-                </button>
-              </Link>
-            </div>
-          </div>
+          </PremiumGate>
         ) : view === "protocol" ? (
           <FetalProtocolChecklist />
         ) : view === "zscore" ? (

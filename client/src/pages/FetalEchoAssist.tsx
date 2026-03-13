@@ -4,14 +4,25 @@
   Reference: Donofrio MT et al. J Am Soc Echocardiogr. 2024;37(1):1-75 (2023 ASE Fetal Echo Guidelines)
   Brand: Teal #189aa1, Aqua #4ad9e0, Navy #0e1e2e
 */
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useSearch } from "wouter";
 import Layout from "@/components/Layout";
-import { Baby, ChevronDown, ChevronUp, Info, Lightbulb, MessageSquare, AlertCircle, Calculator, Activity } from "lucide-react";
+import { PremiumGate } from "@/components/PremiumGate";
+import { Baby, ChevronDown, ChevronUp, Info, Lightbulb, MessageSquare, AlertCircle, Calculator, Activity, FileText, Download, Crown } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const BRAND = "#189aa1";
 const AQUA = "#4ad9e0";
 const NAVY = "#0e1e2e";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+export interface CalcResult {
+  name: string;
+  value: string;
+  interpretation: string;
+  normal: boolean | null;
+  suggests?: string;
+}
 
 // ─── UI Primitives ────────────────────────────────────────────────────────────
 function InputRow({ label, unit, value, onChange, placeholder, hint }: {
@@ -110,7 +121,7 @@ function EngineSection({ id, title, badge, badgeColor, children }: {
 }
 
 // ─── 1. Celermajer Index ──────────────────────────────────────────────────────
-function CelermajerIndex() {
+function CelermajerIndex({ onResult }: { onResult: (r: CalcResult | null) => void }) {
   const [cardiacArea, setCardiacArea] = useState("");
   const [thoracicArea, setThoracicArea] = useState("");
 
@@ -141,6 +152,14 @@ function CelermajerIndex() {
 
   const tip = "FetalEchoAssist™ Tip: Trace the cardiac silhouette at end-diastole on the 4-chamber view. Include pericardial effusion in the cardiac area if present. Ensure the thoracic measurement is at the same level. Repeat in serial scans to track progression.";
 
+  useEffect(() => {
+    if (index !== null) {
+      onResult({ name: "Celermajer Index", value: index.toFixed(3), interpretation: severity!, normal, suggests });
+    } else {
+      onResult(null);
+    }
+  }, [index, severity, normal]);
+
   return (
     <div className="pt-4 space-y-4">
       <div className="grid grid-cols-2 gap-4">
@@ -160,7 +179,7 @@ function CelermajerIndex() {
 }
 
 // ─── 2. Fetal Cardiovascular Profile Score (CVPS) ────────────────────────────
-function CVPSCalculator() {
+function CVPSCalculator({ onResult }: { onResult: (r: CalcResult | null) => void }) {
   const [hydrops, setHydrops] = useState("2");
   const [venousDoppler, setVenousDoppler] = useState("2");
   const [heartSize, setHeartSize] = useState("2");
@@ -183,9 +202,13 @@ function CVPSCalculator() {
     : "Severe cardiovascular compromise. Immediate multidisciplinary evaluation required. High risk of fetal demise. Delivery timing and neonatal resuscitation planning are critical."
   }`;
 
-  const note = `FetalEchoAssist™ Note: The Fetal Cardiovascular Profile Score (CVPS) is a 10-point scoring system (2 points per domain). Each domain scored 0, 1, or 2. Scores ≤6 are associated with significantly increased perinatal mortality (ASE 2023). Domains: Hydrops (0=generalized, 1=isolated effusion, 2=absent), Venous Doppler (0=UV pulsations/reversed DV a-wave, 1=absent DV a-wave, 2=normal), Heart Size (0=CTR>0.50, 1=CTR 0.35-0.50, 2=normal), Cardiac Function (0=severe dysfunction, 1=moderate, 2=normal), Arterial Doppler (0=absent/reversed UA EDF, 1=elevated UA PI, 2=normal).`;
+  const note = `FetalEchoAssist™ Note: The Fetal Cardiovascular Profile Score (CVPS) is a 10-point scoring system (2 points per domain). Each domain scored 0, 1, or 2. Scores ≤6 are associated with significantly increased perinatal mortality (ASE 2023). Domains: Hydrops, Venous Doppler, Heart Size, Cardiac Function, Arterial Doppler.`;
 
-  const tip = "FetalEchoAssist™ Tip: The CVPS should be integrated with biophysical profile (BPP) scoring. A CVPS ≤6 with BPP ≤6 is a strong indicator for delivery if gestational age permits. Serial CVPS every 1–2 weeks is recommended in high-risk pregnancies.";
+  const tip = "FetalEchoAssist™ Tip: The CVPS should be integrated with biophysical profile (BPP) scoring. A CVPS ≤6 with BPP ≤6 is a strong indicator for delivery if gestational age permits.";
+
+  useEffect(() => {
+    onResult({ name: "CVPS", value: `${total}/10`, interpretation: severity, normal: total >= 8, suggests });
+  }, [total, severity]);
 
   return (
     <div className="pt-4 space-y-4">
@@ -223,7 +246,7 @@ function CVPSCalculator() {
 }
 
 // ─── 3. Cardiothoracic Ratio (CTR) ───────────────────────────────────────────
-function CardiothoracicRatio() {
+function CardiothoracicRatio({ onResult }: { onResult: (r: CalcResult | null) => void }) {
   const [mode, setMode] = useState<"diameter"|"circumference">("diameter");
   const [cardiac, setCardiac] = useState("");
   const [thoracic, setThoracic] = useState("");
@@ -241,17 +264,25 @@ function CardiothoracicRatio() {
     : "Severely Enlarged";
 
   const suggests = ctr !== null
-    ? `FetalEchoAssist™ Suggests: CTR = ${ctr.toFixed(2)} (${mode === "diameter" ? "diameter" : "circumference"} method). ${severity}. ${
+    ? `FetalEchoAssist™ Suggests: CTR = ${ctr.toFixed(2)} (${mode} method). ${severity}. ${
         normal ? "Cardiac size is within normal limits (CTR ≤0.50). No cardiomegaly detected."
         : `Elevated CTR of ${ctr.toFixed(2)} suggests cardiomegaly. Evaluate for structural CHD, AV valve regurgitation, arrhythmia, fetal anemia, or high-output cardiac state.`
       }`
     : undefined;
 
   const note = ctr !== null
-    ? `FetalEchoAssist™ Note: Normal CTR (cardiac/thoracic ${mode}) is ≤0.50 throughout gestation (ASE 2023). The CTR is measured on the 4-chamber view at end-diastole. A CTR >0.50 is the standard threshold for cardiomegaly in fetal echo. The Celermajer Index (area method) is more precise but the diameter/circumference CTR is widely used clinically.`
+    ? `FetalEchoAssist™ Note: Normal CTR (cardiac/thoracic ${mode}) is ≤0.50 throughout gestation (ASE 2023). The CTR is measured on the 4-chamber view at end-diastole. A CTR >0.50 is the standard threshold for cardiomegaly in fetal echo.`
     : undefined;
 
   const tip = "FetalEchoAssist™ Tip: Measure at the widest transverse diameter of the cardiac silhouette (including pericardium). Ensure the image is at the level of the 4-chamber view with the spine posterior. Avoid oblique cuts which falsely elevate the CTR.";
+
+  useEffect(() => {
+    if (ctr !== null) {
+      onResult({ name: `CTR (${mode})`, value: ctr.toFixed(2), interpretation: severity!, normal, suggests });
+    } else {
+      onResult(null);
+    }
+  }, [ctr, mode, severity, normal]);
 
   return (
     <div className="pt-4 space-y-4">
@@ -282,7 +313,7 @@ function CardiothoracicRatio() {
 }
 
 // ─── 4. Tei Index (MPI) — Fetal ──────────────────────────────────────────────
-function FetalTeiIndex() {
+function FetalTeiIndex({ onResult }: { onResult: (r: CalcResult | null) => void }) {
   const [chamber, setChamber] = useState<"LV"|"RV">("RV");
   const [ict, setIct] = useState("");
   const [irt, setIrt] = useState("");
@@ -294,7 +325,6 @@ function FetalTeiIndex() {
   const valid = i > 0 && r > 0 && e > 0;
   const mpi = valid ? (i + r) / e : null;
 
-  // ASE 2023 / published fetal nomograms: RV MPI normal <0.55, LV MPI normal <0.53
   const normalThreshold = chamber === "RV" ? 0.55 : 0.53;
   const normal = mpi !== null ? mpi <= normalThreshold : null;
 
@@ -306,16 +336,24 @@ function FetalTeiIndex() {
 
   const suggests = mpi !== null
     ? `FetalEchoAssist™ Suggests: ${chamber} Tei Index (MPI) = ${mpi.toFixed(2)}. ${severity}. Normal reference: ${chamber} MPI ≤${normalThreshold} (ASE 2023). ${
-        normal ? `${chamber} global myocardial performance is within normal limits. No evidence of global ventricular dysfunction.`
-        : `Elevated ${chamber} MPI indicates global myocardial dysfunction (combined systolic and diastolic impairment). Evaluate for structural CHD, cardiomyopathy, fetal infection (CMV, parvovirus), or metabolic disorder.`
+        normal ? `${chamber} global myocardial performance is within normal limits.`
+        : `Elevated ${chamber} MPI indicates global myocardial dysfunction. Evaluate for structural CHD, cardiomyopathy, fetal infection, or metabolic disorder.`
       }`
     : undefined;
 
   const note = mpi !== null
-    ? `FetalEchoAssist™ Note: The Tei Index (Myocardial Performance Index) = (ICT + IRT) / ET. It is load-independent and reflects global ventricular function. Measured by pulsed-wave Doppler at the AV inflow/outflow. Fetal reference values: RV MPI <0.55, LV MPI <0.53 (Tsutsumi et al., Hernandez-Andrade et al.). Tissue Doppler-derived MPI has slightly different reference ranges.`
+    ? `FetalEchoAssist™ Note: The Tei Index (MPI) = (ICT + IRT) / ET. It is load-independent and reflects global ventricular function. Fetal reference values: RV MPI <0.55, LV MPI <0.53.`
     : undefined;
 
-  const tip = "FetalEchoAssist™ Tip: Measure ICT (isovolumetric contraction time) and IRT (isovolumetric relaxation time) from AV valve closure to opening intervals. ET (ejection time) is measured from outflow valve opening to closure. Ensure the Doppler sample volume captures both inflow and outflow signals on the same cardiac cycle for accuracy.";
+  const tip = "FetalEchoAssist™ Tip: Measure ICT and IRT from AV valve closure to opening intervals. ET is measured from outflow valve opening to closure. Ensure the Doppler sample volume captures both inflow and outflow signals on the same cardiac cycle.";
+
+  useEffect(() => {
+    if (mpi !== null) {
+      onResult({ name: `${chamber} Tei Index (MPI)`, value: mpi.toFixed(2), interpretation: severity!, normal, suggests });
+    } else {
+      onResult(null);
+    }
+  }, [mpi, chamber, severity, normal]);
 
   return (
     <div className="pt-4 space-y-4">
@@ -341,13 +379,13 @@ function FetalTeiIndex() {
         </div>
       )}
       <ResultPanel suggests={suggests} note={note} tip={tip} />
-      <p className="text-[10px] text-gray-400">Reference: Tsutsumi T et al. Ultrasound Obstet Gynecol. 1999. | Hernandez-Andrade E et al. Ultrasound Obstet Gynecol. 2005. | ASE 2023 Fetal Echo Guidelines</p>
+      <p className="text-[10px] text-gray-400">Reference: Tsutsumi T et al. Ultrasound Obstet Gynecol. 1999. | ASE 2023 Fetal Echo Guidelines</p>
     </div>
   );
 }
 
 // ─── 5. E/A Ratio (AV Inflow) ────────────────────────────────────────────────
-function EARatioCalculator() {
+function EARatioCalculator({ onResult }: { onResult: (r: CalcResult | null) => void }) {
   const [valve, setValve] = useState<"Mitral"|"Tricuspid">("Tricuspid");
   const [eWave, setEWave] = useState("");
   const [aWave, setAWave] = useState("");
@@ -355,27 +393,30 @@ function EARatioCalculator() {
 
   const e = parseFloat(eWave);
   const a = parseFloat(aWave);
-  const g = parseFloat(ga);
   const valid = e > 0 && a > 0;
   const ratio = valid ? e / a : null;
-
-  // ASE 2023: E/A normally <1 in fetal life (atrial kick dominant), approaches 1 near term
-  // E/A >1 after 20 wks suggests diastolic dysfunction or elevated filling pressures
-  const normalEA = ratio !== null ? ratio < 1.0 : null;
   const aWaveDominant = ratio !== null ? ratio < 1.0 : null;
 
   const suggests = ratio !== null
     ? `FetalEchoAssist™ Suggests: ${valve} E/A ratio = ${ratio.toFixed(2)}. ${
-        aWaveDominant ? `A-wave dominant pattern (E/A <1.0) — normal fetal diastolic filling pattern. The fetal myocardium is relatively non-compliant; atrial contraction (A-wave) dominates throughout most of gestation.`
-        : `E/A ratio ≥1.0 — E-wave dominant or equalization. ${g > 0 && g < 20 ? "Before 20 weeks, E/A ≥1.0 may indicate early diastolic dysfunction." : "E/A ≥1.0 after 20 weeks suggests elevated atrial filling pressures, diastolic dysfunction, or myocardial disease. Evaluate for cardiomyopathy, structural CHD, or fetal compromise."}`
+        aWaveDominant ? "A-wave dominant pattern (E/A <1.0) — normal fetal diastolic filling pattern."
+        : "E/A ratio ≥1.0 — E-wave dominant or equalization. Suggests elevated atrial filling pressures, diastolic dysfunction, or myocardial disease."
       }`
     : undefined;
 
   const note = ratio !== null
-    ? `FetalEchoAssist™ Note: Normal fetal E/A ratio is <1.0 throughout gestation (A-wave dominant). The E/A ratio increases with advancing gestational age, approaching but not exceeding 1.0 at term in normal fetuses. E/A >1.0 is abnormal at any gestational age and suggests impaired myocardial relaxation or elevated filling pressures (ASE 2023). Measure peak velocities with PW Doppler at the AV valve tips on the 4-chamber view.`
+    ? "FetalEchoAssist™ Note: Normal fetal E/A ratio is <1.0 throughout gestation (A-wave dominant). The E/A ratio increases with advancing gestational age, approaching but not exceeding 1.0 at term in normal fetuses. E/A >1.0 is abnormal at any gestational age (ASE 2023)."
     : undefined;
 
-  const tip = "FetalEchoAssist™ Tip: Ensure the Doppler beam is parallel to inflow direction. Measure E and A peak velocities at the AV valve tips. Avoid measuring during fetal movement or irregular rhythm. The tricuspid valve E/A is typically slightly lower than the mitral valve E/A in normal fetuses.";
+  const tip = "FetalEchoAssist™ Tip: Ensure the Doppler beam is parallel to inflow direction. Measure E and A peak velocities at the AV valve tips. Avoid measuring during fetal movement or irregular rhythm.";
+
+  useEffect(() => {
+    if (ratio !== null) {
+      onResult({ name: `${valve} E/A Ratio`, value: ratio.toFixed(2), interpretation: aWaveDominant ? "A-dominant (Normal)" : "E-dominant (Abnormal)", normal: aWaveDominant, suggests });
+    } else {
+      onResult(null);
+    }
+  }, [ratio, valve, aWaveDominant]);
 
   return (
     <div className="pt-4 space-y-4">
@@ -401,59 +442,56 @@ function EARatioCalculator() {
         </div>
       )}
       <ResultPanel suggests={suggests} note={note} tip={tip} />
-      <p className="text-[10px] text-gray-400">Reference: Respondek M et al. Ultrasound Obstet Gynecol. 1994. | ASE 2023 Fetal Echo Guidelines (Donofrio et al. JASE 2024;37:1-75)</p>
+      <p className="text-[10px] text-gray-400">Reference: Respondek M et al. Ultrasound Obstet Gynecol. 1994. | ASE 2023 Fetal Echo Guidelines</p>
     </div>
   );
 }
 
 // ─── 6. Ductus Venosus PIV ───────────────────────────────────────────────────
-function DuctusVenosusPIV() {
+function DuctusVenosusPIV({ onResult }: { onResult: (r: CalcResult | null) => void }) {
   const [sWave, setSWave] = useState("");
-  const [dWave, setDWave] = useState("");
   const [aWave, setAWave] = useState("");
   const [meanVel, setMeanVel] = useState("");
-  const [ga, setGa] = useState("");
 
   const s = parseFloat(sWave);
-  const d = parseFloat(dWave);
   const a = parseFloat(aWave);
   const vm = parseFloat(meanVel);
-  const g = parseFloat(ga);
 
-  // PIV = (S - a) / mean velocity
-  const validPIV = s > 0 && a > 0 && vm > 0;
+  const validPIV = s > 0 && a !== 0 && vm > 0;
   const piv = validPIV ? (s - a) / vm : null;
-
-  // Normal DV PIV <0.7 (varies slightly with GA; higher in early gestation)
   const normalPIV = piv !== null ? piv < 0.7 : null;
-
-  // Also check for reversed a-wave (a < 0)
-  const reversedAWave = a < 0;
+  const reversedAWave = parseFloat(aWave) < 0;
 
   const suggests = piv !== null
     ? `FetalEchoAssist™ Suggests: DV PIV = ${piv.toFixed(2)}. ${
-        reversedAWave ? "REVERSED DV a-wave detected — this is a critical finding indicating severe fetal cardiovascular compromise and is a CVPS score of 0 for this domain. Immediate multidisciplinary evaluation is required."
+        reversedAWave ? "REVERSED DV a-wave detected — critical finding indicating severe fetal cardiovascular compromise. CVPS = 0 for this domain. Immediate multidisciplinary evaluation required."
         : piv < 0.7 ? "Normal ductus venosus PIV. No evidence of venous congestion or right heart compromise."
-        : piv < 1.0 ? "Mildly elevated DV PIV. Suggests early venous congestion or right heart pressure elevation. Increase surveillance frequency and correlate with UA Doppler and biophysical profile."
-        : "Significantly elevated DV PIV. Indicates venous congestion and fetal cardiovascular compromise. Absent DV a-wave is associated with high risk of fetal demise. Multidisciplinary fetal medicine consultation required."
+        : piv < 1.0 ? "Mildly elevated DV PIV. Suggests early venous congestion. Increase surveillance and correlate with UA Doppler and biophysical profile."
+        : "Significantly elevated DV PIV. Indicates venous congestion and fetal cardiovascular compromise. Multidisciplinary fetal medicine consultation required."
       }`
     : undefined;
 
   const note = piv !== null
-    ? `FetalEchoAssist™ Note: Ductus Venosus PIV = (S − a) / mean velocity. Normal DV PIV <0.7 (ASE 2023). The DV a-wave reflects right atrial pressure — absent or reversed a-wave indicates severely elevated RA pressure and is a key marker of fetal compromise. DV Doppler is a critical component of the CVPS scoring system.`
+    ? "FetalEchoAssist™ Note: DV PIV = (S − a) / mean velocity. Normal DV PIV <0.7 (ASE 2023). The DV a-wave reflects right atrial pressure — absent or reversed a-wave indicates severely elevated RA pressure."
     : undefined;
 
-  const tip = "FetalEchoAssist™ Tip: Obtain DV Doppler with the sample volume in the ductus venosus isthmus (narrow segment between umbilical vein and IVC). Use color Doppler to identify the characteristic aliasing at the DV inlet. Angle correction <30°. Measure at least 3 consecutive waveforms and average.";
+  const tip = "FetalEchoAssist™ Tip: Obtain DV Doppler with the sample volume in the ductus venosus isthmus. Use color Doppler to identify the characteristic aliasing at the DV inlet. Angle correction <30°.";
+
+  useEffect(() => {
+    if (piv !== null) {
+      onResult({ name: "Ductus Venosus PIV", value: piv.toFixed(2), interpretation: reversedAWave ? "Reversed a-wave (Critical)" : piv < 0.7 ? "Normal" : piv < 1.0 ? "Mildly Elevated" : "Significantly Elevated", normal: normalPIV, suggests });
+    } else {
+      onResult(null);
+    }
+  }, [piv, normalPIV, reversedAWave]);
 
   return (
     <div className="pt-4 space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <InputRow label="S-wave" unit="cm/s" value={sWave} onChange={setSWave} placeholder="e.g. 65" hint="Systolic peak" />
-        <InputRow label="D-wave" unit="cm/s" value={dWave} onChange={setDWave} placeholder="e.g. 45" hint="Diastolic peak" />
         <InputRow label="a-wave" unit="cm/s" value={aWave} onChange={setAWave} placeholder="e.g. 22" hint="Atrial contraction (negative if reversed)" />
         <InputRow label="Mean Velocity" unit="cm/s" value={meanVel} onChange={setMeanVel} placeholder="e.g. 40" hint="Time-averaged mean" />
       </div>
-      <InputRow label="Gestational Age" unit="weeks" value={ga} onChange={setGa} placeholder="e.g. 30" hint="Optional context" />
       {piv !== null && (
         <div className="flex gap-3 flex-wrap">
           <MetricBadge label="DV PIV" value={piv.toFixed(2)} normal={normalPIV} />
@@ -468,7 +506,7 @@ function DuctusVenosusPIV() {
 }
 
 // ─── 7. Umbilical Artery S/D Ratio & PI ──────────────────────────────────────
-function UmbilicalArteryDoppler() {
+function UmbilicalArteryDoppler({ onResult }: { onResult: (r: CalcResult | null) => void }) {
   const [sVel, setSVel] = useState("");
   const [dVel, setDVel] = useState("");
   const [meanVel, setMeanVel] = useState("");
@@ -484,80 +522,79 @@ function UmbilicalArteryDoppler() {
   const sdRatio = validSD ? s / d : null;
   const pi = validPI ? (s - d) / vm : null;
 
-  // GA-based normal S/D: decreases with advancing GA
-  // At 20 wks: ~4.0, 28 wks: ~3.0, 36 wks: ~2.3
   const normalSD = sdRatio !== null && g > 0
     ? g >= 36 ? sdRatio <= 2.3 : g >= 28 ? sdRatio <= 3.0 : sdRatio <= 4.0
     : sdRatio !== null ? sdRatio <= 3.0 : null;
 
-  const absentEDF = d <= 0;
-  const reversedEDF = d < 0;
+  const absentEDF = parseFloat(dVel) <= 0 && dVel !== "";
+  const reversedEDF = parseFloat(dVel) < 0;
 
   const severity = sdRatio === null ? null
     : reversedEDF ? "Reversed EDF — Critical"
     : absentEDF ? "Absent EDF — Critical"
     : normalSD ? "Normal"
-    : sdRatio > (g >= 36 ? 2.3 : g >= 28 ? 3.0 : 4.0) * 1.5 ? "Severely Elevated"
     : "Elevated";
 
   const suggests = sdRatio !== null
     ? `FetalEchoAssist™ Suggests: UA S/D = ${sdRatio.toFixed(2)}${pi !== null ? `, UA PI = ${pi.toFixed(2)}` : ""}. ${severity}. ${
-        reversedEDF ? "REVERSED end-diastolic flow is a critical finding indicating severe placental resistance and fetal compromise. Immediate delivery planning is required in viable gestations. CVPS arterial domain = 0."
-        : absentEDF ? "ABSENT end-diastolic flow indicates critically elevated placental resistance. High risk of fetal acidemia and demise. Urgent delivery planning required. CVPS arterial domain = 1."
-        : normalSD ? "Umbilical artery Doppler is within normal limits for gestational age. Placental resistance is appropriate."
-        : "Elevated UA S/D ratio indicates increased placental resistance consistent with uteroplacental insufficiency. Increase surveillance. Correlate with MCA Doppler, DV Doppler, and biophysical profile."
+        reversedEDF ? "REVERSED end-diastolic flow is a critical finding indicating severe placental resistance and fetal compromise. Immediate delivery planning required."
+        : absentEDF ? "ABSENT end-diastolic flow indicates critically elevated placental resistance. Urgent delivery planning required."
+        : normalSD ? "Umbilical artery Doppler is within normal limits for gestational age."
+        : "Elevated UA S/D ratio indicates increased placental resistance. Increase surveillance and correlate with biophysical profile and CVPS."
       }`
     : undefined;
 
   const note = sdRatio !== null
-    ? `FetalEchoAssist™ Note: Normal UA S/D ratio decreases with advancing gestational age (reflects decreasing placental resistance): ~4.0 at 20 wks, ~3.0 at 28 wks, ~2.3 at 36 wks. Absent end-diastolic flow (AEDF) and reversed EDF (REDF) are critical findings associated with severe IUGR and high perinatal mortality (ASE 2023). UA Doppler is a key component of the CVPS arterial domain.`
+    ? `FetalEchoAssist™ Note: Normal UA S/D decreases with advancing GA (≈4.0 at 20 wks, ≈3.0 at 28 wks, ≈2.3 at 36 wks). Absent or reversed EDF indicates critical placental insufficiency (ASE 2023).`
     : undefined;
 
-  const tip = "FetalEchoAssist™ Tip: Measure UA Doppler in a free loop of cord (not at placental or fetal insertion). Use a low wall filter (50–100 Hz). Ensure the fetus is not breathing or moving. Average at least 3 consecutive waveforms. If EDF is absent, confirm with multiple measurements and report immediately.";
+  const tip = "FetalEchoAssist™ Tip: Measure UA Doppler in a free loop of cord (not near placental or fetal insertion). Angle correction <30°. Average 3 consecutive waveforms. Absent EDF should be confirmed on 2 separate occasions.";
+
+  useEffect(() => {
+    if (sdRatio !== null) {
+      onResult({ name: "Umbilical Artery S/D", value: `${sdRatio.toFixed(2)}${pi !== null ? ` (PI: ${pi.toFixed(2)})` : ""}`, interpretation: severity!, normal: normalSD, suggests });
+    } else {
+      onResult(null);
+    }
+  }, [sdRatio, pi, severity, normalSD]);
 
   return (
     <div className="pt-4 space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <InputRow label="S (Systolic)" unit="cm/s" value={sVel} onChange={setSVel} placeholder="e.g. 55" />
-        <InputRow label="D (End-Diastolic)" unit="cm/s" value={dVel} onChange={setDVel} placeholder="e.g. 20" hint="Enter 0 for absent, negative for reversed" />
-        <InputRow label="Mean Velocity" unit="cm/s" value={meanVel} onChange={setMeanVel} placeholder="e.g. 32" hint="For PI calculation" />
-        <InputRow label="Gestational Age" unit="weeks" value={ga} onChange={setGa} placeholder="e.g. 32" />
+        <InputRow label="S velocity" unit="cm/s" value={sVel} onChange={setSVel} placeholder="e.g. 60" hint="Peak systolic" />
+        <InputRow label="D velocity" unit="cm/s" value={dVel} onChange={setDVel} placeholder="e.g. 20" hint="End-diastolic (0 if absent, negative if reversed)" />
+        <InputRow label="Mean Velocity" unit="cm/s" value={meanVel} onChange={setMeanVel} placeholder="e.g. 32" hint="Optional — for PI" />
+        <InputRow label="Gestational Age" unit="weeks" value={ga} onChange={setGa} placeholder="e.g. 30" hint="For GA-adjusted norms" />
       </div>
       {sdRatio !== null && (
         <div className="flex gap-3 flex-wrap">
           <MetricBadge label="UA S/D Ratio" value={sdRatio.toFixed(2)} normal={normalSD} />
-          {pi !== null && <MetricBadge label="UA PI" value={pi.toFixed(2)} normal={pi < 1.5} />}
-          <MetricBadge label="EDF Status" value={reversedEDF ? "Reversed ⚠️" : absentEDF ? "Absent ⚠️" : "Present"} normal={!absentEDF && !reversedEDF} />
+          {pi !== null && <MetricBadge label="UA PI" value={pi.toFixed(2)} normal={null} />}
+          <MetricBadge label="Status" value={severity!} normal={normalSD} />
         </div>
       )}
       <ResultPanel suggests={suggests} note={note} tip={tip} />
-      <p className="text-[10px] text-gray-400">Reference: Gudmundsson S et al. Lancet. 1991. | ASE 2023 Fetal Echo Guidelines. GA-adjusted normal ranges applied.</p>
+      <p className="text-[10px] text-gray-400">Reference: Arduini D et al. Ultrasound Obstet Gynecol. 1990. | ASE 2023 Fetal Echo Guidelines.</p>
     </div>
   );
 }
 
 // ─── 8. MCA PSV (MoM) ────────────────────────────────────────────────────────
-function MCAPSVCalculator() {
+function MCAPSVCalculator({ onResult }: { onResult: (r: CalcResult | null) => void }) {
   const [mcaPSV, setMcaPSV] = useState("");
   const [ga, setGa] = useState("");
 
   const psv = parseFloat(mcaPSV);
   const g = parseFloat(ga);
 
-  // Mari nomogram: MCA PSV median (cm/s) ≈ 1.29 × GA - 1.5 (simplified)
-  // More accurate: median at 20wk=25, 24wk=31, 28wk=38, 32wk=46, 36wk=55, 40wk=65
-  const medianTable: [number, number][] = [
-    [18,22],[20,25],[22,28],[24,31],[26,34],[28,38],[30,42],[32,46],[34,50],[36,55],[38,60],[40,65]
-  ];
-  const getMedian = (gaWks: number) => {
-    const sorted = medianTable.sort((a,b) => a[0]-b[0]);
-    for (let i = 0; i < sorted.length - 1; i++) {
-      if (gaWks >= sorted[i][0] && gaWks <= sorted[i+1][0]) {
-        const frac = (gaWks - sorted[i][0]) / (sorted[i+1][0] - sorted[i][0]);
-        return sorted[i][1] + frac * (sorted[i+1][1] - sorted[i][1]);
-      }
-    }
-    return sorted[sorted.length - 1][1];
+  const getMedian = (wks: number) => {
+    const table: Record<number, number> = {
+      18: 23.2, 19: 24.8, 20: 25.5, 21: 26.9, 22: 28.0, 23: 29.3, 24: 30.7, 25: 32.8,
+      26: 34.0, 27: 35.7, 28: 37.0, 29: 38.7, 30: 40.5, 31: 42.4, 32: 44.1, 33: 46.7,
+      34: 48.2, 35: 50.1, 36: 52.0, 37: 54.0, 38: 55.4, 39: 57.0, 40: 58.7,
+    };
+    const wk = Math.round(wks);
+    return table[wk] ?? null;
   };
 
   const valid = psv > 0 && g >= 18 && g <= 40;
@@ -574,17 +611,25 @@ function MCAPSVCalculator() {
 
   const suggests = mom !== null
     ? `FetalEchoAssist™ Suggests: MCA PSV = ${psv} cm/s at ${g} weeks. MoM = ${mom.toFixed(2)}. ${severity}. ${
-        !anemic ? "MCA PSV is below the 1.5 MoM threshold. Fetal anemia is unlikely. Continue routine surveillance."
-        : mom < 1.8 ? "MCA PSV ≥1.5 MoM is the standard threshold for significant fetal anemia. Fetal blood sampling (cordocentesis) or intrauterine transfusion should be discussed with fetal medicine specialists."
-        : "MCA PSV >1.8 MoM indicates severe fetal anemia. Urgent fetal medicine consultation and likely intrauterine transfusion are required."
+        !anemic ? "MCA PSV is below the 1.5 MoM threshold. Fetal anemia is unlikely."
+        : mom < 1.8 ? "MCA PSV ≥1.5 MoM — significant fetal anemia threshold reached. Fetal blood sampling or intrauterine transfusion should be discussed."
+        : "MCA PSV >1.8 MoM indicates severe fetal anemia. Urgent fetal medicine consultation required."
       }`
     : undefined;
 
   const note = mom !== null
-    ? `FetalEchoAssist™ Note: MCA PSV ≥1.5 MoM has 100% sensitivity for moderate-to-severe fetal anemia (Hgb <7 g/dL) with <12% false-positive rate (Mari et al. NEJM 2000). The MCA PSV increases with fetal anemia due to increased cardiac output and decreased blood viscosity. This replaces amniocentesis (ΔOD450) for non-invasive anemia screening. Causes: Rh/Kell alloimmunization, parvovirus B19, fetal hemorrhage, twin-twin transfusion.`
+    ? "FetalEchoAssist™ Note: MCA PSV ≥1.5 MoM has 100% sensitivity for moderate-to-severe fetal anemia (Hgb <7 g/dL) with <12% false-positive rate (Mari et al. NEJM 2000)."
     : undefined;
 
-  const tip = "FetalEchoAssist™ Tip: Measure MCA PSV at the proximal third of the MCA (near the Circle of Willis origin) using a 0° angle of insonation. Avoid fetal breathing or movement. Do NOT angle-correct. Use the highest reproducible PSV from 3 measurements. This is the most important non-invasive fetal anemia screening tool.";
+  const tip = "FetalEchoAssist™ Tip: Measure MCA PSV at the proximal third of the MCA (near the Circle of Willis origin) using a 0° angle of insonation. Do NOT angle-correct. Use the highest reproducible PSV from 3 measurements.";
+
+  useEffect(() => {
+    if (mom !== null) {
+      onResult({ name: "MCA PSV (MoM)", value: `${psv} cm/s (MoM: ${mom.toFixed(2)})`, interpretation: severity!, normal: !anemic, suggests });
+    } else {
+      onResult(null);
+    }
+  }, [mom, psv, severity, anemic]);
 
   return (
     <div className="pt-4 space-y-4">
@@ -606,8 +651,8 @@ function MCAPSVCalculator() {
   );
 }
 
-// ─── 9. Fetal Heart Rate Z-score ─────────────────────────────────────────────
-function FetalHRZScore() {
+// ─── 9. Fetal Heart Rate Classification ──────────────────────────────────────
+function FetalHRZScore({ onResult }: { onResult: (r: CalcResult | null) => void }) {
   const [fhr, setFhr] = useState("");
   const [ga, setGa] = useState("");
 
@@ -615,8 +660,6 @@ function FetalHRZScore() {
   const g = parseFloat(ga);
   const valid = hr > 0 && g >= 10;
 
-  // ASE 2023 / published norms: FHR 120–160 bpm throughout most of gestation
-  // Early gestation (10–14 wks): up to 170 bpm normal
   const lowerNormal = g <= 14 ? 110 : 120;
   const upperNormal = g <= 14 ? 170 : 160;
 
@@ -631,18 +674,26 @@ function FetalHRZScore() {
     : "Normal";
 
   const suggests = valid
-    ? `FetalEchoAssist™ Suggests: FHR = ${hr} bpm at ${g} weeks. ${classification}. Normal range at this GA: ${lowerNormal}–${upperNormal} bpm. ${
-        normal ? "Fetal heart rate is within normal limits. No arrhythmia detected."
-        : hr < lowerNormal ? `Fetal bradycardia detected. ${hr < 100 ? "Severe bradycardia (<100 bpm) requires urgent evaluation for complete heart block (anti-Ro/La antibodies, structural CHD with AV discordance), severe fetal compromise, or umbilical cord compression." : "Evaluate for sinus bradycardia, blocked PACs, or 2:1 AV block. Obtain M-mode and Doppler to characterize rhythm."}`
-        : `Fetal tachycardia detected. ${hr > 200 ? "Rate >200 bpm is consistent with SVT (typically 220–300 bpm) or atrial flutter (typically 300–500 bpm with variable block). Urgent fetal cardiology consultation required for antiarrhythmic therapy planning." : "Evaluate for sinus tachycardia (fetal distress, maternal fever/medications) vs. SVT. Obtain M-mode and simultaneous atrial/ventricular Doppler to characterize mechanism."}`
+    ? `FetalEchoAssist™ Suggests: FHR = ${hr} bpm at ${g} weeks. ${classification}. Normal range: ${lowerNormal}–${upperNormal} bpm. ${
+        normal ? "Fetal heart rate is within normal limits."
+        : hr < lowerNormal ? `Fetal bradycardia detected. ${hr < 100 ? "Severe bradycardia — urgent evaluation for complete heart block, severe fetal compromise, or cord compression." : "Evaluate for sinus bradycardia, blocked PACs, or 2:1 AV block."}`
+        : `Fetal tachycardia detected. ${hr > 200 ? "Rate >200 bpm consistent with SVT or atrial flutter. Urgent fetal cardiology consultation required." : "Evaluate for sinus tachycardia vs. SVT."}`
       }`
     : undefined;
 
   const note = valid
-    ? `FetalEchoAssist™ Note: Normal FHR is 120–160 bpm after 14 weeks (ASE 2023). Irregular rhythm is most commonly due to premature atrial contractions (PACs), which are benign in >95% of cases. Sustained tachycardia >200 bpm requires urgent evaluation — SVT and atrial flutter can cause hydrops fetalis within 24–48 hours. Complete heart block (FHR 40–80 bpm) requires evaluation for anti-Ro/La antibodies and structural CHD.`
+    ? `FetalEchoAssist™ Note: Normal FHR is 120–160 bpm after 14 weeks (ASE 2023). Sustained tachycardia >200 bpm requires urgent evaluation — SVT and atrial flutter can cause hydrops fetalis within 24–48 hours.`
     : undefined;
 
-  const tip = "FetalEchoAssist™ Tip: For rhythm characterization, use M-mode through both an atrial wall and ventricular wall simultaneously, or use simultaneous PW Doppler of mitral inflow (atrial activity) and aortic outflow (ventricular activity). This allows determination of AV relationship and diagnosis of specific arrhythmias.";
+  const tip = "FetalEchoAssist™ Tip: For rhythm characterization, use M-mode through both an atrial wall and ventricular wall simultaneously, or use simultaneous PW Doppler of mitral inflow and aortic outflow.";
+
+  useEffect(() => {
+    if (valid) {
+      onResult({ name: "Fetal Heart Rate", value: `${hr} bpm`, interpretation: classification!, normal, suggests });
+    } else {
+      onResult(null);
+    }
+  }, [hr, g, valid, classification, normal]);
 
   return (
     <div className="pt-4 space-y-4">
@@ -657,26 +708,20 @@ function FetalHRZScore() {
         </div>
       )}
       <ResultPanel suggests={suggests} note={note} tip={tip} />
-      <p className="text-[10px] text-gray-400">Reference: ASE 2023 Fetal Echo Guidelines (Donofrio et al. JASE 2024;37:1-75). Normal FHR 120–160 bpm (&gt;14 wks).</p>
+      <p className="text-[10px] text-gray-400">Reference: ASE 2023 Fetal Echo Guidelines. Normal FHR 120–160 bpm (&gt;14 wks).</p>
     </div>
   );
 }
 
 // ─── 10. PA/Ao Ratio ─────────────────────────────────────────────────────────
-function PAAoRatio() {
+function PAAoRatio({ onResult }: { onResult: (r: CalcResult | null) => void }) {
   const [pa, setPa] = useState("");
   const [ao, setAo] = useState("");
-  const [ga, setGa] = useState("");
 
   const p = parseFloat(pa);
   const a = parseFloat(ao);
-  const g = parseFloat(ga);
   const valid = p > 0 && a > 0;
   const ratio = valid ? p / a : null;
-
-  // Normal PA/Ao ratio: ~1.0–1.2 (PA slightly larger than Ao in fetal life due to right heart dominance)
-  // PA/Ao <0.7 suggests pulmonary stenosis/atresia or HLHS
-  // PA/Ao >1.5 suggests aortic stenosis/HLHS or CoA
   const normal = ratio !== null ? ratio >= 0.7 && ratio <= 1.5 : null;
 
   const severity = ratio === null ? null
@@ -688,24 +733,31 @@ function PAAoRatio() {
 
   const suggests = ratio !== null
     ? `FetalEchoAssist™ Suggests: PA/Ao ratio = ${ratio.toFixed(2)}. ${severity}. ${
-        normal ? "PA/Ao ratio is within normal limits. No significant outflow tract disproportion detected. In normal fetal circulation, the PA is slightly larger than the Ao due to right heart dominance."
-        : ratio < 0.7 ? "Reduced PA/Ao ratio suggests relative pulmonary outflow hypoplasia. Evaluate for pulmonary stenosis, pulmonary atresia, tetralogy of Fallot, or right heart hypoplasia. Correlate with 3-vessel-trachea view and RVOT Doppler."
-        : "Elevated PA/Ao ratio suggests relative aortic outflow hypoplasia. Evaluate for aortic stenosis, hypoplastic left heart syndrome (HLHS), or coarctation of the aorta. Correlate with aortic arch view and isthmus flow."
+        normal ? "PA/Ao ratio is within normal limits. No significant outflow tract disproportion detected."
+        : ratio < 0.7 ? "Reduced PA/Ao ratio suggests relative pulmonary outflow hypoplasia. Evaluate for pulmonary stenosis, pulmonary atresia, or tetralogy of Fallot."
+        : "Elevated PA/Ao ratio suggests relative aortic outflow hypoplasia. Evaluate for aortic stenosis, HLHS, or coarctation of the aorta."
       }`
     : undefined;
 
   const note = ratio !== null
-    ? `FetalEchoAssist™ Note: Normal fetal PA/Ao ratio is approximately 1.0–1.2 (PA slightly larger than Ao due to right-dominant fetal circulation). The ratio is measured at the level of the semilunar valve annuli on the 3-vessel view or LVOT/RVOT views. Significant disproportion (ratio <0.7 or >1.5) warrants detailed evaluation for conotruncal abnormalities (ASE 2023).`
+    ? "FetalEchoAssist™ Note: Normal fetal PA/Ao ratio is approximately 1.0–1.2 (PA slightly larger than Ao due to right-dominant fetal circulation). Significant disproportion (ratio <0.7 or >1.5) warrants detailed evaluation (ASE 2023)."
     : undefined;
 
-  const tip = "FetalEchoAssist™ Tip: Measure PA and Ao at the semilunar valve annulus level (inner edge to inner edge) at end-diastole. Use the 3-vessel view for PA and the LVOT view for Ao. Ensure measurements are taken at the same cardiac cycle. Disproportion >20% between PA and Ao should prompt detailed evaluation.";
+  const tip = "FetalEchoAssist™ Tip: Measure PA and Ao at the semilunar valve annulus level (inner edge to inner edge) at end-diastole. Use the 3-vessel view for PA and the LVOT view for Ao.";
+
+  useEffect(() => {
+    if (ratio !== null) {
+      onResult({ name: "PA/Ao Ratio", value: ratio.toFixed(2), interpretation: severity!, normal, suggests });
+    } else {
+      onResult(null);
+    }
+  }, [ratio, severity, normal]);
 
   return (
     <div className="pt-4 space-y-4">
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <InputRow label="Pulmonary Artery (PA)" unit="mm" value={pa} onChange={setPa} placeholder="e.g. 5.2" hint="At semilunar valve annulus" />
         <InputRow label="Aorta (Ao)" unit="mm" value={ao} onChange={setAo} placeholder="e.g. 4.8" hint="At semilunar valve annulus" />
-        <InputRow label="Gestational Age" unit="weeks" value={ga} onChange={setGa} placeholder="e.g. 24" hint="Optional" />
       </div>
       {ratio !== null && (
         <div className="flex gap-3 flex-wrap">
@@ -714,13 +766,13 @@ function PAAoRatio() {
         </div>
       )}
       <ResultPanel suggests={suggests} note={note} tip={tip} />
-      <p className="text-[10px] text-gray-400">Reference: ASE 2023 Fetal Echo Guidelines. Normal PA/Ao ratio 0.7–1.5. PA slightly larger than Ao in normal fetal circulation.</p>
+      <p className="text-[10px] text-gray-400">Reference: ASE 2023 Fetal Echo Guidelines. Normal PA/Ao ratio 0.7–1.5.</p>
     </div>
   );
 }
 
 // ─── 11. Ventricular Wall Thickness Z-score ───────────────────────────────────
-function VentricularWallThickness() {
+function VentricularWallThickness({ onResult }: { onResult: (r: CalcResult | null) => void }) {
   const [chamber, setChamber] = useState<"IVS"|"LVPW"|"RVW">("IVS");
   const [thickness, setThickness] = useState("");
   const [ga, setGa] = useState("");
@@ -729,13 +781,7 @@ function VentricularWallThickness() {
   const g = parseFloat(ga);
   const valid = t > 0 && g >= 18 && g <= 40;
 
-  // Simplified GA-based nomograms (Schneider C et al., Messing B et al.)
-  // IVS/LVPW mean (mm) ≈ 0.14 × GA - 0.8; SD ≈ 0.5 mm
-  // RVW mean ≈ 0.12 × GA - 0.6; SD ≈ 0.4 mm
-  const getMean = () => {
-    if (chamber === "RVW") return 0.12 * g - 0.6;
-    return 0.14 * g - 0.8;
-  };
+  const getMean = () => chamber === "RVW" ? 0.12 * g - 0.6 : 0.14 * g - 0.8;
   const getSD = () => chamber === "RVW" ? 0.4 : 0.5;
 
   const mean = valid ? getMean() : null;
@@ -752,27 +798,35 @@ function VentricularWallThickness() {
 
   const suggests = zscore !== null
     ? `FetalEchoAssist™ Suggests: ${chamber} thickness = ${t} mm at ${g} weeks. Z-score = ${zscore.toFixed(1)}. ${severity}. ${
-        normal ? `${chamber} thickness is within the normal range for gestational age. No evidence of hypertrophy or hypoplasia.`
-        : zscore > 2 ? `Increased ${chamber} thickness (Z = ${zscore.toFixed(1)}). Evaluate for fetal hypertrophic cardiomyopathy — causes include maternal diabetes (most common), Noonan syndrome, Pompe disease, Barth syndrome, and metabolic cardiomyopathies. Correlate with outflow tract obstruction and diastolic function.`
-        : `Reduced ${chamber} thickness (Z = ${zscore.toFixed(1)}). Evaluate for dilated cardiomyopathy, myocarditis, or structural CHD with ventricular hypoplasia.`
+        normal ? `${chamber} thickness is within the normal range for gestational age.`
+        : zscore > 2 ? `Increased ${chamber} thickness (Z = ${zscore.toFixed(1)}). Evaluate for fetal hypertrophic cardiomyopathy — causes include maternal diabetes (most common), Noonan syndrome, Pompe disease, Barth syndrome.`
+        : `Reduced ${chamber} thickness (Z = ${zscore.toFixed(1)}). Evaluate for dilated cardiomyopathy, myocarditis, or ventricular hypoplasia.`
       }`
     : undefined;
 
   const note = zscore !== null
-    ? `FetalEchoAssist™ Note: Ventricular wall thickness increases linearly with gestational age. Z-scores >+2 suggest hypertrophy; the most common cause is maternal diabetes mellitus (diabetic cardiomyopathy), occurring in up to 30% of infants of diabetic mothers. Symmetric hypertrophy with outflow obstruction suggests obstructive hypertrophic cardiomyopathy. Asymmetric septal hypertrophy (IVS/LVPW >1.3) is a key diagnostic criterion (ASE 2023).`
+    ? `FetalEchoAssist™ Note: Ventricular wall thickness increases linearly with gestational age. Z-scores >+2 suggest hypertrophy; the most common cause is maternal diabetes mellitus. Z-scores <−2 suggest hypoplasia or cardiomyopathy (ASE 2023).`
     : undefined;
 
-  const tip = "FetalEchoAssist™ Tip: Measure wall thickness at end-diastole on M-mode or 2D from the parasternal long-axis equivalent. Measure IVS at the level of the mitral valve tips. Avoid papillary muscles. In diabetic cardiomyopathy, the IVS is typically more affected than the LVPW, and the ratio IVS/LVPW >1.3 is significant.";
+  const tip = "FetalEchoAssist™ Tip: Measure IVS and LVPW at end-diastole on the parasternal short-axis or 4-chamber view. Avoid including trabeculations in the measurement. Use M-mode for reproducibility.";
+
+  useEffect(() => {
+    if (zscore !== null) {
+      onResult({ name: `${chamber} Wall Thickness Z-score`, value: `${t} mm (Z: ${zscore.toFixed(1)})`, interpretation: severity!, normal, suggests });
+    } else {
+      onResult(null);
+    }
+  }, [zscore, chamber, t, severity, normal]);
 
   return (
     <div className="pt-4 space-y-4">
-      <div className="flex gap-2 mb-2 flex-wrap">
+      <div className="flex gap-2 mb-2">
         {(["IVS","LVPW","RVW"] as const).map((c) => (
           <button key={c} onClick={() => setChamber(c)}
             className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${chamber === c ? "text-white border-transparent" : "bg-white border-gray-200 text-gray-600"}`}
             style={chamber === c ? { background: BRAND } : {}}
           >
-            {c === "IVS" ? "IVS" : c === "LVPW" ? "LV Posterior Wall" : "RV Free Wall"}
+            {c}
           </button>
         ))}
       </div>
@@ -788,13 +842,13 @@ function VentricularWallThickness() {
         </div>
       )}
       <ResultPanel suggests={suggests} note={note} tip={tip} />
-      <p className="text-[10px] text-gray-400">Reference: Schneider C et al. Ultrasound Obstet Gynecol. 2005. | Messing B et al. Ultrasound Obstet Gynecol. 2011. | ASE 2023 Fetal Echo Guidelines</p>
+      <p className="text-[10px] text-gray-400">Reference: Schneider C et al. Ultrasound Obstet Gynecol. 2005. | ASE 2023 Fetal Echo Guidelines.</p>
     </div>
   );
 }
 
 // ─── 12. Shortening Fraction (SF) — Fetal ────────────────────────────────────
-function FetalSF() {
+function FetalSF({ onResult }: { onResult: (r: CalcResult | null) => void }) {
   const [chamber, setChamber] = useState<"LV"|"RV">("LV");
   const [edd, setEdd] = useState("");
   const [esd, setEsd] = useState("");
@@ -803,8 +857,6 @@ function FetalSF() {
   const s = parseFloat(esd);
   const valid = d > 0 && s > 0 && d > s;
   const sf = valid ? ((d - s) / d) * 100 : null;
-
-  // Normal fetal SF: 28–40% (LV and RV similar in fetal life)
   const normal = sf !== null ? sf >= 28 && sf <= 40 : null;
 
   const severity = sf === null ? null
@@ -816,17 +868,25 @@ function FetalSF() {
 
   const suggests = sf !== null
     ? `FetalEchoAssist™ Suggests: ${chamber} Shortening Fraction = ${sf.toFixed(1)}%. ${severity}. ${
-        normal ? `${chamber} systolic function is within normal limits. No evidence of systolic dysfunction or hyperdynamic state.`
-        : sf < 28 ? `Reduced ${chamber} SF indicates systolic dysfunction. Evaluate for cardiomyopathy, myocarditis (parvovirus B19, CMV, enterovirus), structural CHD with pressure/volume overload, or severe fetal compromise. Correlate with Tei Index and CVPS.`
-        : `Hyperdynamic ${chamber} function (SF >40%). Evaluate for fetal anemia (high-output state), AV fistula, sacrococcygeal teratoma, or twin-twin transfusion syndrome (recipient twin).`
+        normal ? `${chamber} systolic function is within normal limits. Normal fetal SF is 28–40%.`
+        : sf < 28 ? `Reduced ${chamber} SF indicates systolic dysfunction. Evaluate for cardiomyopathy, myocarditis, structural CHD with pressure/volume overload, or fetal compromise.`
+        : `Hyperdynamic ${chamber} SF. Evaluate for high-output states (fetal anemia, AVM, thyrotoxicosis) or early compensatory response to volume overload.`
       }`
     : undefined;
 
   const note = sf !== null
-    ? `FetalEchoAssist™ Note: Normal fetal ventricular shortening fraction is 28–40% for both LV and RV (ASE 2023). Unlike postnatal life, the fetal RV and LV have similar SF values due to the parallel fetal circulation. SF <28% indicates systolic dysfunction; SF >40% suggests a hyperdynamic state. M-mode measurement at the level of the mitral/tricuspid valve tips (chordal level) is the standard approach.`
+    ? "FetalEchoAssist™ Note: Normal fetal SF is 28–40% (ASE 2023). SF is measured from M-mode or 2D at the level of the mitral/tricuspid valve chordae. SF <28% indicates systolic dysfunction; SF >40% may indicate a hyperdynamic state."
     : undefined;
 
-  const tip = "FetalEchoAssist™ Tip: Measure EDD and ESD on M-mode at the level of the AV valve tips (chordal level), perpendicular to the interventricular septum. Avoid the papillary muscle level. In the fetal RV, the anterior wall and IVS are used. Ensure the M-mode cursor is perpendicular to the ventricular walls for accurate measurements.";
+  const tip = "FetalEchoAssist™ Tip: Measure EDD and ESD at the level of the chordae tendineae on the 4-chamber view. Use M-mode for reproducibility. Ensure measurements are perpendicular to the ventricular walls. Avoid foreshortened views.";
+
+  useEffect(() => {
+    if (sf !== null) {
+      onResult({ name: `${chamber} Shortening Fraction`, value: `${sf.toFixed(1)}%`, interpretation: severity!, normal, suggests });
+    } else {
+      onResult(null);
+    }
+  }, [sf, chamber, severity, normal]);
 
   return (
     <div className="pt-4 space-y-4">
@@ -836,7 +896,7 @@ function FetalSF() {
             className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${chamber === c ? "text-white border-transparent" : "bg-white border-gray-200 text-gray-600"}`}
             style={chamber === c ? { background: BRAND } : {}}
           >
-            {c} Shortening Fraction
+            {c} SF
           </button>
         ))}
       </div>
@@ -856,9 +916,201 @@ function FetalSF() {
   );
 }
 
+// ─── PDF Report Generator ─────────────────────────────────────────────────────
+async function generatePDFReport(
+  results: Record<string, CalcResult>,
+  patientInfo: { ga: string; date: string; operator: string; mrn: string; indication: string }
+) {
+  const { jsPDF } = await import("jspdf");
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+  const TEAL = [24, 154, 161] as [number, number, number];
+  const NAVY = [14, 30, 46] as [number, number, number];
+  const LIGHT_TEAL = [240, 251, 252] as [number, number, number];
+  const pageW = 210;
+  const margin = 15;
+  const contentW = pageW - margin * 2;
+  let y = 0;
+
+  // ── Header ──
+  doc.setFillColor(...NAVY);
+  doc.rect(0, 0, pageW, 32, "F");
+  doc.setFillColor(...TEAL);
+  doc.rect(0, 28, pageW, 4, "F");
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(18);
+  doc.setFont("helvetica", "bold");
+  doc.text("FetalEchoAssist\u2122 Clinical Report", margin, 14);
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.text("Fetal Echo Calculator Engine \u2014 2023 ASE Guideline-Based Feedback", margin, 21);
+  doc.text("iHeartEcho\u2122 | All About Ultrasound | www.iheartecho.com", margin, 27);
+  y = 38;
+
+  // ── Patient Info ──
+  doc.setFillColor(...LIGHT_TEAL);
+  doc.roundedRect(margin, y, contentW, 28, 2, 2, "F");
+  doc.setTextColor(...NAVY);
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "bold");
+  doc.text("Study Information", margin + 4, y + 6);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8.5);
+  const col1x = margin + 4;
+  const col2x = margin + contentW / 2;
+  const infoY = y + 12;
+  doc.text(`Gestational Age: ${patientInfo.ga || "—"} weeks`, col1x, infoY);
+  doc.text(`Study Date: ${patientInfo.date || new Date().toLocaleDateString()}`, col2x, infoY);
+  doc.text(`Operator: ${patientInfo.operator || "—"}`, col1x, infoY + 7);
+  doc.text(`MRN / ID: ${patientInfo.mrn || "—"}`, col2x, infoY + 7);
+  if (patientInfo.indication) {
+    doc.text(`Indication: ${patientInfo.indication}`, col1x, infoY + 14);
+  }
+  y += 34;
+
+  // ── Results Table ──
+  const resultEntries = Object.values(results);
+  if (resultEntries.length === 0) {
+    doc.setTextColor(120, 120, 120);
+    doc.setFontSize(10);
+    doc.text("No calculator results to display.", margin, y + 10);
+    y += 20;
+  } else {
+    // Section header
+    doc.setFillColor(...TEAL);
+    doc.rect(margin, y, contentW, 8, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text("Calculator Results Summary", margin + 3, y + 5.5);
+    y += 10;
+
+    // Column headers
+    doc.setFillColor(240, 240, 240);
+    doc.rect(margin, y, contentW, 7, "F");
+    doc.setTextColor(60, 60, 60);
+    doc.setFontSize(8);
+    doc.text("Calculator", margin + 3, y + 5);
+    doc.text("Result", margin + 65, y + 5);
+    doc.text("Interpretation", margin + 100, y + 5);
+    doc.text("Status", margin + 155, y + 5);
+    y += 9;
+
+    // Rows
+    resultEntries.forEach((r, idx) => {
+      if (y > 260) {
+        doc.addPage();
+        y = 20;
+      }
+      const rowBg: [number, number, number] = idx % 2 === 0 ? [255, 255, 255] : [248, 252, 252];
+      doc.setFillColor(...rowBg);
+      doc.rect(margin, y, contentW, 8, "F");
+
+      // Status indicator
+      const statusColor: [number, number, number] = r.normal === null ? [107, 114, 128] : r.normal ? [22, 163, 74] : [220, 38, 38];
+      doc.setFillColor(...statusColor);
+      doc.circle(margin + 158, y + 4, 2, "F");
+
+      doc.setTextColor(...NAVY);
+      doc.setFontSize(7.5);
+      doc.setFont("helvetica", "bold");
+      const nameLines = doc.splitTextToSize(r.name, 58);
+      doc.text(nameLines[0], margin + 3, y + 5);
+      doc.setFont("helvetica", "normal");
+      doc.text(doc.splitTextToSize(r.value, 32)[0], margin + 65, y + 5);
+      doc.text(doc.splitTextToSize(r.interpretation, 50)[0], margin + 100, y + 5);
+      doc.setTextColor(...statusColor);
+      doc.setFontSize(7);
+      doc.text(r.normal === null ? "N/A" : r.normal ? "Normal" : "Abnormal", margin + 163, y + 5);
+      y += 9;
+    });
+    y += 4;
+  }
+
+  // ── Detailed Interpretations ──
+  if (resultEntries.length > 0) {
+    if (y > 240) { doc.addPage(); y = 20; }
+    doc.setFillColor(...TEAL);
+    doc.rect(margin, y, contentW, 8, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text("FetalEchoAssist\u2122 Guideline-Based Interpretations", margin + 3, y + 5.5);
+    y += 12;
+
+    resultEntries.forEach((r) => {
+      if (!r.suggests) return;
+      if (y > 255) { doc.addPage(); y = 20; }
+
+      // Calc name header
+      doc.setFillColor(...LIGHT_TEAL);
+      doc.roundedRect(margin, y, contentW, 6, 1, 1, "F");
+      doc.setTextColor(...TEAL);
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "bold");
+      doc.text(`${r.name}: ${r.value}`, margin + 3, y + 4.2);
+      y += 8;
+
+      // Suggests text
+      doc.setTextColor(55, 65, 81);
+      doc.setFontSize(7.5);
+      doc.setFont("helvetica", "normal");
+      const lines = doc.splitTextToSize(r.suggests.replace("FetalEchoAssist\u2122 Suggests: ", ""), contentW - 6);
+      lines.forEach((line: string) => {
+        if (y > 275) { doc.addPage(); y = 20; }
+        doc.text(line, margin + 3, y);
+        y += 4.5;
+      });
+      y += 3;
+    });
+  }
+
+  // ── Disclaimer ──
+  if (y > 255) { doc.addPage(); y = 20; }
+  y += 4;
+  doc.setFillColor(254, 243, 199);
+  doc.roundedRect(margin, y, contentW, 20, 2, 2, "F");
+  doc.setTextColor(146, 64, 14);
+  doc.setFontSize(7.5);
+  doc.setFont("helvetica", "bold");
+  doc.text("Clinical Disclaimer", margin + 3, y + 5);
+  doc.setFont("helvetica", "normal");
+  const disclaimer = "This report is generated by FetalEchoAssist\u2122 for educational and clinical decision support purposes only. All values must be interpreted in the context of the complete fetal echocardiographic examination, clinical history, and gestational age. This tool does not replace the judgment of a qualified fetal cardiologist or maternal-fetal medicine specialist. Reference: Donofrio MT et al. J Am Soc Echocardiogr. 2024;37(1):1-75 (2023 ASE Fetal Echo Guidelines).";
+  const disclaimerLines = doc.splitTextToSize(disclaimer, contentW - 6);
+  disclaimerLines.forEach((line: string, i: number) => {
+    doc.text(line, margin + 3, y + 10 + i * 4);
+  });
+  y += 26;
+
+  // ── Footer ──
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFillColor(...NAVY);
+    doc.rect(0, 287, pageW, 10, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "normal");
+    doc.text("FetalEchoAssist\u2122 \u2014 iHeartEcho\u2122 | All About Ultrasound | www.iheartecho.com", margin, 293);
+    doc.text(`Page ${i} of ${pageCount}`, pageW - margin - 15, 293);
+    doc.text("2023 ASE Fetal Echo Guidelines (Donofrio MT et al. JASE 2024;37:1-75)", margin, 297);
+  }
+
+  const dateStr = new Date().toISOString().slice(0, 10);
+  doc.save(`FetalEchoAssist-Report-${dateStr}.pdf`);
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function FetalEchoAssist() {
   const search = useSearch();
+  const [results, setResults] = useState<Record<string, CalcResult>>({});
+  const [patientGA, setPatientGA] = useState("");
+  const [patientDate, setPatientDate] = useState(new Date().toLocaleDateString("en-CA"));
+  const [patientOperator, setPatientOperator] = useState("");
+  const [patientMRN, setPatientMRN] = useState("");
+  const [patientIndication, setPatientIndication] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     const engine = new URLSearchParams(search).get("engine");
@@ -870,24 +1122,54 @@ export default function FetalEchoAssist() {
     }
   }, [search]);
 
+  const makeOnResult = useCallback((key: string) => (r: CalcResult | null) => {
+    setResults((prev) => {
+      if (r === null) {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      }
+      if (prev[key]?.value === r.value && prev[key]?.interpretation === r.interpretation) return prev;
+      return { ...prev, [key]: r };
+    });
+  }, []);
+
+  const resultCount = Object.keys(results).length;
+  const hasAbnormal = Object.values(results).some((r) => r.normal === false);
+
+  const handleGeneratePDF = async () => {
+    setIsGenerating(true);
+    try {
+      await generatePDFReport(results, {
+        ga: patientGA,
+        date: patientDate,
+        operator: patientOperator,
+        mrn: patientMRN,
+        indication: patientIndication,
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const engines = [
-    { id: "engine-celermajer", title: "Celermajer Index", badge: "Cardiomegaly", color: BRAND, component: <CelermajerIndex /> },
-    { id: "engine-cvps", title: "Fetal Cardiovascular Profile Score (CVPS)", badge: "Global Assessment", color: "#dc2626", component: <CVPSCalculator /> },
-    { id: "engine-ctr", title: "Cardiothoracic Ratio (CTR)", badge: "Cardiomegaly", color: BRAND, component: <CardiothoracicRatio /> },
-    { id: "engine-tei", title: "Tei Index (MPI) — Fetal", badge: "Global Function", color: "#7c3aed", component: <FetalTeiIndex /> },
-    { id: "engine-ea", title: "E/A Ratio (AV Inflow)", badge: "Diastolic Function", color: "#0284c7", component: <EARatioCalculator /> },
-    { id: "engine-dv", title: "Ductus Venosus PIV", badge: "Venous Doppler", color: "#0369a1", component: <DuctusVenosusPIV /> },
-    { id: "engine-ua", title: "Umbilical Artery S/D Ratio & PI", badge: "Placental Resistance", color: "#d97706", component: <UmbilicalArteryDoppler /> },
-    { id: "engine-mca", title: "MCA PSV (MoM) — Fetal Anemia Screen", badge: "Fetal Anemia", color: "#dc2626", component: <MCAPSVCalculator /> },
-    { id: "engine-fhr", title: "Fetal Heart Rate Classification", badge: "Rhythm", color: "#16a34a", component: <FetalHRZScore /> },
-    { id: "engine-paao", title: "PA/Ao Ratio", badge: "Outflow Tracts", color: "#0891b2", component: <PAAoRatio /> },
-    { id: "engine-wallthick", title: "Ventricular Wall Thickness Z-score", badge: "Hypertrophy", color: "#7c3aed", component: <VentricularWallThickness /> },
-    { id: "engine-sf", title: "Shortening Fraction (SF) — Fetal", badge: "Systolic Function", color: BRAND, component: <FetalSF /> },
+    { id: "engine-celermajer", title: "Celermajer Index", badge: "Cardiomegaly", color: BRAND, key: "celermajer", component: (onResult: (r: CalcResult | null) => void) => <CelermajerIndex onResult={onResult} /> },
+    { id: "engine-cvps", title: "Fetal Cardiovascular Profile Score (CVPS)", badge: "Global Assessment", color: "#dc2626", key: "cvps", component: (onResult: (r: CalcResult | null) => void) => <CVPSCalculator onResult={onResult} /> },
+    { id: "engine-ctr", title: "Cardiothoracic Ratio (CTR)", badge: "Cardiomegaly", color: BRAND, key: "ctr", component: (onResult: (r: CalcResult | null) => void) => <CardiothoracicRatio onResult={onResult} /> },
+    { id: "engine-tei", title: "Tei Index (MPI) — Fetal", badge: "Global Function", color: "#7c3aed", key: "tei", component: (onResult: (r: CalcResult | null) => void) => <FetalTeiIndex onResult={onResult} /> },
+    { id: "engine-ea", title: "E/A Ratio (AV Inflow)", badge: "Diastolic Function", color: "#0284c7", key: "ea", component: (onResult: (r: CalcResult | null) => void) => <EARatioCalculator onResult={onResult} /> },
+    { id: "engine-dv", title: "Ductus Venosus PIV", badge: "Venous Doppler", color: "#0369a1", key: "dv", component: (onResult: (r: CalcResult | null) => void) => <DuctusVenosusPIV onResult={onResult} /> },
+    { id: "engine-ua", title: "Umbilical Artery S/D Ratio & PI", badge: "Placental Resistance", color: "#d97706", key: "ua", component: (onResult: (r: CalcResult | null) => void) => <UmbilicalArteryDoppler onResult={onResult} /> },
+    { id: "engine-mca", title: "MCA PSV (MoM) — Fetal Anemia Screen", badge: "Fetal Anemia", color: "#dc2626", key: "mca", component: (onResult: (r: CalcResult | null) => void) => <MCAPSVCalculator onResult={onResult} /> },
+    { id: "engine-fhr", title: "Fetal Heart Rate Classification", badge: "Rhythm", color: "#16a34a", key: "fhr", component: (onResult: (r: CalcResult | null) => void) => <FetalHRZScore onResult={onResult} /> },
+    { id: "engine-paao", title: "PA/Ao Ratio", badge: "Outflow Tracts", color: "#0891b2", key: "paao", component: (onResult: (r: CalcResult | null) => void) => <PAAoRatio onResult={onResult} /> },
+    { id: "engine-wallthick", title: "Ventricular Wall Thickness Z-score", badge: "Hypertrophy", color: "#7c3aed", key: "wallthick", component: (onResult: (r: CalcResult | null) => void) => <VentricularWallThickness onResult={onResult} /> },
+    { id: "engine-sf", title: "Shortening Fraction (SF) — Fetal", badge: "Systolic Function", color: BRAND, key: "sf", component: (onResult: (r: CalcResult | null) => void) => <FetalSF onResult={onResult} /> },
   ];
 
   return (
     <Layout>
-      {/* Header */}
+      {/* Header — always visible */}
       <div className="relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${NAVY} 0%, #0e4a50 60%, ${BRAND} 100%)` }}>
         <div className="container py-10">
           <div className="flex items-center gap-3 mb-2">
@@ -895,9 +1177,14 @@ export default function FetalEchoAssist() {
               <Baby className="w-5 h-5" style={{ color: AQUA }} />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-white" style={{ fontFamily: "Merriweather, serif" }}>
-                FetalEchoAssist™
-              </h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-black text-white" style={{ fontFamily: "Merriweather, serif" }}>
+                  FetalEchoAssist™
+                </h1>
+                <span className="inline-flex items-center gap-1 bg-amber-400/20 border border-amber-400/40 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                  <Crown className="w-3 h-3" /> Premium
+                </span>
+              </div>
               <p className="text-sm" style={{ color: AQUA }}>
                 Fetal Echo Calculator Engine — 2023 ASE Guideline-Based Feedback
               </p>
@@ -909,46 +1196,122 @@ export default function FetalEchoAssist() {
         </div>
       </div>
 
-      <div className="container py-8">
-        {/* Quick-nav pills */}
-        <div className="flex flex-wrap gap-2 mb-6">
-          {engines.map(({ id, title, badge, color }) => (
-            <a
-              key={id}
-              href={`#${id}`}
-              onClick={(e) => {
-                e.preventDefault();
-                document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border border-gray-200 bg-white hover:shadow-sm transition-all"
-              style={{ color }}
-            >
-              <Activity className="w-3 h-3" />
-              {badge}
-            </a>
-          ))}
-        </div>
+      {/* Premium Gate wraps all calculator content */}
+      <PremiumGate featureName="FetalEchoAssist™ Calculator Engine">
+        <div className="container py-8">
 
-        {/* Engine cards */}
-        <div className="space-y-3">
-          {engines.map(({ id, title, badge, color, component }) => (
-            <EngineSection key={id} id={id} title={title} badge={badge} badgeColor={color}>
-              {component}
-            </EngineSection>
-          ))}
-        </div>
+          {/* Patient / Study Info */}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-6">
+            <div className="flex items-center gap-2 mb-4">
+              <FileText className="w-4 h-4" style={{ color: BRAND }} />
+              <h2 className="font-bold text-sm text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Study Information (for PDF Report)</h2>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="text-xs font-semibold text-gray-600 block mb-1">Gestational Age (weeks)</label>
+                <input type="text" value={patientGA} onChange={(e) => setPatientGA(e.target.value)} placeholder="e.g. 28+3" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-300 bg-white" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-600 block mb-1">Study Date</label>
+                <input type="date" value={patientDate} onChange={(e) => setPatientDate(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-300 bg-white" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-600 block mb-1">Operator / Sonographer</label>
+                <input type="text" value={patientOperator} onChange={(e) => setPatientOperator(e.target.value)} placeholder="Name or initials" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-300 bg-white" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-600 block mb-1">MRN / Patient ID</label>
+                <input type="text" value={patientMRN} onChange={(e) => setPatientMRN(e.target.value)} placeholder="Optional" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-300 bg-white" />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="text-xs font-semibold text-gray-600 block mb-1">Clinical Indication</label>
+                <input type="text" value={patientIndication} onChange={(e) => setPatientIndication(e.target.value)} placeholder="e.g. Suspected CHD, fetal hydrops, maternal diabetes" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-300 bg-white" />
+              </div>
+            </div>
+          </div>
 
-        {/* Footer */}
-        <div className="mt-8 p-4 bg-gray-50 rounded-xl border border-gray-100 text-xs text-gray-400 space-y-1">
-          <p className="font-semibold text-gray-500">Guideline References</p>
-          <p>• Donofrio MT et al. Diagnosis and Treatment of Fetal Cardiac Disease: A Scientific Statement from the American Heart Association. <em>J Am Soc Echocardiogr.</em> 2024;37(1):1-75 (2023 ASE Fetal Echo Guidelines)</p>
-          <p>• Mari G et al. Noninvasive diagnosis by Doppler ultrasonography of fetal anemia due to maternal red-cell alloimmunization. <em>N Engl J Med.</em> 2000;342:9-14</p>
-          <p>• Huhta JC. Fetal Cardiovascular Profile Score. <em>Ultrasound Obstet Gynecol.</em> 2005;25:550-555</p>
-          <p>• Celermajer DS et al. Cardiothoracic ratio in fetal life. <em>Br Heart J.</em> 1992;68:534-538</p>
-          <p>• Tsutsumi T et al. Evaluation of ductus venosus blood flow velocity waveforms. <em>Ultrasound Obstet Gynecol.</em> 1999;13:26-29</p>
-          <p className="pt-1">© All About Ultrasound — iHeartEcho™ | www.iheartecho.com</p>
+          {/* Results summary bar */}
+          {resultCount > 0 && (
+            <div className={`rounded-xl border p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 ${hasAbnormal ? "border-red-200 bg-red-50" : "border-green-200 bg-green-50"}`}>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  {hasAbnormal
+                    ? <AlertCircle className="w-4 h-4 text-red-600" />
+                    : <Activity className="w-4 h-4 text-green-600" />}
+                  <span className={`font-bold text-sm ${hasAbnormal ? "text-red-700" : "text-green-700"}`}>
+                    {resultCount} calculator{resultCount !== 1 ? "s" : ""} completed
+                    {hasAbnormal ? ` — ${Object.values(results).filter(r => r.normal === false).length} abnormal result(s)` : " — all within normal limits"}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500">Generate a consolidated PDF report with all results and ASE guideline interpretations.</p>
+              </div>
+              <Button
+                onClick={handleGeneratePDF}
+                disabled={isGenerating || resultCount === 0}
+                className="flex items-center gap-2 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-all hover:opacity-90 flex-shrink-0"
+                style={{ background: NAVY }}
+              >
+                <Download className="w-4 h-4" />
+                {isGenerating ? "Generating..." : "Generate PDF Report"}
+              </Button>
+            </div>
+          )}
+
+          {/* Quick-nav pills */}
+          <div className="flex flex-wrap gap-2 mb-6">
+            {engines.map(({ id, badge, color }) => (
+              <a
+                key={id}
+                href={`#${id}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border border-gray-200 bg-white hover:shadow-sm transition-all"
+                style={{ color }}
+              >
+                <Activity className="w-3 h-3" />
+                {badge}
+              </a>
+            ))}
+          </div>
+
+          {/* Engine cards */}
+          <div className="space-y-3">
+            {engines.map(({ id, title, badge, color, key, component }) => (
+              <EngineSection key={id} id={id} title={title} badge={badge} badgeColor={color}>
+                {component(makeOnResult(key))}
+              </EngineSection>
+            ))}
+          </div>
+
+          {/* Generate PDF button at bottom too */}
+          {resultCount > 0 && (
+            <div className="mt-8 flex justify-center">
+              <Button
+                onClick={handleGeneratePDF}
+                disabled={isGenerating}
+                className="flex items-center gap-2 text-white font-semibold px-8 py-3 rounded-xl text-sm transition-all hover:opacity-90"
+                style={{ background: NAVY }}
+              >
+                <Download className="w-4 h-4" />
+                {isGenerating ? "Generating PDF..." : `Generate PDF Report (${resultCount} result${resultCount !== 1 ? "s" : ""})`}
+              </Button>
+            </div>
+          )}
+
+          {/* Footer */}
+          <div className="mt-8 p-4 bg-gray-50 rounded-xl border border-gray-100 text-xs text-gray-400 space-y-1">
+            <p className="font-semibold text-gray-500">Guideline References</p>
+            <p>• Donofrio MT et al. Diagnosis and Treatment of Fetal Cardiac Disease: A Scientific Statement from the American Heart Association. <em>J Am Soc Echocardiogr.</em> 2024;37(1):1-75 (2023 ASE Fetal Echo Guidelines)</p>
+            <p>• Mari G et al. Noninvasive diagnosis by Doppler ultrasonography of fetal anemia due to maternal red-cell alloimmunization. <em>N Engl J Med.</em> 2000;342:9-14</p>
+            <p>• Huhta JC. Fetal Cardiovascular Profile Score. <em>Ultrasound Obstet Gynecol.</em> 2005;25:550-555</p>
+            <p>• Celermajer DS et al. Cardiothoracic ratio in fetal life. <em>Br Heart J.</em> 1992;68:534-538</p>
+            <p>• Tsutsumi T et al. Evaluation of ductus venosus blood flow velocity waveforms. <em>Ultrasound Obstet Gynecol.</em> 1999;13:26-29</p>
+            <p className="pt-1">© All About Ultrasound — iHeartEcho™ | www.iheartecho.com</p>
+          </div>
         </div>
-      </div>
+      </PremiumGate>
     </Layout>
   );
 }

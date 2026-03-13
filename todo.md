@@ -2707,3 +2707,23 @@
 - [x] Add consulting_client to PLAN_LABELS in PlatformAdmin.tsx
 - [x] Add CreateShellOrgDialog to DiyOrgsPanel in AccreditationManager.tsx
 - [x] Add shell org indicator badge in DiyOrgsPanel org list
+
+## FetalEchoAssist™ PDF Report
+- [ ] Add consolidated PDF report generation to FetalEchoAssist™ page
+- [ ] Collect all 12 calculator inputs and results into a report data structure
+- [ ] Add patient/study info fields (GA, date, operator) at top of page
+- [ ] Generate formatted clinical PDF using jsPDF (client-side, no server needed)
+- [ ] Include ASE 2023 guideline interpretation for each result in the PDF
+- [ ] Add "Generate PDF Report" button that is enabled only when at least one calculator has been run
+
+## FetalEchoAssist™ Premium Gate
+- [ ] Gate FetalEchoAssist™ standalone page (/fetal-echo-assist) behind premium paywall
+- [ ] Gate FetalEchoAssist™ tab in FetalNavigator behind premium paywall
+
+## FetalEchoAssist™ Enhancements (Mar 13 2026)
+- [x] Gate FetalEchoAssist™ standalone page (/fetal-echo-assist) behind PremiumGate
+- [x] Gate FetalEchoAssist™ tab in FetalNavigator behind PremiumGate
+- [x] Add PDF report generation feature with jsPDF (patient info header, results table, detailed interpretations, ASE disclaimer, footer)
+- [x] Add study information panel (GA, date, operator, MRN, indication) for PDF report
+- [x] Live results summary bar with abnormal count and Generate PDF button
+- [x] ScanCoach image fix: refetchOnWindowFocus + staleTime=0 so live view always shows fresh images
