@@ -191,6 +191,119 @@ function CelermajerIndex({ onResult }: { onResult: (r: CalcResult | null) => voi
   );
 }
 
+// ─── 1b. SAS Score (Simpson-Andrews-Sharland) — Fetal Ebstein Anomaly ─────────
+function SASScore({ onResult }: { onResult: (r: CalcResult | null) => void }) {
+  const [ctr, setCtr] = useState("");
+  const [celIdx, setCelIdx] = useState("");
+  const [rvlv, setRvlv] = useState("");
+  const [pulm, setPulm] = useState<"0"|"1"|"2">("0");
+  const [ductal, setDuctal] = useState<"0"|"1"|"2">("0");
+
+  const ctrVal = parseFloat(ctr);
+  const celVal = parseFloat(celIdx);
+  const rvlvVal = parseFloat(rvlv);
+
+  const ctrScore = isNaN(ctrVal) ? null : ctrVal < 0.65 ? 0 : ctrVal <= 0.75 ? 1 : 2;
+  const celScore = isNaN(celVal) ? null : celVal < 1.0 ? 0 : celVal <= 1.5 ? 1 : 2;
+  const rvlvScore = isNaN(rvlvVal) ? null : rvlvVal < 1.5 ? 0 : rvlvVal <= 2.0 ? 1 : 2;
+  const pulmScore = parseInt(pulm);
+  const ductalScore = parseInt(ductal);
+
+  const allValid = ctrScore !== null && celScore !== null && rvlvScore !== null;
+  const total = allValid ? ctrScore + celScore + rvlvScore + pulmScore + ductalScore : null;
+
+  const interpretation = total === null ? null
+    : total <= 2 ? "Low Risk — Favourable Prognosis"
+    : total <= 5 ? "Moderate Risk — Guarded Prognosis"
+    : total <= 7 ? "High Risk — Poor Prognosis"
+    : "Very High Risk — Critical / Near-Certain Perinatal Mortality";
+
+  const normal = total !== null ? total <= 2 : null;
+
+  const suggests = total !== null
+    ? `FetalEchoAssist™ Suggests: SAS Score = ${total}/10. ${interpretation}. ${
+        total <= 2
+          ? "Score ≤2 is associated with high likelihood of survival. Continue serial fetal surveillance."
+          : total <= 5
+          ? "Score 3–5 indicates moderate severity. Multidisciplinary fetal cardiac team review recommended. Serial monitoring every 2–4 weeks."
+          : total <= 7
+          ? "Score 6–7 indicates high severity. Perinatal mortality risk is substantially elevated. Fetal medicine, neonatology, and paediatric cardiology consultation required. Delivery planning at a tertiary centre."
+          : "Score ≥8 is associated with very high perinatal mortality. Counsel family regarding guarded prognosis. Consider palliative care discussion alongside active management options."
+      }`
+    : undefined;
+
+  const note = total !== null
+    ? `FetalEchoAssist™ Note: The SAS score (Simpson-Andrews-Sharland, 2008) is a validated fetal prognostic tool for Ebstein anomaly and tricuspid valve dysplasia. It combines five echocardiographic parameters (CTR, Celermajer index, RV/LV ratio, pulmonary flow, ductal flow) scored 0–2 each (total 0–10). Higher scores predict greater perinatal mortality risk. The score should be interpreted alongside gestational age, hydrops status, and functional pulmonary atresia.`
+    : undefined;
+
+  const tip = "FetalEchoAssist™ Tip: Measure CTR and Celermajer index on the 4-chamber view at end-diastole. Assess pulmonary flow with colour and spectral Doppler at the pulmonary valve. Evaluate ductal flow direction with colour Doppler from the ductal arch view. Retrograde ductal flow ('circle of death' physiology) is the single most ominous finding.";
+
+  useEffect(() => {
+    if (total !== null) {
+      onResult({ name: "SAS Score", value: `${total}/10`, interpretation: interpretation!, normal, suggests });
+    } else {
+      onResult(null);
+    }
+  }, [total, interpretation, normal]);
+
+  const scoreRow = (label: string, val: number | null) =>
+    val !== null ? (
+      <div className="flex items-center justify-between text-xs py-0.5">
+        <span className="text-gray-500">{label}</span>
+        <span className="font-semibold" style={{ color: val === 0 ? "#16a34a" : val === 1 ? "#d97706" : "#dc2626" }}>{val}/2</span>
+      </div>
+    ) : null;
+
+  return (
+    <div className="pt-4 space-y-4">
+      <InputRow label="Cardiothoracic Ratio (CTR)" unit="" value={ctr} onChange={setCtr} placeholder="e.g. 0.68" hint="Heart area / thoracic area on 4-chamber view at end-diastole" />
+      <InputRow label="Celermajer Index (RA+aRV / fRV+LA+LV)" unit="" value={celIdx} onChange={setCelIdx} placeholder="e.g. 1.2" hint="Ratio of right-sided to left-sided cardiac areas" />
+      <InputRow label="RV/LV Ratio" unit="" value={rvlv} onChange={setRvlv} placeholder="e.g. 1.8" hint="RV/LV dimension just below MV annulus at end-diastole (4-chamber view)" />
+      <div>
+        <label className="block text-xs font-semibold text-gray-600 mb-1">Pulmonary Blood Flow</label>
+        <div className="flex gap-2">
+          {(["Normal", "Reduced", "Absent"] as const).map((opt, i) => (
+            <button key={opt} onClick={() => setPulm(String(i) as "0"|"1"|"2")}
+              className="flex-1 py-1.5 rounded-lg text-xs font-semibold border transition-all"
+              style={{ background: pulm === String(i) ? BRAND : "transparent", color: pulm === String(i) ? "#fff" : BRAND, borderColor: BRAND }}>{opt}</button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <label className="block text-xs font-semibold text-gray-600 mb-1">Ductal Flow Direction</label>
+        <div className="flex gap-2">
+          {(["Anterograde", "Both", "Retrograde"] as const).map((opt, i) => (
+            <button key={opt} onClick={() => setDuctal(String(i) as "0"|"1"|"2")}
+              className="flex-1 py-1.5 rounded-lg text-xs font-semibold border transition-all"
+              style={{ background: ductal === String(i) ? BRAND : "transparent", color: ductal === String(i) ? "#fff" : BRAND, borderColor: BRAND }}>{opt}</button>
+          ))}
+        </div>
+      </div>
+      {allValid && (
+        <div className="rounded-lg p-3 space-y-0.5" style={{ background: BRAND + "0d", border: `1px solid ${BRAND}30` }}>
+          <p className="text-xs font-bold mb-1" style={{ color: BRAND }}>Score Breakdown</p>
+          {scoreRow("CTR", ctrScore)}
+          {scoreRow("Celermajer Index", celScore)}
+          {scoreRow("RV/LV Ratio", rvlvScore)}
+          {scoreRow("Pulmonary Flow", pulmScore)}
+          {scoreRow("Ductal Flow", ductalScore)}
+          <div className="border-t pt-1 mt-1 flex items-center justify-between">
+            <span className="text-xs font-bold" style={{ color: BRAND }}>Total SAS Score</span>
+            <span className="text-base font-black" style={{ color: total! >= 6 ? "#dc2626" : total! >= 3 ? "#d97706" : "#16a34a" }}>{total}/10</span>
+          </div>
+        </div>
+      )}
+      {total !== null && (
+        <div className="flex gap-3 flex-wrap">
+          <MetricBadge label="SAS Score" value={`${total}/10`} normal={normal} />
+          <MetricBadge label="Risk" value={interpretation!} normal={normal} />
+        </div>
+      )}
+      <ResultPanel suggests={suggests} note={note} tip={tip} />
+      <p className="text-[10px] text-gray-400">Reference: Andrews RE, Tibby SM, Sharland GK, Simpson JM. Prediction of outcome of tricuspid valve malformations diagnosed during fetal life. <em>Am J Cardiol.</em> 2008;101(7):1046-50. PMID: 18359329.</p>
+    </div>
+  );
+}
 // ─── 2. Fetal Cardiovascular Profile Score (CVPS) ────────────────────────────
 function CVPSCalculator({ onResult }: { onResult: (r: CalcResult | null) => void }) {
   const [hydrops, setHydrops] = useState("2");
@@ -1165,6 +1278,7 @@ export default function FetalEchoAssist() {
 
   const engines = [
     { id: "engine-celermajer", title: "Celermajer Index", badge: "Cardiomegaly", color: BRAND, key: "celermajer", component: (onResult: (r: CalcResult | null) => void) => <CelermajerIndex onResult={onResult} /> },
+    { id: "engine-sas", title: "SAS Score — Fetal Ebstein Anomaly", badge: "Ebstein / TVD", color: BRAND, key: "sas", component: (onResult: (r: CalcResult | null) => void) => <SASScore onResult={onResult} /> },
     { id: "engine-cvps", title: "Fetal Cardiovascular Profile Score (CVPS)", badge: "Global Assessment", color: BRAND, key: "cvps", component: (onResult: (r: CalcResult | null) => void) => <CVPSCalculator onResult={onResult} /> },
     { id: "engine-ctr", title: "Cardiothoracic Ratio (CTR)", badge: "Cardiomegaly", color: BRAND, key: "ctr", component: (onResult: (r: CalcResult | null) => void) => <CardiothoracicRatio onResult={onResult} /> },
     { id: "engine-tei", title: "Tei Index (MPI) — Fetal", badge: "Global Function", color: BRAND, key: "tei", component: (onResult: (r: CalcResult | null) => void) => <FetalTeiIndex onResult={onResult} /> },
