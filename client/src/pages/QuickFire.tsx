@@ -12,6 +12,7 @@ import { useState, useMemo, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import Layout from "@/components/Layout";
+import { BlurredOverlay } from "@/components/BlurredOverlay";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -63,7 +64,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Pencil, Loader2 } from "lucide-react";
+import { Pencil, Loader2, BookOpen } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -1327,24 +1328,31 @@ export default function QuickFire() {
         {/* ── TAB: Challenge Archive ───────────────────────────────────────── */}
         {activeTab === "archive" && (
           <>
-            {/* Free users: show premium gate immediately — no archive access at all */}
+            {/* Free users: show blurred preview with premium gate overlay */}
             {!isPremium && (
-              <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}>
-                  <Crown className="w-8 h-8 text-amber-400" />
+              <BlurredOverlay type="premium" featureName="Challenge Archive">
+                {/* Blurred preview — a static mock of the archive list */}
+                <div className="space-y-3 pointer-events-none">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Challenge Archive</h2>
+                      <p className="text-xs text-gray-500 mt-0.5">Unlimited access — all past challenges</p>
+                    </div>
+                  </div>
+                  {["Aortic Stenosis — Severe vs. Moderate", "Diastolic Dysfunction Grading", "RV Pressure Overload Pattern", "Mitral Regurgitation: EROA Calculation", "Fetal Echo: 4-Chamber View Abnormalities", "LV Systolic Function — Wall Motion Score"].map((title, i) => (
+                    <div key={i} className="bg-white rounded-xl border border-gray-100 p-4 flex items-center gap-4">
+                      <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "#f0fbfc" }}>
+                        <BookOpen className="w-4 h-4" style={{ color: "#189aa1" }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-800 truncate">{title}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">Daily Challenge · Adult Echo</p>
+                      </div>
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-green-50 text-green-700">Completed</span>
+                    </div>
+                  ))}
                 </div>
-                <h2 className="text-lg font-bold text-gray-800 mb-2" style={{ fontFamily: "Merriweather, serif" }}>Challenge Archive — Premium Only</h2>
-                <p className="text-sm text-gray-500 max-w-sm mb-1">
-                  Free members can access <strong>today's daily challenge only</strong>. Upgrade to Premium for unlimited access to all past challenges.
-                </p>
-                <p className="text-xs text-gray-400 mb-6">Replay past challenges, track your improvement, and never miss a learning opportunity.</p>
-                <a href="/premium">
-                  <Button className="text-white px-6" style={{ background: "#189aa1" }}>
-                    <Crown className="w-4 h-4 mr-2" /> Upgrade to Premium
-                  </Button>
-                </a>
-                <p className="text-xs text-gray-400 mt-4">Already a premium member? <a href="/premium" className="text-[#189aa1] hover:underline">Sync your membership</a></p>
-              </div>
+              </BlurredOverlay>
             )}
 
             {/* Premium users: show full archive */}

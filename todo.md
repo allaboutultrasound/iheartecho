@@ -2727,3 +2727,13 @@
 - [x] Add study information panel (GA, date, operator, MRN, indication) for PDF report
 - [x] Live results summary bar with abnormal count and Generate PDF button
 - [x] ScanCoach image fix: refetchOnWindowFocus + staleTime=0 so live view always shows fresh images
+
+## PremiumGate Blur-Overlay Consistency (Mar 13 2026)
+- [x] Audit all pages for PremiumGate usage and manual premium checks
+- [x] Apply blur-overlay gate to EchoCase Library (already uses BlurredOverlay)
+- [x] Apply blur-overlay gate to QuickFire Challenge Archive (was plain card, now uses BlurredOverlay with mock preview)
+- [x] Confirmed: ScanCoach, TEE/ICE/HOCM/Device/Stress navigators all already use PremiumOverlay with blur
+- [x] PremiumGate (FetalEchoAssist, POCUS navigators) updated to blur-overlay in previous session
+
+## HIPAA / PHI Compliance
+- [x] Remove MRN field from FetalEchoAssist™ study info panel and PDF report (no PHI collection)

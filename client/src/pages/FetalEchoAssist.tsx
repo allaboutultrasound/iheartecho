@@ -919,7 +919,7 @@ function FetalSF({ onResult }: { onResult: (r: CalcResult | null) => void }) {
 // ─── PDF Report Generator ─────────────────────────────────────────────────────
 async function generatePDFReport(
   results: Record<string, CalcResult>,
-  patientInfo: { ga: string; date: string; operator: string; mrn: string; indication: string }
+  patientInfo: { ga: string; date: string; operator: string; indication: string }
 ) {
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
@@ -963,11 +963,10 @@ async function generatePDFReport(
   doc.text(`Gestational Age: ${patientInfo.ga || "—"} weeks`, col1x, infoY);
   doc.text(`Study Date: ${patientInfo.date || new Date().toLocaleDateString()}`, col2x, infoY);
   doc.text(`Operator: ${patientInfo.operator || "—"}`, col1x, infoY + 7);
-  doc.text(`MRN / ID: ${patientInfo.mrn || "—"}`, col2x, infoY + 7);
   if (patientInfo.indication) {
-    doc.text(`Indication: ${patientInfo.indication}`, col1x, infoY + 14);
+    doc.text(`Indication: ${patientInfo.indication}`, col2x, infoY + 7);
   }
-  y += 34;
+  y += 28;
 
   // ── Results Table ──
   const resultEntries = Object.values(results);
@@ -1108,7 +1107,7 @@ export default function FetalEchoAssist() {
   const [patientGA, setPatientGA] = useState("");
   const [patientDate, setPatientDate] = useState(new Date().toLocaleDateString("en-CA"));
   const [patientOperator, setPatientOperator] = useState("");
-  const [patientMRN, setPatientMRN] = useState("");
+
   const [patientIndication, setPatientIndication] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -1144,7 +1143,6 @@ export default function FetalEchoAssist() {
         ga: patientGA,
         date: patientDate,
         operator: patientOperator,
-        mrn: patientMRN,
         indication: patientIndication,
       });
     } finally {
@@ -1219,10 +1217,7 @@ export default function FetalEchoAssist() {
                 <label className="text-xs font-semibold text-gray-600 block mb-1">Operator / Sonographer</label>
                 <input type="text" value={patientOperator} onChange={(e) => setPatientOperator(e.target.value)} placeholder="Name or initials" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-300 bg-white" />
               </div>
-              <div>
-                <label className="text-xs font-semibold text-gray-600 block mb-1">MRN / Patient ID</label>
-                <input type="text" value={patientMRN} onChange={(e) => setPatientMRN(e.target.value)} placeholder="Optional" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-300 bg-white" />
-              </div>
+
               <div className="sm:col-span-2">
                 <label className="text-xs font-semibold text-gray-600 block mb-1">Clinical Indication</label>
                 <input type="text" value={patientIndication} onChange={(e) => setPatientIndication(e.target.value)} placeholder="e.g. Suspected CHD, fetal hydrops, maternal diabetes" className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-300 bg-white" />
