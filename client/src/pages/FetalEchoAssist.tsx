@@ -9,6 +9,7 @@ import { useSearch } from "wouter";
 import Layout from "@/components/Layout";
 import { PremiumGate } from "@/components/PremiumGate";
 import { Baby, ChevronDown, ChevronUp, Info, Lightbulb, MessageSquare, AlertCircle, Calculator, Activity, FileText, Download, Crown } from "lucide-react";
+import { CopyToReportButton } from "@/components/CopyToReportButton";
 import { Button } from "@/components/ui/button";
 
 const BRAND = "#189aa1";
@@ -85,8 +86,9 @@ function MetricBadge({ label, value, normal }: { label: string; value: string; n
 }
 
 // ─── Engine Wrapper ───────────────────────────────────────────────────────────
-function EngineSection({ id, title, badge, badgeColor, children }: {
+function EngineSection({ id, title, badge, badgeColor, children, result, source }: {
   id: string; title: string; badge: string; badgeColor: string; children: React.ReactNode;
+  result?: CalcResult | null; source?: string;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -113,7 +115,18 @@ function EngineSection({ id, title, badge, badgeColor, children }: {
           <span className="font-bold text-sm text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>{title}</span>
           <span className="ml-2 text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: badgeColor + "18", color: badgeColor }}>{badge}</span>
         </div>
-        {open ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+        <div className="flex items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+          {result && source && (
+            <CopyToReportButton
+              source={source}
+              calculator={result.name}
+              label={`${result.name}: ${result.value}`}
+              result={`${result.value} — ${result.interpretation}`}
+              interpretation={result.suggests ?? result.interpretation}
+            />
+          )}
+          {open ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+        </div>
       </button>
       {open && <div className="px-5 pb-5 border-t border-gray-50">{children}</div>}
     </div>
@@ -1274,7 +1287,7 @@ export default function FetalEchoAssist() {
           {/* Engine cards */}
           <div className="space-y-3">
             {engines.map(({ id, title, badge, color, key, component }) => (
-              <EngineSection key={id} id={id} title={title} badge={badge} badgeColor={color}>
+              <EngineSection key={id} id={id} title={title} badge={badge} badgeColor={color} result={results[key]} source="FetalEchoAssist™">
                 {component(makeOnResult(key))}
               </EngineSection>
             ))}

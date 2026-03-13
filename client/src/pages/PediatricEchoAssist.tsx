@@ -9,6 +9,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useSearch } from "wouter";
 import Layout from "@/components/Layout";
 import { PremiumGate } from "@/components/PremiumGate";
+import { CopyToReportButton } from "@/components/CopyToReportButton";
 import { Button } from "@/components/ui/button";
 import {
   Activity,
@@ -97,16 +98,27 @@ function InputRow({ label, unit, value, onChange, placeholder }: { label: string
   );
 }
 
-function ResultBox({ result }: { result: CalcResult | null }) {
+function ResultBox({ result, source }: { result: CalcResult | null; source?: string }) {
   if (!result) return null;
   return (
     <div className={`mt-4 rounded-xl p-4 border ${result.normal === false ? "bg-red-50 border-red-200" : result.normal === true ? "bg-green-50 border-green-200" : "bg-blue-50 border-blue-200"}`}>
-      <div className="flex items-center gap-2 mb-1">
+      <div className="flex items-center gap-2 mb-1 flex-wrap">
         <span className="font-bold text-sm text-gray-800">{result.label}: {result.value}</span>
         <ResultBadge normal={result.normal} />
       </div>
       <p className="text-xs text-gray-700 leading-relaxed">{result.interpretation}</p>
       {result.guideline && <p className="text-xs text-gray-400 mt-1 italic">{result.guideline}</p>}
+      {source && (
+        <div className="mt-3 pt-2 border-t border-gray-200/60">
+          <CopyToReportButton
+            source={source}
+            calculator={result.label}
+            label={`${result.label}: ${result.value}`}
+            result={`${result.value} — ${result.interpretation}`}
+            interpretation={result.interpretation}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -154,7 +166,7 @@ function BSACalculator({ onResult }: { onResult: (r: CalcResult | null) => void 
       <InputRow label="Weight" unit="kg" value={weight} onChange={setWeight} />
       <InputRow label="Height" unit="cm" value={height} onChange={setHeight} />
       <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: BRAND }}>Calculate BSA</Button>
-      <ResultBox result={result} />
+      <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
 }
@@ -188,7 +200,7 @@ function ZScoreAorticRoot({ onResult }: { onResult: (r: CalcResult | null) => vo
       <InputRow label="BSA" unit="m²" value={bsa} onChange={setBsa} placeholder="e.g. 0.85" />
       <InputRow label="Aortic Root Diameter" unit="cm" value={diameter} onChange={setDiameter} placeholder="e.g. 2.1" />
       <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: "#7c3aed" }}>Calculate Z-Score</Button>
-      <ResultBox result={result} />
+      <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
 }
@@ -222,7 +234,7 @@ function ZScorePulmonaryAnnulus({ onResult }: { onResult: (r: CalcResult | null)
       <InputRow label="BSA" unit="m²" value={bsa} onChange={setBsa} placeholder="e.g. 0.85" />
       <InputRow label="PA Annulus Diameter" unit="cm" value={diameter} onChange={setDiameter} placeholder="e.g. 1.8" />
       <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: "#7c3aed" }}>Calculate Z-Score</Button>
-      <ResultBox result={result} />
+      <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
 }
@@ -255,7 +267,7 @@ function ZScoreMitralAnnulus({ onResult }: { onResult: (r: CalcResult | null) =>
       <InputRow label="BSA" unit="m²" value={bsa} onChange={setBsa} placeholder="e.g. 0.85" />
       <InputRow label="MV Annulus Diameter" unit="cm" value={diameter} onChange={setDiameter} placeholder="e.g. 2.0" />
       <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: "#7c3aed" }}>Calculate Z-Score</Button>
-      <ResultBox result={result} />
+      <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
 }
@@ -288,7 +300,7 @@ function ZScoreTricuspidAnnulus({ onResult }: { onResult: (r: CalcResult | null)
       <InputRow label="BSA" unit="m²" value={bsa} onChange={setBsa} placeholder="e.g. 0.85" />
       <InputRow label="TV Annulus Diameter" unit="cm" value={diameter} onChange={setDiameter} placeholder="e.g. 2.2" />
       <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: "#7c3aed" }}>Calculate Z-Score</Button>
-      <ResultBox result={result} />
+      <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
 }
@@ -322,7 +334,7 @@ function ZScoreLVEDD({ onResult }: { onResult: (r: CalcResult | null) => void })
       <InputRow label="BSA" unit="m²" value={bsa} onChange={setBsa} placeholder="e.g. 0.85" />
       <InputRow label="LVEDD" unit="cm" value={lvedd} onChange={setLvedd} placeholder="e.g. 3.5" />
       <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: "#7c3aed" }}>Calculate Z-Score</Button>
-      <ResultBox result={result} />
+      <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
 }
@@ -376,7 +388,7 @@ function CoronaryZScore({ onResult }: { onResult: (r: CalcResult | null) => void
       <InputRow label="BSA" unit="m²" value={bsa} onChange={setBsa} placeholder="e.g. 0.85" />
       <InputRow label="Vessel Diameter" unit="mm" value={diameter} onChange={setDiameter} placeholder="e.g. 3.2" />
       <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: "#dc2626" }}>Calculate Z-Score</Button>
-      <ResultBox result={result} />
+      <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
 }
@@ -419,7 +431,7 @@ function QpQsCalculator({ onResult }: { onResult: (r: CalcResult | null) => void
       <InputRow label="LVOT VTI" unit="cm" value={lvotVti} onChange={setLvotVti} placeholder="e.g. 22" />
       <InputRow label="LVOT Diameter" unit="cm" value={lvotD} onChange={setLvotD} placeholder="e.g. 1.5" />
       <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: "#0284c7" }}>Calculate Qp:Qs</Button>
-      <ResultBox result={result} />
+      <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
 }
@@ -452,7 +464,7 @@ function RVSPCalculator({ onResult }: { onResult: (r: CalcResult | null) => void
       <InputRow label="TR Vmax" unit="m/s" value={trVmax} onChange={setTrVmax} placeholder="e.g. 3.0" />
       <InputRow label="RAP Estimate" unit="mmHg" value={rap} onChange={setRap} placeholder="5" />
       <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: "#0284c7" }}>Calculate RVSP</Button>
-      <ResultBox result={result} />
+      <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
 }
@@ -498,7 +510,7 @@ function RpRsCalculator({ onResult }: { onResult: (r: CalcResult | null) => void
       <InputRow label="CVP / RAP" unit="mmHg" value={cvp} onChange={setCvp} placeholder="e.g. 5" />
       <InputRow label="Qs" unit="L/min/m²" value={qs} onChange={setQs} placeholder="e.g. 3.0" />
       <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: "#0284c7" }}>Calculate Rp:Rs</Button>
-      <ResultBox result={result} />
+      <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
 }
@@ -529,7 +541,7 @@ function ShorteningFraction({ onResult }: { onResult: (r: CalcResult | null) => 
       <InputRow label="LVEDD" unit="cm" value={edd} onChange={setEdd} placeholder="e.g. 3.5" />
       <InputRow label="LVESD" unit="cm" value={esd} onChange={setEsd} placeholder="e.g. 2.3" />
       <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: BRAND }}>Calculate SF</Button>
-      <ResultBox result={result} />
+      <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
 }
@@ -570,7 +582,7 @@ function BulletEF({ onResult }: { onResult: (r: CalcResult | null) => void }) {
       <InputRow label="LV Area (Systole)" unit="cm²" value={areaS} onChange={setAreaS} placeholder="e.g. 10.2" />
       <InputRow label="LV Length (Systole)" unit="cm" value={lengthS} onChange={setLengthS} placeholder="e.g. 5.5" />
       <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: BRAND }}>Calculate Bullet EF</Button>
-      <ResultBox result={result} />
+      <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
 }
@@ -618,7 +630,7 @@ function PediatricTeiIndex({ onResult }: { onResult: (r: CalcResult | null) => v
       <InputRow label="IRT" unit="ms" value={irt} onChange={setIrt} placeholder="e.g. 40" />
       <InputRow label="ET" unit="ms" value={et} onChange={setEt} placeholder="e.g. 220" />
       <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: "#7c3aed" }}>Calculate Tei Index</Button>
-      <ResultBox result={result} />
+      <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
 }
@@ -651,7 +663,7 @@ function TAPSEZScore({ onResult }: { onResult: (r: CalcResult | null) => void })
       <InputRow label="BSA" unit="m²" value={bsa} onChange={setBsa} placeholder="e.g. 0.85" />
       <InputRow label="TAPSE" unit="mm" value={tapse} onChange={setTapse} placeholder="e.g. 18" />
       <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: BRAND }}>Calculate Z-Score</Button>
-      <ResultBox result={result} />
+      <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
 }
@@ -681,7 +693,7 @@ function RVFACCalculator({ onResult }: { onResult: (r: CalcResult | null) => voi
       <InputRow label="RV ED Area" unit="cm²" value={edArea} onChange={setEdArea} placeholder="e.g. 12.0" />
       <InputRow label="RV ES Area" unit="cm²" value={esArea} onChange={setEsArea} placeholder="e.g. 7.5" />
       <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: BRAND }}>Calculate RV FAC</Button>
-      <ResultBox result={result} />
+      <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
 }
@@ -717,7 +729,7 @@ function NakataIndex({ onResult }: { onResult: (r: CalcResult | null) => void })
       <InputRow label="LPA Diameter" unit="mm" value={lpaD} onChange={setLpaD} placeholder="e.g. 7.5" />
       <InputRow label="BSA" unit="m²" value={bsa} onChange={setBsa} placeholder="e.g. 0.85" />
       <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: "#d97706" }}>Calculate Nakata Index</Button>
-      <ResultBox result={result} />
+      <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
 }
@@ -751,7 +763,7 @@ function McGoonRatio({ onResult }: { onResult: (r: CalcResult | null) => void })
       <InputRow label="LPA Diameter" unit="mm" value={lpaD} onChange={setLpaD} placeholder="e.g. 7.5" />
       <InputRow label="Descending Aorta Diameter" unit="mm" value={daoD} onChange={setDaoD} placeholder="e.g. 10.0" />
       <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: "#d97706" }}>Calculate McGoon Ratio</Button>
-      <ResultBox result={result} />
+      <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
 }
@@ -780,7 +792,7 @@ function CoarctationGradient({ onResult }: { onResult: (r: CalcResult | null) =>
       <p className="text-xs text-gray-500 mb-3">Use CW Doppler from suprasternal notch. Note: collateral flow may underestimate gradient — use diastolic tail pattern as additional marker.</p>
       <InputRow label="CoA Vmax" unit="m/s" value={vmax} onChange={setVmax} placeholder="e.g. 3.5" />
       <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: "#d97706" }}>Calculate Gradient</Button>
-      <ResultBox result={result} />
+      <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
 }
@@ -816,7 +828,7 @@ function PediatricAVA({ onResult }: { onResult: (r: CalcResult | null) => void }
       <InputRow label="LVOT VTI" unit="cm" value={vtiLVOT} onChange={setVtiLVOT} placeholder="e.g. 22" />
       <InputRow label="LVOT Diameter" unit="cm" value={lvotD} onChange={setLvotD} placeholder="e.g. 1.5" />
       <Button onClick={calculate} className="text-white w-full mt-2" style={{ background: "#d97706" }}>Calculate AVA</Button>
-      <ResultBox result={result} />
+      <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
 }
@@ -867,7 +879,7 @@ function RossScore({ onResult }: { onResult: (r: CalcResult | null) => void }) {
         ))}
       </div>
       <Button onClick={calculate} className="text-white w-full" style={{ background: "#dc2626" }}>Calculate Ross Score</Button>
-      <ResultBox result={result} />
+      <ResultBox result={result} source="PediatricEchoAssist™" />
     </CalcCard>
   );
 }

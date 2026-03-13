@@ -95,6 +95,11 @@ import FormBuilderAdmin from "./pages/FormBuilderAdmin";
 import AccreditationManagerPage from "./pages/AccreditationManager";
 import FetalEchoAssist from "./pages/FetalEchoAssist";
 import PediatricEchoAssist from "./pages/PediatricEchoAssist";
+import ACHDEchoAssist from "./pages/ACHDEchoAssist";
+// ECG-Assist Suite
+import ECGNavigator from "./pages/ECGNavigator";
+import ECGCoach from "./pages/ECGCoach";
+import ECGAssist from "./pages/ECGAssist";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -207,6 +212,11 @@ function Router() {
       <Route path="/accreditation-manager">{() => <RoleGuard roles={["platform_admin", "accreditation_manager"]} allowAdmin={true}><AccreditationManagerPage /></RoleGuard>}</Route>
       <Route path="/pediatric-echo-assist" component={PediatricEchoAssist} />
       <Route path="/fetal-echo-assist" component={FetalEchoAssist} />
+      <Route path="/achd-echo-assist">{() => <ACHDEchoAssist />}</Route>
+      {/* ── ECG-Assist Suite ─────────────────────────────────────────────── */}
+      <Route path="/ecg-navigator" component={ECGNavigator} />
+      <Route path="/ecg-coach" component={ECGCoach} />
+      <Route path="/ecg-assist" component={ECGAssist} />
       {/* ── DIY Accreditation™ ────────────────────────────────────────────────────── */}
       <Route path="/diy-accreditation-plans" component={DIYAccreditationPlans} />
       <Route path="/diy-register" component={DIYRegister} /> {/* /diy-lab-admin is deprecated — redirect to the unified /lab-admin */}

@@ -10,7 +10,7 @@ import {
   Scan, BookOpen, FileText, Menu, X, ChevronRight,
   Stethoscope, Zap, ExternalLink, ShoppingBag, FlaskConical, MessageCircle, Award, Shield, GraduationCap,
   BookMarked, Library, Plus, Crown, Droplets, Building2, Users, UserPlus,
-  LogIn, LogOut, Settings, ChevronDown, Webhook, Layers, CreditCard, Lock
+  LogIn, LogOut, Settings, ChevronDown, Webhook, Layers, CreditCard, Lock, Radio
 } from "lucide-react";
 
 import { trpc } from "@/lib/trpc";
@@ -60,6 +60,7 @@ const navGroups = [
     items: [
       { path: "/echo-assist-hub", label: "EchoAssist™", icon: Stethoscope },
       { path: "/pocus-assist-hub", label: "POCUS-Assist™", icon: Shield },
+      { path: "/ecg-navigator", label: "ECG Navigator", icon: Radio },
       { path: "/hemodynamics", label: "Hemodynamics Lab", icon: Activity },
       { path: "/echoassist", label: "EchoAssist™ Calculators", icon: Calculator },
       { path: "/report", label: "Report Builder", icon: FileText },
@@ -122,6 +123,12 @@ const hiddenNavItems = [
   { path: "/pocus-rush-scan-coach", label: "RUSH ScanCoach™" },
   { path: "/pocus-cardiac-scan-coach", label: "Cardiac POCUS ScanCoach™" },
   { path: "/pocus-lung-scan-coach", label: "Lung POCUS ScanCoach™" },
+  { path: "/ecg-navigator", label: "ECG Navigator" },
+  { path: "/ecg-coach", label: "ECG Coach" },
+  { path: "/ecg-assist", label: "ECG Calculators" },
+  { path: "/fetal-echo-assist", label: "FetalEchoAssist™" },
+  { path: "/pediatric-echo-assist", label: "PediatricEchoAssist™" },
+  { path: "/achd-echo-assist", label: "ACHDEchoAssist™" },
   { path: "/diy-accreditation-plans", label: "DIY Accreditation™ Plans" },
   { path: "/diy-accreditation-smart", label: "DIY Accreditation™" },
   { path: "/diy-register", label: "Register Your Lab" },

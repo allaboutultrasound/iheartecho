@@ -9,7 +9,7 @@ import Layout from "@/components/Layout";
 import { trpc } from "@/lib/trpc";
 import {
   Calculator, ClipboardList, Activity, BookOpen, FileText,
-  ArrowRight, Users, Award, Zap, Stethoscope, ExternalLink, MessageCircle, GraduationCap, BookMarked, Crown, Shield
+  ArrowRight, Users, Award, Zap, Stethoscope, ExternalLink, MessageCircle, GraduationCap, BookMarked, Crown, Shield, Radio
 } from "lucide-react";
 
 const BRAND = "#189aa1";
@@ -98,6 +98,14 @@ const modules: Module[] = [
     badge: "Accreditation",
     color: BRAND,
     premium: true,
+  },
+  {
+    path: "/ecg-navigator",
+    icon: Radio,
+    title: "ECG Navigator",
+    description: "Systematic ECG interpretation guide covering rate/rhythm, P wave, PR interval, QRS complex, ST-T changes, QT interval, axis, special patterns (Brugada, Wellens, Sgarbossa), and pacemaker ECGs.",
+    badge: "ECG",
+    color: "#7c3aed",
   },
   // ⚠️ pinLast: true — Community Hub always renders last. Do not remove this flag.
   {

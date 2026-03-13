@@ -11,7 +11,7 @@ import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import {
   Stethoscope, Microscope, Zap, Users, Baby, Heart,
-  Cpu, BarChart3, ArrowRight, Droplets, Activity, Wind, Crown, Lock, Shield
+  Cpu, BarChart3, ArrowRight, Droplets, Activity, Wind, Crown, Lock, Shield, Radio, BookOpen
 } from "lucide-react";
 import { usePremium } from "@/hooks/usePremium";
 
@@ -305,6 +305,56 @@ export default function EchoAssistHub() {
           )}
         </div>
 
+        {/* ── ACHDEchoAssist™ Cross-Promotion ──────────────────────────── */}
+        <div
+          className="mt-8 rounded-xl p-5 border"
+          style={{ borderColor: "#b45309" + "40", background: "#fffbeb" }}
+        >
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="flex-shrink-0">
+              <div
+                className="w-14 h-14 rounded-xl flex items-center justify-center"
+                style={{ background: "linear-gradient(135deg, #0e1e2e, #b45309)" }}
+              >
+                <Heart className="w-7 h-7 text-amber-200" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#b45309" }}>
+                  Adult Congenital Heart Disease Calculators
+                </span>
+              </div>
+              <h3 className="font-bold text-gray-900 text-base mb-1" style={{ fontFamily: "Merriweather, serif" }}>
+                ACHDEchoAssist™
+              </h3>
+              <p className="text-sm text-gray-500 mb-3">
+                12 ASE 2015 ACHD + ACC/AHA 2018 guideline-based calculators — Fontan Hepatic Index, Ebstein's Severity, CoA Re-coarctation Index, Qp:Qs, RVSP, Aortic Root Z-score, RV FAC, TAPSE, Tei Index, Systemic AV Regurgitation, Pulmonary Regurgitation Fraction, and Shunt Significance.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Link href="/achd-echo-assist">
+                  <button
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
+                    style={{ background: "#b45309" }}
+                  >
+                    <Heart className="w-3.5 h-3.5" />
+                    Open ACHDEchoAssist™
+                  </button>
+                </Link>
+                <Link href="/achd">
+                  <button
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm border bg-white transition-all hover:bg-amber-50"
+                    style={{ borderColor: "#b45309" + "50", color: "#b45309" }}
+                  >
+                    <Activity className="w-3.5 h-3.5" />
+                    ACHD Navigator
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* ── PediatricEchoAssist™ Cross-Promotion ─────────────────────── */}
         <div
           className="mt-8 rounded-xl p-5 border"
@@ -398,6 +448,65 @@ export default function EchoAssistHub() {
                   >
                     <Activity className="w-3.5 h-3.5" />
                     Fetal Echo Navigator
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── ECG-Assist Suite Cross-Promotion ─────────────────────────── */}
+        <div
+          className="mt-8 rounded-xl p-5 border"
+          style={{ borderColor: "#7c3aed" + "40", background: "#faf5ff" }}
+        >
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="flex-shrink-0">
+              <div
+                className="w-14 h-14 rounded-xl flex items-center justify-center"
+                style={{ background: "linear-gradient(135deg, #1e1b4b, #7c3aed)" }}
+              >
+                <Radio className="w-7 h-7 text-violet-200" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#7c3aed" }}>
+                  ECG Interpretation Suite
+                </span>
+              </div>
+              <h3 className="font-bold text-gray-900 text-base mb-1" style={{ fontFamily: "Merriweather, serif" }}>
+                ECG-Assist Suite
+              </h3>
+              <p className="text-sm text-gray-500 mb-3">
+                Three-part ECG suite — ECG Navigator (free, 9 clinical sections covering rate/rhythm, ST-T changes, Brugada, Sgarbossa, pacemaker ECGs), ECG Coach (premium, lead placement and neonatal ECG guidance), and ECG Calculators (premium, 12 guideline-based calculators including QTc, LVH voltage criteria, HEART score, GRACE score, and Brugada VT criteria).
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Link href="/ecg-navigator">
+                  <button
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
+                    style={{ background: "#7c3aed" }}
+                  >
+                    <Radio className="w-3.5 h-3.5" />
+                    ECG Navigator
+                  </button>
+                </Link>
+                <Link href="/ecg-coach">
+                  <button
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm border bg-white transition-all hover:bg-violet-50"
+                    style={{ borderColor: "#7c3aed" + "50", color: "#7c3aed" }}
+                  >
+                    <BookOpen className="w-3.5 h-3.5" />
+                    ECG Coach
+                  </button>
+                </Link>
+                <Link href="/ecg-assist">
+                  <button
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm border bg-white transition-all hover:bg-violet-50"
+                    style={{ borderColor: "#7c3aed" + "50", color: "#7c3aed" }}
+                  >
+                    <Cpu className="w-3.5 h-3.5" />
+                    ECG Calculators
                   </button>
                 </Link>
               </div>

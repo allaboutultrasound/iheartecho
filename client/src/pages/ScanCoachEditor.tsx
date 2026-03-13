@@ -897,7 +897,7 @@ export default function ScanCoachEditor() {
                         <span className="text-xs text-gray-400">Upload images to override the static defaults</span>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {IMAGE_SLOTS.map((slot) => (
+                        {IMAGE_SLOTS.filter((slot) => !(selectedModule === "ice" && slot.key === "transducerImageUrl")).map((slot) => (
                           <ImageUploadZone
                             key={slot.key}
                             slot={slot}

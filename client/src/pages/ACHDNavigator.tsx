@@ -8,7 +8,9 @@ import { useState } from "react";
 import Layout from "@/components/Layout";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
 import { Link } from "wouter";
-import { Heart, ChevronDown, ChevronUp, CheckCircle, Circle } from "lucide-react";
+import { Heart, ChevronDown, ChevronUp, CheckCircle, Circle, Cpu } from "lucide-react";
+import { PremiumGate } from "@/components/PremiumGate";
+import ACHDEchoAssist from "./ACHDEchoAssist";
 
 // ─── DATA ─────────────────────────────────────────────────────────────────────
 
@@ -289,6 +291,7 @@ function LesionCard({ lesion }: { lesion: typeof ACHD_LESIONS[0] }) {
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 
 export default function ACHDNavigator() {
+  const [mainTab, setMainTab] = useState<"navigator" | "calculators">("navigator");
   return (
     <Layout>
       {/* Hero Banner */}
@@ -326,6 +329,33 @@ export default function ACHDNavigator() {
         </div>
       </div>
 
+      {/* Main tab switcher */}
+      <div className="container pt-4">
+        <div className="flex gap-1 border-b border-gray-200 mb-0">
+          {(["navigator", "calculators"] as const).map(t => (
+            <button
+              key={t}
+              onClick={() => setMainTab(t)}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-t-lg transition-all"
+              style={{
+                background: mainTab === t ? "#189aa1" : "transparent",
+                color: mainTab === t ? "white" : "#189aa1",
+                borderBottom: mainTab === t ? "2px solid #189aa1" : "2px solid transparent",
+              }}
+            >
+              {t === "navigator" ? <><Heart className="w-3.5 h-3.5" /> ACHD Navigator</> : <><Cpu className="w-3.5 h-3.5" /> ACHDEchoAssist™ Calculators</>}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {mainTab === "calculators" && (
+        <PremiumGate featureName="ACHDEchoAssist™ Calculators">
+          <ACHDEchoAssist embedded />
+        </PremiumGate>
+      )}
+
+      {mainTab === "navigator" && (
       <div className="container py-6">
 
         {/* Info banner */}
@@ -350,6 +380,7 @@ export default function ACHDNavigator() {
           <p className="pt-1">© All About Ultrasound — iHeartEcho™ | www.iheartecho.com</p>
         </div>
       </div>
+      )}
     </Layout>
   );
 }

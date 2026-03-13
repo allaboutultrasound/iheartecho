@@ -2709,16 +2709,16 @@
 - [x] Add shell org indicator badge in DiyOrgsPanel org list
 
 ## FetalEchoAssist™ PDF Report
-- [ ] Add consolidated PDF report generation to FetalEchoAssist™ page
-- [ ] Collect all 12 calculator inputs and results into a report data structure
-- [ ] Add patient/study info fields (GA, date, operator) at top of page
-- [ ] Generate formatted clinical PDF using jsPDF (client-side, no server needed)
-- [ ] Include ASE 2023 guideline interpretation for each result in the PDF
-- [ ] Add "Generate PDF Report" button that is enabled only when at least one calculator has been run
+- [x] Add consolidated PDF report generation to FetalEchoAssist™ page
+- [x] Collect all 12 calculator inputs and results into a report data structure
+- [x] Add patient/study info fields (GA, date, operator) at top of page
+- [x] Generate formatted clinical PDF using jsPDF (client-side, no server needed)
+- [x] Include ASE 2023 guideline interpretation for each result in the PDF
+- [x] Add "Generate PDF Report" button that is enabled only when at least one calculator has been run
 
 ## FetalEchoAssist™ Premium Gate
-- [ ] Gate FetalEchoAssist™ standalone page (/fetal-echo-assist) behind premium paywall
-- [ ] Gate FetalEchoAssist™ tab in FetalNavigator behind premium paywall
+- [x] Gate FetalEchoAssist™ standalone page (/fetal-echo-assist) behind premium paywall
+- [x] Gate FetalEchoAssist™ tab in FetalNavigator behind premium paywall
 
 ## FetalEchoAssist™ Enhancements (Mar 13 2026)
 - [x] Gate FetalEchoAssist™ standalone page (/fetal-echo-assist) behind PremiumGate
@@ -2739,12 +2739,12 @@
 - [x] Remove MRN field from FetalEchoAssist™ study info panel and PDF report (no PHI collection)
 
 ## PediatricEchoAssist™ Engine (Mar 13 2026)
-- [ ] Build PediatricEchoAssist.tsx with 20 calculators (BSA, Z-scores, shunt, ventricular function, congenital-specific, Bullet EF)
-- [ ] Premium gate wrapping all calculator content
-- [ ] PDF report generation with jsPDF
-- [ ] Register /pediatric-echo-assist route in App.tsx
-- [ ] Add engine card above FetalEchoAssist in EchoAssist engines page
-- [ ] Add PediatricEchoAssist tab to Pediatric Navigator (premium gated)
+- [x] Build PediatricEchoAssist.tsx with 20 calculators (BSA, Z-scores, shunt, ventricular function, congenital-specific, Bullet EF)
+- [x] Premium gate wrapping all calculator content
+- [x] PDF report generation with jsPDF
+- [x] Register /pediatric-echo-assist route in App.tsx
+- [x] Add engine card above FetalEchoAssist in EchoAssist engines page
+- [x] Add PediatricEchoAssist tab to Pediatric Navigator (premium gated)
 
 ## PediatricEchoAssist™ Engine (completed)
 - [x] Build PediatricEchoAssist.tsx with 20 ASE 2016 + AHA Kawasaki 2017 guideline-based calculators
@@ -2755,3 +2755,53 @@
 - [x] PediatricEchoAssist cross-promotion card added above FetalEchoAssist in EchoAssistHub
 - [x] Pediatric specialty card in EchoAssistHub updated with echoAssistPath
 - [x] PediatricEchoAssist™ tab added to PediatricNavigator with premium gate
+
+## Copy to Report Feature
+- [x] Create shared useReportClipboard hook (localStorage-based store for copied findings)
+- [x] Create CopyToReport reusable button component
+- [x] Add CopyToReport buttons to all calculator result panels in FetalEchoAssist™
+- [x] Add CopyToReport buttons to all calculator result panels in PediatricEchoAssist™
+- [ ] Update Report Builder to read and display copied findings from the shared store
+
+## ACHDEchoAssist™ Engine
+- [x] Build ACHDEchoAssist.tsx with guideline-based ACHD calculators (Fontan, CoA, Ebstein's, etc.)
+- [x] Premium gate with blur-overlay
+- [x] PDF report generation with jsPDF
+- [x] Route registered at /achd-echo-assist
+- [x] ACHDEchoAssist cross-promotion card added to EchoAssistHub
+- [x] ACHDEchoAssist™ tab added to ACHD Navigator with premium gate
+
+## Copy to Report Feature
+- [x] Create useReportClipboard hook (localStorage-backed shared store)
+- [x] Create CopyToReportButton reusable component
+- [x] Add CopyToReport buttons to all FetalEchoAssist™ calculator result panels
+- [x] Add CopyToReport buttons to all PediatricEchoAssist™ calculator result panels
+- [x] Add CopyToReport buttons to all ACHDEchoAssist™ calculator result panels
+- [ ] Update Report Builder with Copied Findings panel (read from shared store)
+
+## ICE ScanCoach Fix
+- [x] Remove probe position image upload slot from ICE ScanCoach editor and live view (keep only 2 side-by-side echo images)
+
+## ECG-Assist Suite
+- [x] Build ECG Navigator (free) — 9 sections: Rate/Rhythm, P Wave, PR Interval, QRS, ST-T Changes, QT Interval, Axis, Special Patterns, Pacemaker ECGs
+- [x] Build ECG Coach (premium) — lead placement, right-sided/posterior leads, artifact recognition, pediatric/neonatal ECG differences
+- [x] Build ECG Calculators / ECGAssist (premium) — 12 calculators with guideline feedback
+- [x] Register all 3 routes in App.tsx
+- [x] Add ECG-Assist to Home dashboard, EchoAssistHub, and sidebar navigation
+- [x] Wire ACHDEchoAssist tab into ACHD Navigator (premium gate)
+- [ ] Update Report Builder with Copied Findings panel (useReportClipboard)
+
+## ACHDNavigator PremiumGate Fix (Mar 13 2026)
+- [x] Fix PremiumGate import in ACHDNavigator.tsx (change from default to named import)
+- [x] Fix ACHDEchoAssist route in App.tsx (use render function instead of component prop to fix RouteComponentProps TS error)
+- [x] Verify ACHDEchoAssist tab renders correctly in ACHDNavigator with embedded mode
+- [x] Verify standalone /achd-echo-assist route works correctly
+- [x] Verify ECG Navigator, ECG Coach, ECG Calculators all render correctly
+- [x] Verify EchoAssistHub ACHD card shows Open ACHDEchoAssist™ and ACHD Navigator buttons
+
+## ACHDNavigator PremiumGate Fix (Mar 13 2026)
+- [x] Fix PremiumGate import in ACHDNavigator.tsx (change from default to named import)
+- [x] Fix ACHDEchoAssist route in App.tsx (render function fix)
+- [x] Verify ACHDEchoAssist tab renders correctly in ACHDNavigator with embedded mode
+- [x] Verify standalone /achd-echo-assist route works correctly
+- [x] Verify ECG Navigator, ECG Coach, ECG Calculators all render correctly
