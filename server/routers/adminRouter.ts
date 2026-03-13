@@ -98,7 +98,7 @@ export const platformAdminRouter = router({
   assignRole: protectedProcedure
     .input(z.object({
       userId: z.number(),
-      role: z.enum(["user", "premium_user", "diy_admin", "diy_user", "platform_admin"]),
+      role: z.enum(["user", "premium_user", "diy_admin", "diy_user", "platform_admin", "accreditation_manager"]),
       grantedByLabId: z.number().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
@@ -108,6 +108,10 @@ export const platformAdminRouter = router({
       // Only owner can assign platform_admin role
       if (input.role === "platform_admin" && !isOwner) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Only the owner can assign platform_admin" });
+      }
+      // Only platform_admin (or owner) can assign accreditation_manager role
+      if (input.role === "accreditation_manager" && !isOwner && !isPlatformAdmin) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only a platform admin can assign the Accreditation Manager role" });
       }
       if (!isOwner && !isPlatformAdmin) {
         throw new TRPCError({ code: "FORBIDDEN" });
@@ -120,7 +124,7 @@ export const platformAdminRouter = router({
   removeRole: protectedProcedure
     .input(z.object({
       userId: z.number(),
-      role: z.enum(["user", "premium_user", "diy_admin", "diy_user", "platform_admin"]),
+      role: z.enum(["user", "premium_user", "diy_admin", "diy_user", "platform_admin", "accreditation_manager"]),
     }))
     .mutation(async ({ ctx, input }) => {
       const myRoles = await getUserRoles(ctx.user.id);
@@ -132,6 +136,10 @@ export const platformAdminRouter = router({
       // Cannot remove the base "user" role
       if (input.role === "user") {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Cannot remove the base user role" });
+      }
+      // Only platform_admin (or owner) can remove accreditation_manager role
+      if (input.role === "accreditation_manager" && !isOwner && !isPlatformAdmin) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only a platform admin can remove the Accreditation Manager role" });
       }
       await removeRole(input.userId, input.role as AppRole);
       return { success: true };
@@ -177,7 +185,7 @@ export const platformAdminRouter = router({
   bulkAssignRole: protectedProcedure
     .input(z.object({
       emails: z.array(z.string().email()).min(1).max(500),
-      role: z.enum(["user", "premium_user", "diy_admin", "diy_user", "platform_admin"]),
+      role: z.enum(["user", "premium_user", "diy_admin", "diy_user", "platform_admin", "accreditation_manager"]),
     }))
     .mutation(async ({ ctx, input }) => {
       const myRoles = await getUserRoles(ctx.user.id);
@@ -188,6 +196,9 @@ export const platformAdminRouter = router({
       }
       if (input.role === "platform_admin" && !isOwner) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Only the owner can assign platform_admin" });
+      }
+      if (input.role === "accreditation_manager" && !isOwner && !isPlatformAdmin) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only a platform admin can assign the Accreditation Manager role" });
       }
 
       const results: Array<{
@@ -239,7 +250,7 @@ export const platformAdminRouter = router({
   assignRoleByEmail: protectedProcedure
     .input(z.object({
       email: z.string().email(),
-      role: z.enum(["user", "premium_user", "diy_admin", "diy_user", "platform_admin"]),
+      role: z.enum(["user", "premium_user", "diy_admin", "diy_user", "platform_admin", "accreditation_manager"]),
     }))
     .mutation(async ({ ctx, input }) => {
       const myRoles = await getUserRoles(ctx.user.id);
@@ -250,6 +261,9 @@ export const platformAdminRouter = router({
       }
       if (input.role === "platform_admin" && !isOwner) {
         throw new TRPCError({ code: "FORBIDDEN", message: "Only the owner can assign platform_admin" });
+      }
+      if (input.role === "accreditation_manager" && !isOwner && !isPlatformAdmin) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Only a platform admin can assign the Accreditation Manager role" });
       }
       let found = await findUserByEmailWithRoles(input.email);
       let wasPreRegistered = false;

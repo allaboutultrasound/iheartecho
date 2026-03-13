@@ -320,6 +320,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   const isPremiumUser = (user as any).isPremium === true;
                   const hasDiyAdmin = roles.includes("diy_admin");
                   const hasPlatformAdmin = roles.includes("platform_admin") || (user as any).role === "admin";
+                  const hasAccreditationManager = roles.includes("accreditation_manager") || hasPlatformAdmin;
                   const ROLE_LABELS: Record<string, { label: string; color: string }> = {
                     diy_user:  { label: "DIY Accreditation", color: "#f59e0b" },
                     diy_admin: { label: "Lab Admin",         color: "#f97316" },
@@ -453,6 +454,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                               <Shield className="w-3.5 h-3.5 text-purple-500" />
                               <span className="flex-1">Platform Management</span>
                               <PendingBadge />
+                            </button>
+                          </WouterLink>
+                        </div>
+                      )}
+
+                      {/* Accreditation Manager section — for platform_admin and accreditation_manager */}
+                      {hasAccreditationManager && (
+                        <div className="px-2 py-1.5 border-t border-gray-100">
+                          <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider px-2 mb-1">Accreditation</div>
+                          <WouterLink href="/accreditation-manager">
+                            <button onClick={() => setAccountOpen(false)}
+                              className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 transition-all text-left">
+                              <ClipboardList className="w-3.5 h-3.5 text-indigo-500" />
+                              <span className="flex-1">Accreditation Manager</span>
                             </button>
                           </WouterLink>
                         </div>

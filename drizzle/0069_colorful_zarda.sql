@@ -1,0 +1,52 @@
+CREATE TABLE `accreditationTasks` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`managedAccountId` int,
+	`diyOrgId` int,
+	`title` varchar(255) NOT NULL,
+	`description` longtext,
+	`taskType` enum('image_quality_review','peer_review','echo_correlation','case_mix_submission','readiness_checklist','document_upload','facility_information','general') NOT NULL DEFAULT 'general',
+	`priority` enum('low','normal','high','urgent') NOT NULL DEFAULT 'normal',
+	`dueDate` timestamp,
+	`assignedToUserId` int,
+	`assignedToEmail` varchar(320),
+	`assignedToName` varchar(150),
+	`assignedByUserId` int NOT NULL,
+	`status` enum('pending','in_progress','completed','overdue','cancelled') NOT NULL DEFAULT 'pending',
+	`completedAt` timestamp,
+	`completionNotes` longtext,
+	`emailSentAt` timestamp,
+	`emailReminderSentAt` timestamp,
+	`emailStatus` enum('not_sent','sent','delivered','failed') NOT NULL DEFAULT 'not_sent',
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `accreditationTasks_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `managedAccounts` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`facilityName` varchar(255) NOT NULL,
+	`facilityType` varchar(100),
+	`address` text,
+	`city` varchar(100),
+	`state` varchar(50),
+	`zip` varchar(20),
+	`country` varchar(100) DEFAULT 'USA',
+	`phone` varchar(30),
+	`website` varchar(255),
+	`contactName` varchar(150),
+	`contactEmail` varchar(320),
+	`contactTitle` varchar(100),
+	`accreditationTypes` text,
+	`accreditationBody` varchar(100),
+	`currentAccreditationStatus` enum('not_started','in_progress','submitted','accredited','expired','suspended') NOT NULL DEFAULT 'not_started',
+	`accreditationExpiry` timestamp,
+	`notes` longtext,
+	`assignedManagerId` int,
+	`isActive` boolean NOT NULL DEFAULT true,
+	`createdByUserId` int NOT NULL,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `managedAccounts_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+ALTER TABLE `userRoles` MODIFY COLUMN `role` enum('user','premium_user','diy_admin','diy_user','platform_admin','accreditation_manager') NOT NULL;

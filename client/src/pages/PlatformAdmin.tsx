@@ -62,7 +62,7 @@ import {
 import { Link, useLocation } from "wouter";
 import BulkCsvUploadPanel, { type BulkResult } from "@/components/BulkCsvUploadPanel";
 
-type AppRole = "user" | "premium_user" | "diy_admin" | "diy_user" | "platform_admin";
+type AppRole = "user" | "premium_user" | "diy_admin" | "diy_user" | "platform_admin" | "accreditation_manager";
 
 const ROLE_META: Record<AppRole, { label: string; color: string; icon: React.ElementType; description: string }> = {
   user: {
@@ -94,6 +94,12 @@ const ROLE_META: Record<AppRole, { label: string; color: string; icon: React.Ele
     color: "bg-purple-100 text-purple-700",
     icon: Shield,
     description: "Full platform management access",
+  },
+  accreditation_manager: {
+    label: "Accreditation Manager",
+    color: "bg-indigo-100 text-indigo-700",
+    icon: ClipboardList,
+    description: "Full access to all DIY Accreditation organizations and managed accounts — assigned by platform admins only",
   },
 };
 
@@ -140,7 +146,7 @@ type SearchState =
   | { status: "notFound"; email: string }
   | { status: "error"; message: string };
 
-function AddUserByEmailPanel({ onSuccess }: { onSuccess: () => void }) {
+function AddUserByEmailPanel({ onSuccess, isPlatformAdminOrOwner }: { onSuccess: () => void; isPlatformAdminOrOwner: boolean }) {
   const [email, setEmail] = useState("");
   const [selectedRole, setSelectedRole] = useState<AppRole>("premium_user");
   const [searchState, setSearchState] = useState<SearchState>({ status: "idle" });
@@ -279,7 +285,9 @@ function AddUserByEmailPanel({ onSuccess }: { onSuccess: () => void }) {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {(Object.entries(ROLE_META) as [AppRole, typeof ROLE_META[AppRole]][]).map(([role, meta]) => (
+                        {(Object.entries(ROLE_META) as [AppRole, typeof ROLE_META[AppRole]][])
+                          .filter(([role]) => role !== "accreditation_manager" || isPlatformAdminOrOwner)
+                          .map(([role, meta]) => (
                           <SelectItem key={role} value={role}>
                             <div className="flex items-center gap-2">
                               <meta.icon className="w-3.5 h-3.5" />
@@ -329,19 +337,9 @@ function AddUserByEmailPanel({ onSuccess }: { onSuccess: () => void }) {
                         </span>
                       )}
                     </div>
-                    <div className="text-xs text-gray-500">{foundUser.email}</div>
-                    <div className="flex flex-wrap gap-1 mt-1.5">
-                      {foundUser.roles.length > 0
-                        ? foundUser.roles.map(r => <RoleBadge key={r} role={r} />)
-                        : <span className="text-xs text-gray-400 italic">No roles yet</span>
-                      }
-                    </div>
+                    <div className="text-xs text-gray-500 truncate">{foundUser.email}</div>
                   </div>
-                  {foundUser.isPending
-                    ? <Clock className="w-5 h-5 text-orange-400 flex-shrink-0" />
-                    : <CheckCircle2 className="w-5 h-5 text-[#189aa1] flex-shrink-0" />}
                 </div>
-
                 {/* Role selector + assign */}
                 <div className="flex gap-2 items-end">
                   <div className="flex-1">
@@ -351,14 +349,16 @@ function AddUserByEmailPanel({ onSuccess }: { onSuccess: () => void }) {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {(Object.entries(ROLE_META) as [AppRole, typeof ROLE_META[AppRole]][]).map(([role, meta]) => (
-                          <SelectItem key={role} value={role}>
-                            <div className="flex items-center gap-2">
-                              <meta.icon className="w-3.5 h-3.5" />
-                              {meta.label}
-                            </div>
-                          </SelectItem>
-                        ))}
+                        {(Object.entries(ROLE_META) as [AppRole, typeof ROLE_META[AppRole]][])
+                          .filter(([role]) => role !== "accreditation_manager" || isPlatformAdminOrOwner)
+                          .map(([role, meta]) => (
+                            <SelectItem key={role} value={role}>
+                              <div className="flex items-center gap-2">
+                                <meta.icon className="w-3.5 h-3.5" />
+                                {meta.label}
+                              </div>
+                            </SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
                     {ROLE_META[selectedRole] && (
@@ -823,6 +823,10 @@ export default function PlatformAdmin() {
   // Search and filtering is now server-side — use the result directly
   const filteredUsers = users ?? [];
 
+  // Only platform admins and owner can see/assign the accreditation_manager role
+  const currentUserAppRoles: string[] = (user as any)?.appRoles ?? [];
+  const isPlatformAdminOrOwner = (user as any)?.role === "admin" || currentUserAppRoles.includes("platform_admin");
+
   const handleAddRole = () => {
     if (!selectedUser) return;
     assignRoleMutation.mutate({ userId: selectedUser.id, role: roleToAdd });
@@ -942,7 +946,7 @@ export default function PlatformAdmin() {
         </div>
 
         {/* Add User by Email */}
-        <AddUserByEmailPanel onSuccess={refetchUsers} />
+        <AddUserByEmailPanel onSuccess={() => refetchUsers()} isPlatformAdminOrOwner={isPlatformAdminOrOwner} />
 
         {/* Bulk CSV Role Assignment */}
         <Card className="mb-6 border-0 shadow-sm">
@@ -970,7 +974,9 @@ export default function PlatformAdmin() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {(Object.entries(ROLE_META) as [AppRole, typeof ROLE_META[AppRole]][]).map(([role, meta]) => (
+                      {(Object.entries(ROLE_META) as [AppRole, typeof ROLE_META[AppRole]][])
+                        .filter(([role]) => role !== "accreditation_manager" || isPlatformAdminOrOwner)
+                        .map(([role, meta]) => (
                         <SelectItem key={role} value={role}>
                           <div className="flex items-center gap-2">
                             <meta.icon className="w-3.5 h-3.5" />
@@ -1289,6 +1295,7 @@ export default function PlatformAdmin() {
                   <SelectContent>
                     {(Object.entries(ROLE_META) as [AppRole, typeof ROLE_META[AppRole]][])
                       .filter(([role]) => !selectedUser.roles.includes(role))
+                      .filter(([role]) => role !== "accreditation_manager" || isPlatformAdminOrOwner)
                       .map(([role, meta]) => (
                         <SelectItem key={role} value={role}>
                           <div className="flex items-center gap-2">

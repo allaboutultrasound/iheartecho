@@ -484,6 +484,13 @@
       "when": 1773358964640,
       "tag": "0068_silly_barracuda",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "5",
+      "when": 1773359866891,
+      "tag": "0069_colorful_zarda",
+      "breakpoints": true
     }
   ]
 }

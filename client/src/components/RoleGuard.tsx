@@ -23,7 +23,7 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { BlurredOverlay } from "@/components/BlurredOverlay";
 
-type AppRole = "user" | "premium_user" | "diy_admin" | "diy_user" | "platform_admin";
+type AppRole = "user" | "premium_user" | "diy_admin" | "diy_user" | "platform_admin" | "accreditation_manager";
 
 interface RoleGuardProps {
   /** At least one of these roles must be present for access */
@@ -39,6 +39,7 @@ const ROLE_LABELS: Record<AppRole, string> = {
   diy_admin: "DIY Accreditation Admin",
   diy_user: "DIY Accreditation User",
   platform_admin: "Platform Administrator",
+  accreditation_manager: "Accreditation Manager",
 };
 
 const ROLE_DESCRIPTIONS: Record<string, string> = {
@@ -46,6 +47,7 @@ const ROLE_DESCRIPTIONS: Record<string, string> = {
   diy_user: "Seat-based access to the DIY Accreditation Tool™",
   premium_user: "Premium subscription access",
   platform_admin: "Platform administrator access",
+  accreditation_manager: "Full access to all DIY Accreditation organizations and managed accounts",
 };
 
 export function RoleGuard({ roles, allowAdmin = true, children }: RoleGuardProps) {

@@ -92,6 +92,7 @@ import DIYAccreditationPlans from "./pages/DIYAccreditationPlans";
 import DIYRegister from "./pages/DIYRegister";
 import Enrolled from "./pages/Enrolled";
 import FormBuilderAdmin from "./pages/FormBuilderAdmin";
+import AccreditationManagerPage from "./pages/AccreditationManager";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -201,10 +202,10 @@ function Router() {
       <Route path="/admin/thinkific-webhook">{() => <RoleGuard roles={["platform_admin"]} allowAdmin={true}><ThinkificWebhookAdmin /></RoleGuard>}</Route>
       <Route path="/admin/form-builder">{() => <RoleGuard roles={["platform_admin"]} allowAdmin={true}><FormBuilderAdmin /></RoleGuard>}</Route>
       <Route path="/admin/form-builder/:id">{() => <RoleGuard roles={["platform_admin"]} allowAdmin={true}><FormBuilderAdmin /></RoleGuard>}</Route>
-      {/* ── DIY Accreditation™ ─────────────────────────────────────────── */}
+      <Route path="/accreditation-manager">{() => <RoleGuard roles={["platform_admin", "accreditation_manager"]} allowAdmin={true}><AccreditationManagerPage /></RoleGuard>}</Route>
+      {/* ── DIY Accreditation™ ────────────────────────────────────────────────────── */}
       <Route path="/diy-accreditation-plans" component={DIYAccreditationPlans} />
-      <Route path="/diy-register" component={DIYRegister} />
-      {/* /diy-lab-admin is deprecated — redirect to the unified /lab-admin */}
+      <Route path="/diy-register" component={DIYRegister} /> {/* /diy-lab-admin is deprecated — redirect to the unified /lab-admin */}
       <Route path="/diy-lab-admin">{() => { const [, setLoc] = useLocation(); useEffect(() => { setLoc("/lab-admin"); }, []); return null; }}</Route>
       <Route path="/diy-member">{() => <RoleGuard roles={["diy_user", "diy_admin"]} allowAdmin={false}><DIYMemberPortal /></RoleGuard>}</Route>      {/* ── Premium Access ────────────────────────────────────────────────── */}
       <Route path="/premium" component={Premium} />

@@ -790,18 +790,20 @@ export type InsertAccreditationReadinessNavigator = typeof accreditationReadines
 //   diy_admin      — Lab Admin who manages the DIY Accreditation Tool & assigns seats
 //   diy_user       — seat-assigned user with DIY Accreditation Tool access
 //   platform_admin — full platform management access (owner-level)
+//   accreditation_manager — can manage all DIY orgs + full-service accounts; no other platform admin access
 export const appRoleEnum = mysqlEnum("appRole", [
   "user",
   "premium_user",
   "diy_admin",
   "diy_user",
   "platform_admin",
+  "accreditation_manager",
 ]);
 
 export const userRoles = mysqlTable("userRoles", {
   id: int("id").primaryKey().autoincrement(),
   userId: int("userId").notNull(),
-  role: mysqlEnum("role", ["user", "premium_user", "diy_admin", "diy_user", "platform_admin"]).notNull(),
+  role: mysqlEnum("role", ["user", "premium_user", "diy_admin", "diy_user", "platform_admin", "accreditation_manager"]).notNull(),
   // For diy_user: which lab subscription granted this seat
   grantedByLabId: int("grantedByLabId"),
   // Who assigned this role (platform_admin or diy_admin userId)
@@ -1827,3 +1829,87 @@ export const flashcardGuestDailyUsage = mysqlTable(
   })
 );
 export type FlashcardGuestDailyUsage = typeof flashcardGuestDailyUsage.$inferSelect;
+
+// ─── Accreditation Manager: Managed (Full-Service) Accounts ──────────────────
+// Full-service (non-DIY) accreditation accounts managed by platform_admin or
+// accreditation_manager. These are facilities that do not self-administer via
+// the DIY tool — instead, an Accreditation Manager handles all form submissions,
+// reporting, and task assignment on their behalf.
+export const managedAccounts = mysqlTable("managedAccounts", {
+  id: int("id").autoincrement().primaryKey(),
+  // Facility info
+  facilityName: varchar("facilityName", { length: 255 }).notNull(),
+  facilityType: varchar("facilityType", { length: 100 }), // e.g. "Hospital", "Outpatient", "Mobile"
+  address: text("address"),
+  city: varchar("city", { length: 100 }),
+  state: varchar("state", { length: 50 }),
+  zip: varchar("zip", { length: 20 }),
+  country: varchar("country", { length: 100 }).default("USA"),
+  phone: varchar("phone", { length: 30 }),
+  website: varchar("website", { length: 255 }),
+  // Primary contact
+  contactName: varchar("contactName", { length: 150 }),
+  contactEmail: varchar("contactEmail", { length: 320 }),
+  contactTitle: varchar("contactTitle", { length: 100 }),
+  // Accreditation details
+  accreditationTypes: text("accreditationTypes"), // JSON array e.g. ["Adult Echo","Pediatric/Fetal"]
+  accreditationBody: varchar("accreditationBody", { length: 100 }), // e.g. "IAC", "ICAEL", "ACR"
+  currentAccreditationStatus: mysqlEnum("currentAccreditationStatus", [
+    "not_started", "in_progress", "submitted", "accredited", "expired", "suspended",
+  ]).default("not_started").notNull(),
+  accreditationExpiry: timestamp("accreditationExpiry"),
+  notes: longtext("notes"),
+  // Assigned manager
+  assignedManagerId: int("assignedManagerId"), // userId of the accreditation_manager or platform_admin
+  // Metadata
+  isActive: boolean("isActive").default(true).notNull(),
+  createdByUserId: int("createdByUserId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type ManagedAccount = typeof managedAccounts.$inferSelect;
+export type InsertManagedAccount = typeof managedAccounts.$inferInsert;
+
+// ─── Accreditation Manager: Task Assignments ─────────────────────────────────
+// Tasks assigned by a platform_admin or accreditation_manager to a user (or
+// external contact) for a specific managed account or DIY org. Triggers an
+// email notification to the assignee.
+export const accreditationTasks = mysqlTable("accreditationTasks", {
+  id: int("id").autoincrement().primaryKey(),
+  // Scope: either a managed account or a DIY org (one must be set)
+  managedAccountId: int("managedAccountId"),
+  diyOrgId: int("diyOrgId"),
+  // Task details
+  title: varchar("title", { length: 255 }).notNull(),
+  description: longtext("description"),
+  taskType: mysqlEnum("taskType", [
+    "image_quality_review",
+    "peer_review",
+    "echo_correlation",
+    "case_mix_submission",
+    "readiness_checklist",
+    "document_upload",
+    "facility_information",
+    "general",
+  ]).default("general").notNull(),
+  priority: mysqlEnum("priority", ["low", "normal", "high", "urgent"]).default("normal").notNull(),
+  dueDate: timestamp("dueDate"),
+  // Assignment
+  assignedToUserId: int("assignedToUserId"), // null if assigned to external email only
+  assignedToEmail: varchar("assignedToEmail", { length: 320 }), // for external contacts
+  assignedToName: varchar("assignedToName", { length: 150 }),
+  assignedByUserId: int("assignedByUserId").notNull(),
+  // Status tracking
+  status: mysqlEnum("status", ["pending", "in_progress", "completed", "overdue", "cancelled"]).default("pending").notNull(),
+  completedAt: timestamp("completedAt"),
+  completionNotes: longtext("completionNotes"),
+  // Email notification tracking
+  emailSentAt: timestamp("emailSentAt"),
+  emailReminderSentAt: timestamp("emailReminderSentAt"),
+  emailStatus: mysqlEnum("emailStatus", ["not_sent", "sent", "delivered", "failed"]).default("not_sent").notNull(),
+  // Metadata
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type AccreditationTask = typeof accreditationTasks.$inferSelect;
+export type InsertAccreditationTask = typeof accreditationTasks.$inferInsert;

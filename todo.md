@@ -2616,3 +2616,20 @@
 - [x] Persistent demo banner (purple) shown on all pages while in demo mode with Exit button
 - [x] Auth context reads demo session cookie and returns impersonated user
 - [x] Verify DIY Accreditation pages render correctly under demo session
+
+## Accreditation Manager System
+- [x] Add accreditation_manager to AppRole enum in schema and shared types
+- [x] Add managedAccounts table (full-service non-DIY accounts managed by admin/accreditation_manager)
+- [x] Add accreditationTasks table (task assignments with email notification tracking)
+- [x] Add accreditationManagerRouter with org drill-down, managed accounts CRUD, task assignment
+- [x] Build AccreditationManager hub page (org list with drill-down, seat/facility/readiness/forms/analytics tabs)
+- [x] Build Managed Accounts panel (create account, assign tasks, email task notifications)
+- [x] Add accreditation_manager role guard and nav entry in sidebar
+- [x] Add Accreditation Manager card in Platform Admin quick-links section
+- [x] Accreditation Manager mode: create accounts without SuperAdmin (admin or accreditation_manager only)
+- [x] Task assignment: send email notifications for assigned quality reviews
+
+## Accreditation Manager Role Restriction
+- [x] Server-side: only platform_admin can assign/remove accreditation_manager role
+- [x] UI: accreditation_manager option hidden in all role dropdowns unless user is platform_admin or owner
+- [x] Applies to: found-user dropdown, not-found dropdown, bulk CSV dropdown, user row dropdown

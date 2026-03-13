@@ -15,6 +15,7 @@ import { scanCoachAdminRouter } from "./routers/scanCoachAdminRouter";
 import { diyRouter } from "./routers/diyRouter";
 import { meetingRouter } from "./routers/meetingRouter";
 import { formBuilderRouter } from "./routers/formBuilderRouter";
+import { accreditationManagerRouter } from "./routers/accreditationManagerRouter";
 import {
   getUserById,
   getUsersByIds,
@@ -1753,6 +1754,9 @@ export const appRouter = router({
   // ─── DIY Accreditation ─────────────────────────────────────────────────────────────
   diy: diyRouter,
   meeting: meetingRouter,
+
+  // ─── Accreditation Manager ────────────────────────────────────────────────────────
+  accreditationManager: accreditationManagerRouter,
 
   // ─── Physician Over-Read Workflow (Step 1 & Step 2) ──────────────────────────
   physicianOverRead: router({
