@@ -50,3 +50,5 @@
 - [x] Fix: HTML tags (e.g. <p>) showing in challenge queue question titles — strip HTML for display
 - [x] Fix: Challenges created via queue should default to "scheduled" status, not "draft"
 - [x] Daily challenge: display one question per category (ACS, Adult Echo, Pediatric Echo, Fetal Echo, POCUS) — fixed POCUS key mapping bug and inline player key lookup
+- [ ] Admin queue: show all currently live challenges (not just scheduled), with a distinct "Live" badge
+- [ ] Admin queue: Unpublish button on live challenges to move them back to scheduled status
