@@ -2279,7 +2279,7 @@ export default function QuickFireAdmin() {
                 <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Clinical Topic <span className="text-red-500">*</span></label>
                 <div className="flex flex-wrap gap-1.5 mb-2">
                   {[
-                    { label: "ACS", topic: "Echocardiographic assessment in Acute Coronary Syndrome (ACS) — RWMA, LV function, complications" },
+                    { label: "ACS", topic: "Advanced Cardiac Sonographer (ACS) echocardiography — advanced imaging, RWMA, LV function, complications, complex hemodynamics" },
                     { label: "Adult Echo", topic: "Adult transthoracic echocardiography — valvular disease, LV/RV function, Doppler assessment" },
                     { label: "HOCM", topic: "Hypertrophic obstructive cardiomyopathy (HOCM) — LVOT obstruction, SAM, Doppler gradients, septal morphology, provocable obstruction" },
                     { label: "Strain / GLS", topic: "Myocardial strain imaging and global longitudinal strain (GLS) — LV GLS, RV strain, layer-specific strain, clinical applications" },

@@ -2917,3 +2917,6 @@
 
 ## Email Rich Text Emoji Support
 - [x] Add emoji picker button to RichTextEditor toolbar for email sections
+
+## ACS Label Fix
+- [x] Change ACS description from "Acute Coronary Syndrome" to "Advanced Cardiac Sonographer" in Daily Challenge, category prefs, EmailAdmin, QuickFireAdmin

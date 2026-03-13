@@ -943,7 +943,7 @@ export default function QuickFire() {
                   const catPrefs = categoryPrefsQuery.data ?? { acs: true, adultEcho: true, pediatricEcho: true, fetalEcho: true };
 
                   const CATS = [
-                    { key: "ACS", label: "ACS", Icon: Heart, desc: "Acute Coronary Syndrome", prefKey: "acs" as const, mapKey: "acs" },
+                    { key: "ACS", label: "ACS", Icon: Heart, desc: "Advanced Cardiac Sonographer", prefKey: "acs" as const, mapKey: "acs" },
                     { key: "Adult Echo", label: "Adult Echo", Icon: Stethoscope, desc: "Adult Echocardiography", prefKey: "adultEcho" as const, mapKey: "adultEcho" },
                     { key: "Pediatric Echo", label: "Pediatric Echo", Icon: Baby, desc: "Pediatric & Congenital", prefKey: "pediatricEcho" as const, mapKey: "pediatricEcho" },
                     { key: "Fetal Echo", label: "Fetal Echo", Icon: Activity, desc: "Fetal Echocardiography", prefKey: "fetalEcho" as const, mapKey: "fetalEcho" },
