@@ -5,7 +5,7 @@
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
 import { useState, useMemo } from "react";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import Layout from "@/components/Layout";
 import { BlurredOverlay } from "@/components/BlurredOverlay";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -445,8 +445,10 @@ function ViewDetail({ view }: { view: typeof CARDIAC_VIEWS[0] }) {
 }
 
 export default function POCUSCardiacScanCoach() {
+  const search = useSearch();
+  const _viewParam = new URLSearchParams(search).get("view");
   const { loading, isAuthenticated } = useAuth();
-  const [selectedViewId, setSelectedViewId] = useState<string>(CARDIAC_VIEWS[0].id);
+  const [selectedViewId, setSelectedViewId] = useState<string>(CARDIAC_VIEWS.find(v => v.id === _viewParam)?.id ?? CARDIAC_VIEWS[0].id);
   const _selectedViewRaw = CARDIAC_VIEWS.find((v) => v.id === selectedViewId) ?? CARDIAC_VIEWS[0];
   const { mergeView } = useScanCoachOverrides("pocus_cardiac");
   const selectedView = useMemo(() => mergeView(_selectedViewRaw as any), [_selectedViewRaw, mergeView]);

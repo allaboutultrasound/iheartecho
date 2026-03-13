@@ -125,11 +125,32 @@ function parseToStringArray(value: string | null): string[] {
  *   - /tee-scan-coach    → append ?view=viewId
  *   - /scan-coach?tab=chd → use ?tab=chd&defect=viewId&stage=viewId
  */
+// Maps CHD stage IDs to their parent defect IDs for deep-linking
+const CHD_STAGE_TO_DEFECT: Record<string, string> = {
+  "asd-diagnosis": "asd", "asd-post-closure": "asd",
+  "vsd-diagnosis": "vsd", "vsd-post-closure": "vsd",
+  "tof-preop": "tof", "tof-postop": "tof", "tof-surveillance": "tof",
+  "hlhs-prenatal-neonatal": "hlhs", "hlhs-post-norwood": "hlhs", "hlhs-interstage": "hlhs",
+  "hlhs-post-glenn": "hlhs", "hlhs-post-fontan": "hlhs",
+  "dtga-preop": "dtga", "dtga-post-aso": "dtga",
+  "cavsd-preop": "cavsd", "cavsd-postop": "cavsd",
+  "coa-diagnosis": "coa", "coa-postop": "coa",
+  "tapvr-preop": "tapvr", "tapvr-postop": "tapvr",
+  "truncus-preop": "truncus", "truncus-postop": "truncus",
+  "ebstein-assessment": "ebstein", "ebstein-postop": "ebstein",
+  "paivs-preop": "paivs", "paivs-postop": "paivs",
+  "dorv-preop": "dorv", "dorv-postop": "dorv",
+  "ta-preop": "tricuspid-atresia", "ta-fontan": "tricuspid-atresia",
+  "iaa-preop": "iaa", "iaa-postop": "iaa",
+  "heterotaxy-assessment": "heterotaxy",
+};
+
 function buildPreviewUrl(modulePath: string, moduleKey: string, viewId: string): string {
   const base = window.location.origin;
   if (moduleKey === "chd") {
-    // CHD uses defect + stage params
-    return `${base}/scan-coach?tab=chd&defect=${encodeURIComponent(viewId)}&stage=${encodeURIComponent(viewId)}&preview=1`;
+    // CHD uses defect + stage params — map stage IDs to their parent defect
+    const defectId = CHD_STAGE_TO_DEFECT[viewId] ?? viewId;
+    return `${base}/scan-coach?tab=chd&defect=${encodeURIComponent(defectId)}&stage=${encodeURIComponent(viewId)}&preview=1`;
   }
   if (modulePath.includes("?")) {
     // Already has query params (e.g. /scan-coach?tab=tte)

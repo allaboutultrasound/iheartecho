@@ -214,6 +214,14 @@ export const SCANCOACH_MODULES: ScanCoachModuleMeta[] = [
     label: "Pediatric CHD ScanCoach",
     path: "/scan-coach?tab=chd",
     views: [
+      // ASD
+      { id: "asd",                    name: "Atrial Septal Defect (ASD)",                        group: "Shunt Lesions" },
+      { id: "asd-diagnosis",          name: "ASD — Diagnosis & Sizing",                          group: "Shunt Lesions" },
+      { id: "asd-post-closure",       name: "ASD — Post-Closure Surveillance",                   group: "Shunt Lesions" },
+      // VSD
+      { id: "vsd",                    name: "Ventricular Septal Defect (VSD)",                   group: "Shunt Lesions" },
+      { id: "vsd-diagnosis",          name: "VSD — Diagnosis & Sizing",                          group: "Shunt Lesions" },
+      { id: "vsd-post-closure",       name: "VSD — Post-Closure Surveillance",                   group: "Shunt Lesions" },
       // Tetralogy of Fallot
       { id: "tof",                    name: "Tetralogy of Fallot",                              group: "Tetralogy of Fallot" },
       { id: "tof-preop",              name: "ToF — Pre-Op Assessment",                          group: "Tetralogy of Fallot" },

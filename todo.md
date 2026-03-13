@@ -2845,3 +2845,8 @@
 - [x] QuickFire Admin: category reminder banner added to challenge form (explains 1 question per category slot)
 - [x] QuickFire Admin: category-question mismatch warning when selected question category ≠ challenge category
 - [x] QuickFire Admin: category field now shows helper text "Determines which daily slot this challenge fills"
+
+## Pediatric CHD ScanCoach — ASD & VSD Pathology (Session Mar 13)
+- [x] Add ASD (Atrial Septal Defect) pathology entry to top of CHD view list with echo views, structures, measurements, how-to-get, tips, pitfalls, critical findings
+- [x] Add VSD (Ventricular Septal Defect) pathology entry to top of CHD view list with echo views, structures, measurements, how-to-get, tips, pitfalls, critical findings
+- [x] Register ASD and VSD in scanCoachRegistry.ts CHD module view list

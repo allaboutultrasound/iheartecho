@@ -5,7 +5,7 @@
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
 import { useState, useMemo } from "react";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import Layout from "@/components/Layout";
 import { BlurredOverlay } from "@/components/BlurredOverlay";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -460,8 +460,10 @@ function ViewDetail({ view }: { view: typeof EFAST_VIEWS[0] }) {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function POCUSEfastScanCoach() {
+  const search = useSearch();
+  const _viewParam = new URLSearchParams(search).get("view");
   const { loading, isAuthenticated } = useAuth();
-  const [selectedViewId, setSelectedViewId] = useState<string>(EFAST_VIEWS[0].id);
+  const [selectedViewId, setSelectedViewId] = useState<string>(EFAST_VIEWS.find(v => v.id === _viewParam)?.id ?? EFAST_VIEWS[0].id);
   const _selectedViewRaw = EFAST_VIEWS.find((v) => v.id === selectedViewId) ?? EFAST_VIEWS[0];
   const { mergeView } = useScanCoachOverrides("pocus_efast");
   const selectedView = useMemo(() => mergeView(_selectedViewRaw as any), [_selectedViewRaw, mergeView]);

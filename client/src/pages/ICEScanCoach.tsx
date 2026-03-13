@@ -6,7 +6,7 @@
 import { useState, useMemo } from "react";
 import { PremiumOverlay } from "@/components/PremiumOverlay";
 import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import Layout from "@/components/Layout";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
 import ScanCoachNavBar from "@/components/ScanCoachNavBar";
@@ -685,7 +685,11 @@ export function ICEScanCoachContent() {
 }
 
 export default function ICEScanCoach() {
-  const [selectedViewId, setSelectedViewId] = useState<string>(ICE_VIEWS[0].id);
+  const search = useSearch();
+  const _viewParam = new URLSearchParams(search).get("view");
+  const [selectedViewId, setSelectedViewId] = useState<string>(
+    ICE_VIEWS.find(v => v.id === _viewParam)?.id ?? ICE_VIEWS[0].id
+  );
 
   const _selectedViewRaw = ICE_VIEWS.find(v => v.id === selectedViewId) ?? ICE_VIEWS[0];
   const { mergeView: mergeICEView } = useScanCoachOverrides("ice");

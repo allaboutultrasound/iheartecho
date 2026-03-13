@@ -1202,8 +1202,12 @@ export default function ScanCoach() {
   const _params = new URLSearchParams(search);
   const _initialTab = (_params.get("tab") as "tte" | "fetal" | "chd" | "achd" | "diastolic" | "pulm" | "strain" | "hocm" | "uea") || "tte";
   const [activeTab, setActiveTab] = useState<"tte" | "fetal" | "chd" | "achd" | "diastolic" | "pulm" | "strain" | "hocm" | "uea" | "tee" | "ice">(_initialTab as any);
-  const [selectedTTE, setSelectedTTE] = useState(tteViews[0]);
-  const [selectedFetal, setSelectedFetal] = useState(fetalViews[0]);
+  // Deep-link to a specific view via ?view=viewId URL param (used by WYSIWYG editor preview)
+  const _viewParam = _params.get("view");
+  // preview=1: hide hero banner and nav chrome when embedded in the editor iframe
+  const _isPreviewMode = _params.get("preview") === "1";
+  const [selectedTTE, setSelectedTTE] = useState(() => tteViews.find(v => v.id === _viewParam) ?? tteViews[0]);
+  const [selectedFetal, setSelectedFetal] = useState(() => fetalViews.find(v => v.id === _viewParam) ?? fetalViews[0]);
   const [mrExpanded, setMrExpanded] = useState(false);
   const [arExpanded, setArExpanded] = useState(false);
   const { mergeView: mergeTTEView } = useScanCoachOverrides("tte");
@@ -1233,8 +1237,8 @@ export default function ScanCoach() {
 
   return (
     <Layout>
-      {/* Hero Banner */}
-      <div
+      {/* Hero Banner — hidden in editor preview mode */}
+      {!_isPreviewMode && (<div
         className="relative overflow-hidden"
         style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}
       >
@@ -1267,12 +1271,12 @@ export default function ScanCoach() {
             </div>
           </div>
         </div>
-      </div>
+      </div>)}
 
       <div className="max-w-7xl mx-auto px-4 py-6">
 
-        {/* Module Card Grid */}
-        {(() => {
+        {/* Module Card Grid — hidden in editor preview mode */}
+        {!_isPreviewMode && (() => {
           const tabNavMap: Record<string, { path: string; label: string }> = {
             tte: { path: "/tte", label: "TTE Navigator" },
             chd: { path: "/pediatric", label: "Pediatric Navigator" },

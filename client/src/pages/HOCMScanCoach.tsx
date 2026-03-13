@@ -23,7 +23,7 @@ import {
   TrendingUp,
   Zap,
 } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import ScanCoachNavBar from "@/components/ScanCoachNavBar";
 import { PremiumOverlay } from "@/components/PremiumOverlay";
 
@@ -571,7 +571,9 @@ export function HOCMScanCoachContent() {
 }
 
 export default function HOCMScanCoach({ _noLayout }: { _noLayout?: boolean } = {}) {
-  const [selectedView, setSelectedView] = useState(views[0]);
+  const search = useSearch();
+  const _viewParam = new URLSearchParams(search).get("view");
+  const [selectedView, setSelectedView] = useState(() => views.find(v => v.id === _viewParam) ?? views[0]);
   const [expandedSection, setExpandedSection] = useState<string | null>("criteria");
   const [activeTab, setActiveTab] = useState<"views" | "doppler" | "valsalva" | "myosin" | "settings">("views");
   const [valsalvaPath, setValsalvaPath] = useState<"instructed" | "goal-directed" | null>(null);

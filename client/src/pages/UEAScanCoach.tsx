@@ -7,7 +7,7 @@
 */
 import { useState, useMemo } from "react";
 import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import Layout from "@/components/Layout";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
 import ScanCoachNavBar from "@/components/ScanCoachNavBar";
@@ -451,7 +451,11 @@ export function UEAScanCoachContent() {
 }
 
 function UEAScanCoachInner() {
-  const [selectedView, setSelectedView] = useState<string | null>("a4c");
+  const search = useSearch();
+  const _viewParam = new URLSearchParams(search).get("view");
+  const [selectedView, setSelectedView] = useState<string | null>(
+    UEA_VIEWS.find(v => v.id === _viewParam) ? _viewParam : "a4c"
+  );
   const [activeTab, setActiveTab] = useState<"views" | "injection" | "bubble" | "artifacts" | "tips" | "vendors" | "peg">("views");
 
   const _currentViewRaw = UEA_VIEWS.find(v => v.id === selectedView);

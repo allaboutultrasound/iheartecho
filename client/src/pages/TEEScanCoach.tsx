@@ -4,6 +4,7 @@
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
 import { useState, useMemo } from "react";
+import { useSearch } from "wouter";
 import { PremiumOverlay } from "@/components/PremiumOverlay";
 import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 import { Link } from "wouter";
@@ -734,7 +735,11 @@ function ViewDetail({ view }: { view: typeof TEE_VIEWS[0] }) {
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 export default function TEEScanCoach() {
-  const [selectedViewId, setSelectedViewId] = useState<string>(TEE_VIEWS[0].id);
+  const search = useSearch();
+  const _viewParam = new URLSearchParams(search).get("view");
+  const [selectedViewId, setSelectedViewId] = useState<string>(
+    TEE_VIEWS.find(v => v.id === _viewParam)?.id ?? TEE_VIEWS[0].id
+  );
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
     new Set(GROUPS.map(g => g.key))
   );

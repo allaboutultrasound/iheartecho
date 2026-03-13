@@ -17,7 +17,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   Legend, ResponsiveContainer, ReferenceLine
 } from "recharts";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import ScanCoachNavBar from "@/components/ScanCoachNavBar";
 
 const BRAND = "#189aa1";
@@ -1078,7 +1078,9 @@ function StrainScanCoachInner() {
       ],
     },
   ];
-  const [selectedAcqView, setSelectedAcqView] = useState(STRAIN_ACQ_VIEWS[0]);
+  const search = useSearch();
+  const _viewParam = new URLSearchParams(search).get("view");
+  const [selectedAcqView, setSelectedAcqView] = useState(() => STRAIN_ACQ_VIEWS.find(v => v.id === _viewParam) ?? STRAIN_ACQ_VIEWS[0]);
   const { mergeView: mergeStrainView } = useScanCoachOverrides("strain");
   const selectedAcqViewMerged = useMemo(() => mergeStrainView({ ...selectedAcqView, id: selectedAcqView.id } as any), [selectedAcqView, mergeStrainView]);
 
