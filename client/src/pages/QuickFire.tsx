@@ -875,8 +875,8 @@ export default function QuickFire() {
                     { cat: "ACS" as const, prefKey: "acs" as const, Icon: Heart, label: "Advanced Cardiac Sonographer" },
                     { cat: "Adult Echo" as const, prefKey: "adultEcho" as const, Icon: Stethoscope },
                     { cat: "Pediatric Echo" as const, prefKey: "pediatricEcho" as const, Icon: Baby },
-                    { cat: "Fetal Echo" as const, prefKey: "fetalEcho" as const, Icon: Activity },
-                    { cat: "POCUS" as const, prefKey: "pocus" as const, Icon: Scan },
+                    { cat: "Fetal Echo" as const, prefKey: "fetalEcho" as const, Icon: ({ className }: { className?: string }) => <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/fetal-icon_4e4429c0.png" alt="Fetal Echo" className={className} style={{ objectFit: 'contain' }} /> },
+                    { cat: "POCUS" as const, prefKey: "pocus" as const, Icon: ({ className }: { className?: string }) => <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/pocus-icon_0b2e6eff.png" alt="POCUS" className={className} style={{ objectFit: 'contain' }} /> },
                   ] as { cat: string; prefKey: "acs" | "adultEcho" | "pediatricEcho" | "fetalEcho" | "pocus"; Icon: (props: { className?: string }) => import('react').ReactElement; label?: string }[]).map(({ cat, prefKey, Icon, label }) => {
                     const prefs = categoryPrefsQuery.data ?? { acs: true, adultEcho: true, pediatricEcho: true, fetalEcho: true, pocus: true };
                     const isEnabled = (prefs as any)[prefKey] !== false;
@@ -893,9 +893,15 @@ export default function QuickFire() {
                             : "border-gray-200 bg-gray-50 opacity-60"
                         }`}
                       >
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isEnabled ? "bg-[#189aa1]" : "bg-gray-200"}`}>
-                          <Icon className="w-5 h-5 text-white" />
-                        </div>
+                        {(prefKey === 'fetalEcho' || prefKey === 'pocus') ? (
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center overflow-hidden ${!isEnabled ? "opacity-50 grayscale" : ""}`}>
+                            <Icon className="w-10 h-10" />
+                          </div>
+                        ) : (
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isEnabled ? "bg-[#189aa1]" : "bg-gray-200"}`}>
+                            <Icon className="w-5 h-5 text-white" />
+                          </div>
+                        )}
                         <span className="text-xs font-semibold text-gray-700 text-center leading-tight">{label ?? cat}</span>
                         <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
                           isEnabled ? "bg-[#189aa1] text-white" : "bg-gray-200 text-gray-500"
@@ -946,8 +952,8 @@ export default function QuickFire() {
                     { key: "ACS", label: "Advanced Cardiac Sonographer", Icon: Heart, desc: "ACS", prefKey: "acs" as const, mapKey: "acs" },
                     { key: "Adult Echo", label: "Adult Echo", Icon: Stethoscope, desc: "Adult Echocardiography", prefKey: "adultEcho" as const, mapKey: "adultEcho" },
                     { key: "Pediatric Echo", label: "Pediatric Echo", Icon: Baby, desc: "Pediatric & Congenital", prefKey: "pediatricEcho" as const, mapKey: "pediatricEcho" },
-                    { key: "Fetal Echo", label: "Fetal Echo", Icon: Activity, desc: "Fetal Echocardiography", prefKey: "fetalEcho" as const, mapKey: "fetalEcho" },
-                    { key: "POCUS", label: "POCUS", Icon: Scan, desc: "Point-of-Care Ultrasound", prefKey: "pocus" as const, mapKey: "pocus" },
+                    { key: "Fetal Echo", label: "Fetal Echo", Icon: ({ className }: { className?: string }) => <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/fetal-icon_4e4429c0.png" alt="Fetal Echo" className={className} style={{ objectFit: 'contain' }} />, desc: "Fetal Echocardiography", prefKey: "fetalEcho" as const, mapKey: "fetalEcho" },
+                    { key: "POCUS", label: "POCUS", Icon: ({ className }: { className?: string }) => <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/pocus-icon_0b2e6eff.png" alt="POCUS" className={className} style={{ objectFit: 'contain' }} />, desc: "Point-of-Care Ultrasound", prefKey: "pocus" as const, mapKey: "pocus" },
                   ];
 
                   const enabledCats = CATS.filter((c) => catPrefs[c.prefKey] !== false);
@@ -1008,11 +1014,17 @@ export default function QuickFire() {
                           >
                             <div className="flex items-start justify-between mb-3">
                               <div className="flex items-center gap-2">
-                                <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
-                                  isDone ? (isCorrect ? "bg-green-500" : "bg-orange-400") : "bg-[#189aa1]"
-                                }`}>
-                                  <cat.Icon className="w-4.5 h-4.5 text-white" />
-                                </div>
+                                {(cat.mapKey === 'fetalEcho' || cat.mapKey === 'pocus') ? (
+                                  <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden ${isDone ? (isCorrect ? 'opacity-80' : 'opacity-60 grayscale') : ''}`}>
+                                    <cat.Icon className="w-9 h-9" />
+                                  </div>
+                                ) : (
+                                  <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                    isDone ? (isCorrect ? "bg-green-500" : "bg-orange-400") : "bg-[#189aa1]"
+                                  }`}>
+                                    <cat.Icon className="w-4.5 h-4.5 text-white" />
+                                  </div>
+                                )}
                                 <div>
                                   <p className="text-sm font-bold text-gray-800">{cat.label}</p>
                                   <p className="text-xs text-gray-500">{cat.desc}</p>

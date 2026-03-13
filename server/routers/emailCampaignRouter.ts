@@ -46,6 +46,8 @@ const AudienceFilterSchema = z.object({
   roles: z.array(z.string()).default([]),
   /** Subscription type: "all" | "premium" | "free" */
   subscriptionType: z.enum(["all", "premium", "free"]).default("all"),
+  /** User status: "active" = verified non-pending, "pending" = pending/unverified, "all" = both */
+  userStatus: z.enum(["all", "active", "pending"]).default("all"),
   /** Specific email addresses — overrides all other filters when non-empty */
   specificEmails: z.array(z.string().email()).default([]),
 });
@@ -150,7 +152,7 @@ async function resolveRecipients(
     return results;
   }
 
-  // Fetch all non-pending users with emails who have not unsubscribed
+  // Fetch users based on userStatus filter
   let allUsers = await db
     .select({
       id: users.id,
@@ -162,8 +164,15 @@ async function resolveRecipients(
       isPending: users.isPending,
       unsubscribedAt: users.unsubscribedAt,
     })
-    .from(users)
-    .where(eq(users.isPending, false));
+    .from(users);
+
+  // Apply user status filter
+  if (filter.userStatus === "active") {
+    allUsers = allUsers.filter((u) => !u.isPending);
+  } else if (filter.userStatus === "pending") {
+    allUsers = allUsers.filter((u) => u.isPending);
+  }
+  // "all" = include both active and pending
 
   // Filter: must have email, must not have unsubscribed
   allUsers = allUsers.filter(

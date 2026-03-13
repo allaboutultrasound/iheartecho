@@ -154,6 +154,7 @@ export default function EmailAdmin() {
   const [selectedInterests, setSelectedInterests] = useState<InterestKey[]>([]);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [subscriptionType, setSubscriptionType] = useState<SubscriptionType>("all");
+  const [userStatus, setUserStatus] = useState<"all" | "active" | "pending">("active");
   const [specificEmailsInput, setSpecificEmailsInput] = useState("");
   const [audienceExpanded, setAudienceExpanded] = useState(true);
 
@@ -183,6 +184,7 @@ export default function EmailAdmin() {
     interests: selectedInterests,
     roles: selectedRoles,
     subscriptionType,
+    userStatus,
     specificEmails: specificEmailsInput
       .split(/[\n,;]+/)
       .map((e) => e.trim())
@@ -467,6 +469,26 @@ export default function EmailAdmin() {
                           }`}
                         >
                           {type === "all" ? "All Users" : type === "premium" ? "Premium Only" : "Free Users"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* User Status */}
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-2">User Status</label>
+                    <div className="flex gap-2">
+                      {(["active", "pending", "all"] as const).map((status) => (
+                        <button
+                          key={status}
+                          onClick={() => setUserStatus(status)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                            userStatus === status
+                              ? "bg-[#189aa1] text-white border-[#189aa1]"
+                              : "bg-white text-gray-600 border-gray-200 hover:border-[#189aa1]/50"
+                          }`}
+                        >
+                          {status === "active" ? "Active Users" : status === "pending" ? "Pending Users" : "All Users (Active + Pending)"}
                         </button>
                       ))}
                     </div>
