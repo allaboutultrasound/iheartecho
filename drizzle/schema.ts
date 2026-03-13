@@ -1110,6 +1110,20 @@ export const scanCoachOverrides = mysqlTable("scanCoachOverrides", {
   measurements: text("measurements"),
   // JSON: string[] — override for criticalFindings list
   criticalFindings: text("criticalFindings"),
+  // ── Additional text fields for view content ──────────────────────────────────
+  // Probe / transducer positioning text (replaces static probe field)
+  probe: text("probe"),
+  // Key anatomy description text
+  anatomy: text("anatomy"),
+  // ── Additional educational media ─────────────────────────────────────────────
+  // JSON array of AdditionalMedia objects: {id, url, fileKey, caption, mediaType, section, sortOrder}
+  // section values: "echo" | "anatomy" | "transducer" | "tips" | "structures" | "measurements" | "howToGet" | "criticalFindings" | "general"
+  additionalMedia: text("additionalMedia"),
+  // ── Custom view flag ─────────────────────────────────────────────────────────
+  // true = this row was created by admin as a new view (not in static data)
+  isCustomView: boolean("isCustomView").default(false),
+  // Sort order for custom views (0 = first)
+  sortOrder: int("sortOrder").default(0),
   // ── Metadata ─────────────────────────────────────────────────────────────────
   updatedByUserId: int("updatedByUserId"),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

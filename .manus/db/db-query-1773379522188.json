@@ -1,0 +1,9 @@
+{
+  "query": "\nALTER TABLE `scanCoachOverrides` \n  ADD COLUMN `probe` text,\n  ADD COLUMN `anatomy` text,\n  ADD COLUMN `additionalMedia` text,\n  ADD COLUMN `isCustomView` boolean DEFAULT false,\n  ADD COLUMN `sortOrder` int DEFAULT 0;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2mhhtxpXA9Esras.root --database etVPnUidWNWG8W4GHnRqzv --execute \nALTER TABLE `scanCoachOverrides` \n  ADD COLUMN `probe` text,\n  ADD COLUMN `anatomy` text,\n  ADD COLUMN `additionalMedia` text,\n  ADD COLUMN `isCustomView` boolean DEFAULT false,\n  ADD COLUMN `sortOrder` int DEFAULT 0;\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2863
+}

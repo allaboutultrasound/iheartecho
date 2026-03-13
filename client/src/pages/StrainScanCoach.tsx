@@ -992,12 +992,91 @@ function StrainScanCoachInner() {
   // Left-column tab state
   const [leftTab, setLeftTab] = useState<"patterns" | "tips" | "acquisition">("patterns");
 
-  // Strain acquisition views (registry IDs: plax, a4c, a2c, a3c)
+  // Strain acquisition views
+  // PSAX views → Radial & Circumferential Strain only
+  // Apical views → Longitudinal Strain only
   const STRAIN_ACQ_VIEWS = [
-    { id: "plax", name: "PLAX (Parasternal Long Axis)", probe: "Parasternal position, 3rd–4th ICS, left sternal border. Marker at 3–4 o'clock (toward right shoulder).", anatomy: "LV long axis, posterior wall, anterior septum, MV, AV, aortic root.", tips: ["Optimize depth to include the entire LV and aortic root.", "Ensure the MV coaptation point is visible.", "Minimize foreshortening — the LV apex should not be visible in this view.", "Frame rate ≥ 40 fps (ideally 60–80 fps) for strain tracking."] },
-    { id: "a4c",  name: "Apical 4-Chamber (A4C)",      probe: "Cardiac apex, 5th–6th ICS, mid-clavicular line. Marker at 3 o'clock (toward left shoulder).", anatomy: "All four chambers, MV, TV, IAS, IVS, LV lateral and septal walls.", tips: ["True apex: rotate probe slightly counterclockwise to avoid foreshortening.", "Align the septum vertically — a tilted septum causes asymmetric strain.", "Avoid apical rocking artifact by centering the apex.", "Confirm all 17 segments are tracked before accepting."] },
-    { id: "a2c",  name: "Apical 2-Chamber (A2C)",      probe: "Same apical window as A4C. Rotate ~60° counterclockwise from A4C.", anatomy: "LV anterior and inferior walls, LA, MV. No RV or septum visible.", tips: ["Rotate until the RV and septum disappear completely.", "Anterior wall foreshortening is common — adjust tilt.", "Ensure the MV annulus is visible at the base.", "Frame rate ≥ 40 fps for strain."] },
-    { id: "a3c",  name: "Apical 3-Chamber (A3C / APLAX)", probe: "Same apical window. Rotate ~120° counterclockwise from A4C (or ~60° from A2C).", anatomy: "LV anteroseptal and inferolateral walls, LVOT, AV, aortic root, LA.", tips: ["This view provides LVOT for VTI measurement — optimize for both strain and Doppler.", "Ensure the AV is fully open and the LVOT is parallel to the beam for Doppler.", "Foreshortening is common — tilt probe toward the sternum if needed."] },
+    {
+      id: "psax_base",
+      name: "PSAX — Basal Level (Mitral Valve)",
+      strainTypes: ["Radial", "Circumferential"],
+      probe: "Parasternal position, 3rd–4th ICS, left sternal border. Tilt probe inferiorly from PLAX until the mitral valve appears as a 'fish mouth'. Marker at 12 o'clock.",
+      anatomy: "Circular LV cross-section at basal level. Mitral valve leaflets visible centrally. All 6 basal segments: basal anterior, anteroseptal, inferoseptal, inferior, inferolateral, anterolateral.",
+      tips: [
+        "Ensure the LV appears circular — an oval shape indicates oblique imaging and will cause tracking errors.",
+        "The mitral valve should be fully visible and symmetric — if asymmetric, adjust tilt.",
+        "Frame rate ≥ 40 fps (ideally 60–80 fps) for radial and circumferential strain tracking.",
+        "Radial strain at this level is highest (normal ~40–50%) due to thicker myocardium.",
+        "Avoid including the papillary muscles — this is the basal level only.",
+      ],
+    },
+    {
+      id: "psax_mid",
+      name: "PSAX — Mid Level (Papillary Muscles)",
+      strainTypes: ["Radial", "Circumferential"],
+      probe: "Same parasternal window as basal PSAX. Tilt probe slightly more inferiorly until both papillary muscles are visible. Marker at 12 o'clock.",
+      anatomy: "Circular LV cross-section at mid-ventricular level. Posteromedial and anterolateral papillary muscles visible. All 6 mid segments: mid anterior, anteroseptal, inferoseptal, inferior, inferolateral, anterolateral.",
+      tips: [
+        "Both papillary muscles must be visible and symmetric — this confirms true mid-ventricular level.",
+        "If only one papillary muscle is visible, adjust tilt to find the true mid level.",
+        "This is the most commonly used PSAX level for wall motion scoring and radial/circumferential strain.",
+        "Circumferential strain at mid level is the most reproducible across vendors (normal ~−20 to −25%).",
+        "Ensure the LV cavity appears circular — avoid oblique cuts that foreshorten the cavity.",
+      ],
+    },
+    {
+      id: "psax_apex",
+      name: "PSAX — Apical Level",
+      strainTypes: ["Radial", "Circumferential"],
+      probe: "Same parasternal window. Tilt probe further inferiorly past the papillary muscles until the LV appears as a small circle without papillary muscles. Marker at 12 o'clock.",
+      anatomy: "Small circular LV cross-section at apical level. No papillary muscles visible. Apical segments: apical anterior, apical septal, apical inferior, apical lateral.",
+      tips: [
+        "The LV should appear as a small, symmetric circle — no papillary muscles should be visible.",
+        "Apical radial strain is lower than basal/mid due to thinner myocardium — do not over-interpret mild reductions.",
+        "Frame rate is critical at this level — aim for ≥ 50 fps as the smaller cavity requires faster tracking.",
+        "This view is often the most challenging to optimize — take time to find the true apical cross-section.",
+        "Circumferential strain at the apex is most sensitive for apical ischemia (LAD territory).",
+      ],
+    },
+    {
+      id: "a4c",
+      name: "Apical 4-Chamber (A4C)",
+      strainTypes: ["Longitudinal"],
+      probe: "Cardiac apex, 5th–6th ICS, mid-clavicular line. Marker at 3 o'clock (toward left shoulder).",
+      anatomy: "All four chambers, MV, TV, IAS, IVS, LV lateral and septal walls. Provides 6 longitudinal segments: basal/mid/apical lateral and basal/mid/apical septal.",
+      tips: [
+        "True apex: rotate probe slightly counterclockwise to avoid foreshortening.",
+        "Align the septum vertically — a tilted septum causes asymmetric longitudinal strain.",
+        "Avoid apical rocking artifact by centering the apex.",
+        "Confirm all 6 segments are tracked before accepting — foreshortening reduces apparent GLS.",
+      ],
+    },
+    {
+      id: "a2c",
+      name: "Apical 2-Chamber (A2C)",
+      strainTypes: ["Longitudinal"],
+      probe: "Same apical window as A4C. Rotate ~60° counterclockwise from A4C.",
+      anatomy: "LV anterior and inferior walls, LA, MV. No RV or septum visible. Provides 6 longitudinal segments: basal/mid/apical anterior and basal/mid/apical inferior.",
+      tips: [
+        "Rotate until the RV and septum disappear completely.",
+        "Anterior wall foreshortening is common — adjust tilt.",
+        "Ensure the MV annulus is visible at the base.",
+        "Frame rate ≥ 40 fps for longitudinal strain.",
+      ],
+    },
+    {
+      id: "a3c",
+      name: "Apical 3-Chamber (A3C / APLAX)",
+      strainTypes: ["Longitudinal"],
+      probe: "Same apical window. Rotate ~120° counterclockwise from A4C (or ~60° from A2C).",
+      anatomy: "LV anteroseptal and inferolateral walls, LVOT, AV, aortic root, LA. Provides 6 longitudinal segments: basal/mid/apical anteroseptal and basal/mid/apical inferolateral.",
+      tips: [
+        "This view provides LVOT for VTI measurement — optimize for both strain and Doppler.",
+        "Ensure the AV is fully open and the LVOT is parallel to the beam for Doppler.",
+        "Foreshortening is common — tilt probe toward the sternum if needed.",
+        "Together with A4C and A2C, this view completes the 17-segment GLS assessment.",
+      ],
+    },
   ];
   const [selectedAcqView, setSelectedAcqView] = useState(STRAIN_ACQ_VIEWS[0]);
   const { mergeView: mergeStrainView } = useScanCoachOverrides("strain");
