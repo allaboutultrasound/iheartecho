@@ -55,3 +55,8 @@
 - [x] Fix: question explanation showing raw HTML tags — render as HTML not plain text (dangerouslySetInnerHTML in both main and archive players)
 - [x] Fix: Edit Challenge button visible to all users in archive — now only shows for platform_admin appRole
 - [x] Fix: archive drill-down now works — getArchivedChallenge fetches questions regardless of isActive status
+- [ ] Unpublish: keep challenge at top of queue (priority 0) and show "Unpublished" badge
+- [ ] Fix ensureTodaySet queue ordering: priority ASC then queuePosition ASC (nulls last) so unpublished challenges sort first
+- [ ] Full editing of live published questions from admin queue (text, images, videos, options, answer key, explanation) — no unpublish required
+- [x] Fix: Edit Question button on live challenge rows opens full question editor (not challenge picker)
+- [x] Remove multi-select question picker from challenge form (challenges are 1 question, auto-assigned)

@@ -32,7 +32,7 @@ import {
   quickfireChallenges,
   users,
 } from "../../drizzle/schema";
-import { eq, and, desc, sql, gte, lte, count, inArray, isNull } from "drizzle-orm";
+import { eq, and, asc, desc, sql, gte, lte, count, inArray, isNull } from "drizzle-orm";
 import { sendStreakReminders } from "../streakReminders";
 import { generateVirtualLeaderboard } from "../leaderboardSeed";
 import { createHash } from "crypto";
@@ -163,7 +163,11 @@ async function ensureTodaySet(db: NonNullable<Awaited<ReturnType<typeof getDb>>>
     .select()
     .from(quickfireChallenges)
     .where(inArray(quickfireChallenges.status, ["draft", "scheduled"] as any[]))
-    .orderBy(quickfireChallenges.priority, quickfireChallenges.createdAt)
+    .orderBy(
+      asc(quickfireChallenges.priority),
+      sql`CASE WHEN ${quickfireChallenges.queuePosition} IS NULL THEN 999999 ELSE ${quickfireChallenges.queuePosition} END`,
+      asc(quickfireChallenges.createdAt)
+    )
     .limit(50);
 
   const usedChallengeIds: number[] = [];
@@ -282,7 +286,7 @@ export const quickfireRouter = router({
     const questions = await db
       .select()
       .from(quickfireQuestions)
-      .where(and(eq(quickfireQuestions.isActive, true), inArray(quickfireQuestions.id, allIds)));
+      .where(and(isNull(quickfireQuestions.deletedAt), inArray(quickfireQuestions.id, allIds)));
 
     // Order: ACS, Adult Echo, Pediatric Echo, Fetal Echo, POCUS
     const catOrder = ["acs", "adultEcho", "pediatricEcho", "fetalEcho", "pocus"];
@@ -1764,9 +1768,14 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       const [ch] = await db.select().from(quickfireChallenges)
         .where(and(eq(quickfireChallenges.id, input.id), eq(quickfireChallenges.status, "live"))).limit(1);
       if (!ch) throw new TRPCError({ code: "NOT_FOUND", message: "Live challenge not found" });
-      // Move back to scheduled
+      // Move back to scheduled, pin at top of queue (priority 0, queuePosition 0)
+      // First shift all existing scheduled challenges down by 1
       await db.update(quickfireChallenges)
-        .set({ status: "scheduled", publishedAt: null })
+        .set({ queuePosition: sql`${quickfireChallenges.queuePosition} + 1` })
+        .where(inArray(quickfireChallenges.status, ["scheduled"] as any[]));
+      // Then pin this challenge at position 0 with a flag indicating it was unpublished
+      await db.update(quickfireChallenges)
+        .set({ status: "scheduled", publishedAt: null, queuePosition: 0, priority: 0, updatedAt: new Date() })
         .where(eq(quickfireChallenges.id, input.id));
       // Remove from today's daily set cache so it won't be served again today
       const today = new Date().toISOString().slice(0, 10);
