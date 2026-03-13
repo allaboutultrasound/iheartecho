@@ -163,6 +163,12 @@ export const accreditationManagerRouter = router({
         id: diyOrganizations.id,
         name: diyOrganizations.name,
         accreditationTypes: diyOrganizations.accreditationTypes,
+        isShellOrg: diyOrganizations.isShellOrg,
+        facilityType: diyOrganizations.facilityType,
+        contactName: diyOrganizations.contactName,
+        contactEmail: diyOrganizations.contactEmail,
+        city: diyOrganizations.city,
+        state: diyOrganizations.state,
       })
       .from(diyOrganizations)
       .orderBy(diyOrganizations.name);
@@ -285,7 +291,8 @@ export const accreditationManagerRouter = router({
   updateDiyOrgSubscription: protectedProcedure
     .input(z.object({
       orgId: z.number(),
-      plan: z.enum(["starter", "professional", "advanced", "partner"]).optional(),
+      // consulting_client is only assignable by accreditation_manager or platform_admin
+      plan: z.enum(["starter", "professional", "advanced", "partner", "consulting_client"]).optional(),
       status: z.enum(["active", "trialing", "past_due", "canceled", "paused"]).optional(),
       hasConcierge: z.boolean().optional(),
       totalSeats: z.number().min(1).optional(),
@@ -303,6 +310,61 @@ export const accreditationManagerRouter = router({
         await db.insert(diySubscriptions).values({ orgId, plan: updates.plan ?? "starter", status: updates.status ?? "active", hasConcierge: updates.hasConcierge ?? false, totalSeats: updates.totalSeats ?? 5, labAdminSeats: updates.labAdminSeats ?? 1, memberSeats: (updates.totalSeats ?? 5) - (updates.labAdminSeats ?? 1) });
       }
       return { success: true };
+    }),
+
+  // ── Shell Organizations (no user accounts) ──────────────────────────────────
+
+  /**
+   * Create a shell organization — an org record with no user accounts attached.
+   * Only Accreditation Managers and Platform Admins can do this.
+   * The manager's own userId is used as the ownerUserId placeholder.
+   */
+  createShellOrganization: protectedProcedure
+    .input(z.object({
+      name: z.string().min(1).max(300),
+      facilityType: z.string().max(100).optional(),
+      address: z.string().optional(),
+      city: z.string().max(100).optional(),
+      state: z.string().max(100).optional(),
+      zip: z.string().max(20).optional(),
+      country: z.string().max(100).optional(),
+      phone: z.string().max(30).optional(),
+      website: z.string().max(255).optional(),
+      contactName: z.string().max(200).optional(),
+      contactEmail: z.string().email().max(320).optional(),
+      notes: z.string().optional(),
+      accreditationTypes: z.array(z.enum(["adult_echo", "pediatric_fetal_echo"])).optional(),
+      // Plan to assign — consulting_client is the default for shell orgs
+      plan: z.enum(["starter", "professional", "advanced", "partner", "consulting_client"]).default("consulting_client"),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      await assertAccreditationManager(ctx);
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      const { plan, accreditationTypes, ...orgFields } = input;
+
+      // Insert the org with isShellOrg = true
+      const [result] = await db.insert(diyOrganizations).values({
+        ...orgFields,
+        ownerUserId: ctx.user.id, // manager is the placeholder owner
+        accreditationTypes: accreditationTypes ? JSON.stringify(accreditationTypes) : null,
+        isShellOrg: true,
+      });
+      const orgId = (result as any).insertId as number;
+
+      // Create a subscription record for the org
+      await db.insert(diySubscriptions).values({
+        orgId,
+        plan,
+        status: "active",
+        hasConcierge: false,
+        totalSeats: 0,
+        labAdminSeats: 0,
+        memberSeats: 0,
+      });
+
+      return { orgId, success: true };
     }),
 
   // ── Managed Accounts (Full-Service) ────────────────────────────────────────

@@ -528,7 +528,7 @@ export default function ScanCoachEditor() {
 
   const { data: overrides = [], isLoading: loadingOverrides } = trpc.scanCoachAdmin.listOverrides.useQuery(
     { module: selectedModule },
-    { staleTime: 10_000 }
+    { staleTime: 0 }
   );
 
   const { data: isAdmin, isLoading: checkingAdmin } = trpc.platformAdmin.isAdmin.useQuery();

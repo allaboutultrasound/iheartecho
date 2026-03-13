@@ -3171,6 +3171,31 @@ export default function EchoAssist() {
           <POCUSAssistEngine />
           {/* 13. Frank-Starling */}
           <FrankStarlingEngine />
+          {/* 14. FetalEchoAssist™ */}
+          <div id="engine-fetal-echo-assist" className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="teal-header px-5 py-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-0.5">Fetal Echo</div>
+                  <h3 className="font-bold text-sm text-white" style={{ fontFamily: "Merriweather, serif" }}>FetalEchoAssist™ Calculator Engine</h3>
+                  <p className="text-white/60 text-xs mt-0.5">12 fetal echo calculators · 2023 ASE Guideline-Based Feedback</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-5">
+              <p className="text-sm text-gray-600 mb-4">
+                Dedicated fetal echo calculator engine with guideline-based interpretation for Celermajer Index, Cardiovascular Profile Score (CVPS), Cardiothoracic Ratio, Tei Index (MPI), E/A Ratio, Ductus Venosus PIV, Umbilical Artery S/D &amp; PI, MCA PSV (MoM), Fetal Heart Rate Classification, PA/Ao Ratio, Ventricular Wall Thickness Z-score, and Shortening Fraction.
+              </p>
+              <a href="/fetal-echo-assist">
+                <button
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
+                  style={{ background: "#0369a1" }}
+                >
+                  Open FetalEchoAssist™ →
+                </button>
+              </a>
+            </div>
+          </div>
         </div>
 
         {/* Footer */}

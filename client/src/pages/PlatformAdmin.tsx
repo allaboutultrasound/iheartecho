@@ -397,6 +397,8 @@ const PLAN_LABELS: Record<string, string> = {
   professional: "Professional",
   advanced: "Advanced",
   partner: "Partner",
+  // Consulting Client: only assignable by Accreditation Managers / Platform Admins
+  consulting_client: "Consulting Client",
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -414,7 +416,7 @@ function DIYOrgsPanel() {
     onError: (err) => toast.error(err.message),
   });
   const [editingOrg, setEditingOrg] = useState<number | null>(null);
-  const [editPlan, setEditPlan] = useState<"starter" | "professional" | "advanced" | "partner">("starter");
+  const [editPlan, setEditPlan] = useState<"starter" | "professional" | "advanced" | "partner" | "consulting_client">("starter");
   const [editStatus, setEditStatus] = useState<"active" | "trialing" | "past_due" | "canceled" | "paused">("active");
   const [editConcierge, setEditConcierge] = useState(false);
 

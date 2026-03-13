@@ -1431,13 +1431,24 @@ export type InsertPossibleCaseStudy = typeof possibleCaseStudies.$inferInsert;
 export const diyOrganizations = mysqlTable("diyOrganizations", {
   id: int("id").autoincrement().primaryKey(),
   // The owner/billing user who registered the org (SuperAdmin seat)
+  // For shell orgs created by Accreditation Managers, this is the manager's userId
   ownerUserId: int("ownerUserId").notNull(),
   name: varchar("name", { length: 300 }).notNull(),
+  facilityType: varchar("facilityType", { length: 100 }),
   address: text("address"),
+  city: varchar("city", { length: 100 }),
+  state: varchar("state", { length: 100 }),
+  zip: varchar("zip", { length: 20 }),
+  country: varchar("country", { length: 100 }),
   phone: varchar("phone", { length: 30 }),
   website: varchar("website", { length: 255 }),
+  contactName: varchar("contactName", { length: 200 }),
+  contactEmail: varchar("contactEmail", { length: 320 }),
+  notes: text("notes"),
   // Accreditation types the lab is seeking (JSON array: "adult_echo" | "pediatric_fetal_echo")
   accreditationTypes: text("accreditationTypes"),
+  // Flag: created as a shell org by an Accreditation Manager (no user accounts)
+  isShellOrg: boolean("isShellOrg").default(false),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -1466,7 +1477,7 @@ export const diySubscriptions = mysqlTable("diySubscriptions", {
   id: int("id").autoincrement().primaryKey(),
   orgId: int("orgId").notNull(),
   // Billing tier
-  plan: mysqlEnum("plan", ["starter", "professional", "advanced", "partner"]).notNull(),
+  plan: mysqlEnum("plan", ["starter", "professional", "advanced", "partner", "consulting_client"]).notNull(),
   status: mysqlEnum("status", ["active", "trialing", "past_due", "canceled", "paused"]).default("trialing").notNull(),
   // Seat allotments (derived from plan, stored for fast enforcement)
   totalSeats: int("totalSeats").notNull(),        // total seats (Lab Admin + DIY Member)

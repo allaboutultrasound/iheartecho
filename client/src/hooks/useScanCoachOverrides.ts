@@ -84,9 +84,14 @@ export function useScanCoachOverrides(module: ScanCoachModule) {
   const { data: overrides = [], isLoading } = trpc.scanCoachAdmin.listOverrides.useQuery(
     { module },
     {
-      staleTime: 30_000,
-      // Don't block rendering — overrides are a progressive enhancement
-      refetchOnWindowFocus: false,
+      // staleTime: 0 ensures the live view always fetches fresh data on mount
+      // (important because the editor opens the live page in a new tab with a
+      // separate React Query cache — without this, saved changes won't appear
+      // until a hard refresh)
+      staleTime: 0,
+      // Re-fetch when the user switches back to the live-view tab after saving
+      // in the editor tab
+      refetchOnWindowFocus: true,
     }
   );
 

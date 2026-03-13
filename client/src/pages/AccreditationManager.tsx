@@ -48,6 +48,8 @@ const PLAN_LABELS: Record<string, { label: string; color: string }> = {
   professional: { label: "Professional", color: BRAND },
   advanced: { label: "Advanced", color: "#7c3aed" },
   partner: { label: "Partner", color: "#d97706" },
+  // Consulting Client: only assignable by Accreditation Managers / Platform Admins
+  consulting_client: { label: "Consulting Client", color: "#0284c7" },
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -435,6 +437,7 @@ function DiyOrgDetail({ orgId, onBack }: { orgId: number; onBack: () => void }) 
                   <SelectItem value="professional">Professional (15 seats)</SelectItem>
                   <SelectItem value="advanced">Advanced (50 seats)</SelectItem>
                   <SelectItem value="partner">Partner (Unlimited)</SelectItem>
+                  <SelectItem value="consulting_client">Consulting Client</SelectItem>
                 </SelectContent>
               </Select>
               <Select
@@ -564,10 +567,220 @@ function DiyOrgDetail({ orgId, onBack }: { orgId: number; onBack: () => void }) 
   );
 }
 
-// ─── DIY Orgs Panel ───────────────────────────────────────────────────────────
+// ─── Create Shell Org Dialog ───────────────────────────────────────────────────────────────────────────────────
+function CreateShellOrgDialog({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: (orgId: number) => void }) {
+  const utils = trpc.useUtils();
+  const [name, setName] = useState("");
+  const [facilityType, setFacilityType] = useState("");
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [zip, setZip] = useState("");
+  const [country, setCountry] = useState("USA");
+  const [phone, setPhone] = useState("");
+  const [website, setWebsite] = useState("");
+  const [contactName, setContactName] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [notes, setNotes] = useState("");
+  const [plan, setPlan] = useState<"starter" | "professional" | "advanced" | "partner" | "consulting_client">("consulting_client");
+  const [accredTypes, setAccredTypes] = useState<string[]>([]);
+
+  const createMutation = trpc.accreditationManager.createShellOrganization.useMutation({
+    onSuccess: (data) => {
+      utils.accreditationManager.listDiyOrgs.invalidate();
+      toast.success(`Organization "${name}" created successfully`);
+      onCreated(data.orgId);
+      // Reset form
+      setName(""); setFacilityType(""); setAddress(""); setCity(""); setState("");
+      setZip(""); setCountry("USA"); setPhone(""); setWebsite("");
+      setContactName(""); setContactEmail(""); setNotes("");
+      setPlan("consulting_client"); setAccredTypes([]);
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const toggleAccredType = (type: string) => {
+    setAccredTypes((prev) => prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]);
+  };
+
+  const handleSubmit = () => {
+    if (!name.trim()) { toast.error("Organization name is required"); return; }
+    createMutation.mutate({
+      name: name.trim(),
+      facilityType: facilityType || undefined,
+      address: address || undefined,
+      city: city || undefined,
+      state: state || undefined,
+      zip: zip || undefined,
+      country: country || undefined,
+      phone: phone || undefined,
+      website: website || undefined,
+      contactName: contactName || undefined,
+      contactEmail: contactEmail || undefined,
+      notes: notes || undefined,
+      plan,
+      accreditationTypes: accredTypes.length > 0 ? (accredTypes as ("adult_echo" | "pediatric_fetal_echo")[]) : undefined,
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-lg font-bold" style={{ fontFamily: "Merriweather, serif" }}>
+            Create Organization (No User Accounts)
+          </DialogTitle>
+          <p className="text-sm text-gray-500 mt-1">
+            Creates a shell organization record without any user accounts. Useful for tracking consulting clients or facilities not yet onboarded.
+          </p>
+        </DialogHeader>
+
+        <div className="space-y-5 py-2">
+          {/* Plan selector — Consulting Client is the default and highlighted */}
+          <div>
+            <Label className="text-sm font-semibold text-gray-700 mb-2 block">Plan Assignment</Label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {([
+                { value: "consulting_client", label: "Consulting Client", color: "#0284c7", note: "Manager/Admin only" },
+                { value: "starter", label: "Starter", color: "#6b7280", note: "" },
+                { value: "professional", label: "Professional", color: BRAND, note: "" },
+                { value: "advanced", label: "Advanced", color: "#7c3aed", note: "" },
+                { value: "partner", label: "Partner", color: "#d97706", note: "" },
+              ] as const).map(({ value, label, color, note }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setPlan(value)}
+                  className={`flex flex-col items-start p-3 rounded-lg border-2 text-left transition-all ${
+                    plan === value ? "shadow-sm" : "border-gray-100 bg-white hover:border-gray-200"
+                  }`}
+                  style={plan === value ? { borderColor: color, background: color + "10" } : {}}
+                >
+                  <span className="text-xs font-bold" style={{ color: plan === value ? color : "#374151" }}>{label}</span>
+                  {note && <span className="text-[10px] mt-0.5" style={{ color }}>{note}</span>}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Organization name */}
+          <div>
+            <Label htmlFor="shell-org-name" className="text-sm font-medium text-gray-700">Organization Name <span className="text-red-500">*</span></Label>
+            <Input id="shell-org-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Riverside Cardiology Lab" className="mt-1" />
+          </div>
+
+          {/* Facility type + accreditation types */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-sm font-medium text-gray-700">Facility Type</Label>
+              <Select value={facilityType} onValueChange={setFacilityType}>
+                <SelectTrigger className="mt-1"><SelectValue placeholder="Select type..." /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Hospital">Hospital</SelectItem>
+                  <SelectItem value="Outpatient Clinic">Outpatient Clinic</SelectItem>
+                  <SelectItem value="Mobile Echo">Mobile Echo</SelectItem>
+                  <SelectItem value="Academic Medical Center">Academic Medical Center</SelectItem>
+                  <SelectItem value="Private Practice">Private Practice</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-sm font-medium text-gray-700">Accreditation Types</Label>
+              <div className="flex gap-2 mt-2">
+                {["adult_echo", "pediatric_fetal_echo"].map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => toggleAccredType(t)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                      accredTypes.includes(t) ? "text-white" : "bg-white border-gray-200 text-gray-600"
+                    }`}
+                    style={accredTypes.includes(t) ? { background: BRAND, borderColor: BRAND } : {}}
+                  >
+                    {t === "adult_echo" ? "Adult Echo" : "Pediatric/Fetal"}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Address */}
+          <div>
+            <Label className="text-sm font-medium text-gray-700">Address</Label>
+            <Input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Street address" className="mt-1" />
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="col-span-2">
+              <Label className="text-sm font-medium text-gray-700">City</Label>
+              <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City" className="mt-1" />
+            </div>
+            <div>
+              <Label className="text-sm font-medium text-gray-700">State</Label>
+              <Input value={state} onChange={(e) => setState(e.target.value)} placeholder="State" className="mt-1" />
+            </div>
+            <div>
+              <Label className="text-sm font-medium text-gray-700">ZIP</Label>
+              <Input value={zip} onChange={(e) => setZip(e.target.value)} placeholder="ZIP" className="mt-1" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-sm font-medium text-gray-700">Country</Label>
+              <Input value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Country" className="mt-1" />
+            </div>
+            <div>
+              <Label className="text-sm font-medium text-gray-700">Phone</Label>
+              <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone number" className="mt-1" />
+            </div>
+          </div>
+
+          {/* Contact */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <Label className="text-sm font-medium text-gray-700">Contact Name</Label>
+              <Input value={contactName} onChange={(e) => setContactName(e.target.value)} placeholder="Primary contact" className="mt-1" />
+            </div>
+            <div>
+              <Label className="text-sm font-medium text-gray-700">Contact Email</Label>
+              <Input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder="contact@facility.com" className="mt-1" />
+            </div>
+          </div>
+
+          {/* Website */}
+          <div>
+            <Label className="text-sm font-medium text-gray-700">Website</Label>
+            <Input value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://..." className="mt-1" />
+          </div>
+
+          {/* Notes */}
+          <div>
+            <Label className="text-sm font-medium text-gray-700">Internal Notes</Label>
+            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Internal notes about this organization..." className="mt-1" rows={3} />
+          </div>
+        </div>
+
+        <DialogFooter className="pt-2">
+          <Button variant="outline" onClick={onClose} disabled={createMutation.isPending}>Cancel</Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={createMutation.isPending || !name.trim()}
+            style={{ background: BRAND, color: "#fff" }}
+          >
+            {createMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+            Create Organization
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── DIY Orgs Panel ───────────────────────────────────────────────────────────────────────────────────
 function DiyOrgsPanel() {
   const [selectedOrgId, setSelectedOrgId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const { data: orgs, isLoading } = trpc.accreditationManager.listDiyOrgs.useQuery();
 
   const filtered = useMemo(() => {
@@ -590,7 +803,21 @@ function DiyOrgsPanel() {
           className="max-w-xs"
         />
         <span className="text-sm text-gray-400">{filtered.length} org{filtered.length !== 1 ? "s" : ""}</span>
+        <div className="ml-auto">
+          <Button
+            size="sm"
+            onClick={() => setShowCreateDialog(true)}
+            style={{ background: BRAND, color: "#fff" }}
+          >
+            <Plus className="w-4 h-4 mr-1" /> Create Organization
+          </Button>
+        </div>
       </div>
+      <CreateShellOrgDialog
+        open={showCreateDialog}
+        onClose={() => setShowCreateDialog(false)}
+        onCreated={(orgId) => { setShowCreateDialog(false); setSelectedOrgId(orgId); }}
+      />
       {isLoading ? (
         <div className="flex justify-center py-16"><Loader2 className="w-8 h-8 animate-spin" style={{ color: BRAND }} /></div>
       ) : !filtered.length ? (
@@ -611,12 +838,20 @@ function DiyOrgsPanel() {
                 className="flex items-center gap-4 p-4 border border-gray-100 rounded-xl bg-white hover:border-teal-200 hover:shadow-sm cursor-pointer transition-all group"
                 onClick={() => setSelectedOrgId(org.id)}
               >
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: BRAND + "18" }}>
-                  <Building2 className="w-5 h-5" style={{ color: BRAND }} />
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: org.isShellOrg ? "#0284c718" : BRAND + "18" }}>
+                  <Building2 className="w-5 h-5" style={{ color: org.isShellOrg ? "#0284c7" : BRAND }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-800 group-hover:text-teal-700 transition-colors">{org.name}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{types.join(" · ") || "No accreditation types set"}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-gray-800 group-hover:text-teal-700 transition-colors">{org.name}</p>
+                    {org.isShellOrg && (
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full" style={{ background: "#0284c715", color: "#0284c7" }}>No User Accounts</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {org.city && org.state ? `${org.city}, ${org.state} · ` : ""}
+                    {types.join(" · ") || "No accreditation types set"}
+                  </p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <Badge style={{ background: planInfo.color + "20", color: planInfo.color }} className="text-xs">{planInfo.label}</Badge>

@@ -2666,3 +2666,44 @@
 - [x] Replace plain map render with DndContext + SortableContext + SortableQueueItem
 - [x] Live challenge shown at top (not draggable), queued items fully drag-and-drop sortable
 - [x] Drag end calls adminReorderChallenges to persist priority order to DB
+
+## ScanCoach Editor Bug
+- [x] Fix: ScanCoach editor image changes not reflecting in the live ScanCoach view
+  - Root cause: useScanCoachOverrides had staleTime: 30s and refetchOnWindowFocus: false
+  - Live page opens in new tab (separate cache) so it never re-fetched after editor saves
+  - Fix: staleTime: 0, refetchOnWindowFocus: true in useScanCoachOverrides.ts
+  - Also reduced staleTime to 0 in ScanCoachEditor.tsx for immediate editor preview updates
+
+## FetalEchoAssist™ Calculator Engine (completed Mar 13)
+- [x] Build FetalEchoAssist™ page at /fetal-echo-assist with 12 ASE 2023 guideline-based calculators
+- [x] Calculator 1: Celermajer Index (cardiac area / thoracic area, normal <0.35)
+- [x] Calculator 2: Fetal Cardiovascular Profile Score (CVPS, 10-point scoring system)
+- [x] Calculator 3: Cardiothoracic Ratio (cardiac circumference / thoracic circumference, normal <0.50)
+- [x] Calculator 4: Tei Index / MPI (ICT + IRT / ET, normal RV <0.55, LV <0.53)
+- [x] Calculator 5: E/A Ratio (mitral and tricuspid inflow, normal >1 after 20 wks)
+- [x] Calculator 6: Ductus Venosus PIV (S−a / mean velocity, normal <0.7)
+- [x] Calculator 7: Umbilical Artery S/D Ratio & PI (placental resistance marker)
+- [x] Calculator 8: MCA PSV (MoM) (fetal anemia screen, normal MoM <1.5)
+- [x] Calculator 9: Fetal Heart Rate Classification (normal 120–160 bpm, GA-adjusted)
+- [x] Calculator 10: PA/Ao Ratio (pulmonary artery / aortic root diameter, normal 0.75–1.25)
+- [x] Calculator 11: Ventricular Wall Thickness Z-score (IVS/LVPW thickness vs GA nomogram)
+- [x] Calculator 12: Shortening Fraction (EDD−ESD)/EDD × 100, normal 28–40%)
+- [x] Register /fetal-echo-assist route in App.tsx
+- [x] Add FetalEchoAssist™ cross-promotion card to EchoAssistHub (before POCUS-Assist)
+- [x] Add FetalEchoAssist™ button to Fetal Echo specialty card in EchoAssistHub
+- [x] Add FetalEchoAssist™ tab to FetalNavigator (tab 5)
+- [x] Add FetalEchoAssist™ engine card to EchoAssist.tsx engines list (after Frank-Starling, #14)
+
+## Consulting Client Plan & Shell Organization (completed Mar 13)
+- [x] Add consulting_client to diySubscriptions plan enum in schema
+- [x] Add isShellOrg, facilityType, city, state, zip, country, contactName, contactEmail, notes to diyOrganizations schema
+- [x] Run db:push to migrate schema
+- [x] Add consulting_client guard to updateDiyOrgSubscription in accreditationManagerRouter
+- [x] Add createShellOrganization procedure to accreditationManagerRouter (restricted to accreditation_manager role)
+- [x] Update listDiyOrgs to return isShellOrg, facilityType, contactName, contactEmail
+- [x] Add consulting_client to adminUpdateSubscription plan enum in diyRouter
+- [x] Add consulting_client to PLAN_LABELS in AccreditationManager.tsx
+- [x] Add consulting_client to plan selector in DiyOrgDetail seats tab
+- [x] Add consulting_client to PLAN_LABELS in PlatformAdmin.tsx
+- [x] Add CreateShellOrgDialog to DiyOrgsPanel in AccreditationManager.tsx
+- [x] Add shell org indicator badge in DiyOrgsPanel org list

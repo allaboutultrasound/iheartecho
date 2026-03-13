@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
-import { Baby, AlertCircle, CheckCircle2, HelpCircle, Scan, ClipboardList, ChevronDown, ChevronUp } from "lucide-react";
+import { Baby, AlertCircle, CheckCircle2, HelpCircle, Scan, ClipboardList, ChevronDown, ChevronUp, Calculator } from "lucide-react";
 
 const findings3VV = [
   {
@@ -371,7 +371,7 @@ function FetalProtocolChecklist() {
 }
 
 export default function FetalNavigator() {
-  const [view, setView] = useState<"protocol" | "3vv" | "4ch" | "zscore">("protocol");
+  const [view, setView] = useState<"protocol" | "3vv" | "4ch" | "zscore" | "fetalassist">("protocol");
   const [selected, setSelected] = useState<number | null>(null);
 
   const findings = view === "3vv" ? findings3VV : findingsFC;
@@ -421,6 +421,7 @@ export default function FetalNavigator() {
             { id: "3vv", label: "3-Vessel View" },
             { id: "4ch", label: "4-Chamber View" },
             { id: "zscore", label: "Z-Score Calculator" },
+            { id: "fetalassist", label: "FetalEchoAssist™" },
           ].map(tab => (
             <button key={tab.id} onClick={() => { setView(tab.id as any); setSelected(null); }}
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
@@ -432,7 +433,31 @@ export default function FetalNavigator() {
           ))}
         </div>
 
-        {view === "protocol" ? (
+        {view === "fetalassist" ? (
+          <div className="bg-white rounded-xl border border-[#0369a1]/20 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 flex items-center gap-3" style={{ background: "linear-gradient(135deg, #0e1e2e, #0369a1)" }}>
+              <Calculator className="w-5 h-5 text-[#4ad9e0]" />
+              <div>
+                <h3 className="font-bold text-white text-base" style={{ fontFamily: "Merriweather, serif" }}>FetalEchoAssist™ Calculator Engine</h3>
+                <p className="text-white/70 text-xs mt-0.5">12 fetal echo calculators with 2023 ASE guideline-based feedback</p>
+              </div>
+            </div>
+            <div className="p-6">
+              <p className="text-sm text-gray-600 mb-4">
+                The FetalEchoAssist™ engine provides guideline-based interpretation for Celermajer Index, Cardiovascular Profile Score, Cardiothoracic Ratio, Tei Index, E/A Ratio, Ductus Venosus PIV, Umbilical Artery Doppler, MCA PSV (MoM), Fetal Heart Rate Classification, PA/Ao Ratio, Ventricular Wall Thickness Z-score, and Shortening Fraction.
+              </p>
+              <Link href="/fetal-echo-assist">
+                <button
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
+                  style={{ background: "#0369a1" }}
+                >
+                  <Calculator className="w-4 h-4" />
+                  Open FetalEchoAssist™
+                </button>
+              </Link>
+            </div>
+          </div>
+        ) : view === "protocol" ? (
           <FetalProtocolChecklist />
         ) : view === "zscore" ? (
           <ZScoreCalc />

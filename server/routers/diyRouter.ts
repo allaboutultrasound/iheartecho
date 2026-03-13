@@ -711,7 +711,7 @@ export const diyRouter = router({
     .input(
       z.object({
         orgId: z.number(),
-        plan: z.enum(["starter", "professional", "advanced", "partner"]),
+        plan: z.enum(["starter", "professional", "advanced", "partner", "consulting_client"]),
         status: z.enum(["active", "trialing", "past_due", "canceled", "paused"]),
         hasConcierge: z.boolean().optional(),
       })
@@ -724,7 +724,10 @@ export const diyRouter = router({
         throw new TRPCError({ code: "FORBIDDEN" });
       }
 
-      const planConfig = DIY_PLANS[input.plan];
+      // consulting_client is a special plan with custom seat config (unlimited, managed by consultant)
+      const planConfig = input.plan === "consulting_client"
+        ? { totalSeats: 9999, labAdminSeats: 10, memberSeats: 9999, isUnlimitedMembers: true }
+        : DIY_PLANS[input.plan];
 
       await db
         .update(diySubscriptions)
