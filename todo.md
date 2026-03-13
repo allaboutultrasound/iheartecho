@@ -32,3 +32,6 @@
 - [ ] User profile pages in Hub (avatar, bio, credentials)
 - [ ] POCUS EchoAssist engines (IVC collapsibility, B-line scoring, eFAST)
 - [ ] Add emoji to email subject line field in EmailAdmin
+
+## Magic Link Browser Fix
+- [ ] Force magic link email to open in default browser, not in-app mail browser

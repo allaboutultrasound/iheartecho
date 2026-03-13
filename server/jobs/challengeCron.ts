@@ -347,7 +347,7 @@ function buildEmailHtml({
               <table cellpadding="0" cellspacing="0">
                 <tr>
                   <td style="border-radius:8px;background:#189aa1;">
-                    <a href="${challengeUrl}" style="display:inline-block;padding:14px 32px;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:8px;">
+                    <a href="${challengeUrl}" style="display:inline-block;padding:14px 32px;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:8px;" target="_blank" rel="noopener noreferrer">
                       Take Today's Challenges →
                     </a>
                   </td>
@@ -360,11 +360,11 @@ function buildEmailHtml({
             <td style="background:#f9fafb;padding:20px 40px;border-top:1px solid #e5e7eb;text-align:center;">
               <p style="margin:0;color:#9ca3af;font-size:12px;">
                 You're receiving this because you opted in to Daily Challenge notifications.<br/>
-                <a href="${appUrl}/profile#notifications" style="color:#189aa1;text-decoration:none;">Manage notification preferences</a>
+                <a href="${appUrl}/profile#notifications" style="color:#189aa1;text-decoration:none;" target="_blank" rel="noopener noreferrer">Manage notification preferences</a>
                 &nbsp;·&nbsp;
-                <a href="${unsubscribeUrl}" style="color:#9ca3af;text-decoration:underline;">Unsubscribe</a>
+                <a href="${unsubscribeUrl}" style="color:#9ca3af;text-decoration:underline;" target="_blank" rel="noopener noreferrer">Unsubscribe</a>
                 &nbsp;·&nbsp;
-                <a href="${appUrl}" style="color:#189aa1;text-decoration:none;">iHeartEcho™</a>
+                <a href="${appUrl}" style="color:#189aa1;text-decoration:none;" target="_blank" rel="noopener noreferrer">iHeartEcho™</a>
               </p>
             </td>
           </tr>

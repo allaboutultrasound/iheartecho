@@ -1268,7 +1268,7 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       .from(users)
       .where(eq(users.id, ctx.user.id))
       .limit(1);
-    const defaults = { acs: true, adultEcho: true, pediatricEcho: true, fetalEcho: true };
+    const defaults = { acs: true, adultEcho: true, pediatricEcho: true, fetalEcho: true, pocus: true };
     if (!userRow?.challengeCategoryPrefs) return defaults;
     try {
       return { ...defaults, ...JSON.parse(userRow.challengeCategoryPrefs) };
@@ -1285,6 +1285,7 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
         adultEcho: z.boolean().default(true),
         pediatricEcho: z.boolean().default(true),
         fetalEcho: z.boolean().default(true),
+        pocus: z.boolean().default(true),
       })
     )
     .mutation(async ({ ctx, input }) => {

@@ -84,6 +84,8 @@ function emailWrapper(content: string): string {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="x-apple-disable-message-reformatting" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>iHeartEcho™</title>
 </head>
 <body style="margin:0;padding:0;background:#f0fbfc;font-family:Arial,sans-serif;">
@@ -111,7 +113,7 @@ function emailWrapper(content: string): string {
           <tr>
             <td style="background:#f8fffe;border-top:1px solid #e5f7f8;padding:20px 32px;text-align:center;">
               <p style="margin:0;font-size:12px;color:#94a3b8;">
-                © All About Ultrasound · <a href="https://www.iheartecho.com" style="color:${brandColor};text-decoration:none;">www.iheartecho.com</a>
+                © All About Ultrasound · <a href="https://www.iheartecho.com" style="color:${brandColor};text-decoration:none;" target="_blank" rel="noopener noreferrer">www.iheartecho.com</a>
               </p>
               <p style="margin:8px 0 0;font-size:11px;color:#cbd5e1;">
                 You received this email because an account was created for you on iHeartEcho™.
@@ -161,12 +163,12 @@ export function buildStreakReminderEmail(opts: {
     </div>
     <div style="text-align:center;margin:28px 0;">
       <a href="${opts.loginUrl}"
-        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;">
+        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;" target="_blank" rel="noopener noreferrer">
         26a1 Complete Today's Daily Challenge
       </a>
     </div>
     <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;line-height:1.5;">
-      <a href="${opts.unsubscribeUrl}" style="color:#94a3b8;">Unsubscribe from Daily Challenge reminders</a>
+      <a href="${opts.unsubscribeUrl}" style="color:#94a3b8;" target="_blank" rel="noopener noreferrer">Unsubscribe from Daily Challenge reminders</a>
     </p>
   `);
   return { subject, htmlBody, previewText };
@@ -187,7 +189,7 @@ export function buildVerificationEmail(opts: {
     </p>
     <div style="text-align:center;margin:28px 0;">
       <a href="${opts.verificationUrl}"
-        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;">
+        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;" target="_blank" rel="noopener noreferrer">
         Verify Email Address
       </a>
     </div>
@@ -196,7 +198,7 @@ export function buildVerificationEmail(opts: {
     </p>
     <p style="margin:12px 0 0;font-size:13px;color:#94a3b8;">
       Or copy and paste this URL into your browser:<br/>
-      <a href="${opts.verificationUrl}" style="color:${brandColor};word-break:break-all;">${opts.verificationUrl}</a>
+      <a href="${opts.verificationUrl}" style="color:${brandColor};word-break:break-all;" target="_blank" rel="noopener noreferrer">${opts.verificationUrl}</a>
     </p>
   `);
   return { subject, htmlBody, previewText };
@@ -218,7 +220,7 @@ export function buildPasswordResetEmail(opts: {
     </p>
     <div style="text-align:center;margin:28px 0;">
       <a href="${opts.resetUrl}"
-        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;">
+        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;" target="_blank" rel="noopener noreferrer">
         Reset Password
       </a>
     </div>
@@ -227,7 +229,7 @@ export function buildPasswordResetEmail(opts: {
     </p>
     <p style="margin:12px 0 0;font-size:13px;color:#94a3b8;">
       Or copy and paste this URL into your browser:<br/>
-      <a href="${opts.resetUrl}" style="color:${brandColor};word-break:break-all;">${opts.resetUrl}</a>
+      <a href="${opts.resetUrl}" style="color:${brandColor};word-break:break-all;" target="_blank" rel="noopener noreferrer">${opts.resetUrl}</a>
     </p>
   `);
   return { subject, htmlBody, previewText };
@@ -255,7 +257,7 @@ export function buildEmailChangeVerificationEmail(opts: {
     </p>
     <div style="text-align:center;margin:28px 0;">
       <a href="${opts.verificationUrl}"
-        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;">
+        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;" target="_blank" rel="noopener noreferrer">
         Confirm New Email Address
       </a>
     </div>
@@ -264,7 +266,7 @@ export function buildEmailChangeVerificationEmail(opts: {
     </p>
     <p style="margin:12px 0 0;font-size:13px;color:#94a3b8;">
       Or copy and paste this URL into your browser:<br/>
-      <a href="${opts.verificationUrl}" style="color:${brandColor};word-break:break-all;">${opts.verificationUrl}</a>
+      <a href="${opts.verificationUrl}" style="color:${brandColor};word-break:break-all;" target="_blank" rel="noopener noreferrer">${opts.verificationUrl}</a>
     </p>
   `);
   return { subject, htmlBody, previewText };
@@ -285,7 +287,7 @@ export function buildMagicLinkEmail(opts: {
     </p>
     <div style="text-align:center;margin:28px 0;">
       <a href="${opts.magicUrl}"
-        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;">
+        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;" target="_blank" rel="noopener noreferrer">
         Sign In to iHeartEcho™
       </a>
     </div>
@@ -297,7 +299,7 @@ export function buildMagicLinkEmail(opts: {
     </div>
     <p style="margin:0;font-size:13px;color:#94a3b8;line-height:1.5;">
       Or copy and paste this URL into your browser:<br/>
-      <a href="${opts.magicUrl}" style="color:${brandColor};word-break:break-all;">${opts.magicUrl}</a>
+      <a href="${opts.magicUrl}" style="color:${brandColor};word-break:break-all;" target="_blank" rel="noopener noreferrer">${opts.magicUrl}</a>
     </p>
   `);
   return { subject, htmlBody, previewText };
@@ -347,7 +349,7 @@ export function buildNewCaseSubmissionAdminEmail(opts: {
     </div>
     <div style="text-align:center;margin:28px 0;">
       <a href="${opts.adminUrl}"
-        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;">
+        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;" target="_blank" rel="noopener noreferrer">
         Review in Case Management
       </a>
     </div>
@@ -382,7 +384,7 @@ export function buildCaseApprovedEmail(opts: {
     </p>
     <div style="text-align:center;margin:28px 0;">
       <a href="${opts.caseUrl}"
-        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;">
+        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;" target="_blank" rel="noopener noreferrer">
         View Your Case
       </a>
     </div>
@@ -424,13 +426,13 @@ export function buildCaseRejectedEmail(opts: {
     </ul>
     <div style="text-align:center;margin:28px 0;">
       <a href="${opts.submitUrl}"
-        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;">
+        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;" target="_blank" rel="noopener noreferrer">
         Submit a Revised Case
       </a>
     </div>
     <p style="margin:0;font-size:13px;color:#94a3b8;line-height:1.5;">
       If you have questions about this decision, please contact us at
-      <a href="mailto:support@iheartecho.com" style="color:${brandColor};">support@iheartecho.com</a>.
+      <a href="mailto:support@iheartecho.com" style="color:${brandColor};" target="_blank" rel="noopener noreferrer">support@iheartecho.com</a>.
     </p>
   `);
   return { subject, htmlBody, previewText };
@@ -470,13 +472,13 @@ export function buildWelcomeEmail(opts: {
     </div>` : ""}
     <div style="text-align:center;margin:28px 0;">
       <a href="${opts.loginUrl}"
-        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;">
+        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;" target="_blank" rel="noopener noreferrer">
         Sign In to iHeartEcho™
       </a>
     </div>
     <p style="margin:0;font-size:13px;color:#94a3b8;line-height:1.5;">
       If you have any questions, please contact us at
-      <a href="mailto:support@iheartecho.com" style="color:${brandColor};">support@iheartecho.com</a>.
+      <a href="mailto:support@iheartecho.com" style="color:${brandColor};" target="_blank" rel="noopener noreferrer">support@iheartecho.com</a>.
     </p>
   `);
   return { subject, htmlBody, previewText };
@@ -531,7 +533,7 @@ export function buildPhysicianOverReadInvitationEmail(opts: {
     </div>
     <div style="text-align:center;margin:28px 0;">
       <a href="${opts.reviewUrl}"
-        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;">
+        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;" target="_blank" rel="noopener noreferrer">
         Complete Over-Read Form
       </a>
     </div>
@@ -540,7 +542,7 @@ export function buildPhysicianOverReadInvitationEmail(opts: {
     </p>
     <p style="margin:0;font-size:12px;color:#cbd5e1;text-align:center;">
       Or copy and paste this URL into your browser:<br/>
-      <a href="${opts.reviewUrl}" style="color:${brandColor};word-break:break-all;font-size:11px;">${opts.reviewUrl}</a>
+      <a href="${opts.reviewUrl}" style="color:${brandColor};word-break:break-all;font-size:11px;" target="_blank" rel="noopener noreferrer">${opts.reviewUrl}</a>
     </p>
   `);
   return { subject, htmlBody, previewText };
@@ -585,13 +587,13 @@ export function buildOverReadCompletedEmail(opts: {
     </p>
     <div style="text-align:center;margin:28px 0;">
       <a href="${opts.step2Url}"
-        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;">
+        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;" target="_blank" rel="noopener noreferrer">
         Complete Step 2: Comparison Review
       </a>
     </div>
     <p style="margin:0;font-size:12px;color:#cbd5e1;text-align:center;">
       Or copy and paste this URL into your browser:<br/>
-      <a href="${opts.step2Url}" style="color:${brandColor};word-break:break-all;font-size:11px;">${opts.step2Url}</a>
+      <a href="${opts.step2Url}" style="color:${brandColor};word-break:break-all;font-size:11px;" target="_blank" rel="noopener noreferrer">${opts.step2Url}</a>
     </p>
   `);
   return { subject, htmlBody, previewText };
@@ -663,7 +665,7 @@ export function buildPeerReviewFeedbackEmail(opts: {
     ${commentsBlock}
     <div style="text-align:center;margin:28px 0;">
       <a href="${opts.appUrl}/diy-accreditation?tab=sono-peer"
-        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;">
+        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;" target="_blank" rel="noopener noreferrer">
         View Full Review
       </a>
     </div>
@@ -712,7 +714,7 @@ export function buildMeetingInvitationEmail(opts: {
   const joinButton = opts.meetingLink
     ? `<div style="text-align:center;margin:20px 0;">
         <a href="${opts.meetingLink}"
-          style="display:inline-block;background:#0e4a50;color:#ffffff;font-weight:700;font-size:14px;padding:12px 28px;border-radius:8px;text-decoration:none;">
+          style="display:inline-block;background:#0e4a50;color:#ffffff;font-weight:700;font-size:14px;padding:12px 28px;border-radius:8px;text-decoration:none;" target="_blank" rel="noopener noreferrer">
           🎥 Join Meeting (Zoom/Teams)
         </a>
       </div>`
@@ -754,7 +756,7 @@ export function buildMeetingInvitationEmail(opts: {
           <td style="padding:7px 0;color:#0e1e2e;">${opts.durationMinutes} minutes</td>
         </tr>
         ${opts.location ? `<tr><td style="padding:7px 0;color:#64748b;font-weight:600;">Location</td><td style="padding:7px 0;color:#0e1e2e;">${opts.location}</td></tr>` : ""}
-        ${opts.meetingLink ? `<tr style="background:rgba(24,154,161,0.05);"><td style="padding:7px 0;color:#64748b;font-weight:600;">Meeting Link</td><td style="padding:7px 0;"><a href="${opts.meetingLink}" style="color:${brandColor};font-weight:600;word-break:break-all;">Join Meeting</a></td></tr>` : ""}
+        ${opts.meetingLink ? `<tr style="background:rgba(24,154,161,0.05);"><td style="padding:7px 0;color:#64748b;font-weight:600;">Meeting Link</td><td style="padding:7px 0;"><a href="${opts.meetingLink}" style="color:${brandColor};font-weight:600;word-break:break-all;" target="_blank" rel="noopener noreferrer">Join Meeting</a></td></tr>` : ""}
       </table>
     </div>
     ${agendaBlock}
@@ -764,17 +766,17 @@ export function buildMeetingInvitationEmail(opts: {
     </p>
     <div style="text-align:center;margin:0 0 28px;display:flex;gap:12px;justify-content:center;">
       <a href="${opts.rsvpUrl}?response=accepted"
-        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:13px 28px;border-radius:8px;text-decoration:none;margin-right:8px;">
+        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:13px 28px;border-radius:8px;text-decoration:none;margin-right:8px;" target="_blank" rel="noopener noreferrer">
         ✓ Accept
       </a>
       <a href="${opts.rsvpUrl}?response=declined"
-        style="display:inline-block;background:#f1f5f9;color:#475569;font-weight:700;font-size:15px;padding:13px 28px;border-radius:8px;text-decoration:none;border:1px solid #e2e8f0;">
+        style="display:inline-block;background:#f1f5f9;color:#475569;font-weight:700;font-size:15px;padding:13px 28px;border-radius:8px;text-decoration:none;border:1px solid #e2e8f0;" target="_blank" rel="noopener noreferrer">
         ✗ Decline
       </a>
     </div>
     <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.5;text-align:center;">
       This invitation was sent from the iHeartEcho™ DIY Accreditation Tool.<br/>
-      You can also manage your RSVP by logging in to <a href="${opts.appUrl}" style="color:${brandColor};">iHeartEcho™</a>.
+      You can also manage your RSVP by logging in to <a href="${opts.appUrl}" style="color:${brandColor};" target="_blank" rel="noopener noreferrer">iHeartEcho™</a>.
     </p>
   `);
   return { subject, htmlBody, previewText };
