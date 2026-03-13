@@ -2737,3 +2737,21 @@
 
 ## HIPAA / PHI Compliance
 - [x] Remove MRN field from FetalEchoAssist™ study info panel and PDF report (no PHI collection)
+
+## PediatricEchoAssist™ Engine (Mar 13 2026)
+- [ ] Build PediatricEchoAssist.tsx with 20 calculators (BSA, Z-scores, shunt, ventricular function, congenital-specific, Bullet EF)
+- [ ] Premium gate wrapping all calculator content
+- [ ] PDF report generation with jsPDF
+- [ ] Register /pediatric-echo-assist route in App.tsx
+- [ ] Add engine card above FetalEchoAssist in EchoAssist engines page
+- [ ] Add PediatricEchoAssist tab to Pediatric Navigator (premium gated)
+
+## PediatricEchoAssist™ Engine (completed)
+- [x] Build PediatricEchoAssist.tsx with 20 ASE 2016 + AHA Kawasaki 2017 guideline-based calculators
+- [x] Calculators: BSA (Mosteller + DuBois), Z-score Aortic Root, Z-score PA Annulus, Z-score MV Annulus, Z-score TV Annulus, Z-score LVEDD, Coronary Z-score (Kawasaki), Qp:Qs Shunt Ratio, RVSP/PASP via TR Jet, Rp:Rs Resistance Ratio, Shortening Fraction, Bullet EF (5/6 AL), Tei Index (MPI), TAPSE Z-score, RV FAC, Nakata Index, McGoon Ratio, CoA Gradient, Pediatric AVA, Ross Score
+- [x] Premium gate with blur-overlay (same as FetalEchoAssist)
+- [x] PDF report generation with jsPDF
+- [x] Route registered at /pediatric-echo-assist
+- [x] PediatricEchoAssist cross-promotion card added above FetalEchoAssist in EchoAssistHub
+- [x] Pediatric specialty card in EchoAssistHub updated with echoAssistPath
+- [x] PediatricEchoAssist™ tab added to PediatricNavigator with premium gate

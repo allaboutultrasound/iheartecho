@@ -8,7 +8,9 @@ import { useState } from "react";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
-import { Baby, AlertCircle, CheckCircle2, HelpCircle, Activity, Scan } from "lucide-react";
+import { Baby, AlertCircle, CheckCircle2, HelpCircle, Activity, Scan, Calculator } from "lucide-react";
+import { PremiumGate } from "@/components/PremiumGate";
+import { Link as WouterLink } from "wouter";
 
 // --- DATA ---------------------------------------------------------------------
 
@@ -644,7 +646,7 @@ function NeonatalHemodynamics() {
 }
 
 // --- MAIN COMPONENT ---
-type TabId = "findings" | "zscore" | "qpqs" | "segmental" | "neonatal";
+type TabId = "findings" | "zscore" | "qpqs" | "segmental" | "neonatal" | "pediatricassist";
 
 export default function PediatricNavigator() {
   const [tab, setTab] = useState<TabId>("findings");
@@ -659,6 +661,7 @@ export default function PediatricNavigator() {
     { id: "qpqs" as TabId, label: "Qp/Qs Shunt" },
     { id: "segmental" as TabId, label: "Segmental Analysis" },
     { id: "neonatal" as TabId, label: "Neonatal Hemodynamics" },
+    { id: "pediatricassist" as TabId, label: "PediatricEchoAssist™" },
   ];
 
   return (
@@ -859,6 +862,30 @@ export default function PediatricNavigator() {
 
         {/* Neonatal Hemodynamics Tab */}
         {tab === "neonatal" && <NeonatalHemodynamics />}
+
+        {/* PediatricEchoAssist™ Tab */}
+        {tab === "pediatricassist" && (
+          <PremiumGate featureName="PediatricEchoAssist™ Calculator Engine">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 text-center">
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: "linear-gradient(135deg, #0e1e2e, #7c3aed)" }}>
+                <Calculator className="w-8 h-8 text-purple-200" />
+              </div>
+              <h3 className="font-bold text-gray-900 text-lg mb-2" style={{ fontFamily: "Merriweather, serif" }}>PediatricEchoAssist™</h3>
+              <p className="text-sm text-gray-500 mb-4 max-w-md mx-auto">
+                20 ASE 2016 + AHA Kawasaki 2017 guideline-based calculators — BSA, Z-scores, Qp:Qs, RVSP, Rp:Rs, Shortening Fraction, Bullet EF (5/6 AL), Tei Index, TAPSE Z-score, RV FAC, Nakata Index, McGoon Ratio, CoA Gradient, Pediatric AVA, and Ross Score.
+              </p>
+              <WouterLink href="/pediatric-echo-assist">
+                <button
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm text-white transition-all hover:opacity-90"
+                  style={{ background: "#7c3aed" }}
+                >
+                  <Calculator className="w-4 h-4" />
+                  Open Full PediatricEchoAssist™ Engine
+                </button>
+              </WouterLink>
+            </div>
+          </PremiumGate>
+        )}
 
         {/* Quick reference */}
         <div className="mt-6 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">

@@ -94,6 +94,7 @@ import Enrolled from "./pages/Enrolled";
 import FormBuilderAdmin from "./pages/FormBuilderAdmin";
 import AccreditationManagerPage from "./pages/AccreditationManager";
 import FetalEchoAssist from "./pages/FetalEchoAssist";
+import PediatricEchoAssist from "./pages/PediatricEchoAssist";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -204,6 +205,7 @@ function Router() {
       <Route path="/admin/form-builder">{() => <RoleGuard roles={["platform_admin"]} allowAdmin={true}><FormBuilderAdmin /></RoleGuard>}</Route>
       <Route path="/admin/form-builder/:id">{() => <RoleGuard roles={["platform_admin"]} allowAdmin={true}><FormBuilderAdmin /></RoleGuard>}</Route>
       <Route path="/accreditation-manager">{() => <RoleGuard roles={["platform_admin", "accreditation_manager"]} allowAdmin={true}><AccreditationManagerPage /></RoleGuard>}</Route>
+      <Route path="/pediatric-echo-assist" component={PediatricEchoAssist} />
       <Route path="/fetal-echo-assist" component={FetalEchoAssist} />
       {/* ── DIY Accreditation™ ────────────────────────────────────────────────────── */}
       <Route path="/diy-accreditation-plans" component={DIYAccreditationPlans} />

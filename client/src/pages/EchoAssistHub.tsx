@@ -30,7 +30,7 @@ type Specialty = {
 
 const specialties: Specialty[] = [
   { path: "/tte", scanCoachPath: "/scan-coach?tab=tte", icon: Stethoscope, title: "Adult Echo", description: "View-by-view TTE protocol with checklist, critical item tracking, normal reference values, ASE 2025 guidelines, and probe guidance with anatomy overlays.", badge: "Adult TTE", free: true },
-  { path: "/pediatric", scanCoachPath: "/scan-coach?tab=chd", icon: Users, title: "Pediatric Echo", description: "CHD findings, BSA Z-score calculators, Qp/Qs shunt estimation, segmental analysis, neonatal hemodynamics, and pediatric CHD scan guidance.", badge: "Congenital Heart", free: true },
+  { path: "/pediatric", scanCoachPath: "/scan-coach?tab=chd", echoAssistPath: "/pediatric-echo-assist", icon: Users, title: "Pediatric Echo", description: "CHD findings, BSA Z-score calculators, Qp/Qs shunt estimation, segmental analysis, neonatal hemodynamics, and pediatric CHD scan guidance. Includes PediatricEchoAssist™ calculator engine.", badge: "Congenital Heart", free: true },
   { path: "/fetal", scanCoachPath: "/scan-coach?tab=fetal", echoAssistPath: "/fetal-echo-assist", icon: Baby, title: "Fetal Echo", description: "Fetal cardiac findings, CHD differentials, biometry Z-scores, situs, arch patterns, fetal scan coach with clinical images, and FetalEchoAssist™ calculator engine.", badge: "Fetal", free: true },
   { path: "/stress", scanCoachPath: "/stress-scan-coach", icon: Zap, title: "Stress Echo", description: "Exercise and DSE protocols, 17-segment WMSI scorer, target HR calculator, interpretation criteria, and pharmacologic stress guidance.", badge: "Stress Echo", free: false },
   { path: "/diastolic", scanCoachPath: "/scan-coach?tab=diastolic", echoAssistPath: "/echoassist#engine-diastologyassist", icon: Activity, title: "Diastolic Function", description: "Step-by-step diastolic assessment: mitral inflow, TDI e', E/e' ratio, LAVI, TR velocity, pulmonary venous flow, and ASE 2025 grading algorithm with scan coach.", badge: "Diastology", free: true },
@@ -303,6 +303,56 @@ export default function EchoAssistHub() {
             </Link>
           </div>
           )}
+        </div>
+
+        {/* ── PediatricEchoAssist™ Cross-Promotion ─────────────────────── */}
+        <div
+          className="mt-8 rounded-xl p-5 border"
+          style={{ borderColor: "#7c3aed" + "40", background: "#faf5ff" }}
+        >
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="flex-shrink-0">
+              <div
+                className="w-14 h-14 rounded-xl flex items-center justify-center"
+                style={{ background: "linear-gradient(135deg, #0e1e2e, #7c3aed)" }}
+              >
+                <Baby className="w-7 h-7 text-purple-200" />
+              </div>
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#7c3aed" }}>
+                  Pediatric &amp; Congenital Echo Calculators
+                </span>
+              </div>
+              <h3 className="font-bold text-gray-900 text-base mb-1" style={{ fontFamily: "Merriweather, serif" }}>
+                PediatricEchoAssist™
+              </h3>
+              <p className="text-sm text-gray-500 mb-3">
+                20 ASE 2016 + AHA Kawasaki 2017 guideline-based calculators — BSA, 6 Z-scores, Coronary Z-score (Kawasaki), Qp:Qs, RVSP, Rp:Rs, Shortening Fraction, Bullet EF (5/6 AL), Tei Index, TAPSE Z-score, RV FAC, Nakata Index, McGoon Ratio, CoA Gradient, Pediatric AVA, and Ross Score.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Link href="/pediatric-echo-assist">
+                  <button
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
+                    style={{ background: "#7c3aed" }}
+                  >
+                    <Baby className="w-3.5 h-3.5" />
+                    Open PediatricEchoAssist™
+                  </button>
+                </Link>
+                <Link href="/pediatric">
+                  <button
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm border bg-white transition-all hover:bg-purple-50"
+                    style={{ borderColor: "#7c3aed" + "50", color: "#7c3aed" }}
+                  >
+                    <Activity className="w-3.5 h-3.5" />
+                    Pediatric Navigator
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* ── FetalEchoAssist™ Cross-Promotion ─────────────────────────── */}
