@@ -73,6 +73,10 @@ export const users = mysqlTable("users", {
   // Content interest preferences — used to filter platform emails and personalize content
   // null/missing means no preferences set (all content shown)
   interestPrefs: text("interestPrefs"),
+  // Email unsubscribe — set when user clicks the unsubscribe link in a campaign email
+  unsubscribedAt: timestamp("unsubscribedAt"),
+  // Unique token used in unsubscribe links — generated on first campaign send
+  unsubscribeToken: varchar("unsubscribeToken", { length: 64 }),
 });
 
 export type User = typeof users.$inferSelect;
@@ -1065,12 +1069,14 @@ export const quickfireChallenges = mysqlTable("quickfireChallenges", {
   // Admin-assigned priority — lower number = published first (1 = highest)
   priority: int("priority").default(100).notNull(),
   // Category tag for filtering (ACS | Adult Echo | Pediatric Echo | Fetal Echo | General)
-  category: varchar("category", { length: 64 }),
+  category: mysqlEnum("category", ["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "General"]).default("Adult Echo").notNull(),
   // Difficulty level for filtering
   difficulty: mysqlEnum("difficulty", ["beginner", "intermediate", "advanced"]).default("intermediate"),
-  // Lifecycle status
-  status: mysqlEnum("status", ["draft", "scheduled", "live", "archived"]).default("draft").notNull(),
-  // UTC date this challenge went (or is scheduled to go) live — YYYY-MM-DD
+  // Lifecycle status — queued = in the auto-publish queue, waiting for its turn
+  status: mysqlEnum("status", ["draft", "queued", "scheduled", "live", "archived"]).default("draft").notNull(),
+  // Position in the category queue — lower = published first; null = not in queue
+  queuePosition: int("queuePosition"),
+  // UTC date this challenge went live — YYYY-MM-DD (set automatically on publish)
   publishDate: varchar("publishDate", { length: 10 }),
   // Exact UTC timestamp when the challenge became live
   publishedAt: timestamp("publishedAt"),
@@ -1987,9 +1993,11 @@ export const emailCampaigns = mysqlTable("emailCampaigns", {
   audienceFilter: text("audienceFilter").notNull(),
   // Resolved recipient count at send time
   recipientCount: int("recipientCount").default(0).notNull(),
-  // Status: draft | sending | sent | failed
-  status: mysqlEnum("status", ["draft", "sending", "sent", "failed"]).default("draft").notNull(),
+  // Status: draft | scheduled | sending | sent | failed
+  status: mysqlEnum("status", ["draft", "scheduled", "sending", "sent", "failed"]).default("draft").notNull(),
   sentAt: timestamp("sentAt"),
+  // If set, the campaign will be sent at this time by the scheduler cron job
+  scheduledAt: timestamp("scheduledAt"),
   errorMessage: text("errorMessage"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

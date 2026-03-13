@@ -1710,7 +1710,7 @@ export default function ScanCoach() {
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
               <div className="px-5 py-3 border-b border-gray-100 flex items-center gap-2">
                 <Info className="w-4 h-4" style={{ color: "#189aa1" }} />
-                <h3 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>ASE/AHA/ACC Severity Thresholds — Primary MR</h3>
+                <h3 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Guideline-Based Severity Thresholds — Primary MR</h3>
                 <span className="ml-auto text-xs font-medium px-2 py-0.5 rounded-full" style={{ background: "#d0f4f5", color: "#0e7490" }}>2021 Guidelines</span>
               </div>
               <div className="overflow-x-auto">
@@ -1938,7 +1938,7 @@ export default function ScanCoach() {
             {/* ASE Severity Table */}
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
               <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
-                <h3 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>ASE/AHA/ACC Severity Thresholds — Aortic Regurgitation</h3>
+                <h3 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Guideline-Based Severity Thresholds — Aortic Regurgitation</h3>
                 <span className="ml-auto text-xs font-medium px-2 py-0.5 rounded-full" style={{ background: "#d0f4f5", color: "#0e7490" }}>2021 Guidelines</span>
               </div>
               <div className="overflow-x-auto">

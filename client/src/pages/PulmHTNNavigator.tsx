@@ -138,7 +138,7 @@ export default function PulmHTNNavigator() {
             <div className="flex-1">
               <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-2">
                 <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: AQUA }} />
-                <span className="text-xs text-white/80 font-medium">ASE 2025 · ESC/ERS 2022 Guidelines</span>
+                <span className="text-xs text-white/80 font-medium">Guideline-Based Assessment</span>
               </div>
               <h1 className="text-2xl font-black text-white leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
                 EchoAssist™ Navigator — Pulmonary HTN & PE
@@ -194,7 +194,7 @@ export default function PulmHTNNavigator() {
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
               <div className="px-5 py-3 border-b border-gray-100 flex items-center gap-2" style={{ background: BRAND + "08" }}>
                 <TrendingUp className="w-4 h-4" style={{ color: BRAND }} />
-                <h3 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Echo Probability of PH (ASE/ESC 2022)</h3>
+                <h3 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Echo Probability of Pulmonary Hypertension</h3>
               </div>
               <div className="p-5">
                 <p className="text-sm text-gray-600 mb-4">
@@ -349,7 +349,7 @@ export default function PulmHTNNavigator() {
 
             {/* PH Groups */}
             <CollapsibleSection
-              title="WHO/ESC PH Classification (Groups 1–5)"
+              title="Pulmonary Hypertension Classification (Groups 1–5)"
               subtitle="Echo clues to identify the underlying group"
               icon={Activity}
               iconBg={BRAND}
@@ -603,7 +603,7 @@ export default function PulmHTNNavigator() {
             {/* PE Risk Stratification */}
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
               <div className="px-5 py-3 border-b border-gray-100">
-                <h3 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>ESC 2019 PE Risk Stratification</h3>
+                <h3 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Pulmonary Embolism Risk Stratification</h3>
                 <p className="text-xs text-gray-500 mt-0.5">Echo RV dysfunction is a key determinant of intermediate-high vs. intermediate-low risk</p>
               </div>
               <div className="overflow-x-auto">

@@ -2,19 +2,23 @@
  * challengeCron.ts
  *
  * Runs every 5 minutes to:
- *  1. Archive any "live" challenge whose 24-hour window has expired.
- *  2. Auto-publish the next "scheduled" or highest-priority "draft" challenge
- *     if no challenge is currently live.
- *  3. Send a SendGrid notification email to all users who have opted in
- *     when a new challenge goes live — at 9 AM Eastern Time only.
+ *  1. Archive any "live" challenges whose 24-hour window has expired.
+ *  2. At 6 AM Eastern Time: auto-publish the next queued challenge from EACH
+ *     category (ACS, Adult Echo, Pediatric Echo, Fetal Echo) — picking the
+ *     lowest queuePosition per category. No publishDate required from admin.
+ *  3. Send a SendGrid notification email to opted-in users at 6 AM ET when
+ *     new challenges go live.
+ *
+ * Admin workflow:
+ *  - Set challenge status = "queued", assign a category, set queuePosition.
+ *  - The cron does the rest automatically every day at 6 AM ET.
  *
  * Deduplication is DB-backed (users.lastChallengeNotifDate = "YYYY-MM-DD" ET).
- * This prevents duplicate sends even if the server restarts during the 9am window.
  */
 
 import { getDb } from "../db";
-import { quickfireChallenges, quickfireDailySets, quickfireQuestions, users } from "../../drizzle/schema";
-import { eq, and, asc, lte, ne } from "drizzle-orm";
+import { quickfireChallenges, users } from "../../drizzle/schema";
+import { eq, and, asc } from "drizzle-orm";
 import sgMail from "@sendgrid/mail";
 import { generateUnsubscribeToken } from "../routes/unsubscribe";
 
@@ -28,90 +32,28 @@ if (SENDGRID_API_KEY) {
 }
 
 let cronRunning = false;
-let lastAutoGenDate = ""; // tracks the last date we auto-generated a daily set
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Returns today's date in YYYY-MM-DD format in Eastern Time. */
+/** Returns today's date string in YYYY-MM-DD format in Eastern Time. */
 function todayET(): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(new Date());
 }
 
-/** Returns today's date in YYYY-MM-DD format in UTC (for daily set generation). */
-function todayUTC(): string {
-  return new Date().toISOString().slice(0, 10);
+/** Returns current hour (0–23) in Eastern Time. */
+function hourET(): number {
+  return parseInt(
+    new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "numeric", hour12: false }).format(new Date()),
+    10
+  );
 }
 
-function sampleN<T>(arr: T[], n: number): T[] {
-  const shuffled = [...arr].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, n);
+/** Returns current minute (0–59). */
+function minuteNow(): number {
+  return new Date().getMinutes();
 }
 
-/**
- * Ensures a daily question set exists for the given date.
- * Mirrors the logic in quickfireRouter.ts ensureTodaySet.
- */
-async function ensureDailySet(db: NonNullable<Awaited<ReturnType<typeof getDb>>>, date: string) {
-  const existing = await db
-    .select()
-    .from(quickfireDailySets)
-    .where(eq(quickfireDailySets.setDate, date))
-    .limit(1);
-
-  if (existing.length > 0) return existing[0];
-
-  const allQuestions = await db
-    .select({ id: quickfireQuestions.id, type: quickfireQuestions.type })
-    .from(quickfireQuestions)
-    .where(eq(quickfireQuestions.isActive, true));
-
-  if (allQuestions.length === 0) {
-    const [inserted] = await db.insert(quickfireDailySets).values({ setDate: date, questionIds: "[]" });
-    return { setDate: date, questionIds: "[]", id: (inserted as any).insertId };
-  }
-
-  const scenarios = allQuestions.filter((q) => q.type === "scenario");
-  const images = allQuestions.filter((q) => q.type === "image");
-  const reviews = allQuestions.filter((q) => q.type === "quickReview");
-
-  const picked = [
-    ...sampleN(scenarios, Math.min(2, scenarios.length)),
-    ...sampleN(images, Math.min(2, images.length)),
-    ...sampleN(reviews, Math.min(1, reviews.length)),
-  ];
-
-  if (picked.length < 5) {
-    const remaining = allQuestions.filter((q) => !picked.find((p) => p.id === q.id));
-    picked.push(...sampleN(remaining, 5 - picked.length));
-  }
-
-  const finalIds = sampleN(picked, picked.length).map((q) => q.id);
-
-  await db.insert(quickfireDailySets).values({
-    setDate: date,
-    questionIds: JSON.stringify(finalIds),
-  });
-
-  console.log(`[ChallengeCron] Auto-generated daily set for ${date} with ${finalIds.length} questions.`);
-  return { setDate: date, questionIds: JSON.stringify(finalIds) };
-}
-
-/**
- * Auto-generates the daily question set for today if not already done.
- * Runs once per UTC day.
- */
-async function runDailyAutoGenerate() {
-  const today = todayUTC();
-  if (lastAutoGenDate === today) return; // already done today
-  try {
-    const db = await getDb();
-    if (!db) return;
-    await ensureDailySet(db, today);
-    lastAutoGenDate = today;
-  } catch (err) {
-    console.error("[ChallengeCron] Auto-generate error:", err);
-  }
-}
+// ── Main Cron ─────────────────────────────────────────────────────────────────
 
 export async function runChallengeCron() {
   if (cronRunning) return; // prevent overlapping runs
@@ -121,67 +63,130 @@ export async function runChallengeCron() {
     if (!db) return;
 
     const now = new Date();
+    const todayStr = todayET();
 
-    // ── Step 1: Archive expired live challenges ──────────────────────────────
-    const [liveChallenge] = await db
+    // ── Step 1: Archive expired live challenges (24 h window) ─────────────────
+    const liveChallenges = await db
       .select()
       .from(quickfireChallenges)
-      .where(eq(quickfireChallenges.status, "live"))
-      .limit(1);
+      .where(eq(quickfireChallenges.status, "live"));
 
-    if (liveChallenge?.publishedAt) {
-      const publishedAt = new Date(liveChallenge.publishedAt);
-      const expiresAt = new Date(publishedAt.getTime() + 24 * 60 * 60 * 1000);
-      if (now >= expiresAt) {
-        await db
-          .update(quickfireChallenges)
-          .set({ status: "archived", archivedAt: now })
-          .where(eq(quickfireChallenges.id, liveChallenge.id));
-        console.log(`[ChallengeCron] Archived challenge #${liveChallenge.id}: "${liveChallenge.title}"`);
+    for (const liveChallenge of liveChallenges) {
+      if (liveChallenge.publishedAt) {
+        const publishedAt = new Date(liveChallenge.publishedAt);
+        const expiresAt = new Date(publishedAt.getTime() + 24 * 60 * 60 * 1000);
+        if (now >= expiresAt) {
+          await db
+            .update(quickfireChallenges)
+            .set({ status: "archived", archivedAt: now })
+            .where(eq(quickfireChallenges.id, liveChallenge.id));
+          console.log(`[ChallengeCron] Archived challenge #${liveChallenge.id}: "${liveChallenge.title}"`);
+        }
       }
     }
 
-    // ── Step 2: Check if a challenge is still live after archiving ───────────
-    const [stillLive] = await db
+    // ── Step 2: Check if it's the 6 AM ET publish window (6:00–6:09 AM ET) ───
+    const currentHourET = hourET();
+    const currentMinute = minuteNow();
+    const isPublishWindow = currentHourET === 6 && currentMinute < 10;
+
+    if (!isPublishWindow) return;
+
+    // ── Step 3: Check if we already published today (any live challenge today) ─
+    const alreadyPublishedToday = await db
       .select({ id: quickfireChallenges.id })
       .from(quickfireChallenges)
-      .where(eq(quickfireChallenges.status, "live"))
+      .where(
+        and(
+          eq(quickfireChallenges.status, "live"),
+          eq(quickfireChallenges.publishDate, todayStr)
+        )
+      )
       .limit(1);
 
-    if (stillLive) return; // already have a live challenge, nothing to do
+    // Also check archived challenges published today (in case they already expired)
+    const archivedToday = await db
+      .select({ id: quickfireChallenges.id })
+      .from(quickfireChallenges)
+      .where(
+        and(
+          eq(quickfireChallenges.status, "archived"),
+          eq(quickfireChallenges.publishDate, todayStr)
+        )
+      )
+      .limit(1);
 
-    // ── Step 3: Find next challenge to publish ───────────────────────────────
-    // Priority: scheduled challenges with publishDate <= today first,
-    // then draft challenges ordered by priority ASC, createdAt ASC.
-    const todayStr = now.toISOString().slice(0, 10);
+    if (alreadyPublishedToday.length > 0 || archivedToday.length > 0) {
+      console.log(`[ChallengeCron] Already published challenges for ${todayStr}, skipping.`);
+      return;
+    }
 
-    const [nextScheduled] = await db
+    // ── Step 4: Pick the next queued challenge per category ───────────────────
+    const categories = ["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo"] as const;
+    const toPublish: typeof quickfireChallenges.$inferSelect[] = [];
+
+    for (const category of categories) {
+      const [next] = await db
+        .select()
+        .from(quickfireChallenges)
+        .where(
+          and(
+            eq(quickfireChallenges.status, "queued"),
+            eq(quickfireChallenges.category, category)
+          )
+        )
+        // Challenges with explicit position come first; null positions fall back to createdAt
+        .orderBy(asc(quickfireChallenges.queuePosition), asc(quickfireChallenges.createdAt))
+        .limit(1);
+
+      if (next) {
+        toPublish.push(next);
+      }
+    }
+
+    // Also include any "scheduled" challenges with publishDate <= today (legacy support)
+    const scheduledChallenges = await db
       .select()
       .from(quickfireChallenges)
       .where(
         and(
           eq(quickfireChallenges.status, "scheduled"),
-          lte(quickfireChallenges.publishDate, todayStr)
+          // publishDate <= todayStr
         )
       )
       .orderBy(asc(quickfireChallenges.priority), asc(quickfireChallenges.createdAt))
-      .limit(1);
+      .limit(4);
 
-    // Only auto-publish drafts that have a publishDate <= today.
-    // Pure drafts (no publishDate) must be manually published by admin.
-    const toPublish = nextScheduled;
-    if (!toPublish) {
-      console.log("[ChallengeCron] No challenges queued for publishing.");
+    // Merge scheduled into toPublish (avoid duplicates)
+    for (const sc of scheduledChallenges) {
+      if (sc.publishDate && sc.publishDate <= todayStr && !toPublish.find(p => p.id === sc.id)) {
+        toPublish.push(sc);
+      }
+    }
+
+    if (toPublish.length === 0) {
+      console.log(`[ChallengeCron] No queued challenges found for ${todayStr}.`);
       return;
     }
 
-    // ── Step 4: Publish the challenge ────────────────────────────────────────
-    await db
-      .update(quickfireChallenges)
-      .set({ status: "live", publishedAt: now, publishDate: todayStr })
-      .where(eq(quickfireChallenges.id, toPublish.id));
+    // ── Step 5: Publish all selected challenges ───────────────────────────────
+    for (const challenge of toPublish) {
+      await db
+        .update(quickfireChallenges)
+        .set({
+          status: "live",
+          publishedAt: now,
+          publishDate: todayStr,
+          queuePosition: null, // remove from queue
+        })
+        .where(eq(quickfireChallenges.id, challenge.id));
 
-    console.log(`[ChallengeCron] Published challenge #${toPublish.id}: "${toPublish.title}" — email will go out at 9 AM ET via scheduled notification.`);
+      console.log(`[ChallengeCron] Published challenge #${challenge.id}: "${challenge.title}" (${challenge.category})`);
+    }
+
+    // ── Step 6: Send notification emails at 6 AM ET ───────────────────────────
+    await sendChallengeNotifications(db, toPublish, todayStr);
+
   } catch (err) {
     console.error("[ChallengeCron] Error:", err);
   } finally {
@@ -189,20 +194,120 @@ export async function runChallengeCron() {
   }
 }
 
+// ── Email Notifications ───────────────────────────────────────────────────────
+
+async function sendChallengeNotifications(
+  db: NonNullable<Awaited<ReturnType<typeof getDb>>>,
+  publishedChallenges: typeof quickfireChallenges.$inferSelect[],
+  todayStr: string
+) {
+  if (!SENDGRID_API_KEY) {
+    console.log("[ChallengeCron] SendGrid not configured, skipping notifications.");
+    return;
+  }
+
+  // Get users who opted in and haven't been notified today
+  const eligibleUsers = await db
+    .select({
+      id: users.id,
+      email: users.email,
+      displayName: users.displayName,
+      name: users.name,
+      lastChallengeNotifDate: users.lastChallengeNotifDate,
+      notificationPrefs: users.notificationPrefs,
+      unsubscribeToken: users.unsubscribeToken,
+    })
+    .from(users)
+    .where(eq(users.isDemo, false));
+
+  const usersToNotify = eligibleUsers.filter((u) => {
+    if (!u.email) return false;
+    if (u.lastChallengeNotifDate === todayStr) return false;
+    // Check notification prefs — default to opted in if not set
+    if (u.notificationPrefs) {
+      try {
+        const prefs = typeof u.notificationPrefs === "string"
+          ? JSON.parse(u.notificationPrefs)
+          : u.notificationPrefs;
+        if (prefs.dailyChallenge === false) return false;
+      } catch {
+        // malformed prefs, default to opted in
+      }
+    }
+    return true;
+  });
+
+  if (usersToNotify.length === 0) {
+    console.log("[ChallengeCron] No users to notify.");
+    return;
+  }
+
+  // Build a summary of today's challenges for the email
+  const challengeSummary = publishedChallenges
+    .map(c => `${c.category}: ${c.title}`)
+    .join(" · ");
+
+  const primaryChallenge = publishedChallenges[0];
+  let notifiedCount = 0;
+
+  for (const user of usersToNotify) {
+    try {
+      const userName = user.displayName || user.name || "Echo Enthusiast";
+      const unsubToken = user.unsubscribeToken || generateUnsubscribeToken(user.id);
+      const unsubscribeUrl = `${APP_URL}/unsubscribe?token=${unsubToken}&type=challenge`;
+      const challengeUrl = `${APP_URL}/quickfire`;
+
+      const html = buildEmailHtml({
+        userName,
+        challengeCount: publishedChallenges.length,
+        challengeSummary,
+        primaryTitle: primaryChallenge.title,
+        primaryCategory: primaryChallenge.category || "Echo",
+        challengeUrl,
+        appUrl: APP_URL,
+        unsubscribeUrl,
+      });
+
+      await sgMail.send({
+        to: user.email!,
+        from: { email: SENDGRID_FROM_EMAIL, name: SENDGRID_FROM_NAME },
+        subject: `🔥 Today's Echo Challenges Are Live — ${todayStr}`,
+        html,
+      });
+
+      // Mark as notified
+      await db
+        .update(users)
+        .set({ lastChallengeNotifDate: todayStr })
+        .where(eq(users.id, user.id));
+
+      notifiedCount++;
+    } catch (err) {
+      console.error(`[ChallengeCron] Email failed for user ${user.id}:`, err);
+    }
+  }
+
+  console.log(`[ChallengeCron] Sent challenge notifications to ${notifiedCount} users.`);
+}
+
+// ── Email Template ────────────────────────────────────────────────────────────
+
 function buildEmailHtml({
   userName,
-  challengeTitle,
-  challengeDescription,
+  challengeCount,
+  challengeSummary,
+  primaryTitle,
+  primaryCategory,
   challengeUrl,
-  category,
   appUrl,
   unsubscribeUrl,
 }: {
   userName: string;
-  challengeTitle: string;
-  challengeDescription: string;
+  challengeCount: number;
+  challengeSummary: string;
+  primaryTitle: string;
+  primaryCategory: string;
   challengeUrl: string;
-  category: string;
   appUrl: string;
   unsubscribeUrl: string;
 }) {
@@ -211,7 +316,7 @@ function buildEmailHtml({
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>New Daily Challenge</title>
+  <title>Daily Echo Challenges</title>
 </head>
 <body style="margin:0;padding:0;background:#f4f7f9;font-family:'Helvetica Neue',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f7f9;padding:32px 0;">
@@ -222,28 +327,28 @@ function buildEmailHtml({
           <tr>
             <td style="background:linear-gradient(135deg,#0e1e2e 0%,#0e4a50 60%,#189aa1 100%);padding:32px 40px;text-align:center;">
               <h1 style="margin:0;color:#ffffff;font-size:28px;font-weight:900;letter-spacing:-0.5px;">iHeartEcho™</h1>
-              <p style="margin:4px 0 0;color:#4ad9e0;font-size:14px;font-weight:600;">Daily Challenge</p>
+              <p style="margin:4px 0 0;color:#4ad9e0;font-size:14px;font-weight:600;">Daily Challenges</p>
             </td>
           </tr>
           <!-- Body -->
           <tr>
             <td style="padding:40px;">
               <p style="margin:0 0 8px;color:#6b7280;font-size:14px;">Hi ${userName},</p>
-              <h2 style="margin:0 0 16px;color:#0e1e2e;font-size:22px;font-weight:800;">🔥 A new challenge is live!</h2>
-              <!-- Challenge card -->
+              <h2 style="margin:0 0 16px;color:#0e1e2e;font-size:22px;font-weight:800;">🔥 ${challengeCount} new challenge${challengeCount > 1 ? 's are' : ' is'} live today!</h2>
+              <!-- Challenge summary card -->
               <div style="background:#f0fbfc;border:1px solid #4ad9e0;border-radius:10px;padding:20px 24px;margin-bottom:24px;">
-                <div style="display:inline-block;background:#189aa1;color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:10px;letter-spacing:0.5px;">${category.toUpperCase()}</div>
-                <h3 style="margin:0 0 8px;color:#0e1e2e;font-size:18px;font-weight:800;">${challengeTitle}</h3>
-                ${challengeDescription ? `<p style="margin:0;color:#4b5563;font-size:14px;line-height:1.6;">${challengeDescription}</p>` : ""}
+                <div style="display:inline-block;background:#189aa1;color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:10px;letter-spacing:0.5px;">${primaryCategory.toUpperCase()}</div>
+                <h3 style="margin:0 0 8px;color:#0e1e2e;font-size:18px;font-weight:800;">${primaryTitle}</h3>
+                ${challengeCount > 1 ? `<p style="margin:0;color:#4b5563;font-size:13px;line-height:1.6;">Also today: ${challengeSummary}</p>` : ""}
               </div>
-              <p style="margin:0 0 8px;color:#4b5563;font-size:14px;">You have <strong>24 hours</strong> to complete this challenge and make the leaderboard.</p>
-              <p style="margin:0 0 24px;color:#4b5563;font-size:14px;">After 24 hours, the challenge is archived. <strong>Premium members</strong> can replay all past challenges in the archive — free members access today's challenge only.</p>
+              <p style="margin:0 0 8px;color:#4b5563;font-size:14px;">You have <strong>24 hours</strong> to complete today's challenges and make the leaderboard.</p>
+              <p style="margin:0 0 24px;color:#4b5563;font-size:14px;"><strong>Premium members</strong> can replay all past challenges in the archive — free members access today's challenges only.</p>
               <!-- CTA -->
               <table cellpadding="0" cellspacing="0">
                 <tr>
                   <td style="border-radius:8px;background:#189aa1;">
                     <a href="${challengeUrl}" style="display:inline-block;padding:14px 32px;color:#ffffff;font-size:15px;font-weight:700;text-decoration:none;border-radius:8px;">
-                      Take the Challenge →
+                      Take Today's Challenges →
                     </a>
                   </td>
                 </tr>
@@ -271,149 +376,16 @@ function buildEmailHtml({
 </html>`;
 }
 
-/**
- * Sends 9am Eastern Time challenge notifications.
- * Runs every hour. Fires only when it is currently 9:00–9:59 AM Eastern Time.
- *
- * Deduplication is DB-backed: each user's `lastChallengeNotifDate` column is
- * set to today's ET date (YYYY-MM-DD) after their email is sent. On the next
- * hourly tick (or after a server restart), users whose column already equals
- * today's ET date are skipped — guaranteeing exactly one email per user per day
- * regardless of restarts or cron drift.
- */
-async function send9amChallengeNotifications() {
-  if (!SENDGRID_API_KEY) return;
-  try {
-    const db = await getDb();
-    if (!db) return;
-
-    // Only fire when it is 9:00–9:59 AM Eastern Time
-    const now = new Date();
-    const etHour = parseInt(
-      new Intl.DateTimeFormat("en-US", { hour: "numeric", hour12: false, timeZone: "America/New_York" }).format(now),
-      10
-    );
-    if (etHour !== 9) {
-      console.log(`[ChallengeCron] 9am ET check: current ET hour is ${etHour}, skipping.`);
-      return;
-    }
-
-    // Get the currently live challenge
-    const [liveChallenge] = await db
-      .select()
-      .from(quickfireChallenges)
-      .where(eq(quickfireChallenges.status, "live"))
-      .limit(1);
-
-    if (!liveChallenge) {
-      console.log("[ChallengeCron] 9am ET: no live challenge to notify about.");
-      return;
-    }
-
-    // Today's date in ET (YYYY-MM-DD) — used as the dedup key
-    const todayDateET = todayET();
-
-    // Fetch all users who:
-    //  - have an email address
-    //  - are NOT pending (isPending = false) — pending accounts are webhook/admin stubs that have never signed in
-    //  - have verified their email if they registered via email/password
-    //  - have NOT already received a notification today (lastChallengeNotifDate != todayDateET)
-    const allUsers = await db
-      .select({
-        id: users.id,
-        email: users.email,
-        name: users.name,
-        displayName: users.displayName,
-        notificationPrefs: users.notificationPrefs,
-        lastChallengeNotifDate: users.lastChallengeNotifDate,
-        isPending: users.isPending,
-        emailVerified: users.emailVerified,
-        passwordHash: users.passwordHash,
-      })
-      .from(users);
-
-    const toNotify = allUsers.filter((u) => {
-      if (!u.email) return false;
-      // Skip pending accounts — webhook/admin-created stubs that have never signed in
-      if (u.isPending) return false;
-      // Skip email/password accounts that haven't verified their email yet
-      if (u.passwordHash && !u.emailVerified) return false;
-      // DB-backed dedup: skip if already sent today (survives server restarts)
-      if (u.lastChallengeNotifDate === todayDateET) return false;
-      try {
-        const prefs = u.notificationPrefs ? JSON.parse(u.notificationPrefs) : {};
-        if (prefs.quickfireReminder === false) return false;
-      } catch {
-        // default: opted in
-      }
-      return true;
-    });
-
-    if (toNotify.length === 0) {
-      console.log("[ChallengeCron] 9am ET: all eligible users already notified today.");
-      return;
-    }
-
-    const challengeUrl = `${APP_URL}/quickfire`;
-    const categoryTag = liveChallenge.category ? ` — ${liveChallenge.category}` : "";
-
-    const BATCH = 100;
-    for (let i = 0; i < toNotify.length; i += BATCH) {
-      const batch = toNotify.slice(i, i + BATCH);
-      const messages = batch.map((u) => ({
-        to: u.email!,
-        from: { email: SENDGRID_FROM_EMAIL, name: SENDGRID_FROM_NAME },
-        subject: `🔥 Daily Challenge: ${liveChallenge.title}${categoryTag}`,
-        html: buildEmailHtml({
-          userName: u.displayName ?? u.name ?? "Echo Learner",
-          challengeTitle: liveChallenge.title,
-          challengeDescription: liveChallenge.description ?? "",
-          challengeUrl,
-          category: liveChallenge.category ?? "General",
-          appUrl: APP_URL,
-          unsubscribeUrl: `${APP_URL}/api/unsubscribe?token=${generateUnsubscribeToken(u.id)}`,
-        }),
-        text: `Daily Challenge: ${liveChallenge.title}\n\n${liveChallenge.description ?? ""}\n\nYou have 24 hours to complete it!\n\n${challengeUrl}`,
-      }));
-
-      await sgMail.send(messages as any);
-
-      // Mark each user as notified in the DB (DB-backed dedup)
-      for (const u of batch) {
-        await db
-          .update(users)
-          .set({ lastChallengeNotifDate: todayDateET })
-          .where(eq(users.id, u.id));
-      }
-
-      console.log(`[ChallengeCron] 9am ET notification sent to ${batch.length} users (batch ${Math.floor(i / BATCH) + 1}).`);
-    }
-
-    console.log(`[ChallengeCron] 9am ET: notified ${toNotify.length} users for challenge "${liveChallenge.title}" on ${todayDateET}.`);
-  } catch (err) {
-    console.error("[ChallengeCron] 9am notification error:", err);
-  }
-}
+// ── Scheduler ─────────────────────────────────────────────────────────────────
 
 /**
- * Start the cron job — runs every 5 minutes.
- * Also runs daily auto-generation at midnight UTC.
+ * Starts the challenge cron job — runs every 5 minutes.
+ * Called once at server startup.
  */
 export function startChallengeCron() {
-  const INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
-  const HOUR_MS = 60 * 60 * 1000; // 1 hour
-  console.log("[ChallengeCron] Started — checking every 5 minutes. 9am ET notifications checked hourly (no startup send). DB-backed deduplication active.");
-  // Run immediately on startup to catch any missed publishes and generate today's set
-  // NOTE: send9amChallengeNotifications is NOT called on startup to prevent duplicate
-  // emails when the server restarts. It only runs on the hourly interval.
-  runChallengeCron().catch(console.error);
-  runDailyAutoGenerate().catch(console.error);
-  setInterval(() => {
-    runChallengeCron().catch(console.error);
-    runDailyAutoGenerate().catch(console.error);
-  }, INTERVAL_MS);
-  // Check 9am ET notifications every hour (never on startup)
-  setInterval(() => {
-    send9amChallengeNotifications().catch(console.error);
-  }, HOUR_MS);
+  console.log("[ChallengeCron] Started — runs every 5 minutes. Publishes at 6 AM ET daily.");
+  // Run immediately on startup to catch any missed publishes
+  runChallengeCron();
+  // Then run every 5 minutes
+  setInterval(runChallengeCron, 5 * 60 * 1000);
 }

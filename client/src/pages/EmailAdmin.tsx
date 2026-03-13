@@ -164,6 +164,8 @@ export default function EmailAdmin() {
 
   // ── Send confirmation ───────────────────────────────────────────────────────
   const [sendConfirmOpen, setSendConfirmOpen] = useState(false);
+  const [sendMode, setSendMode] = useState<"now" | "later">("now");
+  const [scheduledDateTime, setScheduledDateTime] = useState("");
 
   // ── tRPC queries ────────────────────────────────────────────────────────────
   const { data: templates, refetch: refetchTemplates } = trpc.emailCampaign.listTemplates.useQuery(
@@ -211,9 +213,20 @@ export default function EmailAdmin() {
     onError: (e) => toast.error(e.message),
   });
 
+  const scheduleCampaignMutation = trpc.emailCampaign.scheduleCampaign.useMutation({
+    onSuccess: (result) => {
+      toast.success(`Campaign scheduled for ${new Date(result.scheduledAt).toLocaleString()}`);
+      setSendConfirmOpen(false);
+      setSendMode("now");
+      setScheduledDateTime("");
+      refetchCampaigns();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
   const sendCampaignMutation = trpc.emailCampaign.sendCampaign.useMutation({
     onSuccess: (result) => {
-      toast.success(`Campaign sent to ${result.sent} recipient${result.sent !== 1 ? "s" : ""}${result.failed > 0 ? ` (${result.failed} failed)` : ""}`);
+      toast.success(`Campaign queued for ${result.recipientCount} recipient${result.recipientCount !== 1 ? "s" : ""}. Sending in progress…`);
       setSendConfirmOpen(false);
       refetchCampaigns();
     },
@@ -267,12 +280,22 @@ export default function EmailAdmin() {
 
   function confirmSend() {
     const finalHtml = wrapInTemplate ? wrapInBrandedEmail(bodyHtml, previewText) : bodyHtml;
-    sendCampaignMutation.mutate({
-      subject,
-      htmlBody: finalHtml,
-      previewText: previewText || undefined,
-      audienceFilter,
-    });
+    if (sendMode === "later" && scheduledDateTime) {
+      scheduleCampaignMutation.mutate({
+        subject,
+        htmlBody: finalHtml,
+        previewText: previewText || undefined,
+        audienceFilter,
+        scheduledAt: new Date(scheduledDateTime),
+      });
+    } else {
+      sendCampaignMutation.mutate({
+        subject,
+        htmlBody: finalHtml,
+        previewText: previewText || undefined,
+        audienceFilter,
+      });
+    }
   }
 
   // ── Auth guards ─────────────────────────────────────────────────────────────
@@ -615,16 +638,25 @@ export default function EmailAdmin() {
                             c.status === "sent" ? "bg-green-50 text-green-700" :
                             c.status === "sending" ? "bg-blue-50 text-blue-700" :
                             c.status === "failed" ? "bg-red-50 text-red-700" :
+                            c.status === "scheduled" ? "bg-amber-50 text-amber-700" :
                             "bg-gray-100 text-gray-600"
                           }`}>
                             {c.status === "sent" && <Check className="w-3 h-3" />}
                             {c.status === "sending" && <RefreshCw className="w-3 h-3 animate-spin" />}
                             {c.status === "failed" && <X className="w-3 h-3" />}
+                            {c.status === "scheduled" && <Clock className="w-3 h-3" />}
                             {c.status}
                           </span>
                           <span className="text-xs text-gray-400">{c.recipientCount} recipients</span>
                         </div>
-                        {c.sentAt && (
+                        {c.status === "scheduled" && c.scheduledAt && (
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs text-amber-600 font-medium">
+                              Scheduled: {new Date(c.scheduledAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                            </p>
+                          </div>
+                        )}
+                        {c.sentAt && c.status !== "scheduled" && (
                           <p className="text-xs text-gray-400">
                             {new Date(c.sentAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                           </p>
@@ -704,10 +736,10 @@ export default function EmailAdmin() {
       </Dialog>
 
       {/* ── Send Confirmation Dialog ──────────────────────────────────────────── */}
-      <Dialog open={sendConfirmOpen} onOpenChange={setSendConfirmOpen}>
+      <Dialog open={sendConfirmOpen} onOpenChange={(open) => { setSendConfirmOpen(open); if (!open) { setSendMode("now"); setScheduledDateTime(""); } }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Confirm Send Campaign</DialogTitle>
+            <DialogTitle>Send Campaign</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2">
             <div className="p-3 rounded-lg bg-gray-50 space-y-1">
@@ -733,21 +765,60 @@ export default function EmailAdmin() {
                 Email will be wrapped in the iHeartEcho™ branded template
               </p>
             )}
+            {/* Send Now vs Send Later toggle */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-2">When to send</label>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setSendMode("now")}
+                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${
+                    sendMode === "now" ? "bg-[#189aa1] text-white border-[#189aa1]" : "bg-white text-gray-600 border-gray-200 hover:border-[#189aa1]/50"
+                  }`}
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  Send Now
+                </button>
+                <button
+                  onClick={() => setSendMode("later")}
+                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${
+                    sendMode === "later" ? "bg-[#0e4a50] text-white border-[#0e4a50]" : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <Clock className="w-3.5 h-3.5" />
+                  Schedule for Later
+                </button>
+              </div>
+            </div>
+            {sendMode === "later" && (
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Scheduled Date &amp; Time</label>
+                <input
+                  type="datetime-local"
+                  value={scheduledDateTime}
+                  onChange={(e) => setScheduledDateTime(e.target.value)}
+                  min={new Date(Date.now() + 5 * 60 * 1000).toISOString().slice(0, 16)}
+                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 text-gray-700 focus:outline-none focus:ring-1 focus:ring-[#189aa1]"
+                />
+                <p className="text-xs text-gray-400 mt-1">Times are in your local timezone. Minimum 5 minutes from now.</p>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setSendConfirmOpen(false)}>Cancel</Button>
             <Button
               onClick={confirmSend}
-              disabled={sendCampaignMutation.isPending}
+              disabled={sendCampaignMutation.isPending || scheduleCampaignMutation.isPending || (sendMode === "later" && !scheduledDateTime)}
               className="text-white"
-              style={{ background: "#189aa1" }}
+              style={{ background: sendMode === "later" ? "#0e4a50" : "#189aa1" }}
             >
-              {sendCampaignMutation.isPending ? (
+              {(sendCampaignMutation.isPending || scheduleCampaignMutation.isPending) ? (
                 <RefreshCw className="w-4 h-4 animate-spin" />
+              ) : sendMode === "later" ? (
+                <Clock className="w-4 h-4" />
               ) : (
                 <Send className="w-4 h-4" />
               )}
-              Send Now
+              {sendMode === "later" ? "Schedule Campaign" : "Send Now"}
             </Button>
           </DialogFooter>
         </DialogContent>

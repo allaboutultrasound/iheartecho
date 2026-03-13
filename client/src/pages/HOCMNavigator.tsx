@@ -436,7 +436,7 @@ export default function HOCMNavigator() {
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-4">
               <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
-              <span className="text-xs text-white/80 font-medium">ASE/AHA HCM Guidelines 2020</span>
+              <span className="text-xs text-white/80 font-medium">Guideline-Based HCM Assessment</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-black text-white mb-2" style={{ fontFamily: "Merriweather, serif" }}>
               EchoAssist™ Navigator — HOCM
@@ -1182,7 +1182,7 @@ export default function HOCMNavigator() {
             <h2 className="text-lg font-bold text-gray-800 mb-1" style={{ fontFamily: "Merriweather, serif" }}>
               HOCM Reporting Guide
             </h2>
-            <p className="text-sm text-gray-500">Structured reporting template aligned with ASE/AHA HCM guidelines</p>
+            <p className="text-sm text-gray-500">Structured reporting template aligned with current HCM guidelines</p>
           </div>
 
           <div className="space-y-4">

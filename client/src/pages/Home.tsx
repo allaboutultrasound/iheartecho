@@ -14,7 +14,8 @@ import {
 
 const BRAND = "#189aa1";
 
-type Module = { path: string; icon: any; title: string; description: string; badge: string; color: string; premium?: boolean; external?: boolean; pinLast?: boolean };
+type InterestKey = "acs" | "adultEcho" | "pediatricEcho" | "fetalEcho";
+type Module = { path: string; icon: any; title: string; description: string; badge: string; color: string; premium?: boolean; external?: boolean; pinLast?: boolean; interests?: InterestKey[] };
 // NOTE: Any module with pinLast: true will always render at the end of the grid,
 // regardless of its position in this array. Add new modules ABOVE the Community Hub entry.
 const modules: Module[] = [
@@ -25,6 +26,7 @@ const modules: Module[] = [
     description: "Echo protocol + scan coach for all 11 specialties — Adult Echo, Pediatric, Fetal, Stress, Strain, UEA, HOCM, Pulmonary HTN & PE, Structural Heart, TEE, and ICE. View-by-view checklists, reference values, and probe guidance.",
     badge: "11 Specialties",
     color: BRAND,
+    interests: ["adultEcho", "pediatricEcho", "fetalEcho", "acs"],
   },
   {
     path: "/pocus-assist-hub",
@@ -33,14 +35,16 @@ const modules: Module[] = [
     description: "Point-of-care ultrasound protocols for eFAST, Cardiac POCUS, RUSH, and Lung POCUS — window-by-window checklists, probe guidance, IVC CI, B-line scorer, and eFAST free-fluid grader.",
     badge: "4 Modules",
     color: BRAND,
+    interests: ["acs"],
   },
   {
     path: "/echoassist",
     icon: Calculator,
     title: "EchoAssist™ Calculators",
     description: "Guideline-based severity calculators for AS, MR, AR, TR, MS, LV function, diastology, strain, RV function, PA pressure, SV/CO, LAP estimation, and more — ASE 2025.",
-    badge: "ASE 2025",
+    badge: "Guideline-Based",
     color: BRAND,
+    interests: ["adultEcho", "acs"],
   },
   {
     path: "/quickfire",
@@ -49,6 +53,7 @@ const modules: Module[] = [
     description: "One question. One case. One chance today. Answer the challenge, see the explanation. Maintain your streak, earn points and compare with other echo professionals.",
     badge: "Daily",
     color: BRAND,
+    interests: ["adultEcho", "pediatricEcho", "fetalEcho", "acs"],
   },
   {
     path: "/hemodynamics",
@@ -57,6 +62,7 @@ const modules: Module[] = [
     description: "Adjust preload, afterload, and contractility. See PV loop changes and echo findings in real time.",
     badge: "Training",
     color: BRAND,
+    interests: ["adultEcho", "acs"],
   },
   {
     path: "/cme",
@@ -65,6 +71,7 @@ const modules: Module[] = [
     description: "Browse accredited CME courses from All About Ultrasound — SDMS, AMA PRA, and more. Click to enroll directly on Thinkific.",
     badge: "CME",
     color: BRAND,
+    interests: ["adultEcho", "pediatricEcho", "fetalEcho", "acs"],
   },
   {
     path: "/registry-review",
@@ -73,6 +80,7 @@ const modules: Module[] = [
     description: "Prepare for ARDMS, CCI, and other registry exams with comprehensive review courses from All About Ultrasound.",
     badge: "Registry Prep",
     color: BRAND,
+    interests: ["adultEcho", "pediatricEcho", "fetalEcho", "acs"],
   },
   {
     path: "/report",
@@ -81,6 +89,7 @@ const modules: Module[] = [
     description: "Enter measurements and generate a complete, structured echo report instantly.",
     badge: "Time Saver",
     color: BRAND,
+    interests: ["adultEcho", "acs"],
   },
   {
     path: "/accreditation-navigator",
@@ -89,6 +98,7 @@ const modules: Module[] = [
     description: "Free IAC standards guide — search case mix requirements, CME, staff qualifications, policies, and common deficiencies for TTE, TEE, Stress, Pediatric, Fetal, and HOCM.",
     badge: "Free · IAC",
     color: BRAND,
+    interests: ["adultEcho", "pediatricEcho", "fetalEcho"],
   },
   {
     path: "/accreditation",
@@ -98,6 +108,7 @@ const modules: Module[] = [
     badge: "Accreditation",
     color: BRAND,
     premium: true,
+    interests: ["adultEcho", "pediatricEcho", "fetalEcho", "acs"],
   },
   // ⚠️ pinLast: true — Community Hub always renders last. Do not remove this flag.
   {

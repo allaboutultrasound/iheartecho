@@ -526,6 +526,20 @@
       "when": 1773418126272,
       "tag": "0074_wet_hobgoblin",
       "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "5",
+      "when": 1773419263992,
+      "tag": "0075_first_rage",
+      "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "5",
+      "when": 1773420522173,
+      "tag": "0076_mature_eternals",
+      "breakpoints": true
     }
   ]
 }

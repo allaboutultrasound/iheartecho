@@ -395,7 +395,7 @@ export default function StrainNavigator() {
           <div className="xl:col-span-2 flex flex-col gap-5">
 
             {/* LV GLS */}
-            <SectionCard title="LV Global Longitudinal Strain (GLS)" subtitle="Global value · ASE/EACVI 2022 · Vendor-neutral reference ≤ −20%" icon={<Activity className="w-4 h-4" />}>
+            <SectionCard title="LV Global Longitudinal Strain (GLS)" subtitle="Global value · Vendor-neutral reference ≤ −20%" icon={<Activity className="w-4 h-4" />}>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                 <NumInput label="LV GLS" value={lvGls} onChange={setLvGls} unit="%" placeholder="e.g. −19.5" hint="Normal ≤ −20%" />
                 <div>
@@ -460,7 +460,7 @@ export default function StrainNavigator() {
                 <div className="flex items-start gap-2">
                   <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: "#7c3aed" }} />
                   <div>
-                    <div className="text-xs font-bold mb-1" style={{ color: "#7c3aed" }}>ASE 2025 — Mid-Wall GLS</div>
+                    <div className="text-xs font-bold mb-1" style={{ color: "#7c3aed" }}>Mid-Wall GLS</div>
                     <p className="text-xs text-gray-600 leading-relaxed">
                       Normal mid-wall GLS is ≥ −17% (less negative than endocardial GLS). Mid-wall strain is more sensitive for subendocardial ischemia and early HCM. Most vendors report this automatically — check your software version.
                     </p>
@@ -488,7 +488,7 @@ export default function StrainNavigator() {
             {/* Imaging Checklist */}
             <SectionCard
               title="Imaging Parameters Checklist"
-              subtitle={`${acqDone}/${acqItems.length} items confirmed · ASE 2025`}
+              subtitle={`${acqDone}/${acqItems.length} items confirmed `}
               icon={<Camera className="w-4 h-4" />}
             >
               <div className="mb-3">
@@ -654,7 +654,7 @@ export default function StrainNavigator() {
 
       {/* ── References & Guidelines ── */}
       <div className="mt-6">
-        <SectionCard title="References & Guidelines" subtitle="ASE · EACVI · ESC · Cardio-Oncology" defaultOpen={false} icon={<BookOpen className="w-4 h-4" />}>
+        <SectionCard title="References & Guidelines" subtitle="Cardio-Oncology & Strain References" defaultOpen={false} icon={<BookOpen className="w-4 h-4" />}>
           <div className="space-y-2">
             {[
               { ref: "ASE. Recommendations for the Standardization and Interpretation of Echocardiographic Strain. JASE 2025 (August).", url: "https://www.asecho.org/wp-content/uploads/2025/08/Strain-Guideline-AIP-August-2025.pdf" },

@@ -29,15 +29,15 @@ type Specialty = {
 };
 
 const specialties: Specialty[] = [
-  { path: "/tte", scanCoachPath: "/scan-coach?tab=tte", icon: Stethoscope, title: "Adult Echo", description: "View-by-view TTE protocol with checklist, critical item tracking, normal reference values, ASE 2025 guidelines, and probe guidance with anatomy overlays.", badge: "Adult TTE", free: true },
+  { path: "/tte", scanCoachPath: "/scan-coach?tab=tte", icon: Stethoscope, title: "Adult Echo", description: "View-by-view TTE protocol with checklist, critical item tracking, normal reference values, guideline-based reference values, and probe guidance with anatomy overlays.", badge: "Adult TTE", free: true },
   { path: "/pediatric", scanCoachPath: "/scan-coach?tab=chd", echoAssistPath: "/pediatric-echo-assist", icon: Users, title: "Pediatric Echo", description: "CHD findings, BSA Z-score calculators, Qp/Qs shunt estimation, segmental analysis, neonatal hemodynamics, and pediatric CHD scan guidance. Includes PediatricEchoAssist™ calculator engine.", badge: "Congenital Heart", free: true },
   { path: "/fetal", scanCoachPath: "/scan-coach?tab=fetal", echoAssistPath: "/fetal-echo-assist", icon: Baby, title: "Fetal Echo", description: "Fetal cardiac findings, CHD differentials, biometry Z-scores, situs, arch patterns, fetal scan coach with clinical images, and FetalEchoAssist™ calculator engine.", badge: "Fetal", free: true },
   { path: "/stress", scanCoachPath: "/stress-scan-coach", icon: Zap, title: "Stress Echo", description: "Exercise and DSE protocols, 17-segment WMSI scorer, target HR calculator, interpretation criteria, and pharmacologic stress guidance.", badge: "Stress Echo", free: false },
-  { path: "/diastolic", scanCoachPath: "/scan-coach?tab=diastolic", echoAssistPath: "/echoassist#engine-diastologyassist", icon: Activity, title: "Diastolic Function", description: "Step-by-step diastolic assessment: mitral inflow, TDI e', E/e' ratio, LAVI, TR velocity, pulmonary venous flow, and ASE 2025 grading algorithm with scan coach.", badge: "Diastology", free: true },
+  { path: "/diastolic", scanCoachPath: "/scan-coach?tab=diastolic", echoAssistPath: "/echoassist#engine-diastologyassist", icon: Activity, title: "Diastolic Function", description: "Step-by-step diastolic assessment: mitral inflow, TDI e', E/e' ratio, LAVI, TR velocity, pulmonary venous flow, and guideline-based grading algorithm with scan coach.", badge: "Diastology", free: true },
   { path: "/strain", scanCoachPath: "/strain-scan-coach", icon: BarChart3, title: "Strain", description: "LV GLS, RV strain, LA strain, bull's-eye display, clinical interpretation, segmental curves, and strain scan coach with tips and clinical pattern library.", badge: "Strain", free: true },
   { path: "/uea-navigator", scanCoachPath: "/uea-scan-coach", icon: Droplets, title: "UEA (Contrast Echo)", description: "Contrast echo protocol: safety screening, agent preparation, view-by-view LVO and myocardial perfusion assessment, and reporting guidance.", badge: "Contrast Echo", free: true },
-  { path: "/hocm-navigator", scanCoachPath: "/hocm-scan-coach", icon: Activity, title: "HOCM", description: "Morphology assessment, SAM grading, resting and provoked LVOT gradients, goal-directed Valsalva, MR evaluation, and ASE/AHA reporting thresholds.", badge: "Cardiomyopathy", free: false },
-  { path: "/pulm-htn", scanCoachPath: "/scan-coach?tab=pulm", icon: Wind, title: "Pulmonary HTN & PE", description: "TRV-based PH probability, RVSP estimation, RV function, PA dilation, PE echo signs (McConnell's, 60/60, D-sign), risk stratification, and ASE 2025 thresholds.", badge: "Pulmonary", free: false },
+  { path: "/hocm-navigator", scanCoachPath: "/hocm-scan-coach", icon: Activity, title: "HOCM", description: "Morphology assessment, SAM grading, resting and provoked LVOT gradients, goal-directed Valsalva, MR evaluation, and guideline-based reporting thresholds.", badge: "Cardiomyopathy", free: false },
+  { path: "/pulm-htn", scanCoachPath: "/scan-coach?tab=pulm", icon: Wind, title: "Pulmonary HTN & PE", description: "TRV-based PH probability, RVSP estimation, RV function, PA dilation, PE echo signs (McConnell's, 60/60, D-sign), risk stratification, and guideline-based thresholds.", badge: "Pulmonary", free: false },
   { path: "/device", scanCoachPath: "/structural-heart-scan-coach", icon: Heart, title: "Structural Heart", description: "TAVR, MitraClip, WATCHMAN, and ASD/PFO closure — procedural echo guidance, post-implant assessment, and structural intervention checklists.", badge: "Structural Heart", free: false },
   { path: "/tee", scanCoachPath: "/tee-scan-coach", icon: Microscope, title: "TEE", description: "ME, TG, and UE views with angle/depth guidance, clinical applications, intraoperative checklist, and TEE scan coach with view acquisition tips.", badge: "TEE", free: false },
   { path: "/ice", scanCoachPath: "/ice-scan-coach", icon: Cpu, title: "ICE", description: "Intracardiac echo views, procedural checklists, key measurements for structural interventions, and ICE scan coach with view acquisition guidance.", badge: "ICE", free: false },
@@ -329,7 +329,7 @@ export default function EchoAssistHub() {
                 ACHDEchoAssist™
               </h3>
               <p className="text-sm text-gray-500 mb-3">
-                12 ASE 2015 ACHD + ACC/AHA 2018 guideline-based calculators — Fontan Hepatic Index, Ebstein's Severity, CoA Re-coarctation Index, Qp:Qs, RVSP, Aortic Root Z-score, RV FAC, TAPSE, Tei Index, Systemic AV Regurgitation, Pulmonary Regurgitation Fraction, and Shunt Significance.
+                12 guideline-based calculators — Fontan Hepatic Index, Ebstein's Severity, CoA Re-coarctation Index, Qp:Qs, RVSP, Aortic Root Z-score, RV FAC, TAPSE, Tei Index, Systemic AV Regurgitation, Pulmonary Regurgitation Fraction, and Shunt Significance.
               </p>
               <div className="flex flex-wrap gap-2">
                 <Link href="/achd-echo-assist">
@@ -379,7 +379,7 @@ export default function EchoAssistHub() {
                 PediatricEchoAssist™
               </h3>
               <p className="text-sm text-gray-500 mb-3">
-                20 ASE 2016 + AHA Kawasaki 2017 guideline-based calculators — BSA, 6 Z-scores, Coronary Z-score (Kawasaki), Qp:Qs, RVSP, Rp:Rs, Shortening Fraction, Bullet EF (5/6 AL), Tei Index, TAPSE Z-score, RV FAC, Nakata Index, McGoon Ratio, CoA Gradient, Pediatric AVA, and Ross Score.
+                20 guideline-based calculators — BSA, 6 Z-scores, Coronary Z-score (Kawasaki), Qp:Qs, RVSP, Rp:Rs, Shortening Fraction, Bullet EF (5/6 AL), Tei Index, TAPSE Z-score, RV FAC, Nakata Index, McGoon Ratio, CoA Gradient, Pediatric AVA, and Ross Score.
               </p>
               <div className="flex flex-wrap gap-2">
                 <Link href="/pediatric-echo-assist">

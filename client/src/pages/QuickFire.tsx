@@ -299,7 +299,7 @@ export default function QuickFire() {
       id: selectedArchiveId,
       title: archiveEditChallengeForm.title.trim(),
       description: archiveEditChallengeForm.description.trim() || null,
-      category: archiveEditChallengeForm.category || null,
+      category: (archiveEditChallengeForm.category as any) || undefined,
       difficulty: (archiveEditChallengeForm.difficulty as any) || null,
     });
   }

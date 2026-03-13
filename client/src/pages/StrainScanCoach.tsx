@@ -1295,7 +1295,7 @@ function StrainScanCoachInner() {
                     <div className="flex items-start gap-2">
                       <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: "#7c3aed" }} />
                       <div>
-                        <div className="text-xs font-bold mb-1" style={{ color: "#7c3aed" }}>ASE 2025 — Mid-Wall GLS</div>
+                        <div className="text-xs font-bold mb-1" style={{ color: "#7c3aed" }}>Mid-Wall GLS</div>
                         <p className="text-xs text-gray-600 leading-relaxed">
                           Normal mid-wall GLS is ≥ −17% (less negative than endocardial GLS). Mid-wall strain is more sensitive for subendocardial ischemia and early HCM. Most vendors report this automatically — check your software version for availability.
                         </p>
@@ -1342,7 +1342,7 @@ function StrainScanCoachInner() {
 
                   {/* ASE 2025 Updates — 3D strain card removed (not endorsed) */}
                   <div>
-                    <div className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: "#7c3aed" }}>ASE 2025 Updates</div>
+                    <div className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: "#7c3aed" }}>Guideline Updates</div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <TipCard icon={<Info className="w-3.5 h-3.5" />} title="Mid-Wall Strain (New 2025)" tip="ASE 2025 introduces mid-wall GLS as a separate parameter. Normal mid-wall GLS is ≥ −17%. Mid-wall strain is more sensitive for detecting subendocardial ischemia and early HCM. Most vendors now report this automatically — ensure your software is updated." color="#7c3aed" />
                       <TipCard icon={<Activity className="w-3.5 h-3.5" />} title="Updated Normal Thresholds" tip="ASE 2025 updates normal GLS to ≤ −20% (unchanged from 2022 consensus). However, age- and sex-specific ranges are now recommended: women have slightly more negative GLS (−21 to −22%) than men (−19 to −21%). Adjust interpretation accordingly." color="#7c3aed" />
@@ -1643,7 +1643,7 @@ function StrainScanCoachInner() {
       <div className="mt-6">
         <SectionCard
           title="References & Guidelines"
-          subtitle="ASE 2025 · EACVI · ESC · Cardio-Oncology"
+          subtitle="Cardio-Oncology & Strain References"
           defaultOpen={false}
           icon={<BookOpen className="w-4 h-4" style={{ color: BRAND }} />}
         >

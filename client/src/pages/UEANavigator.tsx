@@ -450,7 +450,7 @@ export default function UEANavigator() {
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-4">
               <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
-              <span className="text-xs text-white/80 font-medium">ASE 2018 Contrast Echo Guidelines</span>
+              <span className="text-xs text-white/80 font-medium">Guideline-Based Contrast Echo</span>
             </div>
             <div className="flex items-center gap-4 mb-3">
               <div className="w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0"

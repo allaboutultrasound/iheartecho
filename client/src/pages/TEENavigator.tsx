@@ -266,7 +266,7 @@ export default function TEENavigator() {
               <div className="flex flex-wrap items-center gap-2 mb-2">
                 <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1">
                   <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
-                  <span className="text-xs text-white/80 font-medium">ASE 2025 · TEE Protocol</span>
+                  <span className="text-xs text-white/80 font-medium">Guideline-Based TEE Protocol</span>
                 </div>
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-white" style={{ background: "linear-gradient(135deg, #f59e0b, #d97706)" }}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>

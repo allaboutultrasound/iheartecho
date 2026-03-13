@@ -46,7 +46,7 @@ export function DiastolicScanCoachContent() {
               ))}
             </div>
             <div className="mt-3 p-3 rounded-lg bg-blue-50 border border-blue-100">
-              <p className="text-xs font-semibold text-blue-800 mb-1">ASE 2025 Age-Specific e' Cutoffs — Step 1 Positive Threshold (Table 6)</p>
+              <p className="text-xs font-semibold text-blue-800 mb-1">Age-Specific e' Cutoffs — Step 1 Positive Threshold</p>
               <div className="grid grid-cols-3 gap-2 text-xs">
                 {[
                   { age: "20–39 y", septal: "≤ 7", lateral: "≤ 10", avg: "≤ 9" },
@@ -276,7 +276,7 @@ export function DiastolicScanCoachContent() {
         <div className="mt-6 rounded-xl p-5" style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}>
           <div className="flex items-center gap-2 mb-4">
             <Info className="w-4 h-4 text-[#4ad9e0]" />
-            <span className="text-sm font-semibold text-[#4ad9e0] uppercase tracking-wider">ASE 2025 Two-Step Algorithm (Figure 3)</span>
+            <span className="text-sm font-semibold text-[#4ad9e0] uppercase tracking-wider">Diastolic Two-Step Algorithm</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
             <div className="bg-white/10 rounded-lg p-3">
@@ -452,7 +452,7 @@ export default function DiastolicNavigator() {
             </SectionCard>
 
             {/* ASE 2025 Two-Step Grading Algorithm */}
-            <SectionCard title="ASE 2025 Two-Step Grading Algorithm (Figure 3)" icon={BarChart3} defaultOpen>
+            <SectionCard title="Two-Step Diastolic Grading Algorithm" icon={BarChart3} defaultOpen>
               <p className="text-sm text-gray-600 mb-4 leading-relaxed">
                 The ASE 2025 algorithm uses a two-step approach. Step 1 assesses LV relaxation via e' velocity. Step 2 counts markers of elevated LA pressure. Diastolic dysfunction is present when Step 1 is positive and ≥1 Step 2 marker is present, or when Step 1 is negative but ≥2 Step 2 markers are present.
               </p>
@@ -526,7 +526,7 @@ export default function DiastolicNavigator() {
             </SectionCard>
 
             {/* LA Reservoir Strain */}
-            <SectionCard title="LA Reservoir Strain (LARS) — ASE 2025 Primary Criterion" icon={Heart}>
+            <SectionCard title="LA Reservoir Strain (LARS) — Primary Criterion" icon={Heart}>
               <p className="text-sm text-gray-600 mb-4 leading-relaxed">
                 LARS is now a primary criterion in the ASE 2025 grading algorithm (threshold: &lt; 18%). LARS worsens as diastolic dysfunction progresses and is inversely related to LVFP — the lower the LARS, the higher the filling pressure. It is obtained by STE imaging and is available on most ultrasound systems.
               </p>
@@ -561,7 +561,7 @@ export default function DiastolicNavigator() {
             </SectionCard>
 
             {/* Normal Reference Values */}
-            <SectionCard title="Normal Reference Values (ASE 2025, Table 5)" icon={Info}>
+            <SectionCard title="Normal Reference Values" icon={Info}>
               <p className="text-sm text-gray-600 mb-3 leading-relaxed">
                 Values are 5th–95th percentile limits from regression equations in persons free of cardiovascular disease or risk factors.
               </p>

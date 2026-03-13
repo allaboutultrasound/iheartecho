@@ -198,9 +198,9 @@ function SortableQueueItem({ c, idx, openEditChallenge, deleteChallengeMutation 
             </span>
           )}
           <span className="text-xs text-gray-400">{qCount === 1 ? "1 question" : qCount === 0 ? "No question assigned" : `${qCount} questions`}</span>
-          {c.publishDate && (
+          {c.queuePosition != null && (
             <span className="flex items-center gap-1 text-xs text-gray-400">
-              <Clock className="w-3 h-3" />Scheduled: {c.publishDate}
+              <ListOrdered className="w-3 h-3" />Position #{c.queuePosition}
             </span>
           )}
           {isLive && c.publishedAt && (
@@ -412,7 +412,7 @@ export default function QuickFireAdmin() {
     title: "",
     description: "",
     category: "Adult Echo",
-    publishDate: "",
+    queuePosition: undefined as number | undefined,
     priority: 100,
     selectedQuestionIds: [] as number[],
   });
@@ -425,7 +425,7 @@ export default function QuickFireAdmin() {
       toast.success("Challenge created and added to queue.");
       challengeListQuery.refetch();
       setChallengeFormOpen(false);
-      setChallengeForm({ title: "", description: "", category: "Adult Echo", publishDate: "", priority: 100, selectedQuestionIds: [] });
+      setChallengeForm({ title: "", description: "", category: "Adult Echo", queuePosition: undefined, priority: 100, selectedQuestionIds: [] });
     },
     onError: (err) => toast.error(err.message || "Failed to create challenge."),
   });
@@ -478,7 +478,7 @@ export default function QuickFireAdmin() {
 
   function openCreateChallenge() {
     setEditingChallengeId(null);
-    setChallengeForm({ title: "", description: "", category: "Adult Echo", publishDate: "", priority: 100, selectedQuestionIds: [] });
+    setChallengeForm({ title: "", description: "", category: "Adult Echo", queuePosition: undefined, priority: 100, selectedQuestionIds: [] });
     setChallengeFormOpen(true);
   }
 
@@ -488,7 +488,7 @@ export default function QuickFireAdmin() {
       title: c.title,
       description: c.description ?? "",
       category: c.category ?? "Adult Echo",
-      publishDate: c.publishDate ?? "",
+      queuePosition: c.queuePosition ?? undefined,
       priority: c.priority ?? 100,
       selectedQuestionIds: Array.isArray(c.questionIds) ? c.questionIds : [],
     });
@@ -504,10 +504,10 @@ export default function QuickFireAdmin() {
       questionIds: challengeForm.selectedQuestionIds,
       priority: challengeForm.priority,
       category: challengeForm.category || undefined,
-      publishDate: challengeForm.publishDate || undefined,
+      queuePosition: challengeForm.queuePosition || undefined,
     };
     if (editingChallengeId !== null) {
-      updateChallengeMutation.mutate({ id: editingChallengeId, ...payload });
+      updateChallengeMutation.mutate({ id: editingChallengeId, ...payload } as any);
     } else {
       createChallengeMutation.mutate(payload as any);
     }
@@ -910,7 +910,7 @@ export default function QuickFireAdmin() {
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div>
                 <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Daily Challenge Queue</h2>
-                <p className="text-xs text-gray-400 mt-0.5">One question per day. Approve individual questions from the Question Bank to add them to this queue.</p>
+                <p className="text-xs text-gray-400 mt-0.5">One challenge per category per day. Publishes automatically at 6 AM ET. No dates needed — just set the category and queue position.</p>
               </div>
               <Input
                 value={challengeSearch}
@@ -950,7 +950,7 @@ export default function QuickFireAdmin() {
 
             {/* Info banner */}
             <div className="bg-teal-50 border border-teal-200 rounded-lg px-4 py-3 text-xs text-teal-700">
-              <strong>Daily Challenge Queue:</strong> Each entry contains <strong>exactly 1 question</strong> served to users on its scheduled day. Use the <button className="underline font-semibold" onClick={() => setActiveAdminTab("questions")}>Question Bank</button> tab to create questions, then click <strong>Queue</strong> to add them here — or use the <strong>New Challenge</strong> button above to pick any question from the bank.
+              <strong>Daily Challenge Queue:</strong> Set the <strong>category</strong> (ACS / Adult Echo / Pediatric Echo / Fetal Echo) and optionally a <strong>queue position</strong>. At 6 AM ET each day, the system automatically publishes the next challenge from each category. Drag rows to reorder, or set explicit position numbers.
             </div>
 
             {/* Challenge list */}
@@ -1592,12 +1592,15 @@ export default function QuickFireAdmin() {
                 <p className="text-[10px] text-gray-400 mt-1">Determines which daily slot this challenge fills</p>
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Scheduled Publish Date <span className="text-gray-400 font-normal">(optional)</span></label>
+                <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Queue Position <span className="text-gray-400 font-normal">(optional — lower = published first)</span></label>
                 <Input
-                  type="date"
-                  value={challengeForm.publishDate}
-                  onChange={(e) => setChallengeForm((f) => ({ ...f, publishDate: e.target.value }))}
+                  type="number"
+                  min={1}
+                  placeholder="e.g. 1, 2, 3…"
+                  value={challengeForm.queuePosition ?? ""}
+                  onChange={(e) => setChallengeForm((f) => ({ ...f, queuePosition: e.target.value ? parseInt(e.target.value) : undefined }))}
                 />
+                <p className="text-[10px] text-gray-400 mt-1">Leave blank to append to end of queue</p>
               </div>
             </div>
             <div>

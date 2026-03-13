@@ -122,7 +122,7 @@ function ASCalculator() {
         <InputField label="DVI" unit="ratio" value={dvi} onChange={setDvi} placeholder="e.g. 0.22" hint="LVOT VTI/AV VTI" />
       </div>
       {hasInput && (
-        <ResultPanel guideline="Per ASE/ACC/AHA 2021 Valvular Heart Disease Guidelines">
+        <ResultPanel guideline="Per current Valvular Heart Disease Guidelines">
           <div className="flex items-center gap-3 mb-2">
             <span className="text-sm font-semibold text-gray-700">Aortic Stenosis:</span>
             <SeverityBadge severity={severity} />
@@ -280,7 +280,7 @@ function MRCalculator() {
       </div>
 
       {hasInput && (
-        <ResultPanel guideline="Per ASE/ACC/AHA 2021 VHD Guidelines (Zoghbi et al.) — Integrated multi-parameter grading">
+        <ResultPanel guideline="Per current VHD Guidelines (Zoghbi et al.) — Integrated multi-parameter grading">
           <div className="flex items-center gap-3 mb-3">
             <span className="text-sm font-semibold text-gray-700">Mitral Regurgitation:</span>
             <SeverityBadge severity={sev} />
@@ -421,7 +421,7 @@ function TRCalculator() {
       </div>
 
       {hasInput && (
-        <ResultPanel guideline="Per ASE 2021 VHD Guidelines — TR Severity (Lancellotti et al.)">
+        <ResultPanel guideline="Per current VHD Guidelines — TR Severity (Lancellotti et al.)">
           <div className="flex items-center gap-3 mb-3">
             <span className="text-sm font-semibold text-gray-700">Tricuspid Regurgitation:</span>
             <SeverityBadge severity={sev} />
@@ -568,7 +568,7 @@ function ARCalculator() {
       </div>
 
       {hasInput && (
-        <ResultPanel guideline="Per ASE/ACC/AHA 2021 VHD Guidelines — AR Severity (Zoghbi et al.)">
+        <ResultPanel guideline="Per current VHD Guidelines — AR Severity (Zoghbi et al.)">
           <div className="flex items-center gap-3 mb-3">
             <span className="text-sm font-semibold text-gray-700">Aortic Regurgitation:</span>
             <SeverityBadge severity={sev} />
@@ -628,7 +628,7 @@ function MVACalculator() {
         <InputField label="MVA (direct)" unit="cm²" value={mva} onChange={setMva} placeholder={calcMva || "optional"} />
       </div>
       {(pht || mva) && (
-        <ResultPanel guideline="MVA = 220 / PHT — Per ASE/ACC/AHA Guidelines">
+        <ResultPanel guideline="MVA = 220 / PHT — Per current Valvular Heart Disease Guidelines">
           <div className="flex items-center gap-3 mb-2">
             <span className="text-sm font-semibold text-gray-700">Mitral Valve Area:</span>
             <span className="text-2xl font-black text-[#189aa1]" style={{ fontFamily: "JetBrains Mono, monospace" }}>
@@ -893,7 +893,7 @@ function DiastologyCalculator() {
 
       {/* Result */}
       {hasInput && (
-        <ResultPanel guideline="Per ASE 2025 LV Diastolic Function Guidelines">
+        <ResultPanel guideline="Per current LV Diastolic Function Guidelines">
           {/* DD verdict banner */}
           <div className={`rounded-lg p-3 mb-3 ${
             ddPresent === true ? "bg-red-50 border border-red-200" :
@@ -985,7 +985,7 @@ function LVFunctionCalculator() {
       </div>
 
       {(efVal || gls) && (
-        <ResultPanel guideline="EF per ASE/WFTF 2018 Chamber Quantification | GLS per ASE 2025 Strain Guideline (Thomas et al.)">
+        <ResultPanel guideline="EF per current Chamber Quantification Guidelines | GLS per current Strain Guidelines (Thomas et al.)">
           {efInterp && (
             <div className="mb-3 p-2 rounded border" style={{ borderColor: efInterp.color + "40", background: efInterp.color + "10" }}>
               <div className="text-xs text-gray-500 mb-0.5">LVEF</div>
@@ -1087,7 +1087,7 @@ function RVFunctionCalculator() {
       </div>
 
       {hasInput && (
-        <ResultPanel guideline="Per ASE 2010 RV Guidelines + ASE 2025 Strain Guideline (Thomas et al.) — RV FWS lower normal limit -17%">
+        <ResultPanel guideline="Per current RV Guidelines + Strain Guidelines (Thomas et al.) — RV FWS lower normal limit -17%">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {tapseInterp && (
               <div className="p-2 rounded border" style={{ borderColor: tapseInterp.color + "40", background: tapseInterp.color + "10" }}>
@@ -1399,7 +1399,7 @@ function LAPEstimationCalculator() {
       <div className="rounded-xl p-4 text-white" style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}>
         <div className="flex items-center gap-2 mb-1">
           <Calculator className="w-4 h-4 text-[#4ad9e0]" />
-          <span className="text-xs font-bold uppercase tracking-wider text-[#4ad9e0]">ASE 2025</span>
+          <span className="text-xs font-bold uppercase tracking-wider text-[#4ad9e0]">Guideline-Based</span>
         </div>
         <div className="text-base font-bold">Diastology LAP Estimation</div>
         <div className="text-xs text-white/70 mt-0.5">Left Atrial Pressure estimation via 3-variable algorithm</div>
@@ -1590,7 +1590,7 @@ function LAPEstimationCalculator() {
 
       {/* Result panel */}
       {hasAnyInput && result.grade && (
-        <ResultPanel guideline="Per ASE 2025 LV Diastolic Function Guidelines">
+        <ResultPanel guideline="Per current LV Diastolic Function Guidelines">
           <div className={`rounded-lg p-3 mb-3 ${
             result.lapStatus === "increased" ? "bg-red-50 border border-red-200" :
             result.lapStatus === "normal" ? "bg-green-50 border border-green-200" :
@@ -1631,17 +1631,17 @@ function LAPEstimationCalculator() {
 
 // --- MAIN COMPONENT -----------------------------------------------------------
 const calculators = [
-  { id: "as", label: "Aortic Stenosis", sub: "ASE/ACC/AHA 2021" },
+  { id: "as", label: "Aortic Stenosis", sub: "Guideline-Based Grading" },
   { id: "mr", label: "Mitral Regurgitation", sub: "PISA Method" },
-  { id: "tr", label: "Tricuspid Regurgitation", sub: "ASE 2021" },
-  { id: "ar", label: "Aortic Regurgitation", sub: "ASE 2021" },
+  { id: "tr", label: "Tricuspid Regurgitation", sub: "Guideline-Based Grading" },
+  { id: "ar", label: "Aortic Regurgitation", sub: "Guideline-Based Grading" },
   { id: "mva", label: "MVA (PHT)", sub: "Pressure Half-Time" },
   { id: "rvsp", label: "RVSP / PAP", sub: "Bernoulli" },
-  { id: "diastology", label: "Diastology", sub: "ASE 2025" },
-  { id: "lap_estimation", label: "LAP Estimation", sub: "ASE 2025 · Premium" },
-  { id: "diastology_special", label: "Diastology — Special Populations", sub: "ASE 2025 · Premium" },
-  { id: "lv", label: "LV Function + GLS", sub: "ASE 2025 Strain" },
-  { id: "rv", label: "RV Function + Strain", sub: "ASE 2025 Strain" },
+  { id: "diastology", label: "Diastology", sub: "Guideline-Based Assessment" },
+  { id: "lap_estimation", label: "LAP Estimation", sub: "Guideline-Based · Premium" },
+  { id: "diastology_special", label: "Diastology — Special Populations", sub: "Guideline-Based · Premium" },
+  { id: "lv", label: "LV Function + GLS", sub: "Guideline-Based Strain Assessment" },
+  { id: "rv", label: "RV Function + Strain", sub: "Guideline-Based Strain Assessment" },
   { id: "sv", label: "Stroke Volume / CO", sub: "LVOT Method" },
 ];
 
@@ -1746,7 +1746,7 @@ export default function EchoCalculator() {
         <div className="mt-6 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-5 py-3 border-b border-gray-100 flex items-center gap-2">
             <Info className="w-4 h-4 text-[#189aa1]" />
-            <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>Quick Reference — Strain Normal Values (ASE 2025)</h3>
+            <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>Quick Reference — Strain Normal Values</h3>
           </div>
           <div className="p-4 overflow-x-auto">
             <table className="w-full text-xs">

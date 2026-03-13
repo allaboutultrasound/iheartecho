@@ -2860,3 +2860,33 @@
 - [x] Platform Admin: add "Email Campaigns" tab with audience filters, rich text composer, template save/load, send
 - [x] Email sending: filter recipients by interests, subscription, role, or specific email addresses
 - [x] Email campaign history: show sent campaigns with recipient count, status, timestamp
+
+## Email Unsubscribe, Scheduled Campaigns & Interest Personalization (Session Mar 13)
+- [x] Add unsubscribedAt and unsubscribeToken fields to users table
+- [x] Generate unsubscribe token on first email send per user
+- [x] Add public /unsubscribe?token=X endpoint that sets unsubscribedAt
+- [x] Add unsubscribe confirmation page (UnsubscribePage.tsx)
+- [x] Exclude unsubscribed users from all campaign sends
+- [x] Inject unsubscribe footer link into all outbound email HTML
+- [x] Add scheduledAt field to emailCampaigns table
+- [x] Add campaign scheduler cron job (check every 5 min for due scheduled campaigns)
+- [x] Add "Send Later" date/time picker to EmailAdmin composer
+- [x] Show scheduled campaigns in campaign history with countdown
+- [ ] Interest-based Home dashboard: filter/sort module cards by user interestPrefs
+- [ ] Interest-based Daily Challenge: show interest-matched challenge first when user has prefs set
+- [ ] Add "Personalized for you" badge on interest-matched content
+
+## Challenge Queue Redesign (Category-Based Auto-Publish)
+- [x] Add queuePosition field to quickfireChallenges table, update status enum to include "queued"
+- [x] Run db:push to migrate schema
+- [x] Rewrite challengeCron.ts: at 6 AM ET, pick lowest-position queued challenge per category, publish all together as daily set, no publishDate required
+- [x] Auto-archive live challenges after 24 hours (existing logic, keep)
+- [x] Update QuickFireAdmin UI: add "Add to Queue" button, queue position field, category assignment, drag-to-reorder queue view
+- [x] Update challenge status display to show "queued" state with position number
+- [x] Remove publishDate requirement from challenge creation/edit form
+
+## Guideline Label Cleanup (Session Mar 13)
+- [x] Remove ASE/AHA/ACC/ESC org names and year references from all subtitles, badges, section headers, and description text visible to users
+- [x] Replace with "Guideline-Based" or descriptive labels (e.g. "Guideline-Based Grading", "Diastolic Assessment Algorithm")
+- [x] Files updated: EchoCalculator.tsx, EchoAssist.tsx, DiastolicNavigator.tsx, StrainNavigator.tsx, StrainScanCoach.tsx, ScanCoach.tsx, PulmHTNNavigator.tsx, StressNavigator.tsx, TEENavigator.tsx, TTENavigator.tsx, UEANavigator.tsx, PediatricEchoAssist.tsx, HOCMNavigator.tsx, ACHDNavigator.tsx
+- [x] Body text, clinical notes, algorithm comments, and reference sections at bottom of pages left untouched

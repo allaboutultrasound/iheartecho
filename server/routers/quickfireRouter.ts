@@ -1371,7 +1371,7 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       const conditions: any[] = [eq(quickfireChallenges.status, "archived")];
       // Category filter
       if (input.category) {
-        conditions.push(eq(quickfireChallenges.category, input.category));
+        conditions.push(eq(quickfireChallenges.category, input.category as any));
       }
       // Difficulty filter
       if (input.difficulty) {
@@ -1457,8 +1457,8 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       description: z.string().max(2000).optional(),
       questionIds: z.array(z.number().int().positive()).min(1).max(1),  // exactly 1 question per challenge
       priority: z.number().int().min(1).default(100),
-      category: z.string().max(64).optional(),
-      publishDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      category: z.enum(["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "General"]).optional(),
+      queuePosition: z.number().int().min(1).optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
@@ -1468,9 +1468,9 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
         description: input.description ?? null,
         questionIds: JSON.stringify(input.questionIds),
         priority: input.priority,
-        category: input.category ?? null,
-         status: "scheduled",  // Always scheduled — ready for auto-publication in queue order
-        publishDate: input.publishDate ?? null,
+        category: (input.category as any) ?? "Adult Echo",
+        status: "queued",
+        queuePosition: input.queuePosition ?? null,
         createdByUserId: ctx.user.id,
       });
       return { id: (result as any).insertId };
@@ -1483,8 +1483,8 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       description: z.string().max(2000).optional().nullable(),
       questionIds: z.array(z.number().int().positive()).min(1).max(1).optional(),  // exactly 1 question per challenge
       priority: z.number().int().min(1).optional(),
-      category: z.string().max(64).optional().nullable(),
-      publishDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
+      category: z.enum(["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "General"]).optional(),
+      queuePosition: z.number().int().min(1).optional().nullable(),
     }))
     .mutation(async ({ input }) => {
       const db = await getDb();
@@ -1493,8 +1493,6 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       await db.update(quickfireChallenges).set({
         ...rest,
         ...(questionIds !== undefined ? { questionIds: JSON.stringify(questionIds) } : {}),
-        // When publishDate is cleared, keep as scheduled (not draft) — still ready for auto-publication
-        ...(rest.publishDate !== undefined ? { status: "scheduled" } : {}),
       }).where(eq(quickfireChallenges.id, id));
       return { success: true };
     }),
@@ -1586,7 +1584,7 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       id: z.number().int().positive(),
       title: z.string().min(3).max(300).optional(),
       description: z.string().max(5000).optional().nullable(),
-      category: z.string().max(64).optional().nullable(),
+      category: z.enum(["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "General"]).optional(),
       difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional().nullable(),
       questionIds: z.array(z.number().int().positive()).min(1).max(1).optional(),
     }))
@@ -1917,8 +1915,8 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
         description: null,
         questionIds: JSON.stringify([input.questionId]),
         priority: 100,
-        category: null,
-        status: "scheduled",  // Always scheduled — ready for auto-publication in queue order
+        category: "Adult Echo",
+        status: "draft",
         publishDate: input.publishDate ?? null,
         createdByUserId: ctx.user.id,
       });
@@ -1974,8 +1972,8 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
           description: null,
           questionIds: JSON.stringify([q.id]),
           priority: 100,
-          category: null,
-          status: "scheduled",  // Always scheduled — ready for auto-publication in queue order
+          category: "Adult Echo",
+         status: "draft",
           publishDate: publishDate ?? null,
           createdByUserId: ctx.user.id,
         });

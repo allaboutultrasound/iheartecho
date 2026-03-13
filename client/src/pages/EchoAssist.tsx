@@ -1062,7 +1062,7 @@ function DiastolicEngine() {
   const avgEpNum = avgEp ?? 0;
 
   return (
-    <EngineSection id="engine-diastolic" title="Diastolic Function Assessment" subtitle="ASE 2025 · Step 1: Myocardial Relaxation (e’) · Step 2: Filling Pressure Markers">
+    <EngineSection id="engine-diastolic" title="Diastolic Function Assessment" subtitle="Step 1: Myocardial Relaxation (e’) · Step 2: Filling Pressure Markers">
       {/* STEP 1 */}
       <div className="border border-[#189aa1]/30 rounded-xl p-4 space-y-3 bg-[#f8feff]">
         <div className="flex items-center gap-2 mb-1">
@@ -3042,10 +3042,10 @@ function LAPEstimationEngine() {
     <EngineSection
       id="engine-lap"
       title="LAP Estimation"
-      subtitle="ASE 2025 · 3-variable algorithm · e' · E/e' · TR/PASP"
+      subtitle="3-variable algorithm · e' · E/e' · TR/PASP"
       premium
     >
-      <PremiumOverlay featureName="LAP Estimation (ASE 2025)">
+      <PremiumOverlay featureName="LAP Estimation">
         <LAPEstimationEngineInner />
       </PremiumOverlay>
     </EngineSection>
@@ -3130,7 +3130,7 @@ export default function EchoAssist() {
               EchoAssist™ Calculators
             </h1>
             <p className="text-sm text-gray-500 mt-0.5">
-              Enter raw measurements — get instant ASE/AHA/ACC guideline-based severity classifications, calculated values, and the specific criteria met. Domains: LV, Diastology, Strain, Stress Echo, AS, MS, AR, MR, TR, RV, PA Pressure, SV/CO, LAP Estimation, Frank-Starling.
+              Enter raw measurements — get instant guideline-based severity classifications, calculated values, and the specific criteria met. Domains: LV, Diastology, Strain, Stress Echo, AS, MS, AR, MR, TR, RV, PA Pressure, SV/CO, LAP Estimation, Frank-Starling.
             </p>
           </div>
         </div>
@@ -3139,7 +3139,7 @@ export default function EchoAssist() {
         <div className="flex items-start gap-3 bg-[#f0fbfc] border border-[#b2e8ec] rounded-xl px-5 py-3 mb-6">
           <Info className="w-4 h-4 text-[#189aa1] flex-shrink-0 mt-0.5" />
           <p className="text-xs text-[#0e7490]">
-            <strong>Clinical tool — not a substitute for physician judgment.</strong> All classifications are based on published ASE, AHA/ACC, and ESC guidelines. Results update in real time as you type. Each section can be used independently.
+            <strong>Clinical tool — not a substitute for physician judgment.</strong> All classifications are based on current published guidelines. Results update in real time as you type. Each section can be used independently.
           </p>
         </div>
 

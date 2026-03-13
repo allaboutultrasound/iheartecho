@@ -16,6 +16,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { startChallengeCron } from "../jobs/challengeCron";
+import { startEmailCampaignScheduler } from "../routers/emailCampaignRouter";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -88,6 +89,8 @@ async function startServer() {
     console.log(`Server running on http://localhost:${port}/`);
     // Start the Daily Challenge lifecycle cron (archive expired, publish next)
     startChallengeCron();
+    // Start the email campaign scheduler (sends scheduled campaigns every 5 minutes)
+    startEmailCampaignScheduler();
   });
 }
 

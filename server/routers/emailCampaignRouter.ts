@@ -2,20 +2,23 @@
  * emailCampaignRouter — Platform email campaigns and user interest preferences
  *
  * Procedures:
- *   user.getInterestPrefs       — get current user's interest preferences
- *   user.updateInterestPrefs    — update current user's interest preferences
- *   admin.listTemplates         — list all saved email templates
- *   admin.saveTemplate          — create or update an email template
- *   admin.deleteTemplate        — delete an email template
- *   admin.previewAudience       — count recipients matching a filter (dry-run)
- *   admin.sendCampaign          — send a campaign to filtered recipients
- *   admin.listCampaigns         — list sent/draft campaigns
+ *   getInterestPrefs        — get current user's interest preferences
+ *   updateInterestPrefs     — update current user's interest preferences
+ *   unsubscribe             — public: one-click unsubscribe via token
+ *   listTemplates           — list all saved email templates (admin)
+ *   saveTemplate            — create or update an email template (admin)
+ *   deleteTemplate          — delete an email template (admin)
+ *   previewAudience         — count recipients matching a filter (admin, dry-run)
+ *   sendCampaign            — send a campaign immediately (admin)
+ *   scheduleCampaign        — save a campaign for future send (admin)
+ *   listCampaigns           — list sent/scheduled/draft campaigns (admin)
+ *   cancelScheduled         — cancel a scheduled campaign (admin)
  */
 
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { eq, and, desc, like, or } from "drizzle-orm";
-import { protectedProcedure, router } from "../_core/trpc";
+import { eq, and, desc, lte, isNull, isNotNull } from "drizzle-orm";
+import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import {
   users,
@@ -24,6 +27,7 @@ import {
   userRoles,
 } from "../../drizzle/schema";
 import { sendEmail } from "../_core/email";
+import { randomBytes } from "crypto";
 
 // ─── Shared Zod schemas ───────────────────────────────────────────────────────
 
@@ -45,6 +49,49 @@ const AudienceFilterSchema = z.object({
   specificEmails: z.array(z.string().email()).default([]),
 });
 
+// ─── Unsubscribe token helper ─────────────────────────────────────────────────
+
+function generateUnsubscribeToken(): string {
+  return randomBytes(32).toString("hex");
+}
+
+/** Get or create an unsubscribe token for a user. Returns the token. */
+async function ensureUnsubscribeToken(userId: number): Promise<string> {
+  const db = await getDb();
+  if (!db) throw new Error("DB unavailable");
+  const [u] = await db
+    .select({ unsubscribeToken: users.unsubscribeToken })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  if (u?.unsubscribeToken) return u.unsubscribeToken;
+  const token = generateUnsubscribeToken();
+  await db.update(users).set({ unsubscribeToken: token }).where(eq(users.id, userId));
+  return token;
+}
+
+/** Build the unsubscribe URL for a given token */
+function buildUnsubscribeUrl(token: string): string {
+  const appUrl = process.env.VITE_APP_URL || "https://app.iheartecho.com";
+  return `${appUrl}/unsubscribe?token=${token}`;
+}
+
+/** Inject an unsubscribe footer block into HTML email body */
+function injectUnsubscribeFooter(htmlBody: string, unsubscribeUrl: string): string {
+  const footerBlock = `
+    <div style="margin-top:24px;padding-top:16px;border-top:1px solid #e2e8f0;text-align:center;">
+      <p style="margin:0;font-size:11px;color:#94a3b8;line-height:1.6;">
+        You are receiving this email because you have an account on iHeartEcho™.<br/>
+        <a href="${unsubscribeUrl}" style="color:#94a3b8;text-decoration:underline;">Unsubscribe from platform emails</a>
+      </p>
+    </div>`;
+  // Insert before closing </body> tag if present, otherwise append
+  if (htmlBody.includes("</body>")) {
+    return htmlBody.replace("</body>", `${footerBlock}</body>`);
+  }
+  return htmlBody + footerBlock;
+}
+
 // ─── Admin guard helper ───────────────────────────────────────────────────────
 
 async function assertAdmin(userId: number) {
@@ -60,7 +107,6 @@ async function assertAdmin(userId: number) {
       ),
     )
     .limit(1);
-  // Also allow the DB role=admin users
   const user = await db.select({ role: users.role }).from(users).where(eq(users.id, userId)).limit(1);
   const isAdmin = adminRole.length > 0 || user[0]?.role === "admin";
   if (!isAdmin) {
@@ -76,23 +122,34 @@ async function resolveRecipients(
   const db = await getDb();
   if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
 
-  // If specific emails are provided, use those directly
+  // If specific emails are provided, use those directly (still respect unsubscribe)
   if (filter.specificEmails.length > 0) {
     const results: { id: number; email: string; displayName: string | null; name: string | null }[] = [];
     for (const email of filter.specificEmails) {
       const found = await db
-        .select({ id: users.id, email: users.email, displayName: users.displayName, name: users.name })
+        .select({
+          id: users.id,
+          email: users.email,
+          displayName: users.displayName,
+          name: users.name,
+          unsubscribedAt: users.unsubscribedAt,
+        })
         .from(users)
         .where(eq(users.email, email))
         .limit(1);
-      if (found[0]?.email) {
-        results.push(found[0] as any);
+      if (found[0]?.email && !found[0]?.unsubscribedAt) {
+        results.push({
+          id: found[0].id,
+          email: found[0].email,
+          displayName: found[0].displayName,
+          name: found[0].name,
+        });
       }
     }
     return results;
   }
 
-  // Fetch all users with emails
+  // Fetch all non-pending users with emails who have not unsubscribed
   let allUsers = await db
     .select({
       id: users.id,
@@ -102,18 +159,15 @@ async function resolveRecipients(
       isPremium: users.isPremium,
       interestPrefs: users.interestPrefs,
       isPending: users.isPending,
+      unsubscribedAt: users.unsubscribedAt,
     })
     .from(users)
-    .where(
-      and(
-        // Must have an email
-        // Using a workaround since drizzle doesn't have isNotNull in this version
-        eq(users.isPending, false),
-      ),
-    );
+    .where(eq(users.isPending, false));
 
-  // Filter out users without emails
-  allUsers = allUsers.filter((u) => u.email && u.email.trim() !== "");
+  // Filter: must have email, must not have unsubscribed
+  allUsers = allUsers.filter(
+    (u) => u.email && u.email.trim() !== "" && !u.unsubscribedAt,
+  );
 
   // Apply subscription filter
   if (filter.subscriptionType === "premium") {
@@ -138,7 +192,7 @@ async function resolveRecipients(
   // Apply interest filter
   if (filter.interests.length > 0) {
     allUsers = allUsers.filter((u) => {
-      if (!u.interestPrefs) return false; // no prefs set — exclude when filtering by interest
+      if (!u.interestPrefs) return false;
       try {
         const prefs = JSON.parse(u.interestPrefs) as Record<string, boolean>;
         return filter.interests.some((interest) => prefs[interest] === true);
@@ -154,6 +208,110 @@ async function resolveRecipients(
     displayName: u.displayName,
     name: u.name,
   }));
+}
+
+// ─── Core send function (shared by immediate and scheduled sends) ─────────────
+
+export async function executeCampaignSend(campaignId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+
+  const [campaign] = await db
+    .select()
+    .from(emailCampaigns)
+    .where(eq(emailCampaigns.id, campaignId))
+    .limit(1);
+  if (!campaign) return;
+
+  let filter: z.infer<typeof AudienceFilterSchema>;
+  try {
+    filter = AudienceFilterSchema.parse(JSON.parse(campaign.audienceFilter));
+  } catch {
+    await db
+      .update(emailCampaigns)
+      .set({ status: "failed", errorMessage: "Invalid audience filter JSON." })
+      .where(eq(emailCampaigns.id, campaignId));
+    return;
+  }
+
+  await db
+    .update(emailCampaigns)
+    .set({ status: "sending" })
+    .where(eq(emailCampaigns.id, campaignId));
+
+  const recipients = await resolveRecipients(filter);
+  let sent = 0;
+  let failed = 0;
+
+  for (const recipient of recipients) {
+    // Ensure unsubscribe token exists for this user
+    const token = await ensureUnsubscribeToken(recipient.id);
+    const unsubscribeUrl = buildUnsubscribeUrl(token);
+    const htmlWithFooter = injectUnsubscribeFooter(campaign.htmlBody, unsubscribeUrl);
+
+    const displayName = recipient.displayName || recipient.name || recipient.email;
+    const ok = await sendEmail({
+      to: { name: displayName, email: recipient.email },
+      subject: campaign.subject,
+      htmlBody: htmlWithFooter,
+      previewText: campaign.previewText ?? undefined,
+    });
+    if (ok) sent++;
+    else failed++;
+  }
+
+  await db
+    .update(emailCampaigns)
+    .set({
+      status: failed === recipients.length && recipients.length > 0 ? "failed" : "sent",
+      sentAt: new Date(),
+      recipientCount: recipients.length,
+      errorMessage:
+        failed > 0 ? `${failed} of ${recipients.length} emails failed to send.` : null,
+    })
+    .where(eq(emailCampaigns.id, campaignId));
+}
+
+// ─── Scheduled campaign cron ──────────────────────────────────────────────────
+
+let schedulerStarted = false;
+
+export function startEmailCampaignScheduler() {
+  if (schedulerStarted) return;
+  schedulerStarted = true;
+
+  const CHECK_INTERVAL_MS = 5 * 60 * 1000; // every 5 minutes
+
+  const check = async () => {
+    try {
+      const db = await getDb();
+      if (!db) return;
+
+      const now = new Date();
+      // Find campaigns that are scheduled and due
+      const due = await db
+        .select({ id: emailCampaigns.id })
+        .from(emailCampaigns)
+        .where(
+          and(
+            eq(emailCampaigns.status, "scheduled"),
+            lte(emailCampaigns.scheduledAt, now),
+          ),
+        );
+
+      for (const c of due) {
+        console.log(`[EmailScheduler] Sending scheduled campaign #${c.id}`);
+        await executeCampaignSend(c.id);
+      }
+    } catch (err) {
+      console.error("[EmailScheduler] Error:", err);
+    }
+  };
+
+  // Run immediately on start, then every 5 minutes
+  check();
+  setInterval(check, CHECK_INTERVAL_MS);
+  console.log("[EmailScheduler] Started — checking every 5 minutes for scheduled campaigns.");
 }
 
 // ─── Router ───────────────────────────────────────────────────────────────────
@@ -191,6 +349,30 @@ export const emailCampaignRouter = router({
       return { success: true };
     }),
 
+  // ── Public: unsubscribe via token ─────────────────────────────────────────
+
+  unsubscribe: publicProcedure
+    .input(z.object({ token: z.string().min(1) }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const [u] = await db
+        .select({ id: users.id, unsubscribedAt: users.unsubscribedAt })
+        .from(users)
+        .where(eq(users.unsubscribeToken, input.token))
+        .limit(1);
+      if (!u) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Invalid or expired unsubscribe link." });
+      }
+      if (!u.unsubscribedAt) {
+        await db
+          .update(users)
+          .set({ unsubscribedAt: new Date() })
+          .where(eq(users.id, u.id));
+      }
+      return { success: true, alreadyUnsubscribed: !!u.unsubscribedAt };
+    }),
+
   // ── Admin: email templates ────────────────────────────────────────────────
 
   listTemplates: protectedProcedure.query(async ({ ctx }) => {
@@ -206,7 +388,7 @@ export const emailCampaignRouter = router({
   saveTemplate: protectedProcedure
     .input(
       z.object({
-        id: z.number().optional(), // if provided, update; otherwise create
+        id: z.number().optional(),
         name: z.string().min(1).max(200),
         subject: z.string().min(1).max(500),
         htmlBody: z.string().min(1),
@@ -263,7 +445,7 @@ export const emailCampaignRouter = router({
       };
     }),
 
-  // ── Admin: send campaign ──────────────────────────────────────────────────
+  // ── Admin: send campaign immediately ─────────────────────────────────────
 
   sendCampaign: protectedProcedure
     .input(
@@ -277,8 +459,9 @@ export const emailCampaignRouter = router({
     .mutation(async ({ ctx, input }) => {
       await assertAdmin(ctx.user.id);
       const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
 
-      // Resolve recipients
+      // Resolve recipients to validate audience
       const recipients = await resolveRecipients(input.audienceFilter);
       if (recipients.length === 0) {
         throw new TRPCError({
@@ -287,10 +470,8 @@ export const emailCampaignRouter = router({
         });
       }
 
-      // Create campaign record
-      const db2 = await getDb();
-      if (!db2) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
-      const [result] = await db2.insert(emailCampaigns).values({
+      // Create campaign record in "sending" state
+      const [result] = await db.insert(emailCampaigns).values({
         sentByUserId: ctx.user.id,
         subject: input.subject,
         htmlBody: input.htmlBody,
@@ -301,40 +482,67 @@ export const emailCampaignRouter = router({
       });
       const campaignId = (result as any).insertId as number;
 
-      // Send emails (fire and forget — update status after)
-      let sent = 0;
-      let failed = 0;
-      for (const recipient of recipients) {
-        const displayName = recipient.displayName || recipient.name || recipient.email;
-        const ok = await sendEmail({
-          to: { name: displayName, email: recipient.email },
-          subject: input.subject,
-          htmlBody: input.htmlBody,
-          previewText: input.previewText,
+      // Send (fire and forget — status updated inside executeCampaignSend)
+      executeCampaignSend(campaignId).catch((err) =>
+        console.error(`[EmailCampaign] Send error for campaign #${campaignId}:`, err),
+      );
+
+      return { campaignId, recipientCount: recipients.length };
+    }),
+
+  // ── Admin: schedule campaign for future send ──────────────────────────────
+
+  scheduleCampaign: protectedProcedure
+    .input(
+      z.object({
+        subject: z.string().min(1).max(500),
+        htmlBody: z.string().min(1),
+        previewText: z.string().max(300).optional(),
+        audienceFilter: AudienceFilterSchema,
+        scheduledAt: z.date(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await assertAdmin(ctx.user.id);
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+
+      if (input.scheduledAt <= new Date()) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Scheduled time must be in the future.",
         });
-        if (ok) sent++;
-        else failed++;
       }
 
-      // Update campaign status
-      await db2
-        .update(emailCampaigns)
-        .set({
-          status: failed === recipients.length ? "failed" : "sent",
-          sentAt: new Date(),
-          errorMessage:
-            failed > 0
-              ? `${failed} of ${recipients.length} emails failed to send.`
-              : null,
-        })
-        .where(eq(emailCampaigns.id, campaignId));
+      // Estimate recipient count (dry-run)
+      const recipients = await resolveRecipients(input.audienceFilter);
 
-      return {
-        campaignId,
-        sent,
-        failed,
-        total: recipients.length,
-      };
+      const [result] = await db.insert(emailCampaigns).values({
+        sentByUserId: ctx.user.id,
+        subject: input.subject,
+        htmlBody: input.htmlBody,
+        previewText: input.previewText ?? null,
+        audienceFilter: JSON.stringify(input.audienceFilter),
+        recipientCount: recipients.length,
+        status: "scheduled",
+        scheduledAt: input.scheduledAt,
+      });
+      return { campaignId: (result as any).insertId as number, recipientCount: recipients.length, scheduledAt: input.scheduledAt };
+    }),
+
+  // ── Admin: cancel a scheduled campaign ───────────────────────────────────
+
+  cancelScheduled: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      await assertAdmin(ctx.user.id);
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      await db
+        .update(emailCampaigns)
+        .set({ status: "draft" })
+        .where(and(eq(emailCampaigns.id, input.id), eq(emailCampaigns.status, "scheduled")));
+      return { success: true };
     }),
 
   // ── Admin: list campaigns ─────────────────────────────────────────────────
