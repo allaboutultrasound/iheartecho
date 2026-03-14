@@ -1813,7 +1813,7 @@ export default function QuickFireAdmin() {
                           {q.imageUrl && <span className="flex items-center gap-1 text-purple-500"><ImageIcon className="w-3 h-3" />Has image</span>}
                           {(q as any).videoUrl && <span className="flex items-center gap-1 text-blue-500"><PlayCircle className="w-3 h-3" />Has video</span>}
                           {q.difficulty && <Badge variant="outline" className="text-[10px]">{q.difficulty}</Badge>}
-                          {!q.isActive && <Badge className="text-[10px] bg-red-100 text-red-600 border-0">Inactive</Badge>}
+
                         </div>
                       </div>
                       <div className="flex items-center gap-1.5">
@@ -1849,7 +1849,7 @@ export default function QuickFireAdmin() {
                           size="sm"
                           className="text-red-500 border-red-200 hover:bg-red-50"
                           onClick={() => {
-                            if (confirm("Deactivate this flashcard?")) {
+                            if (confirm("Move this flashcard to trash?")) {
                               deleteMutation.mutate({ id: q.id });
                             }
                           }}

@@ -221,3 +221,17 @@
 - [x] Activate all questions in DB (set isActive=1 for all non-deleted questions)
 - [x] Remove "Show Inactive" toggle and deactivate button from QuickFireAdmin question bank
 - [x] Fix today's daily set to include active POCUS question
+- [ ] Wire leaderboard points into Daily Challenge submit flow (award points on correct answer)
+- [ ] Wire leaderboard points into flashcard usage (award points per card viewed, not per correct)
+- [ ] Wire leaderboard points into case submissions
+- [ ] Verify trash-only deletion enforced - remove any remaining activate/deactivate logic from codebase
+
+## Leaderboard Points Wiring (Mar 14 2026)
+- [x] Wire awardPoints into submitAnswer (daily challenge correct = 10 pts, streak bonus = 5 pts)
+- [x] Wire awardPoints into submitFlashcardReview (1 pt per card viewed, usage-based not correctness)
+- [x] Wire awardPoints into submitCase (20 pts for case submission by non-admin users)
+- [x] Wire awardPoints into approveCase (50 pts bonus when case is approved)
+- [x] Remove Inactive badge from flashcard management tab in QuickFireAdmin
+- [x] Change flashcard delete confirm text from "Deactivate" to "Move to Trash"
+- [x] Activate all questions in DB (set isActive=1 for all non-deleted questions)
+- [x] Remove Show Inactive toggle from QuickFireAdmin question bank

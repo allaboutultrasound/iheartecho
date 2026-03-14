@@ -33,6 +33,7 @@ import {
   users,
 } from "../../drizzle/schema";
 import { eq, and, desc, sql, gte, lte, count, inArray } from "drizzle-orm";
+import { awardPoints } from "./leaderboardRouter";
 import { sendStreakReminders } from "../streakReminders";
 import { generateVirtualLeaderboard } from "../leaderboardSeed";
 import { createHash } from "crypto";
@@ -415,6 +416,38 @@ export const quickfireRouter = router({
         isCorrect,
         timeMs: input.timeMs ?? null,
       });
+
+      // ── Award leaderboard points ──────────────────────────────────────────
+      if (isCorrect === true) {
+        await awardPoints({
+          userId: ctx.user.id,
+          activityType: "daily_challenge_correct",
+          referenceId: input.questionId,
+        }).catch(() => {}); // non-blocking — don't fail the answer submission
+
+        // Check for daily streak bonus: if user answered correctly yesterday too
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().slice(0, 10);
+        const [yesterdayAttempt] = await db
+          .select({ id: quickfireAttempts.id })
+          .from(quickfireAttempts)
+          .where(
+            and(
+              eq(quickfireAttempts.userId, ctx.user.id),
+              eq(quickfireAttempts.setDate, yesterdayStr),
+              eq(quickfireAttempts.isCorrect, true)
+            )
+          )
+          .limit(1);
+        if (yesterdayAttempt) {
+          await awardPoints({
+            userId: ctx.user.id,
+            activityType: "daily_challenge_streak",
+            referenceId: input.questionId,
+          }).catch(() => {});
+        }
+      }
 
       return {
         isCorrect,
@@ -2108,6 +2141,13 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
         isCorrect: input.gotIt,
         timeMs: input.timeMs ?? null,
       });
+
+      // ── Award 1 point per flashcard viewed (usage-based, not correctness-based) ──
+      await awardPoints({
+        userId: ctx.user.id,
+        activityType: "flashcard_card_viewed",
+        referenceId: input.questionId,
+      }).catch(() => {}); // non-blocking
 
       return { success: true };
     }),

@@ -38,6 +38,7 @@ import { eq, and, desc, sql, count, like, or, gte } from "drizzle-orm";
 import { storagePut } from "../storage";
 import { sendEmail, buildCaseApprovedEmail, buildCaseRejectedEmail, buildNewCaseSubmissionAdminEmail } from "../_core/email";
 import { notifyOwner } from "../_core/notification";
+import { awardPoints } from "./leaderboardRouter";
 import { createPatchedFetch } from "../_core/patchedFetch";
 import { generateText } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
@@ -470,6 +471,15 @@ export const caseLibraryRouter = router({
         }
       }
 
+      // ── Award points for case submission (non-admin users only) ──
+      if (!isAdmin) {
+        await awardPoints({
+          userId: ctx.user.id,
+          activityType: "case_submission",
+          referenceId: caseId,
+        }).catch(() => {}); // non-blocking
+      }
+
       return {
         caseId,
         status: isAdmin ? "approved" : "pending",
@@ -797,6 +807,15 @@ export const caseLibraryRouter = router({
           rejectionReason: null,
         })
         .where(eq(echoLibraryCases.id, input.id));
+
+      // ── Award 50 bonus points when a user's case is approved ──
+      if (caseRow && !caseRow.isAdminSubmission && caseRow.submittedByUserId) {
+        await awardPoints({
+          userId: caseRow.submittedByUserId,
+          activityType: "case_approved",
+          referenceId: caseRow.id,
+        }).catch(() => {});
+      }
 
       // Send approval email to submitter (skip for admin-created cases)
       if (caseRow && !caseRow.isAdminSubmission && caseRow.submittedByUserId) {
