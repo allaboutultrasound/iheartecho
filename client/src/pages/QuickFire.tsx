@@ -853,7 +853,7 @@ export default function QuickFire() {
             { id: "challenge" as const, label: "Daily Challenge", icon: Trophy },
             { id: "archive" as const, label: "Archive", icon: Archive },
             { id: "performance" as const, label: "My Performance", icon: BarChart3 },
-            { id: "leaderboard" as const, label: "Leaderboard", icon: Trophy },
+            { id: "leaderboard" as const, label: "Leaderboard", icon: Medal },
           ] as const).map(({ id, label, icon: Icon }) => (
             <button
               key={id}
