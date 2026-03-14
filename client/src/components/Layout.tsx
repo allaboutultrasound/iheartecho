@@ -127,7 +127,7 @@ const hiddenNavItems = [
   { path: "/ecg-assist", label: "ECG-Assist™" },
   { path: "/fetal-echo-assist", label: "FetalEchoAssist™" },
   { path: "/pediatric-echo-assist", label: "PediatricEchoAssist™" },
-  { path: "/achd-echo-assist", label: "ACHDEchoAssist™" },
+  { path: "/achd-echo-assist", label: "ACHD-EchoAssist™" },
   { path: "/diy-accreditation-plans", label: "DIY Accreditation™ Plans" },
   { path: "/diy-accreditation-smart", label: "DIY Accreditation™" },
   { path: "/diy-register", label: "Register Your Lab" },

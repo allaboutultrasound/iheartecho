@@ -305,7 +305,7 @@ export default function EchoAssistHub() {
           )}
         </div>
 
-        {/* ── ACHDEchoAssist™ Cross-Promotion ──────────────────────────── */}
+        {/* ── ACHD-EchoAssist™ Cross-Promotion ──────────────────────────── */}
         <div
           className="mt-8 rounded-xl p-5 border"
           style={{ borderColor: "#189aa1" + "40", background: "#fffbeb" }}
@@ -326,7 +326,7 @@ export default function EchoAssistHub() {
                 </span>
               </div>
               <h3 className="font-bold text-gray-900 text-base mb-1" style={{ fontFamily: "Merriweather, serif" }}>
-                ACHDEchoAssist™
+                ACHD-EchoAssist™
               </h3>
               <p className="text-sm text-gray-500 mb-3">
                 12 guideline-based calculators — Fontan Hepatic Index, Ebstein's Severity, CoA Re-coarctation Index, Qp:Qs, RVSP, Aortic Root Z-score, RV FAC, TAPSE, Tei Index, Systemic AV Regurgitation, Pulmonary Regurgitation Fraction, and Shunt Significance.
@@ -338,7 +338,7 @@ export default function EchoAssistHub() {
                     style={{ background: "#189aa1" }}
                   >
                     <Heart className="w-3.5 h-3.5" />
-                    Open ACHDEchoAssist™
+                    Open ACHD-EchoAssist™
                   </button>
                 </Link>
                 <Link href="/achd">

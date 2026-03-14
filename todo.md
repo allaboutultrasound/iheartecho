@@ -60,3 +60,6 @@
 - [ ] Full editing of live published questions from admin queue (text, images, videos, options, answer key, explanation) — no unpublish required
 - [x] Fix: Edit Question button on live challenge rows opens full question editor (not challenge picker)
 - [x] Remove multi-select question picker from challenge form (challenges are 1 question, auto-assigned)
+- [x] Fix: Edit Question button missing for queued (non-live) challenges — pass openEditQuestion prop
+- [x] Fix: Edit Question for live challenges — ensure openEditQuestionById works reliably
+- [x] Add: Category filter dropdown to the challenge queue tab

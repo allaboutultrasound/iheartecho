@@ -250,8 +250,18 @@ function SortableQueueItem({ c, idx, openEditChallenge, openEditQuestion, delete
             )}
           </div>
         ) : (
-          <>
-            <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-gray-400 hover:text-[#189aa1]" onClick={() => openEditChallenge(c)}>
+          <div className="flex items-center gap-1">
+            {openEditQuestion && Array.isArray(c.questionIds) && c.questionIds.length > 0 && (
+              <Button
+                size="sm" variant="ghost"
+                className="h-8 px-2 text-xs font-semibold text-[#189aa1] hover:text-[#0e7a80] hover:bg-teal-50 gap-1"
+                onClick={() => openEditQuestion(c.questionIds[0])}
+                title="Edit the linked question (text, options, answer, explanation, images)"
+              >
+                <Pencil className="w-3.5 h-3.5" /> Edit Question
+              </Button>
+            )}
+            <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-gray-400 hover:text-[#189aa1]" onClick={() => openEditChallenge(c)} title="Edit challenge metadata (title, category, position)">
               <Pencil className="w-3.5 h-3.5" />
             </Button>
             <Button
@@ -261,7 +271,7 @@ function SortableQueueItem({ c, idx, openEditChallenge, openEditQuestion, delete
             >
               <Trash2 className="w-3.5 h-3.5" />
             </Button>
-          </>
+          </div>
         )}
       </div>
     </div>
@@ -280,6 +290,7 @@ export default function QuickFireAdmin() {
   const [includeInactive, setIncludeInactive] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [challengeSearch, setChallengeSearch] = useState("");
+  const [challengeCategoryFilter, setChallengeCategoryFilter] = useState<"all" | "ACS" | "Adult Echo" | "Pediatric Echo" | "Fetal Echo" | "POCUS" | "General">("all");
   const [flashcardSearch, setFlashcardSearch] = useState("");
   const [flashcardEchoCategory, setFlashcardEchoCategory] = useState<"all" | "adult" | "pediatric_congenital" | "fetal">("all");
   const [flashcardAiOpen, setFlashcardAiOpen] = useState(false);
@@ -1037,12 +1048,28 @@ export default function QuickFireAdmin() {
                 <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Daily Challenge Queue</h2>
                 <p className="text-xs text-gray-400 mt-0.5">One challenge per category per day. Publishes automatically at 6 AM ET. No dates needed — just set the category and queue position.</p>
               </div>
-              <Input
-                value={challengeSearch}
-                onChange={(e) => setChallengeSearch(e.target.value)}
-                placeholder="Search queue…"
-                className="w-52"
-              />
+              <div className="flex items-center gap-2">
+                <Input
+                  value={challengeSearch}
+                  onChange={(e) => setChallengeSearch(e.target.value)}
+                  placeholder="Search queue…"
+                  className="w-40"
+                />
+                <Select value={challengeCategoryFilter} onValueChange={(v) => setChallengeCategoryFilter(v as any)}>
+                  <SelectTrigger className="w-40 h-9 text-xs">
+                    <SelectValue placeholder="All Categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    <SelectItem value="ACS">ACS</SelectItem>
+                    <SelectItem value="Adult Echo">Adult Echo</SelectItem>
+                    <SelectItem value="Pediatric Echo">Pediatric Echo</SelectItem>
+                    <SelectItem value="Fetal Echo">Fetal Echo</SelectItem>
+                    <SelectItem value="POCUS">POCUS</SelectItem>
+                    <SelectItem value="General">General</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
@@ -1109,12 +1136,14 @@ export default function QuickFireAdmin() {
                     {challenges
                       .filter((c: any) => c.status !== "live")
                       .filter((c: any) => !challengeSearch.trim() || c.title?.toLowerCase().includes(challengeSearch.toLowerCase()) || c.description?.toLowerCase().includes(challengeSearch.toLowerCase()))
+                      .filter((c: any) => challengeCategoryFilter === "all" || c.category === challengeCategoryFilter)
                       .map((c: any, idx: number) => (
                         <SortableQueueItem
                           key={c.id}
                           c={c}
                           idx={idx + challenges.filter((ch: any) => ch.status === "live").length}
                           openEditChallenge={openEditChallenge}
+                          openEditQuestion={openEditQuestionById}
                           deleteChallengeMutation={deleteChallengeMutation}
                         />
                       ))
