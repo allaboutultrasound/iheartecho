@@ -163,3 +163,6 @@
 
 ## Branding Update (Mar 14 2026)
 - [x] Replace "Clinical Companion" with "Clinical Intelligence" across all source files
+
+## Profile Nav Menu Fix (Mar 14 2026)
+- [x] Move Accreditation Manager into the first ACCREDITATION section, remove duplicate section
