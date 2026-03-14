@@ -1,68 +1,51 @@
 /**
- * DailyChallengeBanner
+ * DailyChallengeBanner — Hero banner for the Daily Challenge page.
+ * Matches the dashboard hero style: navy-to-teal gradient, same typography.
  *
- * Hero banner for the Daily Challenge page.
- * Matches the dashboard hero style: dark navy-to-teal gradient with
- * a right-aligned trophy+flames artwork, EKG line, and echo HUD overlay.
- *
- * Props:
- *   streakCount   — current streak number (0 hides the streak pill)
- *   onStart       — callback for the CTA button (optional)
- *   completed     — if true, shows "Completed Today" badge instead of CTA
+ * Features:
+ * - "Start Today's Challenge" scrolls to the challenge cards section
+ * - "View Archive" switches to the Archive tab
+ * - Shows streak count dynamically
+ * - Swaps CTA to "Completed Today ✓" when challenge is done
  */
-
-import { Flame, Trophy, BookOpen } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Trophy, Archive, CheckCircle2, Flame } from "lucide-react";
 
 const BANNER_IMG =
-  "https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/daily-challenge-banner-v3_2e08740d.png";
+  "https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/daily-challenge-banner-v3_178feef6.png";
 
 interface DailyChallengeBannerProps {
-  streakCount?: number;
-  onStart?: () => void;
+  streak?: number;
+  completedToday?: boolean;
+  onStartChallenge?: () => void;
   onViewArchive?: () => void;
-  completed?: boolean;
 }
 
-export function DailyChallengeBanner({
-  streakCount = 0,
-  onStart,
+export default function DailyChallengeBanner({
+  streak = 0,
+  completedToday = false,
+  onStartChallenge,
   onViewArchive,
-  completed = false,
 }: DailyChallengeBannerProps) {
   return (
     <div
-      className="relative overflow-hidden rounded-xl"
+      className="relative overflow-hidden"
       style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}
     >
-      {/* Background artwork — right-aligned trophy image */}
+      {/* Background image */}
       <div
-        className="absolute inset-0 opacity-90"
+        className="absolute inset-0 opacity-25"
         style={{
-          backgroundImage: `url(${BANNER_IMG})`,
+          backgroundImage: `url("${BANNER_IMG}")`,
           backgroundSize: "cover",
           backgroundPosition: "center right",
         }}
-        aria-hidden="true"
       />
-
-      {/* Left-side gradient fade so text stays readable */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "linear-gradient(90deg, rgba(14,30,46,0.95) 0%, rgba(14,30,46,0.80) 40%, rgba(14,30,46,0.30) 70%, transparent 100%)",
-        }}
-        aria-hidden="true"
-      />
-
-      {/* Content */}
-      <div className="relative z-10 container py-10 md:py-14">
-        <div className="max-w-lg">
+      <div className="relative container py-10 md:py-14">
+        <div className="max-w-2xl">
           {/* Live pill */}
           <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-4">
             <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
-            <span className="text-xs text-white/80 font-medium">New challenge every day</span>
+            <span className="text-xs text-white/80 font-medium">One Question · Daily · All Categories</span>
           </div>
 
           {/* Title */}
@@ -72,53 +55,54 @@ export function DailyChallengeBanner({
           >
             Daily Challenge
           </h1>
-          <p className="text-[#4ad9e0] font-semibold text-base md:text-lg mb-4">
-            Test your echo knowledge
+          <p className="text-[#4ad9e0] font-semibold text-base mb-3">
+            Sharpen Your Echo Knowledge Every Day
           </p>
-          <p className="text-white/70 text-sm leading-relaxed mb-6 max-w-sm">
-            One question per category, every day. Answer, learn, maintain your streak, and climb the leaderboard.
+          <p className="text-white/70 text-sm leading-relaxed mb-4 max-w-lg">
+            One question per category — ACS, Adult Echo, Pediatric, Fetal, and POCUS. Complete all
+            five to finish today's challenge. Maintain your streak and climb the leaderboard.
           </p>
 
-          {/* Streak pill */}
-          {streakCount > 0 && (
-            <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 mb-5">
-              <Flame className="w-4 h-4 text-[#4ad9e0]" />
-              <span className="text-white text-sm font-semibold">
-                {streakCount}-day streak — keep it going!
-              </span>
+          {/* Streak badge */}
+          {streak > 0 && (
+            <div className="flex items-center gap-2 mb-5">
+              <div className="flex items-center gap-1.5 bg-white/10 border border-white/20 rounded-full px-3 py-1.5">
+                <Flame className={`w-4 h-4 ${streak >= 3 ? "text-amber-400" : "text-white/60"}`} />
+                <span className="text-sm font-bold text-white">{streak}</span>
+                <span className="text-xs text-white/70">day streak</span>
+              </div>
+              {streak >= 7 && (
+                <span className="text-xs text-amber-300 font-medium">
+                  {streak >= 30 ? "🔥 Legend!" : streak >= 14 ? "🔥 2-week warrior!" : "🔥 Keep it up!"}
+                </span>
+              )}
             </div>
           )}
 
-          {/* CTA */}
+          {/* CTAs */}
           <div className="flex flex-wrap gap-3">
-            {!completed ? (
-              onStart && (
-                <button
-                  onClick={onStart}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90 hover:scale-105"
-                  style={{ background: "#189aa1" }}
-                >
-                  <Trophy className="w-4 h-4" />
-                  Start Today's Challenge
-                </button>
-              )
-            ) : (
-              <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-lg px-4 py-2.5">
-                <Trophy className="w-4 h-4 text-[#4ad9e0]" />
-                <span className="text-[#4ad9e0] text-sm font-semibold">
-                  Completed Today ✓
-                </span>
+            {completedToday ? (
+              <div className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm bg-green-500/20 border border-green-400/40 text-green-300">
+                <CheckCircle2 className="w-4 h-4" />
+                Completed Today ✓
               </div>
-            )}
-            {onViewArchive && (
+            ) : (
               <button
-                onClick={onViewArchive}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all"
+                onClick={onStartChallenge}
+                className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90 hover:scale-105"
+                style={{ background: "#189aa1" }}
               >
-                <BookOpen className="w-4 h-4" />
-                View Archive
+                <Trophy className="w-4 h-4" />
+                Start Today's Challenge
               </button>
             )}
+            <button
+              onClick={onViewArchive}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all"
+            >
+              <Archive className="w-4 h-4" />
+              View Archive
+            </button>
           </div>
         </div>
       </div>

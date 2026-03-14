@@ -46,6 +46,7 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { formatViewCount, getDisplayViewCount } from "@/lib/caseViewCount";
+import CaseLibraryBanner from "@/components/CaseLibraryBanner";
 
 const MODALITY_COLORS: Record<string, string> = {
   TTE: "bg-blue-100 text-blue-700",
@@ -145,6 +146,8 @@ export default function CaseLibrary() {
 
   return (
     <Layout>
+      {/* Full-width hero banner */}
+      <CaseLibraryBanner isAuthenticated={isAuthenticated} />
       <div className="container py-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">

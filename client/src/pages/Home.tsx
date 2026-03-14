@@ -3,14 +3,13 @@
   Brand: Teal #189aa1, Aqua #4ad9e0
   Fonts: Merriweather headings, Open Sans body
 */
-import React from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import { trpc } from "@/lib/trpc";
 import {
   Calculator, ClipboardList, Activity, BookOpen, FileText,
-  ArrowRight, Users, Award, Zap, Stethoscope, ExternalLink, MessageCircle, GraduationCap, BookMarked, Crown, Trophy
+  ArrowRight, Users, Award, Zap, Stethoscope, ExternalLink, MessageCircle, GraduationCap, BookMarked, Crown, Shield
 } from "lucide-react";
 
 const BRAND = "#189aa1";
@@ -31,7 +30,7 @@ const modules: Module[] = [
   },
   {
     path: "/pocus-assist-hub",
-    icon: ({ className, style }: { className?: string; style?: React.CSSProperties }) => <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/pocus-square-v1_55214bfd.png" alt="POCUS" className={className} style={{ objectFit: 'contain', ...style }} />,
+    icon: Shield,
     title: "POCUS-Assist™",
     description: "Point-of-care ultrasound protocols for eFAST, Cardiac POCUS, RUSH, and Lung POCUS — window-by-window checklists, probe guidance, IVC CI, B-line scorer, and eFAST free-fluid grader.",
     badge: "4 Modules",
@@ -205,7 +204,7 @@ export default function Home() {
               </Link>
               <Link href="/quickfire">
                 <button className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all">
-                  <Trophy className="w-4 h-4" />
+                  <BookOpen className="w-4 h-4" />
                   Daily Challenge
                 </button>
               </Link>

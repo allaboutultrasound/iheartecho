@@ -32,7 +32,7 @@ import {
   quickfireChallenges,
   users,
 } from "../../drizzle/schema";
-import { eq, and, asc, desc, sql, gte, lte, count, inArray, isNull, like, or } from "drizzle-orm";
+import { eq, and, desc, sql, gte, lte, count, inArray } from "drizzle-orm";
 import { sendStreakReminders } from "../streakReminders";
 import { generateVirtualLeaderboard } from "../leaderboardSeed";
 import { createHash } from "crypto";
@@ -163,11 +163,7 @@ async function ensureTodaySet(db: NonNullable<Awaited<ReturnType<typeof getDb>>>
     .select()
     .from(quickfireChallenges)
     .where(inArray(quickfireChallenges.status, ["draft", "scheduled"] as any[]))
-    .orderBy(
-      asc(quickfireChallenges.priority),
-      sql`CASE WHEN ${quickfireChallenges.queuePosition} IS NULL THEN 999999 ELSE ${quickfireChallenges.queuePosition} END`,
-      asc(quickfireChallenges.createdAt)
-    )
+    .orderBy(quickfireChallenges.priority, quickfireChallenges.createdAt)
     .limit(50);
 
   const usedChallengeIds: number[] = [];
@@ -286,7 +282,7 @@ export const quickfireRouter = router({
     const questions = await db
       .select()
       .from(quickfireQuestions)
-      .where(and(isNull(quickfireQuestions.deletedAt), inArray(quickfireQuestions.id, allIds)));
+      .where(and(eq(quickfireQuestions.isActive, true), inArray(quickfireQuestions.id, allIds)));
 
     // Order: ACS, Adult Echo, Pediatric Echo, Fetal Echo, POCUS
     const catOrder = ["acs", "adultEcho", "pediatricEcho", "fetalEcho", "pocus"];
@@ -603,7 +599,7 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
         orderedItems: z.array(z.string().min(1)).min(2).max(10).optional(),
         difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("intermediate"),
         tags: z.array(z.string()).default([]),
-        echoCategory: z.enum(["adult", "pediatric_congenital", "fetal"]).default("adult"),
+        echoCategory: z.enum(["acs", "adult", "pediatric_congenital", "fetal", "pocus"]).default("adult"),
         category: z.enum(["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "POCUS", "General"]).default("Adult Echo"),
       })
     )
@@ -654,7 +650,7 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
         difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
         tags: z.array(z.string()).optional(),
         isActive: z.boolean().optional(),
-        echoCategory: z.enum(["adult", "pediatric_congenital", "fetal"]).optional(),
+        echoCategory: z.enum(["acs", "adult", "pediatric_congenital", "fetal", "pocus"]).optional(),
         category: z.enum(["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "POCUS", "General"]).optional(),
       })
     )
@@ -815,7 +811,7 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
         type: z.enum(["scenario", "image", "quickReview", "connect", "identifier", "order"]).optional(),
         includeInactive: z.boolean().default(false),
         search: z.string().max(200).optional(),
-        echoCategory: z.enum(["adult", "pediatric_congenital", "fetal"]).optional(),
+        echoCategory: z.enum(["acs", "adult", "pediatric_congenital", "fetal", "pocus"]).optional(),
         category: z.enum(["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "POCUS", "General"]).optional(),
         ids: z.array(z.number().int().positive()).max(50).optional(),
       })
@@ -1482,7 +1478,6 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
       dateFrom: z.string().optional(), // YYYY-MM-DD
       dateTo: z.string().optional(),   // YYYY-MM-DD
-      search: z.string().optional(),   // free-text search
     }))
     .query(async ({ ctx, input }) => {
       const db = await getDb();
@@ -1508,11 +1503,6 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       }
       if (input.dateTo) {
         conditions.push(lte(quickfireChallenges.publishDate, input.dateTo));
-      }
-      // Free-text search (title or description)
-      if (input.search && input.search.trim()) {
-        const term = `%${input.search.trim()}%`;
-        conditions.push(or(like(quickfireChallenges.title, term), like(quickfireChallenges.description, term)));
       }
       const [rows, totalResult] = await Promise.all([
         db.select({ id: quickfireChallenges.id, title: quickfireChallenges.title, description: quickfireChallenges.description,
@@ -1545,12 +1535,7 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       }
 
       const ids: number[] = JSON.parse(challenge.questionIds || "[]");
-      // Fetch questions by ID regardless of isActive — archived questions were valid when published.
-      // Only exclude soft-deleted questions (deletedAt IS NOT NULL).
-      const allQ = ids.length > 0
-        ? await db.select().from(quickfireQuestions)
-            .where(and(inArray(quickfireQuestions.id, ids), isNull(quickfireQuestions.deletedAt)))
-        : [];
+      const allQ = await db.select().from(quickfireQuestions).where(eq(quickfireQuestions.isActive, true));
       const questions = ids.map((id) => allQ.find((q) => q.id === id)).filter(Boolean) as typeof allQ;
 
       // For archived challenges, always reveal answers
@@ -1763,33 +1748,6 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
     }),
 
   /**
-   * Unpublish a live challenge — moves it back to "scheduled" so it can be re-queued.
-   * Also removes it from today's daily set cache so it won't be served again today.
-   */
-  adminUnpublishChallenge: adminProcedure
-    .input(z.object({ id: z.number().int().positive() }))
-    .mutation(async ({ input }) => {
-      const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
-      const [ch] = await db.select().from(quickfireChallenges)
-        .where(and(eq(quickfireChallenges.id, input.id), eq(quickfireChallenges.status, "live"))).limit(1);
-      if (!ch) throw new TRPCError({ code: "NOT_FOUND", message: "Live challenge not found" });
-      // Move back to scheduled, pin at top of queue (priority 0, queuePosition 0)
-      // First shift all existing scheduled challenges down by 1
-      await db.update(quickfireChallenges)
-        .set({ queuePosition: sql`${quickfireChallenges.queuePosition} + 1` })
-        .where(inArray(quickfireChallenges.status, ["scheduled"] as any[]));
-      // Then pin this challenge at position 0 with a flag indicating it was unpublished
-      await db.update(quickfireChallenges)
-        .set({ status: "scheduled", publishedAt: null, queuePosition: 0, priority: 0, updatedAt: new Date() })
-        .where(eq(quickfireChallenges.id, input.id));
-      // Remove from today's daily set cache so it won't be served again today
-      const today = new Date().toISOString().slice(0, 10);
-      await db.delete(quickfireDailySets).where(eq(quickfireDailySets.setDate, today));
-      return { success: true };
-    }),
-
-  /**
    * Edit an archived challenge's metadata (title, description, category, difficulty).
    * Preserves the `archived` status — does NOT re-schedule the challenge.
    * Also allows replacing the linked question (questionIds).
@@ -1866,7 +1824,7 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
   getFlashcardDeck: publicProcedure
     .input(z.object({
       topic: z.string().optional(),
-      echoCategory: z.enum(["adult", "pediatric_congenital", "fetal"]).optional(),
+      echoCategory: z.enum(["acs", "adult", "pediatric_congenital", "fetal", "pocus"]).optional(),
       limit: z.number().int().min(1).max(200).default(50),
     }))
     .query(async ({ ctx, input }) => {
@@ -2240,23 +2198,11 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
 
   /** List only archived challenges for the archive tab */
   adminListArchivedChallenges: adminProcedure
-    .input(z.object({
-      search: z.string().optional(),
-      category: z.string().optional(),
-    }).optional())
-    .query(async ({ input }) => {
+    .query(async () => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
-      const conditions: any[] = [eq(quickfireChallenges.status, "archived")];
-      if (input?.category) {
-        conditions.push(eq(quickfireChallenges.category, input.category as any));
-      }
-      if (input?.search && input.search.trim()) {
-        const term = `%${input.search.trim()}%`;
-        conditions.push(or(like(quickfireChallenges.title, term), like(quickfireChallenges.description, term)));
-      }
       const rows = await db.select().from(quickfireChallenges)
-        .where(and(...conditions))
+        .where(eq(quickfireChallenges.status, "archived"))
         .orderBy(desc(quickfireChallenges.archivedAt));
       const parsed = rows.map((r) => ({ ...r, questionIds: JSON.parse(r.questionIds || "[]") as number[] }));
       const allQIds = Array.from(new Set(parsed.flatMap((r) => r.questionIds)));

@@ -11,9 +11,8 @@ import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import {
   Stethoscope, Microscope, Zap, Users, Baby, Heart,
-  Cpu, BarChart3, ArrowRight, Droplets, Activity, Wind, Crown, Lock, Shield, BookOpen
+  Cpu, BarChart3, ArrowRight, Droplets, Activity, Wind, Crown, Lock, Shield, Radio, BookOpen
 } from "lucide-react";
-import EkgIcon from "@/components/EkgIcon";
 import { usePremium } from "@/hooks/usePremium";
 
 const BRAND = "#189aa1";
@@ -306,7 +305,7 @@ export default function EchoAssistHub() {
           )}
         </div>
 
-        {/* ── ACHD-EchoAssist™ Cross-Promotion ──────────────────────────── */}
+        {/* ── ACHDEchoAssist™ Cross-Promotion ──────────────────────────── */}
         <div
           className="mt-8 rounded-xl p-5 border"
           style={{ borderColor: "#189aa1" + "40", background: "#fffbeb" }}
@@ -327,7 +326,7 @@ export default function EchoAssistHub() {
                 </span>
               </div>
               <h3 className="font-bold text-gray-900 text-base mb-1" style={{ fontFamily: "Merriweather, serif" }}>
-                ACHD-EchoAssist™
+                ACHDEchoAssist™
               </h3>
               <p className="text-sm text-gray-500 mb-3">
                 12 guideline-based calculators — Fontan Hepatic Index, Ebstein's Severity, CoA Re-coarctation Index, Qp:Qs, RVSP, Aortic Root Z-score, RV FAC, TAPSE, Tei Index, Systemic AV Regurgitation, Pulmonary Regurgitation Fraction, and Shunt Significance.
@@ -339,7 +338,7 @@ export default function EchoAssistHub() {
                     style={{ background: "#189aa1" }}
                   >
                     <Heart className="w-3.5 h-3.5" />
-                    Open ACHD-EchoAssist™
+                    Open ACHDEchoAssist™
                   </button>
                 </Link>
                 <Link href="/achd">
@@ -523,7 +522,7 @@ export default function EchoAssistHub() {
                 className="w-14 h-14 rounded-xl flex items-center justify-center"
                 style={{ background: "linear-gradient(135deg, #0e1e2e, #189aa1)" }}
               >
-                <EkgIcon className="w-7 h-7" color="#4ad9e0" />
+                <Radio className="w-7 h-7 text-[#4ad9e0]" />
               </div>
             </div>
             <div className="flex-1">
@@ -544,7 +543,7 @@ export default function EchoAssistHub() {
                     className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
                     style={{ background: "#189aa1" }}
                   >
-                    <EkgIcon className="w-3.5 h-3.5" color="currentColor" />
+                    <Radio className="w-3.5 h-3.5" />
                     ECG Navigator
                   </button>
                 </Link>
@@ -562,7 +561,7 @@ export default function EchoAssistHub() {
                     className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm border bg-white transition-all hover:bg-[#f0fbfc]"
                     style={{ borderColor: "#189aa1" + "50", color: "#189aa1" }}
                   >
-                    <EkgIcon className="w-3.5 h-3.5" color="currentColor" />
+                    <Cpu className="w-3.5 h-3.5" />
                     ECG Calculators
                   </button>
                 </Link>

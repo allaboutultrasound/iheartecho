@@ -29,15 +29,18 @@ import {
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Link } from "wouter";
 import { Lock, Zap } from "lucide-react";
+import FlashcardsBanner from "@/components/FlashcardsBanner";
 
 type StudyMode = "sequential" | "spaced";
-type EchoCategory = "all" | "adult" | "pediatric_congenital" | "fetal";
+type EchoCategory = "all" | "acs" | "adult" | "pediatric_congenital" | "fetal" | "pocus";
 
 const CATEGORIES: { value: EchoCategory; label: string }[] = [
   { value: "all", label: "All" },
+  { value: "acs", label: "ACS" },
   { value: "adult", label: "Adult Echo" },
-  { value: "pediatric_congenital", label: "Pediatric / Congenital Echo" },
+  { value: "pediatric_congenital", label: "Pediatric Echo" },
   { value: "fetal", label: "Fetal Echo" },
+  { value: "pocus", label: "POCUS" },
 ];
 
 export default function FlashcardDeck() {
@@ -314,6 +317,12 @@ export default function FlashcardDeck() {
 
   return (
     <Layout>
+      {/* Full-width hero banner */}
+      <FlashcardsBanner
+        streak={data?.userStats ? (data.userStats as any).streak ?? 0 : 0}
+        totalCards={data?.totalCards ?? 0}
+        isPremium={dailyLimit === null}
+      />
       <div className="container py-4 max-w-2xl mx-auto">
         {/* Header — compact */}
         <div className="flex items-center justify-between gap-2 mb-3">

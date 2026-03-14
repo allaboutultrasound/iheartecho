@@ -106,12 +106,12 @@ const premiumNavigators = [
 
 const badgeColors: Record<string, string> = {
   "Adult Echo": "#189aa1",
-  "Structural Heart": "#189aa1",
-  "Stress Echo": "#189aa1",
-  "Congenital Heart": "#189aa1",
-  "Contrast Echo": "#189aa1",
-  "Cardiomyopathy": "#189aa1",
-  "Pulmonary": "#189aa1",
+  "Structural Heart": "#0e7490",
+  "Stress Echo": "#0f766e",
+  "Congenital Heart": "#0369a1",
+  "Contrast Echo": "#0e7490",
+  "Cardiomyopathy": "#b45309",
+  "Pulmonary": "#0e7490",
 };
 
 function FreeNavCard({ path, icon: Icon, title, description, badge }: typeof freeNavigators[0]) {

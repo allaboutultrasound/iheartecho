@@ -343,14 +343,14 @@ export default function ACHDNavigator() {
                 borderBottom: mainTab === t ? "2px solid #189aa1" : "2px solid transparent",
               }}
             >
-              {t === "navigator" ? <><Heart className="w-3.5 h-3.5" /> ACHD Navigator</> : <><Cpu className="w-3.5 h-3.5" /> ACHD-EchoAssist™ Calculators</>}
+              {t === "navigator" ? <><Heart className="w-3.5 h-3.5" /> ACHD Navigator</> : <><Cpu className="w-3.5 h-3.5" /> ACHDEchoAssist™ Calculators</>}
             </button>
           ))}
         </div>
       </div>
 
       {mainTab === "calculators" && (
-        <PremiumGate featureName="ACHD-EchoAssist™ Calculators">
+        <PremiumGate featureName="ACHDEchoAssist™ Calculators">
           <ACHDEchoAssist embedded />
         </PremiumGate>
       )}

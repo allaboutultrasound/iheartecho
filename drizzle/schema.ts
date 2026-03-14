@@ -926,7 +926,7 @@ export const quickfireQuestions = mysqlTable("quickfireQuestions", {
   // JSON: string[] — topic tags (e.g. ["AS", "LV function", "TEE"])
   tags: text("tags"),
   // Echo specialty category for flashcard filtering
-  echoCategory: mysqlEnum("echoCategory", ["adult", "pediatric_congenital", "fetal"]).default("adult"),
+  echoCategory: mysqlEnum("echoCategory", ["acs", "adult", "pediatric_congenital", "fetal", "pocus"]).default("adult"),
   // Broad clinical category for admin filtering (ACS, Adult Echo, Pediatric Echo, Fetal Echo, POCUS, General)
   category: mysqlEnum("category", ["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "POCUS", "General"]).default("Adult Echo"),
   // Whether this question is active and eligible for daily sets

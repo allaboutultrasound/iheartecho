@@ -10,10 +10,9 @@ import { PremiumGate } from "@/components/PremiumGate";
 import { CopyToReportButton } from "@/components/CopyToReportButton";
 import { Button } from "@/components/ui/button";
 import {
-  BookOpen, Zap, FileText, AlertTriangle,
+  Activity, BookOpen, Zap, FileText, AlertTriangle,
   CheckCircle2, Info, ChevronDown, ChevronUp, Download
 } from "lucide-react";
-import EkgIcon from "@/components/EkgIcon";
 import jsPDF from "jspdf";
 
 const BRAND = "#189aa1";
@@ -95,7 +94,7 @@ function CalcCard({ id, title, badge, badgeColor, children }: {
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
             style={{ background: (badgeColor ?? BRAND) + "20" }}>
-            <EkgIcon className="w-4 h-4" color={badgeColor ?? BRAND} />
+            <Activity className="w-4 h-4" style={{ color: badgeColor ?? BRAND }} />
           </div>
           <div>
             <h3 className="font-bold text-gray-800 text-sm" style={{ fontFamily: "Merriweather, serif" }}>{title}</h3>
@@ -1042,7 +1041,7 @@ export default function ECGAssist() {
               </Link>
               <Link href="/ecg-coach">
                 <button className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all">
-                  <EkgIcon className="w-4 h-4" color="currentColor" />
+                  <Activity className="w-4 h-4" />
                   ECG Coach
                 </button>
               </Link>
@@ -1174,7 +1173,7 @@ export default function ECGAssist() {
               <Link href="/ecg-navigator">
                 <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold text-xs text-white transition-all hover:opacity-90"
                   style={{ background: BRAND }}>
-                  Open ECG Navigator <EkgIcon className="w-3 h-3" color="currentColor" />
+                  Open ECG Navigator <Zap className="w-3 h-3" />
                 </button>
               </Link>
             </div>

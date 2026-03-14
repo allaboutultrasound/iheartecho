@@ -3,7 +3,7 @@
   Brand: Teal #189aa1, Aqua #4ad9e0, Dark sidebar
   Fonts: Merriweather headings, Open Sans body
 */
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link, Link as WouterLink, useLocation } from "wouter";
 import {
   Heart, Calculator, ClipboardList, Activity,
@@ -127,7 +127,7 @@ const hiddenNavItems = [
   { path: "/ecg-assist", label: "ECG-Assist™" },
   { path: "/fetal-echo-assist", label: "FetalEchoAssist™" },
   { path: "/pediatric-echo-assist", label: "PediatricEchoAssist™" },
-  { path: "/achd-echo-assist", label: "ACHD-EchoAssist™" },
+  { path: "/achd-echo-assist", label: "ACHDEchoAssist™" },
   { path: "/diy-accreditation-plans", label: "DIY Accreditation™ Plans" },
   { path: "/diy-accreditation-smart", label: "DIY Accreditation™" },
   { path: "/diy-register", label: "Register Your Lab" },
@@ -142,6 +142,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const fullLocation = rawLocation; // includes query string, used for tab-specific active state
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const navRef = useRef<HTMLElement>(null);
+
+  // Preserve sidebar scroll position across navigation
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const saved = sessionStorage.getItem("sidebar-scroll");
+    if (saved) nav.scrollTop = parseInt(saved, 10);
+  }, []);
+
+  const saveNavScroll = () => {
+    if (navRef.current) {
+      sessionStorage.setItem("sidebar-scroll", String(navRef.current.scrollTop));
+    }
+  };
   const { isAuthenticated, user, loading: authLoading, logout } = useAuth();
   const isAdmin = (user as any)?.role === "admin";
   // Use appRoles (the authoritative role array from auth.me) for access checks
@@ -188,7 +203,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-4">
+        <nav ref={navRef} onScroll={saveNavScroll} className="flex-1 px-3 py-4 overflow-y-auto space-y-4">
           {navGroups.map(group => (
             <div key={group.label}>
               <div className="text-xs font-semibold text-white/40 uppercase tracking-wider px-3 mb-1">{group.label}</div>

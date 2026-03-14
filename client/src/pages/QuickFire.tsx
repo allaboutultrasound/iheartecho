@@ -23,6 +23,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
+  Zap,
   CheckCircle2,
   XCircle,
   ChevronRight,
@@ -69,8 +70,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Pencil, Loader2, BookOpen } from "lucide-react";
-import { ShareButton } from "@/components/ShareButton";
-import { DailyChallengeBanner } from "@/components/DailyChallengeBanner";
+import DailyChallengeBanner from "@/components/DailyChallengeBanner";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -237,7 +237,7 @@ export default function QuickFire() {
     questions.length > 0 && questions.every((q) => effectiveUserAttempts[q.id] !== undefined);
 
   // ── Admin edit state (archive) ────────────────────────────────────────────
-  const isAdmin = appRoles.includes("platform_admin");
+  const isAdmin = user?.role === "admin";
   const [archiveEditOpen, setArchiveEditOpen] = useState(false);
   const [archiveEditTarget, setArchiveEditTarget] = useState<"challenge" | "question" | null>(null);
   const [archiveEditChallengeForm, setArchiveEditChallengeForm] = useState({
@@ -553,7 +553,7 @@ export default function QuickFire() {
           <div className="flex items-start justify-between mb-5 flex-wrap gap-3">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "#189aa1" }}>
-                <Trophy className="w-5 h-5 text-white" />
+                <Zap className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h1 className="font-bold text-gray-800 text-lg leading-tight" style={{ fontFamily: "Merriweather, serif" }}>Daily Challenge</h1>
@@ -606,7 +606,7 @@ export default function QuickFire() {
           {/* Today's challenge — read-only preview for unauthenticated users */}
           {!challengeExpired && !isLoading && !error && questions.length === 0 && (
             <div className="flex flex-col items-center gap-6 py-16 text-center max-w-lg mx-auto">
-              <Trophy className="w-12 h-12 text-gray-300" />
+              <Zap className="w-12 h-12 text-gray-300" />
               <p className="text-gray-500">No challenge available today. Check back soon.</p>
             </div>
           )}
@@ -690,28 +690,47 @@ export default function QuickFire() {
     );
   }
 
+  // Compute banner props
+  const todaySetForBanner = todaySetQuery.data;
+  const catMapForBanner: Record<string, number> = (todaySetForBanner as any)?.categoryMap ?? {};
+  const attemptsForBanner: Record<number, any> = (todaySetForBanner as any)?.userAttempts ?? {};
+  const catPrefsForBanner = categoryPrefsQuery.data ?? { acs: true, adultEcho: true, pediatricEcho: true, fetalEcho: true, pocus: true };
+  const enabledCatKeysForBanner = ["acs", "adultEcho", "pediatricEcho", "fetalEcho", "pocus"].filter(
+    (k) => (catPrefsForBanner as any)[k] !== false
+  );
+  const completedTodayForBanner =
+    isAuthenticated &&
+    enabledCatKeysForBanner.length > 0 &&
+    enabledCatKeysForBanner.every((k) => {
+      const qId = catMapForBanner[k];
+      return qId && attemptsForBanner[qId] !== undefined;
+    });
+  const streakForBanner = statsQuery.data?.streak ?? 0;
+
+  const scrollToChallenge = () => {
+    const el = document.getElementById("daily-challenge-cards");
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  const switchToArchive = () => {
+    setActiveTab("archive");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
     <Layout>
+      {/* Full-width hero banner */}
+      <DailyChallengeBanner
+        streak={streakForBanner}
+        completedToday={completedTodayForBanner}
+        onStartChallenge={scrollToChallenge}
+        onViewArchive={switchToArchive}
+      />
       <div className="container py-6 max-w-3xl">
-        {/* Hero Banner */}
-        <div className="mb-6">
-          <DailyChallengeBanner
-            streakCount={statsQuery.data?.streak ?? 0}
-            completed={!!(statsQuery.data && alreadyCompleted)}
-            onStart={() => {
-              const firstUnanswered = questions.findIndex((q) => !effectiveUserAttempts[q.id]);
-              if (firstUnanswered >= 0) setCurrentIndex(firstUnanswered);
-              setActiveTab("challenge");
-            }}
-            onViewArchive={() => setActiveTab("archive")}
-          />
-        </div>
-
         {/* Page header */}
         <div className="flex items-start justify-between mb-5 flex-wrap gap-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "#189aa1" }}>
-              <Trophy className="w-5 h-5 text-white" />
+              <Zap className="w-5 h-5 text-white" />
             </div>
             <div>
               <h1 className="font-bold text-gray-800 text-lg leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
@@ -850,10 +869,10 @@ export default function QuickFire() {
         {/* Tab bar */}
         <div className="flex gap-2 mb-6 flex-wrap">
           {([
-            { id: "challenge" as const, label: "Daily Challenge", icon: Trophy },
+            { id: "challenge" as const, label: "Daily Challenge", icon: Zap },
             { id: "archive" as const, label: "Archive", icon: Archive },
             { id: "performance" as const, label: "My Performance", icon: BarChart3 },
-            { id: "leaderboard" as const, label: "Leaderboard", icon: Medal },
+            { id: "leaderboard" as const, label: "Leaderboard", icon: Trophy },
           ] as const).map(({ id, label, icon: Icon }) => (
             <button
               key={id}
@@ -891,8 +910,8 @@ export default function QuickFire() {
                     { cat: "ACS" as const, prefKey: "acs" as const, Icon: Heart, label: "Advanced Cardiac Sonographer" },
                     { cat: "Adult Echo" as const, prefKey: "adultEcho" as const, Icon: Stethoscope },
                     { cat: "Pediatric Echo" as const, prefKey: "pediatricEcho" as const, Icon: Baby },
-                    { cat: "Fetal Echo" as const, prefKey: "fetalEcho" as const, Icon: ({ className }: { className?: string }) => <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/fetal-circular-v1_79bb0d90.png" alt="Fetal Echo" className={className} style={{ objectFit: 'contain' }} /> },
-                    { cat: "POCUS" as const, prefKey: "pocus" as const, Icon: ({ className }: { className?: string }) => <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/pocus-circular-v1_436f6b57.png" alt="POCUS" className={className} style={{ objectFit: 'contain' }} /> },
+                    { cat: "Fetal Echo" as const, prefKey: "fetalEcho" as const, Icon: ({ className }: { className?: string }) => <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/fetal-icon_4e4429c0.png" alt="Fetal Echo" className={className} style={{ objectFit: 'contain' }} /> },
+                    { cat: "POCUS" as const, prefKey: "pocus" as const, Icon: ({ className }: { className?: string }) => <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/pocus-icon_0b2e6eff.png" alt="POCUS" className={className} style={{ objectFit: 'contain' }} /> },
                   ] as { cat: string; prefKey: "acs" | "adultEcho" | "pediatricEcho" | "fetalEcho" | "pocus"; Icon: (props: { className?: string }) => import('react').ReactElement; label?: string }[]).map(({ cat, prefKey, Icon, label }) => {
                     const prefs = categoryPrefsQuery.data ?? { acs: true, adultEcho: true, pediatricEcho: true, fetalEcho: true, pocus: true };
                     const isEnabled = (prefs as any)[prefKey] !== false;
@@ -931,7 +950,7 @@ export default function QuickFire() {
 
             {/* ── 4-Category Daily Set Cards ───────────────────────────────────────── */}
             {!activeCategory && (
-              <div className="mb-6">
+              <div id="daily-challenge-cards" className="mb-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h2 className="text-lg font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Today's Daily Challenge</h2>
@@ -968,8 +987,8 @@ export default function QuickFire() {
                     { key: "ACS", label: "Advanced Cardiac Sonographer", Icon: Heart, desc: "ACS", prefKey: "acs" as const, mapKey: "acs" },
                     { key: "Adult Echo", label: "Adult Echo", Icon: Stethoscope, desc: "Adult Echocardiography", prefKey: "adultEcho" as const, mapKey: "adultEcho" },
                     { key: "Pediatric Echo", label: "Pediatric Echo", Icon: Baby, desc: "Pediatric & Congenital", prefKey: "pediatricEcho" as const, mapKey: "pediatricEcho" },
-                    { key: "Fetal Echo", label: "Fetal Echo", Icon: ({ className }: { className?: string }) => <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/fetal-circular-v1_79bb0d90.png" alt="Fetal Echo" className={className} style={{ objectFit: 'contain' }} />, desc: "Fetal Echocardiography", prefKey: "fetalEcho" as const, mapKey: "fetalEcho" },
-                    { key: "POCUS", label: "POCUS", Icon: ({ className }: { className?: string }) => <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/pocus-circular-v1_436f6b57.png" alt="POCUS" className={className} style={{ objectFit: 'contain' }} />, desc: "Point-of-Care Ultrasound", prefKey: "pocus" as const, mapKey: "pocus" },
+                    { key: "Fetal Echo", label: "Fetal Echo", Icon: ({ className }: { className?: string }) => <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/fetal-icon_4e4429c0.png" alt="Fetal Echo" className={className} style={{ objectFit: 'contain' }} />, desc: "Fetal Echocardiography", prefKey: "fetalEcho" as const, mapKey: "fetalEcho" },
+                    { key: "POCUS", label: "POCUS", Icon: ({ className }: { className?: string }) => <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/pocus-icon_0b2e6eff.png" alt="POCUS" className={className} style={{ objectFit: 'contain' }} />, desc: "Point-of-Care Ultrasound", prefKey: "pocus" as const, mapKey: "pocus" },
                   ];
 
                   const enabledCats = CATS.filter((c) => catPrefs[c.prefKey] !== false);
@@ -1207,13 +1226,6 @@ export default function QuickFire() {
                       ← All Categories
                     </Button>
                   )}
-                  <ShareButton
-                    url={typeof window !== "undefined" ? window.location.origin + "/daily-challenge" : ""}
-                    title={`I just completed today's iHeartEcho Daily Challenge! Can you beat my score?`}
-                    hashtags={["iHeartEcho", "echocardiography", "DailyChallenge"]}
-                    variant="outline"
-                    className="border-white/30 text-white hover:bg-white/10"
-                  />
                 </div>
               </div>
             )}
@@ -1247,13 +1259,6 @@ export default function QuickFire() {
                     <Button variant="outline" className="border-white/30 text-white hover:bg-white/10" onClick={handleRestart}>
                       <RefreshCw className="w-4 h-4 mr-2" /> Retry
                     </Button>
-                    <ShareButton
-                      url={typeof window !== "undefined" ? window.location.origin + "/daily-challenge" : ""}
-                      title={`I scored ${correctCount}/${questions.length} (${pct}%) on today's iHeartEcho Daily Challenge! Can you beat my score?`}
-                      hashtags={["iHeartEcho", "echocardiography", "DailyChallenge"]}
-                      variant="outline"
-                      className="border-white/30 text-white hover:bg-white/10"
-                    />
                   </div>
                 </div>
               );
@@ -1336,7 +1341,7 @@ export default function QuickFire() {
                             </div>
                             <div className="flashcard-face flashcard-face--back">
                               <div className="mb-3"><span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full bg-white/20 text-white mb-2">✓ Answer</span></div>
-                              <p className="text-sm leading-relaxed text-white/95 mb-4" dangerouslySetInnerHTML={{ __html: currentQ.reviewAnswer ?? "" }} />
+                              <p className="text-sm leading-relaxed text-white/95 mb-4">{currentQ.reviewAnswer}</p>
                               {!answered && (
                                 <div className="flex gap-3 mt-2">
                                   <Button size="sm" className="bg-green-400 hover:bg-green-500 text-white border-0" onClick={() => handleSelfMark(true)}><ThumbsUp className="w-3.5 h-3.5 mr-1.5" /> Got it</Button>
@@ -1633,7 +1638,7 @@ export default function QuickFire() {
                       {answered && answerResult?.explanation && (
                         <div className="mt-2 p-4 rounded-lg bg-[#189aa1]/8 border border-[#189aa1]/20">
                           <p className="text-xs font-semibold text-[#189aa1] mb-1">Explanation</p>
-                          <p className="text-sm text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: answerResult.explanation }} />
+                          <p className="text-sm text-gray-700 leading-relaxed">{answerResult.explanation}</p>
                         </div>
                       )}
                     </CardContent>
@@ -1927,13 +1932,6 @@ export default function QuickFire() {
                         <Button variant="outline" className="border-white/30 text-white hover:bg-white/10" onClick={() => setSelectedArchiveId(null)}>
                           <Archive className="w-4 h-4 mr-2" /> Back to Archive
                         </Button>
-                        <ShareButton
-                          url={typeof window !== "undefined" ? window.location.origin + "/daily-challenge" : ""}
-                          title={`I scored ${correctCount}/${archiveQuestions.length} (${pct}%) on an iHeartEcho archive challenge! Test your echo knowledge!`}
-                          hashtags={["iHeartEcho", "echocardiography", "DailyChallenge"]}
-                          variant="outline"
-                          className="border-white/30 text-white hover:bg-white/10"
-                        />
                       </div>
                     </div>
                   );
@@ -2025,7 +2023,7 @@ export default function QuickFire() {
                                         ✓ Answer
                                       </span>
                                     </div>
-                                    <p className="text-sm leading-relaxed text-white/95 mb-4" dangerouslySetInnerHTML={{ __html: archiveCurrentQ.reviewAnswer ?? "" }} />
+                                    <p className="text-sm leading-relaxed text-white/95 mb-4">{archiveCurrentQ.reviewAnswer}</p>
                                     {!archiveAnswered && (
                                       <div className="flex gap-3 mt-2">
                                         <Button
@@ -2097,7 +2095,7 @@ export default function QuickFire() {
                           {archiveAnswered && archiveCurrentQ.explanation && (
                             <div className="mt-2 p-4 rounded-lg bg-[#189aa1]/8 border border-[#189aa1]/20">
                               <p className="text-xs font-semibold text-[#189aa1] mb-1">Explanation</p>
-                              <p className="text-sm text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: archiveCurrentQ.explanation ?? "" }} />
+                              <p className="text-sm text-gray-700 leading-relaxed">{archiveCurrentQ.explanation}</p>
                             </div>
                           )}
                         </CardContent>
@@ -2261,7 +2259,7 @@ export default function QuickFire() {
                       <p className="text-gray-500 font-medium">No data yet</p>
                       <p className="text-sm text-gray-400 mt-1">Complete your first daily challenge to see your stats here.</p>
                       <Button className="mt-4 text-white" style={{ background: "#189aa1" }} onClick={() => setActiveTab("challenge")}>
-                        <Trophy className="w-4 h-4 mr-2" /> Start Today's Challenge
+                        <Zap className="w-4 h-4 mr-2" /> Start Today's Challenge
                       </Button>
                     </div>
                   )}

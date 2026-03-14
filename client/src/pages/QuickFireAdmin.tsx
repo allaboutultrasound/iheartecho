@@ -92,7 +92,6 @@ import {
   ArrowUpDown,
   AlertTriangle,
   Copy,
-  ArrowUpCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -150,12 +149,10 @@ const EMPTY_FORM: QuestionForm = {
 };
 
 // ── Sortable queue row ─────────────────────────────────────────────────────
-function SortableQueueItem({ c, idx, openEditChallenge, openEditQuestion, deleteChallengeMutation, unpublishChallengeMutation }: {
+function SortableQueueItem({ c, idx, openEditChallenge, deleteChallengeMutation }: {
   c: any; idx: number;
   openEditChallenge: (c: any) => void;
-  openEditQuestion?: (questionId: number) => void;
   deleteChallengeMutation: any;
-  unpublishChallengeMutation?: any;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: c.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
@@ -192,8 +189,7 @@ function SortableQueueItem({ c, idx, openEditChallenge, openEditQuestion, delete
         <div className="flex items-center gap-2 flex-wrap">
           <span className="font-semibold text-sm text-gray-800">{c.title}</span>
           {isLive && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-green-500 text-white">LIVE</span>}
-          {isScheduled && c.priority === 0 && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-300">UNPUBLISHED</span>}
-          {isScheduled && c.priority !== 0 && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">SCHEDULED</span>}
+          {isScheduled && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">SCHEDULED</span>}
           {isDraft && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">DRAFT</span>}
         </div>
         <div className="flex items-center gap-3 mt-1 flex-wrap">
@@ -225,43 +221,9 @@ function SortableQueueItem({ c, idx, openEditChallenge, openEditQuestion, delete
       </div>
       {/* Actions */}
       <div className="flex items-center gap-1 flex-shrink-0">
-        {isLive ? (
-          <div className="flex items-center gap-1">
-            {openEditQuestion && Array.isArray(c.questionIds) && c.questionIds.length > 0 && (
-              <Button
-                size="sm" variant="ghost"
-                className="h-8 px-2 text-xs font-semibold text-[#189aa1] hover:text-[#0e7a80] hover:bg-teal-50 gap-1"
-                onClick={() => openEditQuestion(c.questionIds[0])}
-                title="Edit the linked question (text, options, answer, explanation, images)"
-              >
-                <Pencil className="w-3.5 h-3.5" /> Edit Question
-              </Button>
-            )}
-            {unpublishChallengeMutation && (
-              <Button
-                size="sm" variant="ghost"
-                className="h-8 px-2 text-xs font-semibold text-amber-600 hover:text-amber-700 hover:bg-amber-50 gap-1"
-                onClick={() => { if (confirm("Unpublish this live challenge and return it to the queue?")) unpublishChallengeMutation.mutate({ id: c.id }); }}
-                disabled={unpublishChallengeMutation.isPending}
-                title="Move back to scheduled queue"
-              >
-                <ArrowUpCircle className="w-3.5 h-3.5" /> Unpublish
-              </Button>
-            )}
-          </div>
-        ) : (
-          <div className="flex items-center gap-1">
-            {openEditQuestion && Array.isArray(c.questionIds) && c.questionIds.length > 0 && (
-              <Button
-                size="sm" variant="ghost"
-                className="h-8 px-2 text-xs font-semibold text-[#189aa1] hover:text-[#0e7a80] hover:bg-teal-50 gap-1"
-                onClick={() => openEditQuestion(c.questionIds[0])}
-                title="Edit the linked question (text, options, answer, explanation, images)"
-              >
-                <Pencil className="w-3.5 h-3.5" /> Edit Question
-              </Button>
-            )}
-            <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-gray-400 hover:text-[#189aa1]" onClick={() => openEditChallenge(c)} title="Edit challenge metadata (title, category, position)">
+        {!isLive && (
+          <>
+            <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-gray-400 hover:text-[#189aa1]" onClick={() => openEditChallenge(c)}>
               <Pencil className="w-3.5 h-3.5" />
             </Button>
             <Button
@@ -271,7 +233,7 @@ function SortableQueueItem({ c, idx, openEditChallenge, openEditQuestion, delete
             >
               <Trash2 className="w-3.5 h-3.5" />
             </Button>
-          </div>
+          </>
         )}
       </div>
     </div>
@@ -290,7 +252,6 @@ export default function QuickFireAdmin() {
   const [includeInactive, setIncludeInactive] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [challengeSearch, setChallengeSearch] = useState("");
-  const [challengeCategoryFilter, setChallengeCategoryFilter] = useState<"all" | "ACS" | "Adult Echo" | "Pediatric Echo" | "Fetal Echo" | "POCUS" | "General">("all");
   const [flashcardSearch, setFlashcardSearch] = useState("");
   const [flashcardEchoCategory, setFlashcardEchoCategory] = useState<"all" | "adult" | "pediatric_congenital" | "fetal">("all");
   const [flashcardAiOpen, setFlashcardAiOpen] = useState(false);
@@ -436,12 +397,7 @@ export default function QuickFireAdmin() {
   const [activeAdminTab, setActiveAdminTab] = useState<"questions" | "challenges" | "archive" | "flashcards" | "trash">("questions");
 
   // ── Challenge Archive state ──────────────────────────────────────────────
-  const [archiveAdminSearch, setArchiveAdminSearch] = useState("");
-  const [archiveAdminCategory, setArchiveAdminCategory] = useState<"all" | "ACS" | "Adult Echo" | "Pediatric Echo" | "Fetal Echo" | "POCUS" | "General">("all");
-  const archivedChallengesQuery = trpc.quickfire.adminListArchivedChallenges.useQuery({
-    search: archiveAdminSearch.trim() || undefined,
-    category: archiveAdminCategory === "all" ? undefined : archiveAdminCategory,
-  });
+  const archivedChallengesQuery = trpc.quickfire.adminListArchivedChallenges.useQuery();
   const archivedChallenges = archivedChallengesQuery.data ?? [];
 
   // ── Trash state ─────────────────────────────────────────────────────────
@@ -521,11 +477,6 @@ export default function QuickFireAdmin() {
     onError: (err) => toast.error(err.message || "Failed to delete challenge."),
   });
 
-  const unpublishChallengeMutation = trpc.quickfire.adminUnpublishChallenge.useMutation({
-    onSuccess: () => { toast.success("Challenge unpublished and returned to queue."); challengeListQuery.refetch(); },
-    onError: (err) => toast.error(err.message || "Failed to unpublish challenge."),
-  });
-
   const publishNextMutation = trpc.quickfire.adminPublishNextChallenge.useMutation({
     onSuccess: (data) => {
       if (data.published) toast.success(`Challenge "${data.title}" is now live!`);
@@ -564,18 +515,6 @@ export default function QuickFireAdmin() {
     setChallengeFormOpen(true);
   }
 
-  // Fetch a question by ID and open the full question editor dialog
-  async function openEditQuestionById(questionId: number) {
-    try {
-      const result = await utils.quickfire.listAllQuestions.fetch({ ids: [questionId], page: 1, limit: 1 });
-      const q = result?.questions?.[0];
-      if (!q) { toast.error("Question not found."); return; }
-      openEdit(q);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to load question.");
-    }
-  }
-
   function openEditChallenge(c: any) {
     setEditingChallengeId(c.id);
     setChallengeForm({
@@ -592,9 +531,11 @@ export default function QuickFireAdmin() {
 
   function handleSubmitChallenge() {
     if (!challengeForm.title.trim()) { toast.error("Challenge title is required."); return; }
+    if (challengeForm.selectedQuestionIds.length === 0) { toast.error("Select at least one question."); return; }
     const payload = {
       title: challengeForm.title.trim(),
       description: challengeForm.description.trim() || undefined,
+      questionIds: challengeForm.selectedQuestionIds,
       priority: challengeForm.priority,
       category: challengeForm.category || undefined,
       queuePosition: challengeForm.queuePosition || undefined,
@@ -602,8 +543,7 @@ export default function QuickFireAdmin() {
     if (editingChallengeId !== null) {
       updateChallengeMutation.mutate({ id: editingChallengeId, ...payload } as any);
     } else {
-      // New challenges require a question — user must use the Queue button in Question Bank
-      toast.error("To create a challenge, go to the Question Bank and click Queue on a question.");
+      createChallengeMutation.mutate(payload as any);
     }
   }
 
@@ -1053,29 +993,21 @@ export default function QuickFireAdmin() {
                 <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Daily Challenge Queue</h2>
                 <p className="text-xs text-gray-400 mt-0.5">One challenge per category per day. Publishes automatically at 6 AM ET. No dates needed — just set the category and queue position.</p>
               </div>
+              <Input
+                value={challengeSearch}
+                onChange={(e) => setChallengeSearch(e.target.value)}
+                placeholder="Search queue…"
+                className="w-52"
+              />
               <div className="flex items-center gap-2">
-                <Input
-                  value={challengeSearch}
-                  onChange={(e) => setChallengeSearch(e.target.value)}
-                  placeholder="Search queue…"
-                  className="w-40"
-                />
-                <Select value={challengeCategoryFilter} onValueChange={(v) => setChallengeCategoryFilter(v as any)}>
-                  <SelectTrigger className="w-40 h-9 text-xs">
-                    <SelectValue placeholder="All Categories" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    <SelectItem value="ACS">ACS</SelectItem>
-                    <SelectItem value="Adult Echo">Adult Echo</SelectItem>
-                    <SelectItem value="Pediatric Echo">Pediatric Echo</SelectItem>
-                    <SelectItem value="Fetal Echo">Fetal Echo</SelectItem>
-                    <SelectItem value="POCUS">POCUS</SelectItem>
-                    <SelectItem value="General">General</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  className="gap-1.5 text-white"
+                  style={{ background: "#189aa1" }}
+                  onClick={() => { setEditingChallengeId(null); setChallengeFormOpen(true); }}
+                >
+                  <Plus className="w-4 h-4" /> New Challenge
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"
@@ -1132,23 +1064,19 @@ export default function QuickFireAdmin() {
                         c={c}
                         idx={idx}
                         openEditChallenge={openEditChallenge}
-                        openEditQuestion={openEditQuestionById}
                         deleteChallengeMutation={deleteChallengeMutation}
-                        unpublishChallengeMutation={unpublishChallengeMutation}
                       />
                     ))}
                     {/* Queued challenges (sortable) */}
                     {challenges
                       .filter((c: any) => c.status !== "live")
                       .filter((c: any) => !challengeSearch.trim() || c.title?.toLowerCase().includes(challengeSearch.toLowerCase()) || c.description?.toLowerCase().includes(challengeSearch.toLowerCase()))
-                      .filter((c: any) => challengeCategoryFilter === "all" || c.category === challengeCategoryFilter)
                       .map((c: any, idx: number) => (
                         <SortableQueueItem
                           key={c.id}
                           c={c}
                           idx={idx + challenges.filter((ch: any) => ch.status === "live").length}
                           openEditChallenge={openEditChallenge}
-                          openEditQuestion={openEditQuestionById}
                           deleteChallengeMutation={deleteChallengeMutation}
                         />
                       ))
@@ -1523,31 +1451,9 @@ export default function QuickFireAdmin() {
                 <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Challenge Archive</h2>
                 <p className="text-xs text-gray-400 mt-0.5">Past challenges that have been published and archived. Push any to the queue to reuse.</p>
               </div>
-              <div className="flex items-center gap-2">
-                <Input
-                  value={archiveAdminSearch}
-                  onChange={(e) => setArchiveAdminSearch(e.target.value)}
-                  placeholder="Search archive…"
-                  className="w-44 h-9"
-                />
-                <Select value={archiveAdminCategory} onValueChange={(v) => setArchiveAdminCategory(v as any)}>
-                  <SelectTrigger className="w-40 h-9 text-xs">
-                    <SelectValue placeholder="All Categories" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    <SelectItem value="ACS">ACS</SelectItem>
-                    <SelectItem value="Adult Echo">Adult Echo</SelectItem>
-                    <SelectItem value="Pediatric Echo">Pediatric Echo</SelectItem>
-                    <SelectItem value="Fetal Echo">Fetal Echo</SelectItem>
-                    <SelectItem value="POCUS">POCUS</SelectItem>
-                    <SelectItem value="General">General</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button variant="outline" size="sm" onClick={() => archivedChallengesQuery.refetch()} className="gap-1.5 h-9">
-                  <RefreshCw className="w-3.5 h-3.5" /> Refresh
-                </Button>
-              </div>
+              <Button variant="outline" size="sm" onClick={() => archivedChallengesQuery.refetch()} className="gap-1.5">
+                <RefreshCw className="w-3.5 h-3.5" /> Refresh
+              </Button>
             </div>
 
             {archivedChallengesQuery.isLoading ? (
@@ -1901,16 +1807,131 @@ export default function QuickFireAdmin() {
                 <p className="text-[10px] text-gray-400 mt-1">Leave blank to append to end of queue</p>
               </div>
             </div>
-            {/* Info: question is auto-assigned from the Question Bank via the Queue button */}
-            <div className="flex items-start gap-2 px-3 py-2.5 rounded-lg bg-blue-50 border border-blue-200">
-              <CheckCircle2 className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-xs font-semibold text-blue-700">Question is assigned from the Question Bank</p>
-                <p className="text-xs text-blue-600 mt-0.5">
-                  To assign a question to this challenge, go to the <strong>Question Bank</strong> tab and click <strong>Queue</strong> on any question.
-                  Each challenge holds exactly <strong>1 question</strong> served per day.
-                </p>
-              </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Select Question <span className="text-red-500">*</span></label>
+              <p className="text-xs text-gray-400 mb-2">Each challenge contains exactly <strong>1 question</strong> — one question is served per day.</p>
+              {/* Search box for question picker */}
+              <Input
+                value={challengeQSearch}
+                onChange={(e) => setChallengeQSearch(e.target.value)}
+                placeholder="Search questions…"
+                className="mb-2 text-xs"
+              />
+              {challengePickerQuery.isLoading ? (
+                <div className="h-32 bg-gray-100 rounded-lg animate-pulse" />
+              ) : (
+                <div className="max-h-64 overflow-y-auto border rounded-lg divide-y">
+                  {/* Pinned: currently-linked question (shown at top when editing, even if inactive) */}
+                  {linkedQuestion && !challengePickerQuery.data?.questions?.some((q: any) => q.id === linkedQuestion.id) && (() => {
+                    const q = linkedQuestion;
+                    const selected = challengeForm.selectedQuestionIds[0] === q.id;
+                    const meta = TYPE_META[q.type as QuestionType] ?? TYPE_META.scenario;
+                    const Icon = meta.icon;
+                    return (
+                      <div
+                        key={`pinned-${q.id}`}
+                        className={`flex items-start gap-3 px-3 py-2.5 cursor-pointer transition-colors border-b-2 border-teal-200 ${
+                          selected ? "bg-teal-50" : "bg-teal-50/40 hover:bg-teal-50"
+                        }`}
+                        onClick={() => setChallengeForm((f) => ({ ...f, selectedQuestionIds: selected ? [] : [q.id] }))}
+                      >
+                        <div className={`mt-0.5 w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${
+                          selected ? "border-[#189aa1] bg-[#189aa1]" : "border-gray-300"
+                        }`}>
+                          {selected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                        </div>
+                        <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${meta.color}`}>
+                          <Icon className="w-3 h-3" />{q.type === "connect" ? "CONNECT" : q.type === "identifier" ? "ID" : q.type === "order" ? "ORDER" : q.type === "image" ? "IMG" : "MCQ"}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span className="text-[10px] font-semibold text-teal-600 bg-teal-100 px-1.5 py-0.5 rounded">Current</span>
+                            {!q.isActive && <span className="text-[10px] font-semibold text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">Inactive</span>}
+                          </div>
+                          <p className="text-xs text-gray-800 line-clamp-2" dangerouslySetInnerHTML={{ __html: q.question }} />
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className={`text-xs px-1 rounded ${
+                              q.difficulty === "beginner" ? "bg-green-50 text-green-600" :
+                              q.difficulty === "advanced" ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-600"
+                            }`}>{q.difficulty}</span>
+                            {(q.tags ?? []).slice(0, 2).map((t: string) => <span key={t} className="text-xs text-gray-400">#{t}</span>)}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                  {/* Regular question list from picker query */}
+                  {(challengePickerQuery.data?.questions ?? []).filter((q: any) => q.type !== "quickReview").map((q: any) => {
+                    const selected = challengeForm.selectedQuestionIds[0] === q.id;
+                    const meta = TYPE_META[q.type as QuestionType] ?? TYPE_META.scenario;
+                    const Icon = meta.icon;
+                    return (
+                      <div
+                        key={q.id}
+                        className={`flex items-start gap-3 px-3 py-2.5 cursor-pointer transition-colors ${
+                          selected ? "bg-teal-50" : "bg-white hover:bg-gray-50"
+                        }`}
+                        onClick={() => {
+                          // Single-select: replace the array with just this question
+                          setChallengeForm((f) => ({
+                            ...f,
+                            selectedQuestionIds: selected ? [] : [q.id],
+                          }));
+                        }}
+                      >
+                        {/* Radio button indicator */}
+                        <div className={`mt-0.5 w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${
+                          selected ? "border-[#189aa1] bg-[#189aa1]" : "border-gray-300"
+                        }`}>
+                          {selected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                        </div>
+                        <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${meta.color}`}>
+                          <Icon className="w-3 h-3" />{q.type === "connect" ? "CONNECT" : q.type === "identifier" ? "ID" : q.type === "order" ? "ORDER" : q.type === "image" ? "IMG" : "MCQ"}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-gray-800 line-clamp-2" dangerouslySetInnerHTML={{ __html: q.question }} />
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className={`text-xs px-1 rounded ${
+                              q.difficulty === "beginner" ? "bg-green-50 text-green-600" :
+                              q.difficulty === "advanced" ? "bg-red-50 text-red-600" : "bg-blue-50 text-blue-600"
+                            }`}>{q.difficulty}</span>
+                            {(q.tags ?? []).slice(0, 2).map((t: string) => <span key={t} className="text-xs text-gray-400">#{t}</span>)}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {(challengePickerQuery.data?.questions ?? []).filter((q: any) => q.type !== "quickReview").length === 0 && !linkedQuestion && (
+                    <div className="px-4 py-6 text-center text-xs text-gray-400">No questions found. Try a different search.</div>
+                  )}
+                </div>
+              )}
+              {/* Category mismatch warning */}
+              {(() => {
+                const selectedId = challengeForm.selectedQuestionIds[0];
+                if (!selectedId) return <p className="text-xs text-gray-400 mt-1">No question selected</p>;
+                // Look up from picker query OR the pinned linked question
+                const selectedQ =
+                  (challengePickerQuery.data?.questions ?? []).find((q: any) => q.id === selectedId) ??
+                  (linkedQuestion?.id === selectedId ? linkedQuestion : null);
+                const qCat = selectedQ?.category;
+                const formCat = challengeForm.category;
+                const mismatch = qCat && formCat && qCat !== formCat && formCat !== "Mixed";
+                return (
+                  <div className="mt-1 space-y-1">
+                    <p className="text-xs text-teal-600 font-semibold">✓ 1 question selected{qCat ? ` — category: ${qCat}` : ""}</p>
+                    {mismatch && (
+                      <div className="flex items-start gap-1.5 px-2 py-1.5 rounded bg-amber-50 border border-amber-200">
+                        <AlertTriangle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
+                        <p className="text-xs text-amber-700">
+                          <strong>Category mismatch:</strong> The selected question is tagged <strong>{qCat}</strong> but the challenge category is <strong>{formCat}</strong>.
+                          Consider updating the challenge category or selecting a question from the <strong>{formCat}</strong> pool.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           </div>
           <DialogFooter>

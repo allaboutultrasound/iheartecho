@@ -10,9 +10,8 @@ import Layout from "@/components/Layout";
 import { PremiumGate } from "@/components/PremiumGate";
 import {
   ChevronDown, ChevronUp, AlertTriangle, CheckCircle2,
-  Info, BookOpen, Zap, ArrowRight, Heart, Baby
+  Activity, Info, BookOpen, Zap, ArrowRight, Heart, Baby
 } from "lucide-react";
-import EkgIcon from "@/components/EkgIcon";
 
 const BRAND = "#189aa1";
 const BRAND_DARK = "#0e4a50";
@@ -41,7 +40,7 @@ const leadSections: LeadSection[] = [
     id: "standard-limb",
     title: "Standard Limb Leads",
     subtitle: "Leads I, II, III, aVR, aVL, aVF",
-    icon: EkgIcon,
+    icon: Activity,
     color: BRAND,
     steps: [
       { step: "RA (Right Arm)", detail: "Right inner wrist or right upper arm / right infraclavicular area. Avoid bony prominences. Clean skin with alcohol swab.", tip: "For ICU/telemetry: place on right shoulder (infraclavicular fossa) to reduce motion artifact." },
@@ -84,7 +83,7 @@ const leadSections: LeadSection[] = [
     id: "right-sided",
     title: "Right-Sided Leads",
     subtitle: "V3R–V6R — Right Ventricular MI Detection",
-    icon: EkgIcon,
+    icon: Activity,
     color: "#dc2626",
     steps: [
       { step: "V3R", detail: "Mirror image of V3 on the RIGHT side of the chest. Between V1 and V4R.", tip: "V1 serves as V2R — no additional electrode needed for V2R." },
@@ -103,7 +102,7 @@ const leadSections: LeadSection[] = [
     id: "posterior",
     title: "Posterior Leads",
     subtitle: "V7–V9 — Posterior MI Detection",
-    icon: EkgIcon,
+    icon: Activity,
     color: "#189aa1",
     steps: [
       { step: "V7", detail: "Same horizontal level as V4–V6, posterior axillary line (left side). Continue the V4–V6 horizontal line around the back.", tip: "The horizontal level of V4 is the reference — all posterior leads must be at the same level." },

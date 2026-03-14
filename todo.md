@@ -50,28 +50,10 @@
 - [x] Fix: HTML tags (e.g. <p>) showing in challenge queue question titles — strip HTML for display
 - [x] Fix: Challenges created via queue should default to "scheduled" status, not "draft"
 - [x] Daily challenge: display one question per category (ACS, Adult Echo, Pediatric Echo, Fetal Echo, POCUS) — fixed POCUS key mapping bug and inline player key lookup
-- [x] Admin queue: show all currently live challenges (not just scheduled), with a distinct "Live" badge
-- [x] Admin queue: Unpublish button on live challenges to move them back to scheduled status
-- [x] Fix: question explanation showing raw HTML tags — render as HTML not plain text (dangerouslySetInnerHTML in both main and archive players)
-- [x] Fix: Edit Challenge button visible to all users in archive — now only shows for platform_admin appRole
-- [x] Fix: archive drill-down now works — getArchivedChallenge fetches questions regardless of isActive status
-- [ ] Unpublish: keep challenge at top of queue (priority 0) and show "Unpublished" badge
-- [ ] Fix ensureTodaySet queue ordering: priority ASC then queuePosition ASC (nulls last) so unpublished challenges sort first
-- [ ] Full editing of live published questions from admin queue (text, images, videos, options, answer key, explanation) — no unpublish required
-- [x] Fix: Edit Question button on live challenge rows opens full question editor (not challenge picker)
-- [x] Remove multi-select question picker from challenge form (challenges are 1 question, auto-assigned)
-- [x] Fix: Edit Question button missing for queued (non-live) challenges — pass openEditQuestion prop
-- [x] Fix: Edit Question for live challenges — ensure openEditQuestionById works reliably
-- [x] Add: Category filter dropdown to the challenge queue tab
-- [x] Add search to admin challenge archive (search by title, category, question text)
-- [x] Add search to public-facing challenge archive (search by title, category, question text)
-- [x] Replace all ECG/EKG icons with a proper EKG waveform SVG symbol throughout the app
-- [x] Create composite icons: teal circle + white SVG overlay for POCUS and Fetal Echo (circular icons for Daily Challenge cards)
-- [x] Create flat square icons: teal SVG on white/transparent background for POCUS and Fetal Echo (module card icons)
-- [x] Upload composited POCUS and Fetal Echo icons (circular + square) to CDN and update all references
-- [x] Add trophy icon to the Daily Challenge section header/card
-- [x] Replace POCUS and Fetal Echo module card icons on Home dashboard with square flat icons
-- [x] Build reusable ShareButton/ShareModal component (Twitter/X, Facebook, LinkedIn, copy link)
-- [x] Add social sharing to Daily Challenge result screens (session results, already-completed screen, archive results)
-- [x] Add social sharing to Case Library case view (ShareButton in case header)
-- [x] Create and integrate Daily Challenge hero banner (trophy + teal flames + EKG line, matching dashboard style)
+- [ ] Admin queue: show all currently live challenges (not just scheduled), with a distinct "Live" badge
+- [ ] Admin queue: Unpublish button on live challenges to move them back to scheduled status
+- [x] Add ACS and POCUS categories to flashcard UI filter and admin creation
+- [x] Generate and integrate Case Library hero banner (image/video/scenario theme, teal/navy)
+- [x] Generate and integrate Flashcards hero banner (flashcard/learning theme, teal/navy)
+- [x] Daily Challenge banner: "Start Today's Challenge" and "View Archive" buttons scroll to anchor in page content
+- [x] Sidebar nav scroll position preserved on navigation (no longer resets to top on every click)

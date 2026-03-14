@@ -41,7 +41,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { formatViewCount, getDisplayViewCount } from "@/lib/caseViewCount";
-import { ShareButton } from "@/components/ShareButton";
 
 const MODALITY_COLORS: Record<string, string> = {
   TTE: "bg-blue-100 text-blue-700",
@@ -221,18 +220,10 @@ export default function CaseDetail() {
           <h1 className="text-2xl font-bold text-gray-800 mb-2" style={{ fontFamily: "Merriweather, serif" }}>
             {title}
           </h1>
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex flex-wrap gap-4 text-xs text-gray-400">
-              <span className="flex items-center gap-1">
-                <Eye className="w-3 h-3" /> {formatViewCount(getDisplayViewCount(caseData.id, viewCount ?? 0, submittedAt))} views
-              </span>
-            </div>
-            <ShareButton
-              url={typeof window !== "undefined" ? window.location.href : ""}
-              title={`Check out this echo case on iHeartEcho: "${title}" — test your ${modality} knowledge!`}
-              hashtags={["iHeartEcho", "echocardiography", modality ?? "echo"]}
-              size="sm"
-            />
+          <div className="flex flex-wrap gap-4 text-xs text-gray-400">
+            <span className="flex items-center gap-1">
+              <Eye className="w-3 h-3" /> {formatViewCount(getDisplayViewCount(caseData.id, viewCount ?? 0, submittedAt))} views
+            </span>
           </div>
         </div>
 

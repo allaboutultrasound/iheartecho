@@ -1,5 +1,5 @@
 /*
-  ACHD-EchoAssist™ — iHeartEcho™
+  ACHDEchoAssist™ — iHeartEcho™
   Adult Congenital Heart Disease Echo Calculator Engine
   Guidelines: ASE 2010 ACHD Echo (Silversides et al.), ESC 2020 ACHD, ACC/AHA 2018 ACHD,
               ASE 2019 Multimodality Imaging in ACHD, ACC/AHA 2014 ASD/VSD Guidelines
@@ -1174,7 +1174,7 @@ export default function ACHDEchoAssist({ embedded = false }: { embedded?: boolea
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-black text-white" style={{ fontFamily: "Merriweather, serif" }}>
-                  ACHD-EchoAssist™
+                  ACHDEchoAssist™
                 </h1>
                 <span className="inline-flex items-center gap-1 bg-amber-400/20 border border-amber-400/40 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-full">
                   <Crown className="w-3 h-3" /> Premium
@@ -1193,7 +1193,7 @@ export default function ACHDEchoAssist({ embedded = false }: { embedded?: boolea
       )}
 
       {/* Premium Gate */}
-      <PremiumGate featureName="ACHD-EchoAssist™ Calculator Engine">
+      <PremiumGate featureName="ACHDEchoAssist™ Calculator Engine">
         <div className="container py-8">
           {/* Study Info */}
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-6">
@@ -1274,7 +1274,7 @@ export default function ACHDEchoAssist({ embedded = false }: { embedded?: boolea
           {/* Engine cards */}
           <div className="space-y-3">
             {engines.map(({ id, title, badge, color, key, component }) => (
-              <EngineSection key={id} id={id} title={title} badge={badge} badgeColor={color} result={results[key]} source="ACHD-EchoAssist™">
+              <EngineSection key={id} id={id} title={title} badge={badge} badgeColor={color} result={results[key]} source="ACHDEchoAssist™">
                 {component(makeOnResult(key))}
               </EngineSection>
             ))}
