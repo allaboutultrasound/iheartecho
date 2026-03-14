@@ -41,6 +41,7 @@ import {
   Upload,
 } from "lucide-react";
 import { toast } from "sonner";
+import DragDropUploadZone from "@/components/DragDropUploadZone";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -631,35 +632,15 @@ export default function CaseEditorDialog({ caseId, open, onClose, onSaved }: Pro
               {/* ── MEDIA TAB ───────────────────────────────────────────────── */}
               {activeTab === "media" && (
                 <div className="space-y-4">
-                  {/* Upload button */}
-                  <div>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*,video/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) handleMediaUpload(file);
-                      }}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full gap-2 border-dashed border-2 h-14 text-gray-500 hover:border-[#189aa1] hover:text-[#189aa1]"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={uploadingMedia}
-                    >
-                      {uploadingMedia ? (
-                        <><Loader2 className="w-4 h-4 animate-spin" /> Uploading…</>
-                      ) : (
-                        <><Upload className="w-4 h-4" /> Upload Image or Video</>
-                      )}
-                    </Button>
-                    <p className="text-xs text-gray-400 mt-1 text-center">
-                      Supported: JPG, PNG, GIF, MP4, MOV, WebM
-                    </p>
-                  </div>
+                  {/* Upload zone */}
+                  <DragDropUploadZone
+                    onFile={handleMediaUpload}
+                    accept="image/*,video/*"
+                    maxSizeMB={200}
+                    uploading={uploadingMedia}
+                    label="Drag & drop or click to upload media"
+                    sublabel="JPG, PNG, GIF, MP4, MOV, WebM · Max 200 MB"
+                  />
 
                   {/* Media list */}
                   {media.length === 0 ? (

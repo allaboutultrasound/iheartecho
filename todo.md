@@ -111,3 +111,10 @@
 - [x] Flashcard admin: show per-category card count summary at top of Flashcard Management tab
 - [x] Flashcards: add ACS and POCUS as echoCategory options (admin filter, editor form, user-facing category filter, server procedure, getFlashcardCategoryCounts)
 - [x] Daily Challenge: POCUS live challenge not displaying — fixed by adding adminRefreshTodaySet procedure + Refresh Today button in admin queue
+- [ ] Cases admin: add drag-and-drop file upload to all image/media/file fields in the case editor
+
+## Drag-and-Drop File Upload (Mar 14 2026)
+- [ ] Build reusable DragDropUploadZone component (drag-over highlight, file type/size validation, progress indicator)
+- [ ] Cases admin: replace all file input fields with DragDropUploadZone (case image, case media/video, supplemental files)
+- [ ] Daily Challenges admin: replace question image/media input fields with DragDropUploadZone
+- [ ] Flashcards admin: replace flashcard image/media input fields with DragDropUploadZone

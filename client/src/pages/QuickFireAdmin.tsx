@@ -97,6 +97,7 @@ import {
   Inbox,
 } from "lucide-react";
 import { toast } from "sonner";
+import DragDropUploadZone from "@/components/DragDropUploadZone";
 
 const TYPE_META = {
   scenario: { label: "Scenario (MCQ)", icon: Stethoscope, color: "bg-blue-100 text-blue-700" },
@@ -311,6 +312,42 @@ export default function QuickFireAdmin() {
       toast.error(err.message ?? "Image upload failed");
     } finally {
       setImageUploading(false);
+    }
+  }
+
+  async function handleFlashcardImageUpload(file: File) {
+    setFlashcardUploadingMedia(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload-question-media", { method: "POST", body: fd, credentials: "include" });
+      if (!res.ok) { const err = await res.json(); throw new Error(err.error ?? "Upload failed"); }
+      const data = await res.json();
+      if (data.url) setFlashcardForm((f) => ({ ...f, imageUrl: data.url }));
+      else throw new Error("No URL returned");
+      toast.success("Image uploaded");
+    } catch (err: any) {
+      toast.error(err.message ?? "Image upload failed");
+    } finally {
+      setFlashcardUploadingMedia(false);
+    }
+  }
+
+  async function handleFlashcardVideoUpload(file: File) {
+    setFlashcardUploadingMedia(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload-question-media", { method: "POST", body: fd, credentials: "include" });
+      if (!res.ok) { const err = await res.json(); throw new Error(err.error ?? "Upload failed"); }
+      const data = await res.json();
+      if (data.url) setFlashcardForm((f) => ({ ...f, videoUrl: data.url } as any));
+      else throw new Error("No URL returned");
+      toast.success("Video uploaded");
+    } catch (err: any) {
+      toast.error(err.message ?? "Video upload failed");
+    } finally {
+      setFlashcardUploadingMedia(false);
     }
   }
 
@@ -2337,59 +2374,16 @@ export default function QuickFireAdmin() {
                 <label className="text-xs font-semibold text-gray-600 mb-1.5 block">
                   Echo Image / Video <span className="text-red-500">*</span>
                 </label>
-
-                {/* Upload zone */}
-                <div
-                  className="border-2 border-dashed border-purple-200 rounded-xl p-4 text-center cursor-pointer hover:border-purple-400 hover:bg-purple-50 transition-all"
-                  onClick={() => document.getElementById('question-image-input')?.click()}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    const file = e.dataTransfer.files[0];
-                    if (file) handleImageUpload(file);
-                  }}
-                >
-                  {imageUploading ? (
-                    <div className="flex items-center justify-center gap-2 text-purple-600">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span className="text-sm">Uploading…</span>
-                    </div>
-                  ) : form.imageUrl ? (
-                    <div className="relative">
-                      {isVideoUrl(form.imageUrl) ? (
-                        <video src={form.imageUrl} controls controlsList="nodownload" className="w-full max-h-48 rounded-lg bg-black" />
-                      ) : (
-                        <img src={form.imageUrl} alt="Preview" className="w-full max-h-48 object-contain rounded-lg" />
-                      )}
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); setForm((f) => ({ ...f, imageUrl: "" })); }}
-                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600"
-                      >
-                        ×
-                      </button>
-                      <p className="text-xs text-purple-600 mt-1">Click to replace</p>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center gap-1 py-2">
-                      <ImageIcon className="w-8 h-8 text-purple-300" />
-                      <p className="text-sm text-gray-600 font-medium">Click or drag to upload echo image</p>
-                      <p className="text-xs text-gray-400">JPEG, PNG, WEBP, GIF, MP4, WMV · Max 100 MB</p>
-                    </div>
-                  )}
-                </div>
-                <input
-                  id="question-image-input"
-                  type="file"
+                <DragDropUploadZone
+                  onFile={handleImageUpload}
                   accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/x-ms-wmv,.wmv,.mp4,.gif"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) handleImageUpload(file);
-                    e.target.value = "";
-                  }}
+                  maxSizeMB={100}
+                  uploading={imageUploading}
+                  previewUrl={form.imageUrl || undefined}
+                  onRemove={() => setForm((f) => ({ ...f, imageUrl: "" }))}
+                  label="Drag & drop or click to upload echo image / video"
+                  sublabel="JPEG, PNG, WEBP, GIF, MP4, WMV · Max 100 MB"
                 />
-
                 {/* Manual URL fallback */}
                 <div className="mt-2">
                   <Input
@@ -3753,44 +3747,22 @@ export default function QuickFireAdmin() {
             {/* Image Upload */}
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">Image (optional)</label>
-              <div className="flex gap-2 items-center">
-                <Input
-                  value={flashcardForm.imageUrl}
-                  onChange={(e) => setFlashcardForm((f) => ({ ...f, imageUrl: e.target.value }))}
-                  placeholder="Paste image URL or upload below..."
-                  className="flex-1 text-sm"
-                />
-                <label className="cursor-pointer">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      setFlashcardUploadingMedia(true);
-                      try {
-                        const fd = new FormData();
-                        fd.append("file", file);
-                        const res = await fetch("/api/upload-question-media", { method: "POST", body: fd, credentials: "include" });
-                        const data = await res.json();
-                        if (data.url) setFlashcardForm((f) => ({ ...f, imageUrl: data.url }));
-                        else toast.error("Upload failed");
-                      } catch { toast.error("Upload failed"); }
-                      finally { setFlashcardUploadingMedia(false); }
-                    }}
-                  />
-                  <Button variant="outline" size="sm" asChild disabled={flashcardUploadingMedia}>
-                    <span className="gap-1.5">
-                      {flashcardUploadingMedia ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-                      Upload
-                    </span>
-                  </Button>
-                </label>
-              </div>
-              {flashcardForm.imageUrl && (
-                <img src={flashcardForm.imageUrl} alt="Preview" className="mt-2 max-h-32 rounded-lg border border-gray-200 object-contain" />
-              )}
+              <DragDropUploadZone
+                onFile={handleFlashcardImageUpload}
+                accept="image/*"
+                maxSizeMB={50}
+                uploading={flashcardUploadingMedia}
+                previewUrl={flashcardForm.imageUrl || undefined}
+                onRemove={() => setFlashcardForm((f) => ({ ...f, imageUrl: "" }))}
+                label="Drag & drop or click to upload image"
+                sublabel="JPG, PNG, WEBP, GIF · Max 50 MB"
+              />
+              <Input
+                value={flashcardForm.imageUrl}
+                onChange={(e) => setFlashcardForm((f) => ({ ...f, imageUrl: e.target.value }))}
+                placeholder="Or paste image URL..."
+                className="flex-1 text-sm mt-2"
+              />
             </div>
 
             {/* Video Upload */}
