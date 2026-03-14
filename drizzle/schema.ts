@@ -2406,3 +2406,37 @@ export const educatorTemplates = mysqlTable("educatorTemplates", {
 });
 export type EducatorTemplate = typeof educatorTemplates.$inferSelect;
 export type InsertEducatorTemplate = typeof educatorTemplates.$inferInsert;
+
+// ─── Leaderboard & Points ─────────────────────────────────────────────────────
+
+export const userPointsLog = mysqlTable("userPointsLog", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  points: int("points").notNull(), // positive = earned, negative = deducted
+  activityType: mysqlEnum("activityType", [
+    "daily_challenge_correct",   // answered daily challenge correctly
+    "daily_challenge_streak",    // streak bonus
+    "case_submission",           // submitted an echo case for review
+    "case_approved",             // submitted case was approved/published
+    "flashcard_session",         // completed a flashcard session
+    "flashcard_card_viewed",     // viewed individual flashcard
+    "admin_adjustment",          // manual admin point adjustment
+  ]).notNull(),
+  referenceId: int("referenceId"),        // optional: caseId, challengeId, etc.
+  referenceType: varchar("referenceType", { length: 64 }), // "case" | "challenge" | "flashcard_deck"
+  note: text("note"),                     // optional admin note or auto description
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type UserPointsLog = typeof userPointsLog.$inferSelect;
+export type InsertUserPointsLog = typeof userPointsLog.$inferInsert;
+
+// Materialized total points per user (updated on every points event)
+export const userPointsTotals = mysqlTable("userPointsTotals", {
+  userId: int("userId").primaryKey(),
+  totalPoints: int("totalPoints").default(0).notNull(),
+  challengePoints: int("challengePoints").default(0).notNull(),
+  casePoints: int("casePoints").default(0).notNull(),
+  flashcardPoints: int("flashcardPoints").default(0).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type UserPointsTotals = typeof userPointsTotals.$inferSelect;

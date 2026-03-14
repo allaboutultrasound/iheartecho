@@ -10,13 +10,14 @@ import {
   Scan, BookOpen, FileText, Menu, X, ChevronRight,
   Stethoscope, Zap, ExternalLink, ShoppingBag, FlaskConical, MessageCircle, Award, Shield, GraduationCap,
   BookMarked, Library, Plus, Crown, Droplets, Building2, Users, UserPlus,
-  LogIn, LogOut, Settings, ChevronDown, Webhook, Layers, CreditCard, Lock
+  LogIn, LogOut, Settings, ChevronDown, Webhook, Layers, CreditCard, Lock, Trophy
 } from "lucide-react";
 
 import { trpc } from "@/lib/trpc";
 import NotificationBell from "@/components/NotificationBell";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl, getThinkificFreeEnrollUrl } from "@/const";
+import GetAppPrompt from "@/components/GetAppPrompt";
 
 /** Badge showing the count of echo cases pending admin review */
 function CasePendingBadge() {
@@ -69,6 +70,7 @@ const navGroups = [
     label: "Learning",
     items: [
       { path: "/quickfire", label: "Daily Challenge", icon: Zap },
+      { path: "/leaderboard", label: "Leaderboard", icon: Trophy },
       { path: "/flashcards", label: "Echo Flashcards", icon: Layers },
       { path: "/case-library", label: "Echo Case Library", icon: Library },
       { path: "/cme", label: "CME Hub", icon: GraduationCap },
@@ -576,6 +578,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
+
+      {/* Mobile-only PWA install prompt */}
+      <GetAppPrompt />
     </div>
   );
 }

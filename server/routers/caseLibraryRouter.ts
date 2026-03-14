@@ -189,13 +189,95 @@ export const caseLibraryRouter = router({
         }
       }
 
+      // ── Media guarantee: on page 1, ensure positions 2 and 4 (index 1 & 3)
+      //    contain cases with media, when media cases exist for this query.
+      //    We fetch a wider pool of case IDs that have media, then slot them in.
+      let finalCases = [...cases];
+      if (input.page === 1 && finalCases.length >= 4) {
+        // Find which case IDs in the full query have any media (image or video)
+        const allMediaCaseIds = await db
+          .select({ caseId: echoLibraryCaseMedia.caseId })
+          .from(echoLibraryCaseMedia)
+          .where(
+            and(
+              sql`${echoLibraryCaseMedia.caseId} IN (
+                SELECT id FROM ${echoLibraryCases}
+                WHERE ${where ? sql`${where}` : sql`1=1`}
+              )`,
+            )
+          )
+          .groupBy(echoLibraryCaseMedia.caseId)
+          .limit(50);
+        const mediaCaseIdSet = new Set(allMediaCaseIds.map((r) => r.caseId));
+
+        // Check if positions 2 and 4 (index 1, 3) already have media
+        const needsMediaAt: number[] = [];
+        if (!mediaCaseIdSet.has(finalCases[1]?.id)) needsMediaAt.push(1);
+        if (!mediaCaseIdSet.has(finalCases[3]?.id)) needsMediaAt.push(3);
+
+        if (needsMediaAt.length > 0 && mediaCaseIdSet.size > 0) {
+          // Find media cases not already in the current page
+          const currentPageIds = new Set(finalCases.map((c) => c.id));
+          const extraMediaCaseIds = Array.from(mediaCaseIdSet).filter((id) => !currentPageIds.has(id));
+
+          if (extraMediaCaseIds.length > 0) {
+            // Fetch the actual case rows for these extra media cases
+            const extraCases = await db
+              .select({
+                id: echoLibraryCases.id,
+                title: echoLibraryCases.title,
+                summary: echoLibraryCases.summary,
+                diagnosis: echoLibraryCases.diagnosis,
+                modality: echoLibraryCases.modality,
+                difficulty: echoLibraryCases.difficulty,
+                tags: echoLibraryCases.tags,
+                viewCount: echoLibraryCases.viewCount,
+                submittedAt: echoLibraryCases.submittedAt,
+                isAdminSubmission: echoLibraryCases.isAdminSubmission,
+              })
+              .from(echoLibraryCases)
+              .where(
+                and(
+                  eq(echoLibraryCases.status, "approved"),
+                  sql`${echoLibraryCases.id} IN (${extraMediaCaseIds.slice(0, 10).join(",")})`
+                )
+              )
+              .orderBy(desc(echoLibraryCases.submittedAt))
+              .limit(needsMediaAt.length);
+
+            // Fetch thumbnails for these extra cases
+            if (extraCases.length > 0) {
+              const extraIds = extraCases.map((c) => c.id);
+              const extraMedia = await db
+                .select({ caseId: echoLibraryCaseMedia.caseId, url: echoLibraryCaseMedia.url })
+                .from(echoLibraryCaseMedia)
+                .where(
+                  and(
+                    sql`${echoLibraryCaseMedia.caseId} IN (${extraIds.join(",")})`,
+                    eq(echoLibraryCaseMedia.type, "image")
+                  )
+                )
+                .orderBy(echoLibraryCaseMedia.sortOrder);
+              for (const m of extraMedia) {
+                if (!thumbnails[m.caseId]) thumbnails[m.caseId] = m.url;
+              }
+
+              // Slot extra media cases into the target positions
+              for (let i = 0; i < needsMediaAt.length && i < extraCases.length; i++) {
+                finalCases[needsMediaAt[i]] = extraCases[i];
+              }
+            }
+          }
+        }
+      }
+
       const rawTotal = totalResult[0]?.count ?? 0;
       // Cap visible total for free users
       const visibleTotal = isPremiumUser ? rawTotal : Math.min(rawTotal, FREE_CASE_LIMIT);
-      // Trim cases that would exceed the free limit
+      // Trim cases that would exceed the free limit (use finalCases which has media slots filled)
       const visibleCases = isPremiumUser
-        ? cases
-        : cases.filter((_, i) => offset + i < FREE_CASE_LIMIT);
+        ? finalCases
+        : finalCases.filter((_, i) => offset + i < FREE_CASE_LIMIT);
 
       return {
         cases: visibleCases.map((c) => ({

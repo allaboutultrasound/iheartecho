@@ -17,6 +17,7 @@ import { meetingRouter } from "./routers/meetingRouter";
 import { formBuilderRouter } from "./routers/formBuilderRouter";
 import { accreditationManagerRouter } from "./routers/accreditationManagerRouter";
 import { educatorRouter } from "./routers/educatorRouter";
+import { leaderboardRouter } from "./routers/leaderboardRouter";
 import { emailCampaignRouter } from "./routers/emailCampaignRouter";
 import {
   getUserById,
@@ -1761,6 +1762,9 @@ export const appRouter = router({
   // ─── Accreditation Manager ────────────────────────────────────────────────────────
   accreditationManager: accreditationManagerRouter,
   emailCampaign: emailCampaignRouter,
+
+  // ─── Leaderboard & Points System ─────────────────────────────────────────────
+  leaderboard: leaderboardRouter,
 
   // ─── Physician Over-Read Workflow (Step 1 & Step 2) ──────────────────────────
   physicianOverRead: router({

@@ -106,6 +106,8 @@ import ECGAssist from "./pages/ECGAssist";
 import EducatorAssist from "./pages/EducatorAssist";
 import EducatorAdmin from "./pages/EducatorAdmin";
 import StudentDashboard from "./pages/StudentDashboard";
+// Leaderboard
+import Leaderboard from "./pages/Leaderboard";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -204,6 +206,7 @@ function Router() {
       <Route path="/echo-assist-hub" component={EchoAssistHub} />
       {/* ── LMS Engines ──────────────────────────────────────────────────── */}
       <Route path="/quickfire" component={QuickFire} />
+      <Route path="/leaderboard" component={Leaderboard} />
       <Route path="/flashcards" component={FlashcardDeck} />
       <Route path="/case-library" component={CaseLibrary} />
       <Route path="/case-library/submit" component={SubmitCase} />

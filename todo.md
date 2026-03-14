@@ -191,3 +191,22 @@
 
 ## Icon Size Fix (Mar 14 2026)
 - [x] Increase SVG icon size for Fetal Echo and POCUS category icons
+
+## Case Library Media Guarantee (Mar 14 2026)
+- [x] Ensure positions 2 and 4 (1-indexed) in the Case Library page 1 always show cases with media (when media cases exist for that query)
+
+## Case Library MCQ Generation (Mar 14 2026)
+- [ ] Add at least 2 MCQ questions to every approved case missing them (skip cases with 2+ questions)
+
+## Leaderboard Expansion (Mar 14 2026)
+- [ ] Add userPoints and userActivityLog tables to DB schema
+- [ ] Add tRPC procedures: awardPoints, getLeaderboard, getUserPointHistory
+- [ ] Wire points on case submission (award points when case is submitted)
+- [ ] Wire points on flashcard usage (award points per flashcard session/card viewed)
+- [ ] Build dedicated /leaderboard page with full rankings, filters, and stats
+- [ ] Add /leaderboard to sidebar nav (below Daily Challenge)
+- [ ] Keep leaderboard embedded in Daily Challenge page
+- [ ] Add points/activity log panel to Platform Admin user profile detail view
+
+- [x] Add mobile-only "Get App" prompt component (iOS + Android, button says "Get App")
+- [x] Ensure PWA manifest has correct icons and theme color for home screen install
