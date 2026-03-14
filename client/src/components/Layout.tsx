@@ -195,7 +195,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <div className="font-bold text-white text-base leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
               iHeartEcho™
             </div>
-            <div className="text-xs md:text-sm text-[#4ad9e0] leading-tight">EchoAssist™ Echocardiography Clinical Companion</div>
+            <div className="text-xs md:text-sm text-[#4ad9e0] leading-tight">EchoAssist™ Echocardiography Clinical Intelligence</div>
           </div>
           <button
             className="ml-auto lg:hidden text-white/60 hover:text-white flex-shrink-0"
@@ -303,7 +303,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </span>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <span className="text-xs text-gray-400 hidden sm:block">EchoAssist™ Echocardiography Clinical Companion</span>
+            <span className="text-xs text-gray-400 hidden sm:block">EchoAssist™ Echocardiography Clinical Intelligence</span>
             {isAuthenticated && <NotificationBell />}
             {/* Account / Login in header */}
             {authLoading ? null : isAuthenticated ? (

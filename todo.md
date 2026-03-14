@@ -160,3 +160,6 @@
 
 ## Platform Admin Duplicate Key Bug (Mar 14 2026)
 - [x] Fix duplicate React key 'user' error on /platform-admin page
+
+## Branding Update (Mar 14 2026)
+- [x] Replace "Clinical Companion" with "Clinical Intelligence" across all source files

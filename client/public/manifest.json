@@ -1,7 +1,7 @@
 {
   "name": "iHeartEcho",
   "short_name": "iHeartEcho",
-  "description": "Echocardiography Clinical Companion — real-time echo interpretation and measurement assistant for cardiac ultrasound students, sonographers, echocardiographers, cardiologists, physicians, residents, ACS professionals, and echo educators.",
+  "description": "Echocardiography Clinical Intelligence — real-time echo interpretation and measurement assistant for cardiac ultrasound students, sonographers, echocardiographers, cardiologists, physicians, residents, ACS professionals, and echo educators.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0e1e2e",

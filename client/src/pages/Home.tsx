@@ -140,7 +140,7 @@ export default function Home() {
 
   // SEO: set page title, description, and keywords
   useEffect(() => {
-    document.title = "iHeartEcho™ — Echocardiography Clinical Companion";
+    document.title = "iHeartEcho™ — Echocardiography Clinical Intelligence";
     // Meta description
     let desc = document.querySelector<HTMLMetaElement>("meta[name='description']");
     if (!desc) {
@@ -211,7 +211,7 @@ export default function Home() {
                 <h1 className="text-3xl md:text-4xl font-black text-white leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
                   iHeartEcho™
                 </h1>
-                <p className="text-lg text-[#4ad9e0] font-semibold">EchoAssist™ Echocardiography Clinical Companion</p>
+                <p className="text-lg text-[#4ad9e0] font-semibold">EchoAssist™ Echocardiography Clinical Intelligence</p>
               </div>
             </div>
             <p className="text-white/70 text-sm md:text-base leading-relaxed mb-6 max-w-lg">

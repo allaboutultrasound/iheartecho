@@ -288,7 +288,7 @@ export default function EchoCorrelationTab() {
     doc.text("Echo Correlation Review", 14, 12);
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    doc.text("iHeartEcho™ EchoAssist™ — Echocardiography Clinical Companion", 14, 19);
+    doc.text("iHeartEcho™ EchoAssist™ — Echocardiography Clinical Intelligence", 14, 19);
     doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 25);
     y = 36;
 

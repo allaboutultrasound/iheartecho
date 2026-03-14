@@ -100,7 +100,7 @@ function emailWrapper(content: string): string {
                 alt="iHeartEcho™" width="80" height="80"
                 style="border-radius:50%;display:block;margin:0 auto 12px;" />
               <div style="font-size:22px;font-weight:700;color:#ffffff;font-family:Georgia,serif;">iHeartEcho™</div>
-              <div style="font-size:12px;color:#4ad9e0;margin-top:4px;">Echocardiography Clinical Companion</div>
+              <div style="font-size:12px;color:#4ad9e0;margin-top:4px;">Echocardiography Clinical Intelligence</div>
             </td>
           </tr>
           <!-- Body -->

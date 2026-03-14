@@ -191,7 +191,7 @@ export default function Enrolled() {
                 className="text-xl font-bold text-white leading-snug"
                 style={{ fontFamily: "Merriweather, serif" }}
               >
-                iHeartEcho™ EchoAssist™ Echocardiography Clinical Companion
+                iHeartEcho™ EchoAssist™ Echocardiography Clinical Intelligence
               </h2>
             </div>
             <p className="text-white/60 text-sm leading-relaxed">
