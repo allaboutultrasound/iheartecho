@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import RichTextEditor from "@/components/RichTextEditor";
 import {
   SCANCOACH_MODULES,
   IMAGE_SLOTS,
@@ -728,10 +729,14 @@ export default function ScanCoachEditor() {
   const handleSaveText = () => {
     if (!selectedViewId || !draft) return;
     const viewMeta = moduleMeta.views.find((v) => v.id === selectedViewId);
+    // Preserve existing image URLs so saving text doesn't wipe uploaded images
     upsertMutation.mutate({
       module: selectedModule,
       viewId: selectedViewId,
       viewName: viewMeta?.name,
+      echoImageUrl: currentOverride?.echoImageUrl ?? undefined,
+      anatomyImageUrl: currentOverride?.anatomyImageUrl ?? undefined,
+      transducerImageUrl: currentOverride?.transducerImageUrl ?? undefined,
       description: draft.description || null,
       howToGet: draft.howToGet ? toJsonArray(draft.howToGet) : null,
       tips: draft.tips ? toJsonArray(draft.tips) : null,
@@ -1084,19 +1089,27 @@ export default function ScanCoachEditor() {
                                     <span className="text-[10px] text-gray-400">One item per line</span>
                                   )}
                                 </div>
-                                <Textarea
-                                  value={value}
-                                  onChange={(e) =>
-                                    setDraft((d) => d ? { ...d, [field.key]: e.target.value } : d)
-                                  }
-                                  placeholder={
-                                    field.isArray
-                                      ? `Enter each ${field.label.toLowerCase()} item on a new line…`
-                                      : `Enter ${field.label.toLowerCase()}…`
-                                  }
-                                  rows={field.isArray ? 4 : 3}
-                                  className="text-sm font-mono resize-y"
-                                />
+                                {!field.isArray ? (
+                                  <RichTextEditor
+                                    value={value}
+                                    onChange={(html) =>
+                                      setDraft((d) => d ? { ...d, [field.key]: html } : d)
+                                    }
+                                    placeholder={`Enter ${field.label.toLowerCase()}…`}
+                                    minHeight={120}
+                                    maxHeight={400}
+                                  />
+                                ) : (
+                                  <Textarea
+                                    value={value}
+                                    onChange={(e) =>
+                                      setDraft((d) => d ? { ...d, [field.key]: e.target.value } : d)
+                                    }
+                                    placeholder={`Enter each ${field.label.toLowerCase()} item on a new line…`}
+                                    rows={4}
+                                    className="text-sm font-mono resize-y"
+                                  />
+                                )}
                               </div>
                             );
                           })}

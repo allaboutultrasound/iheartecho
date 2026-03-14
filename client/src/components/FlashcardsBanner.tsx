@@ -10,11 +10,10 @@ const BANNER_IMG =
 
 interface FlashcardsBannerProps {
   streak?: number;
-  totalCards?: number;
   isPremium?: boolean;
 }
 
-export default function FlashcardsBanner({ streak = 0, totalCards = 0, isPremium = false }: FlashcardsBannerProps) {
+export default function FlashcardsBanner({ streak = 0, isPremium = false }: FlashcardsBannerProps) {
   return (
     <div
       className="relative overflow-hidden"
@@ -54,12 +53,7 @@ export default function FlashcardsBanner({ streak = 0, totalCards = 0, isPremium
 
           {/* Stats row */}
           <div className="flex flex-wrap gap-4 mb-6">
-            {totalCards > 0 && (
-              <div className="flex items-center gap-1.5 text-sm text-white/70">
-                <BookOpen className="w-4 h-4 text-[#4ad9e0]" />
-                <span><strong className="text-white">{totalCards}</strong> cards available</span>
-              </div>
-            )}
+
             {streak > 0 && (
               <div className="flex items-center gap-1.5 text-sm text-white/70">
                 <span className="text-lg">🔥</span>

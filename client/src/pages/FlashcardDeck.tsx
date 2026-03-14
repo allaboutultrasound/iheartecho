@@ -320,7 +320,6 @@ export default function FlashcardDeck() {
       {/* Full-width hero banner */}
       <FlashcardsBanner
         streak={data?.userStats ? (data.userStats as any).streak ?? 0 : 0}
-        totalCards={data?.totalCards ?? 0}
         isPremium={dailyLimit === null}
       />
       <div className="container py-4 max-w-2xl mx-auto">

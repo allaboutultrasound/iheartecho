@@ -97,3 +97,17 @@
 - [x] EducatorAssist Template Library: ARDMS content categories (Adult Echo, Pediatric Echo, Fetal Echo, General Ultrasound, Vascular Ultrasound)
 - [x] Route registration: /educator-assist, /educator-admin, /student-dashboard registered in App.tsx with RoleGuard
 - [x] TypeScript: zero compilation errors across all educator platform files
+
+## Bug Fixes (Mar 14 2026)
+- [x] Flashcard hero banner: remove card count display
+- [x] Flashcard editor: category type not showing in admin editor
+- [x] AI flashcard generator: add duplicate detection (pass existing summaries to prompt)
+- [x] ScanCoach WYSIWYG editor: replaced plain Textarea with RichTextEditor for description field
+- [x] ScanCoach image saving: fixed — handleSaveText now preserves existing image URLs instead of overwriting with null
+- [x] Daily Challenge queue: show category totals at top
+- [x] Daily Challenge queue: add category filter buttons
+- [x] Daily Challenge queue: add direct question edit button on each queue row
+- [x] Daily Challenge icons: restored SVG overlay over teal circle base for Fetal Echo and POCUS (custom SVG components)
+- [x] Flashcard admin: show per-category card count summary at top of Flashcard Management tab
+- [x] Flashcards: add ACS and POCUS as echoCategory options (admin filter, editor form, user-facing category filter, server procedure, getFlashcardCategoryCounts)
+- [x] Daily Challenge: POCUS live challenge not displaying — fixed by adding adminRefreshTodaySet procedure + Refresh Today button in admin queue

@@ -2441,4 +2441,58 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
         .where(eq(quickfireQuestions.id, input.id));
       return { success: true };
     }),
+
+  /**
+   * Returns per-echoCategory card counts for all active quickReview flashcards.
+   * Used in the admin Flashcard Management tab to show a summary row.
+   */
+  getFlashcardCategoryCounts: adminProcedure
+    .query(async () => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const rows = await db
+        .select({
+          echoCategory: quickfireQuestions.echoCategory,
+          count: count(quickfireQuestions.id),
+        })
+        .from(quickfireQuestions)
+        .where(
+          and(
+            eq(quickfireQuestions.type, "quickReview"),
+            eq(quickfireQuestions.isActive, true),
+            sql`${quickfireQuestions.deletedAt} IS NULL`,
+          )
+        )
+        .groupBy(quickfireQuestions.echoCategory);
+      // Build a map with defaults for all 5 categories
+      const defaults: Record<string, number> = { acs: 0, adult: 0, pediatric_congenital: 0, fetal: 0, pocus: 0 };
+      for (const row of rows) {
+        const key = row.echoCategory ?? "adult";
+        defaults[key] = (defaults[key] ?? 0) + row.count;
+      }
+      const total = Object.values(defaults).reduce((a, b) => a + b, 0);
+      return { counts: defaults, total };
+    }),
+
+  /**
+   * Delete today's cached daily set so the next getTodaySet call rebuilds it
+   * from the current challenge queue. Use when challenges have been added/changed
+   * after today's set was already generated.
+   */
+  adminRefreshTodaySet: adminProcedure.mutation(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+    const date = todayDateStr();
+    await db.delete(quickfireDailySets).where(eq(quickfireDailySets.setDate, date));
+    // Also reset any challenges that were set live by today's set back to scheduled
+    // so they can be re-picked by the next ensureTodaySet call
+    await db
+      .update(quickfireChallenges)
+      .set({ status: "scheduled", publishedAt: null, archivedAt: null })
+      .where(and(
+        eq(quickfireChallenges.status, "live"),
+        sql`DATE(${quickfireChallenges.publishedAt}) = ${date}` as any
+      ));
+    return { refreshed: true, date };
+  }),
 });

@@ -127,6 +127,7 @@ interface QuestionForm {
   difficulty: Difficulty;
   tags: string;
   category: QuestionCategory;
+  echoCategory?: "acs" | "adult" | "pediatric_congenital" | "fetal" | "pocus";
   // Connect game
   pairs: ConnectPair[];
   // Identifier game
@@ -146,15 +147,17 @@ const EMPTY_FORM: QuestionForm = {
   difficulty: "intermediate",
   tags: "",
   category: "Adult Echo",
+  echoCategory: "adult",
   pairs: [{ left: "", right: "" }, { left: "", right: "" }, { left: "", right: "" }, { left: "", right: "" }],
   markers: [],
   orderedItems: [{ text: "" }, { text: "" }, { text: "" }, { text: "" }],
 };
 
 // ── Sortable queue row ─────────────────────────────────────────────────────
-function SortableQueueItem({ c, idx, openEditChallenge, deleteChallengeMutation }: {
+function SortableQueueItem({ c, idx, openEditChallenge, openEditQuestion, deleteChallengeMutation }: {
   c: any; idx: number;
   openEditChallenge: (c: any) => void;
+  openEditQuestion: (questionId: number) => void;
   deleteChallengeMutation: any;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: c.id });
@@ -224,9 +227,20 @@ function SortableQueueItem({ c, idx, openEditChallenge, deleteChallengeMutation 
       </div>
       {/* Actions */}
       <div className="flex items-center gap-1 flex-shrink-0">
+        {/* Edit linked question directly */}
+        {Array.isArray(c.questionIds) && c.questionIds.length > 0 && (
+          <Button
+            size="sm" variant="ghost"
+            className="h-8 px-2 text-xs text-gray-400 hover:text-blue-600 gap-1"
+            title="Edit the linked question"
+            onClick={() => openEditQuestion(c.questionIds[0])}
+          >
+            <FileText className="w-3.5 h-3.5" /> Q
+          </Button>
+        )}
         {!isLive && (
           <>
-            <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-gray-400 hover:text-[#189aa1]" onClick={() => openEditChallenge(c)}>
+            <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-gray-400 hover:text-[#189aa1]" title="Edit challenge" onClick={() => openEditChallenge(c)}>
               <Pencil className="w-3.5 h-3.5" />
             </Button>
             <Button
@@ -255,8 +269,9 @@ export default function QuickFireAdmin() {
   const [includeInactive, setIncludeInactive] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [challengeSearch, setChallengeSearch] = useState("");
+  const [queueCategoryFilter, setQueueCategoryFilter] = useState<"all" | "ACS" | "Adult Echo" | "Pediatric Echo" | "Fetal Echo" | "POCUS" | "General">("all");
   const [flashcardSearch, setFlashcardSearch] = useState("");
-  const [flashcardEchoCategory, setFlashcardEchoCategory] = useState<"all" | "adult" | "pediatric_congenital" | "fetal">("all");
+  const [flashcardEchoCategory, setFlashcardEchoCategory] = useState<"all" | "acs" | "adult" | "pediatric_congenital" | "fetal" | "pocus">("all");
   const [flashcardAiOpen, setFlashcardAiOpen] = useState(false);
   const [flashcardAiTopic, setFlashcardAiTopic] = useState("");
   const [flashcardAiDifficulty, setFlashcardAiDifficulty] = useState<Difficulty>("intermediate");
@@ -264,6 +279,7 @@ export default function QuickFireAdmin() {
   const [flashcardAiPreview, setFlashcardAiPreview] = useState<any[]>([]);
   const [flashcardAiSelected, setFlashcardAiSelected] = useState<Set<number>>(new Set());
   const [flashcardAiImporting, setFlashcardAiImporting] = useState(false);
+  const [flashcardAiEchoCategory, setFlashcardAiEchoCategory] = useState<"acs" | "adult" | "pediatric_congenital" | "fetal" | "pocus">("adult");
 
   // Form state
   const [formOpen, setFormOpen] = useState(false);
@@ -513,6 +529,14 @@ export default function QuickFireAdmin() {
     onError: (err) => toast.error(err.message || "Failed to publish challenge."),
   });
 
+  const refreshTodaySetMutation = trpc.quickfire.adminRefreshTodaySet.useMutation({
+    onSuccess: () => {
+      toast.success("Today's challenge set has been refreshed! Users will now see the updated questions.");
+      challengeListQuery.refetch();
+    },
+    onError: (err) => toast.error(err.message || "Failed to refresh today's set."),
+  });
+
   const reorderMutation = trpc.quickfire.adminReorderChallenges.useMutation({
     onError: (err) => toast.error(err.message || "Failed to reorder."),
   });
@@ -640,6 +664,11 @@ export default function QuickFireAdmin() {
     search: searchQuery.trim() || undefined,
   });
 
+  const flashcardCountsQuery = trpc.quickfire.getFlashcardCategoryCounts.useQuery(undefined, {
+    staleTime: 30_000,
+    retry: false,
+  });
+
   const flashcardListQuery = trpc.quickfire.listAllQuestions.useQuery({
     page: 1,
     limit: 100,
@@ -686,6 +715,7 @@ export default function QuickFireAdmin() {
     onSuccess: () => {
       toast.success("Question moved to Trash. It will be permanently deleted after 30 days.");
       utils.quickfire.listAllQuestions.invalidate();
+      utils.quickfire.getFlashcardCategoryCounts.invalidate();
     },
     onError: (err) => toast.error(err.message || "Failed to delete question."),
   });
@@ -802,6 +832,21 @@ export default function QuickFireAdmin() {
     setEditingId(null);
     setForm(EMPTY_FORM);
     setFormOpen(true);
+  };
+
+  // Open question editor directly from the queue by fetching the question data
+  const openEditQuestion = async (questionId: number) => {
+    try {
+      // Use the listAllQuestions procedure to fetch by ID
+      const result = await utils.quickfire.listAllQuestions.fetch({ ids: [questionId], includeInactive: true, limit: 1 });
+      const q = result?.questions?.[0];
+      if (!q) { toast.error("Question not found"); return; }
+      setActiveAdminTab("questions");
+      // Small delay to let tab switch render before opening form
+      setTimeout(() => openEdit(q), 50);
+    } catch {
+      toast.error("Failed to load question");
+    }
   };
 
   const openEdit = (q: any) => {
@@ -1075,6 +1120,21 @@ export default function QuickFireAdmin() {
                 <Button
                   variant="outline"
                   size="sm"
+                  className="gap-1.5 border-orange-400 text-orange-600 hover:bg-orange-50"
+                  onClick={() => {
+                    if (confirm("Refresh today\'s challenge set? This will reset all live challenges back to scheduled and rebuild today\'s set from the current queue. Users will see the updated questions immediately.")) {
+                      refreshTodaySetMutation.mutate();
+                    }
+                  }}
+                  disabled={refreshTodaySetMutation.isPending}
+                  title="Clears today's cached set so the next page load rebuilds it from the current queue. Use when POCUS or other categories aren't showing."
+                >
+                  {refreshTodaySetMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                  Refresh Today
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
                   className="gap-1.5"
                   onClick={() => setActiveAdminTab("questions")}
                 >
@@ -1085,8 +1145,50 @@ export default function QuickFireAdmin() {
 
             {/* Info banner */}
             <div className="bg-teal-50 border border-teal-200 rounded-lg px-4 py-3 text-xs text-teal-700">
-              <strong>Daily Challenge Queue:</strong> Set the <strong>category</strong> (ACS / Adult Echo / Pediatric Echo / Fetal Echo) and optionally a <strong>queue position</strong>. At 6 AM ET each day, the system automatically publishes the next challenge from each category. Drag rows to reorder, or set explicit position numbers.
+              <strong>Daily Challenge Queue:</strong> Set the <strong>category</strong> (ACS / Adult Echo / Pediatric Echo / Fetal Echo / POCUS / General) and optionally a <strong>queue position</strong>. At 6 AM ET each day, the system automatically publishes the next challenge from each category. Drag rows to reorder, or set explicit position numbers.
             </div>
+
+            {/* Category totals + filter */}
+            {challenges.length > 0 && (() => {
+              const QUEUE_CATS = ["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "POCUS", "General"] as const;
+              const counts = QUEUE_CATS.reduce((acc, cat) => {
+                acc[cat] = challenges.filter((c: any) => c.category === cat).length;
+                return acc;
+              }, {} as Record<string, number>);
+              return (
+                <div className="space-y-2">
+                  {/* Totals row */}
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                    {QUEUE_CATS.map((cat) => (
+                      <div key={cat} className="bg-white border border-gray-100 rounded-lg px-3 py-2 text-center">
+                        <div className="text-lg font-bold" style={{ color: "#189aa1" }}>{counts[cat]}</div>
+                        <div className="text-[10px] text-gray-400 leading-tight">{cat}</div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Filter buttons */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {(["all", ...QUEUE_CATS] as const).map((cat) => (
+                      <button
+                        key={cat}
+                        onClick={() => setQueueCategoryFilter(cat)}
+                        className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
+                          queueCategoryFilter === cat
+                            ? "text-white border-transparent"
+                            : "bg-white text-gray-500 border-gray-200 hover:border-[#189aa1]/50"
+                        }`}
+                        style={queueCategoryFilter === cat ? { background: "#189aa1", borderColor: "#189aa1" } : {}}
+                      >
+                        {cat === "all" ? "All Categories" : cat}
+                        {cat !== "all" && counts[cat] > 0 && (
+                          <span className="ml-1 opacity-70">({counts[cat]})</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Challenge list */}
             {challengeListQuery.isLoading ? (
@@ -1112,18 +1214,23 @@ export default function QuickFireAdmin() {
                 >
                   <div className="space-y-2">
                     {/* Live challenge (not sortable) */}
-                    {challenges.filter((c: any) => c.status === "live").map((c: any, idx: number) => (
-                      <SortableQueueItem
-                        key={c.id}
-                        c={c}
-                        idx={idx}
-                        openEditChallenge={openEditChallenge}
-                        deleteChallengeMutation={deleteChallengeMutation}
-                      />
-                    ))}
+                    {challenges
+                      .filter((c: any) => c.status === "live")
+                      .filter((c: any) => queueCategoryFilter === "all" || c.category === queueCategoryFilter)
+                      .map((c: any, idx: number) => (
+                        <SortableQueueItem
+                          key={c.id}
+                          c={c}
+                          idx={idx}
+                          openEditChallenge={openEditChallenge}
+                          openEditQuestion={openEditQuestion}
+                          deleteChallengeMutation={deleteChallengeMutation}
+                        />
+                      ))}
                     {/* Queued challenges (sortable) */}
                     {challenges
                       .filter((c: any) => c.status !== "live")
+                      .filter((c: any) => queueCategoryFilter === "all" || c.category === queueCategoryFilter)
                       .filter((c: any) => !challengeSearch.trim() || c.title?.toLowerCase().includes(challengeSearch.toLowerCase()) || c.description?.toLowerCase().includes(challengeSearch.toLowerCase()))
                       .map((c: any, idx: number) => (
                         <SortableQueueItem
@@ -1131,6 +1238,7 @@ export default function QuickFireAdmin() {
                           c={c}
                           idx={idx + challenges.filter((ch: any) => ch.status === "live").length}
                           openEditChallenge={openEditChallenge}
+                          openEditQuestion={openEditQuestion}
                           deleteChallengeMutation={deleteChallengeMutation}
                         />
                       ))
@@ -1598,6 +1706,27 @@ export default function QuickFireAdmin() {
               </div>
             </div>
 
+            {/* Category counts summary */}
+            {flashcardCountsQuery.data && (
+              <div className="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                {([
+                  { key: "acs", label: "ACS", color: "text-red-600 bg-red-50 border-red-200" },
+                  { key: "adult", label: "Adult Echo", color: "text-[#189aa1] bg-teal-50 border-teal-200" },
+                  { key: "pediatric_congenital", label: "Pediatric", color: "text-purple-600 bg-purple-50 border-purple-200" },
+                  { key: "fetal", label: "Fetal Echo", color: "text-pink-600 bg-pink-50 border-pink-200" },
+                  { key: "pocus", label: "POCUS", color: "text-blue-600 bg-blue-50 border-blue-200" },
+                ] as const).map(({ key, label, color }) => (
+                  <div key={key} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-semibold ${color}`}>
+                    <span>{label}</span>
+                    <span className="font-bold">{flashcardCountsQuery.data.counts[key] ?? 0}</span>
+                  </div>
+                ))}
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-gray-300 bg-white text-xs font-bold text-gray-700 ml-auto">
+                  Total: {flashcardCountsQuery.data.total}
+                </div>
+              </div>
+            )}
+
             {/* Search + Category filter */}
             <div className="flex gap-2 flex-wrap">
               <Input
@@ -1607,7 +1736,7 @@ export default function QuickFireAdmin() {
                 className="w-56"
               />
               <div className="flex gap-1 flex-wrap">
-                {(["all", "adult", "pediatric_congenital", "fetal"] as const).map((cat) => (
+                {(["all", "acs", "adult", "pediatric_congenital", "fetal", "pocus"] as const).map((cat) => (
                   <button
                     key={cat}
                     onClick={() => setFlashcardEchoCategory(cat)}
@@ -1617,7 +1746,7 @@ export default function QuickFireAdmin() {
                         : "border-gray-200 bg-gray-50 text-gray-600 hover:border-[#189aa1] hover:text-[#189aa1]"
                     }`}
                   >
-                    {cat === "all" ? "All" : cat === "adult" ? "Adult Echo" : cat === "pediatric_congenital" ? "Pediatric/Congenital" : "Fetal Echo"}
+                    {cat === "all" ? "All" : cat === "acs" ? "ACS" : cat === "adult" ? "Adult Echo" : cat === "pediatric_congenital" ? "Pediatric" : cat === "fetal" ? "Fetal Echo" : "POCUS"}
                   </button>
                 ))}
               </div>
@@ -1640,6 +1769,17 @@ export default function QuickFireAdmin() {
                           <p className="text-xs text-gray-500 mb-2 line-clamp-2" dangerouslySetInnerHTML={{ __html: q.reviewAnswer }} />
                         )}
                         <div className="flex items-center gap-3 text-[10px] text-gray-400">
+                          {q.echoCategory && (
+                            <Badge variant="outline" className={`text-[10px] ${
+                              q.echoCategory === "acs" ? "border-red-300 text-red-600" :
+                              q.echoCategory === "adult" ? "border-teal-300 text-teal-700" :
+                              q.echoCategory === "pediatric_congenital" ? "border-purple-300 text-purple-600" :
+                              q.echoCategory === "fetal" ? "border-pink-300 text-pink-600" :
+                              "border-blue-300 text-blue-600"
+                            }`}>
+                              {q.echoCategory === "acs" ? "ACS" : q.echoCategory === "adult" ? "Adult Echo" : q.echoCategory === "pediatric_congenital" ? "Pediatric" : q.echoCategory === "fetal" ? "Fetal Echo" : "POCUS"}
+                            </Badge>
+                          )}
                           {q.imageUrl && <span className="flex items-center gap-1 text-purple-500"><ImageIcon className="w-3 h-3" />Has image</span>}
                           {(q as any).videoUrl && <span className="flex items-center gap-1 text-blue-500"><PlayCircle className="w-3 h-3" />Has video</span>}
                           {q.difficulty && <Badge variant="outline" className="text-[10px]">{q.difficulty}</Badge>}
@@ -1663,6 +1803,7 @@ export default function QuickFireAdmin() {
                               difficulty: (q.difficulty as Difficulty) ?? "intermediate",
                               tags: tags.join(", "),
                               category: (q.category as QuestionCategory) ?? "Adult Echo",
+                              echoCategory: (q.echoCategory as any) ?? "adult",
                               pairs: [{ left: "", right: "" }, { left: "", right: "" }],
                               markers: [],
                               orderedItems: [{ text: "" }, { text: "" }],
@@ -3269,7 +3410,20 @@ export default function QuickFireAdmin() {
                   placeholder="e.g. Aortic stenosis severity grading, diastolic dysfunction, TAPSE and RV function..."
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Category</label>
+                  <Select value={flashcardAiEchoCategory} onValueChange={(v) => setFlashcardAiEchoCategory(v as any)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="acs">ACS</SelectItem>
+                      <SelectItem value="adult">Adult Echo</SelectItem>
+                      <SelectItem value="pediatric_congenital">Pediatric</SelectItem>
+                      <SelectItem value="fetal">Fetal Echo</SelectItem>
+                      <SelectItem value="pocus">POCUS</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div>
                   <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Difficulty</label>
                   <Select value={flashcardAiDifficulty} onValueChange={(v) => setFlashcardAiDifficulty(v as Difficulty)}>
@@ -3350,11 +3504,13 @@ export default function QuickFireAdmin() {
                             difficulty: flashcardAiDifficulty,
                             tags: q.tags ?? [],
                             category: aiCategory,
+                            echoCategory: flashcardAiEchoCategory,
                           } as any)
                         )
                       );
                       toast.success(`${selectedQs.length} flashcard${selectedQs.length !== 1 ? "s" : ""} imported.`);
                       flashcardListQuery.refetch();
+                      flashcardCountsQuery.refetch();
                       setFlashcardAiOpen(false);
                       setFlashcardAiPreview([]);
                       setFlashcardAiTopic("");
@@ -3677,6 +3833,24 @@ export default function QuickFireAdmin() {
               </div>
             </div>
 
+            {/* Category */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Category</label>
+              <Select
+                value={flashcardForm.echoCategory ?? "adult"}
+                onValueChange={(v) => setFlashcardForm((f) => ({ ...f, echoCategory: v as any }))}
+              >
+                <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="acs">ACS</SelectItem>
+                  <SelectItem value="adult">Adult Echo</SelectItem>
+                  <SelectItem value="pediatric_congenital">Pediatric / Congenital</SelectItem>
+                  <SelectItem value="fetal">Fetal Echo</SelectItem>
+                  <SelectItem value="pocus">POCUS</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Difficulty & Tags */}
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -3721,6 +3895,7 @@ export default function QuickFireAdmin() {
                   difficulty: flashcardForm.difficulty,
                   tags: flashcardForm.tags ? flashcardForm.tags.split(",").map((t: string) => t.trim()).filter(Boolean) : [],
                   category: "General" as const,
+                  echoCategory: flashcardForm.echoCategory ?? "adult",
                 };
                 if (editingFlashcardId !== null) {
                   updateMutation.mutate({ id: editingFlashcardId, ...payload }, {
