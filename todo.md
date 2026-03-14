@@ -70,3 +70,7 @@
 - [x] Create flat square icons: teal SVG on white/transparent background for POCUS and Fetal Echo (module card icons)
 - [x] Upload composited POCUS and Fetal Echo icons (circular + square) to CDN and update all references
 - [x] Add trophy icon to the Daily Challenge section header/card
+- [x] Replace POCUS and Fetal Echo module card icons on Home dashboard with square flat icons
+- [ ] Build reusable ShareButton/ShareModal component (Twitter/X, Facebook, LinkedIn, copy link)
+- [ ] Add social sharing to Daily Challenge result screens
+- [ ] Add social sharing to Case Library case view

@@ -3,13 +3,14 @@
   Brand: Teal #189aa1, Aqua #4ad9e0
   Fonts: Merriweather headings, Open Sans body
 */
+import React from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import { trpc } from "@/lib/trpc";
 import {
   Calculator, ClipboardList, Activity, BookOpen, FileText,
-  ArrowRight, Users, Award, Zap, Stethoscope, ExternalLink, MessageCircle, GraduationCap, BookMarked, Crown, Shield
+  ArrowRight, Users, Award, Zap, Stethoscope, ExternalLink, MessageCircle, GraduationCap, BookMarked, Crown
 } from "lucide-react";
 
 const BRAND = "#189aa1";
@@ -30,7 +31,7 @@ const modules: Module[] = [
   },
   {
     path: "/pocus-assist-hub",
-    icon: Shield,
+    icon: ({ className, style }: { className?: string; style?: React.CSSProperties }) => <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/pocus-square-v1_55214bfd.png" alt="POCUS" className={className} style={{ objectFit: 'contain', ...style }} />,
     title: "POCUS-Assist™",
     description: "Point-of-care ultrasound protocols for eFAST, Cardiac POCUS, RUSH, and Lung POCUS — window-by-window checklists, probe guidance, IVC CI, B-line scorer, and eFAST free-fluid grader.",
     badge: "4 Modules",
