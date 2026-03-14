@@ -2440,3 +2440,22 @@ export const userPointsTotals = mysqlTable("userPointsTotals", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 export type UserPointsTotals = typeof userPointsTotals.$inferSelect;
+
+// ─── Accreditation Navigator Checklist ────────────────────────────────────────
+// Stores per-user, per-accreditation-type, per-section checklist state.
+// sectionKey is a stable string like "adult-tte::equipment::1.1B" (type::tab::code).
+export const accreditationChecklist = mysqlTable(
+  "accreditationChecklist",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId").notNull(),
+    // The accreditation type filter: adult-tte | adult-tee | stress | ped-tte | ped-tee | fetal | periop-tee
+    accreditationType: varchar("accreditationType", { length: 32 }).notNull(),
+    // Stable section key: "<tab>::<sectionCode>" e.g. "equipment::1.1B"
+    sectionKey: varchar("sectionKey", { length: 128 }).notNull(),
+    checked: boolean("checked").default(false).notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  }
+);
+export type AccreditationChecklist = typeof accreditationChecklist.$inferSelect;
+export type InsertAccreditationChecklist = typeof accreditationChecklist.$inferInsert;

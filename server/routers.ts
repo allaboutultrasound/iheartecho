@@ -131,6 +131,10 @@ import {
   getPossibleCaseStudies,
   updatePossibleCaseStudy,
   deletePossibleCaseStudy,
+  getAccreditationChecklist,
+  getAllAccreditationChecklists,
+  toggleAccreditationChecklistItem,
+  bulkToggleAccreditationChecklist,
 } from "./db";
 
 export const appRouter = router({
@@ -1609,7 +1613,70 @@ export const appRouter = router({
       }),
   }),
 
-  // ─── Case Mix Submissions ─────────────────────────────────────────────────────
+  // ─── Accreditation Navigator Checklist ───────────────────────────────────────
+  // Per-user, per-accreditation-type checklist state for the EchoAccreditation Navigator.
+  // Accessible to all authenticated users (DIY and non-DIY).
+  accreditationChecklist: router({
+    /** Get all checked section keys for a given accreditation type */
+    get: protectedProcedure
+      .input(z.object({
+        accreditationType: z.string().min(1).max(32),
+      }))
+      .query(async ({ ctx, input }) => {
+        const checked = await getAccreditationChecklist(ctx.user.id, input.accreditationType);
+        return { checkedKeys: Array.from(checked) };
+      }),
+
+    /** Get all checklist rows across all accreditation types for the readiness summary */
+    getAll: protectedProcedure.query(async ({ ctx }) => {
+      const rows = await getAllAccreditationChecklists(ctx.user.id);
+      // Group by accreditationType → { [type]: checkedKeys[] }
+      const grouped: Record<string, string[]> = {};
+      for (const row of rows) {
+        if (!row.checked) continue;
+        if (!grouped[row.accreditationType]) grouped[row.accreditationType] = [];
+        grouped[row.accreditationType].push(row.sectionKey);
+      }
+      return grouped;
+    }),
+
+    /** Toggle a single section item checked/unchecked */
+    toggle: protectedProcedure
+      .input(z.object({
+        accreditationType: z.string().min(1).max(32),
+        sectionKey: z.string().min(1).max(128),
+        checked: z.boolean(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        await toggleAccreditationChecklistItem(
+          ctx.user.id,
+          input.accreditationType,
+          input.sectionKey,
+          input.checked,
+        );
+        return { success: true };
+      }),
+
+    /** Bulk toggle (check all / uncheck all for a tab+type) */
+    bulkToggle: protectedProcedure
+      .input(z.object({
+        accreditationType: z.string().min(1).max(32),
+        items: z.array(z.object({
+          sectionKey: z.string().min(1).max(128),
+          checked: z.boolean(),
+        })).max(200),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        await bulkToggleAccreditationChecklist(
+          ctx.user.id,
+          input.accreditationType,
+          input.items,
+        );
+        return { success: true };
+      }),
+  }),
+
+  // ─── Case Mix Submissions ──────────────────────────────────────────────────────
   caseMix: router({
     /** Get all case submissions for the current user's lab */
     list: protectedProcedure.query(async ({ ctx }) => {

@@ -80,6 +80,8 @@ import {
   accreditationFormSubmissions,
   type AccreditationFormSubmission,
   type InsertAccreditationFormSubmission,
+  accreditationChecklist,
+  type AccreditationChecklist,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -2893,4 +2895,84 @@ export async function cleanupUserRolesDb(): Promise<{ deduped: number; backfille
   }
 
   return { deduped: toDelete.length, backfilled };
+}
+
+
+// ─── Accreditation Navigator Checklist ────────────────────────────────────────
+
+/**
+ * Returns all checked section keys for a user+accreditationType combo.
+ * Returns a Set of sectionKey strings that are currently checked=true.
+ */
+export async function getAccreditationChecklist(
+  userId: number,
+  accreditationType: string,
+): Promise<Set<string>> {
+  const db = await getDb();
+  if (!db) return new Set();
+  const rows = await db
+    .select({ sectionKey: accreditationChecklist.sectionKey })
+    .from(accreditationChecklist)
+    .where(
+      and(
+        eq(accreditationChecklist.userId, userId),
+        eq(accreditationChecklist.accreditationType, accreditationType),
+        eq(accreditationChecklist.checked, true),
+      ),
+    );
+  return new Set(rows.map((r) => r.sectionKey));
+}
+
+/**
+ * Returns all checklist rows for a user across all accreditation types.
+ * Used for the overall readiness summary panel.
+ */
+export async function getAllAccreditationChecklists(
+  userId: number,
+): Promise<AccreditationChecklist[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(accreditationChecklist)
+    .where(eq(accreditationChecklist.userId, userId));
+}
+
+/**
+ * Upserts a single checklist item (checked or unchecked).
+ */
+export async function toggleAccreditationChecklistItem(
+  userId: number,
+  accreditationType: string,
+  sectionKey: string,
+  checked: boolean,
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .insert(accreditationChecklist)
+    .values({ userId, accreditationType, sectionKey, checked })
+    .onDuplicateKeyUpdate({ set: { checked } });
+}
+
+/**
+ * Bulk-upsert multiple checklist items for a user+type in one call.
+ * Useful for "check all" / "uncheck all" operations.
+ */
+export async function bulkToggleAccreditationChecklist(
+  userId: number,
+  accreditationType: string,
+  items: { sectionKey: string; checked: boolean }[],
+): Promise<void> {
+  if (items.length === 0) return;
+  const db = await getDb();
+  if (!db) return;
+  // MySQL doesn't support multi-row ON DUPLICATE KEY UPDATE cleanly with drizzle,
+  // so we batch individual upserts.
+  for (const { sectionKey, checked } of items) {
+    await db
+      .insert(accreditationChecklist)
+      .values({ userId, accreditationType, sectionKey, checked })
+      .onDuplicateKeyUpdate({ set: { checked } });
+  }
 }

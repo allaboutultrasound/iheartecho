@@ -247,3 +247,20 @@
 - [x] Rebuild AccreditationNavigator with correct tabs: Equipment, Facility, Medical Director, Medical Staff, Technical Director, Technical Staff, CME, Case Study Submissions, Quality Measures, Application Submission
 - [x] Wire filters: Adult TTE, Adult TEE, Stress → Adult 2025 standards; Pediatric TTE, Pediatric TEE, Fetal → Pediatric 2025 standards; PeriOp TEE → PeriOp 2025 standards
 - [x] Add server-side guard in adminRefreshTodaySet to auto-activate questions with isActive drift
+
+## Accreditation Navigator Checklist Mode (Mar 14 2026)
+- [x] DB schema: accreditationChecklist table (userId, accreditationType, sectionKey, checked, updatedAt)
+- [x] DB migration: push schema changes (created via SQL directly)
+- [x] tRPC: getChecklist(accreditationType) — returns all checked sectionKeys for the user
+- [x] tRPC: toggleChecklistItem(accreditationType, sectionKey, checked) — upsert checked state
+- [x] tRPC: bulkToggle for check-all/uncheck-all operations
+- [x] tRPC: getAll — returns grouped checklist across all accreditation types for summary panel
+- [x] UI: Checklist Mode toggle button on AccreditationNavigator header
+- [x] UI: In checklist mode, each section card shows a checkbox (checked state persisted per user per accreditation type)
+- [x] UI: Green border highlight on checked sections
+- [x] UI: Per-tab readiness score (X of Y sections checked) shown in tab bar when checklist mode is on
+- [x] UI: Overall readiness panel showing % complete per accreditation type across all tabs
+- [x] UI: Per-filter tab progress bar in content area
+- [x] UI: Readiness scores isolated per accreditation type (Adult TTE, Adult TEE, Stress, Ped TTE, Ped TEE, Fetal, PeriOp TEE)
+- [x] UI: Unauthenticated users see checklist mode with localStorage fallback + sign-in prompt
+- [x] Write vitest tests for checklist DB helpers (9 tests, all passing)

@@ -5,16 +5,18 @@
         | Technical Staff | CME | Case Study Submissions | Quality Measures | Application Submission
   Filters: Adult TTE | Adult TEE | Stress | Pediatric TTE | Pediatric TEE | Fetal | PeriOp TEE
 */
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { trpc } from "@/lib/trpc";
 import {
   BookOpen, ExternalLink, Award, Users, FileText, GraduationCap,
   Stethoscope, Activity, Baby, Heart, Zap, ClipboardList, ShieldCheck,
   Monitor, Building2, UserCheck, Settings, CheckCircle2, AlertCircle,
-  ChevronDown, ChevronUp, Info
+  ChevronDown, ChevronUp, Info, ListChecks, Square, CheckSquare, BarChart3
 } from "lucide-react";
 
 const BRAND = "#189aa1";
@@ -1764,16 +1766,54 @@ const TAB_CONTENT_MAP: Record<TabId, Record<Filter, TabContent>> = {
   "application":        APPLICATION_CONTENT,
 };
 
+// ─── Filter → DB key mapping ──────────────────────────────────────────────────
+const FILTER_TO_DB_KEY: Record<Filter, string> = {
+  "Adult TTE":    "adult-tte",
+  "Adult TEE":    "adult-tee",
+  "Stress":       "stress",
+  "Pediatric TTE":"ped-tte",
+  "Pediatric TEE":"ped-tee",
+  "Fetal":        "fetal",
+  "PeriOp TEE":   "periop-tee",
+};
+
 // ─── Section Card Component ───────────────────────────────────────────────────
-function SectionCard({ section, filterColor }: { section: Section; filterColor: string }) {
+function SectionCard({
+  section,
+  filterColor,
+  checklistMode,
+  checked,
+  onToggle,
+}: {
+  section: Section;
+  filterColor: string;
+  checklistMode: boolean;
+  checked: boolean;
+  onToggle?: (checked: boolean) => void;
+}) {
   const [open, setOpen] = useState(true);
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <button
+    <div
+      className={`bg-white rounded-xl border overflow-hidden transition-all ${
+        checklistMode && checked ? "border-green-400 shadow-sm" : "border-gray-200"
+      }`}
+    >
+      <div
         className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50 transition-colors"
-        onClick={() => setOpen(o => !o)}
       >
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-3 flex-1 min-w-0">
+          {/* Checklist checkbox */}
+          {checklistMode && (
+            <button
+              onClick={() => onToggle?.(!checked)}
+              className="flex-shrink-0 mt-0.5 focus:outline-none"
+              aria-label={checked ? "Uncheck section" : "Check section as complete"}
+            >
+              {checked
+                ? <CheckSquare className="w-5 h-5" style={{ color: filterColor }} />
+                : <Square className="w-5 h-5 text-gray-300 hover:text-gray-400" />}
+            </button>
+          )}
           <span
             className="inline-block px-2 py-0.5 rounded text-xs font-mono font-semibold flex-shrink-0 mt-0.5"
             style={{ background: filterColor + "18", color: filterColor }}
@@ -1782,8 +1822,13 @@ function SectionCard({ section, filterColor }: { section: Section; filterColor: 
           </span>
           <span className="font-semibold text-gray-800 text-sm">{section.title}</span>
         </div>
-        {open ? <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />}
-      </button>
+        <button
+          onClick={() => setOpen(o => !o)}
+          className="flex-shrink-0 ml-2 p-1 rounded hover:bg-gray-100"
+        >
+          {open ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+        </button>
+      </div>
       {open && (
         <div className="px-5 pb-4 border-t border-gray-100">
           <ul className="mt-3 space-y-1.5">
@@ -1806,10 +1851,154 @@ function SectionCard({ section, filterColor }: { section: Section; filterColor: 
   );
 }
 
+// ─── Readiness Summary Panel ──────────────────────────────────────────────────
+function ReadinessSummaryPanel({
+  allChecked,
+  filterColor,
+}: {
+  allChecked: Record<string, string[]>;
+  filterColor: string;
+}) {
+  const types: Array<{ key: string; label: string; color: string; totalSections: number }> = [
+    { key: "adult-tte",  label: "Adult TTE",    color: "#189aa1", totalSections: countSectionsForFilter("Adult TTE") },
+    { key: "adult-tee",  label: "Adult TEE",    color: "#0e7490", totalSections: countSectionsForFilter("Adult TEE") },
+    { key: "stress",     label: "Stress Echo",  color: "#7c3aed", totalSections: countSectionsForFilter("Stress") },
+    { key: "ped-tte",    label: "Ped TTE",      color: "#059669", totalSections: countSectionsForFilter("Pediatric TTE") },
+    { key: "ped-tee",    label: "Ped TEE",      color: "#047857", totalSections: countSectionsForFilter("Pediatric TEE") },
+    { key: "fetal",      label: "Fetal",        color: "#db2777", totalSections: countSectionsForFilter("Fetal") },
+    { key: "periop-tee", label: "PeriOp TEE",   color: "#b45309", totalSections: countSectionsForFilter("PeriOp TEE") },
+  ];
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
+      <div className="flex items-center gap-2 mb-4">
+        <BarChart3 className="w-4 h-4" style={{ color: filterColor }} />
+        <span className="font-semibold text-gray-800 text-sm">Readiness Summary — All Accreditation Types</span>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {types.map(t => {
+          const checkedCount = (allChecked[t.key] ?? []).length;
+          const pct = t.totalSections > 0 ? Math.round((checkedCount / t.totalSections) * 100) : 0;
+          return (
+            <div key={t.key} className="rounded-lg p-3" style={{ background: t.color + "0d", border: `1px solid ${t.color}30` }}>
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-xs font-semibold" style={{ color: t.color }}>{t.label}</span>
+                <span className="text-xs font-bold" style={{ color: t.color }}>{pct}%</span>
+              </div>
+              <div className="w-full h-1.5 rounded-full bg-gray-200 overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{ width: `${pct}%`, background: t.color }}
+                />
+              </div>
+              <div className="text-xs text-gray-400 mt-1">{checkedCount} / {t.totalSections} sections</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── Helper: count total sections for a filter across all tabs ────────────────
+function countSectionsForFilter(filter: Filter): number {
+  let count = 0;
+  for (const tabId of Object.keys(TAB_CONTENT_MAP) as TabId[]) {
+    const content = TAB_CONTENT_MAP[tabId][filter];
+    if (content) count += content.sections.length;
+  }
+  return count;
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function AccreditationNavigator() {
+  const { user, isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState<TabId>("equipment");
   const [activeFilter, setActiveFilter] = useState<Filter>("Adult TTE");
+  const [checklistMode, setChecklistMode] = useState(false);
+
+  // Local state for unauthenticated users (localStorage-backed)
+  const [localChecked, setLocalChecked] = useState<Record<string, Set<string>>>(() => {
+    try {
+      const raw = localStorage.getItem("accreditation-checklist");
+      if (!raw) return {};
+      const parsed = JSON.parse(raw) as Record<string, string[]>;
+      return Object.fromEntries(Object.entries(parsed).map(([k, v]) => [k, new Set(v)]));
+    } catch { return {}; }
+  });
+
+  const dbKey = FILTER_TO_DB_KEY[activeFilter];
+
+  // ─── tRPC queries (only run when authenticated) ───────────────────────────
+  const checklistQuery = trpc.accreditationChecklist.get.useQuery(
+    { accreditationType: dbKey },
+    { enabled: isAuthenticated && checklistMode }
+  );
+  const allChecklistQuery = trpc.accreditationChecklist.getAll.useQuery(
+    undefined,
+    { enabled: isAuthenticated && checklistMode }
+  );
+  const toggleMutation = trpc.accreditationChecklist.toggle.useMutation();
+  const bulkToggleMutation = trpc.accreditationChecklist.bulkToggle.useMutation();
+
+  // ─── Checked set for the current filter ──────────────────────────────────
+  const checkedKeys: Set<string> = useMemo(() => {
+    if (isAuthenticated) {
+      return new Set(checklistQuery.data?.checkedKeys ?? []);
+    }
+    return localChecked[dbKey] ?? new Set();
+  }, [isAuthenticated, checklistQuery.data, localChecked, dbKey]);
+
+  // ─── All checked (for summary panel) ─────────────────────────────────────
+  const allChecked: Record<string, string[]> = useMemo(() => {
+    if (isAuthenticated) {
+      return allChecklistQuery.data ?? {};
+    }
+    return Object.fromEntries(
+      Object.entries(localChecked).map(([k, v]) => [k, Array.from(v)])
+    );
+  }, [isAuthenticated, allChecklistQuery.data, localChecked]);
+
+  // ─── Toggle a section ─────────────────────────────────────────────────────
+  const handleToggle = useCallback((sectionKey: string, checked: boolean) => {
+    if (isAuthenticated) {
+      toggleMutation.mutate(
+        { accreditationType: dbKey, sectionKey, checked },
+        {
+          onSuccess: () => {
+            checklistQuery.refetch();
+            allChecklistQuery.refetch();
+          },
+        }
+      );
+    } else {
+      setLocalChecked(prev => {
+        const next = { ...prev };
+        const set = new Set(next[dbKey] ?? []);
+        if (checked) set.add(sectionKey); else set.delete(sectionKey);
+        next[dbKey] = set;
+        try {
+          localStorage.setItem(
+            "accreditation-checklist",
+            JSON.stringify(Object.fromEntries(Object.entries(next).map(([k, v]) => [k, Array.from(v)])))
+          );
+        } catch {}
+        return next;
+      });
+    }
+  }, [isAuthenticated, dbKey, toggleMutation, checklistQuery, allChecklistQuery]);
+
+  // ─── Tab readiness score ──────────────────────────────────────────────────
+  const tabReadiness = useMemo(() => {
+    const scores: Record<TabId, { checked: number; total: number }> = {} as Record<TabId, { checked: number; total: number }>;
+    for (const tab of TABS) {
+      const content = TAB_CONTENT_MAP[tab.id][activeFilter];
+      const sections = content?.sections ?? [];
+      const total = sections.length;
+      const checked = sections.filter(s => checkedKeys.has(s.id)).length;
+      scores[tab.id] = { checked, total };
+    }
+    return scores;
+  }, [activeFilter, checkedKeys]);
 
   const filterConfig = FILTER_CONFIG[activeFilter];
   const tabContentMap = TAB_CONTENT_MAP[activeTab];
@@ -1861,6 +2050,18 @@ export default function AccreditationNavigator() {
                     {g.label} PDF
                   </a>
                 ))}
+                {/* Checklist Mode Toggle */}
+                <button
+                  onClick={() => setChecklistMode(m => !m)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    checklistMode
+                      ? "bg-[#4ad9e0] text-[#0e1e2e]"
+                      : "bg-white/10 border border-white/20 text-white hover:bg-white/20"
+                  }`}
+                >
+                  <ListChecks className="w-3.5 h-3.5" />
+                  {checklistMode ? "Checklist Mode: ON" : "Checklist Mode"}
+                </button>
               </div>
             </div>
           </div>
@@ -1906,6 +2107,7 @@ export default function AccreditationNavigator() {
             {TABS.map(tab => {
               const TabIcon = tab.icon;
               const isActive = activeTab === tab.id;
+              const score = checklistMode ? tabReadiness[tab.id] : null;
               return (
                 <button
                   key={tab.id}
@@ -1918,6 +2120,19 @@ export default function AccreditationNavigator() {
                 >
                   <TabIcon className="w-3.5 h-3.5" />
                   {tab.label}
+                  {score && score.total > 0 && (
+                    <span
+                      className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                        score.checked === score.total
+                          ? "bg-green-100 text-green-700"
+                          : score.checked > 0
+                          ? "bg-yellow-100 text-yellow-700"
+                          : "bg-gray-100 text-gray-400"
+                      }`}
+                    >
+                      {score.checked}/{score.total}
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -1927,8 +2142,13 @@ export default function AccreditationNavigator() {
 
       {/* Content */}
       <div className="container py-6 max-w-4xl">
-        {/* Active filter badge */}
-        <div className="flex items-center gap-2 mb-5">
+        {/* Readiness Summary Panel (checklist mode only) */}
+        {checklistMode && (
+          <ReadinessSummaryPanel allChecked={allChecked} filterColor={filterConfig.color} />
+        )}
+
+        {/* Active filter badge + checklist progress */}
+        <div className="flex items-center gap-2 mb-5 flex-wrap">
           <div
             className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold text-white"
             style={{ background: filterConfig.color }}
@@ -1938,13 +2158,49 @@ export default function AccreditationNavigator() {
           </div>
           <span className="text-xs text-gray-400">·</span>
           <span className="text-xs text-gray-500">{filterConfig.source}</span>
+          {checklistMode && content && content.sections.length > 0 && (() => {
+            const tabScore = tabReadiness[activeTab];
+            const pct = tabScore.total > 0 ? Math.round((tabScore.checked / tabScore.total) * 100) : 0;
+            return (
+              <div className="ml-auto flex items-center gap-2">
+                <span className="text-xs font-semibold" style={{ color: filterConfig.color }}>
+                  {tabScore.checked}/{tabScore.total} sections complete ({pct}%)
+                </span>
+                <div className="w-24 h-1.5 rounded-full bg-gray-200 overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{ width: `${pct}%`, background: filterConfig.color }}
+                  />
+                </div>
+              </div>
+            );
+          })()}
         </div>
+
+        {/* Login prompt for unauthenticated checklist users */}
+        {checklistMode && !isAuthenticated && (
+          <div className="mb-4 flex items-start gap-3 rounded-lg p-4 text-sm" style={{ background: "#189aa10d", border: "1px solid #189aa130" }}>
+            <Info className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: BRAND }} />
+            <div>
+              <span className="font-semibold" style={{ color: BRAND }}>Your progress is saved locally.</span>
+              {" "}
+              <Link href="/login" className="underline" style={{ color: BRAND }}>Sign in</Link> to sync your checklist across devices and access your readiness history.
+            </div>
+          </div>
+        )}
 
         {/* Sections */}
         {content && content.sections.length > 0 ? (
           <div className="space-y-3">
             {content.sections.map(section => (
-              <SectionCard key={section.id} section={section} filterColor={filterConfig.color} />
+              <SectionCard
+                key={section.id}
+                section={section}
+                filterColor={filterConfig.color}
+                checklistMode={checklistMode}
+                checked={checkedKeys.has(section.id)}
+                onToggle={(checked) => handleToggle(section.id, checked)}
+              />
             ))}
           </div>
         ) : (
