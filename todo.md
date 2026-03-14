@@ -239,3 +239,11 @@
 - [x] Update enrolled split-decision page: add iHeartEcho logo+text to IHE card, AAUS logo+text to AAUS card
 - [x] Fix POCUS daily challenge not showing live question in public UI — activated all non-deleted questions in DB (isActive=TRUE)
 - [x] Fix Daily Challenge button icon in dashboard hero (should be Trophy, not BookOpen)
+
+## Accreditation Navigator Rebuild (Mar 14 2026)
+- [x] Download and parse IAC Adult Echo 2025 PDF standards
+- [x] Download and parse IAC Pediatric Echo 2025 PDF standards
+- [x] Download and parse IAC PeriOp TEE 2025 PDF standards
+- [x] Rebuild AccreditationNavigator with correct tabs: Equipment, Facility, Medical Director, Medical Staff, Technical Director, Technical Staff, CME, Case Study Submissions, Quality Measures, Application Submission
+- [x] Wire filters: Adult TTE, Adult TEE, Stress → Adult 2025 standards; Pediatric TTE, Pediatric TEE, Fetal → Pediatric 2025 standards; PeriOp TEE → PeriOp 2025 standards
+- [x] Add server-side guard in adminRefreshTodaySet to auto-activate questions with isActive drift

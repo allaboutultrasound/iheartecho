@@ -125,7 +125,7 @@ const CAT_KEY: Record<ChallengeCategory, string> = {
  * Handles both the legacy array format [id] and the new object format
  * { acs: id|null, adultEcho: id|null, pediatricEcho: id|null, fetalEcho: id|null }.
  */
-function parseDailySetIds(raw: string): Record<string, number | null> {
+export function parseDailySetIds(raw: string): Record<string, number | null> {
   try {
     const parsed = JSON.parse(raw || "{}");
     if (Array.isArray(parsed)) {
@@ -139,6 +139,34 @@ function parseDailySetIds(raw: string): Record<string, number | null> {
 }
 
 /**
+ * Auto-activate any question IDs that are currently inactive.
+ * Returns the list of IDs that were re-activated.
+ * Used as a guard to prevent silent isActive drift from breaking daily sets.
+ * Exported for unit testing.
+ */
+export async function autoActivateQuestions(
+  db: NonNullable<Awaited<ReturnType<typeof getDb>>>,
+  ids: number[]
+): Promise<number[]> {
+  if (ids.length === 0) return [];
+  // Find which of the given IDs are currently inactive
+  const inactive = await db
+    .select({ id: quickfireQuestions.id })
+    .from(quickfireQuestions)
+    .where(and(inArray(quickfireQuestions.id, ids), eq(quickfireQuestions.isActive, false)));
+  if (inactive.length === 0) return [];
+  const inactiveIds = inactive.map((r) => r.id);
+  await db
+    .update(quickfireQuestions)
+    .set({ isActive: true })
+    .where(inArray(quickfireQuestions.id, inactiveIds));
+  console.warn(
+    `[autoActivateQuestions] Re-activated ${inactiveIds.length} question(s) that were inactive: [${inactiveIds.join(", ")}]`
+  );
+  return inactiveIds;
+}
+
+/**
  * Ensure a daily set exists for the given date.
  * Stores one question per category:
  *   questionIds = JSON object: { acs: id|null, adultEcho: id|null, pediatricEcho: id|null, fetalEcho: id|null }
@@ -146,6 +174,9 @@ function parseDailySetIds(raw: string): Record<string, number | null> {
  * Priority order per category:
  *   1. Next queued challenge with matching category (draft/scheduled)
  *   2. Fallback: random active non-flashcard question from that category
+ *
+ * Guard: any question chosen for a slot is auto-activated if it is somehow
+ * inactive, preventing silent isActive drift from producing empty category slots.
  */
 async function ensureTodaySet(db: NonNullable<Awaited<ReturnType<typeof getDb>>>, date: string) {
   const existing = await db
@@ -205,6 +236,16 @@ async function ensureTodaySet(db: NonNullable<Awaited<ReturnType<typeof getDb>>>
             .update(quickfireChallenges)
             .set({ status: "live", publishDate: match.publishDate ?? date, publishedAt: new Date(), archivedAt: null })
             .where(eq(quickfireChallenges.id, match.id));
+        } else if (ids.length > 0) {
+          // All questions linked to this challenge are inactive — auto-activate
+          // the first one so the category slot is not silently left empty.
+          await autoActivateQuestions(db, ids);
+          questionMap[key] = ids[0];
+          usedChallengeIds.push(match.id);
+          await db
+            .update(quickfireChallenges)
+            .set({ status: "live", publishDate: match.publishDate ?? date, publishedAt: new Date(), archivedAt: null })
+            .where(eq(quickfireChallenges.id, match.id));
         }
       }
     }
@@ -240,6 +281,24 @@ async function ensureTodaySet(db: NonNullable<Awaited<ReturnType<typeof getDb>>>
       );
     if (pool.length > 0) {
       questionMap[key] = sampleN(pool, 1)[0].id;
+    } else {
+      // No active questions in this category — try any non-deleted question and
+      // auto-activate it so the slot is never silently empty.
+      const anyPool = await db
+        .select({ id: quickfireQuestions.id })
+        .from(quickfireQuestions)
+        .where(
+          and(
+            sql`${quickfireQuestions.type} != 'quickReview'` as any,
+            sql`${quickfireQuestions.category} = ${cat}` as any,
+            sql`${quickfireQuestions.deletedAt} IS NULL` as any
+          )
+        );
+      if (anyPool.length > 0) {
+        const picked = sampleN(anyPool, 1)[0].id;
+        await autoActivateQuestions(db, [picked]);
+        questionMap[key] = picked;
+      }
     }
   }
 
@@ -2535,11 +2594,34 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
    * Delete today's cached daily set so the next getTodaySet call rebuilds it
    * from the current challenge queue. Use when challenges have been added/changed
    * after today's set was already generated.
+   *
+   * Guard: before rebuilding, any question IDs stored in the stale daily set
+   * that are currently inactive are auto-activated so they are eligible for
+   * re-selection. This prevents silent isActive drift from leaving category
+   * slots empty after a refresh.
    */
   adminRefreshTodaySet: adminProcedure.mutation(async () => {
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
     const date = todayDateStr();
+
+    // ── Guard: auto-activate any inactive questions in today's stale set ────
+    const [staleSet] = await db
+      .select({ questionIds: quickfireDailySets.questionIds })
+      .from(quickfireDailySets)
+      .where(eq(quickfireDailySets.setDate, date))
+      .limit(1);
+    if (staleSet) {
+      const staleMap = parseDailySetIds(staleSet.questionIds);
+      const staleIds = Object.values(staleMap).filter((id): id is number => id !== null);
+      const reactivated = await autoActivateQuestions(db, staleIds);
+      if (reactivated.length > 0) {
+        console.warn(
+          `[adminRefreshTodaySet] Auto-activated ${reactivated.length} inactive question(s) before rebuild: [${reactivated.join(", ")}]`
+        );
+      }
+    }
+
     // Delete today's cached daily set
     await db.delete(quickfireDailySets).where(eq(quickfireDailySets.setDate, date));
     // Reset any challenges that were set live by today's set back to scheduled
