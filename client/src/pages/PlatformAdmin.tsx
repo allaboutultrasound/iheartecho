@@ -1223,7 +1223,7 @@ export default function PlatformAdmin() {
                       </div>
                       <div className="text-xs text-gray-400 mt-0.5">{u.email ?? "No email"}</div>
                       <div className="flex flex-wrap gap-1.5 mt-2">
-                        {u.roles.map(role => (
+                        {Array.from(new Set(u.roles)).map(role => (
                           <RoleBadge
                             key={role}
                             role={role}
@@ -1310,7 +1310,7 @@ export default function PlatformAdmin() {
                 </div>
                 <div className="text-xs text-gray-500">{selectedUser.email}</div>
                 <div className="flex flex-wrap gap-1 mt-2">
-                  {selectedUser.roles.map(r => <RoleBadge key={r} role={r} />)}
+                  {Array.from(new Set(selectedUser.roles)).map(r => <RoleBadge key={r} role={r} />)}
                 </div>
               </div>
               <div>

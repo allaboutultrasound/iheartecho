@@ -157,3 +157,6 @@
 
 ## WMV Video Playback (Mar 14 2026)
 - [x] Add WMV detection and unsupported-format fallback UI with download link across all video players
+
+## Platform Admin Duplicate Key Bug (Mar 14 2026)
+- [x] Fix duplicate React key 'user' error on /platform-admin page

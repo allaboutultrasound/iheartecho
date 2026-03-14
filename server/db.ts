@@ -1905,7 +1905,9 @@ export async function listUsersWithRoles(
   const roleMap = new Map<number, AppRole[]>();
   for (const r of allRoles) {
     const list = roleMap.get(r.userId) ?? [];
-    list.push(r.role as AppRole);
+    if (!list.includes(r.role as AppRole)) {
+      list.push(r.role as AppRole);
+    }
     roleMap.set(r.userId, list);
   }
 
