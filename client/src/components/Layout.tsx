@@ -133,6 +133,9 @@ const hiddenNavItems = [
   { path: "/diy-register", label: "Register Your Lab" },
   { path: "/lab-admin", label: "Lab Admin Portal" },
   { path: "/diy-member", label: "Member Portal" },
+  { path: "/educator-assist", label: "EducatorAssist™" },
+  { path: "/educator-admin", label: "Educator Dashboard" },
+  { path: "/student-dashboard", label: "Student Learning Portal" },
 ];
 const navItems = [...navGroups.flatMap(g => g.items), ...hiddenNavItems];
 
@@ -491,6 +494,43 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                               <span className="flex-1">Accreditation Manager</span>
                             </button>
                           </WouterLink>
+                        </div>
+                      )}
+
+                      {/* EducatorAssist section — for education roles and platform_admin */}
+                      {(roles.includes("education_admin") || roles.includes("education_manager") || roles.includes("education_student") || hasPlatformAdmin) && (
+                        <div className="px-2 py-1.5 border-t border-gray-100">
+                          <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider px-2 mb-1">EducatorAssist™</div>
+                          {/* Educator Admin — for education_admin, education_manager, platform_admin */}
+                          {(roles.includes("education_admin") || roles.includes("education_manager") || hasPlatformAdmin) && (
+                            <WouterLink href="/educator-admin">
+                              <button onClick={() => setAccountOpen(false)}
+                                className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-teal-50 hover:text-teal-600 transition-all text-left">
+                                <GraduationCap className="w-3.5 h-3.5 text-teal-500" />
+                                <span className="flex-1">Educator Dashboard</span>
+                              </button>
+                            </WouterLink>
+                          )}
+                          {/* Student Portal — for education_student, education_admin, education_manager, platform_admin */}
+                          {(roles.includes("education_student") || roles.includes("education_admin") || roles.includes("education_manager") || hasPlatformAdmin) && (
+                            <WouterLink href="/student-dashboard">
+                              <button onClick={() => setAccountOpen(false)}
+                                className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-teal-50 hover:text-teal-600 transition-all text-left">
+                                <BookOpen className="w-3.5 h-3.5 text-teal-500" />
+                                <span className="flex-1">Student Portal</span>
+                              </button>
+                            </WouterLink>
+                          )}
+                          {/* EducatorAssist Info — for platform_admin and education_manager */}
+                          {(roles.includes("education_manager") || hasPlatformAdmin) && (
+                            <WouterLink href="/educator-assist">
+                              <button onClick={() => setAccountOpen(false)}
+                                className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-xs text-gray-700 hover:bg-teal-50 hover:text-teal-600 transition-all text-left">
+                                <Award className="w-3.5 h-3.5 text-teal-500" />
+                                <span className="flex-1">EducatorAssist™ Plans</span>
+                              </button>
+                            </WouterLink>
+                          )}
                         </div>
                       )}
 

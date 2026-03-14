@@ -76,3 +76,24 @@
 - [ ] User question submission: notify platform admins on new submission
 - [x] User question submission: gamification — award bonus Echo Ninja points when submitted question is approved
 - [x] Fix SEO on home page (/): add proper title (30-60 chars), meta description (50-160 chars), and keywords
+
+## EducatorAssist Platform
+- [x] DB schema: educator orgs, memberships, tiers, courses, modules, assignments, competencies, student progress (13 tables)
+- [x] DB migration: push schema changes (all 14 educator tables + platformFeatureFlags exist in DB)
+- [x] Add educator roles to appRoleEnum: education_manager, education_admin, education_student
+- [x] tRPC educatorRouter: org management, enrollment, course/module CRUD, assignment CRUD, competency tracking, analytics (30+ procedures)
+- [x] Marketing pages: /educator-assist (pricing + features) — platform_admin and education_manager gate
+- [x] EducatorAdmin dashboard: /educator-admin (course builder, student roster, assignments, analytics, template library)
+- [x] Student Member dashboard: /student-dashboard (my courses, assignments, progress, competencies, leaderboard)
+- [x] Education Manager view: accessible via /educator-admin with elevated role access (cross-org analytics, reporting)
+- [x] Platform Admin: assign education_manager role to users (via existing adminRouter role assignment)
+- [x] Sidebar nav: add EducatorAssist entry in account dropdown (visible only to relevant roles)
+- [x] RoleGuard: add education_manager, education_admin, education_student to AppRole type
+- [x] Visibility toggle: platformFeatureFlags table + educatorPlatformVisible flag controls public visibility
+- [x] EducatorAssist Template Library: DB schema (educatorTemplates table — ARDMS category, content type, S3 URL, view-only flag)
+- [x] EducatorAssist Template Library: tRPC procedures (uploadTemplate, listTemplates, getTemplate, deleteTemplate)
+- [x] EducatorAssist Template Library: Upload UI for Education Manager / Platform Admin
+- [x] EducatorAssist Template Library: Browse/view UI for Educator Admin (view-only, no download, no edit)
+- [x] EducatorAssist Template Library: ARDMS content categories (Adult Echo, Pediatric Echo, Fetal Echo, General Ultrasound, Vascular Ultrasound)
+- [x] Route registration: /educator-assist, /educator-admin, /student-dashboard registered in App.tsx with RoleGuard
+- [x] TypeScript: zero compilation errors across all educator platform files

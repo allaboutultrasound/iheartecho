@@ -62,7 +62,7 @@ import {
 import { Link, useLocation } from "wouter";
 import BulkCsvUploadPanel, { type BulkResult } from "@/components/BulkCsvUploadPanel";
 
-type AppRole = "user" | "premium_user" | "diy_admin" | "diy_user" | "platform_admin" | "accreditation_manager";
+type AppRole = "user" | "premium_user" | "diy_admin" | "diy_user" | "platform_admin" | "accreditation_manager" | "education_manager" | "education_admin" | "education_student";
 
 const ROLE_META: Record<AppRole, { label: string; color: string; icon: React.ElementType; description: string }> = {
   user: {
@@ -100,6 +100,24 @@ const ROLE_META: Record<AppRole, { label: string; color: string; icon: React.Ele
     color: "bg-indigo-100 text-indigo-700",
     icon: ClipboardList,
     description: "Full access to all DIY Accreditation organizations and managed accounts — assigned by platform admins only",
+  },
+  education_manager: {
+    label: "Education Manager",
+    color: "bg-emerald-100 text-emerald-700",
+    icon: Shield,
+    description: "Cross-organization visibility into all EducatorAssist accounts, analytics, and reporting — assigned by platform admins only",
+  },
+  education_admin: {
+    label: "Educator Admin",
+    color: "bg-teal-100 text-teal-700",
+    icon: Stethoscope,
+    description: "Educator dashboard access — build courses, manage students, and track competencies",
+  },
+  education_student: {
+    label: "Student Member",
+    color: "bg-cyan-100 text-cyan-700",
+    icon: User,
+    description: "Student access to assigned courses, quizzes, and competency tracking",
   },
 };
 

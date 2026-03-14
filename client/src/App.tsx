@@ -102,6 +102,10 @@ import ACHDEchoAssist from "./pages/ACHDEchoAssist";
 import ECGNavigator from "./pages/ECGNavigator";
 import ECGCoach from "./pages/ECGCoach";
 import ECGAssist from "./pages/ECGAssist";
+// EducatorAssist Platform
+import EducatorAssist from "./pages/EducatorAssist";
+import EducatorAdmin from "./pages/EducatorAdmin";
+import StudentDashboard from "./pages/StudentDashboard";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -231,6 +235,28 @@ function Router() {
       {/* ── Post-enrollment return from Thinkific free membership ────────── */}
       <Route path="/enrolled" component={Enrolled} />      {/* ── Physician Over-Read (public, token-based) ─────────────────── */}
       <Route path="/physician-review/:token" component={PhysicianOverReadForm} />
+      {/* ── EducatorAssist Platform ─────────────────────────────────────────── */}
+      <Route path="/educator-assist">
+        {() => (
+          <RoleGuard roles={["education_manager", "education_admin", "education_student"]} allowAdmin={true}>
+            <EducatorAssist />
+          </RoleGuard>
+        )}
+      </Route>
+      <Route path="/educator-admin">
+        {() => (
+          <RoleGuard roles={["education_admin", "education_manager"]} allowAdmin={true}>
+            <EducatorAdmin />
+          </RoleGuard>
+        )}
+      </Route>
+      <Route path="/student-dashboard">
+        {() => (
+          <RoleGuard roles={["education_student", "education_admin", "education_manager"]} allowAdmin={true}>
+            <StudentDashboard />
+          </RoleGuard>
+        )}
+      </Route>
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
       </Switch>

@@ -809,12 +809,15 @@ export const appRoleEnum = mysqlEnum("appRole", [
   "diy_user",
   "platform_admin",
   "accreditation_manager",
+  "education_manager",
+  "education_admin",
+  "education_student",
 ]);
 
 export const userRoles = mysqlTable("userRoles", {
   id: int("id").primaryKey().autoincrement(),
   userId: int("userId").notNull(),
-  role: mysqlEnum("role", ["user", "premium_user", "diy_admin", "diy_user", "platform_admin", "accreditation_manager"]).notNull(),
+  role: mysqlEnum("role", ["user", "premium_user", "diy_admin", "diy_user", "platform_admin", "accreditation_manager", "education_manager", "education_admin", "education_student"]).notNull(),
   // For diy_user: which lab subscription granted this seat
   grantedByLabId: int("grantedByLabId"),
   // Who assigned this role (platform_admin or diy_admin userId)
@@ -2018,3 +2021,383 @@ export const emailCampaigns = mysqlTable("emailCampaigns", {
 });
 export type EmailCampaign = typeof emailCampaigns.$inferSelect;
 export type InsertEmailCampaign = typeof emailCampaigns.$inferInsert;
+
+// ─── EducatorAssist Platform ──────────────────────────────────────────────────
+//
+// Roles:
+//   education_manager  — assigned by platform_admin; cross-org visibility into all educator orgs
+//   education_admin    — the end-user "Educator" who owns an org and builds content
+//   education_student  — learner enrolled in an educator org
+//
+// Subscription tiers (stored on educatorOrgs.tier):
+//   individual    — $59.97/mo, 1 educator, 50 learners
+//   school        — $299–$399/mo, 3 educators, 250 students
+//   hospital      — $599–$999/mo, 5 educators, 500 staff
+//   enterprise    — $1,999–$4,999/mo, unlimited educators, multi-site
+//
+// Visibility gate:
+//   All /educator-assist marketing pages and /educator-admin / /educator-student routes
+//   are gated behind platform_admin (or education_manager) until the platform admin
+//   flips the `educatorPlatformVisible` flag in the platform settings table.
+//   This flag is the single toggle to make EducatorAssist publicly visible.
+
+// ─── Platform Feature Flags ───────────────────────────────────────────────────
+// One row, keyed by name. Used to toggle platform-wide features.
+export const platformFeatureFlags = mysqlTable("platformFeatureFlags", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 100 }).notNull().unique(),
+  // JSON value — can be boolean, string, number, or object
+  value: text("value").notNull(),
+  description: text("description"),
+  updatedByUserId: int("updatedByUserId"),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type PlatformFeatureFlag = typeof platformFeatureFlags.$inferSelect;
+export type InsertPlatformFeatureFlag = typeof platformFeatureFlags.$inferInsert;
+
+// ─── Educator Organisations ───────────────────────────────────────────────────
+export const educatorOrgs = mysqlTable("educatorOrgs", {
+  id: int("id").autoincrement().primaryKey(),
+  // Org name (e.g. "St. Mary's Echo Training Program")
+  name: varchar("name", { length: 300 }).notNull(),
+  // Short slug for URL-friendly references
+  slug: varchar("slug", { length: 100 }).notNull().unique(),
+  // Subscription tier
+  tier: mysqlEnum("tier", ["individual", "school", "hospital", "enterprise"]).notNull().default("individual"),
+  // Billing status
+  billingStatus: mysqlEnum("billingStatus", ["active", "trial", "past_due", "cancelled", "pending"]).notNull().default("trial"),
+  // Seat limits (null = unlimited for enterprise)
+  maxEducators: int("maxEducators"),
+  maxStudents: int("maxStudents"),
+  // Org branding
+  logoUrl: text("logoUrl"),
+  bannerUrl: text("bannerUrl"),
+  description: text("description"),
+  website: varchar("website", { length: 255 }),
+  // Contact info
+  contactEmail: varchar("contactEmail", { length: 320 }),
+  contactName: varchar("contactName", { length: 200 }),
+  // Institution type
+  institutionType: mysqlEnum("institutionType", ["individual", "school_university", "hospital_echo_lab", "health_system", "other"]).default("individual"),
+  // Multi-site support (enterprise)
+  isMultiSite: boolean("isMultiSite").default(false).notNull(),
+  // Custom branding / white-label (enterprise)
+  isWhiteLabel: boolean("isWhiteLabel").default(false).notNull(),
+  // Assigned education_manager (platform-level oversight)
+  assignedManagerId: int("assignedManagerId"),
+  // Owner user (the primary education_admin who created the org)
+  ownerUserId: int("ownerUserId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type EducatorOrg = typeof educatorOrgs.$inferSelect;
+export type InsertEducatorOrg = typeof educatorOrgs.$inferInsert;
+
+// ─── Educator Org Members ─────────────────────────────────────────────────────
+// Tracks all users belonging to an educator org with their role within that org.
+export const educatorOrgMembers = mysqlTable("educatorOrgMembers", {
+  id: int("id").autoincrement().primaryKey(),
+  orgId: int("orgId").notNull(),
+  userId: int("userId").notNull(),
+  // Role within this specific org
+  orgRole: mysqlEnum("orgRole", ["education_admin", "education_student"]).notNull(),
+  // Enrollment status
+  status: mysqlEnum("status", ["active", "inactive", "pending", "suspended"]).notNull().default("pending"),
+  // Invite token (for email-based enrollment)
+  inviteToken: varchar("inviteToken", { length: 128 }),
+  inviteEmail: varchar("inviteEmail", { length: 320 }),
+  inviteExpiry: timestamp("inviteExpiry"),
+  inviteAcceptedAt: timestamp("inviteAcceptedAt"),
+  // Who added this member
+  addedByUserId: int("addedByUserId"),
+  joinedAt: timestamp("joinedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type EducatorOrgMember = typeof educatorOrgMembers.$inferSelect;
+export type InsertEducatorOrgMember = typeof educatorOrgMembers.$inferInsert;
+
+// ─── Educator Courses / Modules ───────────────────────────────────────────────
+// A "course" is the top-level container. Modules are ordered sections within a course.
+export const educatorCourses = mysqlTable("educatorCourses", {
+  id: int("id").autoincrement().primaryKey(),
+  orgId: int("orgId").notNull(),
+  createdByUserId: int("createdByUserId").notNull(),
+  title: varchar("title", { length: 300 }).notNull(),
+  description: longtext("description"),
+  // Cover image
+  coverImageUrl: text("coverImageUrl"),
+  // Category alignment (mirrors quickfire categories)
+  category: mysqlEnum("category", ["Adult Echo", "Pediatric Echo", "Fetal Echo", "ACS", "POCUS", "General Ultrasound", "Vascular Ultrasound", "General"]).default("General"),
+  // Status
+  status: mysqlEnum("status", ["draft", "published", "archived"]).notNull().default("draft"),
+  // Ordering within the org
+  sortOrder: int("sortOrder").default(0).notNull(),
+  // Estimated duration in minutes
+  estimatedMinutes: int("estimatedMinutes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type EducatorCourse = typeof educatorCourses.$inferSelect;
+export type InsertEducatorCourse = typeof educatorCourses.$inferInsert;
+
+// ─── Course Modules ───────────────────────────────────────────────────────────
+export const educatorModules = mysqlTable("educatorModules", {
+  id: int("id").autoincrement().primaryKey(),
+  courseId: int("courseId").notNull(),
+  orgId: int("orgId").notNull(),
+  title: varchar("title", { length: 300 }).notNull(),
+  description: text("description"),
+  // Module type determines what content it holds
+  moduleType: mysqlEnum("moduleType", ["lesson", "case_study", "challenge", "quiz", "flashcard_deck", "presentation", "protocol_library"]).notNull().default("lesson"),
+  // Rich text lesson content (for type=lesson)
+  content: longtext("content"),
+  // Reference to existing platform content (for case_study, challenge, quiz, flashcard_deck)
+  // JSON: { type: "case"|"challenge"|"quiz"|"flashcard", ids: number[] }
+  linkedContentIds: text("linkedContentIds"),
+  // For presentations: JSON array of slide objects
+  presentationData: longtext("presentationData"),
+  // Ordering within the course
+  sortOrder: int("sortOrder").default(0).notNull(),
+  // Estimated duration in minutes
+  estimatedMinutes: int("estimatedMinutes"),
+  // Whether this module is required for course completion
+  isRequired: boolean("isRequired").default(true).notNull(),
+  status: mysqlEnum("status", ["draft", "published", "archived"]).notNull().default("draft"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type EducatorModule = typeof educatorModules.$inferSelect;
+export type InsertEducatorModule = typeof educatorModules.$inferInsert;
+
+// ─── Assignments ──────────────────────────────────────────────────────────────
+// An assignment links a course (or specific module) to a student or group of students.
+export const educatorAssignments = mysqlTable("educatorAssignments", {
+  id: int("id").autoincrement().primaryKey(),
+  orgId: int("orgId").notNull(),
+  assignedByUserId: int("assignedByUserId").notNull(),
+  title: varchar("title", { length: 300 }).notNull(),
+  description: text("description"),
+  // What is being assigned
+  courseId: int("courseId"),
+  moduleId: int("moduleId"), // if assigning a specific module only
+  // Assignment target: individual student or whole org (group)
+  targetType: mysqlEnum("targetType", ["individual", "group", "org_wide"]).notNull().default("individual"),
+  // JSON array of userId ints for individual/group targets
+  targetUserIds: text("targetUserIds"),
+  // Due date
+  dueAt: timestamp("dueAt"),
+  // Grading
+  passingScore: int("passingScore"), // percentage 0-100
+  maxAttempts: int("maxAttempts").default(3).notNull(),
+  // Status
+  status: mysqlEnum("status", ["draft", "active", "completed", "archived"]).notNull().default("active"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type EducatorAssignment = typeof educatorAssignments.$inferSelect;
+export type InsertEducatorAssignment = typeof educatorAssignments.$inferInsert;
+
+// ─── Student Progress ─────────────────────────────────────────────────────────
+// Tracks each student's progress through modules and assignments.
+export const educatorStudentProgress = mysqlTable("educatorStudentProgress", {
+  id: int("id").autoincrement().primaryKey(),
+  orgId: int("orgId").notNull(),
+  userId: int("userId").notNull(),
+  courseId: int("courseId"),
+  moduleId: int("moduleId"),
+  assignmentId: int("assignmentId"),
+  // Progress state
+  status: mysqlEnum("status", ["not_started", "in_progress", "completed", "failed"]).notNull().default("not_started"),
+  // Score (percentage 0-100, null if not scored)
+  score: int("score"),
+  // Attempt number
+  attemptNumber: int("attemptNumber").default(1).notNull(),
+  // Time spent in seconds
+  timeSpentSeconds: int("timeSpentSeconds").default(0).notNull(),
+  // Completion timestamp
+  completedAt: timestamp("completedAt"),
+  // Detailed result data (JSON: quiz answers, case responses, etc.)
+  resultData: longtext("resultData"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type EducatorStudentProgress = typeof educatorStudentProgress.$inferSelect;
+export type InsertEducatorStudentProgress = typeof educatorStudentProgress.$inferInsert;
+
+// ─── Competencies ─────────────────────────────────────────────────────────────
+// Competency framework: defines skills/competencies that can be tracked per student.
+export const educatorCompetencies = mysqlTable("educatorCompetencies", {
+  id: int("id").autoincrement().primaryKey(),
+  orgId: int("orgId").notNull(),
+  createdByUserId: int("createdByUserId").notNull(),
+  title: varchar("title", { length: 300 }).notNull(),
+  description: text("description"),
+  // Category alignment
+  category: mysqlEnum("category", ["Adult Echo", "Pediatric Echo", "Fetal Echo", "ACS", "POCUS", "General Ultrasound", "Vascular Ultrasound", "General"]).default("General"),
+  // Competency level: 1=Novice, 2=Advanced Beginner, 3=Competent, 4=Proficient, 5=Expert
+  maxLevel: int("maxLevel").default(5).notNull(),
+  // Whether this competency is required for certification/completion
+  isRequired: boolean("isRequired").default(false).notNull(),
+  sortOrder: int("sortOrder").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type EducatorCompetency = typeof educatorCompetencies.$inferSelect;
+export type InsertEducatorCompetency = typeof educatorCompetencies.$inferInsert;
+
+// ─── Student Competency Records ───────────────────────────────────────────────
+// Tracks each student's achieved level for each competency.
+export const educatorStudentCompetencies = mysqlTable("educatorStudentCompetencies", {
+  id: int("id").autoincrement().primaryKey(),
+  orgId: int("orgId").notNull(),
+  userId: int("userId").notNull(),
+  competencyId: int("competencyId").notNull(),
+  // Current achieved level (1-5)
+  achievedLevel: int("achievedLevel").notNull().default(0),
+  // Assessor notes
+  notes: text("notes"),
+  // Who assessed/updated this record
+  assessedByUserId: int("assessedByUserId"),
+  assessedAt: timestamp("assessedAt"),
+  // Evidence links (JSON array of URLs or module IDs)
+  evidenceData: text("evidenceData"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type EducatorStudentCompetency = typeof educatorStudentCompetencies.$inferSelect;
+export type InsertEducatorStudentCompetency = typeof educatorStudentCompetencies.$inferInsert;
+
+// ─── Educator Quizzes ─────────────────────────────────────────────────────────
+// Custom quizzes created by educators (separate from Daily Challenge questions).
+export const educatorQuizzes = mysqlTable("educatorQuizzes", {
+  id: int("id").autoincrement().primaryKey(),
+  orgId: int("orgId").notNull(),
+  createdByUserId: int("createdByUserId").notNull(),
+  title: varchar("title", { length: 300 }).notNull(),
+  description: text("description"),
+  // Time limit in minutes (null = no limit)
+  timeLimitMinutes: int("timeLimitMinutes"),
+  // Passing score percentage
+  passingScore: int("passingScore").default(70).notNull(),
+  // Shuffle questions
+  shuffleQuestions: boolean("shuffleQuestions").default(false).notNull(),
+  // Show correct answers after submission
+  showAnswers: boolean("showAnswers").default(true).notNull(),
+  status: mysqlEnum("status", ["draft", "published", "archived"]).notNull().default("draft"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type EducatorQuiz = typeof educatorQuizzes.$inferSelect;
+export type InsertEducatorQuiz = typeof educatorQuizzes.$inferInsert;
+
+// ─── Quiz Questions ───────────────────────────────────────────────────────────
+export const educatorQuizQuestions = mysqlTable("educatorQuizQuestions", {
+  id: int("id").autoincrement().primaryKey(),
+  quizId: int("quizId").notNull(),
+  orgId: int("orgId").notNull(),
+  // Question text (rich HTML)
+  question: longtext("question").notNull(),
+  // JSON array of option strings
+  options: text("options").notNull(),
+  correctAnswer: int("correctAnswer").notNull(),
+  explanation: longtext("explanation"),
+  // Optional image/video URL
+  mediaUrl: text("mediaUrl"),
+  mediaType: mysqlEnum("mediaType", ["image", "video", "gif"]),
+  difficulty: mysqlEnum("difficulty", ["beginner", "intermediate", "advanced"]).default("intermediate"),
+  points: int("points").default(1).notNull(),
+  sortOrder: int("sortOrder").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type EducatorQuizQuestion = typeof educatorQuizQuestions.$inferSelect;
+export type InsertEducatorQuizQuestion = typeof educatorQuizQuestions.$inferInsert;
+
+// ─── Quiz Attempts ────────────────────────────────────────────────────────────
+export const educatorQuizAttempts = mysqlTable("educatorQuizAttempts", {
+  id: int("id").autoincrement().primaryKey(),
+  quizId: int("quizId").notNull(),
+  orgId: int("orgId").notNull(),
+  userId: int("userId").notNull(),
+  assignmentId: int("assignmentId"),
+  attemptNumber: int("attemptNumber").default(1).notNull(),
+  // JSON: { questionId: number, selectedAnswer: number, isCorrect: boolean }[]
+  answers: longtext("answers"),
+  score: int("score"), // percentage 0-100
+  passed: boolean("passed"),
+  startedAt: timestamp("startedAt").defaultNow().notNull(),
+  completedAt: timestamp("completedAt"),
+  timeSpentSeconds: int("timeSpentSeconds"),
+});
+export type EducatorQuizAttempt = typeof educatorQuizAttempts.$inferSelect;
+export type InsertEducatorQuizAttempt = typeof educatorQuizAttempts.$inferInsert;
+
+// ─── Educator Presentations ───────────────────────────────────────────────────
+// Slide-based presentations created by educators.
+export const educatorPresentations = mysqlTable("educatorPresentations", {
+  id: int("id").autoincrement().primaryKey(),
+  orgId: int("orgId").notNull(),
+  createdByUserId: int("createdByUserId").notNull(),
+  title: varchar("title", { length: 300 }).notNull(),
+  description: text("description"),
+  // JSON array of slide objects { id, title, content, imageUrl, notes }
+  slidesData: longtext("slidesData"),
+  // Cover image
+  coverImageUrl: text("coverImageUrl"),
+  // Category
+  category: mysqlEnum("category", ["Adult Echo", "Pediatric Echo", "Fetal Echo", "ACS", "POCUS", "General Ultrasound", "Vascular Ultrasound", "General"]).default("General"),
+  status: mysqlEnum("status", ["draft", "published", "archived"]).notNull().default("draft"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type EducatorPresentation = typeof educatorPresentations.$inferSelect;
+export type InsertEducatorPresentation = typeof educatorPresentations.$inferInsert;
+
+// ─── Educator Announcements ───────────────────────────────────────────────────
+// Org-wide or course-level announcements from educators to students.
+export const educatorAnnouncements = mysqlTable("educatorAnnouncements", {
+  id: int("id").autoincrement().primaryKey(),
+  orgId: int("orgId").notNull(),
+  courseId: int("courseId"), // null = org-wide
+  createdByUserId: int("createdByUserId").notNull(),
+  title: varchar("title", { length: 300 }).notNull(),
+  content: longtext("content").notNull(),
+  // Pinned announcements appear at the top
+  isPinned: boolean("isPinned").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type EducatorAnnouncement = typeof educatorAnnouncements.$inferSelect;
+export type InsertEducatorAnnouncement = typeof educatorAnnouncements.$inferInsert;
+
+// ─── Educator Template Library ────────────────────────────────────────────────
+// Pre-built ARDMS-aligned templates uploaded by Education Managers / Platform Admins.
+// Educator Admins can browse and present these online (view-only, no download, no edit).
+export const educatorTemplates = mysqlTable("educatorTemplates", {
+  id: int("id").autoincrement().primaryKey(),
+  uploadedByUserId: int("uploadedByUserId").notNull(),
+  title: varchar("title", { length: 300 }).notNull(),
+  description: text("description"),
+  // ARDMS exam content outline category
+  ardmsCategory: mysqlEnum("ardmsCategory", ["Adult Echo", "Pediatric Echo", "Fetal Echo", "General Ultrasound", "Vascular Ultrasound", "General"]).notNull().default("Adult Echo"),
+  // Content type determines how it is rendered
+  contentType: mysqlEnum("contentType", ["presentation", "quiz", "flashcard_deck", "case_study", "protocol_guide", "study_guide"]).notNull().default("presentation"),
+  // S3 URL for the source file (PDF, JSON, etc.)
+  fileUrl: text("fileUrl"),
+  fileKey: text("fileKey"),
+  mimeType: varchar("mimeType", { length: 100 }),
+  // For presentations: JSON slides data
+  slidesData: longtext("slidesData"),
+  // For quizzes / flashcard decks: JSON content data
+  contentData: longtext("contentData"),
+  coverImageUrl: text("coverImageUrl"),
+  tags: text("tags"),
+  estimatedMinutes: int("estimatedMinutes"),
+  viewCount: int("viewCount").default(0).notNull(),
+  isPublished: boolean("isPublished").default(false).notNull(),
+  isViewOnly: boolean("isViewOnly").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type EducatorTemplate = typeof educatorTemplates.$inferSelect;
+export type InsertEducatorTemplate = typeof educatorTemplates.$inferInsert;

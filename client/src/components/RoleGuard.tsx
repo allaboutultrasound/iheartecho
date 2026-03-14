@@ -23,7 +23,7 @@ import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { BlurredOverlay } from "@/components/BlurredOverlay";
 
-type AppRole = "user" | "premium_user" | "diy_admin" | "diy_user" | "platform_admin" | "accreditation_manager";
+type AppRole = "user" | "premium_user" | "diy_admin" | "diy_user" | "platform_admin" | "accreditation_manager" | "education_manager" | "education_admin" | "education_student";
 
 interface RoleGuardProps {
   /** At least one of these roles must be present for access */
@@ -40,6 +40,9 @@ const ROLE_LABELS: Record<AppRole, string> = {
   diy_user: "DIY Accreditation User",
   platform_admin: "Platform Administrator",
   accreditation_manager: "Accreditation Manager",
+  education_manager: "Education Manager",
+  education_admin: "Educator Admin",
+  education_student: "Student Member",
 };
 
 const ROLE_DESCRIPTIONS: Record<string, string> = {
@@ -48,6 +51,9 @@ const ROLE_DESCRIPTIONS: Record<string, string> = {
   premium_user: "Premium subscription access",
   platform_admin: "Platform administrator access",
   accreditation_manager: "Full access to all DIY Accreditation organizations and managed accounts",
+  education_manager: "Cross-organization visibility into all EducatorAssist accounts and analytics",
+  education_admin: "Educator dashboard access to build courses, manage students, and track progress",
+  education_student: "Student access to assigned courses, quizzes, and competency tracking",
 };
 
 export function RoleGuard({ roles, allowAdmin = true, children }: RoleGuardProps) {
