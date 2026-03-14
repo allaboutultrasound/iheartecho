@@ -63,3 +63,6 @@
 - [x] Fix: Edit Question button missing for queued (non-live) challenges — pass openEditQuestion prop
 - [x] Fix: Edit Question for live challenges — ensure openEditQuestionById works reliably
 - [x] Add: Category filter dropdown to the challenge queue tab
+- [x] Add search to admin challenge archive (search by title, category, question text)
+- [x] Add search to public-facing challenge archive (search by title, category, question text)
+- [x] Replace all ECG/EKG icons with a proper EKG waveform SVG symbol throughout the app

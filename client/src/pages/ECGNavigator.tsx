@@ -8,9 +8,10 @@ import { useState, useMemo } from "react";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import {
-  Activity, ChevronDown, ChevronUp, AlertTriangle, CheckCircle2,
-  Heart, Zap, BarChart3, ArrowRight, Info, BookOpen, Radio
+  ChevronDown, ChevronUp, AlertTriangle, CheckCircle2,
+  Heart, Zap, BarChart3, ArrowRight, Info, BookOpen
 } from "lucide-react";
+import EkgIcon from "@/components/EkgIcon";
 
 const BRAND = "#189aa1";
 const BRAND_DARK = "#0e4a50";
@@ -33,7 +34,7 @@ interface Pattern {
 interface Section {
   id: string;
   title: string;
-  icon: React.ElementType;
+  icon: React.ElementType | typeof EkgIcon;
   color: string;
   patterns: Pattern[];
 }
@@ -43,7 +44,7 @@ const sections: Section[] = [
   {
     id: "rate-rhythm",
     title: "Rate & Rhythm",
-    icon: Activity,
+    icon: EkgIcon,
     color: "#189aa1",
     patterns: [
       {
@@ -134,7 +135,7 @@ const sections: Section[] = [
   {
     id: "av-blocks",
     title: "AV Blocks",
-    icon: Radio,
+    icon: EkgIcon,
     color: "#dc2626",
     patterns: [
       {
@@ -357,7 +358,7 @@ const sections: Section[] = [
   {
     id: "qt",
     title: "QT Interval",
-    icon: Activity,
+    icon: EkgIcon,
     color: "#189aa1",
     patterns: [
       {

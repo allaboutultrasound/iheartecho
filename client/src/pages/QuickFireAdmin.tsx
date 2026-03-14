@@ -436,7 +436,12 @@ export default function QuickFireAdmin() {
   const [activeAdminTab, setActiveAdminTab] = useState<"questions" | "challenges" | "archive" | "flashcards" | "trash">("questions");
 
   // ── Challenge Archive state ──────────────────────────────────────────────
-  const archivedChallengesQuery = trpc.quickfire.adminListArchivedChallenges.useQuery();
+  const [archiveAdminSearch, setArchiveAdminSearch] = useState("");
+  const [archiveAdminCategory, setArchiveAdminCategory] = useState<"all" | "ACS" | "Adult Echo" | "Pediatric Echo" | "Fetal Echo" | "POCUS" | "General">("all");
+  const archivedChallengesQuery = trpc.quickfire.adminListArchivedChallenges.useQuery({
+    search: archiveAdminSearch.trim() || undefined,
+    category: archiveAdminCategory === "all" ? undefined : archiveAdminCategory,
+  });
   const archivedChallenges = archivedChallengesQuery.data ?? [];
 
   // ── Trash state ─────────────────────────────────────────────────────────
@@ -1518,9 +1523,31 @@ export default function QuickFireAdmin() {
                 <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Challenge Archive</h2>
                 <p className="text-xs text-gray-400 mt-0.5">Past challenges that have been published and archived. Push any to the queue to reuse.</p>
               </div>
-              <Button variant="outline" size="sm" onClick={() => archivedChallengesQuery.refetch()} className="gap-1.5">
-                <RefreshCw className="w-3.5 h-3.5" /> Refresh
-              </Button>
+              <div className="flex items-center gap-2">
+                <Input
+                  value={archiveAdminSearch}
+                  onChange={(e) => setArchiveAdminSearch(e.target.value)}
+                  placeholder="Search archive…"
+                  className="w-44 h-9"
+                />
+                <Select value={archiveAdminCategory} onValueChange={(v) => setArchiveAdminCategory(v as any)}>
+                  <SelectTrigger className="w-40 h-9 text-xs">
+                    <SelectValue placeholder="All Categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    <SelectItem value="ACS">ACS</SelectItem>
+                    <SelectItem value="Adult Echo">Adult Echo</SelectItem>
+                    <SelectItem value="Pediatric Echo">Pediatric Echo</SelectItem>
+                    <SelectItem value="Fetal Echo">Fetal Echo</SelectItem>
+                    <SelectItem value="POCUS">POCUS</SelectItem>
+                    <SelectItem value="General">General</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button variant="outline" size="sm" onClick={() => archivedChallengesQuery.refetch()} className="gap-1.5 h-9">
+                  <RefreshCw className="w-3.5 h-3.5" /> Refresh
+                </Button>
+              </div>
             </div>
 
             {archivedChallengesQuery.isLoading ? (

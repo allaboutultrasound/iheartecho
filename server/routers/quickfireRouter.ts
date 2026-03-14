@@ -32,7 +32,7 @@ import {
   quickfireChallenges,
   users,
 } from "../../drizzle/schema";
-import { eq, and, asc, desc, sql, gte, lte, count, inArray, isNull } from "drizzle-orm";
+import { eq, and, asc, desc, sql, gte, lte, count, inArray, isNull, like, or } from "drizzle-orm";
 import { sendStreakReminders } from "../streakReminders";
 import { generateVirtualLeaderboard } from "../leaderboardSeed";
 import { createHash } from "crypto";
@@ -1482,6 +1482,7 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
       dateFrom: z.string().optional(), // YYYY-MM-DD
       dateTo: z.string().optional(),   // YYYY-MM-DD
+      search: z.string().optional(),   // free-text search
     }))
     .query(async ({ ctx, input }) => {
       const db = await getDb();
@@ -1507,6 +1508,11 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       }
       if (input.dateTo) {
         conditions.push(lte(quickfireChallenges.publishDate, input.dateTo));
+      }
+      // Free-text search (title or description)
+      if (input.search && input.search.trim()) {
+        const term = `%${input.search.trim()}%`;
+        conditions.push(or(like(quickfireChallenges.title, term), like(quickfireChallenges.description, term)));
       }
       const [rows, totalResult] = await Promise.all([
         db.select({ id: quickfireChallenges.id, title: quickfireChallenges.title, description: quickfireChallenges.description,
@@ -2234,11 +2240,23 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
 
   /** List only archived challenges for the archive tab */
   adminListArchivedChallenges: adminProcedure
-    .query(async () => {
+    .input(z.object({
+      search: z.string().optional(),
+      category: z.string().optional(),
+    }).optional())
+    .query(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const conditions: any[] = [eq(quickfireChallenges.status, "archived")];
+      if (input?.category) {
+        conditions.push(eq(quickfireChallenges.category, input.category as any));
+      }
+      if (input?.search && input.search.trim()) {
+        const term = `%${input.search.trim()}%`;
+        conditions.push(or(like(quickfireChallenges.title, term), like(quickfireChallenges.description, term)));
+      }
       const rows = await db.select().from(quickfireChallenges)
-        .where(eq(quickfireChallenges.status, "archived"))
+        .where(and(...conditions))
         .orderBy(desc(quickfireChallenges.archivedAt));
       const parsed = rows.map((r) => ({ ...r, questionIds: JSON.parse(r.questionIds || "[]") as number[] }));
       const allQIds = Array.from(new Set(parsed.flatMap((r) => r.questionIds)));

@@ -876,8 +876,8 @@ export default function QuickFire() {
                     { cat: "ACS" as const, prefKey: "acs" as const, Icon: Heart, label: "Advanced Cardiac Sonographer" },
                     { cat: "Adult Echo" as const, prefKey: "adultEcho" as const, Icon: Stethoscope },
                     { cat: "Pediatric Echo" as const, prefKey: "pediatricEcho" as const, Icon: Baby },
-                    { cat: "Fetal Echo" as const, prefKey: "fetalEcho" as const, Icon: ({ className }: { className?: string }) => <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/fetal-icon-v3_60481ebf.png" alt="Fetal Echo" className={className} style={{ objectFit: 'contain' }} /> },
-                    { cat: "POCUS" as const, prefKey: "pocus" as const, Icon: ({ className }: { className?: string }) => <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/pocus-icon-v2_869568fc.png" alt="POCUS" className={className} style={{ objectFit: 'contain' }} /> },
+                    { cat: "Fetal Echo" as const, prefKey: "fetalEcho" as const, Icon: ({ className }: { className?: string }) => <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/fetal-icon-final_15ea612a.png" alt="Fetal Echo" className={className} style={{ objectFit: 'contain' }} /> },
+                    { cat: "POCUS" as const, prefKey: "pocus" as const, Icon: ({ className }: { className?: string }) => <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/pocus-icon-final_a5c96a2f.png" alt="POCUS" className={className} style={{ objectFit: 'contain' }} /> },
                   ] as { cat: string; prefKey: "acs" | "adultEcho" | "pediatricEcho" | "fetalEcho" | "pocus"; Icon: (props: { className?: string }) => import('react').ReactElement; label?: string }[]).map(({ cat, prefKey, Icon, label }) => {
                     const prefs = categoryPrefsQuery.data ?? { acs: true, adultEcho: true, pediatricEcho: true, fetalEcho: true, pocus: true };
                     const isEnabled = (prefs as any)[prefKey] !== false;
@@ -953,8 +953,8 @@ export default function QuickFire() {
                     { key: "ACS", label: "Advanced Cardiac Sonographer", Icon: Heart, desc: "ACS", prefKey: "acs" as const, mapKey: "acs" },
                     { key: "Adult Echo", label: "Adult Echo", Icon: Stethoscope, desc: "Adult Echocardiography", prefKey: "adultEcho" as const, mapKey: "adultEcho" },
                     { key: "Pediatric Echo", label: "Pediatric Echo", Icon: Baby, desc: "Pediatric & Congenital", prefKey: "pediatricEcho" as const, mapKey: "pediatricEcho" },
-                    { key: "Fetal Echo", label: "Fetal Echo", Icon: ({ className }: { className?: string }) => <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/fetal-icon-v3_60481ebf.png" alt="Fetal Echo" className={className} style={{ objectFit: 'contain' }} />, desc: "Fetal Echocardiography", prefKey: "fetalEcho" as const, mapKey: "fetalEcho" },
-                    { key: "POCUS", label: "POCUS", Icon: ({ className }: { className?: string }) => <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/pocus-icon-v2_869568fc.png" alt="POCUS" className={className} style={{ objectFit: 'contain' }} />, desc: "Point-of-Care Ultrasound", prefKey: "pocus" as const, mapKey: "pocus" },
+                    { key: "Fetal Echo", label: "Fetal Echo", Icon: ({ className }: { className?: string }) => <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/fetal-icon-final_15ea612a.png" alt="Fetal Echo" className={className} style={{ objectFit: 'contain' }} />, desc: "Fetal Echocardiography", prefKey: "fetalEcho" as const, mapKey: "fetalEcho" },
+                    { key: "POCUS", label: "POCUS", Icon: ({ className }: { className?: string }) => <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/pocus-icon-final_a5c96a2f.png" alt="POCUS" className={className} style={{ objectFit: 'contain' }} />, desc: "Point-of-Care Ultrasound", prefKey: "pocus" as const, mapKey: "pocus" },
                   ];
 
                   const enabledCats = CATS.filter((c) => catPrefs[c.prefKey] !== false);
