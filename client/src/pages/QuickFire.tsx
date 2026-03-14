@@ -1253,23 +1253,26 @@ export default function QuickFire() {
                   ];
 
                   const enabledCats = CATS.filter((c) => catPrefs[c.prefKey] !== false);
-                  const allDone = enabledCats.length > 0 && enabledCats.every((c) => {
+                  // Only count categories that actually have a question assigned in today's set
+                  const enabledCatsWithQ = enabledCats.filter((c) => !!categoryMap[c.mapKey]);
+                  const allDone = enabledCatsWithQ.length > 0 && enabledCatsWithQ.every((c) => {
                     const qId = categoryMap[c.mapKey];
                     return qId && todayAttempts[qId] !== undefined;
                   });
 
                   if (allDone) {
-                    const correctCount = enabledCats.filter((c) => {
+                    const correctCount = enabledCatsWithQ.filter((c) => {
                       const qId = categoryMap[c.mapKey];
                       return qId && todayAttempts[qId]?.isCorrect === true;
                     }).length;
+                    const totalAnswered = enabledCatsWithQ.length;
                     return (
                       <div className="rounded-2xl p-8 text-center" style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}>
                         <Trophy className="w-14 h-14 text-[#4ad9e0] mx-auto mb-4" />
                         <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "Merriweather, serif" }}>Today's Challenge Complete!</h2>
                         <p className="text-white/60 text-sm mb-1">Today's score</p>
-                        <div className="text-5xl font-black text-white mb-1" style={{ fontFamily: "JetBrains Mono, monospace" }}>{correctCount}/{enabledCats.length}</div>
-                        <p className="text-[#4ad9e0] font-semibold mb-6">{Math.round((correctCount / enabledCats.length) * 100)}% correct</p>
+                        <div className="text-5xl font-black text-white mb-1" style={{ fontFamily: "JetBrains Mono, monospace" }}>{correctCount}/{totalAnswered}</div>
+                        <p className="text-[#4ad9e0] font-semibold mb-6">{Math.round((correctCount / totalAnswered) * 100)}% correct</p>
                         <div className="flex flex-wrap gap-3 justify-center">
                           <Button className="text-white" style={{ background: "#189aa1" }} onClick={() => setActiveTab("performance")}>
                             <BarChart3 className="w-4 h-4 mr-2" /> View My Stats
@@ -1282,10 +1285,10 @@ export default function QuickFire() {
                     );
                   }
 
-                  // Running tally counts
-                  const tallyCorrect = enabledCats.filter((c) => { const qId = categoryMap[c.mapKey]; return qId && todayAttempts[qId]?.isCorrect === true; }).length;
-                  const tallyIncorrect = enabledCats.filter((c) => { const qId = categoryMap[c.mapKey]; return qId && todayAttempts[qId] !== undefined && todayAttempts[qId]?.isCorrect !== true; }).length;
-                  const tallyRemaining = enabledCats.length - tallyCorrect - tallyIncorrect;
+                  // Running tally counts — base on categories that actually have questions
+                  const tallyCorrect = enabledCatsWithQ.filter((c) => { const qId = categoryMap[c.mapKey]; return qId && todayAttempts[qId]?.isCorrect === true; }).length;
+                  const tallyIncorrect = enabledCatsWithQ.filter((c) => { const qId = categoryMap[c.mapKey]; return qId && todayAttempts[qId] !== undefined && todayAttempts[qId]?.isCorrect !== true; }).length;
+                  const tallyRemaining = enabledCatsWithQ.length - tallyCorrect - tallyIncorrect;
 
                   return (
                     <>

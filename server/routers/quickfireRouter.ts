@@ -121,6 +121,26 @@ const CAT_KEY: Record<ChallengeCategory, string> = {
 };
 
 /**
+ * Normalize options field: handles both plain string[] and [{text: string}, ...] object format.
+ * Returns string[] or null.
+ */
+function normalizeOptions(raw: string | null): string[] | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    if (parsed.length === 0) return parsed;
+    // If items are objects with a 'text' key, extract the text
+    if (typeof parsed[0] === 'object' && parsed[0] !== null) {
+      return parsed.map((o: any) => (typeof o.text === 'string' ? o.text : String(o)));
+    }
+    return parsed as string[];
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Parse questionIds from a daily set row.
  * Handles both the legacy array format [id] and the new object format
  * { acs: id|null, adultEcho: id|null, pediatricEcho: id|null, fetalEcho: id|null }.
@@ -397,7 +417,7 @@ export const quickfireRouter = router({
       const attempted = userAttempts[q.id];
       return {
         ...q,
-        options: q.options ? JSON.parse(q.options) : null,
+        options: normalizeOptions(q.options),
         tags: q.tags ? JSON.parse(q.tags) : [],
         pairs: q.pairs ? JSON.parse(q.pairs) : null,
         markers: q.markers ? JSON.parse(q.markers) : null,
@@ -877,7 +897,7 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
         .orderBy(desc(quickfireQuestions.deletedAt));
       return rows.map((q) => ({
         ...q,
-        options: q.options ? JSON.parse(q.options) : null,
+        options: normalizeOptions(q.options),
         tags: q.tags ? JSON.parse(q.tags) : [],
         daysUntilPurge: Math.max(0, 30 - Math.floor((Date.now() - new Date(q.deletedAt!).getTime()) / 86_400_000)),
       }));
@@ -988,7 +1008,7 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
       return {
         questions: questions.map((q) => ({
           ...q,
-          options: q.options ? JSON.parse(q.options) : null,
+          options: normalizeOptions(q.options),
           tags: q.tags ? JSON.parse(q.tags) : [],
           pairs: q.pairs ? JSON.parse(q.pairs) : null,
           markers: q.markers ? JSON.parse(q.markers) : null,
@@ -1641,7 +1661,7 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       const attempted = userAttempts[q.id];
       return {
         ...q,
-        options: q.options ? JSON.parse(q.options) : null,
+        options: normalizeOptions(q.options),
         tags: q.tags ? JSON.parse(q.tags) : [],
         correctAnswer: attempted ? q.correctAnswer : null,
         explanation: attempted ? q.explanation : null,
@@ -1729,7 +1749,7 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       // For archived challenges, always reveal answers
       const withAnswers = questions.map((q) => ({
         ...q,
-        options: q.options ? JSON.parse(q.options) : null,
+        options: normalizeOptions(q.options),
         tags: q.tags ? JSON.parse(q.tags) : [],
         pairs: q.pairs ? JSON.parse(q.pairs) : null,
         markers: q.markers ? JSON.parse(q.markers) : null,
@@ -2495,7 +2515,7 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       .orderBy(desc(quickfireQuestions.createdAt));
     return rows.map((r) => ({
       ...r,
-      options: r.options ? JSON.parse(r.options) : null,
+      options: normalizeOptions(r.options),
       tags: r.tags ? JSON.parse(r.tags) : [],
     }));
   }),
@@ -2516,7 +2536,7 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       .orderBy(desc(quickfireQuestions.createdAt));
     return rows.map(({ q, submitterEmail, submitterDisplayName }) => ({
       ...q,
-      options: q.options ? JSON.parse(q.options) : null,
+      options: normalizeOptions(q.options),
       tags: q.tags ? JSON.parse(q.tags) : [],
       submitterEmail,
       submitterDisplayName,

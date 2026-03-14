@@ -146,8 +146,11 @@ export const leaderboardRouter = router({
           displayName: v.displayName,
           avatarUrl: null,
           credentials: v.credentials,
-          // Convert correct answers to equivalent points for display
-          points: v.correct * (category === "challenge" ? 10 : category === "case" ? 25 : category === "flashcard" ? 5 : 10),
+          // Use pre-computed per-category points (single-point flashcard events only count in flashcard/overall)
+          points: category === "challenge" ? v.challengePoints
+                : category === "case" ? v.casePoints
+                : category === "flashcard" ? v.flashcardPoints
+                : v.points,
           isVirtual: true as const,
         }));
 
@@ -203,7 +206,11 @@ export const leaderboardRouter = router({
         displayName: v.displayName,
         avatarUrl: null,
         credentials: v.credentials,
-        points: v.correct * (category === "challenge" ? 10 : category === "case" ? 25 : category === "flashcard" ? 5 : 10),
+        // Use pre-computed per-category points (single-point flashcard events only count in flashcard/overall)
+        points: category === "challenge" ? v.challengePoints
+              : category === "case" ? v.casePoints
+              : category === "flashcard" ? v.flashcardPoints
+              : v.points,
         isVirtual: true as const,
       }));
 

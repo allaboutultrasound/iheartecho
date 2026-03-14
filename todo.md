@@ -264,3 +264,24 @@
 - [x] UI: Readiness scores isolated per accreditation type (Adult TTE, Adult TEE, Stress, Ped TTE, Ped TEE, Fetal, PeriOp TEE)
 - [x] UI: Unauthenticated users see checklist mode with localStorage fallback + sign-in prompt
 - [x] Write vitest tests for checklist DB helpers (9 tests, all passing)
+
+## Leaderboard Placeholder Update (Mar 14 2026)
+- [x] Update placeholder point values to realistic non-rounded numbers (top = 4952)
+- [x] Ensure real users bypass placeholders when their points exceed highest placeholder value
+
+## Leaderboard Point Scoping Fix (Mar 14 2026)
+- [x] Virtual leaderboard: use realistic non-rounded point values (top = 4952, others like 3563, 4587)
+- [x] Virtual leaderboard: real users bypass all placeholders when their points exceed 4952
+- [x] Single-point flashcard events (flashcard_card_viewed = 1 pt): only count in flashcardPoints and totalPoints — not in challengePoints or casePoints
+- [x] Challenge category leaderboard: virtual entries use challenge-only point scale (v.challengePoints)
+- [x] Case category leaderboard: virtual entries use case-only point scale (v.casePoints)
+
+## POCUS Challenge Error Fix (Mar 14 2026)
+- [x] Fix React error #31 in POCUS challenge — options stored as [{text:"..."}] objects; added normalizeOptions() helper
+- [x] Fix POCUS question 180001 options in DB to plain strings
+- [x] Fix completion score denominator to use enabledCatsWithQ (categories with actual questions)
+- [x] Fix tallyRemaining to use enabledCatsWithQ.length as base
+
+## Daily Challenge Bug Fixes (Mar 14 2026)
+- [x] Fix POCUS question React error #31 when starting question — normalizeOptions() added to all 7 parse sites
+- [x] Fix completion score showing wrong total — denominator now uses enabledCatsWithQ (categories with actual questions)
