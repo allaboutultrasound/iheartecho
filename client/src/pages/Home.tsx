@@ -10,7 +10,7 @@ import Layout from "@/components/Layout";
 import { trpc } from "@/lib/trpc";
 import {
   Calculator, ClipboardList, Activity, BookOpen, FileText,
-  ArrowRight, Users, Award, Zap, Stethoscope, ExternalLink, MessageCircle, GraduationCap, BookMarked, Crown, Shield
+  ArrowRight, Users, Award, Zap, Stethoscope, ExternalLink, MessageCircle, GraduationCap, BookMarked, Crown, Shield, Trophy
 } from "lucide-react";
 
 const BRAND = "#189aa1";
@@ -49,7 +49,7 @@ const modules: Module[] = [
   },
   {
     path: "/quickfire",
-    icon: BookOpen,
+    icon: Trophy,
     title: "Daily Challenge",
     description: "One question. One case. One chance today. Answer the challenge, see the explanation. Maintain your streak, earn points and compare with other echo professionals.",
     badge: "Daily",
@@ -227,7 +227,7 @@ export default function Home() {
               </Link>
               <Link href="/quickfire">
                 <button className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all">
-                  <BookOpen className="w-4 h-4" />
+                  <Trophy className="w-4 h-4" />
                   Daily Challenge
                 </button>
               </Link>

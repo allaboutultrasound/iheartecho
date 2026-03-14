@@ -96,10 +96,14 @@ export default function Enrolled() {
             style={{ borderBottom: "1px solid rgba(74,217,224,0.12)" }}
           >
             <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center"
-              style={{ background: "rgba(74,217,224,0.15)" }}
+              className="w-16 h-16 rounded-xl flex items-center justify-center overflow-hidden"
+              style={{ background: "rgba(74,217,224,0.08)" }}
             >
-              <Users className="w-6 h-6" style={{ color: "#4ad9e0" }} />
+              <img
+                src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/aaus-logo_3140b0c9.png"
+                alt="All About Ultrasound"
+                className="w-14 h-14 object-contain"
+              />
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: "#4ad9e0" }}>
@@ -178,10 +182,14 @@ export default function Enrolled() {
             style={{ borderBottom: "1px solid rgba(24,154,161,0.15)" }}
           >
             <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center"
-              style={{ background: "rgba(24,154,161,0.18)" }}
+              className="w-16 h-16 rounded-xl flex items-center justify-center overflow-hidden"
+              style={{ background: "rgba(24,154,161,0.1)" }}
             >
-              <Heart className="w-6 h-6" style={{ color: "#189aa1" }} />
+              <img
+                src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/ihe-logo_63005c85.webp"
+                alt="iHeartEcho™"
+                className="w-14 h-14 object-contain"
+              />
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: "#189aa1" }}>

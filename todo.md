@@ -236,4 +236,6 @@
 - [x] Activate all questions in DB (set isActive=1 for all non-deleted questions)
 - [x] Remove Show Inactive toggle from QuickFireAdmin question bank
 - [x] Seed leaderboard with pre-populated display entries (realistic names/credentials/points via virtual entries)
-- [ ] Update enrolled split-decision page: add iHeartEcho logo+text to IHE card, AAUS logo+text to AAUS card
+- [x] Update enrolled split-decision page: add iHeartEcho logo+text to IHE card, AAUS logo+text to AAUS card
+- [x] Fix POCUS daily challenge not showing live question in public UI — activated all non-deleted questions in DB (isActive=TRUE)
+- [x] Fix Daily Challenge button icon in dashboard hero (should be Trophy, not BookOpen)
