@@ -308,15 +308,15 @@ export default function EchoAssistHub() {
         {/* ── ACHDEchoAssist™ Cross-Promotion ──────────────────────────── */}
         <div
           className="mt-8 rounded-xl p-5 border"
-          style={{ borderColor: "#189aa1" + "40", background: "#fffbeb" }}
+          style={{ borderColor: "#189aa1" + "40", background: "#f0fbfc" }}
         >
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <div className="flex-shrink-0">
               <div
                 className="w-14 h-14 rounded-xl flex items-center justify-center"
-                style={{ background: "linear-gradient(135deg, #0e1e2e, #b45309)" }}
+                style={{ background: "linear-gradient(135deg, #0e1e2e, #189aa1)" }}
               >
-                <Heart className="w-7 h-7 text-amber-200" />
+                <Heart className="w-7 h-7 text-[#4ad9e0]" />
               </div>
             </div>
             <div className="flex-1">
@@ -343,7 +343,7 @@ export default function EchoAssistHub() {
                 </Link>
                 <Link href="/achd">
                   <button
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm border bg-white transition-all hover:bg-amber-50"
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm border bg-white transition-all hover:bg-[#f0fbfc]"
                     style={{ borderColor: "#189aa1" + "50", color: "#189aa1" }}
                   >
                     <Activity className="w-3.5 h-3.5" />

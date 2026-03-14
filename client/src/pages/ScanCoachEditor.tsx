@@ -587,6 +587,7 @@ function ImageUploadZone({
             <video
               src={currentUrl}
               controls
+              loop
               className="w-full max-h-48 object-contain"
             />
           ) : (

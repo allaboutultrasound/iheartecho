@@ -70,9 +70,9 @@ const navGroups = [
     label: "Learning",
     items: [
       { path: "/quickfire", label: "Daily Challenge", icon: Zap },
-      { path: "/leaderboard", label: "Leaderboard", icon: Trophy },
       { path: "/flashcards", label: "Echo Flashcards", icon: Layers },
       { path: "/case-library", label: "Echo Case Library", icon: Library },
+      { path: "/leaderboard", label: "Leaderboard", icon: Trophy },
       { path: "/cme", label: "CME Hub", icon: GraduationCap },
       { path: "/registry-review", label: "Registry Review", icon: BookMarked },
       { path: "https://www.allaboutultrasound.net/acs-preview-pass-access", label: "ACS Mastery", icon: Award, external: true },

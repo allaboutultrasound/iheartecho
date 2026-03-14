@@ -24,7 +24,9 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
-const DISMISSED_KEY = "ihe_get_app_dismissed_v1";
+// Use sessionStorage so the banner reappears each time the user navigates back to the dashboard
+const DISMISSED_KEY = "ihe_get_app_dismissed_session";
+const CUSTOM_DOMAIN = "https://app.iheartecho.com";
 
 function isMobile(): boolean {
   return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
@@ -47,11 +49,12 @@ export default function GetAppPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
-    // Don't show if already installed, not on mobile, or previously dismissed
+    // Don't show if already installed or not on mobile
+    // Dismissal uses sessionStorage so it resets each time the user returns to the dashboard
     if (
       isInStandaloneMode() ||
       !isMobile() ||
-      localStorage.getItem(DISMISSED_KEY) === "1"
+      sessionStorage.getItem(DISMISSED_KEY) === "1"
     ) {
       return;
     }
@@ -76,12 +79,26 @@ export default function GetAppPrompt() {
   const dismiss = () => {
     setShow(false);
     setShowIOSInstructions(false);
-    localStorage.setItem(DISMISSED_KEY, "1");
+    // Store in sessionStorage only — clears when the tab closes or user navigates away and returns
+    sessionStorage.setItem(DISMISSED_KEY, "1");
   };
 
   const handleGetApp = async () => {
+    // If not on the custom domain, redirect there first so the PWA installs from the right origin
+    const isOnCustomDomain = window.location.hostname === "app.iheartecho.com";
+
     if (isIOS()) {
+      if (!isOnCustomDomain) {
+        window.location.href = CUSTOM_DOMAIN + window.location.pathname;
+        return;
+      }
       setShowIOSInstructions(true);
+      return;
+    }
+
+    if (!isOnCustomDomain) {
+      // Redirect to custom domain — the install prompt will appear there
+      window.location.href = CUSTOM_DOMAIN + window.location.pathname;
       return;
     }
 
@@ -176,7 +193,7 @@ export default function GetAppPrompt() {
                 <p className="text-white font-bold" style={{ fontFamily: "Merriweather, serif" }}>
                   Get iHeartEcho™
                 </p>
-                <p className="text-white/50 text-xs">Add to your iPhone home screen</p>
+                <p className="text-white/50 text-xs">Add to your iPhone home screen from app.iheartecho.com</p>
               </div>
             </div>
 

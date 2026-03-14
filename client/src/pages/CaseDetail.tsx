@@ -258,6 +258,7 @@ export default function CaseDetail() {
                     <video
                       src={currentMedia.url}
                       controls
+                      loop
                       controlsList="nodownload"
                       onContextMenu={(e) => e.preventDefault()}
                       className="w-full max-h-80 object-contain"

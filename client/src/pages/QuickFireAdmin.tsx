@@ -1057,22 +1057,22 @@ export default function QuickFireAdmin() {
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex gap-1 mb-6 bg-gray-100 rounded-lg p-1 overflow-x-auto">
+        <div className="grid grid-cols-3 sm:flex flex-wrap gap-1 mb-6 bg-gray-100 rounded-lg p-1">
           <button
             onClick={() => setActiveAdminTab("questions")}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+            className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-all ${
               activeAdminTab === "questions" ? "bg-white text-[#189aa1] shadow-sm" : "text-gray-500 hover:text-gray-700"
             }`}
           >
-            <Zap className="w-4 h-4" /> Question Bank
+            <Zap className="w-3.5 h-3.5" /> <span className="hidden xs:inline">Question </span>Bank
           </button>
           <button
             onClick={() => setActiveAdminTab("challenges")}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+            className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-all ${
               activeAdminTab === "challenges" ? "bg-white text-[#189aa1] shadow-sm" : "text-gray-500 hover:text-gray-700"
             }`}
           >
-            <ListOrdered className="w-4 h-4" /> Challenge Queue
+            <ListOrdered className="w-3.5 h-3.5" /> Queue
             {challenges.filter((c) => c.status === "live").length > 0 && (
               <span className="ml-1 bg-green-500 text-white text-xs rounded-full px-1.5 py-0.5">LIVE</span>
             )}

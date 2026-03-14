@@ -1617,6 +1617,7 @@ export default function QuickFire() {
                           <video
                             src={currentQ.imageUrl}
                             controls
+                            loop
                             controlsList="nodownload"
                             onContextMenu={(e) => e.preventDefault()}
                             className="w-full rounded-lg max-h-64 bg-black mb-3"
@@ -1633,6 +1634,7 @@ export default function QuickFire() {
                         <video
                           src={(currentQ as any).videoUrl}
                           controls
+                          loop
                           controlsList="nodownload"
                           onContextMenu={(e) => e.preventDefault()}
                           className="w-full rounded-lg max-h-64 bg-black mb-3"
@@ -2300,6 +2302,7 @@ export default function QuickFire() {
                               <video
                                 src={archiveCurrentQ.imageUrl}
                                 controls
+                                loop
                                 controlsList="nodownload"
                                 onContextMenu={(e) => e.preventDefault()}
                                 className="w-full rounded-lg max-h-64 bg-black mb-3"
@@ -2312,6 +2315,7 @@ export default function QuickFire() {
                             <video
                               src={(archiveCurrentQ as any).videoUrl}
                               controls
+                              loop
                               controlsList="nodownload"
                               onContextMenu={(e) => e.preventDefault()}
                               className="w-full rounded-lg max-h-64 bg-black mb-3"

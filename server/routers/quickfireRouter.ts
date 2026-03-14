@@ -187,12 +187,24 @@ async function ensureTodaySet(db: NonNullable<Awaited<ReturnType<typeof getDb>>>
     if (match) {
       const ids: number[] = JSON.parse(match.questionIds || "[]");
       if (ids.length > 0) {
-        questionMap[key] = ids[0];
-        usedChallengeIds.push(match.id);
-        await db
-          .update(quickfireChallenges)
-          .set({ status: "live", publishDate: match.publishDate ?? date, publishedAt: new Date(), archivedAt: null })
-          .where(eq(quickfireChallenges.id, match.id));
+        // Only use an active question — skip inactive ones
+        let activeId: number | null = null;
+        for (const qid of ids) {
+          const [qrow] = await db
+            .select({ id: quickfireQuestions.id })
+            .from(quickfireQuestions)
+            .where(and(eq(quickfireQuestions.id, qid), eq(quickfireQuestions.isActive, true)))
+            .limit(1);
+          if (qrow) { activeId = qrow.id; break; }
+        }
+        if (activeId !== null) {
+          questionMap[key] = activeId;
+          usedChallengeIds.push(match.id);
+          await db
+            .update(quickfireChallenges)
+            .set({ status: "live", publishDate: match.publishDate ?? date, publishedAt: new Date(), archivedAt: null })
+            .where(eq(quickfireChallenges.id, match.id));
+        }
       }
     }
   }

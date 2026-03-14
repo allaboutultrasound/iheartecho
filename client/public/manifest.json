@@ -1,8 +1,10 @@
 {
+  "id": "https://app.iheartecho.com/",
   "name": "iHeartEcho",
   "short_name": "iHeartEcho",
   "description": "Echocardiography Clinical Intelligence — real-time echo interpretation and measurement assistant for cardiac ultrasound students, sonographers, echocardiographers, cardiologists, physicians, residents, ACS professionals, and echo educators.",
-  "start_url": "/",
+  "start_url": "https://app.iheartecho.com/",
+  "scope": "https://app.iheartecho.com/",
   "display": "standalone",
   "background_color": "#0e1e2e",
   "theme_color": "#189aa1",
@@ -21,7 +23,7 @@
     }
   ],
   "categories": ["medical", "health", "education"],
-  "lang": "en-AU",
+  "lang": "en-US",
   "related_applications": [
     {
       "platform": "play",

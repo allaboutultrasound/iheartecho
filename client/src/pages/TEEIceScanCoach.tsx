@@ -19,7 +19,7 @@ import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 // ─── Helper: render image or video based on URL extension ───────────────────
 function MediaDisplay({ src, alt, className, style }: { src: string; alt: string; className?: string; style?: React.CSSProperties }) {
   const isVideo = /\.(mp4|webm|ogv|mov)(\?|$)/i.test(src);
-  if (isVideo) return <video src={src} controls className={className} style={style} />;
+  if (isVideo) return <video src={src} controls loop className={className} style={style} />;
   return <img src={src} alt={alt} className={className} style={style} />;
 }
 
@@ -592,7 +592,7 @@ function ViewMediaDisplay({ viewId }: { viewId: string }) {
             {m.mediaType === "image" ? (
               <img src={m.url} alt={m.caption ?? "Reference image"} className="w-full object-contain bg-gray-900 max-h-48" />
             ) : (
-              <video src={m.url} className="w-full max-h-48 bg-gray-900" controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} muted />
+              <video src={m.url} className="w-full max-h-48 bg-gray-900" controls loop controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} muted />
             )}
             {m.caption && (
               <p className="text-xs text-gray-500 px-3 py-2">{m.caption}</p>

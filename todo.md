@@ -210,3 +210,11 @@
 
 - [x] Add mobile-only "Get App" prompt component (iOS + Android, button says "Get App")
 - [x] Ensure PWA manifest has correct icons and theme color for home screen install
+- [ ] Remove billing issue prompt from ever showing
+- [ ] Update PWA manifest start_url and id to use app.iheartecho.com custom domain
+- [ ] Fix daily challenge categories showing "No question available today"
+- [ ] Fix QuickFireAdmin mobile layout: tab bar overflow and question card layout
+- [ ] Fix QuickFireAdmin mobile tab nav: wrap tabs on mobile so Bank/Queue/Archive/Trash are all accessible
+- [ ] Fix EchoAssist Hub page: ACHD card has wrong beige/brown colors - should use teal brand
+- [ ] Fix video looping - add loop attribute to all video elements across the app
+- [x] Get App prompt: session-only dismissal — reappears each dashboard visit, only hides permanently when installed
