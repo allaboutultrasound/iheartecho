@@ -235,3 +235,5 @@
 - [x] Change flashcard delete confirm text from "Deactivate" to "Move to Trash"
 - [x] Activate all questions in DB (set isActive=1 for all non-deleted questions)
 - [x] Remove Show Inactive toggle from QuickFireAdmin question bank
+- [x] Seed leaderboard with pre-populated display entries (realistic names/credentials/points via virtual entries)
+- [ ] Update enrolled split-decision page: add iHeartEcho logo+text to IHE card, AAUS logo+text to AAUS card

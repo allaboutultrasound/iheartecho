@@ -105,7 +105,7 @@ export default function Leaderboard() {
   });
 
   const entries = leaderboardQuery.data ?? [];
-  const myUserId = user?.id;
+  const myUserId = user?.id != null ? String(user.id) : undefined;
   const myRank = myPointsQuery.data?.rank;
   const myTotals = myPointsQuery.data?.totals;
 
@@ -277,7 +277,8 @@ export default function Leaderboard() {
 
                 <div className="divide-y divide-gray-50">
                   {entries.map((entry) => {
-                    const isMe = entry.userId === myUserId;
+                    const isVirtual = (entry as any).isVirtual === true;
+                    const isMe = !isVirtual && myUserId != null && entry.userId === myUserId;
                     return (
                       <div
                         key={entry.userId}

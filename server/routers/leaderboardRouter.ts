@@ -15,6 +15,7 @@ import { getDb } from "../db";
 import { userPointsLog, userPointsTotals, users } from "../../drizzle/schema";
 import { eq, desc, sql, and, gte } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
+import { generateVirtualLeaderboard } from "../leaderboardSeed";
 
 // ─── Point values ─────────────────────────────────────────────────────────────
 export const POINTS = {
@@ -127,14 +128,39 @@ export const leaderboardRouter = router({
           .orderBy(desc(sql`SUM(${userPointsLog.points})`))
           .limit(limit);
 
-        return rows.map((r, i) => ({
-          rank: i + 1,
-          userId: r.userId,
+          const realEntries = rows.map((r) => ({
+          rank: 0,
+          userId: String(r.userId),
           displayName: r.displayName || r.name || "Anonymous",
           avatarUrl: r.avatarUrl,
           credentials: r.credentials,
           points: r.periodPoints ?? 0,
+          isVirtual: false as const,
         }));
+
+        // Merge with virtual entries, real users always shown, virtual fill the rest
+        const virtualPeriod = period === "this_week" ? "7d" : "30d";
+        const virtual = generateVirtualLeaderboard(1200, virtualPeriod).map((v) => ({
+          rank: 0,
+          userId: v.userId,
+          displayName: v.displayName,
+          avatarUrl: null,
+          credentials: v.credentials,
+          // Convert correct answers to equivalent points for display
+          points: v.correct * (category === "challenge" ? 10 : category === "case" ? 25 : category === "flashcard" ? 5 : 10),
+          isVirtual: true as const,
+        }));
+
+        const realUserIds = new Set(realEntries.map((r) => r.userId));
+        const merged = [
+          ...realEntries,
+          ...virtual.filter((v) => !realUserIds.has(v.userId)),
+        ]
+          .sort((a, b) => b.points - a.points)
+          .slice(0, limit)
+          .map((e, i) => ({ ...e, rank: i + 1 }));
+
+        return merged;
       }
 
       const pointsCol =
@@ -160,14 +186,37 @@ export const leaderboardRouter = router({
         .orderBy(desc(pointsCol))
         .limit(limit);
 
-      return rows.map((r, i) => ({
-        rank: i + 1,
-        userId: r.userId,
+      const realEntries = rows.map((r) => ({
+        rank: 0,
+        userId: String(r.userId),
         displayName: r.displayName || r.name || "Anonymous",
         avatarUrl: r.avatarUrl,
         credentials: r.credentials,
         points: r.points ?? 0,
+        isVirtual: false as const,
       }));
+
+      // Merge with virtual entries for all_time view
+      const virtual = generateVirtualLeaderboard(1200, "allTime").map((v) => ({
+        rank: 0,
+        userId: v.userId,
+        displayName: v.displayName,
+        avatarUrl: null,
+        credentials: v.credentials,
+        points: v.correct * (category === "challenge" ? 10 : category === "case" ? 25 : category === "flashcard" ? 5 : 10),
+        isVirtual: true as const,
+      }));
+
+      const realUserIds = new Set(realEntries.map((r) => r.userId));
+      const merged = [
+        ...realEntries,
+        ...virtual.filter((v) => !realUserIds.has(v.userId)),
+      ]
+        .sort((a, b) => b.points - a.points)
+        .slice(0, limit)
+        .map((e, i) => ({ ...e, rank: i + 1 }));
+
+      return merged;
     }),
 
   getMyPoints: protectedProcedure.query(async ({ ctx }) => {
