@@ -69,6 +69,8 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Pencil, Loader2, BookOpen } from "lucide-react";
+import { ShareButton } from "@/components/ShareButton";
+import { DailyChallengeBanner } from "@/components/DailyChallengeBanner";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -691,6 +693,20 @@ export default function QuickFire() {
   return (
     <Layout>
       <div className="container py-6 max-w-3xl">
+        {/* Hero Banner */}
+        <div className="mb-6">
+          <DailyChallengeBanner
+            streakCount={statsQuery.data?.streak ?? 0}
+            completed={!!(statsQuery.data && alreadyCompleted)}
+            onStart={() => {
+              const firstUnanswered = questions.findIndex((q) => !effectiveUserAttempts[q.id]);
+              if (firstUnanswered >= 0) setCurrentIndex(firstUnanswered);
+              setActiveTab("challenge");
+            }}
+            onViewArchive={() => setActiveTab("archive")}
+          />
+        </div>
+
         {/* Page header */}
         <div className="flex items-start justify-between mb-5 flex-wrap gap-3">
           <div className="flex items-center gap-3">
@@ -1191,6 +1207,13 @@ export default function QuickFire() {
                       ← All Categories
                     </Button>
                   )}
+                  <ShareButton
+                    url={typeof window !== "undefined" ? window.location.origin + "/daily-challenge" : ""}
+                    title={`I just completed today's iHeartEcho Daily Challenge! Can you beat my score?`}
+                    hashtags={["iHeartEcho", "echocardiography", "DailyChallenge"]}
+                    variant="outline"
+                    className="border-white/30 text-white hover:bg-white/10"
+                  />
                 </div>
               </div>
             )}
@@ -1224,6 +1247,13 @@ export default function QuickFire() {
                     <Button variant="outline" className="border-white/30 text-white hover:bg-white/10" onClick={handleRestart}>
                       <RefreshCw className="w-4 h-4 mr-2" /> Retry
                     </Button>
+                    <ShareButton
+                      url={typeof window !== "undefined" ? window.location.origin + "/daily-challenge" : ""}
+                      title={`I scored ${correctCount}/${questions.length} (${pct}%) on today's iHeartEcho Daily Challenge! Can you beat my score?`}
+                      hashtags={["iHeartEcho", "echocardiography", "DailyChallenge"]}
+                      variant="outline"
+                      className="border-white/30 text-white hover:bg-white/10"
+                    />
                   </div>
                 </div>
               );
@@ -1897,6 +1927,13 @@ export default function QuickFire() {
                         <Button variant="outline" className="border-white/30 text-white hover:bg-white/10" onClick={() => setSelectedArchiveId(null)}>
                           <Archive className="w-4 h-4 mr-2" /> Back to Archive
                         </Button>
+                        <ShareButton
+                          url={typeof window !== "undefined" ? window.location.origin + "/daily-challenge" : ""}
+                          title={`I scored ${correctCount}/${archiveQuestions.length} (${pct}%) on an iHeartEcho archive challenge! Test your echo knowledge!`}
+                          hashtags={["iHeartEcho", "echocardiography", "DailyChallenge"]}
+                          variant="outline"
+                          className="border-white/30 text-white hover:bg-white/10"
+                        />
                       </div>
                     </div>
                   );

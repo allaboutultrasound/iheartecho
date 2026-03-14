@@ -71,6 +71,7 @@
 - [x] Upload composited POCUS and Fetal Echo icons (circular + square) to CDN and update all references
 - [x] Add trophy icon to the Daily Challenge section header/card
 - [x] Replace POCUS and Fetal Echo module card icons on Home dashboard with square flat icons
-- [ ] Build reusable ShareButton/ShareModal component (Twitter/X, Facebook, LinkedIn, copy link)
-- [ ] Add social sharing to Daily Challenge result screens
-- [ ] Add social sharing to Case Library case view
+- [x] Build reusable ShareButton/ShareModal component (Twitter/X, Facebook, LinkedIn, copy link)
+- [x] Add social sharing to Daily Challenge result screens (session results, already-completed screen, archive results)
+- [x] Add social sharing to Case Library case view (ShareButton in case header)
+- [x] Create and integrate Daily Challenge hero banner (trophy + teal flames + EKG line, matching dashboard style)
