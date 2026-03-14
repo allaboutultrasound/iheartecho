@@ -1008,19 +1008,19 @@ export default function QuickFireAdmin() {
     <Layout>
       <div className="container py-8 max-w-4xl">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
           <div className="flex items-center gap-2">
-            <button onClick={() => navigate("/quickfire")} className="text-gray-400 hover:text-[#189aa1]">
+            <button onClick={() => navigate("/quickfire")} className="text-gray-400 hover:text-[#189aa1] flex-shrink-0">
               <ChevronLeft className="w-5 h-5" />
             </button>
             <div>
-              <h1 className="text-xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
+              <h1 className="text-lg sm:text-xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
                 Daily Challenge Question Builder
               </h1>
               <p className="text-xs text-gray-400">Create and manage daily challenge questions</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Button
               variant="outline"
               size="sm"
@@ -1057,7 +1057,7 @@ export default function QuickFireAdmin() {
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex gap-1 mb-6 bg-gray-100 rounded-lg p-1 w-fit">
+        <div className="flex gap-1 mb-6 bg-gray-100 rounded-lg p-1 overflow-x-auto">
           <button
             onClick={() => setActiveAdminTab("questions")}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium transition-all ${
@@ -1291,7 +1291,7 @@ export default function QuickFireAdmin() {
         {activeAdminTab === "questions" && (
         <div>
         {/* Stats bar */}
-        <div className="grid grid-cols-5 gap-3 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
           {(["scenario", "image", "connect", "identifier", "order"] as QuestionType[]).map((t) => {
             const meta = TYPE_META[t];
             const Icon = meta.icon;
@@ -1312,10 +1312,10 @@ export default function QuickFireAdmin() {
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
             placeholder="Search questions…"
-            className="w-56"
+            className="w-full sm:w-56"
           />
           <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v as any); setPage(1); }}>
-            <SelectTrigger className="w-44">
+            <SelectTrigger className="w-full sm:w-44">
               <SelectValue placeholder="All Types" />
             </SelectTrigger>
             <SelectContent>
@@ -1329,7 +1329,7 @@ export default function QuickFireAdmin() {
             </SelectContent>
           </Select>
           <Select value={categoryFilter} onValueChange={(v) => { setCategoryFilter(v as any); setPage(1); }}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full sm:w-40">
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>

@@ -159,21 +159,29 @@ async function ensureTodaySet(db: NonNullable<Awaited<ReturnType<typeof getDb>>>
   };
 
   // 1. Check for queued challenges per category
-  const queuedChallenges = await db
-    .select()
-    .from(quickfireChallenges)
-    .where(inArray(quickfireChallenges.status, ["draft", "scheduled"] as any[]))
-    .orderBy(quickfireChallenges.priority, quickfireChallenges.createdAt)
-    .limit(50);
-
+  // Query per-category to avoid a fixed LIMIT cutting off categories with many items ahead of them
   const usedChallengeIds: number[] = [];
 
   for (const cat of CHALLENGE_CATEGORIES) {
     const key = CAT_KEY[cat];
-    const match = queuedChallenges.find(
+    // Fetch the top scheduled/draft challenge for this specific category
+    const catChallenges = await db
+      .select()
+      .from(quickfireChallenges)
+      .where(
+        and(
+          inArray(quickfireChallenges.status, ["draft", "scheduled"] as any[]),
+          cat === "Adult Echo"
+            ? sql`(${quickfireChallenges.category} = ${cat} OR ${quickfireChallenges.category} IS NULL)` as any
+            : eq(quickfireChallenges.category, cat)
+        )
+      )
+      .orderBy(quickfireChallenges.priority, quickfireChallenges.createdAt)
+      .limit(10);
+
+    const match = catChallenges.find(
       (c) =>
         !usedChallengeIds.includes(c.id) &&
-        (c.category === cat || (!c.category && cat === "Adult Echo")) &&
         (!c.publishDate || c.publishDate <= date)
     );
     if (match) {
@@ -2483,9 +2491,10 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
     const date = todayDateStr();
+    // Delete today's cached daily set
     await db.delete(quickfireDailySets).where(eq(quickfireDailySets.setDate, date));
-    // Also reset any challenges that were set live by today's set back to scheduled
-    // so they can be re-picked by the next ensureTodaySet call
+    // Reset any challenges that were set live by today's set back to scheduled
+    // so they can be re-picked by the ensureTodaySet rebuild below
     await db
       .update(quickfireChallenges)
       .set({ status: "scheduled", publishedAt: null, archivedAt: null })
@@ -2493,6 +2502,9 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
         eq(quickfireChallenges.status, "live"),
         sql`DATE(${quickfireChallenges.publishedAt}) = ${date}` as any
       ));
+    // Immediately rebuild today's set so challenges go live right away
+    // instead of waiting for the next user page load
+    await ensureTodaySet(db, date);
     return { refreshed: true, date };
   }),
 });

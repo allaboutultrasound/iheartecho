@@ -944,19 +944,19 @@ export default function AdminCaseManagement() {
     <Layout>
       <div className="container py-8 max-w-4xl">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-3">
           <div className="flex items-center gap-2">
-            <button onClick={() => navigate("/case-library")} className="text-gray-400 hover:text-[#189aa1] transition-colors">
+            <button onClick={() => navigate("/case-library")} className="text-gray-400 hover:text-[#189aa1] transition-colors flex-shrink-0">
               <ChevronLeft className="w-5 h-5" />
             </button>
             <div>
-              <h1 className="text-xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
+              <h1 className="text-lg sm:text-xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
                 Case Management
               </h1>
               <p className="text-xs text-gray-400">Review and approve member-submitted echo cases</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Button
               variant="outline"
               size="sm"
@@ -975,7 +975,7 @@ export default function AdminCaseManagement() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-6 bg-gray-100 rounded-lg p-1 w-fit">
+        <div className="flex gap-1 mb-6 bg-gray-100 rounded-lg p-1 overflow-x-auto">
           {(["pending", "all", "flagged", "analytics"] as TabType[]).map((t) => (
             <button
               key={t}
@@ -1033,7 +1033,7 @@ export default function AdminCaseManagement() {
             {/* Filters */}
             <div className="space-y-2 mb-4">
               {/* Row 1: Search + Tag + Search button */}
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input
@@ -1044,7 +1044,7 @@ export default function AdminCaseManagement() {
                     className="pl-9"
                   />
                 </div>
-                <div className="relative w-48">
+                <div className="relative w-full sm:w-48">
                   <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input
                     value={tagInput}
@@ -1054,22 +1054,24 @@ export default function AdminCaseManagement() {
                     className="pl-9"
                   />
                 </div>
-                <Button variant="outline" onClick={handleSearch} className="gap-1.5">
-                  <Search className="w-4 h-4" /> Search
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => utils.caseLibrary.listAllCases.invalidate()}
-                  title="Refresh"
-                >
-                  <RefreshCw className="w-4 h-4 text-gray-400" />
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={handleSearch} className="gap-1.5 flex-1 sm:flex-none">
+                    <Search className="w-4 h-4" /> Search
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => utils.caseLibrary.listAllCases.invalidate()}
+                    title="Refresh"
+                  >
+                    <RefreshCw className="w-4 h-4 text-gray-400" />
+                  </Button>
+                </div>
               </div>
               {/* Row 2: Status + Modality + Difficulty + Clear */}
-              <div className="flex gap-2 flex-wrap">
+              <div className="grid grid-cols-2 sm:flex gap-2 flex-wrap">
                 <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v as any); setPage(1); }}>
-                  <SelectTrigger className="w-36">
+                  <SelectTrigger className="w-full sm:w-36">
                     <SelectValue placeholder="All Status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1080,7 +1082,7 @@ export default function AdminCaseManagement() {
                   </SelectContent>
                 </Select>
                 <Select value={modalityFilter} onValueChange={(v) => { setModalityFilter(v); setPage(1); }}>
-                  <SelectTrigger className="w-36">
+                  <SelectTrigger className="w-full sm:w-36">
                     <SelectValue placeholder="All Modalities" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1096,7 +1098,7 @@ export default function AdminCaseManagement() {
                   </SelectContent>
                 </Select>
                 <Select value={difficultyFilter} onValueChange={(v) => { setDifficultyFilter(v); setPage(1); }}>
-                  <SelectTrigger className="w-36">
+                  <SelectTrigger className="w-full sm:w-36">
                     <SelectValue placeholder="All Levels" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1107,7 +1109,7 @@ export default function AdminCaseManagement() {
                   </SelectContent>
                 </Select>
                 <Select value={mediaFilter} onValueChange={(v) => { setMediaFilter(v as any); setPage(1); }}>
-                  <SelectTrigger className="w-36">
+                  <SelectTrigger className="w-full sm:w-36">
                     <SelectValue placeholder="All Media" />
                   </SelectTrigger>
                   <SelectContent>

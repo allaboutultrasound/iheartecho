@@ -166,3 +166,28 @@
 
 ## Profile Nav Menu Fix (Mar 14 2026)
 - [x] Move Accreditation Manager into the first ACCREDITATION section, remove duplicate section
+
+## Full Platform Mobile Responsiveness (Mar 14 2026)
+- [x] Fix QuickFireAdmin mobile layout (header overflow, tabs, filter pills, question cards)
+- [x] Fix PlatformAdmin mobile layout (user list, role management, stats)
+- [x] Fix AdminCaseManagement mobile layout (case list, media viewer, dialogs)
+- [x] Fix EducatorAdmin mobile layout (tabs, course cards, competency cards)
+- [x] Fix AccreditationManager mobile layout (org table, stats, dialogs)
+- [x] Fix DIY LabAdmin mobile layout (already responsive — confirmed)
+- [x] Fix DiyMember portal mobile layout (already responsive — confirmed)
+- [x] Fix CaseLibrary mobile layout (stats grid fixed, rest already responsive)
+- [ ] Fix CaseDetail mobile layout (media carousel, findings tabs)
+- [ ] Fix ScanCoach mobile layout (view cards, video player)
+- [ ] Fix TTENavigator and TEENavigator mobile layout
+- [ ] Fix EchoAssist and EchoAssist Calculators mobile layout
+
+## Challenge Live Status Fix (Mar 14 2026)
+- [x] Restore today's challenges to live status after refresh reset them
+- [x] Fix refreshTodaySet logic — adminRefreshTodaySet now auto-rebuilds immediately after reset
+
+## POCUS Category Bug (Mar 14 2026)
+- [x] Fix POCUS category not sticking in daily challenge queue (per-category query fix)
+- [x] Promote POCUS challenge live for today
+
+## Icon Size Fix (Mar 14 2026)
+- [x] Increase SVG icon size for Fetal Echo and POCUS category icons

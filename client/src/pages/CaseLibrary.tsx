@@ -385,7 +385,7 @@ export default function CaseLibrary() {
           <div>
             {/* Summary stats */}
             {mySubmissions.length > 0 && (
-              <div className="grid grid-cols-3 gap-3 mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
                 {(["pending", "approved", "rejected"] as const).map((status) => {
                   const count = mySubmissions.filter((c: any) => c.status === status).length;
                   const Icon = STATUS_ICONS[status];

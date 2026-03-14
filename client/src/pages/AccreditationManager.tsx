@@ -344,12 +344,12 @@ function DiyOrgDetail({ orgId, onBack }: { orgId: number; onBack: () => void }) 
   return (
     <div>
       {/* Back + header */}
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex flex-wrap items-center gap-2 mb-6">
         <Button variant="ghost" size="sm" onClick={onBack} className="text-gray-500">
           <ChevronLeft className="w-4 h-4 mr-1" /> All Organizations
         </Button>
-        <ChevronRight className="w-4 h-4 text-gray-300" />
-        <span className="font-semibold text-gray-800">{org.name}</span>
+        <ChevronRight className="w-4 h-4 text-gray-300 hidden sm:block" />
+        <span className="font-semibold text-gray-800 truncate max-w-[160px] sm:max-w-none">{org.name}</span>
         <Badge style={{ background: planInfo.color + "20", color: planInfo.color }} className="text-xs font-semibold">{planInfo.label}</Badge>
         <Badge className={`text-xs ${STATUS_COLORS[subStatus] ?? "bg-gray-100 text-gray-600"}`}>{subStatus.replace("_", " ")}</Badge>
       </div>
@@ -513,12 +513,12 @@ function DiyOrgDetail({ orgId, onBack }: { orgId: number; onBack: () => void }) 
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="flex gap-3">
-                <span className="text-sm text-gray-500 w-40">Organization Name</span>
+              <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
+                <span className="text-sm text-gray-500 sm:w-40 font-medium sm:font-normal">Organization Name</span>
                 <span className="text-sm font-medium text-gray-800">{org.name}</span>
               </div>
-              <div className="flex gap-3">
-                <span className="text-sm text-gray-500 w-40">Accreditation Types</span>
+              <div className="flex flex-col sm:flex-row gap-1 sm:gap-3">
+                <span className="text-sm text-gray-500 sm:w-40 font-medium sm:font-normal">Accreditation Types</span>
                 <span className="text-sm font-medium text-gray-800">
                   {org.accreditationTypes ? JSON.parse(org.accreditationTypes).join(", ") : "Not set"}
                 </span>

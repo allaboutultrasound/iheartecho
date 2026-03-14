@@ -861,13 +861,13 @@ export default function PlatformAdmin() {
       <div className="container py-8 max-w-6xl">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "#189aa1" }}>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "#189aa1" }}>
               <Shield className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900" style={{ fontFamily: "Merriweather, serif" }}>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900" style={{ fontFamily: "Merriweather, serif" }}>
                 Platform Admin
               </h1>
               <p className="text-sm text-gray-500">Manage users, roles, and platform access</p>
@@ -877,7 +877,7 @@ export default function PlatformAdmin() {
             variant="outline"
             size="sm"
             onClick={() => refetchUsers()}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 self-start sm:self-auto"
           >
             <RefreshCw className="w-4 h-4" />
             Refresh
@@ -1162,7 +1162,7 @@ export default function PlatformAdmin() {
                 <Users className="w-4 h-4 text-[#189aa1]" />
                 All Users ({filteredUsers.length})
               </CardTitle>
-              <div className="relative w-64">
+              <div className="relative w-full sm:w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
                   placeholder="Search by name or email…"

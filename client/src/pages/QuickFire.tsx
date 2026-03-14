@@ -1193,7 +1193,7 @@ export default function QuickFire() {
                       >
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center relative ${isEnabled ? "bg-[#189aa1]" : "bg-gray-200"} ${!isEnabled ? "opacity-50 grayscale" : ""}`}>
                           {(prefKey === 'fetalEcho' || prefKey === 'pocus') ? (
-                            <Icon className="w-6 h-6" />
+                            <Icon className="w-8 h-8" />
                           ) : (
                             <Icon className="w-5 h-5 text-white" />
                           )}
@@ -1357,7 +1357,7 @@ export default function QuickFire() {
                                     isDone ? (isCorrect ? "bg-green-500" : "bg-orange-400") : "bg-[#189aa1]"
                                   } ${isDone && !isCorrect ? 'opacity-80' : ''}`}>
                                   {(cat.mapKey === 'fetalEcho' || cat.mapKey === 'pocus') ? (
-                                    <cat.Icon className="w-5 h-5" />
+                                    <cat.Icon className="w-7 h-7" />
                                   ) : (
                                     <cat.Icon className="w-4 h-4 text-white" />
                                   )}

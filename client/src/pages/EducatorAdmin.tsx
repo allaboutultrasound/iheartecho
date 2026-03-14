@@ -1096,7 +1096,7 @@ export default function EducatorAdmin() {
               <div className="flex items-center gap-3">
                 {orgs && orgs.length > 1 && (
                   <Select value={String(activeOrgId)} onValueChange={v => setSelectedOrgId(Number(v))}>
-                    <SelectTrigger className="w-48 text-sm">
+                    <SelectTrigger className="w-full sm:w-48 text-sm">
                       <SelectValue placeholder="Select organization" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1133,7 +1133,7 @@ export default function EducatorAdmin() {
             </div>
           ) : (
             <Tabs defaultValue="overview">
-              <TabsList className="mb-6 bg-white border border-gray-100 p-1 rounded-xl h-auto flex-wrap gap-1">
+              <TabsList className="mb-6 bg-white border border-gray-100 p-1 rounded-xl h-auto flex-wrap gap-1 overflow-x-auto">
                 {[
                   { value: "overview", label: "Overview", icon: BarChart3 },
                   { value: "courses", label: "Courses", icon: BookOpen },
