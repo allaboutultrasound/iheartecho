@@ -154,3 +154,6 @@
 - [x] Fix course edit option not working in Educator dashboard
 - [x] Fix course edit button - add click handler and edit dialog with pre-filled form
 - [x] Add edit/assign/review actions to Competencies tab in Educator Admin
+
+## WMV Video Playback (Mar 14 2026)
+- [x] Add WMV detection and unsupported-format fallback UI with download link across all video players
