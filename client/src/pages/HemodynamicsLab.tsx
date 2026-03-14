@@ -1009,16 +1009,29 @@ export default function HemodynamicsLab() {
 
   return (
     <Layout>
-      <div className="container py-6">
-        <div className="mb-5">
-          <h1 className="text-2xl font-bold text-gray-800 mb-1" style={{ fontFamily: "Merriweather, serif" }}>
+      {/* Hero Banner */}
+      <div className="relative overflow-hidden" style={{ minHeight: 200 }}>
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url('https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/echoassist-hub-banner-WWGwHuDdiGx2vcpx389pUW.webp')`,
+          }}
+        />
+        <div
+          className="absolute inset-0"
+          style={{ background: "linear-gradient(90deg, rgba(14,30,46,0.88) 0%, rgba(14,74,80,0.65) 55%, rgba(14,74,80,0.15) 100%)" }}
+        />
+        <div className="relative container py-8 md:py-10">
+          <h1 className="text-2xl md:text-3xl font-black text-white leading-tight mb-1" style={{ fontFamily: "Merriweather, serif" }}>
             Hemodynamics Lab
           </h1>
-          <p className="text-sm text-gray-500">
+          <p className="text-[#4ad9e0] font-semibold text-sm mt-0.5">Interactive Cardiac Physiology Simulator</p>
+          <p className="text-white/70 text-sm mt-2 max-w-xl leading-relaxed">
             Adjust preload, afterload, contractility, and heart rate. The Wiggers diagram and PV loop update in real time with synchronized valve events.
           </p>
         </div>
-
+      </div>
+      <div className="container py-6">
         {/* Clinical Presets */}
         <div className="mb-5 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="teal-header px-5 py-3">

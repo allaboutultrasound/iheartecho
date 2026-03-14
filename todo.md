@@ -57,3 +57,13 @@
 - [x] Generate and integrate Flashcards hero banner (flashcard/learning theme, teal/navy)
 - [x] Daily Challenge banner: "Start Today's Challenge" and "View Archive" buttons scroll to anchor in page content
 - [x] Sidebar nav scroll position preserved on navigation (no longer resets to top on every click)
+- [x] Hemodynamics Lab hero banner — same echocardiography tablet image as EchoAssist Hub
+- [x] Hemodynamics Lab hero banner — same echocardiography tablet image as EchoAssist Hub
+- [x] Daily Challenge queue: running category tally at the top showing count per category
+- [x] Challenge Archive: add category filter (ACS, Adult Echo, Pediatric Echo, Fetal Echo, POCUS)
+- [ ] Daily Challenge admin: fix edit question functionality in the queue (edit button not working)
+- [ ] Daily Challenge: fix auto-assignment of questions (should not prompt user to select questions)
+- [x] AI question generator: fix invalid JSON error when generating large batches (truncated response)
+- [x] Question bank edit dialog: add "Save & Add to Queue" button that saves question and creates scheduled challenge entry
+- [x] AI question generator: add duplicate detection — pass existing question summaries to the AI prompt so it generates only new unique content
+- [x] Add WMV to accepted video upload formats

@@ -298,8 +298,8 @@ function RecordingUploadSection({ meetingId, onUploaded }: { meetingId: number; 
       toast.error(`File too large. Maximum size is ${maxMB}MB.`);
       return;
     }
-    const allowed = ["audio/mpeg", "audio/mp4", "audio/wav", "audio/ogg", "audio/webm", "video/mp4", "video/webm", "video/quicktime", "audio/x-m4a"];
-    if (!allowed.includes(file.type) && !file.name.match(/\.(mp3|mp4|wav|ogg|webm|m4a|mov)$/i)) {
+    const allowed = ["audio/mpeg", "audio/mp4", "audio/wav", "audio/ogg", "audio/webm", "video/mp4", "video/webm", "video/quicktime", "video/x-ms-wmv", "video/avi", "video/x-msvideo", "audio/x-m4a"];
+    if (!allowed.includes(file.type) && !file.name.match(/\.(mp3|mp4|wav|ogg|webm|m4a|mov|wmv|avi)$/i)) {
       toast.error("Unsupported file type. Please upload an audio or video recording.");
       return;
     }

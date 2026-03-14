@@ -939,42 +939,109 @@ ${jsonFormatInstructions}
 
 Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
 
-      let text: string;
+      // Fetch existing question texts for deduplication — pass to AI so it avoids repeating topics
+      let existingQuestionSummaries: string[] = [];
       try {
-        // Use native fetch (not createPatchedFetch) — patchedFetch is for SSE streaming only
-        const aiResp = await fetch(`${forgeBaseUrl}/v1/chat/completions`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${forgeApiKey}`,
-          },
-          body: JSON.stringify({
-            model: "gpt-4o",
-            messages: [{ role: "user", content: promptText }],
-            temperature: 0.7,
-            response_format: { type: "json_object" }, // force JSON mode — eliminates markdown fences and prose
-          }),
-        });
-        if (!aiResp.ok) {
-          const errBody = await aiResp.text();
-          throw new Error(`Forge API returned ${aiResp.status}: ${errBody.substring(0, 200)}`);
+        const db = await getDb();
+        if (db) {
+          const existing = await db
+            .select({ question: quickfireQuestions.question })
+            .from(quickfireQuestions)
+            .where(sql`${quickfireQuestions.deletedAt} IS NULL AND ${quickfireQuestions.type} = ${input.type}`)
+            .orderBy(desc(quickfireQuestions.id))
+            .limit(100);
+          existingQuestionSummaries = existing.map((q) => {
+            // Strip HTML and truncate to first 120 chars for the prompt
+            const plain = q.question.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").trim();
+            return plain.length > 120 ? plain.slice(0, 117) + "..." : plain;
+          });
         }
-        const aiData = await aiResp.json() as {
-          choices?: { message?: { content?: string } }[];
-          error?: { message?: string };
-        };
-        if (aiData.error) {
-          throw new Error(`Forge API error: ${aiData.error.message ?? JSON.stringify(aiData.error)}`);
-        }
-        text = aiData.choices?.[0]?.message?.content ?? "";
-        if (!text) throw new Error("Forge API returned empty content");
-      } catch (aiErr) {
-        const errMsg = aiErr instanceof Error ? aiErr.message : String(aiErr);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: `AI generation failed: ${errMsg.substring(0, 300)}`,
-        });
+      } catch { /* non-fatal — proceed without dedup context */ }
+
+      const dedupInstruction = existingQuestionSummaries.length > 0
+        ? `\nIMPORTANT — Do NOT repeat or closely paraphrase any of the following ${existingQuestionSummaries.length} existing questions already in the database. Each new question must cover a DISTINCT clinical scenario, value, or concept:\n${existingQuestionSummaries.map((q, i) => `${i + 1}. ${q}`).join("\n")}\n`
+        : "";
+
+      // Batch into groups of 5 to avoid JSON truncation on large requests
+      const BATCH_SIZE = 5;
+      const totalCount = input.count;
+      const batches: number[] = [];
+      let remaining = totalCount;
+      while (remaining > 0) {
+        const batchCount = Math.min(BATCH_SIZE, remaining);
+        batches.push(batchCount);
+        remaining -= batchCount;
       }
+
+      const allTexts: string[] = [];
+
+      for (const batchCount of batches) {
+        const batchPrompt = `You are an expert echocardiography educator creating ${batchCount} ${input.difficulty} ${input.type} questions about: "${input.topic}".
+
+${typeInstructions}
+${dedupInstruction}
+Guidelines:
+- Use accurate, up-to-date ASE/AHA/ACC guidelines where applicable
+- Questions should be clinically relevant and educational
+- For MCQ: distractors should be plausible but clearly distinguishable from the correct answer
+- Tags: 2-4 specific clinical terms (e.g. "aortic stenosis", "ASE 2021", "Doppler")
+- Difficulty: ${input.difficulty} (beginner=basic concepts, intermediate=clinical application, advanced=complex interpretation)
+- Each question MUST be unique — different clinical scenario, different patient presentation, different values
+
+Return exactly ${batchCount} questions as a valid JSON object matching this format:
+${jsonFormatInstructions}
+
+Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
+
+        let batchText: string;
+        try {
+          const aiResp = await fetch(`${forgeBaseUrl}/v1/chat/completions`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${forgeApiKey}`,
+            },
+            body: JSON.stringify({
+              model: "gpt-4o",
+              messages: [{ role: "user", content: batchPrompt }],
+              temperature: 0.7,
+              max_tokens: 8000, // ample for 5 questions, prevents truncation
+              response_format: { type: "json_object" },
+            }),
+          });
+          if (!aiResp.ok) {
+            const errBody = await aiResp.text();
+            throw new Error(`Forge API returned ${aiResp.status}: ${errBody.substring(0, 200)}`);
+          }
+          const aiData = await aiResp.json() as {
+            choices?: { message?: { content?: string } }[];
+            error?: { message?: string };
+          };
+          if (aiData.error) {
+            throw new Error(`Forge API error: ${aiData.error.message ?? JSON.stringify(aiData.error)}`);
+          }
+          batchText = aiData.choices?.[0]?.message?.content ?? "";
+          if (!batchText) throw new Error("Forge API returned empty content");
+          allTexts.push(batchText);
+        } catch (aiErr) {
+          const errMsg = aiErr instanceof Error ? aiErr.message : String(aiErr);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: `AI generation failed: ${errMsg.substring(0, 300)}`,
+          });
+        }
+      }
+
+      // Combine all batch texts into one for unified parsing below
+      const text = allTexts.length === 1
+        ? allTexts[0]
+        : JSON.stringify({ questions: allTexts.flatMap(t => {
+            try {
+              let c = t.replace(/^```(?:json)?\s*/im, "").replace(/\s*```\s*$/im, "").trim();
+              const r = JSON.parse(c);
+              return Array.isArray(r) ? r : (Array.isArray(r.questions) ? r.questions : []);
+            } catch { return []; }
+          }) });
 
       // Parse the JSON response — handle multiple formats the model may return:
       // 1. {"questions":[...]}  (ideal)
@@ -2084,12 +2151,22 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       // Strip HTML tags from question text for the challenge title
       const rawTitle = q.question.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").trim();
       const autoTitle = rawTitle.length > 60 ? rawTitle.slice(0, 57) + "..." : rawTitle;
+      // Map question category to challenge category
+      const catMap: Record<string, string> = {
+        "ACS": "ACS",
+        "Adult Echo": "Adult Echo",
+        "Pediatric Echo": "Pediatric Echo",
+        "Fetal Echo": "Fetal Echo",
+        "POCUS": "POCUS",
+        "General": "Adult Echo",
+      };
+      const challengeCategory = ((q.category && catMap[q.category]) ? catMap[q.category] : "Adult Echo") as "ACS" | "Adult Echo" | "Pediatric Echo" | "Fetal Echo" | "POCUS" | "General";
       const [result] = await db.insert(quickfireChallenges).values({
         title: autoTitle,
         description: null,
         questionIds: JSON.stringify([input.questionId]),
         priority: 100,
-        category: "Adult Echo",
+        category: challengeCategory,
         status: "scheduled",
         publishDate: input.publishDate ?? null,
         createdByUserId: ctx.user.id,

@@ -83,7 +83,7 @@ type AnswerResult = {
 
 type LeaderboardPeriod = "7d" | "30d" | "allTime";
 
-const CATEGORY_TAGS = ["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo"] as const;
+const CATEGORY_TAGS = ["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "POCUS"] as const;
 const DIFFICULTY_OPTIONS = ["beginner", "intermediate", "advanced"] as const;
 
 const TYPE_LABELS: Record<string, { label: string; color: string; icon: React.ComponentType<{ className?: string }> }> = {
@@ -106,6 +106,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Adult Echo": "bg-[#189aa1]/10 text-[#189aa1]",
   "Pediatric Echo": "bg-purple-100 text-purple-700",
   "Fetal Echo": "bg-pink-100 text-pink-700",
+  "POCUS": "bg-blue-100 text-blue-700",
 };
 
 // ─── Mini bar chart ───────────────────────────────────────────────────────────
@@ -1021,7 +1022,50 @@ export default function QuickFire() {
                     );
                   }
 
+                  // Running tally counts
+                  const tallyCorrect = enabledCats.filter((c) => { const qId = categoryMap[c.mapKey]; return qId && todayAttempts[qId]?.isCorrect === true; }).length;
+                  const tallyIncorrect = enabledCats.filter((c) => { const qId = categoryMap[c.mapKey]; return qId && todayAttempts[qId] !== undefined && todayAttempts[qId]?.isCorrect !== true; }).length;
+                  const tallyRemaining = enabledCats.length - tallyCorrect - tallyIncorrect;
+
                   return (
+                    <>
+                    {/* ── Category Tally Bar ── */}
+                    <div className="flex flex-wrap items-center gap-2 mb-4 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                      <div className="flex flex-wrap gap-1.5 flex-1">
+                        {enabledCats.map((cat) => {
+                          const qId = categoryMap[cat.mapKey];
+                          const attempt = qId ? todayAttempts[qId] : undefined;
+                          const isDone = attempt !== undefined;
+                          const isCorrect = attempt?.isCorrect === true;
+                          return (
+                            <div
+                              key={cat.key}
+                              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border transition-all ${
+                                isDone
+                                  ? isCorrect
+                                    ? "bg-green-50 border-green-200 text-green-700"
+                                    : "bg-orange-50 border-orange-200 text-orange-700"
+                                  : "bg-white border-[#189aa1]/25 text-[#189aa1]"
+                              }`}
+                            >
+                              {isDone ? (
+                                isCorrect
+                                  ? <CheckCircle2 className="w-3 h-3 text-green-500" />
+                                  : <XCircle className="w-3 h-3 text-orange-400" />
+                              ) : (
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#189aa1] inline-block" />
+                              )}
+                              {cat.label}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="flex items-center gap-3 text-xs shrink-0">
+                        {tallyCorrect > 0 && <span className="text-green-600 font-bold">{tallyCorrect} ✓</span>}
+                        {tallyIncorrect > 0 && <span className="text-orange-500 font-bold">{tallyIncorrect} ✗</span>}
+                        <span className="text-gray-400">{tallyRemaining} left</span>
+                      </div>
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {CATS.map((cat) => {
                         const isDisabled = catPrefs[cat.prefKey] === false;
@@ -1113,6 +1157,7 @@ export default function QuickFire() {
                         );
                       })}
                     </div>
+                    </>
                   );
                 })()}
               </div>

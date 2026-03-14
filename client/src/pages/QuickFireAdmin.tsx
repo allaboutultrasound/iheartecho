@@ -622,24 +622,36 @@ export default function QuickFireAdmin() {
   });
 
   const createMutation = trpc.quickfire.createQuestion.useMutation({
-    onSuccess: () => {
-      toast.success("Question created.");
+    onSuccess: (data) => {
       utils.quickfire.listAllQuestions.invalidate();
-      setFormOpen(false);
-      setForm(EMPTY_FORM);
+      if (saveAndQueuePending) {
+        approveToQueueMutation.mutate({ questionId: data.id });
+        setFormOpen(false);
+        setForm(EMPTY_FORM);
+      } else {
+        toast.success("Question created.");
+        setFormOpen(false);
+        setForm(EMPTY_FORM);
+      }
     },
-    onError: (err) => toast.error(err.message || "Failed to create question."),
+    onError: (err) => { toast.error(err.message || "Failed to create question."); setSaveAndQueuePending(false); },
   });
-
   const updateMutation = trpc.quickfire.updateQuestion.useMutation({
     onSuccess: () => {
-      toast.success("Question updated.");
       utils.quickfire.listAllQuestions.invalidate();
-      setFormOpen(false);
-      setEditingId(null);
-      setForm(EMPTY_FORM);
+      if (saveAndQueuePending && editingId !== null) {
+        approveToQueueMutation.mutate({ questionId: editingId });
+        setFormOpen(false);
+        setEditingId(null);
+        setForm(EMPTY_FORM);
+      } else {
+        toast.success("Question updated.");
+        setFormOpen(false);
+        setEditingId(null);
+        setForm(EMPTY_FORM);
+      }
     },
-    onError: (err) => toast.error(err.message || "Failed to update question."),
+    onError: (err) => { toast.error(err.message || "Failed to update question."); setSaveAndQueuePending(false); },
   });
 
   const deleteMutation = trpc.quickfire.deleteQuestion.useMutation({
@@ -665,12 +677,15 @@ export default function QuickFireAdmin() {
     onError: (err) => toast.error(err.message || "Failed to copy question."),
   });
 
+  const [saveAndQueuePending, setSaveAndQueuePending] = useState(false);
+
   const approveToQueueMutation = trpc.quickfire.adminApproveQuestionToQueue.useMutation({
     onSuccess: () => {
-      toast.success("Question approved and added to the daily queue.");
+      toast.success("Question saved and added to the daily queue.");
       challengeListQuery.refetch();
+      setSaveAndQueuePending(false);
     },
-    onError: (err) => toast.error(err.message || "Failed to approve question."),
+    onError: (err) => { toast.error(err.message || "Failed to add to queue."); setSaveAndQueuePending(false); },
   });
 
   // ── Bulk-select state ─────────────────────────────────────────────────────
@@ -2478,14 +2493,23 @@ export default function QuickFireAdmin() {
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => { setFormOpen(false); setEditingId(null); setForm(EMPTY_FORM); }}>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => { setFormOpen(false); setEditingId(null); setForm(EMPTY_FORM); setSaveAndQueuePending(false); }}>
               Cancel
+            </Button>
+            <Button
+              variant="outline"
+              className="gap-2 border-[#189aa1] text-[#189aa1] hover:bg-[#189aa1]/10"
+              onClick={() => { setSaveAndQueuePending(true); handleSubmitForm(); }}
+              disabled={createMutation.isPending || updateMutation.isPending || approveToQueueMutation.isPending}
+            >
+              <ListOrdered className="w-4 h-4" />
+              {editingId !== null ? "Save & Add to Queue" : "Create & Add to Queue"}
             </Button>
             <Button
               className="text-white gap-2"
               style={{ background: "#189aa1" }}
-              onClick={handleSubmitForm}
+              onClick={() => { setSaveAndQueuePending(false); handleSubmitForm(); }}
               disabled={createMutation.isPending || updateMutation.isPending}
             >
               <CheckCircle2 className="w-4 h-4" />
@@ -3362,7 +3386,7 @@ export default function QuickFireAdmin() {
                       try {
                         const fd = new FormData();
                         fd.append("file", file);
-                        const res = await fetch("/api/upload/question-media", { method: "POST", body: fd, credentials: "include" });
+                        const res = await fetch("/api/upload-question-media", { method: "POST", body: fd, credentials: "include" });
                         const data = await res.json();
                         if (data.url) setFlashcardForm((f) => ({ ...f, imageUrl: data.url }));
                         else toast.error("Upload failed");
@@ -3405,7 +3429,7 @@ export default function QuickFireAdmin() {
                       try {
                         const fd = new FormData();
                         fd.append("file", file);
-                        const res = await fetch("/api/upload/question-media", { method: "POST", body: fd, credentials: "include" });
+                        const res = await fetch("/api/upload-question-media", { method: "POST", body: fd, credentials: "include" });
                         const data = await res.json();
                         if (data.url) setFlashcardForm((f) => ({ ...f, videoUrl: data.url } as any));
                         else toast.error("Upload failed");
