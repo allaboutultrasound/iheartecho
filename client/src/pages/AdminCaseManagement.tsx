@@ -52,6 +52,9 @@ import {
   Link2,
   BarChart3,
   TrendingUp,
+  Bookmark,
+  BookmarkCheck,
+  Flag,
 } from "lucide-react";
 import {
   BarChart,
@@ -70,7 +73,7 @@ import { formatDistanceToNow } from "date-fns";
 import CaseEditorDialog from "@/components/CaseEditorDialog";
 import { formatViewCount } from "@/lib/caseViewCount";
 
-type TabType = "pending" | "all" | "analytics";
+type TabType = "pending" | "all" | "flagged" | "analytics";
 
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-amber-100 text-amber-700 border-amber-200",
@@ -640,6 +643,40 @@ export default function AdminCaseManagement() {
     onError: (err) => toast.error(err.message || "Failed to delete case."),
   });
 
+  // Flag state
+  const [flagDialogOpen, setFlagDialogOpen] = useState(false);
+  const [flagTarget, setFlagTarget] = useState<{ id: number; title: string; flagged: boolean; flagNote: string | null } | null>(null);
+  const [flagNoteInput, setFlagNoteInput] = useState("");
+
+  // Flagged cases query
+  const flaggedQuery = trpc.caseLibrary.listFlaggedCases.useQuery(undefined, {
+    enabled: tab === "flagged",
+  });
+
+  const flagMutation = trpc.caseLibrary.flagCase.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.flagged ? "Case flagged for review." : "Flag removed.");
+      setFlagDialogOpen(false);
+      setFlagTarget(null);
+      setFlagNoteInput("");
+      utils.caseLibrary.listAllCases.invalidate();
+      utils.caseLibrary.listFlaggedCases.invalidate();
+    },
+    onError: (err) => toast.error(err.message || "Failed to update flag."),
+  });
+
+  const handleFlagClick = (c: any) => {
+    if (c.flaggedForReview) {
+      // Unflag immediately without dialog
+      flagMutation.mutate({ id: c.id, flagged: false });
+    } else {
+      // Open dialog to add optional note
+      setFlagTarget({ id: c.id, title: c.title, flagged: false, flagNote: c.flagNote ?? null });
+      setFlagNoteInput("");
+      setFlagDialogOpen(true);
+    }
+  };
+
   // Guard: admin only
   if (!isAuthenticated || user?.role !== "admin") {
     return (
@@ -799,10 +836,31 @@ export default function AdminCaseManagement() {
             Rejection reason: {c.rejectionReason}
           </div>
         )}
+        {c.flaggedForReview && (
+          <div className="mt-2 flex items-start gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">
+            <BookmarkCheck className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+            <span><span className="font-semibold">Flagged for review</span>{c.flagNote ? `: ${c.flagNote}` : ""}</span>
+          </div>
+        )}
       </div>
 
       {showActions && (
         <div className="flex items-center gap-1.5 flex-shrink-0">
+          {/* Flag for review button */}
+          <Button
+            size="sm"
+            variant="ghost"
+            className={`h-8 w-8 p-0 transition-colors ${
+              c.flaggedForReview
+                ? "text-amber-500 hover:text-amber-600"
+                : "text-gray-300 hover:text-amber-400"
+            }`}
+            onClick={() => handleFlagClick(c)}
+            title={c.flaggedForReview ? "Remove flag" : "Flag for review"}
+            disabled={flagMutation.isPending}
+          >
+            {c.flaggedForReview ? <BookmarkCheck className="w-4 h-4" /> : <Bookmark className="w-4 h-4" />}
+          </Button>
           <Button
             size="sm"
             variant="ghost"
@@ -897,7 +955,7 @@ export default function AdminCaseManagement() {
 
         {/* Tabs */}
         <div className="flex gap-1 mb-6 bg-gray-100 rounded-lg p-1 w-fit">
-          {(["pending", "all", "analytics"] as TabType[]).map((t) => (
+          {(["pending", "all", "flagged", "analytics"] as TabType[]).map((t) => (
             <button
               key={t}
               onClick={() => { setTab(t); setPage(1); }}
@@ -907,10 +965,16 @@ export default function AdminCaseManagement() {
             >
               {t === "pending" && "Pending Review"}
               {t === "all" && "All Cases"}
+              {t === "flagged" && <><Bookmark className="w-3.5 h-3.5" /> Flagged</>}
               {t === "analytics" && <><BarChart3 className="w-3.5 h-3.5" /> Analytics</>}
               {t === "pending" && pendingCases.length > 0 && (
                 <span className="ml-1.5 bg-amber-500 text-white text-xs rounded-full px-1.5 py-0.5">
                   {pendingCases.length}
+                </span>
+              )}
+              {t === "flagged" && (flaggedQuery.data?.length ?? 0) > 0 && (
+                <span className="ml-1.5 bg-amber-500 text-white text-xs rounded-full px-1.5 py-0.5">
+                  {flaggedQuery.data?.length}
                 </span>
               )}
             </button>

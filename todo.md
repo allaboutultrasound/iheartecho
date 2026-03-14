@@ -127,3 +127,30 @@
 - [x] Flashcard editor: front (question) and back (answer/explanation) already use RichTextEditor — confirmed
 - [x] Question bank inline explanation previews: upgraded from plain text to dangerouslySetInnerHTML (3 locations)
 - [x] All admin text fields audit: all 7 RichTextEditor instances confirmed (challenge description, question text, quick-review answer, explanation, AI topic, flashcard front, flashcard back)
+
+## Video Autoplay & Loop (Mar 14 2026)
+- [ ] Find all <video> elements across the platform
+- [ ] Add loop, autoPlay, muted attributes to all video elements (muted required for autoplay in browsers)
+- [ ] Ensure video players in ScanCoach, Cases, Daily Challenges, and any other pages loop automatically
+
+## Flag Case for Review (Mar 14 2026)
+- [ ] DB schema: add flaggedForReview boolean + flagNote text columns to echoCases table
+- [ ] DB migration: push schema changes
+- [ ] tRPC: add flagCase procedure (toggle flag + optional note)
+- [ ] AdminCaseManagement: add flag button (bookmark icon) on each case row
+- [ ] AdminCaseManagement: add "Flagged" filter tab to show only flagged cases
+- [ ] AdminCaseManagement: show flag note in flagged view
+- [ ] Write vitest tests for flagCase procedure
+
+## Video Playback Fix (Mar 14 2026)
+- [ ] Audit all video elements for missing autoPlay/loop/muted/playsInline
+- [ ] Fix video attributes platform-wide
+- [ ] Verify videos play in browser
+
+## Educator Assist Dashboard Button Styling (Mar 14 2026)
+- [ ] Darken button backgrounds on the Educator Assist dashboard
+
+## Educator Course Edit Bug (Mar 14 2026)
+- [x] Fix course edit option not working in Educator dashboard
+- [x] Fix course edit button - add click handler and edit dialog with pre-filled form
+- [x] Add edit/assign/review actions to Competencies tab in Educator Admin

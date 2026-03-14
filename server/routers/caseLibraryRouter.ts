@@ -1415,4 +1415,59 @@ Guidelines:
         matchCount: c.matchCount,
       }));
     }),
+
+  // ── Admin: Flag for Review ────────────────────────────────────────────────────
+
+  /**
+   * Toggle the flaggedForReview state on a case.
+   * Admins use this to mark cases they need to come back to for editing.
+   */
+  flagCase: adminProcedure
+    .input(
+      z.object({
+        id: z.number().int().positive(),
+        flagged: z.boolean(),
+        flagNote: z.string().max(500).optional().nullable(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      await db
+        .update(echoLibraryCases)
+        .set({
+          flaggedForReview: input.flagged,
+          flagNote: input.flagged ? (input.flagNote ?? null) : null,
+          updatedAt: new Date(),
+        })
+        .where(eq(echoLibraryCases.id, input.id));
+      return { success: true, flagged: input.flagged };
+    }),
+
+  /** List all cases flagged for review (admin only). */
+  listFlaggedCases: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+    const cases = await db
+      .select()
+      .from(echoLibraryCases)
+      .where(eq(echoLibraryCases.flaggedForReview, true))
+      .orderBy(desc(echoLibraryCases.updatedAt));
+    const userIds = Array.from(new Set(cases.map((c) => c.submittedByUserId)));
+    let submitterMap: Record<number, string> = {};
+    if (userIds.length > 0) {
+      const userList = await db
+        .select({ id: users.id, displayName: users.displayName, name: users.name })
+        .from(users)
+        .where(sql`${users.id} IN (${userIds.join(",")})`);
+      for (const u of userList) {
+        submitterMap[u.id] = u.displayName || u.name || "Unknown";
+      }
+    }
+    return cases.map((c) => ({
+      ...c,
+      tags: c.tags ? JSON.parse(c.tags) : [],
+      submitterName: submitterMap[c.submittedByUserId] ?? "Unknown",
+    }));
+  }),
 });

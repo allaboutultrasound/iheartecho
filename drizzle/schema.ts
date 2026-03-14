@@ -304,6 +304,8 @@ export const echoCases = mysqlTable("echoCases", {
   diagnosis: varchar("diagnosis", { length: 200 }),
   notes: text("notes"),
   isPublic: boolean("isPublic").default(false).notNull(),
+  flaggedForReview: boolean("flaggedForReview").default(false).notNull(),
+  flagNote: text("flagNote"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -1019,6 +1021,9 @@ export const echoLibraryCases = mysqlTable("echoLibraryCases", {
   submitterLinkedIn: varchar("submitterLinkedIn", { length: 500 }),
   // View / engagement counts
   viewCount: int("viewCount").default(0).notNull(),
+  // Admin flag for review
+  flaggedForReview: boolean("flaggedForReview").default(false).notNull(),
+  flagNote: text("flagNote"),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 export type EchoLibraryCase = typeof echoLibraryCases.$inferSelect;

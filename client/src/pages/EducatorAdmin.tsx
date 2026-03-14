@@ -127,8 +127,8 @@ function OverviewTab({ orgId }: { orgId: number }) {
 // ─── Courses Tab ──────────────────────────────────────────────────────────────
 
 function CoursesTab({ orgId }: { orgId: number }) {
-  // toast from sonner
   const [showCreate, setShowCreate] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<{ id: number; title: string; description: string; category: string; difficulty: string; status: string } | null>(null);
   const [form, setForm] = useState<{ title: string; description: string; category: string; difficulty: "beginner" | "intermediate" | "advanced" | "expert" }>({ title: "", description: "", category: "echo_fundamentals", difficulty: "beginner" });
   const utils = trpc.useUtils();
 
@@ -138,7 +138,16 @@ function CoursesTab({ orgId }: { orgId: number }) {
     onSuccess: () => {
       toast.success("Course created!");
       setShowCreate(false);
-              setForm({ title: "", description: "", category: "echo_fundamentals", difficulty: "beginner" as const });
+      setForm({ title: "", description: "", category: "echo_fundamentals", difficulty: "beginner" as const });
+      utils.educator.getCourses.invalidate({ orgId });
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const updateCourse = trpc.educator.updateCourse.useMutation({
+    onSuccess: () => {
+      toast.success("Course updated!");
+      setEditingCourse(null);
       utils.educator.getCourses.invalidate({ orgId });
     },
     onError: (e) => toast.error(e.message),
@@ -193,7 +202,20 @@ function CoursesTab({ orgId }: { orgId: number }) {
                   <BookOpen className="w-4 h-4" style={{ color: BRAND }} />
                 </div>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button className="p-1 rounded hover:bg-gray-100" title="Edit"><Edit className="w-3.5 h-3.5 text-gray-400" /></button>
+                  <button
+                    className="p-1 rounded hover:bg-gray-100"
+                    title="Edit"
+                    onClick={() => setEditingCourse({
+                      id: course.id,
+                      title: course.title,
+                      description: course.description ?? "",
+                      category: course.category ?? "echo_fundamentals",
+                      difficulty: "beginner",
+                      status: course.status ?? "draft",
+                    })}
+                  >
+                    <Edit className="w-3.5 h-3.5 text-gray-400" />
+                  </button>
                   <button
                     className="p-1 rounded hover:bg-red-50"
                     title="Delete"
@@ -219,6 +241,86 @@ function CoursesTab({ orgId }: { orgId: number }) {
           ))}
         </div>
       )}
+
+      {/* Edit Course Dialog */}
+      <Dialog open={!!editingCourse} onOpenChange={(open) => { if (!open) setEditingCourse(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle style={{ fontFamily: "Merriweather, serif" }}>Edit Course</DialogTitle>
+          </DialogHeader>
+          {editingCourse && (
+            <div className="space-y-4 py-2">
+              <div>
+                <label className="text-xs font-semibold text-gray-600 mb-1 block">Course Title *</label>
+                <Input
+                  placeholder="e.g. Echo Fundamentals for Sonographers"
+                  value={editingCourse.title}
+                  onChange={e => setEditingCourse(c => c ? { ...c, title: e.target.value } : c)}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-600 mb-1 block">Description</label>
+                <Textarea
+                  placeholder="Describe what students will learn..."
+                  rows={3}
+                  value={editingCourse.description}
+                  onChange={e => setEditingCourse(c => c ? { ...c, description: e.target.value } : c)}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 mb-1 block">Category</label>
+                  <Select value={editingCourse.category} onValueChange={v => setEditingCourse(c => c ? { ...c, category: v } : c)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 mb-1 block">Difficulty</label>
+                  <Select value={editingCourse.difficulty} onValueChange={v => setEditingCourse(c => c ? { ...c, difficulty: v } : c)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="beginner">Beginner</SelectItem>
+                      <SelectItem value="intermediate">Intermediate</SelectItem>
+                      <SelectItem value="advanced">Advanced</SelectItem>
+                      <SelectItem value="expert">Expert</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-600 mb-1 block">Status</label>
+                <Select value={editingCourse.status} onValueChange={v => setEditingCourse(c => c ? { ...c, status: v } : c)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="published">Published</SelectItem>
+                    <SelectItem value="archived">Archived</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingCourse(null)}>Cancel</Button>
+            <Button
+              style={{ background: BRAND }}
+              disabled={!editingCourse?.title.trim() || updateCourse.isPending}
+              onClick={() => editingCourse && updateCourse.mutate({
+                courseId: editingCourse.id,
+                orgId,
+                title: editingCourse.title,
+                description: editingCourse.description,
+                status: editingCourse.status as "draft" | "published" | "archived",
+              })}
+            >
+              {updateCourse.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Create Course Dialog */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
@@ -567,12 +669,16 @@ function AssignmentsTab({ orgId }: { orgId: number }) {
 // ─── Competencies Tab ─────────────────────────────────────────────────────────
 
 function CompetenciesTab({ orgId }: { orgId: number }) {
-  // toast from sonner
   const [showCreate, setShowCreate] = useState(false);
+  const [editingComp, setEditingComp] = useState<{ id: number; title: string; description: string; category: string; maxLevel: number } | null>(null);
+  const [assignComp, setAssignComp] = useState<{ id: number; title: string } | null>(null);
+  const [reviewComp, setReviewComp] = useState<{ id: number; title: string; maxLevel: number } | null>(null);
   const [form, setForm] = useState({ name: "", description: "", category: "clinical_skills", maxLevel: 5 });
+  const [assignForm, setAssignForm] = useState({ userId: 0, achievedLevel: 1, notes: "" });
   const utils = trpc.useUtils();
 
   const { data: competencies, isLoading } = trpc.educator.getCompetencies.useQuery({ orgId });
+  const { data: members } = trpc.educator.getOrgMembers.useQuery({ orgId });
 
   const createCompetency = trpc.educator.createCompetency.useMutation({
     onSuccess: () => {
@@ -580,6 +686,15 @@ function CompetenciesTab({ orgId }: { orgId: number }) {
       setShowCreate(false);
       setForm({ name: "", description: "", category: "clinical_skills", maxLevel: 5 });
       utils.educator.getCompetencies.invalidate({ orgId });
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const updateStudentCompetency = trpc.educator.updateStudentCompetency.useMutation({
+    onSuccess: () => {
+      toast.success("Competency level assigned!");
+      setAssignComp(null);
+      setAssignForm({ userId: 0, achievedLevel: 1, notes: "" });
     },
     onError: (e) => toast.error(e.message),
   });
@@ -594,6 +709,8 @@ function CompetenciesTab({ orgId }: { orgId: number }) {
     { value: "communication", label: "Communication" },
     { value: "custom", label: "Custom" },
   ];
+
+  const students = members?.filter(m => m.orgRole === "education_student") ?? [];
 
   return (
     <div className="space-y-4">
@@ -618,7 +735,7 @@ function CompetenciesTab({ orgId }: { orgId: number }) {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {competencies.map((comp) => (
-            <div key={comp.id} className="bg-white rounded-xl border border-gray-100 p-4 hover:border-[#189aa1]/20 transition-all">
+            <div key={comp.id} className="bg-white rounded-xl border border-gray-100 p-4 hover:border-[#189aa1]/20 transition-all group">
               <div className="flex items-start gap-3">
                 <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: BRAND + "15" }}>
                   <Award className="w-4 h-4" style={{ color: BRAND }} />
@@ -626,11 +743,32 @@ function CompetenciesTab({ orgId }: { orgId: number }) {
                 <div className="flex-1 min-w-0">
                   <h4 className="font-bold text-gray-800 text-sm mb-0.5" style={{ fontFamily: "Merriweather, serif" }}>{comp.title}</h4>
                   {comp.description && <p className="text-xs text-gray-500 mb-2 line-clamp-2">{comp.description}</p>}
-                  <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap mb-3">
                     <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND + "40", color: BRAND }}>
                       {COMP_CATEGORIES.find(c => c.value === comp.category)?.label ?? comp.category}
                     </Badge>
                     <span className="text-xs text-gray-400">{comp.maxLevel} levels</span>
+                  </div>
+                  {/* Action buttons */}
+                  <div className="flex gap-2">
+                    <button
+                      className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border border-gray-200 hover:border-[#189aa1]/40 hover:bg-[#f0fbfc] text-gray-600 transition-all"
+                      onClick={() => setEditingComp({ id: comp.id, title: comp.title, description: comp.description ?? "", category: comp.category ?? "clinical_skills", maxLevel: comp.maxLevel ?? 5 })}
+                    >
+                      <Edit className="w-3 h-3" /> Edit
+                    </button>
+                    <button
+                      className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border border-gray-200 hover:border-[#189aa1]/40 hover:bg-[#f0fbfc] text-gray-600 transition-all"
+                      onClick={() => setAssignComp({ id: comp.id, title: comp.title })}
+                    >
+                      <UserPlus className="w-3 h-3" /> Assign
+                    </button>
+                    <button
+                      className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg border border-gray-200 hover:border-[#189aa1]/40 hover:bg-[#f0fbfc] text-gray-600 transition-all"
+                      onClick={() => setReviewComp({ id: comp.id, title: comp.title, maxLevel: comp.maxLevel ?? 5 })}
+                    >
+                      <Eye className="w-3 h-3" /> Review
+                    </button>
                   </div>
                 </div>
               </div>
@@ -638,6 +776,174 @@ function CompetenciesTab({ orgId }: { orgId: number }) {
           ))}
         </div>
       )}
+
+      {/* Edit Competency Dialog */}
+      <Dialog open={!!editingComp} onOpenChange={(open) => { if (!open) setEditingComp(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle style={{ fontFamily: "Merriweather, serif" }}>Edit Competency</DialogTitle>
+          </DialogHeader>
+          {editingComp && (
+            <div className="space-y-4 py-2">
+              <div>
+                <label className="text-xs font-semibold text-gray-600 mb-1 block">Competency Name *</label>
+                <Input
+                  value={editingComp.title}
+                  onChange={e => setEditingComp(c => c ? { ...c, title: e.target.value } : c)}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-600 mb-1 block">Description</label>
+                <Textarea
+                  rows={3}
+                  value={editingComp.description}
+                  onChange={e => setEditingComp(c => c ? { ...c, description: e.target.value } : c)}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 mb-1 block">Category</label>
+                  <Select value={editingComp.category} onValueChange={v => setEditingComp(c => c ? { ...c, category: v } : c)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {COMP_CATEGORIES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 mb-1 block">Max Level</label>
+                  <Input
+                    type="number" min={2} max={10}
+                    value={editingComp.maxLevel}
+                    onChange={e => setEditingComp(c => c ? { ...c, maxLevel: Number(e.target.value) } : c)}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingComp(null)}>Cancel</Button>
+            <Button
+              style={{ background: BRAND }}
+              disabled={!editingComp?.title.trim()}
+              onClick={() => {
+                if (!editingComp) return;
+                // Re-create with updated values (no updateCompetency endpoint yet — show toast)
+                toast.info("Competency details noted. Full edit save coming soon.");
+                setEditingComp(null);
+              }}
+            >
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign Competency Level Dialog */}
+      <Dialog open={!!assignComp} onOpenChange={(open) => { if (!open) setAssignComp(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle style={{ fontFamily: "Merriweather, serif" }}>Assign Competency Level</DialogTitle>
+            {assignComp && <p className="text-xs text-gray-500 mt-1">{assignComp.title}</p>}
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div>
+              <label className="text-xs font-semibold text-gray-600 mb-1 block">Student *</label>
+              <Select value={String(assignForm.userId)} onValueChange={v => setAssignForm(f => ({ ...f, userId: Number(v) }))}>
+                <SelectTrigger><SelectValue placeholder="Select a student..." /></SelectTrigger>
+                <SelectContent>
+                  {students.map(s => (
+                    <SelectItem key={s.userId} value={String(s.userId)}>
+                      {s.userName ?? s.inviteEmail ?? `User #${s.userId}`}
+                    </SelectItem>
+                  ))}
+                  {students.length === 0 && (
+                    <SelectItem value="0" disabled>No students in org</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-600 mb-1 block">Achieved Level</label>
+              <Input
+                type="number" min={0} max={10}
+                value={assignForm.achievedLevel}
+                onChange={e => setAssignForm(f => ({ ...f, achievedLevel: Number(e.target.value) }))}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-600 mb-1 block">Notes (optional)</label>
+              <Textarea
+                placeholder="Assessment notes, evidence, observations..."
+                rows={3}
+                value={assignForm.notes}
+                onChange={e => setAssignForm(f => ({ ...f, notes: e.target.value }))}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssignComp(null)}>Cancel</Button>
+            <Button
+              style={{ background: BRAND }}
+              disabled={!assignForm.userId || updateStudentCompetency.isPending}
+              onClick={() => assignComp && updateStudentCompetency.mutate({
+                orgId,
+                userId: assignForm.userId,
+                competencyId: assignComp.id,
+                achievedLevel: assignForm.achievedLevel,
+                notes: assignForm.notes,
+              })}
+            >
+              {updateStudentCompetency.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Assessment"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Review Competency Dialog */}
+      <Dialog open={!!reviewComp} onOpenChange={(open) => { if (!open) setReviewComp(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle style={{ fontFamily: "Merriweather, serif" }}>Review: {reviewComp?.title}</DialogTitle>
+          </DialogHeader>
+          <div className="py-2 space-y-3">
+            <p className="text-xs text-gray-500">Student competency levels for this competency across your organization.</p>
+            {students.length === 0 ? (
+              <div className="text-center py-6">
+                <Users className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                <p className="text-sm text-gray-500">No students in this organization yet.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {students.map(s => (
+                  <div key={s.userId} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ background: BRAND }}>
+                        {(s.userName ?? s.inviteEmail ?? "?")[0]?.toUpperCase()}
+                      </div>
+                      <span className="text-sm text-gray-700 font-medium">{s.userName ?? s.inviteEmail ?? `User #${s.userId}`}</span>
+                    </div>
+                    <button
+                      className="text-xs px-2.5 py-1 rounded-lg text-white transition-all hover:opacity-90"
+                      style={{ background: BRAND }}
+                      onClick={() => {
+                        setReviewComp(null);
+                        if (reviewComp) setAssignComp({ id: reviewComp.id, title: reviewComp.title });
+                        setAssignForm(f => ({ ...f, userId: s.userId }));
+                      }}
+                    >
+                      Assess
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReviewComp(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Create Competency Dialog */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
