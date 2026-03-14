@@ -856,10 +856,7 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
       const conditions: any[] = [];
       // Always exclude trashed questions from the bank (they live in the Trash tab only)
       conditions.push(sql`${quickfireQuestions.deletedAt} IS NULL`);
-      // When fetching by specific IDs, skip the active filter so inactive questions are included
-      if (!input.includeInactive && !input.ids?.length) {
-        conditions.push(eq(quickfireQuestions.isActive, true));
-      }
+      // All non-deleted questions are shown in the admin bank — isActive is no longer used as a filter
       if (input.ids?.length) {
         conditions.push(inArray(quickfireQuestions.id, input.ids));
       }

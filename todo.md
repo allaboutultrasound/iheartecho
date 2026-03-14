@@ -218,3 +218,6 @@
 - [ ] Fix EchoAssist Hub page: ACHD card has wrong beige/brown colors - should use teal brand
 - [ ] Fix video looping - add loop attribute to all video elements across the app
 - [x] Get App prompt: session-only dismissal — reappears each dashboard visit, only hides permanently when installed
+- [x] Activate all questions in DB (set isActive=1 for all non-deleted questions)
+- [x] Remove "Show Inactive" toggle and deactivate button from QuickFireAdmin question bank
+- [x] Fix today's daily set to include active POCUS question

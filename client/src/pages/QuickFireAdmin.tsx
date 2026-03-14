@@ -1342,14 +1342,7 @@ export default function QuickFireAdmin() {
               <SelectItem value="General">General</SelectItem>
             </SelectContent>
           </Select>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIncludeInactive((v) => !v)}
-            className={includeInactive ? "border-[#189aa1] text-[#189aa1]" : ""}
-          >
-            {includeInactive ? "Hide Inactive" : "Show Inactive"}
-          </Button>
+
           <Button
             variant="ghost"
             size="icon"
@@ -1426,7 +1419,7 @@ export default function QuickFireAdmin() {
                     key={q.id}
                     className={`flex items-start gap-3 p-4 bg-white rounded-xl border transition-all ${
                       isChecked ? "border-[#189aa1] bg-[#f0fbfc]" :
-                      q.isActive ? "border-gray-100 hover:border-[#189aa1]/30" : "border-gray-100 opacity-50"
+                      "border-gray-100 hover:border-[#189aa1]/30"
                     }`}
                     onClick={bulkMode && isEligibleForBulk ? () => toggleBulkSelect(q.id) : undefined}
                     style={bulkMode && isEligibleForBulk ? { cursor: "pointer" } : {}}
@@ -1478,7 +1471,7 @@ export default function QuickFireAdmin() {
                         {(q.tags ?? []).slice(0, 3).map((t: string) => (
                           <span key={t} className="text-xs text-gray-400">#{t}</span>
                         ))}
-                        {!q.isActive && <Badge variant="outline" className="text-xs text-gray-400">inactive</Badge>}
+
                       </div>
                     </div>
 
