@@ -66,3 +66,7 @@
 - [x] Add search to admin challenge archive (search by title, category, question text)
 - [x] Add search to public-facing challenge archive (search by title, category, question text)
 - [x] Replace all ECG/EKG icons with a proper EKG waveform SVG symbol throughout the app
+- [x] Create composite icons: teal circle + white SVG overlay for POCUS and Fetal Echo (circular icons for Daily Challenge cards)
+- [x] Create flat square icons: teal SVG on white/transparent background for POCUS and Fetal Echo (module card icons)
+- [x] Upload composited POCUS and Fetal Echo icons (circular + square) to CDN and update all references
+- [x] Add trophy icon to the Daily Challenge section header/card

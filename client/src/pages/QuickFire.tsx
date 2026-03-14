@@ -23,7 +23,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Zap,
   CheckCircle2,
   XCircle,
   ChevronRight,
@@ -552,7 +551,7 @@ export default function QuickFire() {
           <div className="flex items-start justify-between mb-5 flex-wrap gap-3">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "#189aa1" }}>
-                <Zap className="w-5 h-5 text-white" />
+                <Trophy className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h1 className="font-bold text-gray-800 text-lg leading-tight" style={{ fontFamily: "Merriweather, serif" }}>Daily Challenge</h1>
@@ -605,7 +604,7 @@ export default function QuickFire() {
           {/* Today's challenge — read-only preview for unauthenticated users */}
           {!challengeExpired && !isLoading && !error && questions.length === 0 && (
             <div className="flex flex-col items-center gap-6 py-16 text-center max-w-lg mx-auto">
-              <Zap className="w-12 h-12 text-gray-300" />
+              <Trophy className="w-12 h-12 text-gray-300" />
               <p className="text-gray-500">No challenge available today. Check back soon.</p>
             </div>
           )}
@@ -696,7 +695,7 @@ export default function QuickFire() {
         <div className="flex items-start justify-between mb-5 flex-wrap gap-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "#189aa1" }}>
-              <Zap className="w-5 h-5 text-white" />
+              <Trophy className="w-5 h-5 text-white" />
             </div>
             <div>
               <h1 className="font-bold text-gray-800 text-lg leading-tight" style={{ fontFamily: "Merriweather, serif" }}>
@@ -835,7 +834,7 @@ export default function QuickFire() {
         {/* Tab bar */}
         <div className="flex gap-2 mb-6 flex-wrap">
           {([
-            { id: "challenge" as const, label: "Daily Challenge", icon: Zap },
+            { id: "challenge" as const, label: "Daily Challenge", icon: Trophy },
             { id: "archive" as const, label: "Archive", icon: Archive },
             { id: "performance" as const, label: "My Performance", icon: BarChart3 },
             { id: "leaderboard" as const, label: "Leaderboard", icon: Trophy },
@@ -876,8 +875,8 @@ export default function QuickFire() {
                     { cat: "ACS" as const, prefKey: "acs" as const, Icon: Heart, label: "Advanced Cardiac Sonographer" },
                     { cat: "Adult Echo" as const, prefKey: "adultEcho" as const, Icon: Stethoscope },
                     { cat: "Pediatric Echo" as const, prefKey: "pediatricEcho" as const, Icon: Baby },
-                    { cat: "Fetal Echo" as const, prefKey: "fetalEcho" as const, Icon: ({ className }: { className?: string }) => <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/fetal-icon-final_15ea612a.png" alt="Fetal Echo" className={className} style={{ objectFit: 'contain' }} /> },
-                    { cat: "POCUS" as const, prefKey: "pocus" as const, Icon: ({ className }: { className?: string }) => <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/pocus-icon-final_a5c96a2f.png" alt="POCUS" className={className} style={{ objectFit: 'contain' }} /> },
+                    { cat: "Fetal Echo" as const, prefKey: "fetalEcho" as const, Icon: ({ className }: { className?: string }) => <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/fetal-circular-v1_79bb0d90.png" alt="Fetal Echo" className={className} style={{ objectFit: 'contain' }} /> },
+                    { cat: "POCUS" as const, prefKey: "pocus" as const, Icon: ({ className }: { className?: string }) => <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/pocus-circular-v1_436f6b57.png" alt="POCUS" className={className} style={{ objectFit: 'contain' }} /> },
                   ] as { cat: string; prefKey: "acs" | "adultEcho" | "pediatricEcho" | "fetalEcho" | "pocus"; Icon: (props: { className?: string }) => import('react').ReactElement; label?: string }[]).map(({ cat, prefKey, Icon, label }) => {
                     const prefs = categoryPrefsQuery.data ?? { acs: true, adultEcho: true, pediatricEcho: true, fetalEcho: true, pocus: true };
                     const isEnabled = (prefs as any)[prefKey] !== false;
@@ -953,8 +952,8 @@ export default function QuickFire() {
                     { key: "ACS", label: "Advanced Cardiac Sonographer", Icon: Heart, desc: "ACS", prefKey: "acs" as const, mapKey: "acs" },
                     { key: "Adult Echo", label: "Adult Echo", Icon: Stethoscope, desc: "Adult Echocardiography", prefKey: "adultEcho" as const, mapKey: "adultEcho" },
                     { key: "Pediatric Echo", label: "Pediatric Echo", Icon: Baby, desc: "Pediatric & Congenital", prefKey: "pediatricEcho" as const, mapKey: "pediatricEcho" },
-                    { key: "Fetal Echo", label: "Fetal Echo", Icon: ({ className }: { className?: string }) => <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/fetal-icon-final_15ea612a.png" alt="Fetal Echo" className={className} style={{ objectFit: 'contain' }} />, desc: "Fetal Echocardiography", prefKey: "fetalEcho" as const, mapKey: "fetalEcho" },
-                    { key: "POCUS", label: "POCUS", Icon: ({ className }: { className?: string }) => <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/pocus-icon-final_a5c96a2f.png" alt="POCUS" className={className} style={{ objectFit: 'contain' }} />, desc: "Point-of-Care Ultrasound", prefKey: "pocus" as const, mapKey: "pocus" },
+                    { key: "Fetal Echo", label: "Fetal Echo", Icon: ({ className }: { className?: string }) => <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/fetal-circular-v1_79bb0d90.png" alt="Fetal Echo" className={className} style={{ objectFit: 'contain' }} />, desc: "Fetal Echocardiography", prefKey: "fetalEcho" as const, mapKey: "fetalEcho" },
+                    { key: "POCUS", label: "POCUS", Icon: ({ className }: { className?: string }) => <img src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/pocus-circular-v1_436f6b57.png" alt="POCUS" className={className} style={{ objectFit: 'contain' }} />, desc: "Point-of-Care Ultrasound", prefKey: "pocus" as const, mapKey: "pocus" },
                   ];
 
                   const enabledCats = CATS.filter((c) => catPrefs[c.prefKey] !== false);
@@ -2225,7 +2224,7 @@ export default function QuickFire() {
                       <p className="text-gray-500 font-medium">No data yet</p>
                       <p className="text-sm text-gray-400 mt-1">Complete your first daily challenge to see your stats here.</p>
                       <Button className="mt-4 text-white" style={{ background: "#189aa1" }} onClick={() => setActiveTab("challenge")}>
-                        <Zap className="w-4 h-4 mr-2" /> Start Today's Challenge
+                        <Trophy className="w-4 h-4 mr-2" /> Start Today's Challenge
                       </Button>
                     </div>
                   )}
