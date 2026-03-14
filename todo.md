@@ -67,3 +67,12 @@
 - [x] Question bank edit dialog: add "Save & Add to Queue" button that saves question and creates scheduled challenge entry
 - [x] AI question generator: add duplicate detection — pass existing question summaries to the AI prompt so it generates only new unique content
 - [x] Add WMV to accepted video upload formats
+- [x] Image-based questions: accept WMV, MP4, and GIF formats in addition to still images (JPEG, PNG, WEBP)
+- [x] Fix AI generator: category/echoCategory not saved on insert (always defaults to Adult Echo)
+- [x] User question submission: DB schema fields (submitter name, LinkedIn URL, submission status, submitted_by)
+- [x] User question submission: server-side procedures (public submit, admin list pending, admin approve/reject)
+- [x] User question submission: user-facing form (name, LinkedIn URL, category required, MCQ Scenario / MCQ Image+Video only)
+- [x] User question submission: admin approval queue tab in question bank
+- [ ] User question submission: notify platform admins on new submission
+- [x] User question submission: gamification — award bonus Echo Ninja points when submitted question is approved
+- [x] Fix SEO on home page (/): add proper title (30-60 chars), meta description (50-160 chars), and keywords

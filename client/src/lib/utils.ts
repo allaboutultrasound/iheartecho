@@ -6,6 +6,15 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * Returns true if the URL points to a video file (mp4, wmv, webm, mov, avi).
+ */
+export function isVideoUrl(url: string): boolean {
+  if (!url) return false;
+  return /\.(mp4|wmv|webm|mov|avi)(\?|$)/i.test(url) ||
+    url.includes("question-videos/");
+}
+
+/**
  * Strip HTML tags from a string, returning plain text.
  * Safe to call with plain text (no-op if no tags present).
  */

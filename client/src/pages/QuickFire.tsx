@@ -9,6 +9,7 @@
  */
 
 import { useState, useMemo, useEffect } from "react";
+import { isVideoUrl } from "@/lib/utils";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import Layout from "@/components/Layout";
@@ -69,7 +70,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Pencil, Loader2, BookOpen } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Pencil, Loader2, BookOpen, SendHorizonal, CheckCircle, Clock, XCircle as XCircleIcon, Plus, Minus } from "lucide-react";
 import DailyChallengeBanner from "@/components/DailyChallengeBanner";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -132,7 +134,265 @@ function ActivityBar({ date, correct, total }: { date: string; correct: number; 
   );
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
+// ─── Submit Question Tab ─────────────────────────────────────────────────────
+
+function SubmitQuestionTab({ isAuthenticated }: { isAuthenticated: boolean }) {
+  const utils = trpc.useUtils();
+
+  // Form state
+  const [submitterName, setSubmitterName] = useState("");
+  const [submitterLinkedIn, setSubmitterLinkedIn] = useState("");
+  const [category, setCategory] = useState<"ACS" | "Adult Echo" | "Pediatric Echo" | "Fetal Echo" | "POCUS" | "General">("Adult Echo");
+  const [difficulty, setDifficulty] = useState<"beginner" | "intermediate" | "advanced">("intermediate");
+  const [question, setQuestion] = useState("");
+  const [options, setOptions] = useState(["", "", "", ""]);
+  const [correctAnswer, setCorrectAnswer] = useState(0);
+  const [explanation, setExplanation] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+
+  const submitMutation = trpc.quickfire.submitUserQuestion.useMutation({
+    onSuccess: () => {
+      toast.success("✅ Question submitted for review! You’ll earn 50 bonus XP if approved.");
+      setSubmitted(true);
+      setQuestion("");
+      setOptions(["", "", "", ""]);
+      setCorrectAnswer(0);
+      setExplanation("");
+      utils.quickfire.getMySubmissions.invalidate();
+    },
+    onError: (err) => toast.error(err.message || "Failed to submit question."),
+  });
+
+  const mySubmissionsQuery = trpc.quickfire.getMySubmissions.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
+
+  function handleSubmit() {
+    if (!question.trim()) { toast.error("Question text is required."); return; }
+    const filledOptions = options.filter((o) => o.trim());
+    if (filledOptions.length < 2) { toast.error("At least 2 answer options are required."); return; }
+    if (!submitterName.trim()) { toast.error("Your name is required."); return; }
+    submitMutation.mutate({
+      type: "scenario",
+      question: question.trim(),
+      options: options.map((o) => o.trim()).filter(Boolean),
+      correctAnswer,
+      explanation: explanation.trim() || undefined,
+      category,
+      difficulty,
+      submitterName: submitterName.trim(),
+      submitterLinkedIn: submitterLinkedIn.trim() || undefined,
+    });
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="text-center py-16">
+        <Stethoscope className="w-12 h-12 mx-auto mb-3 text-gray-200" />
+        <p className="text-gray-500 font-medium">Sign in to submit a question</p>
+        <p className="text-sm text-gray-400 mt-1">Your approved questions earn 50 bonus XP and credit on the platform.</p>
+      </div>
+    );
+  }
+
+  const statusBadge = (status: string) => {
+    if (status === "approved") return <span className="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-green-50 text-green-700"><CheckCircle className="w-3 h-3" /> Approved</span>;
+    if (status === "rejected") return <span className="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-700"><XCircleIcon className="w-3 h-3" /> Rejected</span>;
+    return <span className="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700"><Clock className="w-3 h-3" /> Pending Review</span>;
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="mb-2">
+        <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Submit a Question</h2>
+        <p className="text-xs text-gray-500 mt-0.5">Contribute a multiple-choice question to the Daily Challenge pool. Earn <span className="font-semibold text-[#189aa1]">50 bonus XP</span> when your question is approved and published.</p>
+      </div>
+
+      {/* Submission form */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-4">
+        <h3 className="text-sm font-bold text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>Your Question</h3>
+
+        {/* Name + LinkedIn */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Your Name <span className="text-red-500">*</span></label>
+            <Input value={submitterName} onChange={(e) => setSubmitterName(e.target.value)} placeholder="e.g. Jane Smith, RDCS" maxLength={200} />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-gray-600 mb-1.5 block">LinkedIn URL <span className="text-gray-400 font-normal">(optional)</span></label>
+            <Input value={submitterLinkedIn} onChange={(e) => setSubmitterLinkedIn(e.target.value)} placeholder="https://linkedin.com/in/..." maxLength={500} />
+          </div>
+        </div>
+
+        {/* Category + Difficulty */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Category <span className="text-red-500">*</span></label>
+            <Select value={category} onValueChange={(v) => setCategory(v as any)}>
+              <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {(["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "POCUS"] as const).map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Difficulty</label>
+            <Select value={difficulty} onValueChange={(v) => setDifficulty(v as any)}>
+              <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="beginner">Beginner</SelectItem>
+                <SelectItem value="intermediate">Intermediate</SelectItem>
+                <SelectItem value="advanced">Advanced</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Question text */}
+        <div>
+          <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Question Text <span className="text-red-500">*</span></label>
+          <Textarea
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            placeholder="Write your clinical scenario or question here..."
+            rows={4}
+            maxLength={2000}
+            className="resize-none"
+          />
+          <p className="text-[10px] text-gray-400 mt-1 text-right">{question.length}/2000</p>
+        </div>
+
+        {/* Answer options */}
+        <div>
+          <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Answer Options <span className="text-red-500">*</span> <span className="text-gray-400 font-normal">(mark the correct one)</span></label>
+          <div className="space-y-2">
+            {options.map((opt, idx) => (
+              <div key={idx} className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCorrectAnswer(idx)}
+                  className={`w-6 h-6 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all ${
+                    correctAnswer === idx ? "border-[#189aa1] bg-[#189aa1]" : "border-gray-300 bg-white"
+                  }`}
+                  title="Mark as correct answer"
+                >
+                  {correctAnswer === idx && <div className="w-2.5 h-2.5 rounded-full bg-white" />}
+                </button>
+                <Input
+                  value={opt}
+                  onChange={(e) => {
+                    const next = [...options];
+                    next[idx] = e.target.value;
+                    setOptions(next);
+                  }}
+                  placeholder={`Option ${idx + 1}${idx < 2 ? " (required)" : " (optional)"}`}
+                  maxLength={500}
+                  className="flex-1"
+                />
+                {idx >= 2 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = options.filter((_, i) => i !== idx);
+                      setOptions(next);
+                      if (correctAnswer >= next.length) setCorrectAnswer(next.length - 1);
+                    }}
+                    className="text-gray-400 hover:text-red-500 transition-colors"
+                  >
+                    <Minus className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            ))}
+            {options.length < 6 && (
+              <button
+                type="button"
+                onClick={() => setOptions([...options, ""])}
+                className="flex items-center gap-1.5 text-xs text-[#189aa1] font-semibold hover:underline mt-1"
+              >
+                <Plus className="w-3.5 h-3.5" /> Add option
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Explanation */}
+        <div>
+          <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Explanation <span className="text-gray-400 font-normal">(optional but encouraged)</span></label>
+          <Textarea
+            value={explanation}
+            onChange={(e) => setExplanation(e.target.value)}
+            placeholder="Explain why the correct answer is correct, with any relevant guideline references..."
+            rows={3}
+            maxLength={2000}
+            className="resize-none"
+          />
+        </div>
+
+        {/* Submit button */}
+        <div className="flex justify-end pt-2">
+          <Button
+            className="text-white flex items-center gap-2"
+            style={{ background: "#189aa1" }}
+            onClick={handleSubmit}
+            disabled={submitMutation.isPending}
+          >
+            {submitMutation.isPending ? (
+              <><Loader2 className="w-4 h-4 animate-spin" /> Submitting…</>
+            ) : (
+              <><SendHorizonal className="w-4 h-4" /> Submit Question</>
+            )}
+          </Button>
+        </div>
+      </div>
+
+      {/* My Submissions history */}
+      {mySubmissionsQuery.data && mySubmissionsQuery.data.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+          <h3 className="text-sm font-bold text-gray-700 mb-4" style={{ fontFamily: "Merriweather, serif" }}>My Submissions</h3>
+          <div className="space-y-3">
+            {mySubmissionsQuery.data.map((q: any) => (
+              <div key={q.id} className="flex items-start gap-3 p-3 rounded-lg border border-gray-100 bg-gray-50">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    {statusBadge(q.submissionStatus)}
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${CATEGORY_COLORS[q.category] ?? "bg-gray-100 text-gray-600"}`}>{q.category}</span>
+                    {q.qid && <span className="text-[10px] text-gray-400 font-mono">{q.qid}</span>}
+                  </div>
+                  <p className="text-xs text-gray-700 leading-relaxed line-clamp-2" dangerouslySetInnerHTML={{ __html: q.question }} />
+                  {q.submissionStatus === "rejected" && q.rejectionReason && (
+                    <p className="text-[10px] text-red-500 mt-1">Reason: {q.rejectionReason}</p>
+                  )}
+                  {q.submissionStatus === "approved" && (
+                    <p className="text-[10px] text-green-600 mt-1 font-semibold">⭐ +50 XP awarded</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Guidelines */}
+      <div className="rounded-xl p-4 border border-[#189aa1]/20" style={{ background: "#f0fbfc" }}>
+        <h3 className="text-xs font-bold text-[#189aa1] mb-2 uppercase tracking-wider">Submission Guidelines</h3>
+        <ul className="text-xs text-gray-600 space-y-1 list-disc list-inside">
+          <li>Questions must be original and clinically relevant to echocardiography or cardiac ultrasound.</li>
+          <li>Multiple-choice scenario format only (2–6 options, one correct answer).</li>
+          <li>Include a clear explanation referencing ASE or relevant guidelines where possible.</li>
+          <li>Avoid duplicating existing questions in the platform.</li>
+          <li>Approved questions earn <strong>50 bonus XP</strong> and will credit your name on the platform.</li>
+          <li>The editorial team may edit questions for clarity before publishing.</li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main component ─────────────────────────────────────────────────────────────────────────────────
 
 export default function QuickFire() {
   const { isAuthenticated, user } = useAuth();
@@ -152,7 +412,7 @@ export default function QuickFire() {
   const shouldShowNotifPrompt = isAuthenticated && showNotifPrompt && !hasTimezone && !notifPrefsQuery.isLoading;
 
   // Top-level tab
-  const [activeTab, setActiveTab] = useState<"challenge" | "archive" | "performance" | "leaderboard">("challenge");
+  const [activeTab, setActiveTab] = useState<"challenge" | "archive" | "performance" | "leaderboard" | "submit">("challenge");
 
   // ── Daily Challenge state ──────────────────────────────────────────────────
   // Uses the new challenge system (1 question per challenge from quickfireChallenges)
@@ -874,6 +1134,7 @@ export default function QuickFire() {
             { id: "archive" as const, label: "Archive", icon: Archive },
             { id: "performance" as const, label: "My Performance", icon: BarChart3 },
             { id: "leaderboard" as const, label: "Leaderboard", icon: Trophy },
+            { id: "submit" as const, label: "Submit a Question", icon: Stethoscope },
           ] as const).map(({ id, label, icon: Icon }) => (
             <button
               key={id}
@@ -1355,11 +1616,21 @@ export default function QuickFire() {
 
                     <CardContent className="space-y-2 pb-3">
                       {currentQ.imageUrl && (
-                        <img
-                          src={currentQ.imageUrl}
-                          alt="Question image"
-                          className="w-full rounded-lg object-cover max-h-64 mb-3"
-                        />
+                        isVideoUrl(currentQ.imageUrl) ? (
+                          <video
+                            src={currentQ.imageUrl}
+                            controls
+                            controlsList="nodownload"
+                            onContextMenu={(e) => e.preventDefault()}
+                            className="w-full rounded-lg max-h-64 bg-black mb-3"
+                          />
+                        ) : (
+                          <img
+                            src={currentQ.imageUrl}
+                            alt="Question image"
+                            className="w-full rounded-lg object-cover max-h-64 mb-3"
+                          />
+                        )
                       )}
                       {(currentQ as any).videoUrl && (
                         <video
@@ -2028,7 +2299,17 @@ export default function QuickFire() {
 
                         <CardContent className="space-y-2 pb-3">
                           {archiveCurrentQ.imageUrl && (
-                            <img src={archiveCurrentQ.imageUrl} alt="Question" className="w-full rounded-lg object-cover max-h-64 mb-3" />
+                            isVideoUrl(archiveCurrentQ.imageUrl) ? (
+                              <video
+                                src={archiveCurrentQ.imageUrl}
+                                controls
+                                controlsList="nodownload"
+                                onContextMenu={(e) => e.preventDefault()}
+                                className="w-full rounded-lg max-h-64 bg-black mb-3"
+                              />
+                            ) : (
+                              <img src={archiveCurrentQ.imageUrl} alt="Question" className="w-full rounded-lg object-cover max-h-64 mb-3" />
+                            )
                           )}
                           {(archiveCurrentQ as any).videoUrl && (
                             <video
@@ -2297,6 +2578,20 @@ export default function QuickFire() {
                     </div>
                   )}
 
+                  {/* Bonus XP from approved submissions */}
+                  {(stats as any).bonusPoints > 0 && (
+                    <div className="bg-white rounded-xl border border-[#189aa1]/30 p-4 flex items-center gap-4" style={{ background: "linear-gradient(135deg, #f0fbfc, #e8f8f9)" }}>
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "#189aa1" }}>
+                        <Star className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-sm font-bold text-gray-800">Bonus XP — Question Contributor</div>
+                        <div className="text-xs text-gray-500">{(stats as any).approvedSubmissionCount} approved question{(stats as any).approvedSubmissionCount !== 1 ? "s" : ""} × 50 XP each</div>
+                      </div>
+                      <div className="text-2xl font-black" style={{ fontFamily: "JetBrains Mono, monospace", color: "#189aa1" }}>+{(stats as any).bonusPoints}</div>
+                    </div>
+                  )}
+
                   {/* Empty state */}
                   {stats.total === 0 && (
                     <div className="text-center py-12">
@@ -2431,6 +2726,10 @@ export default function QuickFire() {
             )}
           </>
         )}
+
+        {/* ── TAB: Submit a Question ─────────────────────────────────────── */}
+        {activeTab === "submit" && <SubmitQuestionTab isAuthenticated={isAuthenticated} />}
+
       </div>
 
       {/* ── Admin: Archive Edit Dialog ─────────────────────────────────────── */}

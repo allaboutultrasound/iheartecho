@@ -502,7 +502,19 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
     const recentHistory = Object.entries(byDate)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([date, s]) => ({ date, correct: s.correct, total: s.total, accuracy: Math.round((s.correct / s.total) * 100) }));
-    return { total, correct, accuracy, streak, bestStreak, categoryStats, recentHistory };
+    // Bonus XP: 50 points per approved submission
+    const approvedSubmissions = await db
+      .select({ id: quickfireQuestions.id })
+      .from(quickfireQuestions)
+      .where(
+        and(
+          eq(quickfireQuestions.submittedByUserId, userId),
+          eq(quickfireQuestions.submissionStatus, "approved")
+        )
+      );
+    const bonusPoints = approvedSubmissions.length * 50;
+    const approvedSubmissionCount = approvedSubmissions.length;
+    return { total, correct, accuracy, streak, bestStreak, categoryStats, recentHistory, bonusPoints, approvedSubmissionCount };
   }),
 
   /** Leaderboard with period filter and current user rank */
@@ -2293,5 +2305,140 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
         questionDifficulty: r.questionIds[0] != null ? (qMetaMap.get(r.questionIds[0])?.difficulty ?? null) : null,
         questionType: r.questionIds[0] != null ? (qMetaMap.get(r.questionIds[0])?.type ?? null) : null,
       }));
+    }),
+
+  // ─── User Question Submission ─────────────────────────────────────────────
+  /**
+   * Any authenticated user can submit a question for admin review.
+   * Saved with submissionStatus = 'pending_review' and isActive = false
+   * until an admin approves it. Approving awards 50 bonus XP points.
+   */
+  submitUserQuestion: protectedProcedure
+    .input(
+      z.object({
+        type: z.enum(["scenario", "image", "quickReview", "connect", "identifier", "order"]),
+        question: z.string().min(5).max(2000),
+        options: z.array(z.string().min(1)).min(2).max(6).optional(),
+        correctAnswer: z.number().int().min(0).optional(),
+        explanation: z.string().max(2000).optional(),
+        reviewAnswer: z.string().max(2000).optional(),
+        imageUrl: z.string().url().optional(),
+        pairs: z.array(z.object({ left: z.string().min(1), right: z.string().min(1) })).optional(),
+        markers: z.array(z.object({ x: z.number(), y: z.number(), label: z.string().min(1), radius: z.number().optional() })).optional(),
+        orderedItems: z.array(z.string().min(1)).min(2).max(10).optional(),
+        difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("intermediate"),
+        tags: z.array(z.string()).default([]),
+        category: z.enum(["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "POCUS", "General"]).default("Adult Echo"),
+        submitterName: z.string().max(200).optional(),
+        submitterLinkedIn: z.string().max(500).optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const [result] = await db.insert(quickfireQuestions).values({
+        type: input.type,
+        question: input.question,
+        options: input.options ? JSON.stringify(input.options) : null,
+        correctAnswer: input.correctAnswer ?? null,
+        explanation: input.explanation ?? null,
+        reviewAnswer: input.reviewAnswer ?? null,
+        imageUrl: input.imageUrl ?? null,
+        pairs: input.pairs ? JSON.stringify(input.pairs) : null,
+        markers: input.markers ? JSON.stringify(input.markers) : null,
+        orderedItems: input.orderedItems ? JSON.stringify(input.orderedItems) : null,
+        difficulty: input.difficulty,
+        tags: JSON.stringify(input.tags),
+        category: input.category as any,
+        isActive: false,
+        submittedByUserId: ctx.user.id,
+        submitterName: input.submitterName ?? null,
+        submitterLinkedIn: input.submitterLinkedIn ?? null,
+        submissionStatus: "pending_review",
+        submissionPointsAwarded: false,
+      });
+      const newId = (result as any).insertId as number;
+      const qid = `QID-${String(newId).padStart(4, "0")}`;
+      await db.update(quickfireQuestions).set({ qid }).where(eq(quickfireQuestions.id, newId));
+      return { id: newId, qid };
+    }),
+
+  /** Returns the current user's own submitted questions with their review status */
+  getMySubmissions: protectedProcedure.query(async ({ ctx }) => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+    const rows = await db
+      .select()
+      .from(quickfireQuestions)
+      .where(
+        and(
+          eq(quickfireQuestions.submittedByUserId, ctx.user.id),
+          sql`${quickfireQuestions.submissionStatus} != 'draft'`
+        )
+      )
+      .orderBy(desc(quickfireQuestions.createdAt));
+    return rows.map((r) => ({
+      ...r,
+      options: r.options ? JSON.parse(r.options) : null,
+      tags: r.tags ? JSON.parse(r.tags) : [],
+    }));
+  }),
+
+  /** Admin: list all questions pending review, with submitter info */
+  adminGetPendingSubmissions: adminProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+    const rows = await db
+      .select({
+        q: quickfireQuestions,
+        submitterEmail: users.email,
+        submitterDisplayName: users.displayName,
+      })
+      .from(quickfireQuestions)
+      .leftJoin(users, eq(quickfireQuestions.submittedByUserId, users.id))
+      .where(eq(quickfireQuestions.submissionStatus, "pending_review"))
+      .orderBy(desc(quickfireQuestions.createdAt));
+    return rows.map(({ q, submitterEmail, submitterDisplayName }) => ({
+      ...q,
+      options: q.options ? JSON.parse(q.options) : null,
+      tags: q.tags ? JSON.parse(q.tags) : [],
+      submitterEmail,
+      submitterDisplayName,
+    }));
+  }),
+
+  /**
+   * Admin: approve a user-submitted question.
+   * Sets isActive = true, submissionStatus = 'approved', and marks points as awarded.
+   * The 50 bonus XP points are calculated at query time in getUserStats.
+   */
+  adminApproveSubmission: adminProcedure
+    .input(z.object({ id: z.number().int().positive() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const [q] = await db.select().from(quickfireQuestions).where(eq(quickfireQuestions.id, input.id)).limit(1);
+      if (!q) throw new TRPCError({ code: "NOT_FOUND", message: "Question not found" });
+      if (q.submissionStatus !== "pending_review") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Question is not pending review" });
+      }
+      await db.update(quickfireQuestions)
+        .set({ submissionStatus: "approved", isActive: true, submissionPointsAwarded: true })
+        .where(eq(quickfireQuestions.id, input.id));
+      return { success: true, submittedByUserId: q.submittedByUserId };
+    }),
+
+  /** Admin: reject a user-submitted question with an optional reason */
+  adminRejectSubmission: adminProcedure
+    .input(z.object({ id: z.number().int().positive(), reason: z.string().max(1000).optional() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const [q] = await db.select().from(quickfireQuestions).where(eq(quickfireQuestions.id, input.id)).limit(1);
+      if (!q) throw new TRPCError({ code: "NOT_FOUND", message: "Question not found" });
+      await db.update(quickfireQuestions)
+        .set({ submissionStatus: "rejected", rejectionReason: input.reason ?? null })
+        .where(eq(quickfireQuestions.id, input.id));
+      return { success: true };
     }),
 });

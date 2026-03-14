@@ -7,7 +7,7 @@
  *  - Generate the daily set for today (or a specific date)
  */
 
-import { useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import {
   DndContext,
   closestCenter,
@@ -27,7 +27,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
-import { stripHtml } from "@/lib/utils";
+import { stripHtml, isVideoUrl } from "@/lib/utils";
 import { useAuth } from "@/_core/hooks/useAuth";
 import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
@@ -92,6 +92,9 @@ import {
   ArrowUpDown,
   AlertTriangle,
   Copy,
+  CheckCircle,
+  XCircle,
+  Inbox,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -285,9 +288,9 @@ export default function QuickFireAdmin() {
         const err = await res.json();
         throw new Error(err.error ?? "Upload failed");
       }
-      const { url } = await res.json();
-      setForm((f) => ({ ...f, imageUrl: url }));
-      toast.success("Image uploaded successfully");
+      const data = await res.json();
+      setForm((f) => ({ ...f, imageUrl: data.url }));
+      toast.success(data.mediaType === "video" ? "Video uploaded successfully" : "Image uploaded successfully");
     } catch (err: any) {
       toast.error(err.message ?? "Image upload failed");
     } finally {
@@ -394,7 +397,7 @@ export default function QuickFireAdmin() {
   }
 
   // ── Challenge Queue state ────────────────────────────────────────────────
-  const [activeAdminTab, setActiveAdminTab] = useState<"questions" | "challenges" | "archive" | "flashcards" | "trash">("questions");
+  const [activeAdminTab, setActiveAdminTab] = useState<"questions" | "challenges" | "archive" | "flashcards" | "trash" | "submissions">("questions");
 
   // ── Challenge Archive state ──────────────────────────────────────────────
   const archivedChallengesQuery = trpc.quickfire.adminListArchivedChallenges.useQuery();
@@ -406,6 +409,30 @@ export default function QuickFireAdmin() {
     { enabled: activeAdminTab === "trash" }
   );
   const trashedQuestions = trashQuery.data ?? [];
+
+  const pendingSubmissionsQuery = trpc.quickfire.adminGetPendingSubmissions.useQuery(
+    undefined,
+    { enabled: activeAdminTab === "submissions" }
+  );
+  const [rejectingSubmissionId, setRejectingSubmissionId] = useState<number | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+
+  const approveSubmissionMutation = trpc.quickfire.adminApproveSubmission.useMutation({
+    onSuccess: () => {
+      toast.success("Question approved and published to the bank.");
+      pendingSubmissionsQuery.refetch();
+      utils.quickfire.listAllQuestions.invalidate();
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to approve submission."),
+  });
+
+  const rejectSubmissionMutation = trpc.quickfire.adminRejectSubmission.useMutation({
+    onSuccess: () => {
+      toast.success("Submission rejected.");
+      pendingSubmissionsQuery.refetch();
+    },
+    onError: (err: any) => toast.error(err.message || "Failed to reject submission."),
+  });
 
   const restoreQuestionMutation = trpc.quickfire.restoreQuestion.useMutation({
     onSuccess: () => {
@@ -580,6 +607,7 @@ export default function QuickFireAdmin() {
   const [aiMixedPreview, setAiMixedPreview] = useState<Array<{ type: string; question: any }>>([]);
   const [aiMixedSelected, setAiMixedSelected] = useState<Set<number>>(new Set());
   const [aiMixedImporting, setAiMixedImporting] = useState(false);
+  const [aiCategory, setAiCategory] = useState<QuestionCategory>("Adult Echo");
 
   // Challenge form question picker search
   const [challengeQSearch, setChallengeQSearch] = useState("");
@@ -995,6 +1023,17 @@ export default function QuickFireAdmin() {
             <Trash2 className="w-4 h-4" /> Trash
             {trashedQuestions.length > 0 && (
               <span className="ml-1 bg-red-400 text-white text-xs rounded-full px-1.5 py-0.5">{trashedQuestions.length}</span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveAdminTab("submissions")}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+              activeAdminTab === "submissions" ? "bg-white text-[#189aa1] shadow-sm" : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            <Inbox className="w-4 h-4" /> Submissions
+            {pendingSubmissionsQuery.data && pendingSubmissionsQuery.data.length > 0 && (
+              <span className="ml-1 bg-amber-400 text-white text-xs rounded-full px-1.5 py-0.5">{pendingSubmissionsQuery.data.length}</span>
             )}
           </button>
         </div>
@@ -1755,6 +1794,158 @@ export default function QuickFireAdmin() {
           </div>
         )}
 
+        {/* ── SUBMISSIONS TAB ────────────────────────────────────────────────────────────────────── */}
+        {activeAdminTab === "submissions" && (
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>User Submissions</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Review questions submitted by users. Approved questions are published to the Question Bank and the submitter earns 50 bonus XP.</p>
+            </div>
+
+            {pendingSubmissionsQuery.isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-6 h-6 animate-spin text-gray-300" />
+              </div>
+            ) : !pendingSubmissionsQuery.data || pendingSubmissionsQuery.data.length === 0 ? (
+              <div className="text-center py-16 text-gray-400">
+                <Inbox className="w-10 h-10 mx-auto mb-3 opacity-20" />
+                <p className="text-sm font-medium">No pending submissions</p>
+                <p className="text-xs mt-1">When users submit questions from the Daily Challenge page, they will appear here for review.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {pendingSubmissionsQuery.data.map((q: any) => {
+                  const rejectOpen = rejectingSubmissionId === q.id;
+                  return (
+                    <div key={q.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+                      {/* Header row */}
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {q.qid && <span className="text-[10px] font-mono font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{q.qid}</span>}
+                          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                            q.category === "ACS" ? "bg-red-100 text-red-700" :
+                            q.category === "POCUS" ? "bg-blue-100 text-blue-700" :
+                            q.category === "Pediatric Echo" ? "bg-purple-100 text-purple-700" :
+                            q.category === "Fetal Echo" ? "bg-pink-100 text-pink-700" :
+                            "bg-teal-100 text-teal-700"
+                          }`}>{q.category}</span>
+                          <span className={`text-xs px-1.5 py-0.5 rounded ${
+                            q.difficulty === "beginner" ? "bg-green-50 text-green-600" :
+                            q.difficulty === "advanced" ? "bg-red-50 text-red-600" :
+                            "bg-blue-50 text-blue-600"
+                          }`}>{q.difficulty}</span>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <Button
+                            size="sm"
+                            className="h-8 px-3 text-xs gap-1 text-white"
+                            style={{ background: "#189aa1" }}
+                            onClick={() => {
+                              if (confirm(`Approve this question and publish it to the Question Bank?`)) {
+                                approveSubmissionMutation.mutate({ id: q.id });
+                              }
+                            }}
+                            disabled={approveSubmissionMutation.isPending}
+                          >
+                            <CheckCircle className="w-3.5 h-3.5" /> Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 px-3 text-xs gap-1 text-red-600 border-red-200 hover:bg-red-50"
+                            onClick={() => setRejectingSubmissionId(q.id)}
+                            disabled={rejectSubmissionMutation.isPending}
+                          >
+                            <XCircle className="w-3.5 h-3.5" /> Reject
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Submitter info */}
+                      <div className="flex items-center gap-3 mb-3 p-2.5 rounded-lg bg-gray-50 border border-gray-100">
+                        <div className="w-7 h-7 rounded-full bg-[#189aa1]/20 flex items-center justify-center flex-shrink-0">
+                          <span className="text-xs font-bold text-[#189aa1]">{(q.submitterName || q.submitterDisplayName || "?")[0].toUpperCase()}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-gray-700">{q.submitterName || q.submitterDisplayName || "Anonymous"}</p>
+                          {q.submitterEmail && <p className="text-[10px] text-gray-400">{q.submitterEmail}</p>}
+                        </div>
+                        {q.submitterLinkedIn && (
+                          <a href={q.submitterLinkedIn} target="_blank" rel="noopener noreferrer" className="text-[10px] text-[#189aa1] hover:underline flex-shrink-0">LinkedIn</a>
+                        )}
+                        <span className="text-[10px] text-gray-400 flex-shrink-0">{q.createdAt ? new Date(q.createdAt).toLocaleDateString() : ""}</span>
+                      </div>
+
+                      {/* Question text */}
+                      <div className="mb-3">
+                        <p className="text-xs font-semibold text-gray-500 mb-1">Question</p>
+                        <p className="text-sm text-gray-800 leading-relaxed" dangerouslySetInnerHTML={{ __html: q.question }} />
+                      </div>
+
+                      {/* Answer options */}
+                      {q.options && q.options.length > 0 && (
+                        <div className="mb-3">
+                          <p className="text-xs font-semibold text-gray-500 mb-1.5">Options</p>
+                          <div className="space-y-1">
+                            {q.options.map((opt: string, idx: number) => (
+                              <div key={idx} className={`flex items-center gap-2 text-xs px-2.5 py-1.5 rounded-lg ${
+                                idx === q.correctAnswer ? "bg-green-50 border border-green-200 text-green-800 font-semibold" : "bg-gray-50 text-gray-600"
+                              }`}>
+                                <span className="w-4 h-4 rounded-full border flex items-center justify-center flex-shrink-0 text-[10px] font-bold" style={{ borderColor: idx === q.correctAnswer ? "#16a34a" : "#d1d5db" }}>{String.fromCharCode(65 + idx)}</span>
+                                {opt}
+                                {idx === q.correctAnswer && <CheckCircle className="w-3 h-3 text-green-600 ml-auto" />}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Explanation */}
+                      {q.explanation && (
+                        <div className="p-3 rounded-lg bg-blue-50 border border-blue-100">
+                          <p className="text-xs font-semibold text-blue-700 mb-1">Explanation</p>
+                          <p className="text-xs text-blue-800 leading-relaxed" dangerouslySetInnerHTML={{ __html: q.explanation }} />
+                        </div>
+                      )}
+
+                      {/* Reject dialog */}
+                      {rejectOpen && (
+                        <div className="mt-3 p-3 rounded-lg border border-red-200 bg-red-50 space-y-2">
+                          <p className="text-xs font-semibold text-red-700">Rejection reason (optional)</p>
+                          <Input
+                            value={rejectReason}
+                            onChange={(e) => setRejectReason(e.target.value)}
+                            placeholder="e.g. Duplicate question, needs more clinical context..."
+                            className="text-xs"
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 px-3 text-xs"
+                              onClick={() => { setRejectingSubmissionId(null); setRejectReason(""); }}
+                            >Cancel</Button>
+                            <Button
+                              size="sm"
+                              className="h-7 px-3 text-xs bg-red-600 text-white hover:bg-red-700"
+                              onClick={() => {
+                                rejectSubmissionMutation.mutate({ id: q.id, reason: rejectReason || undefined });
+                                setRejectingSubmissionId(null);
+                                setRejectReason("");
+                              }}
+                              disabled={rejectSubmissionMutation.isPending}
+                            >Confirm Reject</Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
       </div>
       {/* ── Challenge Form Dialog ────────────────────────────────────────────── */}
       <Dialog open={challengeFormOpen} onOpenChange={(open) => { if (!open) { setChallengeFormOpen(false); setEditingChallengeId(null); } }}>
@@ -2003,7 +2194,7 @@ export default function QuickFireAdmin() {
             {form.type === "image" && (
               <div>
                 <label className="text-xs font-semibold text-gray-600 mb-1.5 block">
-                  Echo Image <span className="text-red-500">*</span>
+                  Echo Image / Video <span className="text-red-500">*</span>
                 </label>
 
                 {/* Upload zone */}
@@ -2024,7 +2215,11 @@ export default function QuickFireAdmin() {
                     </div>
                   ) : form.imageUrl ? (
                     <div className="relative">
-                      <img src={form.imageUrl} alt="Preview" className="w-full max-h-48 object-contain rounded-lg" />
+                      {isVideoUrl(form.imageUrl) ? (
+                        <video src={form.imageUrl} controls controlsList="nodownload" className="w-full max-h-48 rounded-lg bg-black" />
+                      ) : (
+                        <img src={form.imageUrl} alt="Preview" className="w-full max-h-48 object-contain rounded-lg" />
+                      )}
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); setForm((f) => ({ ...f, imageUrl: "" })); }}
@@ -2038,14 +2233,14 @@ export default function QuickFireAdmin() {
                     <div className="flex flex-col items-center gap-1 py-2">
                       <ImageIcon className="w-8 h-8 text-purple-300" />
                       <p className="text-sm text-gray-600 font-medium">Click or drag to upload echo image</p>
-                      <p className="text-xs text-gray-400">JPEG, PNG, WEBP · Max 20 MB</p>
+                      <p className="text-xs text-gray-400">JPEG, PNG, WEBP, GIF, MP4, WMV · Max 100 MB</p>
                     </div>
                   )}
                 </div>
                 <input
                   id="question-image-input"
                   type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/x-ms-wmv,.wmv,.mp4,.gif"
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
@@ -2059,7 +2254,7 @@ export default function QuickFireAdmin() {
                   <Input
                     value={form.imageUrl}
                     onChange={(e) => setForm((f) => ({ ...f, imageUrl: e.target.value }))}
-                    placeholder="Or paste a public image URL…"
+                    placeholder="Or paste a public image or video URL…"
                     className="text-xs"
                   />
                 </div>
@@ -2339,7 +2534,7 @@ export default function QuickFireAdmin() {
                   <Input
                     value={form.imageUrl}
                     onChange={(e) => setForm((f) => ({ ...f, imageUrl: e.target.value }))}
-                    placeholder="Or paste a public image URL…"
+                    placeholder="Or paste a public image or video URL…"
                     className="text-xs mt-2"
                   />
                 </div>
@@ -2557,25 +2752,25 @@ export default function QuickFireAdmin() {
                 <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Clinical Topic <span className="text-red-500">*</span></label>
                 <div className="flex flex-wrap gap-1.5 mb-2">
                   {[
-                    { label: "ACS", topic: "Advanced Cardiac Sonographer (ACS) echocardiography — advanced imaging, RWMA, LV function, complications, complex hemodynamics" },
-                    { label: "Adult Echo", topic: "Adult transthoracic echocardiography — valvular disease, LV/RV function, Doppler assessment" },
-                    { label: "HOCM", topic: "Hypertrophic obstructive cardiomyopathy (HOCM) — LVOT obstruction, SAM, Doppler gradients, septal morphology, provocable obstruction" },
-                    { label: "Strain / GLS", topic: "Myocardial strain imaging and global longitudinal strain (GLS) — LV GLS, RV strain, layer-specific strain, clinical applications" },
-                    { label: "Diastolic Function", topic: "Diastolic function assessment — grading diastolic dysfunction, E/A ratio, E/e\u2019, LAVI, TR velocity, ASE 2025 guidelines" },
-                    { label: "Dilated CM", topic: "Dilated cardiomyopathy — LV dilation, reduced EF, functional MR, LV dyssynchrony, CRT criteria" },
-                    { label: "Restrictive CM", topic: "Restrictive cardiomyopathy — amyloid, sarcoid, Fabry disease, restrictive filling pattern, biatrial enlargement" },
-                    { label: "Constrictive Pericarditis", topic: "Constrictive pericarditis — respiratory variation, septal bounce, annulus reversus, hepatic vein flow, differentiation from restriction" },
-                    { label: "Tamponade", topic: "Cardiac tamponade — pericardial effusion, chamber collapse, respiratory variation, IVC plethora, equalization of pressures" },
-                    { label: "Pulmonary HTN", topic: "Pulmonary hypertension — RVSP estimation, TR velocity, RV remodeling, PA pressures, ASE 2025 PH guidelines" },
-                    { label: "Pulmonary Embolism", topic: "Pulmonary embolism — RV strain pattern, McConnell sign, D-sign, TR, IVC, risk stratification by echo" },
-                    { label: "Pediatric Echo", topic: "Pediatric echocardiography — congenital heart disease, Z-scores, shunt assessment, CHD lesions" },
-                    { label: "Fetal Echo", topic: "Fetal echocardiography — fetal cardiac anatomy, CHD screening, biometry, situs, arch patterns" },
-                    { label: "POCUS", topic: "Point-of-care ultrasound (POCUS) — eFAST, RUSH protocol, lung POCUS, bedside cardiac assessment, IVC assessment, pleural effusion" },
-                  ].map(({ label, topic }) => (
+                    { label: "ACS", topic: "Advanced Cardiac Sonographer (ACS) echocardiography — advanced imaging, RWMA, LV function, complications, complex hemodynamics", category: "ACS" as QuestionCategory },
+                    { label: "Adult Echo", topic: "Adult transthoracic echocardiography — valvular disease, LV/RV function, Doppler assessment", category: "Adult Echo" as QuestionCategory },
+                    { label: "HOCM", topic: "Hypertrophic obstructive cardiomyopathy (HOCM) — LVOT obstruction, SAM, Doppler gradients, septal morphology, provocable obstruction", category: "Adult Echo" as QuestionCategory },
+                    { label: "Strain / GLS", topic: "Myocardial strain imaging and global longitudinal strain (GLS) — LV GLS, RV strain, layer-specific strain, clinical applications", category: "Adult Echo" as QuestionCategory },
+                    { label: "Diastolic Function", topic: "Diastolic function assessment — grading diastolic dysfunction, E/A ratio, E/e\u2019, LAVI, TR velocity, ASE 2025 guidelines", category: "Adult Echo" as QuestionCategory },
+                    { label: "Dilated CM", topic: "Dilated cardiomyopathy — LV dilation, reduced EF, functional MR, LV dyssynchrony, CRT criteria", category: "Adult Echo" as QuestionCategory },
+                    { label: "Restrictive CM", topic: "Restrictive cardiomyopathy — amyloid, sarcoid, Fabry disease, restrictive filling pattern, biatrial enlargement", category: "Adult Echo" as QuestionCategory },
+                    { label: "Constrictive Pericarditis", topic: "Constrictive pericarditis — respiratory variation, septal bounce, annulus reversus, hepatic vein flow, differentiation from restriction", category: "Adult Echo" as QuestionCategory },
+                    { label: "Tamponade", topic: "Cardiac tamponade — pericardial effusion, chamber collapse, respiratory variation, IVC plethora, equalization of pressures", category: "Adult Echo" as QuestionCategory },
+                    { label: "Pulmonary HTN", topic: "Pulmonary hypertension — RVSP estimation, TR velocity, RV remodeling, PA pressures, ASE 2025 PH guidelines", category: "Adult Echo" as QuestionCategory },
+                    { label: "Pulmonary Embolism", topic: "Pulmonary embolism — RV strain pattern, McConnell sign, D-sign, TR, IVC, risk stratification by echo", category: "POCUS" as QuestionCategory },
+                    { label: "Pediatric Echo", topic: "Pediatric echocardiography — congenital heart disease, Z-scores, shunt assessment, CHD lesions", category: "Pediatric Echo" as QuestionCategory },
+                    { label: "Fetal Echo", topic: "Fetal echocardiography — fetal cardiac anatomy, CHD screening, biometry, situs, arch patterns", category: "Fetal Echo" as QuestionCategory },
+                    { label: "POCUS", topic: "Point-of-care ultrasound (POCUS) — eFAST, RUSH protocol, lung POCUS, bedside cardiac assessment, IVC assessment, pleural effusion", category: "POCUS" as QuestionCategory },
+                  ].map(({ label, topic, category }) => (
                     <button
                       key={label}
                       type="button"
-                      onClick={() => setAiTopic(topic)}
+                      onClick={() => { setAiTopic(topic); setAiCategory(category); }}
                       className={`text-xs px-2.5 py-1 rounded-full border font-medium transition-all ${
                         aiTopic === topic
                           ? "border-[#189aa1] bg-[#189aa1] text-white"
@@ -2595,41 +2790,57 @@ export default function QuickFireAdmin() {
               </div>
               {/* Single type mode */}
               {!aiMixedMode && (
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Question Type</label>
-                    <Select value={aiType} onValueChange={(v) => setAiType(v as QuestionType)}>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Question Type</label>
+                      <Select value={aiType} onValueChange={(v) => setAiType(v as QuestionType)}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="scenario">Scenario (MCQ)</SelectItem>
+                          <SelectItem value="image">Image-Based (MCQ)</SelectItem>
+                          <SelectItem value="quickReview">Quick Review (Flashcard)</SelectItem>
+                          <SelectItem value="connect">Connect (Matching)</SelectItem>
+                          <SelectItem value="order">Order (Sequence)</SelectItem>
+                          <SelectItem value="identifier">Identifier (MCQ)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Difficulty</label>
+                      <Select value={aiDifficulty} onValueChange={(v) => setAiDifficulty(v as Difficulty)}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="beginner">Beginner</SelectItem>
+                          <SelectItem value="intermediate">Intermediate</SelectItem>
+                          <SelectItem value="advanced">Advanced</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Count (1–20)</label>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={20}
+                        value={aiCount}
+                        onChange={(e) => setAiCount(Math.min(20, Math.max(1, parseInt(e.target.value) || 1)))}
+                      />
+                    </div>
+                  </div>
+                  <div className="w-48">
+                    <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Category</label>
+                    <Select value={aiCategory} onValueChange={(v) => setAiCategory(v as QuestionCategory)}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="scenario">Scenario (MCQ)</SelectItem>
-                        <SelectItem value="image">Image-Based (MCQ)</SelectItem>
-                        <SelectItem value="quickReview">Quick Review (Flashcard)</SelectItem>
-                        <SelectItem value="connect">Connect (Matching)</SelectItem>
-                        <SelectItem value="order">Order (Sequence)</SelectItem>
-                        <SelectItem value="identifier">Identifier (MCQ)</SelectItem>
+                        <SelectItem value="ACS">ACS</SelectItem>
+                        <SelectItem value="Adult Echo">Adult Echo</SelectItem>
+                        <SelectItem value="Pediatric Echo">Pediatric Echo</SelectItem>
+                        <SelectItem value="Fetal Echo">Fetal Echo</SelectItem>
+                        <SelectItem value="POCUS">POCUS</SelectItem>
+                        <SelectItem value="General">General</SelectItem>
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Difficulty</label>
-                    <Select value={aiDifficulty} onValueChange={(v) => setAiDifficulty(v as Difficulty)}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="beginner">Beginner</SelectItem>
-                        <SelectItem value="intermediate">Intermediate</SelectItem>
-                        <SelectItem value="advanced">Advanced</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Count (1–20)</label>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={20}
-                      value={aiCount}
-                      onChange={(e) => setAiCount(Math.min(20, Math.max(1, parseInt(e.target.value) || 1)))}
-                    />
                   </div>
                 </div>
               )}
@@ -2675,16 +2886,32 @@ export default function QuickFireAdmin() {
                       }`}>{Object.values(aiTypeCounts).reduce((a, b) => a + b, 0)}</span> questions
                     </p>
                   </div>
-                  <div className="w-48">
-                    <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Difficulty</label>
-                    <Select value={aiDifficulty} onValueChange={(v) => setAiDifficulty(v as Difficulty)}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="beginner">Beginner</SelectItem>
-                        <SelectItem value="intermediate">Intermediate</SelectItem>
-                        <SelectItem value="advanced">Advanced</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <div className="flex gap-3">
+                    <div className="w-48">
+                      <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Difficulty</label>
+                      <Select value={aiDifficulty} onValueChange={(v) => setAiDifficulty(v as Difficulty)}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="beginner">Beginner</SelectItem>
+                          <SelectItem value="intermediate">Intermediate</SelectItem>
+                          <SelectItem value="advanced">Advanced</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="w-48">
+                      <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Category</label>
+                      <Select value={aiCategory} onValueChange={(v) => setAiCategory(v as QuestionCategory)}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="ACS">ACS</SelectItem>
+                          <SelectItem value="Adult Echo">Adult Echo</SelectItem>
+                          <SelectItem value="Pediatric Echo">Pediatric Echo</SelectItem>
+                          <SelectItem value="Fetal Echo">Fetal Echo</SelectItem>
+                          <SelectItem value="POCUS">POCUS</SelectItem>
+                          <SelectItem value="General">General</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
               )}
@@ -2841,6 +3068,7 @@ export default function QuickFireAdmin() {
                             markers: q.markers,
                             difficulty: aiDifficulty,
                             tags: q.tags ?? [],
+                            category: aiCategory,
                           } as any)
                         )
                       );
@@ -2964,6 +3192,7 @@ export default function QuickFireAdmin() {
                             markers: q.markers,
                             difficulty: aiDifficulty,
                             tags: q.tags ?? [],
+                            category: aiCategory,
                           } as any)
                         )
                       );
@@ -3120,6 +3349,7 @@ export default function QuickFireAdmin() {
                             explanation: q.explanation,
                             difficulty: flashcardAiDifficulty,
                             tags: q.tags ?? [],
+                            category: aiCategory,
                           } as any)
                         )
                       );

@@ -934,6 +934,16 @@ export const quickfireQuestions = mysqlTable("quickfireQuestions", {
   // Soft-delete: set when question is deleted from the bank. Permanently purged after 30 days.
   deletedAt: timestamp("deletedAt"),
   createdByUserId: int("createdByUserId"),
+  // User-submission fields
+  submitterName: varchar("submitterName", { length: 200 }),
+  submitterLinkedIn: varchar("submitterLinkedIn", { length: 500 }),
+  submittedByUserId: int("submittedByUserId"),
+  // Submission workflow: 'draft' = admin-created, 'pending_review' = user-submitted awaiting approval, 'approved' = live, 'rejected' = declined
+  submissionStatus: mysqlEnum("submissionStatus", ["draft", "pending_review", "approved", "rejected"]).default("draft").notNull(),
+  // Points awarded to submitter when question is approved (true = already awarded)
+  submissionPointsAwarded: boolean("submissionPointsAwarded").default(false).notNull(),
+  // Admin rejection reason shown to submitter
+  rejectionReason: text("rejectionReason"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

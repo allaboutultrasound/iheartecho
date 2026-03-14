@@ -3,6 +3,7 @@
   Brand: Teal #189aa1, Aqua #4ad9e0
   Fonts: Merriweather headings, Open Sans body
 */
+import { useEffect } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
@@ -136,6 +137,28 @@ const STATIC_STATS = [
 
 export default function Home() {
   const { user } = useAuth();
+
+  // SEO: set page title, description, and keywords
+  useEffect(() => {
+    document.title = "iHeartEcho™ — Echocardiography Clinical Companion";
+    // Meta description
+    let desc = document.querySelector<HTMLMetaElement>("meta[name='description']");
+    if (!desc) {
+      desc = document.createElement("meta");
+      desc.name = "description";
+      document.head.appendChild(desc);
+    }
+    desc.content = "iHeartEcho™ is a real-time echocardiography clinical companion for sonographers and cardiologists. Guideline-based echo protocols, calculators, daily challenges, and case library.";
+    // Meta keywords
+    let kw = document.querySelector<HTMLMetaElement>("meta[name='keywords']");
+    if (!kw) {
+      kw = document.createElement("meta");
+      kw.name = "keywords";
+      document.head.appendChild(kw);
+    }
+    kw.content = "echocardiography, echo, ultrasound, cardiology, sonography, POCUS, TTE, TEE, ASE guidelines, echo protocols, cardiac imaging, echo calculator, daily challenge, CME, ARDMS, CCI";
+  }, []);
+
   const { data: premiumStatus } = trpc.premium.getStatus.useQuery(undefined, {
     enabled: !!user,
     staleTime: 60_000,
