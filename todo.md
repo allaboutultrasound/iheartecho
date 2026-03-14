@@ -118,3 +118,12 @@
 - [ ] Cases admin: replace all file input fields with DragDropUploadZone (case image, case media/video, supplemental files)
 - [ ] Daily Challenges admin: replace question image/media input fields with DragDropUploadZone
 - [ ] Flashcards admin: replace flashcard image/media input fields with DragDropUploadZone
+
+## Rich Text Editor Upgrades (Mar 14 2026)
+- [ ] Daily Challenge question editor: upgrade explanation/rationale field to RichTextEditor (WYSIWYG)
+
+## Rich Text & HTML Rendering Fixes (Mar 14 2026)
+- [x] Daily Challenge question editor: explanation field already uses RichTextEditor — confirmed
+- [x] Flashcard editor: front (question) and back (answer/explanation) already use RichTextEditor — confirmed
+- [x] Question bank inline explanation previews: upgraded from plain text to dangerouslySetInnerHTML (3 locations)
+- [x] All admin text fields audit: all 7 RichTextEditor instances confirmed (challenge description, question text, quick-review answer, explanation, AI topic, flashcard front, flashcard back)

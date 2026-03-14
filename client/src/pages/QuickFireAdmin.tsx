@@ -3167,7 +3167,7 @@ export default function QuickFireAdmin() {
                             <p className="text-[10px] text-indigo-400 italic">Upload the image and place markers manually in the form.</p>
                           </div>
                         )}
-                        {q.explanation && <p className="text-xs text-gray-400 mt-1 italic">{q.explanation}</p>}
+                        {q.explanation && <div className="text-xs text-gray-400 mt-1 italic prose prose-xs max-w-none" dangerouslySetInnerHTML={{ __html: q.explanation }} />}
                         {/* Tags */}
                         {q.tags && q.tags.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-1.5">
@@ -3294,7 +3294,7 @@ export default function QuickFireAdmin() {
                               ))}
                             </div>
                           )}
-                          {q.explanation && <p className="text-xs text-gray-400 mt-1 italic">{q.explanation}</p>}
+                          {q.explanation && <div className="text-xs text-gray-400 mt-1 italic prose prose-xs max-w-none" dangerouslySetInnerHTML={{ __html: q.explanation }} />}
                           {q.tags && q.tags.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1.5">
                               {q.tags.map((t: string) => <span key={t} className="text-xs text-gray-400">#{t}</span>)}
@@ -3475,7 +3475,7 @@ export default function QuickFireAdmin() {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-800 leading-snug" dangerouslySetInnerHTML={{ __html: q.question ?? "" }} />
                         {q.reviewAnswer && <p className="text-xs text-green-700 font-semibold mt-1">Answer: {q.reviewAnswer}</p>}
-                        {q.explanation && <p className="text-xs text-gray-400 mt-1 italic">{q.explanation}</p>}
+                        {q.explanation && <div className="text-xs text-gray-400 mt-1 italic prose prose-xs max-w-none" dangerouslySetInnerHTML={{ __html: q.explanation }} />}
                       </div>
                     </div>
                   ))}
