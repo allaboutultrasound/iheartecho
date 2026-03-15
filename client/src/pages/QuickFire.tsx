@@ -498,6 +498,25 @@ export default function QuickFire() {
   const alreadyCompleted =
     questions.length > 0 && questions.every((q) => effectiveUserAttempts[q.id] !== undefined);
 
+  // Compute whether the category-based daily challenge is fully complete at component level
+  // Used to suppress the legacy alreadyCompleted summary when the category summary is already shown
+  const _dailyCatPrefs = categoryPrefsQuery.data ?? { acs: true, adultEcho: true, pediatricEcho: true, fetalEcho: true, pocus: true };
+  const _DAILY_CATS = [
+    { prefKey: "acs" as const, mapKey: "acs" },
+    { prefKey: "adultEcho" as const, mapKey: "adultEcho" },
+    { prefKey: "pediatricEcho" as const, mapKey: "pediatricEcho" },
+    { prefKey: "fetalEcho" as const, mapKey: "fetalEcho" },
+    { prefKey: "pocus" as const, mapKey: "pocus" },
+  ];
+  const _enabledDailyCats = _DAILY_CATS.filter((c) => _dailyCatPrefs[c.prefKey] !== false);
+  const _enabledDailyCatsWithQ = _enabledDailyCats.filter((c) => !!todayCategoryMap[c.mapKey]);
+  const allDoneDaily = !todaySetQuery.isLoading &&
+    _enabledDailyCatsWithQ.length > 0 &&
+    _enabledDailyCatsWithQ.every((c) => {
+      const qId = todayCategoryMap[c.mapKey];
+      return qId && todayUserAttempts[qId] !== undefined;
+    });
+
   // ── Admin edit state (archive) ────────────────────────────────────────────
   const isAdmin = user?.role === "admin";
   const [archiveEditOpen, setArchiveEditOpen] = useState(false);
@@ -1488,7 +1507,7 @@ export default function QuickFire() {
             )}
 
             {/* Already completed */}
-            {(activeCategory ? !todaySetQuery.isLoading : !isLoading && !error) && alreadyCompleted && !showResults && sessionResults.length === 0 && (
+            {(activeCategory ? !todaySetQuery.isLoading : !isLoading && !error) && alreadyCompleted && !showResults && sessionResults.length === 0 && !allDoneDaily && (
               <div className="rounded-2xl p-8 text-center" style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}>
                 <Trophy className="w-14 h-14 text-[#4ad9e0] mx-auto mb-4" />
                 <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "Merriweather, serif" }}>
@@ -1956,7 +1975,7 @@ export default function QuickFire() {
                       {answered && answerResult?.explanation && (
                         <div className="mt-2 p-4 rounded-lg bg-[#189aa1]/8 border border-[#189aa1]/20">
                           <p className="text-xs font-semibold text-[#189aa1] mb-1">Explanation</p>
-                          <p className="text-sm text-gray-700 leading-relaxed">{answerResult.explanation}</p>
+                          <p className="text-sm text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: answerResult.explanation }} />
                         </div>
                       )}
                     </CardContent>
@@ -2423,11 +2442,11 @@ export default function QuickFire() {
                           )}
 
                           {archiveAnswered && archiveCurrentQ.explanation && (
-                            <div className="mt-2 p-4 rounded-lg bg-[#189aa1]/8 border border-[#189aa1]/20">
-                              <p className="text-xs font-semibold text-[#189aa1] mb-1">Explanation</p>
-                              <p className="text-sm text-gray-700 leading-relaxed">{archiveCurrentQ.explanation}</p>
-                            </div>
-                          )}
+                              <div className="mt-2 p-4 rounded-lg bg-[#189aa1]/8 border border-[#189aa1]/20">
+                                <p className="text-xs font-semibold text-[#189aa1] mb-1">Explanation</p>
+                                <p className="text-sm text-gray-700 leading-relaxed" dangerouslySetInnerHTML={{ __html: archiveCurrentQ.explanation }} />
+                              </div>
+                            )}
                         </CardContent>
 
                         <CardFooter className="pt-2">

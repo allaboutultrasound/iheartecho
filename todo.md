@@ -292,3 +292,7 @@
 - [x] Add Crown badge marker on all premium ScanCoach tab buttons (fetal, chd, pulm, strain, hocm, tee, ice, uea)
 - [x] Show upgrade prompt with feature list when non-premium user tries to access gated ScanCoach views
 - [x] Ensure logged-out users also see the gate (prompt to sign in + upgrade)
+
+## Daily Challenge Bug Fixes (Mar 15 2026)
+- [x] Fix duplicate completion summary: suppress legacy alreadyCompleted block when category-based allDoneDaily is true
+- [x] Fix HTML rendering in explanations: use dangerouslySetInnerHTML for explanation field in main player and archive player
