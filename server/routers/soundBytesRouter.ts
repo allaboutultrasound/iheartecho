@@ -79,9 +79,12 @@ export const soundBytesRouter = router({
         .groupBy(soundByteViews.soundByteId);
       const viewMap = new Map(viewCounts.map((v) => [v.soundByteId, v.total]));
 
-      return rows.map((r) => ({
+      // Tag the first FREE_ITEM_COUNT items (by position in the sorted result) as free-tier
+      const FREE_ITEM_COUNT = 4;
+      return rows.map((r, index) => ({
         ...r,
         phantomViews: getPhantomViews(r.id, viewMap.get(r.id) ?? 0),
+        isFree: index < FREE_ITEM_COUNT,
       }));
     }),
 
@@ -98,6 +101,16 @@ export const soundBytesRouter = router({
         .limit(1);
       if (!row) throw new TRPCError({ code: "NOT_FOUND", message: "SoundByte not found" });
 
+      // Determine if this item is in the free-tier (first 4 by sort order)
+      const FREE_ITEM_COUNT = 4;
+      const allPublished = await db
+        .select({ id: soundBytes.id })
+        .from(soundBytes)
+        .where(eq(soundBytes.status, "published"))
+        .orderBy(soundBytes.sortOrder, desc(soundBytes.publishedAt));
+      const freeIds = new Set(allPublished.slice(0, FREE_ITEM_COUNT).map((r) => r.id));
+      const isFree = freeIds.has(row.id);
+
       // Compute real view count for phantom calculation
       const [viewRow] = await db
         .select({ total: sql<number>`COUNT(*)`.as("total") })
@@ -105,7 +118,7 @@ export const soundBytesRouter = router({
         .where(eq(soundByteViews.soundByteId, input.id));
       const realViews = viewRow?.total ?? 0;
 
-      return { ...row, phantomViews: getPhantomViews(row.id, realViews) };
+      return { ...row, phantomViews: getPhantomViews(row.id, realViews), isFree };
     }),
 
   /** Record a view event for a SoundByte (premium users only) */

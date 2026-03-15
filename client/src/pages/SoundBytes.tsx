@@ -27,6 +27,7 @@ import {
   Reply,
   ChevronDown,
   ChevronUp,
+  Lock,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -94,10 +95,16 @@ export default function SoundBytesPage() {
     category: activeCategory === "all" ? undefined : activeCategory,
   });
 
+  // Determine if the selected item is free-tier (based on list data)
+  const selectedItem = items.find((i) => i.id === selectedId);
+  const selectedIsFree = selectedItem?.isFree ?? false;
+  // Can view detail if premium OR if the item is free-tier and user is logged in
+  const canViewSelected = isPremium || (isAuthenticated && selectedIsFree);
+
   // Fetch selected item detail
   const { data: selected } = trpc.soundBytes.getById.useQuery(
     { id: selectedId! },
-    { enabled: selectedId !== null && isPremium }
+    { enabled: selectedId !== null && canViewSelected }
   );
 
   // Record view mutation
@@ -107,7 +114,7 @@ export default function SoundBytesPage() {
   const utils = trpc.useUtils();
   const { data: discussions = [] } = trpc.soundBytes.listDiscussions.useQuery(
     { soundByteId: selectedId! },
-    { enabled: selectedId !== null && isPremium }
+    { enabled: selectedId !== null && canViewSelected }
   );
   const submitDiscussion = trpc.soundBytes.submitDiscussion.useMutation({
     onSuccess: () => {
@@ -131,8 +138,10 @@ export default function SoundBytesPage() {
   }
 
   function handleSelect(id: number) {
+    const item = items.find((i) => i.id === id);
+    const itemIsFree = item?.isFree ?? false;
     setSelectedId(id);
-    if (isPremium) {
+    if (isPremium || (isAuthenticated && itemIsFree)) {
       recordView.mutate({ soundByteId: id, watchedSeconds: 0, completed: false });
     }
   }
@@ -226,15 +235,98 @@ export default function SoundBytesPage() {
           </BlurredOverlay>
         )}
 
-        {/* Gate: logged in but not premium */}
-        {isAuthenticated && !isPremium && (
+        {/* Free user: back button when viewing a free item detail */}
+        {isAuthenticated && !isPremium && selectedId !== null && canViewSelected && selected && (
+          <div className="max-w-3xl mx-auto">
+            <button
+              onClick={() => setSelectedId(null)}
+              className="flex items-center gap-1.5 text-sm text-[#189aa1] font-semibold mb-4 hover:opacity-80 transition-opacity"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Back to SoundBytes
+            </button>
+            {/* Video player */}
+            <div className="rounded-xl overflow-hidden bg-black mb-5 aspect-video">
+              {(() => {
+                const embedUrl = getEmbedUrl(selected.videoUrl);
+                if (embedUrl) {
+                  return (
+                    <iframe
+                      src={embedUrl}
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      title={selected.title}
+                    />
+                  );
+                }
+                return (
+                  <video
+                    src={selected.videoUrl}
+                    controls
+                    className="w-full h-full"
+                    onEnded={() =>
+                      recordView.mutate({ soundByteId: selected.id, watchedSeconds: 999, completed: true })
+                    }
+                  />
+                );
+              })()}
+            </div>
+            <div className="flex items-start gap-3 mb-4">
+              <div className="flex-1">
+                <h2 className="text-xl font-bold text-gray-900 leading-snug" style={{ fontFamily: "Merriweather, serif" }}>
+                  {selected.title}
+                </h2>
+                <div className="flex items-center gap-2 mt-1.5">
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "#189aa115", color: "#189aa1" }}>
+                    {CATEGORY_LABELS[selected.category] ?? selected.category}
+                  </span>
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600">Free</span>
+                  <span className="text-xs text-gray-400 flex items-center gap-1">
+                    <Eye className="w-3 h-3" />
+                    {(selected.phantomViews ?? selected.displayViews ?? 0).toLocaleString()} views
+                  </span>
+                </div>
+              </div>
+            </div>
+            {selected.body && (
+              <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed mb-8" dangerouslySetInnerHTML={{ __html: selected.body }} />
+            )}
+            {/* Upgrade CTA */}
+            <div className="mt-6 rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4" style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}>
+              <div className="flex-1">
+                <p className="text-xs font-semibold text-[#4ad9e0] uppercase tracking-wider mb-1">Upgrade to Premium</p>
+                <p className="text-white font-bold text-sm">Unlock all SoundBytes™ micro-lessons</p>
+                <p className="text-white/60 text-xs mt-0.5">Access the full library of clinical echo micro-lessons.</p>
+              </div>
+              <a href="https://www.iheartecho.com" target="_blank" rel="noopener noreferrer"
+                className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
+                style={{ background: "#189aa1" }}>
+                Upgrade Now
+              </a>
+            </div>
+          </div>
+        )}
+
+        {/* Gate: logged in but not premium — show free items + blurred premium items */}
+        {isAuthenticated && !isPremium && selectedId === null && (
+          <FreeUserGrid
+            items={items}
+            isLoading={isLoading}
+            onSelect={handleSelect}
+            previewItems={PREVIEW_ITEMS}
+          />
+        )}
+
+        {/* Free user viewing a free item detail */}
+        {isAuthenticated && !isPremium && selectedId !== null && !canViewSelected && (
           <BlurredOverlay type="premium" featureName="SoundBytes™">
             <SoundBytesPreviewGrid items={PREVIEW_ITEMS} />
           </BlurredOverlay>
         )}
 
-        {/* Premium: show content */}
-        {isPremium && (
+        {/* Content visible to premium OR free user on a free item */}
+        {(isPremium || (isAuthenticated && canViewSelected)) && (
           <>
             {/* Detail view */}
             {selectedId !== null && selected && (
@@ -410,64 +502,89 @@ export default function SoundBytesPage() {
 
                 {!isLoading && items.length > 0 && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {items.map((item) => (
-                      <button
-                        key={item.id}
-                        onClick={() => handleSelect(item.id)}
-                        className="bg-white rounded-xl border border-gray-100 overflow-hidden text-left group hover:shadow-md hover:border-[#189aa1]/20 transition-all"
-                      >
-                        {/* Thumbnail */}
-                        <div className="aspect-video bg-gradient-to-br from-[#0e1e2e] to-[#0e4a50] relative overflow-hidden">
-                          {item.thumbnailUrl ? (
-                            <img
-                              src={item.thumbnailUrl}
-                              alt={item.title}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <div
-                                className="w-12 h-12 rounded-full flex items-center justify-center"
-                                style={{ background: "rgba(24,154,161,0.3)" }}
-                              >
-                                <Play className="w-6 h-6 text-[#4ad9e0] fill-[#4ad9e0]" />
+                    {items.map((item) => {
+                      const itemIsFree = item.isFree ?? false;
+                      const isLocked = !isPremium && isAuthenticated && !itemIsFree;
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => handleSelect(item.id)}
+                          className={`bg-white rounded-xl border overflow-hidden text-left group transition-all ${
+                            isLocked
+                              ? "border-gray-100 opacity-70 cursor-pointer hover:opacity-90"
+                              : "border-gray-100 hover:shadow-md hover:border-[#189aa1]/20"
+                          }`}
+                        >
+                          {/* Thumbnail */}
+                          <div className="aspect-video bg-gradient-to-br from-[#0e1e2e] to-[#0e4a50] relative overflow-hidden">
+                            {item.thumbnailUrl ? (
+                              <img
+                                src={item.thumbnailUrl}
+                                alt={item.title}
+                                className={`w-full h-full object-cover ${isLocked ? "brightness-50" : ""}`}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <div
+                                  className="w-12 h-12 rounded-full flex items-center justify-center"
+                                  style={{ background: "rgba(24,154,161,0.3)" }}
+                                >
+                                  <Play className="w-6 h-6 text-[#4ad9e0] fill-[#4ad9e0]" />
+                                </div>
                               </div>
-                            </div>
-                          )}
-                          {/* Play overlay on hover */}
-                          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <div
-                              className="w-12 h-12 rounded-full flex items-center justify-center"
-                              style={{ background: "#189aa1" }}
-                            >
-                              <Play className="w-5 h-5 text-white fill-white ml-0.5" />
-                            </div>
+                            )}
+                            {/* Free badge */}
+                            {itemIsFree && (
+                              <span className="absolute top-2 left-2 text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-white shadow">
+                                Free
+                              </span>
+                            )}
+                            {/* Lock overlay for premium items shown to free users */}
+                            {isLocked && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                                <div className="flex flex-col items-center gap-1">
+                                  <Lock className="w-7 h-7 text-white/80" />
+                                  <span className="text-xs text-white/70 font-semibold">Premium</span>
+                                </div>
+                              </div>
+                            )}
+                            {/* Play overlay on hover (non-locked) */}
+                            {!isLocked && (
+                              <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <div
+                                  className="w-12 h-12 rounded-full flex items-center justify-center"
+                                  style={{ background: "#189aa1" }}
+                                >
+                                  <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        </div>
 
-                        {/* Info */}
-                        <div className="p-4">
-                          <h3
-                            className="font-bold text-gray-800 text-sm leading-snug mb-2 line-clamp-2"
-                            style={{ fontFamily: "Merriweather, serif" }}
-                          >
-                            {item.title}
-                          </h3>
-                          <div className="flex items-center justify-between">
-                            <span
-                              className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                              style={{ background: "#189aa115", color: "#189aa1" }}
+                          {/* Info */}
+                          <div className="p-4">
+                            <h3
+                              className="font-bold text-gray-800 text-sm leading-snug mb-2 line-clamp-2"
+                              style={{ fontFamily: "Merriweather, serif" }}
                             >
-                              {CATEGORY_LABELS[item.category] ?? item.category}
-                            </span>
-                            <span className="text-xs text-gray-400 flex items-center gap-1">
-                              <Eye className="w-3 h-3" />
-                              {(item.phantomViews ?? item.displayViews ?? 0).toLocaleString()}
-                            </span>
+                              {item.title}
+                            </h3>
+                            <div className="flex items-center justify-between">
+                              <span
+                                className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                                style={{ background: "#189aa115", color: "#189aa1" }}
+                              >
+                                {CATEGORY_LABELS[item.category] ?? item.category}
+                              </span>
+                              <span className="text-xs text-gray-400 flex items-center gap-1">
+                                <Eye className="w-3 h-3" />
+                                {(item.phantomViews ?? item.displayViews ?? 0).toLocaleString()}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      </button>
-                    ))}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </>
@@ -628,3 +745,129 @@ function DiscussionThread({ discussion, isExpanded, onToggleReplies }: Discussio
   );
 }
 
+
+// ── FreeUserGrid — shown to logged-in free users: free items playable, rest locked ──
+
+interface FreeUserGridProps {
+  items: Array<{
+    id: number;
+    title: string;
+    category: string;
+    thumbnailUrl?: string | null;
+    displayViews?: number | null;
+    phantomViews?: number | null;
+    isFree?: boolean;
+  }>;
+  isLoading: boolean;
+  onSelect: (id: number) => void;
+  previewItems: { title: string; category: string }[];
+}
+
+function FreeUserGrid({ items, isLoading, onSelect, previewItems }: FreeUserGridProps) {
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} className="bg-white rounded-xl border border-gray-100 overflow-hidden animate-pulse">
+            <div className="aspect-video bg-gray-100" />
+            <div className="p-4 space-y-2">
+              <div className="h-4 bg-gray-100 rounded w-3/4" />
+              <div className="h-3 bg-gray-50 rounded w-1/2" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  const displayItems = items.length > 0 ? items : previewItems.map((p, i) => ({ ...p, id: -(i + 1), isFree: false }));
+
+  return (
+    <>
+      {/* Free tier banner */}
+      <div className="mb-5 rounded-xl px-4 py-3 flex items-center gap-3" style={{ background: "linear-gradient(90deg, #0e1e2e, #0e4a50)" }}>
+        <Crown className="w-5 h-5 text-[#4ad9e0] flex-shrink-0" />
+        <div className="flex-1">
+          <p className="text-white text-sm font-semibold">Free Access: First 4 SoundBytes™</p>
+          <p className="text-white/60 text-xs">Upgrade to Premium to unlock the full library of clinical echo micro-lessons.</p>
+        </div>
+        <a href="https://www.iheartecho.com" target="_blank" rel="noopener noreferrer"
+          className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold text-white hover:opacity-90 transition-opacity"
+          style={{ background: "#189aa1" }}>
+          Upgrade
+        </a>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {displayItems.map((item) => {
+          const itemIsFree = item.isFree ?? false;
+          const isLocked = !itemIsFree;
+          return (
+            <button
+              key={item.id}
+              onClick={() => itemIsFree && item.id > 0 ? onSelect(item.id) : undefined}
+              className={`bg-white rounded-xl border overflow-hidden text-left group transition-all ${
+                isLocked ? "border-gray-100 cursor-default" : "border-gray-100 hover:shadow-md hover:border-[#189aa1]/20 cursor-pointer"
+              }`}
+            >
+              <div className="aspect-video bg-gradient-to-br from-[#0e1e2e] to-[#0e4a50] relative overflow-hidden">
+                {item.thumbnailUrl ? (
+                  <img
+                    src={item.thumbnailUrl}
+                    alt={item.title}
+                    className={`w-full h-full object-cover ${isLocked ? "brightness-50" : ""}`}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: "rgba(24,154,161,0.3)" }}>
+                      <Play className="w-6 h-6 text-[#4ad9e0] fill-[#4ad9e0]" />
+                    </div>
+                  </div>
+                )}
+                {/* Free badge */}
+                {itemIsFree && (
+                  <span className="absolute top-2 left-2 text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-white shadow">
+                    Free
+                  </span>
+                )}
+                {/* Lock overlay */}
+                {isLocked && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                    <div className="flex flex-col items-center gap-1">
+                      <Lock className="w-7 h-7 text-white/80" />
+                      <span className="text-xs text-white/70 font-semibold">Premium</span>
+                    </div>
+                  </div>
+                )}
+                {/* Play overlay on hover (free items only) */}
+                {itemIsFree && (
+                  <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: "#189aa1" }}>
+                      <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="p-4">
+                <h3 className="font-bold text-gray-800 text-sm leading-snug mb-2 line-clamp-2" style={{ fontFamily: "Merriweather, serif" }}>
+                  {item.title}
+                </h3>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "#189aa115", color: "#189aa1" }}>
+                    {CATEGORY_LABELS[item.category as keyof typeof CATEGORY_LABELS] ?? item.category}
+                  </span>
+                  {!isLocked && (
+                    <span className="text-xs text-gray-400 flex items-center gap-1">
+                      <Eye className="w-3 h-3" />
+                      {(item.phantomViews ?? item.displayViews ?? 0).toLocaleString()}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </>
+  );
+}

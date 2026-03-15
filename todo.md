@@ -353,3 +353,9 @@
 - [x] Update soundBytes.list and soundBytes.getById public responses to include phantomViews field
 - [x] Update SoundBytes public UI to display phantomViews instead of real view count
 - [x] Keep real view count visible only in SoundBytesAdmin analytics
+
+## SoundBytes™ Free Tier Access (Mar 15 2026)
+- [x] Server: tag first 4 published SoundBytes (by sort order) with isFree: true in list response
+- [x] Server: update getById to allow free registered users to access isFree items (no premium check)
+- [x] Public UI: show "Free" badge on first 4 items; remove lock/premium gate for those items
+- [x] Public UI: keep premium gate on items 5+ for non-premium users
