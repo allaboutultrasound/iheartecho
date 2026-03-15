@@ -336,3 +336,8 @@
 - [x] Build reply UI in SoundBytes member page (show replies under each approved comment)
 - [x] Build reply form in SoundBytesAdmin approval queue (admin can reply from approval panel)
 - [x] Add notifyOwner call in submitDiscussion procedure when new comment is submitted
+
+## Enrolled Page Fix (Mar 15 2026)
+- [x] Remove iHeartEcho logo + name from top header on Enrolled page
+- [x] Move iHeartEcho logo + "iHeartEcho™" text into the iHeartEcho card header
+- [x] Add AAUS logo + "All About Ultrasound™" text into the AAUS card header

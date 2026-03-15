@@ -44,23 +44,8 @@ export default function Enrolled() {
       className="min-h-screen flex flex-col"
       style={{ background: "linear-gradient(160deg, #0e1e2e 0%, #0b3a40 50%, #0e1e2e 100%)" }}
     >
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <header className="flex items-center justify-center gap-3 px-6 py-6">
-        <img
-          src="https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/TTSqgyHlTBmxeODV.png?Expires=1804183007&Signature=tWUrD-cUfgsk0u97qoBm0zB3mj75cGUW2F-hh-3aepkHA9QlDWUbfY2eqgxrIpyY2Zp3wTFpuBC7DXxtNjAMv5Ju2HBWLLcCgaGJrEB5X2wKLtoJQKscrbUUOXFV7xdwiJWP5zeVe7QNQaBw5zHqqyN6EYc6a0WovYLeHtUnM~vCz5pDvUh0L43UEpwlSVUZnU9ULfYO~ML9cpjCX-M~Uwb1QHUU2IxD7Qa9wMXw3nUhLxhbrUVdc-byWsUfQg5~PCwxH3jjLLq-4hlrBvFgkyB5QJJiqv6f~GM6bMh8jFE1GfWCAPzQVdcY97tgqT4GBExpYMkQ-K7AK83Fvd5zEg__&Key-Pair-Id=K2HSFNDJXOU9YS"
-          alt="iHeartEcho™"
-          className="w-10 h-10 object-contain"
-        />
-        <span
-          className="text-white font-bold text-lg"
-          style={{ fontFamily: "Merriweather, serif" }}
-        >
-          iHeartEcho™
-        </span>
-      </header>
-
       {/* ── Hero ───────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col items-center text-center px-6 pt-4 pb-10">
+      <div className="flex flex-col items-center text-center px-6 pt-10 pb-10">
         <div className="w-14 h-14 rounded-full flex items-center justify-center mb-4"
           style={{ background: "rgba(74, 217, 224, 0.15)", border: "1.5px solid rgba(74,217,224,0.4)" }}>
           <CheckCircle2 className="w-7 h-7" style={{ color: "#4ad9e0" }} />
@@ -95,27 +80,36 @@ export default function Enrolled() {
             className="px-8 py-7 flex flex-col items-start gap-3"
             style={{ borderBottom: "1px solid rgba(74,217,224,0.12)" }}
           >
-            <div
-              className="w-16 h-16 rounded-xl flex items-center justify-center overflow-hidden"
-              style={{ background: "rgba(74,217,224,0.08)" }}
-            >
-              <img
-                src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/aaus-logo_3140b0c9.png"
-                alt="All About Ultrasound"
-                className="w-14 h-14 object-contain"
-              />
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: "#4ad9e0" }}>
-                All About Ultrasound
-              </p>
-              <h2
-                className="text-xl font-bold text-white leading-snug"
-                style={{ fontFamily: "Merriweather, serif" }}
+            {/* AAUS logo + name */}
+            <div className="flex items-center gap-3">
+              <div
+                className="w-16 h-16 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0"
+                style={{ background: "rgba(74,217,224,0.08)" }}
               >
-                All About Ultrasound Dashboard
-              </h2>
+                <img
+                  src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/aaus-logo_3140b0c9.png"
+                  alt="All About Ultrasound™"
+                  className="w-14 h-14 object-contain"
+                />
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest mb-0.5" style={{ color: "#4ad9e0" }}>
+                  Community Platform
+                </p>
+                <span
+                  className="text-lg font-bold text-white leading-snug"
+                  style={{ fontFamily: "Merriweather, serif" }}
+                >
+                  All About Ultrasound™
+                </span>
+              </div>
             </div>
+            <h2
+              className="text-xl font-bold text-white leading-snug"
+              style={{ fontFamily: "Merriweather, serif" }}
+            >
+              All About Ultrasound Dashboard
+            </h2>
             <p className="text-white/60 text-sm leading-relaxed">
               Access your All About Ultrasound member dashboard — view your enrolled courses, continue learning, and connect with the community.
             </p>
@@ -181,27 +175,36 @@ export default function Enrolled() {
             className="px-8 py-7 flex flex-col items-start gap-3"
             style={{ borderBottom: "1px solid rgba(24,154,161,0.15)" }}
           >
-            <div
-              className="w-16 h-16 rounded-xl flex items-center justify-center overflow-hidden"
-              style={{ background: "rgba(24,154,161,0.1)" }}
-            >
-              <img
-                src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/ihe-logo_63005c85.webp"
-                alt="iHeartEcho™"
-                className="w-14 h-14 object-contain"
-              />
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: "#189aa1" }}>
-                Clinical Tools
-              </p>
-              <h2
-                className="text-xl font-bold text-white leading-snug"
-                style={{ fontFamily: "Merriweather, serif" }}
+            {/* IHE logo + name */}
+            <div className="flex items-center gap-3">
+              <div
+                className="w-16 h-16 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0"
+                style={{ background: "rgba(24,154,161,0.1)" }}
               >
-                iHeartEcho™ EchoAssist™ Echocardiography Clinical Intelligence
-              </h2>
+                <img
+                  src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/ihe-logo_63005c85.webp"
+                  alt="iHeartEcho™"
+                  className="w-14 h-14 object-contain"
+                />
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest mb-0.5" style={{ color: "#189aa1" }}>
+                  Clinical Tools
+                </p>
+                <span
+                  className="text-lg font-bold text-white leading-snug"
+                  style={{ fontFamily: "Merriweather, serif" }}
+                >
+                  iHeartEcho™
+                </span>
+              </div>
             </div>
+            <h2
+              className="text-xl font-bold text-white leading-snug"
+              style={{ fontFamily: "Merriweather, serif" }}
+            >
+              EchoAssist™ Echocardiography Clinical Intelligence
+            </h2>
             <p className="text-white/60 text-sm leading-relaxed">
               Real-time echo interpretation tools, clinical calculators, and daily learning — built for the clinical environment.
             </p>
