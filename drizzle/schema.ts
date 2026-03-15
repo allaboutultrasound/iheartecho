@@ -1001,7 +1001,7 @@ export const echoLibraryCases = mysqlTable("echoLibraryCases", {
   diagnosis: varchar("diagnosis", { length: 300 }),
   // Teaching points (JSON: string[])
   teachingPoints: text("teachingPoints"),
-  modality: mysqlEnum("modality", ["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "ECG", "Other"]).notNull(),
+  modality: mysqlEnum("modality", ["TTE", "TEE", "ICE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "ECG", "Other"]).notNull(),
   difficulty: mysqlEnum("difficulty", ["beginner", "intermediate", "advanced"]).default("intermediate").notNull(),
   // JSON: string[] — topic tags
   tags: text("tags"),

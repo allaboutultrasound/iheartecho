@@ -58,7 +58,7 @@ const caseInputSchema = z.object({
   clinicalHistory: z.string().max(5000).optional(),
   diagnosis: z.string().max(300).optional(),
   teachingPoints: z.array(z.string().max(500)).max(10).optional(),
-  modality: z.enum(["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "ECG", "Other"]),
+  modality: z.enum(["TTE", "TEE", "ICE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "ECG", "Other"]),
   difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("intermediate"),
   tags: z.array(z.string().max(50)).max(10).default([]),
   hipaaAcknowledged: z.boolean(),
@@ -109,7 +109,7 @@ export const caseLibraryRouter = router({
         page: z.number().int().min(1).default(1),
         limit: z.number().int().min(1).max(50).default(12),
         modality: z
-          .enum(["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "ECG", "Other"])
+          .enum(["TTE", "TEE", "ICE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "ECG", "Other"])
           .optional(),
         difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
         search: z.string().max(100).optional(),
@@ -1043,7 +1043,7 @@ export const caseLibraryRouter = router({
         clinicalHistory: z.string().max(5000).optional().nullable(),
         diagnosis: z.string().max(300).optional().nullable(),
         teachingPoints: z.array(z.string().max(500)).max(10).optional(),
-        modality: z.enum(["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "ECG", "Other"]).optional(),
+        modality: z.enum(["TTE", "TEE", "ICE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "ECG", "Other"]).optional(),
         difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
         tags: z.array(z.string().max(50)).max(10).optional(),
         status: z.enum(["pending", "approved", "rejected"]).optional(),
@@ -1100,7 +1100,7 @@ export const caseLibraryRouter = router({
         status: z.enum(["pending", "approved", "rejected"]).optional(),
         search: z.string().max(100).optional(),
         tag: z.string().max(100).optional(),
-        modality: z.enum(["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "ECG", "Other"]).optional(),
+        modality: z.enum(["TTE", "TEE", "ICE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "ECG", "Other"]).optional(),
         difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
         mediaFilter: z.enum(["all", "has_media", "no_media"]).optional(),
       })
@@ -1187,7 +1187,7 @@ export const caseLibraryRouter = router({
     .input(
       z.object({
         prompt: z.string().min(10).max(1000).describe("Clinical scenario description"),
-        modality: z.enum(["TTE", "TEE", "Stress", "Pediatric", "Fetal", "POCUS", "ECG", "Other"]).default("TTE"),
+        modality: z.enum(["TTE", "TEE", "ICE", "Stress", "Pediatric", "Fetal", "POCUS", "ECG", "Other"]).default("TTE"),
         difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("intermediate"),
         questionCount: z.number().int().min(1).max(5).default(3),
       })

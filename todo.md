@@ -396,13 +396,12 @@
 - [x] Verify fix works for all category types (722 tests pass)
 
 ## Daily Challenge Questions Not Showing - Permanent Fix (Mar 15 2026)
-- [ ] Root cause analysis: getLiveChallenge returns questions:[] despite live challenges existing
-- [ ] Fix: getLiveChallenge should not silently return empty when questions are inactive
-- [ ] Fix: ensureTodaySet must not create duplicate daily set entries for the same date
-- [ ] Fix: archive logic should not archive today's live challenges prematurely on repeated calls
-- [ ] Fix: add self-healing — if today's set has null slots, regenerate them automatically
-- [ ] Add vitest tests covering publish → live → questions-visible pipeline
-- [ ] Verify all 5 categories show questions after fix
+- [x] Root cause analysis: getLiveChallenge returns questions:[] despite live challenges existing
+- [x] Fix: getLiveChallenge now calls ensureTodaySet as fallback when no live challenge exists
+- [x] Fix: getTodaySet self-heals inactive questions — auto-activates instead of silently dropping
+- [x] Fix: getLiveChallenge no longer does full table scan — fetches by ID directly
+- [x] Add vitest tests: parseDailySetIds, autoActivateQuestions, DB-unavailable guard
+- [x] Verify fix: 730 tests pass, dev server healthy
 
 ## Case View Count Fix
 - [x] Diagnose inaccurate case view counts in platform admin — root cause: getCase incremented viewCount on every call including admin previews, and had no deduplication for repeat member views
@@ -410,3 +409,11 @@
 - [x] Fix: authenticated member views deduplicated per user per UTC calendar day (same case opened twice in a day = 1 view)
 - [x] Fix: getViewTrends analytics now excludes admin views from weekly trend chart
 - [x] Schema: added userId and isAdminView columns to caseViewEvents table (migration applied)
+
+## Add ICE Modality to Cases
+- [x] Add ICE to modality enum in drizzle/schema.ts (MySQL ALTER TABLE applied)
+- [x] Add ICE to all Zod enums in caseLibraryRouter.ts (listCases, submitCase, updateCase, listAllCases, aiGenerateCase)
+- [x] Add ICE to CaseLibrary.tsx MODALITIES filter list and MODALITY_COLORS (cyan badge)
+- [x] Add ICE to CaseEditorDialog.tsx modality selector
+- [x] Add ICE to AdminCaseManagement.tsx modality filter dropdown, AI generate selector, and MODALITY_COLORS
+- [x] Add ICE to SubmitCase.tsx MODALITIES list

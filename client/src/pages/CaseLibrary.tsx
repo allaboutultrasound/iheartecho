@@ -51,6 +51,7 @@ import CaseLibraryBanner from "@/components/CaseLibraryBanner";
 const MODALITY_COLORS: Record<string, string> = {
   TTE: "bg-blue-100 text-blue-700",
   TEE: "bg-purple-100 text-purple-700",
+  ICE: "bg-cyan-100 text-cyan-700",
   Stress: "bg-orange-100 text-orange-700",
   Pediatric: "bg-pink-100 text-pink-700",
   Fetal: "bg-rose-100 text-rose-700",
@@ -78,7 +79,7 @@ const STATUS_ICONS: Record<string, React.ElementType> = {
   rejected: XCircle,
 };
 
-const MODALITIES = ["All", "TTE", "TEE", "Stress", "Pediatric", "Fetal", "POCUS", "ECG", "Other"];
+const MODALITIES = ["All", "TTE", "TEE", "ICE", "Stress", "Pediatric", "Fetal", "POCUS", "ECG", "Other"];
 
 const MODALITY_COLORS_EXTRA: Record<string, string> = {
   ECG: "bg-indigo-100 text-indigo-700",
