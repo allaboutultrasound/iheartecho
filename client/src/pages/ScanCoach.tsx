@@ -1299,8 +1299,8 @@ export default function ScanCoach() {
             { key: "hocm",     label: "HOCM",               shortLabel: "HOCM",              icon: Heart,       views: 14, premium: true },
             { key: "chd",      label: "Pediatric CHD",      shortLabel: "Pediatric CHD",     icon: Users,       views: 14, premium: true },
             { key: "fetal",    label: "Fetal Echo",         shortLabel: "Fetal Echo",        icon: Baby,        views: 13, premium: true },
-            { key: "achd",     label: "Adult Congenital",   shortLabel: "Adult Congenital",  icon: Heart,       views: 13 },
-            { key: "diastolic",label: "Diastolic Function", shortLabel: "Diastolic",         icon: Wind,        views: 7  },
+            { key: "achd",     label: "Adult Congenital",   shortLabel: "Adult Congenital",  icon: Heart,       views: 13, premium: true },
+            { key: "diastolic",label: "Diastolic Function", shortLabel: "Diastolic",         icon: Wind,        views: 7,  premium: true },
             { key: "pulm",     label: "Pulmonary HTN & PE", shortLabel: "Pulm HTN & PE",     icon: Wind,        views: 8,  premium: true },
           ];
           const nav = tabNavMap[activeTab];
@@ -2538,7 +2538,9 @@ export default function ScanCoach() {
         {activeTab === "achd" && (
           !loading && !isAuthenticated
             ? <BlurredOverlay type="login" featureName="Adult Congenital ScanCoach"><ACHDScanCoach /></BlurredOverlay>
-            : <ACHDScanCoach />
+            : !loading && !isPremium
+              ? <BlurredOverlay type="premium" featureName="Adult Congenital ScanCoach"><ACHDScanCoach /></BlurredOverlay>
+              : <ACHDScanCoach />
         )}
         {/* ─── PULMONARY HTN & PE TAB ─── */}
         {activeTab === "pulm" && (
@@ -2576,7 +2578,9 @@ export default function ScanCoach() {
         {activeTab === "diastolic" && (
           !loading && !isAuthenticated
             ? <BlurredOverlay type="login" featureName="Diastolic Function ScanCoach"><DiastolicScanCoachContent /></BlurredOverlay>
-            : <DiastolicScanCoachContent />
+            : !loading && !isPremium
+              ? <BlurredOverlay type="premium" featureName="Diastolic Function ScanCoach"><DiastolicScanCoachContent /></BlurredOverlay>
+              : <DiastolicScanCoachContent />
         )}
         {/* ─── TEE TAB ─── */}
         {activeTab === "tee" && (

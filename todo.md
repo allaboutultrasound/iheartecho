@@ -302,6 +302,6 @@
 - [x] Fix rank display: competition ranking — tied users (same correct + same accuracy) share the same rank number, next rank skips accordingly
 
 ## ScanCoach Premium Badge Additions (Mar 15 2026)
-- [ ] Add premium crown badge to Diastolic Function ScanCoach tab
-- [ ] Add premium crown badge to Adult Congenital ScanCoach tab
-- [ ] Gate Diastolic Function and Adult Congenital ScanCoach content behind premium subscription
+- [x] Add premium crown badge to Diastolic Function ScanCoach tab
+- [x] Add premium crown badge to Adult Congenital ScanCoach tab
+- [x] Gate Diastolic Function and Adult Congenital ScanCoach content behind premium subscription
