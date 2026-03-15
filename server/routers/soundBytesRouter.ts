@@ -5,7 +5,8 @@
 import { z } from "zod";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { getDb } from "../db";
-import { soundBytes, soundByteViews } from "../../drizzle/schema";
+import { soundBytes, soundByteViews, soundByteDiscussions } from "../../drizzle/schema";
+import { users } from "../../drizzle/schema";
 import {
   publicProcedure,
   protectedProcedure,
@@ -277,4 +278,158 @@ export const soundBytesRouter = router({
         .where(eq(soundByteViews.soundByteId, input.soundByteId))
         .orderBy(desc(soundByteViews.updatedAt));
     }),
+
+  // ── Discussions ───────────────────────────────────────────────────────────────
+
+  /** Submit a discussion comment (premium users only — goes to pending queue) */
+  submitDiscussion: protectedProcedure
+    .input(
+      z.object({
+        soundByteId: z.number(),
+        body: z.string().min(1).max(5000),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const now = Date.now();
+      await db.insert(soundByteDiscussions).values({
+        soundByteId: input.soundByteId,
+        userId: ctx.user.id,
+        body: input.body,
+        status: "pending",
+        createdAt: now,
+        updatedAt: now,
+      });
+      return { ok: true };
+    }),
+
+  /** List approved discussions for a SoundByte (public — premium gate enforced on client) */
+  listDiscussions: publicProcedure
+    .input(z.object({ soundByteId: z.number() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const rows = await db
+        .select({
+          id: soundByteDiscussions.id,
+          body: soundByteDiscussions.body,
+          createdAt: soundByteDiscussions.createdAt,
+          userId: soundByteDiscussions.userId,
+          userName: users.name,
+          userDisplayName: users.displayName,
+          userCredentials: users.credentials,
+          userAvatarUrl: users.avatarUrl,
+        })
+        .from(soundByteDiscussions)
+        .leftJoin(users, eq(soundByteDiscussions.userId, users.id))
+        .where(
+          and(
+            eq(soundByteDiscussions.soundByteId, input.soundByteId),
+            eq(soundByteDiscussions.status, "approved")
+          )
+        )
+        .orderBy(desc(soundByteDiscussions.createdAt));
+      return rows;
+    }),
+
+  /** Admin: list all pending discussions across all SoundBytes */
+  adminListPendingDiscussions: protectedProcedure.query(async ({ ctx }) => {
+    if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+    const db = await getDb();
+    if (!db) return [];
+    return db
+      .select({
+        id: soundByteDiscussions.id,
+        soundByteId: soundByteDiscussions.soundByteId,
+        body: soundByteDiscussions.body,
+        status: soundByteDiscussions.status,
+        createdAt: soundByteDiscussions.createdAt,
+        userId: soundByteDiscussions.userId,
+        userName: users.name,
+        userDisplayName: users.displayName,
+        userCredentials: users.credentials,
+        soundByteTitle: soundBytes.title,
+      })
+      .from(soundByteDiscussions)
+      .leftJoin(users, eq(soundByteDiscussions.userId, users.id))
+      .leftJoin(soundBytes, eq(soundByteDiscussions.soundByteId, soundBytes.id))
+      .where(eq(soundByteDiscussions.status, "pending"))
+      .orderBy(desc(soundByteDiscussions.createdAt));
+  }),
+
+  /** Admin: list ALL discussions (all statuses) for the full moderation queue */
+  adminListAllDiscussions: protectedProcedure.query(async ({ ctx }) => {
+    if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+    const db = await getDb();
+    if (!db) return [];
+    return db
+      .select({
+        id: soundByteDiscussions.id,
+        soundByteId: soundByteDiscussions.soundByteId,
+        body: soundByteDiscussions.body,
+        status: soundByteDiscussions.status,
+        createdAt: soundByteDiscussions.createdAt,
+        userId: soundByteDiscussions.userId,
+        userName: users.name,
+        userDisplayName: users.displayName,
+        userCredentials: users.credentials,
+        soundByteTitle: soundBytes.title,
+      })
+      .from(soundByteDiscussions)
+      .leftJoin(users, eq(soundByteDiscussions.userId, users.id))
+      .leftJoin(soundBytes, eq(soundByteDiscussions.soundByteId, soundBytes.id))
+      .orderBy(desc(soundByteDiscussions.createdAt));
+  }),
+
+  /** Admin: approve a discussion */
+  adminApproveDiscussion: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db
+        .update(soundByteDiscussions)
+        .set({ status: "approved", updatedAt: Date.now() })
+        .where(eq(soundByteDiscussions.id, input.id));
+      return { ok: true };
+    }),
+
+  /** Admin: reject a discussion */
+  adminRejectDiscussion: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db
+        .update(soundByteDiscussions)
+        .set({ status: "rejected", updatedAt: Date.now() })
+        .where(eq(soundByteDiscussions.id, input.id));
+      return { ok: true };
+    }),
+
+  /** Admin: permanently delete a discussion */
+  adminDeleteDiscussion: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.delete(soundByteDiscussions).where(eq(soundByteDiscussions.id, input.id));
+      return { ok: true };
+    }),
+
+  /** Admin: count pending discussions (for badge) */
+  adminPendingDiscussionCount: protectedProcedure.query(async ({ ctx }) => {
+    if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+    const db = await getDb();
+    if (!db) return { count: 0 };
+    const [row] = await db
+      .select({ count: sql<number>`COUNT(*)`.as("count") })
+      .from(soundByteDiscussions)
+      .where(eq(soundByteDiscussions.status, "pending"));
+    return { count: row?.count ?? 0 };
+  }),
 });

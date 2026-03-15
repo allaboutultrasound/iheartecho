@@ -22,6 +22,9 @@ import {
   Clock,
   Crown,
   X,
+  MessageCircle,
+  Check,
+  Ban,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -78,7 +81,8 @@ export default function SoundBytesAdmin() {
   // toast is imported from sonner directly
   const utils = trpc.useUtils();
 
-  const [view, setView] = useState<"list" | "create" | "edit" | "analytics">("list");
+  const [view, setView] = useState<"list" | "create" | "edit" | "analytics" | "discussions">("list");
+  const [adminTab, setAdminTab] = useState<"soundbytes" | "discussions">("soundbytes");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [analyticsId, setAnalyticsId] = useState<number | null>(null);
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
@@ -105,6 +109,17 @@ export default function SoundBytesAdmin() {
     { soundByteId: analyticsId! },
     { enabled: analyticsId !== null }
   );
+
+  // Discussions approval queue
+  const { data: pendingDiscussions = [], isLoading: pendingLoading } = trpc.soundBytes.adminListPendingDiscussions.useQuery();
+  const approveDiscussion = trpc.soundBytes.adminApproveDiscussion.useMutation({
+    onSuccess: () => { toast.success("Comment approved and published."); utils.soundBytes.adminListPendingDiscussions.invalidate(); },
+    onError: () => toast.error("Failed to approve comment."),
+  });
+  const rejectDiscussion = trpc.soundBytes.adminRejectDiscussion.useMutation({
+    onSuccess: () => { toast.success("Comment rejected and removed."); utils.soundBytes.adminListPendingDiscussions.invalidate(); },
+    onError: () => toast.error("Failed to reject comment."),
+  });
 
   // ── Mutations ────────────────────────────────────────────────────────────────
 
@@ -436,16 +451,130 @@ export default function SoundBytesAdmin() {
               </div>
             </div>
           </div>
-          <Button
-            onClick={() => { setForm(DEFAULT_FORM); setView("create"); }}
-            className="text-white font-semibold text-sm flex items-center gap-1.5"
-            style={{ background: "#189aa1" }}
-          >
-            <Plus className="w-4 h-4" />
-            New SoundByte
-          </Button>
+          {adminTab === "soundbytes" && (
+            <Button
+              onClick={() => { setForm(DEFAULT_FORM); setView("create"); }}
+              className="text-white font-semibold text-sm flex items-center gap-1.5"
+              style={{ background: "#189aa1" }}
+            >
+              <Plus className="w-4 h-4" />
+              New SoundByte
+            </Button>
+          )}
         </div>
 
+        {/* Tab switcher */}
+        <div className="flex gap-1 mb-5 border-b border-gray-100">
+          <button
+            onClick={() => setAdminTab("soundbytes")}
+            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-semibold border-b-2 transition-colors ${
+              adminTab === "soundbytes"
+                ? "border-[#189aa1] text-[#189aa1]"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            <Play className="w-3.5 h-3.5" />
+            SoundBytes
+          </button>
+          <button
+            onClick={() => setAdminTab("discussions")}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold border-b-2 transition-colors ${
+              adminTab === "discussions"
+                ? "border-[#189aa1] text-[#189aa1]"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            <MessageCircle className="w-3.5 h-3.5" />
+            Discussion Approvals
+            {pendingDiscussions.length > 0 && (
+              <span className="flex items-center justify-center w-5 h-5 rounded-full text-white text-xs font-bold" style={{ background: "#e11d48" }}>
+                {pendingDiscussions.length}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* ── Discussions approval queue ─────────────────────────────────── */}
+        {adminTab === "discussions" && (
+          <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+            {pendingLoading && (
+              <div className="py-12 text-center text-gray-400 text-sm">Loading pending comments…</div>
+            )}
+            {!pendingLoading && pendingDiscussions.length === 0 && (
+              <div className="py-16 text-center">
+                <CheckCircle2 className="w-10 h-10 mx-auto mb-3 text-green-200" />
+                <p className="text-sm font-medium text-gray-500">No comments pending review.</p>
+                <p className="text-xs text-gray-400 mt-1">All submitted discussions have been moderated.</p>
+              </div>
+            )}
+            {!pendingLoading && pendingDiscussions.length > 0 && (
+              <div className="divide-y divide-gray-50">
+                {pendingDiscussions.map((d) => (
+                  <div key={d.id} className="p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        {/* SoundByte context */}
+                        <div className="flex items-center gap-1.5 mb-2">
+                          <Play className="w-3 h-3 text-[#189aa1]" />
+                          <span className="text-xs font-semibold text-[#189aa1] truncate">
+                            {(d as any).soundByteTitle ?? `SoundByte #${d.soundByteId}`}
+                          </span>
+                        </div>
+                        {/* Author + time */}
+                        <div className="flex items-center gap-2 mb-2">
+                          <div
+                            className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                            style={{ background: "#189aa1" }}
+                          >
+                            {((d as any).userDisplayName || "M").charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <span className="text-xs font-semibold text-gray-800">
+                              {(d as any).userDisplayName || "Member"}
+                              {(d as any).userCredentials && (
+                                <span className="text-gray-500 font-normal">, {(d as any).userCredentials}</span>
+                              )}
+                            </span>
+                            <div className="text-xs text-gray-400">
+                              {new Date(d.createdAt).toLocaleString()}
+                            </div>
+                          </div>
+                        </div>
+                        {/* Comment body */}
+                        <p className="text-sm text-gray-700 leading-relaxed bg-gray-50 rounded-lg p-3 whitespace-pre-wrap">
+                          {d.body}
+                        </p>
+                      </div>
+                      {/* Action buttons */}
+                      <div className="flex flex-col gap-2 flex-shrink-0">
+                        <button
+                          onClick={() => approveDiscussion.mutate({ id: d.id })}
+                          disabled={approveDiscussion.isPending}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-green-600 hover:bg-green-700 transition-colors disabled:opacity-50"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => rejectDiscussion.mutate({ id: d.id })}
+                          disabled={rejectDiscussion.isPending}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 transition-colors disabled:opacity-50"
+                        >
+                          <Ban className="w-3.5 h-3.5" />
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── SoundBytes list ────────────────────────────────────────────── */}
+        {adminTab === "soundbytes" && (
+          <>
         {/* Stats summary */}
         {!isLoading && items.length > 0 && (
           <div className="grid grid-cols-3 gap-3 mb-5">
@@ -572,6 +701,8 @@ export default function SoundBytesAdmin() {
             </table>
           )}
         </div>
+          </>
+        )}
       </div>
     </div>
   );

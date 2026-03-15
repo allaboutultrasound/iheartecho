@@ -2508,3 +2508,16 @@ export const soundByteViews = mysqlTable("soundByteViews", {
 });
 export type SoundByteView = typeof soundByteViews.$inferSelect;
 export type InsertSoundByteView = typeof soundByteViews.$inferInsert;
+
+// ─── SoundBytes™ Discussions (admin-moderated comments) ──────────────────────
+export const soundByteDiscussions = mysqlTable("soundByteDiscussions", {
+  id: int("id").autoincrement().primaryKey(),
+  soundByteId: int("soundByteId").notNull(),
+  userId: int("userId").notNull(),
+  body: text("body").notNull(),
+  status: mysqlEnum("status", ["pending", "approved", "rejected"]).notNull().default("pending"),
+  createdAt: bigint("createdAt", { mode: "number" }).notNull(),
+  updatedAt: bigint("updatedAt", { mode: "number" }).notNull(),
+});
+export type SoundByteDiscussion = typeof soundByteDiscussions.$inferSelect;
+export type InsertSoundByteDiscussion = typeof soundByteDiscussions.$inferInsert;

@@ -3,7 +3,7 @@
  * Filterable by clinical category. Premium gate for all content.
  */
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import Layout from "@/components/Layout";
@@ -19,7 +19,13 @@ import {
   Microscope,
   Activity,
   BookOpen,
+  MessageCircle,
+  Send,
+  Clock,
+  User,
+  CheckCircle,
 } from "lucide-react";
+import { toast } from "sonner";
 
 // ── Category config ────────────────────────────────────────────────────────────
 
@@ -93,6 +99,22 @@ export default function SoundBytesPage() {
 
   // Record view mutation
   const recordView = trpc.soundBytes.recordView.useMutation();
+
+  // Discussions
+  const utils = trpc.useUtils();
+  const { data: discussions = [] } = trpc.soundBytes.listDiscussions.useQuery(
+    { soundByteId: selectedId! },
+    { enabled: selectedId !== null && isPremium }
+  );
+  const submitDiscussion = trpc.soundBytes.submitDiscussion.useMutation({
+    onSuccess: () => {
+      utils.soundBytes.listDiscussions.invalidate({ soundByteId: selectedId! });
+      setDiscussionBody("");
+      toast.success("Your comment has been submitted for review. It will appear once approved.");
+    },
+    onError: () => toast.error("Failed to submit comment. Please try again."),
+  });
+  const [discussionBody, setDiscussionBody] = useState("");
 
   function handleSelect(id: number) {
     setSelectedId(id);
@@ -270,10 +292,113 @@ export default function SoundBytesPage() {
                 {/* Rich text body */}
                 {selected.body && (
                   <div
-                    className="prose prose-sm max-w-none text-gray-700 leading-relaxed"
+                    className="prose prose-sm max-w-none text-gray-700 leading-relaxed mb-8"
                     dangerouslySetInnerHTML={{ __html: selected.body }}
                   />
                 )}
+
+                {/* ── Discussions ─────────────────────────────────────────── */}
+                <div className="mt-8 border-t border-gray-100 pt-6">
+                  <h3
+                    className="text-base font-bold text-gray-800 mb-4 flex items-center gap-2"
+                    style={{ fontFamily: "Merriweather, serif" }}
+                  >
+                    <MessageCircle className="w-4 h-4" style={{ color: "#189aa1" }} />
+                    Discussion
+                    {discussions.length > 0 && (
+                      <span
+                        className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                        style={{ background: "#189aa115", color: "#189aa1" }}
+                      >
+                        {discussions.length}
+                      </span>
+                    )}
+                  </h3>
+
+                  {/* Submit form */}
+                  <div className="bg-gray-50 rounded-xl p-4 mb-6">
+                    <p className="text-xs text-gray-500 mb-3 flex items-center gap-1.5">
+                      <Clock className="w-3 h-3" />
+                      Comments are reviewed before appearing publicly.
+                    </p>
+                    <textarea
+                      value={discussionBody}
+                      onChange={(e) => setDiscussionBody(e.target.value)}
+                      placeholder="Share a clinical pearl, question, or insight…"
+                      rows={3}
+                      className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#189aa1]/30 focus:border-[#189aa1] resize-none"
+                    />
+                    <div className="flex justify-end mt-2">
+                      <button
+                        onClick={() => {
+                          if (!discussionBody.trim()) return;
+                          submitDiscussion.mutate({
+                            soundByteId: selected.id,
+                            body: discussionBody.trim(),
+                          });
+                        }}
+                        disabled={!discussionBody.trim() || submitDiscussion.isPending}
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90"
+                        style={{ background: "#189aa1" }}
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                        {submitDiscussion.isPending ? "Submitting…" : "Submit for Review"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Approved comments */}
+                  {discussions.length === 0 ? (
+                    <div className="text-center py-8 text-gray-400">
+                      <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                      <p className="text-sm">No approved comments yet. Be the first to share a thought!</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {discussions.map((d) => {
+                        const displayName = (d as any).userDisplayName || (d as any).userName || "Member";
+                        const credentials = (d as any).userCredentials;
+                        const avatarUrl = (d as any).userAvatarUrl;
+                        return (
+                          <div key={d.id} className="flex gap-3">
+                            {/* Avatar */}
+                            <div className="flex-shrink-0">
+                              {avatarUrl ? (
+                                <img
+                                  src={avatarUrl}
+                                  alt={displayName}
+                                  className="w-8 h-8 rounded-full object-cover"
+                                />
+                              ) : (
+                                <div
+                                  className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
+                                  style={{ background: "#189aa1" }}
+                                >
+                                  {displayName.charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                            </div>
+                            {/* Content */}
+                            <div className="flex-1 bg-white rounded-xl border border-gray-100 p-3">
+                              <div className="flex items-center gap-2 mb-1.5">
+                                <span className="text-xs font-semibold text-gray-800">
+                                  {displayName}
+                                  {credentials && (
+                                    <span className="text-gray-500 font-normal">, {credentials}</span>
+                                  )}
+                                </span>
+                                <span className="text-xs text-gray-400">
+                                  {new Date(d.createdAt).toLocaleDateString()}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{d.body}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 

@@ -317,3 +317,11 @@
 - [x] Add dashboard card between Daily Challenge and Hemodynamics Lab
 - [x] Wire /soundbytes and /admin/soundbytes routes in App.tsx
 - [x] Generate SoundBytes hero banner (text-free sound wave + cardiac ECG waveform, teal/navy)
+
+## SoundBytes™ Discussions (Mar 15 2026)
+- [x] Add soundByteDiscussions DB table (id, soundByteId, userId, body, status: pending/approved/rejected, createdAt)
+- [x] Create DB table via SQL migration
+- [x] Add server procedures: submitDiscussion (protected), listApprovedDiscussions (public), adminListPending, adminApprove, adminReject, adminDeleteDiscussion
+- [x] Build Discussions section on SoundBytes detail/player view (submit form + approved comments list)
+- [x] Build admin approval queue tab in SoundBytesAdmin (pending list with approve/reject actions)
+- [x] Show pending count badge on admin approval queue tab
