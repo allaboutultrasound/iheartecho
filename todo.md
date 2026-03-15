@@ -285,3 +285,10 @@
 ## Daily Challenge Bug Fixes (Mar 14 2026)
 - [x] Fix POCUS question React error #31 when starting question — normalizeOptions() added to all 7 parse sites
 - [x] Fix completion score showing wrong total — denominator now uses enabledCatsWithQ (categories with actual questions)
+
+## ScanCoach Premium Gate (Mar 14 2026)
+- [x] Gate Fetal Echo ScanCoach views behind premium subscription (upgrade prompt + premium badge)
+- [x] Gate Pediatric Echo ScanCoach views behind premium subscription (upgrade prompt + premium badge)
+- [x] Add Crown badge marker on all premium ScanCoach tab buttons (fetal, chd, pulm, strain, hocm, tee, ice, uea)
+- [x] Show upgrade prompt with feature list when non-premium user tries to access gated ScanCoach views
+- [x] Ensure logged-out users also see the gate (prompt to sign in + upgrade)

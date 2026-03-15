@@ -8,7 +8,7 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { useSearch, Link } from "wouter";
 import Layout from "@/components/Layout";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
-import { Scan, Heart, Info, Eye, AlertTriangle, ChevronRight, Zap, Clock, Activity, TrendingUp, CheckCircle2, XCircle, Wind, Stethoscope, Baby, Users, Wind as WindIcon, Microscope } from "lucide-react";
+import { Scan, Heart, Info, Eye, AlertTriangle, ChevronRight, Zap, Clock, Activity, TrendingUp, CheckCircle2, XCircle, Wind, Stethoscope, Baby, Users, Wind as WindIcon, Microscope, Crown } from "lucide-react";
 import PedCHDCoach from "@/components/PedCHDCoach";
 import { HOCMScanCoachContent } from "@/pages/HOCMScanCoach";
 import { StrainScanCoachContent } from "@/pages/StrainScanCoach";
@@ -1290,34 +1290,39 @@ export default function ScanCoach() {
             tee: { path: "/tee", label: "TEE Navigator" },
             ice: { path: "/ice", label: "ICE Navigator" },
           };
-          const tabMeta: Array<{ key: typeof activeTab; label: string; shortLabel: string; icon: React.ElementType; views: number }> = [
+          const tabMeta: Array<{ key: typeof activeTab; label: string; shortLabel: string; icon: React.ElementType; views: number; premium?: boolean }> = [
             { key: "tte",      label: "Adult TTE",          shortLabel: "Adult TTE",         icon: Stethoscope, views: 10 },
-            { key: "tee",      label: "TEE",                shortLabel: "TEE",               icon: Microscope,  views: 13 },
-            { key: "ice",      label: "ICE",                shortLabel: "ICE",               icon: Scan,        views: 9  },
-            { key: "uea",      label: "UEA",                shortLabel: "UEA",               icon: Zap,         views: 7  },
-            { key: "strain",   label: "Strain",             shortLabel: "Strain",            icon: Activity,    views: 4  },
-            { key: "hocm",     label: "HOCM",               shortLabel: "HOCM",              icon: Heart,       views: 14 },
-            { key: "chd",      label: "Pediatric CHD",      shortLabel: "Pediatric CHD",     icon: Users,       views: 14 },
-            { key: "fetal",    label: "Fetal Echo",         shortLabel: "Fetal Echo",        icon: Baby,        views: 13 },
+            { key: "tee",      label: "TEE",                shortLabel: "TEE",               icon: Microscope,  views: 13, premium: true },
+            { key: "ice",      label: "ICE",                shortLabel: "ICE",               icon: Scan,        views: 9,  premium: true },
+            { key: "uea",      label: "UEA",                shortLabel: "UEA",               icon: Zap,         views: 7,  premium: true },
+            { key: "strain",   label: "Strain",             shortLabel: "Strain",            icon: Activity,    views: 4,  premium: true },
+            { key: "hocm",     label: "HOCM",               shortLabel: "HOCM",              icon: Heart,       views: 14, premium: true },
+            { key: "chd",      label: "Pediatric CHD",      shortLabel: "Pediatric CHD",     icon: Users,       views: 14, premium: true },
+            { key: "fetal",    label: "Fetal Echo",         shortLabel: "Fetal Echo",        icon: Baby,        views: 13, premium: true },
             { key: "achd",     label: "Adult Congenital",   shortLabel: "Adult Congenital",  icon: Heart,       views: 13 },
             { key: "diastolic",label: "Diastolic Function", shortLabel: "Diastolic",         icon: Wind,        views: 7  },
-            { key: "pulm",     label: "Pulmonary HTN & PE", shortLabel: "Pulm HTN & PE",     icon: Wind,        views: 8  },
+            { key: "pulm",     label: "Pulmonary HTN & PE", shortLabel: "Pulm HTN & PE",     icon: Wind,        views: 8,  premium: true },
           ];
           const nav = tabNavMap[activeTab];
           return (
             <div className="mb-6">
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 mb-4">
-                {tabMeta.map(({ key, label, icon: Icon, views }) => {
+                {tabMeta.map(({ key, label, icon: Icon, views, premium }) => {
                   const isActive = activeTab === key;
                   return (
                     <button
                       key={key}
                       onClick={() => setActiveTab(key)}
-                      className="flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all text-center cursor-pointer"
+                      className="relative flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all text-center cursor-pointer"
                       style={isActive
                         ? { background: "#189aa1", borderColor: "#189aa1", color: "white" }
                         : { background: "white", borderColor: "#e2e8f0", color: "#374151" }}
                     >
+                      {premium && (
+                        <span className="absolute top-1.5 right-1.5 flex items-center justify-center w-4 h-4 rounded-full" style={{ background: isActive ? "rgba(255,255,255,0.25)" : "#fef3c7" }}>
+                          <Crown className="w-2.5 h-2.5" style={{ color: isActive ? "white" : "#d97706" }} />
+                        </span>
+                      )}
                       <div
                         className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                         style={isActive
@@ -1984,7 +1989,8 @@ export default function ScanCoach() {
 
         {/* ─── FETAL ECHO TAB ─── */}
         {activeTab === "fetal" && (
-          <BlurredOverlay type="login" featureName="Fetal Echo ScanCoach" disabled={loading || isAuthenticated}><div>
+          !loading && !isAuthenticated
+            ? <BlurredOverlay type="login" featureName="Fetal Echo ScanCoach">
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 items-start">
             {/* Fetal detail panel — order-first on mobile so it appears at top */}
@@ -2161,13 +2167,372 @@ export default function ScanCoach() {
               </div>
             </div>
           </div>
-          </div></BlurredOverlay>
+              </BlurredOverlay>
+            : !loading && !isPremium
+              ? <BlurredOverlay type="premium" featureName="Fetal Echo ScanCoach">
+
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 items-start">
+            {/* Fetal detail panel — order-first on mobile so it appears at top */}
+            <div ref={fetalDetailRef} className="lg:col-span-3 lg:order-2 order-1 space-y-4">
+              {/* Header */}
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="px-5 py-4 border-b" style={{ borderColor: selectedFetal.color + "30", background: selectedFetal.color + "08" }}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white text-xs font-bold"
+                        style={{ background: selectedFetal.color }}>
+                        {selectedFetal.step}
+                      </div>
+                      <div>
+                        <h2 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>{selectedFetal.name}</h2>
+                        <p className="text-xs text-gray-500">Fetal Echocardiography View Guide</p>
+                      </div>
+                    </div>
+                    {/* Navigation */}
+                    <div className="flex gap-2">
+                      {selectedFetal.step > 1 && (
+                        <button onClick={() => setSelectedFetal(fetalViews[selectedFetal.step - 2])}
+                          className="px-3 py-1 rounded text-xs border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
+                          ← Prev
+                        </button>
+                      )}
+                      {selectedFetal.step < fetalViews.length && (
+                        <button onClick={() => setSelectedFetal(fetalViews[selectedFetal.step])}
+                          className="px-3 py-1 rounded text-xs text-white transition-colors"
+                          style={{ background: selectedFetal.color }}>
+                          Next →
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="p-5">
+                  <p className="text-sm text-gray-700 leading-relaxed">{selectedFetal.description}</p>
+                </div>
+              </div>
+
+              {/* Diagram + Echo image */}
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                  <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>View Reference Images</h3>
+                  <span className="text-xs text-gray-400">Diagram · Clinical Echo</span>
+                </div>
+                <div className="grid grid-cols-2 gap-0 bg-gray-950">
+                  <div className="flex justify-center items-center p-3 border-r border-gray-800">
+                    <div className="text-center">
+                      <p className="text-xs text-gray-400 mb-1.5">Anatomy Diagram</p>
+                      <MediaDisplay
+                        src={(selectedFetalMerged as any).anatomyImageUrl || selectedFetal.imageUrl}
+                        alt={`${selectedFetalMerged.name} diagram`}
+                        className="max-h-60 object-contain rounded"
+                        style={{ background: "#030712" }}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-center items-center p-3">
+                    <div className="text-center">
+                      <p className="text-xs text-gray-400 mb-1.5">Clinical Echo Image</p>
+                      <MediaDisplay
+                        src={(selectedFetalMerged as any).echoImageUrl || selectedFetal.imageUrl}
+                        alt={`${selectedFetalMerged.name} echo`}
+                        className="max-h-60 object-contain rounded"
+                        style={{ background: "#030712" }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Structures */}
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Eye className="w-4 h-4" style={{ color: selectedFetal.color }} />
+                    <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>Structures to Identify</h3>
+                  </div>
+                  <ul className="space-y-1.5">
+                    {selectedFetal.structures.map((s, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                        <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: selectedFetal.color }}></span>
+                        {s}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Normal Findings */}
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Info className="w-4 h-4" style={{ color: selectedFetal.color }} />
+                    <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>Normal Findings</h3>
+                  </div>
+                  <ul className="space-y-1.5">
+                    {selectedFetal.normalFindings.map((f, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                        <span className="text-green-500 font-bold mt-0.5 flex-shrink-0">✓</span>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {/* Technique + Red Flags */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+                  <h3 className="font-bold text-sm text-gray-700 mb-2" style={{ fontFamily: "Merriweather, serif" }}>Scanning Technique</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">{selectedFetal.technique}</p>
+                  {(selectedFetal as any).patientPosition && (
+                    <div className="mt-3 pt-3 border-t border-gray-100">
+                      <h4 className="font-semibold text-xs text-gray-500 mb-1 uppercase tracking-wide">Patient Positioning</h4>
+                      <p className="text-sm text-gray-600">{(selectedFetal as any).patientPosition}</p>
+                    </div>
+                  )}
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <h4 className="font-semibold text-xs text-gray-500 mb-1 uppercase tracking-wide">Doppler</h4>
+                    <p className="text-sm text-gray-600">{selectedFetal.doppler}</p>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <h4 className="font-semibold text-xs text-gray-500 mb-1 uppercase tracking-wide">Common Pitfalls</h4>
+                    <ul className="space-y-1">
+                      {selectedFetal.pitfalls.map((p, i) => (
+                        <li key={i} className="flex items-start gap-2 text-xs text-amber-700">
+                          <AlertTriangle className="w-3 h-3 text-amber-500 flex-shrink-0 mt-0.5" />
+                          {p}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Red Flags */}
+                <div className="bg-white rounded-xl border border-red-50 shadow-sm p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <AlertTriangle className="w-4 h-4 text-red-500" />
+                    <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>Red Flags / Abnormal Findings</h3>
+                  </div>
+                  <ul className="space-y-1.5">
+                    {selectedFetal.redFlags.map((f, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-red-700">
+                        <span className="text-red-500 font-bold mt-0.5 flex-shrink-0">!</span>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {/* Copyright */}
+              <div className="text-xs text-gray-400 text-center py-2">
+                Clinical images © All About Ultrasound, Inc. / iHeartEcho™. Educational use only.
+              </div>
+            </div>
+            {/* View list sidebar — sticky on desktop */}
+            <div className="lg:col-span-1 lg:order-1 order-2 lg:sticky lg:top-4">
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-100">
+                  <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>Fetal Echo Views</h3>
+                  <p className="text-xs text-gray-400 mt-0.5">13-view sweep sequence</p>
+                </div>
+                {/* Sweep overview image */}
+                <div className="p-2">
+                  <img src={CDN.sweep} alt="Fetal echo sweep overview" className="w-full rounded-lg object-contain bg-gray-900" style={{ maxHeight: "100px" }} />
+                </div>
+                <div className="p-3 space-y-1 max-h-[calc(100vh-300px)] overflow-y-auto">
+                  {fetalViews.map(v => (
+                    <FetalViewCard key={v.id} view={v} isSelected={selectedFetal.id === v.id} onClick={() => setSelectedFetal(v)} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+              </BlurredOverlay>
+              : <>
+
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 items-start">
+            {/* Fetal detail panel — order-first on mobile so it appears at top */}
+            <div ref={fetalDetailRef} className="lg:col-span-3 lg:order-2 order-1 space-y-4">
+              {/* Header */}
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="px-5 py-4 border-b" style={{ borderColor: selectedFetal.color + "30", background: selectedFetal.color + "08" }}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white text-xs font-bold"
+                        style={{ background: selectedFetal.color }}>
+                        {selectedFetal.step}
+                      </div>
+                      <div>
+                        <h2 className="font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>{selectedFetal.name}</h2>
+                        <p className="text-xs text-gray-500">Fetal Echocardiography View Guide</p>
+                      </div>
+                    </div>
+                    {/* Navigation */}
+                    <div className="flex gap-2">
+                      {selectedFetal.step > 1 && (
+                        <button onClick={() => setSelectedFetal(fetalViews[selectedFetal.step - 2])}
+                          className="px-3 py-1 rounded text-xs border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors">
+                          ← Prev
+                        </button>
+                      )}
+                      {selectedFetal.step < fetalViews.length && (
+                        <button onClick={() => setSelectedFetal(fetalViews[selectedFetal.step])}
+                          className="px-3 py-1 rounded text-xs text-white transition-colors"
+                          style={{ background: selectedFetal.color }}>
+                          Next →
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="p-5">
+                  <p className="text-sm text-gray-700 leading-relaxed">{selectedFetal.description}</p>
+                </div>
+              </div>
+
+              {/* Diagram + Echo image */}
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                  <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>View Reference Images</h3>
+                  <span className="text-xs text-gray-400">Diagram · Clinical Echo</span>
+                </div>
+                <div className="grid grid-cols-2 gap-0 bg-gray-950">
+                  <div className="flex justify-center items-center p-3 border-r border-gray-800">
+                    <div className="text-center">
+                      <p className="text-xs text-gray-400 mb-1.5">Anatomy Diagram</p>
+                      <MediaDisplay
+                        src={(selectedFetalMerged as any).anatomyImageUrl || selectedFetal.imageUrl}
+                        alt={`${selectedFetalMerged.name} diagram`}
+                        className="max-h-60 object-contain rounded"
+                        style={{ background: "#030712" }}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-center items-center p-3">
+                    <div className="text-center">
+                      <p className="text-xs text-gray-400 mb-1.5">Clinical Echo Image</p>
+                      <MediaDisplay
+                        src={(selectedFetalMerged as any).echoImageUrl || selectedFetal.imageUrl}
+                        alt={`${selectedFetalMerged.name} echo`}
+                        className="max-h-60 object-contain rounded"
+                        style={{ background: "#030712" }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Structures */}
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Eye className="w-4 h-4" style={{ color: selectedFetal.color }} />
+                    <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>Structures to Identify</h3>
+                  </div>
+                  <ul className="space-y-1.5">
+                    {selectedFetal.structures.map((s, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                        <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: selectedFetal.color }}></span>
+                        {s}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Normal Findings */}
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Info className="w-4 h-4" style={{ color: selectedFetal.color }} />
+                    <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>Normal Findings</h3>
+                  </div>
+                  <ul className="space-y-1.5">
+                    {selectedFetal.normalFindings.map((f, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                        <span className="text-green-500 font-bold mt-0.5 flex-shrink-0">✓</span>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {/* Technique + Red Flags */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
+                  <h3 className="font-bold text-sm text-gray-700 mb-2" style={{ fontFamily: "Merriweather, serif" }}>Scanning Technique</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">{selectedFetal.technique}</p>
+                  {(selectedFetal as any).patientPosition && (
+                    <div className="mt-3 pt-3 border-t border-gray-100">
+                      <h4 className="font-semibold text-xs text-gray-500 mb-1 uppercase tracking-wide">Patient Positioning</h4>
+                      <p className="text-sm text-gray-600">{(selectedFetal as any).patientPosition}</p>
+                    </div>
+                  )}
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <h4 className="font-semibold text-xs text-gray-500 mb-1 uppercase tracking-wide">Doppler</h4>
+                    <p className="text-sm text-gray-600">{selectedFetal.doppler}</p>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <h4 className="font-semibold text-xs text-gray-500 mb-1 uppercase tracking-wide">Common Pitfalls</h4>
+                    <ul className="space-y-1">
+                      {selectedFetal.pitfalls.map((p, i) => (
+                        <li key={i} className="flex items-start gap-2 text-xs text-amber-700">
+                          <AlertTriangle className="w-3 h-3 text-amber-500 flex-shrink-0 mt-0.5" />
+                          {p}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Red Flags */}
+                <div className="bg-white rounded-xl border border-red-50 shadow-sm p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <AlertTriangle className="w-4 h-4 text-red-500" />
+                    <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>Red Flags / Abnormal Findings</h3>
+                  </div>
+                  <ul className="space-y-1.5">
+                    {selectedFetal.redFlags.map((f, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-red-700">
+                        <span className="text-red-500 font-bold mt-0.5 flex-shrink-0">!</span>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {/* Copyright */}
+              <div className="text-xs text-gray-400 text-center py-2">
+                Clinical images © All About Ultrasound, Inc. / iHeartEcho™. Educational use only.
+              </div>
+            </div>
+            {/* View list sidebar — sticky on desktop */}
+            <div className="lg:col-span-1 lg:order-1 order-2 lg:sticky lg:top-4">
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-100">
+                  <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>Fetal Echo Views</h3>
+                  <p className="text-xs text-gray-400 mt-0.5">13-view sweep sequence</p>
+                </div>
+                {/* Sweep overview image */}
+                <div className="p-2">
+                  <img src={CDN.sweep} alt="Fetal echo sweep overview" className="w-full rounded-lg object-contain bg-gray-900" style={{ maxHeight: "100px" }} />
+                </div>
+                <div className="p-3 space-y-1 max-h-[calc(100vh-300px)] overflow-y-auto">
+                  {fetalViews.map(v => (
+                    <FetalViewCard key={v.id} view={v} isSelected={selectedFetal.id === v.id} onClick={() => setSelectedFetal(v)} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+              </>
         )}
         {/* ─── PEDIATRIC CHD TAB ─── */}
         {activeTab === "chd" && (
           !loading && !isAuthenticated
             ? <BlurredOverlay type="login" featureName="Pediatric CHD ScanCoach"><PedCHDCoach /></BlurredOverlay>
-            : <PedCHDCoach />
+            : !loading && !isPremium
+              ? <BlurredOverlay type="premium" featureName="Pediatric CHD ScanCoach"><PedCHDCoach /></BlurredOverlay>
+              : <PedCHDCoach />
         )}
         {/* ─── ADULT CONGENITAL TAB ─── */}
         {activeTab === "achd" && (

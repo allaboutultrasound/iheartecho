@@ -16,11 +16,11 @@ const BRAND = "#189aa1";
 
 const freeCoaches = [
   { tab: "tte",       icon: Stethoscope, label: "Adult TTE",          views: 10 },
-  { tab: "chd",       icon: Users,       label: "Pediatric CHD",      views: 14 },
-  { tab: "fetal",     icon: Baby,        label: "Fetal Echo",         views: 13 },
 ];
 
 const premiumCoaches = [
+  { tab: "chd",       icon: Users,       label: "Pediatric CHD",      views: 14, route: null as string | null },
+  { tab: "fetal",     icon: Baby,        label: "Fetal Echo",         views: 13, route: null as string | null },
   { tab: "uea",       icon: Droplets,    label: "UEA",                views: 7,  route: "/uea-scan-coach" },
   { tab: "strain",    icon: Activity,    label: "Strain",             views: 4,  route: "/strain-scan-coach" },
   { tab: "achd",      icon: Heart,       label: "Adult Congenital",   views: 13, route: null as string | null },
@@ -78,7 +78,7 @@ export default function ScanCoachHub() {
           <div className="flex items-center gap-3 mb-4">
             <div className="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold text-[#189aa1] bg-[#189aa1]/10 border border-[#189aa1]/20">
               <div className="w-2 h-2 rounded-full bg-[#189aa1]" />
-              FREE — Included with all memberships
+              FREE — Included with all memberships (Adult TTE)
             </div>
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
