@@ -296,3 +296,12 @@
 ## Daily Challenge Bug Fixes (Mar 15 2026)
 - [x] Fix duplicate completion summary: suppress legacy alreadyCompleted block when category-based allDoneDaily is true
 - [x] Fix HTML rendering in explanations: use dangerouslySetInnerHTML for explanation field in main player and archive player
+
+## Leaderboard Bug Fix (Mar 15 2026)
+- [x] Fix leaderboard ranking: ties in correct count broken by accuracy (higher accuracy ranks higher)
+- [x] Fix rank display: competition ranking — tied users (same correct + same accuracy) share the same rank number, next rank skips accordingly
+
+## ScanCoach Premium Badge Additions (Mar 15 2026)
+- [ ] Add premium crown badge to Diastolic Function ScanCoach tab
+- [ ] Add premium crown badge to Adult Congenital ScanCoach tab
+- [ ] Gate Diastolic Function and Adult Congenital ScanCoach content behind premium subscription

@@ -710,8 +710,23 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
     // Combine and sort by correct desc
     const combined: LeaderEntry[] = [...realMapped, ...virtualEntries]
       .sort((a, b) => b.correct - a.correct || b.accuracy - a.accuracy);
-    // Assign ranks
-    combined.forEach((e, i) => { e.rank = i + 1; });
+    // Assign competition ranks: tied entries (same correct + same accuracy) share the same rank
+    // Ties in correct count are broken by accuracy (higher accuracy = higher rank)
+    // If still tied after accuracy, they share the same rank number
+    combined.forEach((e, i) => {
+      if (i === 0) {
+        e.rank = 1;
+      } else {
+        const prev = combined[i - 1];
+        if (e.correct === prev.correct && e.accuracy === prev.accuracy) {
+          // True tie: same rank as previous
+          e.rank = prev.rank;
+        } else {
+          // Not tied: rank = position + 1 (competition ranking skips)
+          e.rank = i + 1;
+        }
+      }
+    });
     // Find current user
     const currentUserEntry = combined.find((e) => e.userId === currentUserId || String(e.userId) === String(currentUserId)) ?? null;
     const currentUserRank = currentUserEntry?.rank ?? null;
