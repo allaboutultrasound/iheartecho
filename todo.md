@@ -403,3 +403,10 @@
 - [ ] Fix: add self-healing — if today's set has null slots, regenerate them automatically
 - [ ] Add vitest tests covering publish → live → questions-visible pipeline
 - [ ] Verify all 5 categories show questions after fix
+
+## Case View Count Fix
+- [x] Diagnose inaccurate case view counts in platform admin — root cause: getCase incremented viewCount on every call including admin previews, and had no deduplication for repeat member views
+- [x] Fix: admin views now logged with isAdminView=true and do NOT increment viewCount
+- [x] Fix: authenticated member views deduplicated per user per UTC calendar day (same case opened twice in a day = 1 view)
+- [x] Fix: getViewTrends analytics now excludes admin views from weekly trend chart
+- [x] Schema: added userId and isAdminView columns to caseViewEvents table (migration applied)

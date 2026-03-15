@@ -337,14 +337,52 @@ export const caseLibraryRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Case not found" });
       }
 
-      // Increment view count and log event (fire-and-forget)
-      db.update(echoLibraryCases)
-        .set({ viewCount: sql`${echoLibraryCases.viewCount} + 1` })
-        .where(eq(echoLibraryCases.id, input.id))
-        .catch(() => {});
-      db.insert(caseViewEvents)
-        .values({ caseId: input.id })
-        .catch(() => {});
+      // ── View count tracking ──────────────────────────────────────────────
+      // Rules:
+      //  1. Admin views are logged with isAdminView=true and do NOT increment viewCount.
+      //     This keeps the admin count accurate regardless of how many times admins
+      //     preview a case during review/editing.
+      //  2. Authenticated member views are deduplicated per user per calendar day
+      //     (UTC) — opening the same case twice in a day counts as one view.
+      //  3. Guest (unauthenticated) views always increment (no session to deduplicate).
+      const isAdmin = ctx.user?.role === "admin";
+      const todayUtcStart = new Date(new Date().toISOString().slice(0, 10) + "T00:00:00Z");
+
+      if (isAdmin) {
+        // Log admin preview without touching viewCount
+        db.insert(caseViewEvents)
+          .values({ caseId: input.id, userId: ctx.user!.id, isAdminView: true })
+          .catch(() => {});
+      } else {
+        // For authenticated members: check if they already viewed today
+        let alreadyViewedToday = false;
+        if (ctx.user) {
+          const [existing] = await db
+            .select({ id: caseViewEvents.id })
+            .from(caseViewEvents)
+            .where(
+              and(
+                eq(caseViewEvents.caseId, input.id),
+                eq(caseViewEvents.userId, ctx.user.id),
+                eq(caseViewEvents.isAdminView, false),
+                gte(caseViewEvents.viewedAt, todayUtcStart)
+              )
+            )
+            .limit(1);
+          alreadyViewedToday = !!existing;
+        }
+
+        if (!alreadyViewedToday) {
+          // Increment the stored counter and log the event
+          db.update(echoLibraryCases)
+            .set({ viewCount: sql`${echoLibraryCases.viewCount} + 1` })
+            .where(eq(echoLibraryCases.id, input.id))
+            .catch(() => {});
+          db.insert(caseViewEvents)
+            .values({ caseId: input.id, userId: ctx.user?.id ?? null, isAdminView: false })
+            .catch(() => {});
+        }
+      }
 
       const [media, questions] = await Promise.all([
         db
@@ -1412,11 +1450,16 @@ Guidelines:
       const cutoff = new Date();
       cutoff.setDate(cutoff.getDate() - input.weeks * 7);
 
-      // Fetch all view events in the window
+      // Fetch all member view events in the window (exclude admin previews)
       const events = await db
         .select({ caseId: caseViewEvents.caseId, viewedAt: caseViewEvents.viewedAt })
         .from(caseViewEvents)
-        .where(gte(caseViewEvents.viewedAt, cutoff));
+        .where(
+          and(
+            gte(caseViewEvents.viewedAt, cutoff),
+            eq(caseViewEvents.isAdminView, false)
+          )
+        );
 
       // Build week labels (ISO week strings: YYYY-Www)
       const getWeekKey = (date: Date): string => {

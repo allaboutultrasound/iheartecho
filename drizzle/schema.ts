@@ -1446,6 +1446,8 @@ export type InsertPhysicianComparisonReview = typeof physicianComparisonReviews.
 export const caseViewEvents = mysqlTable("caseViewEvents", {
   id: int("id").autoincrement().primaryKey(),
   caseId: int("caseId").notNull(),
+  userId: int("userId"),          // null = unauthenticated/guest
+  isAdminView: boolean("isAdminView").default(false).notNull(), // true = admin preview, excluded from member counts
   viewedAt: timestamp("viewedAt").defaultNow().notNull(),
 });
 export type CaseViewEvent = typeof caseViewEvents.$inferSelect;
