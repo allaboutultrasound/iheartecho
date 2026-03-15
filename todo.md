@@ -35,6 +35,13 @@
 - [ ] POCUS EchoAssist engines (IVC collapsibility, B-line scoring, eFAST)
 - [ ] Add emoji to email subject line field in EmailAdmin
 
+## Daily Challenge Permanent Fix (2026-03-15)
+- [x] Fix: getLiveChallenge returns null for unauthenticated users when no live challenge exists — now calls ensureTodaySet as fallback, then synthesises from today's set if still empty
+- [x] Fix: getTodaySet self-heals inactive questions — auto-activates any inactive question IDs in the stored daily set instead of silently returning empty
+- [x] Fix: getLiveChallenge no longer does full table scan (was fetching ALL active questions) — now fetches by ID directly and auto-activates any inactive ones
+- [x] Fix: one-time SQL update to re-derive categories from linked question IDs for all existing queue entries (55 corrected)
+- [x] Tests: parseDailySetIds, autoActivateQuestions, getLiveChallenge DB-unavailable guard added to quickfire.test.ts
+
 ## Magic Link Browser Fix
 - [ ] Force magic link email to open in default browser, not in-app mail browser
 - [ ] Show difficulty badges (Advanced/Intermediate/Beginner) on challenge queue, archive, and question bank items in QuickFireAdmin
@@ -387,3 +394,12 @@
 - [x] Investigate: questions added to queue revert to Adult Echo category instead of maintaining original category
 - [x] Fix category preservation in queue add flow: adminBatchApproveToQueue had hardcoded "Adult Echo"; adminApproveQuestionToQueue mapped General to Adult Echo; both now use question.category with echoCategory fallback
 - [x] Verify fix works for all category types (722 tests pass)
+
+## Daily Challenge Questions Not Showing - Permanent Fix (Mar 15 2026)
+- [ ] Root cause analysis: getLiveChallenge returns questions:[] despite live challenges existing
+- [ ] Fix: getLiveChallenge should not silently return empty when questions are inactive
+- [ ] Fix: ensureTodaySet must not create duplicate daily set entries for the same date
+- [ ] Fix: archive logic should not archive today's live challenges prematurely on repeated calls
+- [ ] Fix: add self-healing — if today's set has null slots, regenerate them automatically
+- [ ] Add vitest tests covering publish → live → questions-visible pipeline
+- [ ] Verify all 5 categories show questions after fix

@@ -316,3 +316,70 @@ describe("quickfire.adminBatchApproveToQueue", () => {
     ).rejects.toThrow("DB unavailable");
   });
 });
+
+// ── getLiveChallenge — fallback & self-healing ────────────────────────────────
+
+describe("quickfire.getLiveChallenge", () => {
+  it("throws INTERNAL_SERVER_ERROR when DB is unavailable", async () => {
+    const caller = appRouter.createCaller(makeCtx());
+    await expect(caller.quickfire.getLiveChallenge()).rejects.toThrow("DB unavailable");
+  });
+});
+
+// ── parseDailySetIds — unit tests ─────────────────────────────────────────────
+
+import { parseDailySetIds } from "./routers/quickfireRouter";
+
+describe("parseDailySetIds", () => {
+  it("parses the new object format correctly", () => {
+    const raw = JSON.stringify({ acs: 1, adultEcho: 2, pediatricEcho: 3, fetalEcho: 4, pocus: 5 });
+    const result = parseDailySetIds(raw);
+    expect(result).toEqual({ acs: 1, adultEcho: 2, pediatricEcho: 3, fetalEcho: 4, pocus: 5 });
+  });
+
+  it("handles null values in the object format", () => {
+    const raw = JSON.stringify({ acs: null, adultEcho: 42, pediatricEcho: null, fetalEcho: null, pocus: null });
+    const result = parseDailySetIds(raw);
+    expect(result.adultEcho).toBe(42);
+    expect(result.acs).toBeNull();
+  });
+
+  it("handles the legacy array format (single question → adultEcho slot)", () => {
+    const raw = JSON.stringify([99]);
+    const result = parseDailySetIds(raw);
+    expect(result.adultEcho).toBe(99);
+    expect(result.acs).toBeNull();
+    expect(result.pediatricEcho).toBeNull();
+  });
+
+  it("returns all-null map for empty string", () => {
+    const result = parseDailySetIds("");
+    expect(Object.values(result).every((v) => v === null)).toBe(true);
+  });
+
+  it("returns all-null map for invalid JSON", () => {
+    const result = parseDailySetIds("not-json");
+    expect(Object.values(result).every((v) => v === null)).toBe(true);
+  });
+
+  it("fills missing keys with null when partial object provided", () => {
+    const raw = JSON.stringify({ adultEcho: 7 });
+    const result = parseDailySetIds(raw);
+    expect(result.adultEcho).toBe(7);
+    expect(result.acs).toBeNull();
+    expect(result.pocus).toBeNull();
+  });
+});
+
+// ── autoActivateQuestions — unit tests ───────────────────────────────────────
+
+import { autoActivateQuestions } from "./routers/quickfireRouter";
+
+describe("autoActivateQuestions", () => {
+  it("returns empty array immediately when given empty ids list", async () => {
+    // No DB call needed — should short-circuit
+    const mockDb = {} as any;
+    const result = await autoActivateQuestions(mockDb, []);
+    expect(result).toEqual([]);
+  });
+});

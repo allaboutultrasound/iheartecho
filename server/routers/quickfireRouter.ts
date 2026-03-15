@@ -379,10 +379,21 @@ export const quickfireRouter = router({
       return { setDate: date, questions: [], userAttempts: {}, categoryMap: questionMap };
     }
 
+    // Fetch questions by ID — do NOT filter by isActive here; auto-activate any
+    // inactive ones so a stale daily set never silently returns empty questions.
     const questions = await db
       .select()
       .from(quickfireQuestions)
-      .where(and(eq(quickfireQuestions.isActive, true), inArray(quickfireQuestions.id, allIds)));
+      .where(inArray(quickfireQuestions.id, allIds));
+    // Self-heal: if any questions are inactive, re-activate them
+    const inactiveInSet = questions.filter((q) => !q.isActive).map((q) => q.id);
+    if (inactiveInSet.length > 0) {
+      await autoActivateQuestions(db, inactiveInSet);
+      inactiveInSet.forEach((id) => {
+        const q = questions.find((q) => q.id === id);
+        if (q) q.isActive = true;
+      });
+    }
 
     // Order: ACS, Adult Echo, Pediatric Echo, Fetal Echo, POCUS
     const catOrder = ["acs", "adultEcho", "pediatricEcho", "fetalEcho", "pocus"];
@@ -1645,19 +1656,131 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
 
-    const [challenge] = await db
+    const date = todayDateStr();
+
+    // ── Step 1: Try to find a live challenge ─────────────────────────────────
+    let challenge = await db
       .select()
       .from(quickfireChallenges)
       .where(eq(quickfireChallenges.status, "live"))
       .orderBy(desc(quickfireChallenges.publishedAt))
-      .limit(1);
+      .limit(1)
+      .then((rows) => rows[0] ?? null);
 
-    if (!challenge) return null;
+    // ── Step 2: No live challenge found — trigger ensureTodaySet which will
+    //    promote scheduled/queued challenges to 'live' and build today's set.
+    //    This ensures unauthenticated users always see questions even if the
+    //    cron hasn't run yet (e.g. server restart, first user of the day).
+    if (!challenge) {
+      await ensureTodaySet(db, date);
+      // Re-query after ensureTodaySet may have promoted challenges to 'live'
+      challenge = await db
+        .select()
+        .from(quickfireChallenges)
+        .where(eq(quickfireChallenges.status, "live"))
+        .orderBy(desc(quickfireChallenges.publishedAt))
+        .limit(1)
+        .then((rows) => rows[0] ?? null);
+    }
+
+    // ── Step 3: Still no live challenge (all categories used fallback questions
+    //    with no associated challenge record) — synthesise one from today's set
+    //    so the unauthenticated view never shows "No challenge available today".
+    if (!challenge) {
+      const todaySet = await db
+        .select()
+        .from(quickfireDailySets)
+        .where(eq(quickfireDailySets.setDate, date))
+        .limit(1)
+        .then((rows) => rows[0] ?? null);
+      if (todaySet) {
+        const questionMap = parseDailySetIds(todaySet.questionIds);
+        const firstId = Object.values(questionMap).find((id): id is number => id !== null) ?? null;
+        if (firstId !== null) {
+          const [q] = await db
+            .select()
+            .from(quickfireQuestions)
+            .where(eq(quickfireQuestions.id, firstId))
+            .limit(1);
+          if (q) {
+            let userAttempts: Record<number, { selectedAnswer: number | null; selfMarkedCorrect: boolean | null; isCorrect: boolean | null }> = {};
+            if (ctx.user) {
+              const attempts = await db
+                .select()
+                .from(quickfireAttempts)
+                .where(and(eq(quickfireAttempts.userId, ctx.user.id), eq(quickfireAttempts.setDate, date)));
+              for (const a of attempts) {
+                userAttempts[a.questionId] = { selectedAnswer: a.selectedAnswer, selfMarkedCorrect: a.selfMarkedCorrect, isCorrect: a.isCorrect };
+              }
+            }
+            const attempted = userAttempts[q.id];
+            return {
+              id: -1,
+              title: "Daily Challenge",
+              description: null,
+              category: q.category ?? null,
+              difficulty: q.difficulty ?? null,
+              questionIds: JSON.stringify([q.id]),
+              status: "live" as const,
+              publishDate: date,
+              publishedAt: new Date(),
+              archivedAt: null,
+              priority: 0,
+              queuePosition: null,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              questions: [{
+                ...q,
+                options: normalizeOptions(q.options),
+                tags: q.tags ? JSON.parse(q.tags) : [],
+                pairs: q.pairs ? JSON.parse(q.pairs) : null,
+                markers: q.markers ? JSON.parse(q.markers) : null,
+                orderedItems: q.orderedItems ? JSON.parse(q.orderedItems) : null,
+                correctAnswer: attempted ? q.correctAnswer : null,
+                explanation: attempted ? q.explanation : null,
+                reviewAnswer: attempted ? q.reviewAnswer : null,
+              }],
+              userAttempts,
+              setDate: date,
+              msRemaining: 24 * 60 * 60 * 1000,
+            };
+          }
+        }
+      }
+      return null;
+    }
 
     const ids: number[] = JSON.parse(challenge.questionIds || "[]");
-    if (ids.length === 0) return { ...challenge, questions: [], userAttempts: {} };
+    if (ids.length === 0) {
+      // Challenge has no question IDs — try to get one from today's set
+      const todaySet = await db
+        .select()
+        .from(quickfireDailySets)
+        .where(eq(quickfireDailySets.setDate, date))
+        .limit(1)
+        .then((rows) => rows[0] ?? null);
+      if (todaySet) {
+        const questionMap = parseDailySetIds(todaySet.questionIds);
+        const firstId = Object.values(questionMap).find((id): id is number => id !== null) ?? null;
+        if (firstId !== null) ids.push(firstId);
+      }
+      if (ids.length === 0) return { ...challenge, questions: [], userAttempts: {}, setDate: date, msRemaining: null };
+    }
 
-    const allQ = await db.select().from(quickfireQuestions).where(eq(quickfireQuestions.isActive, true));
+    // Fetch questions by ID directly (not a full table scan) and auto-activate any
+    // that are inactive so they always appear in the response.
+    const allQ = await db
+      .select()
+      .from(quickfireQuestions)
+      .where(inArray(quickfireQuestions.id, ids));
+    const inactiveIds = allQ.filter((q) => !q.isActive).map((q) => q.id);
+    if (inactiveIds.length > 0) {
+      await autoActivateQuestions(db, inactiveIds);
+      inactiveIds.forEach((id) => {
+        const q = allQ.find((a) => a.id === id);
+        if (q) q.isActive = true;
+      });
+    }
     const orderedQuestions = ids.map((id) => allQ.find((q) => q.id === id)).filter(Boolean) as typeof allQ;
 
     let userAttempts: Record<number, { selectedAnswer: number | null; selfMarkedCorrect: boolean | null; isCorrect: boolean | null }> = {};
