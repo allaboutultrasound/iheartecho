@@ -382,3 +382,8 @@
 ## Accreditation Seat Fix (Mar 15 2026)
 - [x] Confirmed server (diyRouter.ts) and plans page seat values are correct for all tiers
 - [x] Fixed sales page /accreditation-pro seat copy: Starter (1 admin, 4 members, 5 total), Professional (2 admins, 13 members, 15 total), Advanced (5 admins, 45 members, 50 total), Partner (10 admins, unlimited)
+
+## Question Bank Queue Category Bug (Mar 15 2026)
+- [x] Investigate: questions added to queue revert to Adult Echo category instead of maintaining original category
+- [x] Fix category preservation in queue add flow: adminBatchApproveToQueue had hardcoded "Adult Echo"; adminApproveQuestionToQueue mapped General to Adult Echo; both now use question.category with echoCategory fallback
+- [x] Verify fix works for all category types (722 tests pass)

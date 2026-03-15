@@ -2321,9 +2321,20 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
         "Pediatric Echo": "Pediatric Echo",
         "Fetal Echo": "Fetal Echo",
         "POCUS": "POCUS",
-        "General": "Adult Echo",
+        "General": "General",
       };
-      const challengeCategory = ((q.category && catMap[q.category]) ? catMap[q.category] : "Adult Echo") as "ACS" | "Adult Echo" | "Pediatric Echo" | "Fetal Echo" | "POCUS" | "General";
+      const echoCatFallback: Record<string, string> = {
+        "acs": "ACS",
+        "adult": "Adult Echo",
+        "pediatric_congenital": "Pediatric Echo",
+        "fetal": "Fetal Echo",
+        "pocus": "POCUS",
+      };
+      const challengeCategory = ((q.category && catMap[q.category])
+        ? catMap[q.category]
+        : (q.echoCategory && echoCatFallback[q.echoCategory])
+          ? echoCatFallback[q.echoCategory]
+          : "Adult Echo") as "ACS" | "Adult Echo" | "Pediatric Echo" | "Fetal Echo" | "POCUS" | "General";
       const [result] = await db.insert(quickfireChallenges).values({
         title: autoTitle,
         description: null,
@@ -2383,13 +2394,34 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
           d.setDate(d.getDate() + i);
           publishDate = d.toISOString().slice(0, 10);
         }
+        // Preserve the question's category — map echoCategory as fallback
+        const batchCatMap: Record<string, string> = {
+          "ACS": "ACS",
+          "Adult Echo": "Adult Echo",
+          "Pediatric Echo": "Pediatric Echo",
+          "Fetal Echo": "Fetal Echo",
+          "POCUS": "POCUS",
+          "General": "General",
+        };
+        const echoCatMap: Record<string, string> = {
+          "acs": "ACS",
+          "adult": "Adult Echo",
+          "pediatric_congenital": "Pediatric Echo",
+          "fetal": "Fetal Echo",
+          "pocus": "POCUS",
+        };
+        const batchCategory = (q.category && batchCatMap[q.category])
+          ? batchCatMap[q.category]
+          : (q.echoCategory && echoCatMap[q.echoCategory])
+            ? echoCatMap[q.echoCategory]
+            : "Adult Echo";
         const [result] = await db.insert(quickfireChallenges).values({
           title: autoTitle,
           description: null,
           questionIds: JSON.stringify([q.id]),
           priority: 100,
-          category: "Adult Echo",
-         status: "scheduled",
+          category: batchCategory as any,
+          status: "scheduled",
           publishDate: publishDate ?? null,
           createdByUserId: ctx.user.id,
         });
