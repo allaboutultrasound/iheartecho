@@ -1094,6 +1094,7 @@ export default function AdminCaseManagement() {
                     <SelectItem value="Fetal">Fetal</SelectItem>
                     <SelectItem value="HOCM">HOCM</SelectItem>
                     <SelectItem value="POCUS">POCUS</SelectItem>
+                    <SelectItem value="ECG">ECG</SelectItem>
                     <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>

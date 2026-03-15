@@ -46,6 +46,7 @@ const CATEGORIES = [
   { id: "fetal_echo", label: "Fetal Echo" },
   { id: "pocus", label: "POCUS" },
   { id: "physics", label: "Physics" },
+  { id: "ecg", label: "ECG" },
 ] as const;
 
 type CategoryId = (typeof CATEGORIES)[number]["id"];
@@ -57,6 +58,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   fetal_echo: "Fetal Echo",
   pocus: "POCUS",
   physics: "Physics",
+  ecg: "ECG",
 };
 
 // ── Form state ─────────────────────────────────────────────────────────────────

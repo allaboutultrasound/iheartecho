@@ -359,3 +359,12 @@
 - [x] Server: update getById to allow free registered users to access isFree items (no premium check)
 - [x] Public UI: show "Free" badge on first 4 items; remove lock/premium gate for those items
 - [x] Public UI: keep premium gate on items 5+ for non-premium users
+
+## Case Library & SoundBytes™ Updates (Mar 15 2026)
+- [x] Add ECG category to SoundBytes (schema enum, router, admin form, public category filter)
+- [x] Add ECG category to Cases (schema enum, router, admin form, public category filter)
+- [x] Add categorySortOrder field to cases table for per-category position placement
+- [x] Admin: add per-category sort position input in Case Library admin (CaseEditorDialog — Category Position field)
+- [x] Server: tag first 6 cases per category as isFree in list/getById responses
+- [x] Public Case Library UI: show Free badge on free cases; lock premium cases for free registered users
+- [x] Public Case Library UI: free users can open and view the first 6 cases per category

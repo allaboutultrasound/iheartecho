@@ -28,6 +28,7 @@ import {
   ChevronDown,
   ChevronUp,
   Lock,
+  HeartPulse,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -41,6 +42,7 @@ const CATEGORIES = [
   { id: "fetal_echo", label: "Fetal Echo", icon: Baby },
   { id: "pocus", label: "POCUS", icon: Zap },
   { id: "physics", label: "Physics", icon: Microscope },
+  { id: "ecg", label: "ECG", icon: HeartPulse },
 ] as const;
 
 type CategoryId = (typeof CATEGORIES)[number]["id"];
@@ -52,6 +54,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   fetal_echo: "Fetal Echo",
   pocus: "POCUS",
   physics: "Physics",
+  ecg: "ECG",
 };
 
 const PREMIUM_ROLES_SET = new Set(["premium_user", "diy_user", "diy_admin", "platform_admin"]);

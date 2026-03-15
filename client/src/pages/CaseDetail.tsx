@@ -50,6 +50,7 @@ const MODALITY_COLORS: Record<string, string> = {
   Fetal: "bg-rose-100 text-rose-700",
   HOCM: "bg-red-100 text-red-700",
   POCUS: "bg-teal-100 text-teal-700",
+  ECG: "bg-indigo-100 text-indigo-700",
   Other: "bg-gray-100 text-gray-600",
 };
 

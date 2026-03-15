@@ -36,6 +36,7 @@ const CATEGORY_VALUES = [
   "fetal_echo",
   "pocus",
   "physics",
+  "ecg",
 ] as const;
 
 export const soundBytesRouter = router({

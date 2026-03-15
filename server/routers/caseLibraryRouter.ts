@@ -34,7 +34,7 @@ import {
   caseViewEvents,
   users,
 } from "../../drizzle/schema";
-import { eq, and, desc, sql, count, like, or, gte } from "drizzle-orm";
+import { eq, and, desc, asc, sql, count, like, or, gte } from "drizzle-orm";
 import { storagePut } from "../storage";
 import { sendEmail, buildCaseApprovedEmail, buildCaseRejectedEmail, buildNewCaseSubmissionAdminEmail } from "../_core/email";
 import { notifyOwner } from "../_core/notification";
@@ -58,7 +58,7 @@ const caseInputSchema = z.object({
   clinicalHistory: z.string().max(5000).optional(),
   diagnosis: z.string().max(300).optional(),
   teachingPoints: z.array(z.string().max(500)).max(10).optional(),
-  modality: z.enum(["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "Other"]),
+  modality: z.enum(["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "ECG", "Other"]),
   difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("intermediate"),
   tags: z.array(z.string().max(50)).max(10).default([]),
   hipaaAcknowledged: z.boolean(),
@@ -109,7 +109,7 @@ export const caseLibraryRouter = router({
         page: z.number().int().min(1).default(1),
         limit: z.number().int().min(1).max(50).default(12),
         modality: z
-          .enum(["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "Other"])
+          .enum(["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "ECG", "Other"])
           .optional(),
         difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
         search: z.string().max(100).optional(),
@@ -155,13 +155,14 @@ export const caseLibraryRouter = router({
             viewCount: echoLibraryCases.viewCount,
             submittedAt: echoLibraryCases.submittedAt,
             isAdminSubmission: echoLibraryCases.isAdminSubmission,
+            categorySortOrder: echoLibraryCases.categorySortOrder,
           })
           .from(echoLibraryCases)
           .where(where)
           .orderBy(
             input.sortBy === "mostViewed"
               ? desc(echoLibraryCases.viewCount)
-              : desc(echoLibraryCases.submittedAt)
+              : asc(echoLibraryCases.categorySortOrder)
           )
           .limit(input.limit)
           .offset(offset),
@@ -280,17 +281,41 @@ export const caseLibraryRouter = router({
         ? finalCases
         : finalCases.filter((_, i) => offset + i < FREE_CASE_LIMIT);
 
+      // Build per-modality free-tier map: first 6 by categorySortOrder per modality
+      // Fetch all approved cases sorted by categorySortOrder to determine free positions
+      const FREE_PER_CATEGORY = 6;
+      let freeCaseIds = new Set<number>();
+      if (!isPremiumUser) {
+        const allApproved = await db
+          .select({ id: echoLibraryCases.id, modality: echoLibraryCases.modality, categorySortOrder: echoLibraryCases.categorySortOrder })
+          .from(echoLibraryCases)
+          .where(eq(echoLibraryCases.status, "approved"))
+          .orderBy(asc(echoLibraryCases.categorySortOrder));
+        const countPerModality: Record<string, number> = {};
+        for (const c of allApproved) {
+          const m = c.modality;
+          if (!countPerModality[m]) countPerModality[m] = 0;
+          if (countPerModality[m] < FREE_PER_CATEGORY) {
+            freeCaseIds.add(c.id);
+            countPerModality[m]++;
+          }
+        }
+      }
+
       return {
         cases: visibleCases.map((c) => ({
           ...c,
           tags: c.tags ? JSON.parse(c.tags) : [],
           thumbnail: thumbnails[c.id] ?? null,
+          isFree: isPremiumUser ? false : freeCaseIds.has(c.id),
+          categorySortOrder: c.categorySortOrder,
         })),
         total: visibleTotal,
         page: input.page,
         limit: input.limit,
         isPremiumGated: !isPremiumUser && rawTotal > FREE_CASE_LIMIT,
         freeCaseLimit: FREE_CASE_LIMIT,
+        freeCaseIds: isPremiumUser ? [] : Array.from(freeCaseIds),
       };
     }),
 
@@ -953,6 +978,24 @@ export const caseLibraryRouter = router({
       return { caseId };
     }),
 
+  /** Update the per-category sort position for a single case (admin only) */
+  adminUpdateCategorySortOrder: adminProcedure
+    .input(
+      z.object({
+        id: z.number().int().positive(),
+        categorySortOrder: z.number().int().min(0),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      await db
+        .update(echoLibraryCases)
+        .set({ categorySortOrder: input.categorySortOrder })
+        .where(eq(echoLibraryCases.id, input.id));
+      return { success: true };
+    }),
+
   adminUpdateCase: adminProcedure
     .input(
       z.object({
@@ -962,11 +1005,12 @@ export const caseLibraryRouter = router({
         clinicalHistory: z.string().max(5000).optional().nullable(),
         diagnosis: z.string().max(300).optional().nullable(),
         teachingPoints: z.array(z.string().max(500)).max(10).optional(),
-        modality: z.enum(["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "Other"]).optional(),
+        modality: z.enum(["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "ECG", "Other"]).optional(),
         difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
         tags: z.array(z.string().max(50)).max(10).optional(),
         status: z.enum(["pending", "approved", "rejected"]).optional(),
         submitterCreditName: z.string().max(200).optional().nullable(),
+        categorySortOrder: z.number().int().min(0).optional(),
         submitterLinkedIn: z
           .string()
           .max(500)
@@ -1018,7 +1062,7 @@ export const caseLibraryRouter = router({
         status: z.enum(["pending", "approved", "rejected"]).optional(),
         search: z.string().max(100).optional(),
         tag: z.string().max(100).optional(),
-        modality: z.enum(["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "Other"]).optional(),
+        modality: z.enum(["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "ECG", "Other"]).optional(),
         difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
         mediaFilter: z.enum(["all", "has_media", "no_media"]).optional(),
       })
@@ -1105,7 +1149,7 @@ export const caseLibraryRouter = router({
     .input(
       z.object({
         prompt: z.string().min(10).max(1000).describe("Clinical scenario description"),
-        modality: z.enum(["TTE", "TEE", "Stress", "Pediatric", "Fetal", "POCUS", "Other"]).default("TTE"),
+        modality: z.enum(["TTE", "TEE", "Stress", "Pediatric", "Fetal", "POCUS", "ECG", "Other"]).default("TTE"),
         difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("intermediate"),
         questionCount: z.number().int().min(1).max(5).default(3),
       })

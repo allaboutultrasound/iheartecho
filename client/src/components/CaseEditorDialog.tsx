@@ -283,6 +283,7 @@ export default function CaseEditorDialog({ caseId, open, onClose, onSaved }: Pro
   const [tags, setTags] = useState<string[]>([]);
   const [modality, setModality] = useState("TTE");
   const [difficulty, setDifficulty] = useState("intermediate");
+  const [categorySortOrder, setCategorySortOrder] = useState(0);
   const [submitterCreditName, setSubmitterCreditName] = useState("");
   const [submitterLinkedIn, setSubmitterLinkedIn] = useState("");
   const [linkedInError, setLinkedInError] = useState("");
@@ -298,6 +299,7 @@ export default function CaseEditorDialog({ caseId, open, onClose, onSaved }: Pro
     setTags(caseData.tags ?? []);
     setModality(caseData.modality);
     setDifficulty(caseData.difficulty);
+    setCategorySortOrder((caseData as any).categorySortOrder ?? 0);
     setSubmitterCreditName((caseData as any).submitterCreditName ?? "");
     setSubmitterLinkedIn((caseData as any).submitterLinkedIn ?? "");
     setDetailsInitialized(true);
@@ -350,6 +352,7 @@ export default function CaseEditorDialog({ caseId, open, onClose, onSaved }: Pro
       tags,
       modality: modality as any,
       difficulty: difficulty as any,
+      categorySortOrder,
       submitterCreditName: submitterCreditName.trim() || undefined,
       submitterLinkedIn: submitterLinkedIn.trim() || undefined,
     });
@@ -553,7 +556,7 @@ export default function CaseEditorDialog({ caseId, open, onClose, onSaved }: Pro
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {["TTE", "TEE", "Stress", "Pediatric", "Fetal", "POCUS", "Other"].map((m) => (
+                          {["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "ECG", "Other"].map((m) => (
                             <SelectItem key={m} value={m}>{m}</SelectItem>
                           ))}
                         </SelectContent>
@@ -572,6 +575,21 @@ export default function CaseEditorDialog({ caseId, open, onClose, onSaved }: Pro
                         </SelectContent>
                       </Select>
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-gray-600 mb-1.5 block">
+                      Category Position <span className="text-gray-400 font-normal">(lower = shown first in free tier)</span>
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={categorySortOrder}
+                      onChange={(e) => setCategorySortOrder(Math.max(0, parseInt(e.target.value) || 0))}
+                      className="w-full border border-gray-200 rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#189aa1]/30"
+                      placeholder="0"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">The first 6 cases per category (by this position) are available to free registered users.</p>
                   </div>
 
                   <TagListEditor

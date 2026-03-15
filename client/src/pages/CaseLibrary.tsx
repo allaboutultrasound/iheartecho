@@ -55,6 +55,8 @@ const MODALITY_COLORS: Record<string, string> = {
   Pediatric: "bg-pink-100 text-pink-700",
   Fetal: "bg-rose-100 text-rose-700",
   POCUS: "bg-teal-100 text-teal-700",
+  ECG: "bg-indigo-100 text-indigo-700",
+  HOCM: "bg-amber-100 text-amber-700",
   Other: "bg-gray-100 text-gray-600",
 };
 
@@ -76,13 +78,19 @@ const STATUS_ICONS: Record<string, React.ElementType> = {
   rejected: XCircle,
 };
 
-const MODALITIES = ["All", "TTE", "TEE", "Stress", "Pediatric", "Fetal", "POCUS", "Other"];
+const MODALITIES = ["All", "TTE", "TEE", "Stress", "Pediatric", "Fetal", "POCUS", "ECG", "Other"];
+
+const MODALITY_COLORS_EXTRA: Record<string, string> = {
+  ECG: "bg-indigo-100 text-indigo-700",
+  HOCM: "bg-amber-100 text-amber-700",
+};
 const DIFFICULTIES = ["All", "beginner", "intermediate", "advanced"];
 
 type TabType = "browse" | "mySubmissions";
 
 export default function CaseLibrary() {
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { isAuthenticated, loading: authLoading, user } = useAuth();
+  const isPremium = (user as any)?.isPremium === true || (user as any)?.role === "admin";
   const [, navigate] = useLocation();
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>("browse");
@@ -136,10 +144,16 @@ export default function CaseLibrary() {
     setPage(1);
   };
 
-  const handleViewCase = (caseId: number) => {
+  const freeCaseIds = new Set<number>(data?.freeCaseIds ?? []);
+
+  const handleViewCase = (caseId: number, isFree?: boolean) => {
     if (!isAuthenticated) {
       setShowRegisterModal(true);
       return;
+    }
+    // Free registered users can only open free cases
+    if (!isPremium && !isFree) {
+      return; // locked — do nothing (card shows lock overlay)
     }
     navigate(`/case-library/${caseId}`);
   };
@@ -289,8 +303,34 @@ export default function CaseLibrary() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {cases.map((c: any) => {
                   const tags: string[] = Array.isArray(c.tags) ? c.tags : (c.tags ? JSON.parse(c.tags) : []);
+                  const itemIsFree = c.isFree ?? freeCaseIds.has(c.id);
+                  const isLocked = isAuthenticated && !isPremium && !itemIsFree;
                   return (
-                    <div key={c.id} onClick={() => handleViewCase(c.id)} className="bg-white rounded-xl border border-gray-100 p-5 hover:shadow-md hover:border-[#189aa1]/30 transition-all cursor-pointer group h-full flex flex-col">
+                    <div
+                      key={c.id}
+                      onClick={() => handleViewCase(c.id, itemIsFree)}
+                      className={`bg-white rounded-xl border border-gray-100 p-5 transition-all group h-full flex flex-col relative ${
+                        isLocked
+                          ? "opacity-70 cursor-default"
+                          : "hover:shadow-md hover:border-[#189aa1]/30 cursor-pointer"
+                      }`}
+                    >
+                        {/* Free badge */}
+                        {isAuthenticated && !isPremium && itemIsFree && (
+                          <span className="absolute top-3 right-3 text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-white shadow z-10">
+                            Free
+                          </span>
+                        )}
+                        {/* Lock overlay for premium cases shown to free users */}
+                        {isLocked && (
+                          <div className="absolute inset-0 rounded-xl flex items-center justify-center bg-white/60 z-10">
+                            <div className="flex flex-col items-center gap-1">
+                              <Lock className="w-7 h-7 text-gray-400" />
+                              <span className="text-xs text-gray-500 font-semibold">Premium</span>
+                            </div>
+                          </div>
+                        )}
+
                         {/* Media preview indicator */}
                         {c.mediaCount > 0 && (
                           <div className="flex items-center gap-1.5 mb-3">
@@ -344,9 +384,15 @@ export default function CaseLibrary() {
                             <Eye className="w-3 h-3" />
                             {formatViewCount(getDisplayViewCount(c.id, c.viewCount ?? 0, c.submittedAt))} views
                           </div>
-                          <div className="flex items-center gap-1 text-xs font-semibold text-[#189aa1] group-hover:gap-2 transition-all">
-                            View Case <ChevronRight className="w-3 h-3" />
-                          </div>
+                          {!isLocked ? (
+                            <div className="flex items-center gap-1 text-xs font-semibold text-[#189aa1] group-hover:gap-2 transition-all">
+                              View Case <ChevronRight className="w-3 h-3" />
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1 text-xs font-semibold text-gray-400">
+                              <Lock className="w-3 h-3" /> Premium
+                            </div>
+                          )}
                         </div>
                     </div>
                   );

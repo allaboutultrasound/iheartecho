@@ -1001,7 +1001,7 @@ export const echoLibraryCases = mysqlTable("echoLibraryCases", {
   diagnosis: varchar("diagnosis", { length: 300 }),
   // Teaching points (JSON: string[])
   teachingPoints: text("teachingPoints"),
-  modality: mysqlEnum("modality", ["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "Other"]).notNull(),
+  modality: mysqlEnum("modality", ["TTE", "TEE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "ECG", "Other"]).notNull(),
   difficulty: mysqlEnum("difficulty", ["beginner", "intermediate", "advanced"]).default("intermediate").notNull(),
   // JSON: string[] — topic tags
   tags: text("tags"),
@@ -1024,6 +1024,8 @@ export const echoLibraryCases = mysqlTable("echoLibraryCases", {
   // Admin flag for review
   flaggedForReview: boolean("flaggedForReview").default(false).notNull(),
   flagNote: text("flagNote"),
+  // Per-category sort position — lower = shown first within its modality category (used for free-tier ordering)
+  categorySortOrder: int("categorySortOrder").default(0).notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 export type EchoLibraryCase = typeof echoLibraryCases.$inferSelect;
@@ -2480,6 +2482,7 @@ export const soundBytes = mysqlTable("soundBytes", {
     "fetal_echo",
     "pocus",
     "physics",
+    "ecg",
   ]).notNull(),
   // Publish state
   status: mysqlEnum("status", ["draft", "published"]).default("draft").notNull(),
