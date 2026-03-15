@@ -3,7 +3,7 @@
  * SoundBytes micro-lessons. Includes view analytics visible only to admins.
  */
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
@@ -29,6 +29,11 @@ import {
   Send,
   ChevronDown,
   ChevronUp,
+  Upload,
+  Film,
+  Image as ImageIcon,
+  Loader2,
+  Link as LinkIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -95,6 +100,14 @@ export default function SoundBytesAdmin() {
   const [replyOpenId, setReplyOpenId] = useState<number | null>(null);
   const [replyBody, setReplyBody] = useState("");
 
+  // Upload state
+  const [videoUploading, setVideoUploading] = useState(false);
+  const [thumbUploading, setThumbUploading] = useState(false);
+  const [videoDragOver, setVideoDragOver] = useState(false);
+  const [thumbDragOver, setThumbDragOver] = useState(false);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+  const thumbInputRef = useRef<HTMLInputElement>(null);
+
   // Guard: admin only
   if ((user as any)?.role !== "admin") {
     return (
@@ -127,6 +140,52 @@ export default function SoundBytesAdmin() {
     onSuccess: () => { toast.success("Comment rejected and removed."); utils.soundBytes.adminListPendingDiscussions.invalidate(); },
     onError: () => toast.error("Failed to reject comment."),
   });
+
+  const uploadMediaMutation = trpc.soundBytes.adminUploadMedia.useMutation();
+
+  const handleFileUpload = useCallback(async (
+    file: File,
+    fileType: "video" | "thumbnail"
+  ) => {
+    const MAX_VIDEO_MB = 500;
+    const MAX_IMG_MB = 20;
+    const maxMB = fileType === "video" ? MAX_VIDEO_MB : MAX_IMG_MB;
+    if (file.size > maxMB * 1024 * 1024) {
+      toast.error(`File too large. Max ${maxMB} MB for ${fileType === "video" ? "videos" : "images"}.`);
+      return;
+    }
+    const setSaving = fileType === "video" ? setVideoUploading : setThumbUploading;
+    setSaving(true);
+    try {
+      const base64Data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result as string;
+          // Strip the data:mime;base64, prefix
+          resolve(result.split(",")[1]);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      const { url } = await uploadMediaMutation.mutateAsync({
+        base64Data,
+        mimeType: file.type,
+        fileName: file.name,
+        fileType,
+      });
+      if (fileType === "video") {
+        setForm((p) => ({ ...p, videoUrl: url }));
+        toast.success("Video uploaded and URL filled in.");
+      } else {
+        setForm((p) => ({ ...p, thumbnailUrl: url }));
+        toast.success("Thumbnail uploaded and URL filled in.");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Upload failed. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  }, [uploadMediaMutation]);
 
   const submitReply = trpc.soundBytes.adminSubmitReply.useMutation({
     onSuccess: () => {
@@ -353,27 +412,138 @@ export default function SoundBytesAdmin() {
                 </div>
               </div>
 
-              {/* Video URL */}
+              {/* Video — upload zone + URL fallback */}
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Video URL *</label>
-                <Input
-                  value={form.videoUrl}
-                  onChange={(e) => setForm((p) => ({ ...p, videoUrl: e.target.value }))}
-                  placeholder="YouTube, Vimeo, or direct video URL"
-                  className="text-sm"
-                />
-                <p className="text-xs text-gray-400 mt-1">Supports YouTube, Vimeo, or direct MP4/embed URLs.</p>
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Video *</label>
+
+                {/* Drop zone */}
+                <div
+                  onDragOver={(e) => { e.preventDefault(); setVideoDragOver(true); }}
+                  onDragLeave={() => setVideoDragOver(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setVideoDragOver(false);
+                    const file = e.dataTransfer.files[0];
+                    if (file) handleFileUpload(file, "video");
+                  }}
+                  onClick={() => !videoUploading && videoInputRef.current?.click()}
+                  className={`relative flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed py-6 cursor-pointer transition-all ${
+                    videoDragOver
+                      ? "border-[#189aa1] bg-[#189aa1]/8"
+                      : "border-gray-200 bg-gray-50 hover:border-[#189aa1]/50 hover:bg-[#189aa1]/5"
+                  }`}
+                >
+                  {videoUploading ? (
+                    <><Loader2 className="w-6 h-6 text-[#189aa1] animate-spin" /><span className="text-xs text-gray-500">Uploading video…</span></>
+                  ) : form.videoUrl && !form.videoUrl.startsWith("http") ? null : form.videoUrl ? (
+                    <>
+                      <Film className="w-6 h-6 text-[#189aa1]" />
+                      <span className="text-xs font-medium text-[#189aa1] text-center px-4 truncate max-w-full">
+                        {form.videoUrl.length > 60 ? form.videoUrl.slice(0, 57) + "…" : form.videoUrl}
+                      </span>
+                      <span className="text-xs text-gray-400">Click or drop to replace</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-6 h-6 text-gray-400" />
+                      <span className="text-xs font-medium text-gray-600">Drop video file here or click to browse</span>
+                      <span className="text-xs text-gray-400">MP4, WebM, MOV, AVI, WMV — up to 500 MB</span>
+                    </>
+                  )}
+                  <input
+                    ref={videoInputRef}
+                    type="file"
+                    accept="video/mp4,video/webm,video/quicktime,video/x-msvideo,video/x-ms-wmv,video/ogg"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleFileUpload(file, "video");
+                      e.target.value = "";
+                    }}
+                  />
+                </div>
+
+                {/* URL fallback */}
+                <div className="mt-2 flex items-center gap-2">
+                  <LinkIcon className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                  <Input
+                    value={form.videoUrl}
+                    onChange={(e) => setForm((p) => ({ ...p, videoUrl: e.target.value }))}
+                    placeholder="Or paste YouTube, Vimeo, or direct video URL"
+                    className="text-sm h-8"
+                  />
+                </div>
+                <p className="text-xs text-gray-400 mt-1">Upload a file above, or paste a URL directly. Supports YouTube, Vimeo, or direct MP4/embed URLs.</p>
               </div>
 
-              {/* Thumbnail URL */}
+              {/* Thumbnail — upload zone + URL fallback */}
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Thumbnail URL (optional)</label>
-                <Input
-                  value={form.thumbnailUrl}
-                  onChange={(e) => setForm((p) => ({ ...p, thumbnailUrl: e.target.value }))}
-                  placeholder="https://..."
-                  className="text-sm"
-                />
+                <label className="block text-xs font-semibold text-gray-600 mb-1.5">Thumbnail (optional)</label>
+
+                {/* Drop zone */}
+                <div
+                  onDragOver={(e) => { e.preventDefault(); setThumbDragOver(true); }}
+                  onDragLeave={() => setThumbDragOver(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setThumbDragOver(false);
+                    const file = e.dataTransfer.files[0];
+                    if (file) handleFileUpload(file, "thumbnail");
+                  }}
+                  onClick={() => !thumbUploading && thumbInputRef.current?.click()}
+                  className={`relative flex items-center justify-center gap-3 rounded-xl border-2 border-dashed py-4 cursor-pointer transition-all ${
+                    thumbDragOver
+                      ? "border-[#189aa1] bg-[#189aa1]/8"
+                      : "border-gray-200 bg-gray-50 hover:border-[#189aa1]/50 hover:bg-[#189aa1]/5"
+                  }`}
+                >
+                  {thumbUploading ? (
+                    <><Loader2 className="w-5 h-5 text-[#189aa1] animate-spin" /><span className="text-xs text-gray-500">Uploading thumbnail…</span></>
+                  ) : form.thumbnailUrl ? (
+                    <>
+                      <img
+                        src={form.thumbnailUrl}
+                        alt="Thumbnail preview"
+                        className="w-16 h-10 object-cover rounded-md flex-shrink-0"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                      />
+                      <div className="flex flex-col">
+                        <span className="text-xs font-medium text-[#189aa1]">Thumbnail set</span>
+                        <span className="text-xs text-gray-400">Click or drop to replace</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <ImageIcon className="w-5 h-5 text-gray-400" />
+                      <div className="flex flex-col">
+                        <span className="text-xs font-medium text-gray-600">Drop image here or click to browse</span>
+                        <span className="text-xs text-gray-400">JPEG, PNG, WebP — up to 20 MB</span>
+                      </div>
+                    </>
+                  )}
+                  <input
+                    ref={thumbInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleFileUpload(file, "thumbnail");
+                      e.target.value = "";
+                    }}
+                  />
+                </div>
+
+                {/* URL fallback */}
+                <div className="mt-2 flex items-center gap-2">
+                  <LinkIcon className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                  <Input
+                    value={form.thumbnailUrl}
+                    onChange={(e) => setForm((p) => ({ ...p, thumbnailUrl: e.target.value }))}
+                    placeholder="Or paste thumbnail image URL"
+                    className="text-sm h-8"
+                  />
+                </div>
               </div>
 
               {/* Sort order + display views row */}

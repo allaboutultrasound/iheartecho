@@ -341,3 +341,9 @@
 - [x] Remove iHeartEcho logo + name from top header on Enrolled page
 - [x] Move iHeartEcho logo + "iHeartEcho™" text into the iHeartEcho card header
 - [x] Add AAUS logo + "All About Ultrasound™" text into the AAUS card header
+
+## SoundBytes™ Native File Upload (Mar 15 2026)
+- [x] Add server-side tRPC procedure: soundBytes.adminUploadMedia (base64 upload to S3, returns URL)
+- [x] SoundBytesAdmin: add drag-drop/click upload zone for video file (alongside existing URL field)
+- [x] SoundBytesAdmin: add drag-drop/click upload zone for thumbnail image (alongside existing URL field)
+- [x] Show upload progress indicator and preview after upload

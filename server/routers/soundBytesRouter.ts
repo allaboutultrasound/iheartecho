@@ -8,6 +8,7 @@ import { getDb } from "../db";
 import { soundBytes, soundByteViews, soundByteDiscussions, soundByteDiscussionReplies } from "../../drizzle/schema";
 import { users } from "../../drizzle/schema";
 import { notifyOwner } from "../_core/notification";
+import { storagePut } from "../storage";
 import {
   publicProcedure,
   protectedProcedure,
@@ -488,6 +489,52 @@ export const soundBytesRouter = router({
         .delete(soundByteDiscussionReplies)
         .where(eq(soundByteDiscussionReplies.id, input.id));
       return { ok: true };
+    }),
+
+  // ── Media Upload ─────────────────────────────────────────────────────────────
+
+  /**
+   * Admin: upload a video or thumbnail file for a SoundByte.
+   * Accepts base64-encoded file data, uploads to S3, returns the public URL.
+   * fileType: "video" | "thumbnail"
+   */
+  adminUploadMedia: protectedProcedure
+    .input(
+      z.object({
+        base64Data: z.string().min(1),
+        mimeType: z.string().min(1),
+        fileName: z.string().min(1),
+        fileType: z.enum(["video", "thumbnail"]),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+
+      const MIME_TO_EXT: Record<string, string> = {
+        // Images
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/gif": "gif",
+        "image/webp": "webp",
+        // Videos
+        "video/mp4": "mp4",
+        "video/webm": "webm",
+        "video/ogg": "ogv",
+        "video/quicktime": "mov",
+        "video/x-ms-wmv": "wmv",
+        "video/x-msvideo": "avi",
+        "video/avi": "avi",
+      };
+
+      const ext = MIME_TO_EXT[input.mimeType] ?? input.mimeType.split("/")[1] ?? "bin";
+      const randomSuffix = Math.random().toString(36).slice(2, 10);
+      const safeName = input.fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const key = `soundbytes/${input.fileType}/${safeName}-${randomSuffix}.${ext}`;
+
+      const buffer = Buffer.from(input.base64Data, "base64");
+      const { url } = await storagePut(key, buffer, input.mimeType);
+
+      return { url, key };
     }),
 
   /** Admin: count pending discussions (for badge) */
