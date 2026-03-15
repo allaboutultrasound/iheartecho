@@ -111,6 +111,8 @@ import Leaderboard from "./pages/Leaderboard";
 // SoundBytes™
 import SoundBytesPage from "./pages/SoundBytes";
 import SoundBytesAdmin from "./pages/SoundBytesAdmin";
+// Accreditation Sales Page
+import AccreditationProSalesPage from "./pages/AccreditationProSalesPage";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -233,9 +235,11 @@ function Router() {
       <Route path="/ecg-navigator" component={ECGNavigator} />
       <Route path="/ecg-coach" component={ECGCoach} />
       <Route path="/ecg-assist" component={ECGAssist} />
-      {/* ── DIY Accreditation™ ────────────────────────────────────────────────────── */}
+      {/* ── DIY Accreditation™ ────────────────────────────────────────────────────────────────── */}
+      <Route path="/accreditation-pro" component={AccreditationProSalesPage} />
       <Route path="/diy-accreditation-plans" component={DIYAccreditationPlans} />
-      <Route path="/diy-register" component={DIYRegister} /> {/* /diy-lab-admin is deprecated — redirect to the unified /lab-admin */}
+      <Route path="/diy-register" component={DIYRegister} />
+      {/* /diy-lab-admin is deprecated — redirect to the unified /lab-admin */}
       <Route path="/diy-lab-admin">{() => { const [, setLoc] = useLocation(); useEffect(() => { setLoc("/lab-admin"); }, []); return null; }}</Route>
       <Route path="/diy-member">{() => <RoleGuard roles={["diy_user", "diy_admin"]} allowAdmin={false}><DIYMemberPortal /></RoleGuard>}</Route>      {/* ── Premium Access ────────────────────────────────────────────────── */}
       <Route path="/premium" component={Premium} />

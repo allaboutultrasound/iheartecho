@@ -368,3 +368,10 @@
 - [x] Server: tag first 6 cases per category as isFree in list/getById responses
 - [x] Public Case Library UI: show Free badge on free cases; lock premium cases for free registered users
 - [x] Public Case Library UI: free users can open and view the first 6 cases per category
+
+## Accreditation Sales Landing Page (Mar 15 2026)
+- [ ] Build /accreditation-pro sales page: combined Accreditation Navigator + DIY Accreditation Tool ad copy
+- [ ] Include sign-up CTAs linking to plans page (no prices shown)
+- [ ] Accreditation Navigator section: note it is included with Premium subscription
+- [ ] Register route in App.tsx
+- [ ] Deliver public URL for the page
