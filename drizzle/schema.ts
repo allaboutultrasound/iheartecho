@@ -2521,3 +2521,15 @@ export const soundByteDiscussions = mysqlTable("soundByteDiscussions", {
 });
 export type SoundByteDiscussion = typeof soundByteDiscussions.$inferSelect;
 export type InsertSoundByteDiscussion = typeof soundByteDiscussions.$inferInsert;
+
+// ─── SoundBytes™ Discussion Replies (admin-authored threaded replies) ─────────
+export const soundByteDiscussionReplies = mysqlTable("soundByteDiscussionReplies", {
+  id: varchar("id", { length: 36 }).primaryKey(),
+  discussionId: int("discussionId").notNull(),
+  userId: int("userId").notNull(),
+  userName: varchar("userName", { length: 255 }).notNull(),
+  body: text("body").notNull(),
+  createdAt: bigint("createdAt", { mode: "number" }).notNull(),
+});
+export type SoundByteDiscussionReply = typeof soundByteDiscussionReplies.$inferSelect;
+export type InsertSoundByteDiscussionReply = typeof soundByteDiscussionReplies.$inferInsert;

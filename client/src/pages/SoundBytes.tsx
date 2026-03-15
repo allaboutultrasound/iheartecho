@@ -24,6 +24,9 @@ import {
   Clock,
   User,
   CheckCircle,
+  Reply,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -115,6 +118,17 @@ export default function SoundBytesPage() {
     onError: () => toast.error("Failed to submit comment. Please try again."),
   });
   const [discussionBody, setDiscussionBody] = useState("");
+  // Track which discussions have their replies expanded
+  const [expandedReplies, setExpandedReplies] = useState<Set<number>>(new Set());
+
+  function toggleReplies(discussionId: number) {
+    setExpandedReplies((prev) => {
+      const next = new Set(prev);
+      if (next.has(discussionId)) next.delete(discussionId);
+      else next.add(discussionId);
+      return next;
+    });
+  }
 
   function handleSelect(id: number) {
     setSelectedId(id);
@@ -355,47 +369,14 @@ export default function SoundBytesPage() {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {discussions.map((d) => {
-                        const displayName = (d as any).userDisplayName || (d as any).userName || "Member";
-                        const credentials = (d as any).userCredentials;
-                        const avatarUrl = (d as any).userAvatarUrl;
-                        return (
-                          <div key={d.id} className="flex gap-3">
-                            {/* Avatar */}
-                            <div className="flex-shrink-0">
-                              {avatarUrl ? (
-                                <img
-                                  src={avatarUrl}
-                                  alt={displayName}
-                                  className="w-8 h-8 rounded-full object-cover"
-                                />
-                              ) : (
-                                <div
-                                  className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                                  style={{ background: "#189aa1" }}
-                                >
-                                  {displayName.charAt(0).toUpperCase()}
-                                </div>
-                              )}
-                            </div>
-                            {/* Content */}
-                            <div className="flex-1 bg-white rounded-xl border border-gray-100 p-3">
-                              <div className="flex items-center gap-2 mb-1.5">
-                                <span className="text-xs font-semibold text-gray-800">
-                                  {displayName}
-                                  {credentials && (
-                                    <span className="text-gray-500 font-normal">, {credentials}</span>
-                                  )}
-                                </span>
-                                <span className="text-xs text-gray-400">
-                                  {new Date(d.createdAt).toLocaleDateString()}
-                                </span>
-                              </div>
-                              <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{d.body}</p>
-                            </div>
-                          </div>
-                        );
-                      })}
+                      {discussions.map((d) => (
+                        <DiscussionThread
+                          key={d.id}
+                          discussion={d as any}
+                          isExpanded={expandedReplies.has(d.id)}
+                          onToggleReplies={() => toggleReplies(d.id)}
+                        />
+                      ))}
                     </div>
                   )}
                 </div>
@@ -539,3 +520,111 @@ function SoundBytesPreviewGrid({
     </div>
   );
 }
+
+// ── DiscussionThread — shows a single approved comment + admin replies ─────────
+
+interface DiscussionThreadProps {
+  discussion: {
+    id: number;
+    body: string;
+    createdAt: number;
+    userId: number;
+    userName?: string | null;
+    userDisplayName?: string | null;
+    userCredentials?: string | null;
+    userAvatarUrl?: string | null;
+  };
+  isExpanded: boolean;
+  onToggleReplies: () => void;
+}
+
+function DiscussionThread({ discussion, isExpanded, onToggleReplies }: DiscussionThreadProps) {
+  const { data: replies = [] } = trpc.soundBytes.listReplies.useQuery(
+    { discussionId: discussion.id },
+    { enabled: isExpanded }
+  );
+
+  const displayName = discussion.userDisplayName || discussion.userName || "Member";
+  const credentials = discussion.userCredentials;
+  const avatarUrl = discussion.userAvatarUrl;
+
+  return (
+    <div className="flex gap-3">
+      {/* Avatar */}
+      <div className="flex-shrink-0">
+        {avatarUrl ? (
+          <img src={avatarUrl} alt={displayName} className="w-8 h-8 rounded-full object-cover" />
+        ) : (
+          <div
+            className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
+            style={{ background: "#189aa1" }}
+          >
+            {displayName.charAt(0).toUpperCase()}
+          </div>
+        )}
+      </div>
+
+      {/* Content */}
+      <div className="flex-1">
+        <div className="bg-white rounded-xl border border-gray-100 p-3">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="text-xs font-semibold text-gray-800">
+              {displayName}
+              {credentials && <span className="text-gray-500 font-normal">, {credentials}</span>}
+            </span>
+          </div>
+          <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{discussion.body}</p>
+
+          {/* Toggle replies button — only shown if there are replies or after first load */}
+          <button
+            onClick={onToggleReplies}
+            className="mt-2 flex items-center gap-1 text-xs text-[#189aa1] font-semibold hover:opacity-80 transition-opacity"
+          >
+            <Reply className="w-3 h-3" />
+            {isExpanded ? (
+              <>
+                <ChevronUp className="w-3 h-3" />
+                Hide replies
+              </>
+            ) : (
+              <>
+                <ChevronDown className="w-3 h-3" />
+                View replies
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Threaded replies */}
+        {isExpanded && (
+          <div className="mt-2 ml-4 space-y-2">
+            {replies.length === 0 ? (
+              <p className="text-xs text-gray-400 italic pl-1">No replies yet.</p>
+            ) : (
+              replies.map((reply) => (
+                <div key={reply.id} className="flex gap-2">
+                  <div
+                    className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-white text-xs font-bold"
+                    style={{ background: "#0e4a50" }}
+                  >
+                    {(reply.userName || "A").charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 bg-[#f0fbfc] rounded-lg border border-[#189aa1]/15 px-3 py-2">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-xs font-semibold text-[#189aa1]">{reply.userName}</span>
+                      <span className="text-xs font-medium text-[#189aa1]/70 bg-[#189aa1]/10 px-1.5 py-0.5 rounded-full">
+                        Admin
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap">{reply.body}</p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+

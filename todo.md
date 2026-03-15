@@ -325,3 +325,14 @@
 - [x] Build Discussions section on SoundBytes detail/player view (submit form + approved comments list)
 - [x] Build admin approval queue tab in SoundBytesAdmin (pending list with approve/reject actions)
 - [x] Show pending count badge on admin approval queue tab
+
+## SoundBytes™ Enhancements (Mar 15 2026)
+- [x] Add thumbnailUrl field to soundBytes table and schema
+- [x] Update soundBytesRouter to include thumbnailUrl in all CRUD procedures
+- [x] Update SoundBytesAdmin create/edit form with thumbnail URL input field
+- [x] Update SoundBytes member page card grid to show thumbnail image
+- [x] Add soundByteDiscussionReplies DB table (id, discussionId, userId, body, createdAt)
+- [x] Add reply server procedures: submitReply (admin only), listReplies, adminDeleteReply
+- [x] Build reply UI in SoundBytes member page (show replies under each approved comment)
+- [x] Build reply form in SoundBytesAdmin approval queue (admin can reply from approval panel)
+- [x] Add notifyOwner call in submitDiscussion procedure when new comment is submitted

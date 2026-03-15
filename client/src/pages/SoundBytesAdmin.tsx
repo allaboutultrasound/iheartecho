@@ -25,6 +25,10 @@ import {
   MessageCircle,
   Check,
   Ban,
+  Reply,
+  Send,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -87,6 +91,9 @@ export default function SoundBytesAdmin() {
   const [analyticsId, setAnalyticsId] = useState<number | null>(null);
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  // Reply state: track which discussion has its reply form open and the reply body
+  const [replyOpenId, setReplyOpenId] = useState<number | null>(null);
+  const [replyBody, setReplyBody] = useState("");
 
   // Guard: admin only
   if ((user as any)?.role !== "admin") {
@@ -119,6 +126,15 @@ export default function SoundBytesAdmin() {
   const rejectDiscussion = trpc.soundBytes.adminRejectDiscussion.useMutation({
     onSuccess: () => { toast.success("Comment rejected and removed."); utils.soundBytes.adminListPendingDiscussions.invalidate(); },
     onError: () => toast.error("Failed to reject comment."),
+  });
+
+  const submitReply = trpc.soundBytes.adminSubmitReply.useMutation({
+    onSuccess: () => {
+      toast.success("Reply posted.");
+      setReplyOpenId(null);
+      setReplyBody("");
+    },
+    onError: () => toast.error("Failed to post reply."),
   });
 
   // ── Mutations ────────────────────────────────────────────────────────────────
@@ -507,7 +523,7 @@ export default function SoundBytesAdmin() {
                 <p className="text-xs text-gray-400 mt-1">All submitted discussions have been moderated.</p>
               </div>
             )}
-            {!pendingLoading && pendingDiscussions.length > 0 && (
+                {!pendingLoading && pendingDiscussions.length > 0 && (
               <div className="divide-y divide-gray-50">
                 {pendingDiscussions.map((d) => (
                   <div key={d.id} className="p-5">
@@ -544,6 +560,49 @@ export default function SoundBytesAdmin() {
                         <p className="text-sm text-gray-700 leading-relaxed bg-gray-50 rounded-lg p-3 whitespace-pre-wrap">
                           {d.body}
                         </p>
+
+                        {/* Admin reply toggle */}
+                        <button
+                          onClick={() => {
+                            if (replyOpenId === d.id) { setReplyOpenId(null); setReplyBody(""); }
+                            else { setReplyOpenId(d.id); setReplyBody(""); }
+                          }}
+                          className="mt-2 flex items-center gap-1 text-xs text-[#189aa1] font-semibold hover:opacity-80 transition-opacity"
+                        >
+                          <Reply className="w-3 h-3" />
+                          {replyOpenId === d.id ? (
+                            <><ChevronUp className="w-3 h-3" /> Hide reply form</>
+                          ) : (
+                            <><ChevronDown className="w-3 h-3" /> Reply as Admin</>
+                          )}
+                        </button>
+
+                        {/* Admin reply form */}
+                        {replyOpenId === d.id && (
+                          <div className="mt-2 bg-[#f0fbfc] rounded-lg border border-[#189aa1]/20 p-3">
+                            <textarea
+                              value={replyBody}
+                              onChange={(e) => setReplyBody(e.target.value)}
+                              placeholder="Write an admin reply…"
+                              rows={3}
+                              className="w-full rounded-lg border border-[#189aa1]/20 bg-white px-3 py-2 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#189aa1]/30 focus:border-[#189aa1] resize-none"
+                            />
+                            <div className="flex justify-end mt-2">
+                              <button
+                                onClick={() => {
+                                  if (!replyBody.trim()) return;
+                                  submitReply.mutate({ discussionId: d.id, body: replyBody.trim() });
+                                }}
+                                disabled={!replyBody.trim() || submitReply.isPending}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all disabled:opacity-50 hover:opacity-90"
+                                style={{ background: "#189aa1" }}
+                              >
+                                <Send className="w-3 h-3" />
+                                {submitReply.isPending ? "Posting…" : "Post Reply"}
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                       {/* Action buttons */}
                       <div className="flex flex-col gap-2 flex-shrink-0">

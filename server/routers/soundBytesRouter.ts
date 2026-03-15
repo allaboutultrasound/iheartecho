@@ -5,8 +5,9 @@
 import { z } from "zod";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { getDb } from "../db";
-import { soundBytes, soundByteViews, soundByteDiscussions } from "../../drizzle/schema";
+import { soundBytes, soundByteViews, soundByteDiscussions, soundByteDiscussionReplies } from "../../drizzle/schema";
 import { users } from "../../drizzle/schema";
+import { notifyOwner } from "../_core/notification";
 import {
   publicProcedure,
   protectedProcedure,
@@ -301,6 +302,21 @@ export const soundBytesRouter = router({
         createdAt: now,
         updatedAt: now,
       });
+      // Notify admin of new discussion awaiting approval
+      try {
+        const [sb] = await db
+          .select({ title: soundBytes.title })
+          .from(soundBytes)
+          .where(eq(soundBytes.id, input.soundByteId))
+          .limit(1);
+        const userName = ctx.user.displayName || ctx.user.name || "A member";
+        await notifyOwner({
+          title: "New SoundBytes™ Discussion Awaiting Approval",
+          content: `${userName} posted a comment on "${sb?.title ?? "a SoundByte"}" and it is waiting for your review in the admin approval queue.`,
+        });
+      } catch (_) {
+        // Non-critical — don't fail the submission if notification fails
+      }
       return { ok: true };
     }),
 
@@ -418,6 +434,59 @@ export const soundBytesRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       await db.delete(soundByteDiscussions).where(eq(soundByteDiscussions.id, input.id));
+      return { ok: true };
+    }),
+
+  // ── Discussion Replies ────────────────────────────────────────────────────────
+
+  /** List all replies for an approved discussion */
+  listReplies: publicProcedure
+    .input(z.object({ discussionId: z.number() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      return db
+        .select()
+        .from(soundByteDiscussionReplies)
+        .where(eq(soundByteDiscussionReplies.discussionId, input.discussionId))
+        .orderBy(soundByteDiscussionReplies.createdAt);
+    }),
+
+  /** Admin: post a reply to an approved discussion */
+  adminSubmitReply: protectedProcedure
+    .input(
+      z.object({
+        discussionId: z.number(),
+        body: z.string().min(1).max(5000),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const replyId = crypto.randomUUID();
+      const userName = ctx.user.displayName || ctx.user.name || "Admin";
+      await db.insert(soundByteDiscussionReplies).values({
+        id: replyId,
+        discussionId: input.discussionId,
+        userId: ctx.user.id,
+        userName,
+        body: input.body,
+        createdAt: Date.now(),
+      });
+      return { ok: true, id: replyId };
+    }),
+
+  /** Admin: delete a reply */
+  adminDeleteReply: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db
+        .delete(soundByteDiscussionReplies)
+        .where(eq(soundByteDiscussionReplies.id, input.id));
       return { ok: true };
     }),
 
