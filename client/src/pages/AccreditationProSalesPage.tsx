@@ -277,7 +277,7 @@ export default function AccreditationProSalesPage() {
             {/* Right: hero graphic */}
             <div className="flex-1 w-full max-w-2xl">
               <img
-                src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/accreditation-quality-metrics-v2_f90f9c92.png"
+                src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/accreditation-quality-v2.webp"
                 alt="DIY Accreditation Quality Dashboard showing accreditation readiness metrics, quality trend charts, and echo imaging"
                 className="w-full rounded-2xl shadow-2xl border border-white/10"
                 style={{ maxHeight: 380, objectFit: "cover", objectPosition: "center" }}
