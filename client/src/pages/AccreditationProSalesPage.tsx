@@ -44,7 +44,7 @@ const DIY_PLANS_PATH = "/diy-accreditation-plans";
 const NAVIGATOR_FEATURES = [
   {
     icon: ClipboardList,
-    title: "IAC 2025 Standards — Built In",
+    title: "Based on the IAC Standards",
     desc: "Fully mapped IAC requirements for Adult TTE, Adult TEE, Stress Echo, Pediatric TTE, Pediatric TEE, Fetal Echo, and PeriOp TEE — no PDF hunting required.",
   },
   {
@@ -171,7 +171,7 @@ const DIY_PLANS = [
 const FAQS = [
   {
     q: "What is the difference between Accreditation Navigator™ and the DIY Accreditation™ Tool?",
-    a: "Accreditation Navigator™ is a read-only reference and checklist tool — it maps the IAC 2025 standards so you always know what is required and lets you track your readiness. The DIY Accreditation™ Tool is an active QA/QI platform where your lab performs peer reviews, image quality reviews, policy management, case study submissions, and generates the documentation required for accreditation.",
+    a: "Accreditation Navigator™ is a read-only reference and checklist tool — it maps the IAC Standards so you always know what is required and lets you track your readiness. The DIY Accreditation™ Tool is an active QA/QI platform where your lab performs peer reviews, image quality reviews, policy management, case study submissions, and generates the documentation required for accreditation.",
   },
   {
     q: "Is Accreditation Navigator™ included with my Premium subscription?",
@@ -183,7 +183,7 @@ const FAQS = [
   },
   {
     q: "Which accreditation types are supported?",
-    a: "Both tools support IAC Adult Echo (TTE, TEE, Stress), IAC Pediatric/Congenital Echo (Ped TTE, Ped TEE, Fetal), and IAC PeriOp TEE — covering the full 2025 IAC standards.",
+    a: "Both tools support IAC Adult Echo (TTE, TEE, Stress), IAC Pediatric/Congenital Echo (Ped TTE, Ped TEE, Fetal), and IAC PeriOp TEE — covering the full IAC Standards.",
   },
   {
     q: "Can multiple people in my lab use the DIY Accreditation™ Tool?",
@@ -235,41 +235,53 @@ export default function AccreditationProSalesPage() {
             backgroundSize: "40px 40px",
           }}
         />
-        <div className="relative container py-20 md:py-28 max-w-5xl mx-auto px-6">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 mb-6">
-              <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
-              <span className="text-xs text-white/80 font-semibold tracking-wide uppercase">IAC 2025 Standards · Built for Echo Labs</span>
-            </div>
-            <h1
-              className="text-4xl md:text-5xl font-black text-white leading-tight mb-5"
-              style={{ fontFamily: "Merriweather, serif" }}
-            >
-              Accreditation<br />
-              <span style={{ color: "#4ad9e0" }}>Simplified.</span>
-            </h1>
-            <p className="text-white/70 text-lg leading-relaxed mb-8 max-w-2xl">
-              The only platform built specifically for echo lab accreditation — combining an interactive IAC standards navigator with a complete QA/QI documentation suite. From readiness checklist to submission-ready evidence, in one place.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <a
-                href={PREMIUM_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm text-white transition-all hover:opacity-90 hover:scale-105"
-                style={{ background: BRAND }}
+        <div className="relative container py-16 md:py-20 max-w-6xl mx-auto px-6">
+          <div className="flex flex-col lg:flex-row items-center gap-12">
+            {/* Left: copy */}
+            <div className="flex-1 max-w-xl">
+              <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 mb-6">
+                <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
+                <span className="text-xs text-white/80 font-semibold tracking-wide uppercase">Based on the IAC Standards · Built for Echo Labs</span>
+              </div>
+              <h1
+                className="text-4xl md:text-5xl font-black text-white leading-tight mb-5"
+                style={{ fontFamily: "Merriweather, serif" }}
               >
-                <Zap className="w-4 h-4" />
-                Get Accreditation Navigator™ — Premium
-                <ArrowRight className="w-4 h-4" />
-              </a>
-              <Link href={DIY_PLANS_PATH}>
-                <span className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm bg-white/10 border border-white/25 text-white hover:bg-white/20 transition-all cursor-pointer">
-                  <Building2 className="w-4 h-4" />
-                  Explore DIY Accreditation™ Plans
+                Accreditation<br />
+                <span style={{ color: "#4ad9e0" }}>Simplified.</span>
+              </h1>
+              <p className="text-white/70 text-lg leading-relaxed mb-8">
+                The only platform built specifically for echo lab accreditation — combining an interactive IAC standards navigator with a complete QA/QI documentation suite. From readiness checklist to submission-ready evidence, in one place.
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <a
+                  href={PREMIUM_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm text-white transition-all hover:opacity-90 hover:scale-105"
+                  style={{ background: BRAND }}
+                >
+                  <Zap className="w-4 h-4" />
+                  Get Accreditation Navigator™ — Premium
                   <ArrowRight className="w-4 h-4" />
-                </span>
-              </Link>
+                </a>
+                <Link href={DIY_PLANS_PATH}>
+                  <span className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm bg-white/10 border border-white/25 text-white hover:bg-white/20 transition-all cursor-pointer">
+                    <Building2 className="w-4 h-4" />
+                    Explore DIY Accreditation™ Plans
+                    <ArrowRight className="w-4 h-4" />
+                  </span>
+                </Link>
+              </div>
+            </div>
+            {/* Right: hero graphic */}
+            <div className="flex-1 w-full max-w-2xl">
+              <img
+                src="https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/accreditation-quality-metrics-v2-LPxPkfhVKbgqHCGPJcFZqv.png"
+                alt="DIY Accreditation Quality Dashboard showing accreditation readiness metrics, quality trend charts, and echo imaging"
+                className="w-full rounded-2xl shadow-2xl border border-white/10"
+                style={{ maxHeight: 380, objectFit: "cover", objectPosition: "center" }}
+              />
             </div>
           </div>
         </div>
@@ -279,7 +291,7 @@ export default function AccreditationProSalesPage() {
       <div className="border-b border-gray-100 bg-gray-50">
         <div className="max-w-5xl mx-auto px-6 py-5 flex flex-wrap gap-6 items-center justify-center md:justify-between">
           {[
-            { icon: CheckCircle2, text: "IAC 2025 Standards Mapped" },
+            { icon: CheckCircle2, text: "Based on the IAC Standards" },
             { icon: Shield, text: "7 Accreditation Types Supported" },
             { icon: FileText, text: "Submission-Ready Documentation" },
             { icon: Heart, text: "Built by Echo Professionals" },
@@ -309,7 +321,7 @@ export default function AccreditationProSalesPage() {
               Accreditation Navigator™
             </h2>
             <p className="text-gray-500 text-base mt-3 max-w-xl leading-relaxed">
-              Your interactive guide to the IAC 2025 standards. Know exactly what is required, track your readiness section by section, and walk into your accreditation survey with confidence.
+              Your interactive guide to the IAC Standards. Know exactly what is required, track your readiness section by section, and walk into your accreditation survey with confidence.
             </p>
           </div>
           <a
