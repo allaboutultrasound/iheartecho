@@ -245,8 +245,8 @@ export default function AccreditationProSalesPage() {
               className="text-4xl md:text-5xl font-black text-white leading-tight mb-5"
               style={{ fontFamily: "Merriweather, serif" }}
             >
-              Stop Guessing.<br />
-              <span style={{ color: "#4ad9e0" }}>Start Accrediting.</span>
+              Accreditation<br />
+              <span style={{ color: "#4ad9e0" }}>Simplified.</span>
             </h1>
             <p className="text-white/70 text-lg leading-relaxed mb-8 max-w-2xl">
               The only platform built specifically for echo lab accreditation — combining an interactive IAC standards navigator with a complete QA/QI documentation suite. From readiness checklist to submission-ready evidence, in one place.
