@@ -375,3 +375,10 @@
 - [ ] Accreditation Navigator section: note it is included with Premium subscription
 - [ ] Register route in App.tsx
 - [ ] Deliver public URL for the page
+
+## Accreditation Sales Page Seat Copy Fix (Mar 15 2026)
+- [ ] Update DIY Accreditation plan seat descriptions on /accreditation-pro: Starter (1 admin, 3 seats total), Professional (3 admins, 15 seats total), Advanced (5 admins, 50 seats total), Partner (10 admins, unlimited seats)
+
+## Accreditation Seat Fix (Mar 15 2026)
+- [x] Confirmed server (diyRouter.ts) and plans page seat values are correct for all tiers
+- [x] Fixed sales page /accreditation-pro seat copy: Starter (1 admin, 4 members, 5 total), Professional (2 admins, 13 members, 15 total), Advanced (5 admins, 45 members, 50 total), Partner (10 admins, unlimited)

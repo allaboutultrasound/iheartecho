@@ -143,26 +143,26 @@ const DIY_PLANS = [
   {
     name: "Accreditation Starter",
     tagline: "Begin your accreditation journey",
-    seats: "1 Lab Admin · Up to 10 Members",
+    seats: "1 Lab Admin · 4 Member Seats · 5 Total",
     url: "https://member.allaboutultrasound.com/enroll/3706401?price_id=4655411",
   },
   {
     name: "Accreditation Professional",
     tagline: "Structured QA/QI for growing labs",
-    seats: "3 Lab Admins · Up to 30 Members",
+    seats: "2 Lab Admins · 13 Member Seats · 15 Total",
     url: "https://member.allaboutultrasound.com/enroll/3706397?price_id=4655406",
     popular: true,
   },
   {
     name: "Accreditation Advanced",
     tagline: "Multi-site & large lab solution",
-    seats: "6 Lab Admins · Up to 100 Members",
+    seats: "5 Lab Admins · 45 Member Seats · 50 Total",
     url: "https://member.allaboutultrasound.com/enroll/3706392?price_id=4655402",
   },
   {
     name: "Accreditation Partner",
     tagline: "Unlimited seats + expert guidance",
-    seats: "Unlimited Lab Admins · Unlimited Members",
+    seats: "10 Lab Admins · Unlimited Member Seats",
     url: "https://member.allaboutultrasound.com/enroll/3706344?price_id=4655349",
   },
 ];
