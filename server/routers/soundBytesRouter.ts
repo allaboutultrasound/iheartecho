@@ -1,0 +1,280 @@
+/**
+ * SoundBytes™ Router
+ * Premium micro-lesson video feature with category filtering and admin management.
+ */
+import { z } from "zod";
+import { eq, desc, and, sql } from "drizzle-orm";
+import { getDb } from "../db";
+import { soundBytes, soundByteViews } from "../../drizzle/schema";
+import {
+  publicProcedure,
+  protectedProcedure,
+  router,
+} from "../_core/trpc";
+import { TRPCError } from "@trpc/server";
+
+const CATEGORY_VALUES = [
+  "acs",
+  "adult_echo",
+  "pediatric_echo",
+  "fetal_echo",
+  "pocus",
+  "physics",
+] as const;
+
+export const soundBytesRouter = router({
+  // ── Public / Member ──────────────────────────────────────────────────────────
+
+  /** List published SoundBytes, optionally filtered by category */
+  list: publicProcedure
+    .input(
+      z.object({
+        category: z.enum(CATEGORY_VALUES).optional(),
+      })
+    )
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+      const conditions: ReturnType<typeof eq>[] = [eq(soundBytes.status, "published")];
+      if (input.category) {
+        conditions.push(eq(soundBytes.category, input.category));
+      }
+      return db
+        .select({
+          id: soundBytes.id,
+          title: soundBytes.title,
+          thumbnailUrl: soundBytes.thumbnailUrl,
+          category: soundBytes.category,
+          sortOrder: soundBytes.sortOrder,
+          displayViews: soundBytes.displayViews,
+          publishedAt: soundBytes.publishedAt,
+        })
+        .from(soundBytes)
+        .where(and(...conditions))
+        .orderBy(soundBytes.sortOrder, desc(soundBytes.publishedAt));
+    }),
+
+  /** Get a single published SoundByte by ID (includes body + videoUrl) */
+  getById: publicProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const [row] = await db
+        .select()
+        .from(soundBytes)
+        .where(and(eq(soundBytes.id, input.id), eq(soundBytes.status, "published")))
+        .limit(1);
+      if (!row) throw new TRPCError({ code: "NOT_FOUND", message: "SoundByte not found" });
+      return row;
+    }),
+
+  /** Record a view event for a SoundByte (premium users only) */
+  recordView: protectedProcedure
+    .input(
+      z.object({
+        soundByteId: z.number(),
+        watchedSeconds: z.number().int().min(0).default(0),
+        completed: z.boolean().default(false),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) return { ok: false };
+      // Upsert: one view record per user per SoundByte
+      const [existing] = await db
+        .select({ id: soundByteViews.id })
+        .from(soundByteViews)
+        .where(
+          and(
+            eq(soundByteViews.soundByteId, input.soundByteId),
+            eq(soundByteViews.userId, ctx.user.id)
+          )
+        )
+        .limit(1);
+
+      if (existing) {
+        await db
+          .update(soundByteViews)
+          .set({
+            watchedSeconds: input.watchedSeconds,
+            completed: input.completed,
+          })
+          .where(eq(soundByteViews.id, existing.id));
+      } else {
+        await db.insert(soundByteViews).values({
+          soundByteId: input.soundByteId,
+          userId: ctx.user.id,
+          watchedSeconds: input.watchedSeconds,
+          completed: input.completed,
+        });
+      }
+      return { ok: true };
+    }),
+
+  // ── Admin ─────────────────────────────────────────────────────────────────────
+
+  /** Admin: list all SoundBytes (all statuses) with view analytics */
+  adminList: protectedProcedure.query(async ({ ctx }) => {
+    if (ctx.user.role !== "admin") {
+      throw new TRPCError({ code: "FORBIDDEN" });
+    }
+    const db = await getDb();
+    if (!db) return [];
+    const rows = await db
+      .select({
+        id: soundBytes.id,
+        title: soundBytes.title,
+        category: soundBytes.category,
+        status: soundBytes.status,
+        sortOrder: soundBytes.sortOrder,
+        displayViews: soundBytes.displayViews,
+        publishedAt: soundBytes.publishedAt,
+        createdAt: soundBytes.createdAt,
+        updatedAt: soundBytes.updatedAt,
+      })
+      .from(soundBytes)
+      .orderBy(soundBytes.sortOrder, desc(soundBytes.createdAt));
+
+    // Attach true view counts from soundByteViews
+    const viewCounts = await db
+      .select({
+        soundByteId: soundByteViews.soundByteId,
+        totalViews: sql<number>`COUNT(*)`.as("totalViews"),
+        completions: sql<number>`SUM(CASE WHEN ${soundByteViews.completed} = 1 THEN 1 ELSE 0 END)`.as("completions"),
+      })
+      .from(soundByteViews)
+      .groupBy(soundByteViews.soundByteId);
+
+    const viewMap = new Map(viewCounts.map((v) => [v.soundByteId, v]));
+
+    return rows.map((r) => ({
+      ...r,
+      trueViews: viewMap.get(r.id)?.totalViews ?? 0,
+      completions: viewMap.get(r.id)?.completions ?? 0,
+    }));
+  }),
+
+  /** Admin: get a single SoundByte for editing */
+  adminGetById: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .query(async ({ input, ctx }) => {
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const [row] = await db
+        .select()
+        .from(soundBytes)
+        .where(eq(soundBytes.id, input.id))
+        .limit(1);
+      if (!row) throw new TRPCError({ code: "NOT_FOUND" });
+      return row;
+    }),
+
+  /** Admin: create a new SoundByte */
+  adminCreate: protectedProcedure
+    .input(
+      z.object({
+        title: z.string().min(1).max(255),
+        body: z.string().default(""),
+        videoUrl: z.string().min(1),
+        thumbnailUrl: z.string().min(1).optional(),
+        category: z.enum(CATEGORY_VALUES),
+        sortOrder: z.number().int().default(0),
+        displayViews: z.number().int().min(0).default(0),
+        status: z.enum(["draft", "published"]).default("draft"),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const [result] = await db.insert(soundBytes).values({
+        title: input.title,
+        body: input.body || null,
+        videoUrl: input.videoUrl,
+        thumbnailUrl: input.thumbnailUrl ?? null,
+        category: input.category,
+        sortOrder: input.sortOrder,
+        displayViews: input.displayViews,
+        status: input.status,
+        createdByUserId: ctx.user.id,
+        publishedAt: input.status === "published" ? new Date() : null,
+      });
+      return { id: (result as any).insertId as number };
+    }),
+
+  /** Admin: update an existing SoundByte */
+  adminUpdate: protectedProcedure
+    .input(
+      z.object({
+        id: z.number(),
+        title: z.string().min(1).max(255).optional(),
+        body: z.string().optional(),
+        videoUrl: z.string().min(1).optional(),
+        thumbnailUrl: z.string().min(1).nullable().optional(),
+        category: z.enum(CATEGORY_VALUES).optional(),
+        sortOrder: z.number().int().optional(),
+        displayViews: z.number().int().min(0).optional(),
+        status: z.enum(["draft", "published"]).optional(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      const { id, ...fields } = input;
+
+      // Set publishedAt when publishing for the first time
+      let publishedAt: Date | null | undefined = undefined;
+      if (fields.status === "published") {
+        const [existing] = await db
+          .select({ publishedAt: soundBytes.publishedAt })
+          .from(soundBytes)
+          .where(eq(soundBytes.id, id))
+          .limit(1);
+        if (existing && !existing.publishedAt) {
+          publishedAt = new Date();
+        }
+      }
+
+      const updateData: Record<string, unknown> = { ...fields };
+      if (publishedAt !== undefined) updateData.publishedAt = publishedAt;
+
+      await db.update(soundBytes).set(updateData).where(eq(soundBytes.id, id));
+      return { ok: true };
+    }),
+
+  /** Admin: delete a SoundByte */
+  adminDelete: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+      await db.delete(soundByteViews).where(eq(soundByteViews.soundByteId, input.id));
+      await db.delete(soundBytes).where(eq(soundBytes.id, input.id));
+      return { ok: true };
+    }),
+
+  /** Admin: get per-viewer analytics for a specific SoundByte */
+  adminViewerStats: protectedProcedure
+    .input(z.object({ soundByteId: z.number() }))
+    .query(async ({ input, ctx }) => {
+      if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
+      const db = await getDb();
+      if (!db) return [];
+      return db
+        .select({
+          id: soundByteViews.id,
+          userId: soundByteViews.userId,
+          watchedSeconds: soundByteViews.watchedSeconds,
+          completed: soundByteViews.completed,
+          createdAt: soundByteViews.createdAt,
+          updatedAt: soundByteViews.updatedAt,
+        })
+        .from(soundByteViews)
+        .where(eq(soundByteViews.soundByteId, input.soundByteId))
+        .orderBy(desc(soundByteViews.updatedAt));
+    }),
+});

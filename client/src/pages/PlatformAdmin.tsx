@@ -58,6 +58,7 @@ import {
   Scan,
   Webhook,
   FlaskConical,
+  Play,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import BulkCsvUploadPanel, { type BulkResult } from "@/components/BulkCsvUploadPanel";
@@ -952,6 +953,13 @@ export default function PlatformAdmin() {
                 label: "Email Campaigns",
                 description: "Compose and send targeted emails to users filtered by interest, role, and subscription",
                 color: "#7c3aed",
+              },
+              {
+                href: "/admin/soundbytes",
+                icon: Play,
+                label: "SoundBytes™",
+                description: "Create, publish, and track premium micro-lesson videos by clinical category",
+                color: "#189aa1",
               },
             ].map(({ href, icon: Icon, label, description, color }) => (
               <Link key={href} href={href}>

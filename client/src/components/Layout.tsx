@@ -10,7 +10,7 @@ import {
   Scan, BookOpen, FileText, Menu, X, ChevronRight,
   Stethoscope, Zap, ExternalLink, ShoppingBag, FlaskConical, MessageCircle, Award, Shield, GraduationCap,
   BookMarked, Library, Plus, Crown, Droplets, Building2, Users, UserPlus,
-  LogIn, LogOut, Settings, ChevronDown, Webhook, Layers, CreditCard, Lock, Trophy
+  LogIn, LogOut, Settings, ChevronDown, Webhook, Layers, CreditCard, Lock, Trophy, Volume2
 } from "lucide-react";
 
 import { trpc } from "@/lib/trpc";
@@ -73,6 +73,7 @@ const navGroups = [
       { path: "/flashcards", label: "Echo Flashcards", icon: Layers },
       { path: "/case-library", label: "Echo Case Library", icon: Library },
       { path: "/leaderboard", label: "Leaderboard", icon: Trophy },
+      { path: "/soundbytes", label: "SoundBytes™", icon: Volume2 },
       { path: "/cme", label: "CME Hub", icon: GraduationCap },
       { path: "/registry-review", label: "Registry Review", icon: BookMarked },
       { path: "https://www.allaboutultrasound.net/acs-preview-pass-access", label: "ACS Mastery", icon: Award, external: true },

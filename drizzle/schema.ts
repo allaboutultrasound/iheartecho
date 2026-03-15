@@ -2459,3 +2459,52 @@ export const accreditationChecklist = mysqlTable(
 );
 export type AccreditationChecklist = typeof accreditationChecklist.$inferSelect;
 export type InsertAccreditationChecklist = typeof accreditationChecklist.$inferInsert;
+
+// ─── SoundBytes™ Micro-Lessons ────────────────────────────────────────────────
+// Premium video micro-lessons filterable by clinical category.
+
+export const soundBytes = mysqlTable("soundBytes", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  // Rich HTML body rendered below the video
+  body: longtext("body"),
+  // Video URL (e.g. Vimeo, YouTube embed, or S3 direct)
+  videoUrl: text("videoUrl").notNull(),
+  // Thumbnail image URL (optional)
+  thumbnailUrl: text("thumbnailUrl"),
+  // Clinical category filter
+  category: mysqlEnum("category", [
+    "acs",
+    "adult_echo",
+    "pediatric_echo",
+    "fetal_echo",
+    "pocus",
+    "physics",
+  ]).notNull(),
+  // Publish state
+  status: mysqlEnum("status", ["draft", "published"]).default("draft").notNull(),
+  // Sort order within category (lower = first)
+  sortOrder: int("sortOrder").default(0).notNull(),
+  // Prepopulated view count shown to members (cosmetic, like case library)
+  displayViews: int("displayViews").default(0).notNull(),
+  createdByUserId: int("createdByUserId"),
+  publishedAt: timestamp("publishedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type SoundByte = typeof soundBytes.$inferSelect;
+export type InsertSoundByte = typeof soundBytes.$inferInsert;
+
+// Tracks actual video view events per user (admin-only analytics)
+export const soundByteViews = mysqlTable("soundByteViews", {
+  id: int("id").autoincrement().primaryKey(),
+  soundByteId: int("soundByteId").notNull(),
+  userId: int("userId"),           // null for unauthenticated (shouldn't happen — premium gate)
+  // Duration watched in seconds (updated on pause/end events from the player)
+  watchedSeconds: int("watchedSeconds").default(0).notNull(),
+  completed: boolean("completed").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type SoundByteView = typeof soundByteViews.$inferSelect;
+export type InsertSoundByteView = typeof soundByteViews.$inferInsert;

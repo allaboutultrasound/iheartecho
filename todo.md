@@ -305,3 +305,15 @@
 - [x] Add premium crown badge to Diastolic Function ScanCoach tab
 - [x] Add premium crown badge to Adult Congenital ScanCoach tab
 - [x] Gate Diastolic Function and Adult Congenital ScanCoach content behind premium subscription
+
+## SoundBytes™ Feature (Mar 15 2026)
+- [x] Add soundBytes and soundByteViews tables to drizzle schema
+- [x] Push database migration (tables created directly via SQL)
+- [x] Add server procedures: list (with category filter), getById, recordView, admin CRUD, adminViewerStats
+- [x] Build SoundBytes member page with category filter tabs, video player, rich text body, premium gate
+- [x] Build SoundBytesAdmin page with create/edit/delete/publish and per-video view analytics
+- [x] Add SoundBytes admin card to PlatformAdmin
+- [x] Add sidebar nav link (Volume2 icon) above CME Hub
+- [x] Add dashboard card between Daily Challenge and Hemodynamics Lab
+- [x] Wire /soundbytes and /admin/soundbytes routes in App.tsx
+- [x] Generate SoundBytes hero banner (text-free sound wave + cardiac ECG waveform, teal/navy)

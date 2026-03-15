@@ -108,6 +108,9 @@ import EducatorAdmin from "./pages/EducatorAdmin";
 import StudentDashboard from "./pages/StudentDashboard";
 // Leaderboard
 import Leaderboard from "./pages/Leaderboard";
+// SoundBytes™
+import SoundBytesPage from "./pages/SoundBytes";
+import SoundBytesAdmin from "./pages/SoundBytesAdmin";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -219,6 +222,8 @@ function Router() {
       <Route path="/admin/form-builder">{() => <RoleGuard roles={["platform_admin"]} allowAdmin={true}><FormBuilderAdmin /></RoleGuard>}</Route>
       <Route path="/admin/form-builder/:id">{() => <RoleGuard roles={["platform_admin"]} allowAdmin={true}><FormBuilderAdmin /></RoleGuard>}</Route>
       <Route path="/admin/email">{() => <RoleGuard roles={["platform_admin"]} allowAdmin={true}><EmailAdmin /></RoleGuard>}</Route>
+      <Route path="/admin/soundbytes">{() => <RoleGuard roles={["platform_admin"]} allowAdmin={true}><SoundBytesAdmin /></RoleGuard>}</Route>
+      <Route path="/soundbytes" component={SoundBytesPage} />
       <Route path="/unsubscribe" component={Unsubscribe} />
       <Route path="/accreditation-manager">{() => <RoleGuard roles={["platform_admin", "accreditation_manager"]} allowAdmin={true}><AccreditationManagerPage /></RoleGuard>}</Route>
       <Route path="/pediatric-echo-assist" component={PediatricEchoAssist} />

@@ -10,7 +10,7 @@ import Layout from "@/components/Layout";
 import { trpc } from "@/lib/trpc";
 import {
   Calculator, ClipboardList, Activity, BookOpen, FileText,
-  ArrowRight, Users, Award, Zap, Stethoscope, ExternalLink, MessageCircle, GraduationCap, BookMarked, Crown, Shield, Trophy
+  ArrowRight, Users, Award, Zap, Stethoscope, ExternalLink, MessageCircle, GraduationCap, BookMarked, Crown, Shield, Trophy, Volume2
 } from "lucide-react";
 
 const BRAND = "#189aa1";
@@ -53,6 +53,15 @@ const modules: Module[] = [
     title: "Daily Challenge",
     description: "One question. One case. One chance today. Answer the challenge, see the explanation. Maintain your streak, earn points and compare with other echo professionals.",
     badge: "Daily",
+    color: BRAND,
+    interests: ["adultEcho", "pediatricEcho", "fetalEcho", "acs"],
+  },
+  {
+    path: "/soundbytes",
+    icon: Volume2,
+    title: "SoundBytes™",
+    description: "Quick-hit video micro-lessons — clinical pearls in minutes. Filter by specialty and watch on demand.",
+    badge: "Premium",
     color: BRAND,
     interests: ["adultEcho", "pediatricEcho", "fetalEcho", "acs"],
   },
