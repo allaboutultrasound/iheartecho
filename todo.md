@@ -347,3 +347,9 @@
 - [x] SoundBytesAdmin: add drag-drop/click upload zone for video file (alongside existing URL field)
 - [x] SoundBytesAdmin: add drag-drop/click upload zone for thumbnail image (alongside existing URL field)
 - [x] Show upload progress indicator and preview after upload
+
+## SoundBytes™ Phantom View Count (Mar 15 2026)
+- [x] Add getPhantomViews(id, realViews) helper: seeded phantom count shown until real views exceed 3092
+- [x] Update soundBytes.list and soundBytes.getById public responses to include phantomViews field
+- [x] Update SoundBytes public UI to display phantomViews instead of real view count
+- [x] Keep real view count visible only in SoundBytesAdmin analytics

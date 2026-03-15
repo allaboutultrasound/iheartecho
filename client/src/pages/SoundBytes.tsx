@@ -297,7 +297,7 @@ export default function SoundBytesPage() {
                       </span>
                       <span className="text-xs text-gray-400 flex items-center gap-1">
                         <Eye className="w-3 h-3" />
-                        {(selected.displayViews ?? 0).toLocaleString()} views
+                        {(selected.phantomViews ?? selected.displayViews ?? 0).toLocaleString()} views
                       </span>
                     </div>
                   </div>
@@ -462,7 +462,7 @@ export default function SoundBytesPage() {
                             </span>
                             <span className="text-xs text-gray-400 flex items-center gap-1">
                               <Eye className="w-3 h-3" />
-                              {(item.displayViews ?? 0).toLocaleString()}
+                              {(item.phantomViews ?? item.displayViews ?? 0).toLocaleString()}
                             </span>
                           </div>
                         </div>

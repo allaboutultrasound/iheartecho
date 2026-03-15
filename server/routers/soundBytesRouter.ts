@@ -16,6 +16,19 @@ import {
 } from "../_core/trpc";
 import { TRPCError } from "@trpc/server";
 
+/**
+ * Returns a deterministic phantom view count for public display.
+ * Each SoundByte gets a seeded number in the range [2351, 3092] derived from its ID.
+ * Once real views exceed 3092, the real count is shown instead.
+ */
+function getPhantomViews(id: number, realViews: number): number {
+  if (realViews > 3092) return realViews;
+  // Deterministic seed per ID so the number is stable across requests
+  // Range: 2351–3092 = 742 possible values
+  const seed = ((id * 2654435761) >>> 0) % 742; // 0–741
+  return 2351 + seed;
+}
+
 const CATEGORY_VALUES = [
   "acs",
   "adult_echo",
@@ -42,7 +55,7 @@ export const soundBytesRouter = router({
       if (input.category) {
         conditions.push(eq(soundBytes.category, input.category));
       }
-      return db
+      const rows = await db
         .select({
           id: soundBytes.id,
           title: soundBytes.title,
@@ -55,6 +68,21 @@ export const soundBytesRouter = router({
         .from(soundBytes)
         .where(and(...conditions))
         .orderBy(soundBytes.sortOrder, desc(soundBytes.publishedAt));
+
+      // Fetch real view counts for phantom calculation
+      const viewCounts = await db
+        .select({
+          soundByteId: soundByteViews.soundByteId,
+          total: sql<number>`COUNT(*)`.as("total"),
+        })
+        .from(soundByteViews)
+        .groupBy(soundByteViews.soundByteId);
+      const viewMap = new Map(viewCounts.map((v) => [v.soundByteId, v.total]));
+
+      return rows.map((r) => ({
+        ...r,
+        phantomViews: getPhantomViews(r.id, viewMap.get(r.id) ?? 0),
+      }));
     }),
 
   /** Get a single published SoundByte by ID (includes body + videoUrl) */
@@ -69,7 +97,15 @@ export const soundBytesRouter = router({
         .where(and(eq(soundBytes.id, input.id), eq(soundBytes.status, "published")))
         .limit(1);
       if (!row) throw new TRPCError({ code: "NOT_FOUND", message: "SoundByte not found" });
-      return row;
+
+      // Compute real view count for phantom calculation
+      const [viewRow] = await db
+        .select({ total: sql<number>`COUNT(*)`.as("total") })
+        .from(soundByteViews)
+        .where(eq(soundByteViews.soundByteId, input.id));
+      const realViews = viewRow?.total ?? 0;
+
+      return { ...row, phantomViews: getPhantomViews(row.id, realViews) };
     }),
 
   /** Record a view event for a SoundByte (premium users only) */
