@@ -454,3 +454,6 @@
 
 ## ACS Description Update (Mar 16 2026)
 - [x] Profile interests: updated ACS description from "Acute care echo, ICU echo..." to "Advanced Cardiac Sonographer — advanced echo protocols, hemodynamic assessment, structural heart, and complex cardiac imaging."
+
+## Member Count Floor Display (Mar 16 2026)
+- [x] Home.tsx: member count now displays 15,174 as a floor — shows real-time actual count only when it surpasses 15,174; shows 15,174 immediately on page load (no "..." flash) while the live query resolves

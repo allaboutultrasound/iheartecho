@@ -179,13 +179,18 @@ export default function Home() {
     staleTime: 24 * 60 * 60 * 1000, // 24 hours
     refetchOnWindowFocus: false,
   });
+  const USER_COUNT_FLOOR = 15_174;
   const totalMembers = userCountData?.total ?? null;
+  // Show floor value until real count surpasses it, then track in real-time
+  const displayedMembers = totalMembers !== null
+    ? Math.max(totalMembers, USER_COUNT_FLOOR).toLocaleString()
+    : USER_COUNT_FLOOR.toLocaleString();
 
   const stats = [
     ...STATIC_STATS,
     {
       label: "Members",
-      value: totalMembers !== null ? totalMembers.toLocaleString() : "...",
+      value: displayedMembers,
       icon: Users,
     },
   ];
