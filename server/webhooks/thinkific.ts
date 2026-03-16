@@ -20,6 +20,16 @@
  *
  * Every event (including filtered ones) is logged to the webhookEvents table.
  *
+ * WELCOME EMAIL POLICY:
+ *   A welcome email with a 72-hour magic sign-in link is sent for:
+ *     • order.created (complete) for any direct iHeartEcho product
+ *     • enrollment.created for any direct iHeartEcho product
+ *   NOT sent for:
+ *     • enrollment.updated (re-activations / status changes)
+ *     • subscription.activated (re-activations)
+ *     • user.signup (no product purchase — silent account creation)
+ *     • All About Ultrasound free membership (allaboutultrasound.com bundles)
+ *
  * Setup in Thinkific:
  *   Admin → Settings → Webhooks → Add Webhook
  *   URL: https://your-domain.com/api/webhooks/thinkific
@@ -34,10 +44,10 @@
 import { Router, Request, Response } from "express";
 import { getDb } from "../db";
 import { webhookEvents } from "../../drizzle/schema";
-import { getUserByEmail, setPremiumStatus, createPendingUser, assignRole, removeRole, ensureUserRole, markThinkificEnrolled } from "../db";
+import { getUserByEmail, setPremiumStatus, createPendingUser, assignRole, removeRole, ensureUserRole, markThinkificEnrolled, generateWelcomeMagicLink } from "../db";
 import { syncCatalogToDb } from "../routers/cmeRouter";
 import { getEnrollmentById } from "../thinkific";
-import { sendEmail, buildWelcomeEmail } from "../_core/email";
+import { sendEmail, buildWelcomeWithMagicLinkEmail } from "../_core/email";
 
 // ── Allowed event allowlist ──────────────────────────────────────────────────
 /** Only these resource+action pairs will be processed. Everything else is filtered. */
@@ -126,7 +136,6 @@ function isFreeProduct(name: string | null | undefined): boolean {
 /**
  * Returns true if the product is the new iHeartEcho™ App free membership product.
  * Canonical Thinkific name: "iHeartEcho™ App"
- * This is the only product that triggers a welcome email from iHeartEcho.
  */
 function isIHeartEchoAppProduct(name: string | null | undefined): boolean {
   if (!name) return false;
@@ -138,6 +147,61 @@ function isIHeartEchoAppProduct(name: string | null | undefined): boolean {
     l === "iheartecho™app" ||
     (l.startsWith("iheartecho") && (l.endsWith("app") || l.endsWith("app™") || l.endsWith("™ app")))
   );
+}
+
+/**
+ * Returns true if the product is a direct iHeartEcho subscription that should
+ * trigger a welcome email. This includes:
+ *   - iHeartEcho™ App (free tier)
+ *   - iHeartEcho™ Premium Access
+ *   - DIY Accreditation / Education memberships
+ *   - Any free product that explicitly references "iheartecho" in its name
+ *
+ * Explicitly EXCLUDED:
+ *   - "All About Ultrasound" free membership (allaboutultrasound.com bundles)
+ *     where the product name does NOT reference iHeartEcho
+ */
+export function isDirectIHeartEchoProduct(name: string | null | undefined): boolean {
+  if (!name) return false;
+  const l = name.toLowerCase().trim();
+
+  // Always include premium and DIY accreditation products
+  if (isPremiumProduct(name)) return true;
+  if (isDIYProduct(name)) return true;
+
+  // Include the iHeartEcho App free tier
+  if (isIHeartEchoAppProduct(name)) return true;
+
+  // Include free products that explicitly reference iHeartEcho
+  if (isFreeProduct(name) && l.includes("iheartecho")) return true;
+
+  // Exclude free products that are All About Ultrasound bundles without iHeartEcho branding
+  // e.g. "Free Membership", "All About Ultrasound Free Membership", "allaboutultrasound free"
+  if (isFreeProduct(name) && !l.includes("iheartecho")) return false;
+
+  return false;
+}
+
+/**
+ * Returns a human-readable membership label for the welcome email.
+ */
+function membershipLabel(name: string): string {
+  if (isPremiumProduct(name)) return "iHeartEcho™ Premium Access";
+  if (isDIYProduct(name)) {
+    const role = diyRoleForProduct(name);
+    return role === "diy_admin" ? "DIY Accreditation — Lab Admin" : "DIY Accreditation";
+  }
+  if (isIHeartEchoAppProduct(name)) return "iHeartEcho™ App";
+  return "iHeartEcho™";
+}
+
+/**
+ * Returns the list of roles that should be shown in the welcome email body.
+ */
+function rolesForProduct(name: string): string[] {
+  if (isPremiumProduct(name)) return ["premium_user"];
+  if (isDIYProduct(name)) return [diyRoleForProduct(name)];
+  return [];
 }
 
 /** Returns true if the product is relevant to iHeartEcho (premium, DIY, or free). */
@@ -289,7 +353,8 @@ export function registerThinkificWebhook(app: Router) {
           return res.status(200).json({ ok: true, message: msg });
         }
 
-        return await grantAccess({ resource, action, userEmail, productName, payload, res });
+        // order.created is always a new purchase — send welcome email for direct iHE products
+        return await grantAccess({ resource, action, userEmail, productName, payload, res, sendWelcome: true });
       }
 
       // ── 2. enrollment.created / enrollment.updated → grant access ─────────
@@ -331,7 +396,16 @@ export function registerThinkificWebhook(app: Router) {
           return res.status(200).json({ ok: true, message: msg });
         }
 
-        return await grantAccess({ resource, action, userEmail: resolvedEmail, productName: resolvedProductName, payload, res });
+        // Send welcome email only on enrollment.created (not enrollment.updated re-activations)
+        return await grantAccess({
+          resource,
+          action,
+          userEmail: resolvedEmail,
+          productName: resolvedProductName,
+          payload,
+          res,
+          sendWelcome: action === "created",
+        });
       }
 
       // ── 3. subscription.activated → re-grant access ───────────────────────
@@ -341,7 +415,8 @@ export function registerThinkificWebhook(app: Router) {
           await logWebhookEvent({ resource, action, productName, httpStatus: 200, outcome: "ignored", message: msg, rawPayload: payload });
           return res.status(200).json({ ok: true, message: msg });
         }
-        return await grantAccess({ resource, action, userEmail, productName, payload, res });
+        // subscription.activated is a re-activation — do NOT send welcome email again
+        return await grantAccess({ resource, action, userEmail, productName, payload, res, sendWelcome: false });
       }
 
       // ── 4. subscription.cancelled → revoke access ─────────────────────────
@@ -400,27 +475,34 @@ export function registerThinkificWebhook(app: Router) {
 // ── Welcome email helper ────────────────────────────────────────────────────
 
 /**
- * Send a welcome email for the iHeartEcho™ App product enrollment.
- * Only called when the product is the "iHeartEcho™ App" free membership.
+ * Send a welcome email with a 72-hour magic sign-in link to a new iHeartEcho subscriber.
+ * Only called for direct iHeartEcho products (not All About Ultrasound free membership).
  */
-async function sendIHeartEchoAppWelcome(email: string): Promise<void> {
+async function sendWelcomeEmail(userId: number, email: string, productName: string): Promise<void> {
   try {
-    const appUrl = process.env.VITE_APP_URL ?? "https://app.iheartecho.com";
-    const payload = buildWelcomeEmail({
-      firstName: email.split("@")[0],
-      loginUrl: `${appUrl}/login`,
-      roles: [], // free account — no special roles to list
+    const magicUrl = await generateWelcomeMagicLink(userId);
+    const firstName = email.split("@")[0];
+    const label = membershipLabel(productName);
+    const roles = rolesForProduct(productName);
+
+    const payload = buildWelcomeWithMagicLinkEmail({
+      firstName,
+      magicUrl,
+      membershipLabel: label,
+      roles,
     });
+
     const sent = await sendEmail({
-      to: { name: email, email },
+      to: { name: firstName, email },
       subject: payload.subject,
       htmlBody: payload.htmlBody,
       previewText: payload.previewText,
     });
+
     if (!sent) {
       console.warn(`[Thinkific Webhook] Welcome email to ${email} could not be sent (SendGrid unavailable)`);
     } else {
-      console.log(`[Thinkific Webhook] Welcome email sent to ${email} for iHeartEcho™ App enrollment`);
+      console.log(`[Thinkific Webhook] Welcome email sent to ${email} for "${productName}" (userId=${userId})`);
     }
   } catch (err) {
     console.error(`[Thinkific Webhook] Failed to send welcome email to ${email}:`, err);
@@ -436,8 +518,10 @@ async function grantAccess(params: {
   productName: string;
   payload: unknown;
   res: Response;
+  /** Whether to send a welcome email for this event (true for new enrollments/orders only) */
+  sendWelcome: boolean;
 }): Promise<Response> {
-  const { resource, action, userEmail, productName, payload, res } = params;
+  const { resource, action, userEmail, productName, payload, res, sendWelcome } = params;
 
   console.log(`[Thinkific Webhook] ${resource}.${action} — granting access to ${userEmail} for "${productName}"`);
 
@@ -457,9 +541,9 @@ async function grantAccess(params: {
       } else if (isFreeProduct(productName) || isIHeartEchoAppProduct(productName)) {
         await markThinkificEnrolled(pendingUserId);
       }
-      // Send welcome email ONLY for the iHeartEcho™ App product
-      if (isIHeartEchoAppProduct(productName)) {
-        sendIHeartEchoAppWelcome(userEmail).catch(() => {});
+      // Send welcome email for direct iHeartEcho products on new enrollments/orders
+      if (sendWelcome && isDirectIHeartEchoProduct(productName)) {
+        sendWelcomeEmail(pendingUserId, userEmail, productName).catch(() => {});
       }
       const msg = `pending account created and access granted for ${userEmail} ("${productName}")`;
       console.log(`[Thinkific Webhook] ${msg} (userId=${pendingUserId})`);
@@ -483,9 +567,9 @@ async function grantAccess(params: {
   } else if (isFreeProduct(productName) || isIHeartEchoAppProduct(productName)) {
     await markThinkificEnrolled(user.id);
   }
-  // Send welcome email ONLY for the iHeartEcho™ App product (new enrollments only)
-  if (isIHeartEchoAppProduct(productName) && action === "created") {
-    sendIHeartEchoAppWelcome(userEmail).catch(() => {});
+  // Send welcome email for direct iHeartEcho products on new enrollments/orders
+  if (sendWelcome && isDirectIHeartEchoProduct(productName)) {
+    sendWelcomeEmail(user.id, userEmail, productName).catch(() => {});
   }
 
   const msg = `access granted to ${userEmail} (userId=${user.id}) for "${productName}"`;

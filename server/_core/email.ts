@@ -781,3 +781,86 @@ export function buildMeetingInvitationEmail(opts: {
   `);
   return { subject, htmlBody, previewText };
 }
+
+// ─── Welcome Email with Magic Link (for new Thinkific subscribers) ────────────
+
+/**
+ * Welcome email sent to new iHeartEcho direct subscribers via Thinkific webhook.
+ * Embeds a one-click magic link so the user can sign in immediately without
+ * needing to set a password. The token should be valid for 72 hours (not the
+ * usual 15-minute request-time token) to give users time to see the email.
+ *
+ * Sent for: iHeartEcho free, premium, DIY accreditation, and education memberships.
+ * NOT sent for: All About Ultrasound free membership sign-ups.
+ */
+export function buildWelcomeWithMagicLinkEmail(opts: {
+  firstName: string;
+  magicUrl: string;
+  membershipLabel: string;  // e.g. "Free", "Premium Access", "DIY Accreditation"
+  roles: string[];
+}): { subject: string; htmlBody: string; previewText: string } {
+  const subject = "Welcome to iHeartEcho™ — your account is ready";
+  const previewText = "Your iHeartEcho™ account is set up. Click to sign in instantly — no password needed.";
+
+  const roleLabels: Record<string, string> = {
+    premium_user: "Premium Access",
+    diy_user: "DIY Accreditation",
+    diy_admin: "Lab Admin",
+    platform_admin: "Platform Admin",
+    education_manager: "Education Manager",
+    education_admin: "Education Admin",
+    education_student: "Education Student",
+  };
+  const roleList = opts.roles
+    .filter(r => roleLabels[r])
+    .map(r => `<li style="margin:4px 0;color:#475569;">${roleLabels[r]}</li>`)
+    .join("");
+
+  const htmlBody = emailWrapper(`
+    <h2 style="margin:0 0 8px;font-size:20px;color:${brandDark};font-family:Georgia,serif;">
+      Welcome to iHeartEcho™, ${opts.firstName}!
+    </h2>
+    <p style="margin:0 0 16px;font-size:15px;color:#475569;line-height:1.6;">
+      Your <strong>${opts.membershipLabel}</strong> account is ready. Click the button below
+      to sign in instantly &mdash; no password needed.
+    </p>
+    ${roleList ? `
+    <div style="background:#f0fbfc;border-left:3px solid ${brandColor};padding:12px 16px;border-radius:0 8px 8px 0;margin:0 0 20px;">
+      <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:${brandColor};">Your membership includes:</p>
+      <ul style="margin:0;padding-left:20px;font-size:14px;">
+        ${roleList}
+      </ul>
+    </div>` : ""}
+    <div style="text-align:center;margin:28px 0;">
+      <a href="${opts.magicUrl}"
+        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:16px;padding:16px 36px;border-radius:8px;text-decoration:none;" target="_blank" rel="noopener noreferrer">
+        Sign In to iHeartEcho™
+      </a>
+    </div>
+    <div style="background:#fff8ed;border-left:3px solid #f59e0b;padding:12px 16px;border-radius:0 8px 8px 0;margin:0 0 24px;">
+      <p style="margin:0;font-size:13px;color:#92400e;">
+        <strong>This sign-in link expires in 72 hours</strong> and can only be used once.
+        After signing in you can set a password from your profile, or continue using
+        magic links each time.
+      </p>
+    </div>
+    <p style="margin:0 0 8px;font-size:13px;color:#64748b;line-height:1.6;">
+      What you can do on iHeartEcho™:
+    </p>
+    <ul style="margin:0 0 20px;padding-left:20px;font-size:13px;color:#475569;line-height:1.8;">
+      <li>Daily echo challenges &amp; case library</li>
+      <li>Echo severity calculators (ASE 2025 guidelines)</li>
+      <li>Hemodynamics Lab &amp; ScanCoach™</li>
+      <li>EchoAssist™ clinical decision support</li>
+    </ul>
+    <p style="margin:0;font-size:13px;color:#94a3b8;line-height:1.5;">
+      If you have any questions, contact us at
+      <a href="mailto:support@iheartecho.com" style="color:${brandColor};" target="_blank" rel="noopener noreferrer">support@iheartecho.com</a>.
+    </p>
+    <p style="margin:12px 0 0;font-size:12px;color:#cbd5e1;">
+      Or copy and paste this URL into your browser:<br/>
+      <a href="${opts.magicUrl}" style="color:${brandColor};word-break:break-all;font-size:11px;" target="_blank" rel="noopener noreferrer">${opts.magicUrl}</a>
+    </p>
+  `);
+  return { subject, htmlBody, previewText };
+}

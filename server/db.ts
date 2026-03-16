@@ -316,6 +316,20 @@ export async function clearMagicLinkToken(userId: number): Promise<void> {
     .where(eq(users.id, userId));
 }
 
+/**
+ * Generate a magic link token for a welcome email.
+ * Uses a 72-hour expiry (longer than the usual 15-minute request-time token)
+ * to give new users time to see their welcome email and sign in.
+ * Returns the full magic link URL.
+ */
+export async function generateWelcomeMagicLink(userId: number): Promise<string> {
+  const crypto = await import('crypto');
+  const token = crypto.randomBytes(48).toString('hex');
+  const expiry = new Date(Date.now() + 72 * 60 * 60 * 1000); // 72 hours
+  await setMagicLinkToken(userId, token, expiry);
+  const appUrl = process.env.VITE_APP_URL || 'https://app.iheartecho.com';
+  return `${appUrl}/auth/magic?token=${token}`;
+}
 
 
 // ─── ACCREDITATION HELPERS ────────────────────────────────────────────────────

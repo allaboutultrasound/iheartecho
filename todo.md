@@ -457,3 +457,11 @@
 
 ## Member Count Floor Display (Mar 16 2026)
 - [x] Home.tsx: member count now displays 15,174 as a floor — shows real-time actual count only when it surpasses 15,174; shows 15,174 immediately on page load (no "..." flash) while the live query resolves
+
+## Welcome Email with Magic Link (Mar 16 2026)
+- [x] Add buildWelcomeWithMagicLinkEmail template to email.ts (72-hour magic link, role-aware content)
+- [x] Add generateWelcomeMagicLink(userId, email) helper to db.ts
+- [x] Update Thinkific webhook grantAccess to send welcome email for all direct iHeartEcho subscriptions (free, premium, DIY accreditation/education) — exclude All About Ultrasound free membership
+- [x] Only send on order.created and enrollment.created (not updated/activated re-activations)
+- [x] Add isDirectIHeartEchoProduct() filter function to clearly distinguish iHE direct vs AAU free
+- [x] Write tests for new welcome email logic and product filter
