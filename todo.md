@@ -451,3 +451,6 @@
 - [x] Build MergeAccountsPanel UI in PlatformAdmin.tsx — email search, row cards with account details (roles, pending status, created/last sign-in), survivor selection with star highlight, confirmation dialog with merge summary, success/error toasts
 - [x] Inserted between AddUserByEmailPanel and Bulk CSV section in PlatformAdmin page
 - [x] All 730 tests pass
+
+## ACS Description Update (Mar 16 2026)
+- [x] Profile interests: updated ACS description from "Acute care echo, ICU echo..." to "Advanced Cardiac Sonographer — advanced echo protocols, hemodynamic assessment, structural heart, and complex cardiac imaging."

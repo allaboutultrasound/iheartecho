@@ -994,7 +994,7 @@ export default function Profile() {
                   ) : (
                     <>
                       {([
-                        { key: "acs" as const, label: "ACS", description: "Acute care echo, ICU echo, hemodynamic assessment, and critical care applications.", icon: "🫀" },
+                        { key: "acs" as const, label: "ACS", description: "Advanced Cardiac Sonographer — advanced echo protocols, hemodynamic assessment, structural heart, and complex cardiac imaging.", icon: "🫀" },
                         { key: "adultEcho" as const, label: "Adult Echocardiography", description: "TTE, TEE, stress echo, valvular disease, cardiomyopathy, and adult structural heart.", icon: "❤️" },
                         { key: "pediatricEcho" as const, label: "Pediatric Echocardiography", description: "Congenital heart disease, CHD protocols, pediatric measurements, and neonatal echo.", icon: "🧒" },
                         { key: "fetalEcho" as const, label: "Fetal Echocardiography", description: "Fetal cardiac screening, CHD detection, biometry, and fetal hemodynamics.", icon: "🤰" },
