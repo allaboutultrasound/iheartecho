@@ -6,7 +6,7 @@
  * approve, or reject with a reason — all from within the preview modal.
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -587,6 +587,37 @@ export default function AdminCaseManagement() {
   // Editor dialog
   const [editorCaseId, setEditorCaseId] = useState<number | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
+  // Preserve window scroll position when dialogs close (Radix focus-return causes scroll jump)
+  const savedScrollY = useRef<number>(0);
+  const saveScroll = useCallback(() => { savedScrollY.current = window.scrollY; }, []);
+  const restoreScroll = useCallback(() => {
+    const y = savedScrollY.current;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: y, behavior: "instant" });
+      });
+    });
+  }, []);
+  const handleEditorOpen = useCallback((caseId: number) => {
+    saveScroll();
+    setEditorCaseId(caseId);
+    setEditorOpen(true);
+  }, [saveScroll]);
+  const handleEditorClose = useCallback(() => {
+    setEditorOpen(false);
+    setEditorCaseId(null);
+    restoreScroll();
+  }, [restoreScroll]);
+  const handlePreviewOpen = useCallback((caseId: number) => {
+    saveScroll();
+    setPreviewCaseId(caseId);
+    setPreviewOpen(true);
+  }, [saveScroll]);
+  const handlePreviewClose = useCallback(() => {
+    setPreviewOpen(false);
+    setPreviewCaseId(null);
+    restoreScroll();
+  }, [restoreScroll]);
 
   // Reject dialog
   const [rejectTarget, setRejectTarget] = useState<{ id: number; title: string } | null>(null);
@@ -887,7 +918,7 @@ export default function AdminCaseManagement() {
             size="sm"
             variant="ghost"
             className="h-8 w-8 p-0 text-gray-400 hover:text-[#189aa1]"
-            onClick={() => { setPreviewCaseId(c.id); setPreviewOpen(true); }}
+            onClick={() => handlePreviewOpen(c.id)}
             title="Preview full case"
           >
             <Eye className="w-4 h-4" />
@@ -896,7 +927,7 @@ export default function AdminCaseManagement() {
             size="sm"
             variant="ghost"
             className="h-8 w-8 p-0 text-gray-400 hover:text-purple-600"
-            onClick={() => { setEditorCaseId(c.id); setEditorOpen(true); }}
+            onClick={() => handleEditorOpen(c.id)}
             title="Edit case"
           >
             <Pencil className="w-4 h-4" />
@@ -1188,7 +1219,7 @@ export default function AdminCaseManagement() {
       <CasePreviewModal
         caseId={previewCaseId}
         open={previewOpen}
-        onClose={() => { setPreviewOpen(false); setPreviewCaseId(null); }}
+        onClose={handlePreviewClose}
         onApprove={handleApprove}
         onReject={(id, title) => { setRejectTarget({ id, title }); setRejectReason(""); }}
         isApproving={approveMutation.isPending}
@@ -1395,7 +1426,7 @@ export default function AdminCaseManagement() {
       <CaseEditorDialog
         caseId={editorCaseId}
         open={editorOpen}
-        onClose={() => { setEditorOpen(false); setEditorCaseId(null); }}
+        onClose={handleEditorClose}
         onSaved={() => {
           utils.caseLibrary.listAllCases.invalidate();
           utils.caseLibrary.listPendingCases.invalidate();

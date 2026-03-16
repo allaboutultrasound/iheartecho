@@ -417,3 +417,8 @@
 - [x] Add ICE to CaseEditorDialog.tsx modality selector
 - [x] Add ICE to AdminCaseManagement.tsx modality filter dropdown, AI generate selector, and MODALITY_COLORS
 - [x] Add ICE to SubmitCase.tsx MODALITIES list
+
+## Admin Case Edit Scroll Fix (Mar 15 2026)
+- [x] Fix: editing a case in AdminCaseManagement resets scroll to top — root cause: Radix Dialog focus-return scrolls the trigger button into view on close
+- [x] Fix: save window.scrollY before opening editor/preview dialogs, restore via double-rAF after close
+- [x] Fix: same scroll preservation applied to both the Edit (pencil) and Preview (eye) dialogs
