@@ -80,13 +80,19 @@ export const soundBytesRouter = router({
         .groupBy(soundByteViews.soundByteId);
       const viewMap = new Map(viewCounts.map((v) => [v.soundByteId, v.total]));
 
-      // Tag the first FREE_ITEM_COUNT items (by position in the sorted result) as free-tier
-      const FREE_ITEM_COUNT = 4;
-      return rows.map((r, index) => ({
-        ...r,
-        phantomViews: getPhantomViews(r.id, viewMap.get(r.id) ?? 0),
-        isFree: index < FREE_ITEM_COUNT,
-      }));
+      // Tag the FIRST item in each category as free-tier (1 free video per category).
+      // When a category filter is active, the first item in the filtered result is free.
+      // When showing "all" categories, the first item per category (by sort order) is free.
+      const seenCategories = new Set<string>();
+      return rows.map((r) => {
+        const isFirstInCategory = !seenCategories.has(r.category);
+        seenCategories.add(r.category);
+        return {
+          ...r,
+          phantomViews: getPhantomViews(r.id, viewMap.get(r.id) ?? 0),
+          isFree: isFirstInCategory,
+        };
+      });
     }),
 
   /** Get a single published SoundByte by ID (includes body + videoUrl) */

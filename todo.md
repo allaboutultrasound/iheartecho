@@ -465,3 +465,11 @@
 - [x] Only send on order.created and enrollment.created (not updated/activated re-activations)
 - [x] Add isDirectIHeartEchoProduct() filter function to clearly distinguish iHE direct vs AAU free
 - [x] Write tests for new welcome email logic and product filter
+
+## SoundBytes Per-Category 1-Video Gate (Mar 16 2026)
+- [x] Replace global isFree flag (first 4 items) with per-category first-item logic: first video in each category is free, rest are locked
+- [x] Track watched categories in client state; after watching 1 video per category, show upgrade modal/prompt instead of playing next
+- [x] Update FreeUserGrid to show first item per category as playable, rest locked
+- [x] Add upgrade prompt modal that fires when a free user tries to play a second video in a category they already watched one in
+- [x] Update banner copy to reflect new "1 per category" rule
+- [x] Write tests for per-category gate logic

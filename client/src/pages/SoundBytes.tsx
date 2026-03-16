@@ -1,9 +1,17 @@
 /**
  * SoundBytes™ — Premium micro-lesson video library
- * Filterable by clinical category. Premium gate for all content.
+ *
+ * Auth gate rules:
+ *   - Not logged in: blurred overlay with login prompt
+ *   - Logged in, free user:
+ *       • First video in each category is playable (isFree=true from server)
+ *       • After watching 1 video in a category, clicking any other video in that
+ *         same category shows an upgrade modal instead of playing
+ *       • All other locked videos show a lock overlay
+ *   - Premium user: full access to all videos
  */
 
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import Layout from "@/components/Layout";
@@ -22,13 +30,14 @@ import {
   MessageCircle,
   Send,
   Clock,
-  User,
   CheckCircle,
   Reply,
   ChevronDown,
   ChevronUp,
   Lock,
   HeartPulse,
+  X,
+  ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -59,6 +68,9 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 const PREMIUM_ROLES_SET = new Set(["premium_user", "diy_user", "diy_admin", "platform_admin"]);
 
+// localStorage key for persisting watched categories across sessions
+const WATCHED_CATEGORIES_KEY = "ihe_sb_watched_cats";
+
 // ── Video embed helper ─────────────────────────────────────────────────────────
 
 function getEmbedUrl(videoUrl: string): string | null {
@@ -80,6 +92,101 @@ function getEmbedUrl(videoUrl: string): string | null {
   return null;
 }
 
+// ── Upgrade Modal ──────────────────────────────────────────────────────────────
+
+interface UpgradeModalProps {
+  categoryLabel: string;
+  onClose: () => void;
+}
+
+function UpgradeModal({ categoryLabel, onClose }: UpgradeModalProps) {
+  // Close on Escape key
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: "rgba(14,30,46,0.75)", backdropFilter: "blur(4px)" }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div className="relative w-full max-w-md rounded-2xl overflow-hidden shadow-2xl">
+        {/* Header gradient */}
+        <div
+          className="px-6 pt-8 pb-6 text-center"
+          style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 100%)" }}
+        >
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 text-white/50 hover:text-white transition-colors"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <div
+            className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg"
+            style={{ background: "rgba(24,154,161,0.25)", border: "2px solid #189aa1" }}
+          >
+            <Crown className="w-7 h-7 text-[#4ad9e0]" />
+          </div>
+          <h2
+            className="text-xl font-black text-white mb-1"
+            style={{ fontFamily: "Merriweather, serif" }}
+          >
+            You've used your free {categoryLabel} video
+          </h2>
+          <p className="text-white/70 text-sm leading-relaxed">
+            Upgrade to iHeartEcho™ Premium to unlock every SoundByte™ in every category — unlimited access to the full clinical micro-lesson library.
+          </p>
+        </div>
+
+        {/* Body */}
+        <div className="bg-white px-6 py-5">
+          {/* Feature list */}
+          <ul className="space-y-2.5 mb-5">
+            {[
+              "All SoundBytes™ in every category",
+              "Full EchoAssist™ clinical decision support",
+              "500+ echo cases with gamified learning",
+              "DIY Accreditation tools & checklists",
+              "Unlimited Hemodynamics Lab access",
+            ].map((feat) => (
+              <li key={feat} className="flex items-center gap-2.5 text-sm text-gray-700">
+                <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: "#189aa1" }} />
+                {feat}
+              </li>
+            ))}
+          </ul>
+
+          <a
+            href="https://www.iheartecho.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl font-bold text-sm text-white transition-all hover:opacity-90 shadow-md"
+            style={{ background: "linear-gradient(90deg, #189aa1, #0e4a50)" }}
+          >
+            <Crown className="w-4 h-4" />
+            Upgrade to Premium
+            <ExternalLink className="w-3.5 h-3.5 opacity-70" />
+          </a>
+
+          <button
+            onClick={onClose}
+            className="mt-3 w-full py-2.5 rounded-xl text-sm font-semibold text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-all"
+          >
+            Maybe later
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export default function SoundBytesPage() {
@@ -93,7 +200,21 @@ export default function SoundBytesPage() {
   const [activeCategory, setActiveCategory] = useState<CategoryId>("all");
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
-  // Fetch list (public procedure — returns published items)
+  // Track which categories the free user has already watched a video in.
+  // Persisted to localStorage so the gate survives page refreshes.
+  const [watchedCategories, setWatchedCategories] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem(WATCHED_CATEGORIES_KEY);
+      return stored ? new Set(JSON.parse(stored) as string[]) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+
+  // Upgrade modal state: holds the category label to display in the modal
+  const [upgradeModalCategory, setUpgradeModalCategory] = useState<string | null>(null);
+
+  // Fetch list (public procedure — returns published items with isFree per category)
   const { data: items = [], isLoading } = trpc.soundBytes.list.useQuery({
     category: activeCategory === "all" ? undefined : activeCategory,
   });
@@ -140,13 +261,54 @@ export default function SoundBytesPage() {
     });
   }
 
-  function handleSelect(id: number) {
-    const item = items.find((i) => i.id === id);
-    const itemIsFree = item?.isFree ?? false;
-    setSelectedId(id);
-    if (isPremium || (isAuthenticated && itemIsFree)) {
-      recordView.mutate({ soundByteId: id, watchedSeconds: 0, completed: false });
+  /**
+   * Mark a category as watched and persist to localStorage.
+   * Called when a free user successfully plays a video.
+   */
+  function markCategoryWatched(category: string) {
+    if (watchedCategories.has(category)) return;
+    const next = new Set(watchedCategories);
+    next.add(category);
+    setWatchedCategories(next);
+    try {
+      localStorage.setItem(WATCHED_CATEGORIES_KEY, JSON.stringify([...next]));
+    } catch {
+      // localStorage unavailable — in-memory only
     }
+  }
+
+  /**
+   * Handle a card click for a free user.
+   *
+   * Rules:
+   *   1. If the item is free (isFree=true from server) AND the user hasn't watched
+   *      this category yet → play it and mark the category as watched.
+   *   2. If the item is free but the user HAS already watched this category →
+   *      show the upgrade modal (they've used their 1 free video for this category).
+   *   3. If the item is locked (not free) → show the upgrade modal immediately.
+   */
+  function handleFreeUserSelect(id: number) {
+    const item = items.find((i) => i.id === id);
+    if (!item) return;
+
+    const itemIsFree = item.isFree ?? false;
+    const alreadyWatchedCategory = watchedCategories.has(item.category);
+
+    if (itemIsFree && !alreadyWatchedCategory) {
+      // Allow play — this is their 1 free video for this category
+      setSelectedId(id);
+      markCategoryWatched(item.category);
+      recordView.mutate({ soundByteId: id, watchedSeconds: 0, completed: false });
+    } else {
+      // Either locked or they've already used their free video in this category
+      const label = CATEGORY_LABELS[item.category] ?? item.category;
+      setUpgradeModalCategory(label);
+    }
+  }
+
+  function handlePremiumSelect(id: number) {
+    setSelectedId(id);
+    recordView.mutate({ soundByteId: id, watchedSeconds: 0, completed: false });
   }
 
   // ── Blurred preview items for non-premium users ────────────────────────────
@@ -162,6 +324,14 @@ export default function SoundBytesPage() {
 
   return (
     <Layout>
+      {/* Upgrade modal — rendered at top level so it overlays everything */}
+      {upgradeModalCategory && (
+        <UpgradeModal
+          categoryLabel={upgradeModalCategory}
+          onClose={() => setUpgradeModalCategory(null)}
+        />
+      )}
+
       {/* Hero Banner */}
       <div className="relative overflow-hidden" style={{ minHeight: 220 }}>
         <img
@@ -238,7 +408,7 @@ export default function SoundBytesPage() {
           </BlurredOverlay>
         )}
 
-        {/* Free user: back button when viewing a free item detail */}
+        {/* Free user: detail view of their free video */}
         {isAuthenticated && !isPremium && selectedId !== null && canViewSelected && selected && (
           <div className="max-w-3xl mx-auto">
             <button
@@ -284,7 +454,7 @@ export default function SoundBytesPage() {
                   <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "#189aa115", color: "#189aa1" }}>
                     {CATEGORY_LABELS[selected.category] ?? selected.category}
                   </span>
-                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600">Free</span>
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600">Free Preview</span>
                   <span className="text-xs text-gray-400 flex items-center gap-1">
                     <Eye className="w-3 h-3" />
                     {(selected.phantomViews ?? selected.displayViews ?? 0).toLocaleString()} views
@@ -295,12 +465,12 @@ export default function SoundBytesPage() {
             {selected.body && (
               <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed mb-8" dangerouslySetInnerHTML={{ __html: selected.body }} />
             )}
-            {/* Upgrade CTA */}
+            {/* Upgrade CTA — inline after watching the free video */}
             <div className="mt-6 rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4" style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}>
               <div className="flex-1">
-                <p className="text-xs font-semibold text-[#4ad9e0] uppercase tracking-wider mb-1">Upgrade to Premium</p>
-                <p className="text-white font-bold text-sm">Unlock all SoundBytes™ micro-lessons</p>
-                <p className="text-white/60 text-xs mt-0.5">Access the full library of clinical echo micro-lessons.</p>
+                <p className="text-xs font-semibold text-[#4ad9e0] uppercase tracking-wider mb-1">You've used your free {CATEGORY_LABELS[selected.category] ?? selected.category} video</p>
+                <p className="text-white font-bold text-sm">Upgrade to unlock all SoundBytes™</p>
+                <p className="text-white/60 text-xs mt-0.5">Get unlimited access to the full clinical echo micro-lesson library.</p>
               </div>
               <a href="https://www.iheartecho.com" target="_blank" rel="noopener noreferrer"
                 className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
@@ -311,25 +481,26 @@ export default function SoundBytesPage() {
           </div>
         )}
 
-        {/* Gate: logged in but not premium — show free items + blurred premium items */}
+        {/* Gate: logged in but not premium — show grid with per-category gate */}
         {isAuthenticated && !isPremium && selectedId === null && (
           <FreeUserGrid
             items={items}
             isLoading={isLoading}
-            onSelect={handleSelect}
+            onSelect={handleFreeUserSelect}
             previewItems={PREVIEW_ITEMS}
+            watchedCategories={watchedCategories}
           />
         )}
 
-        {/* Free user viewing a free item detail */}
+        {/* Free user tried to view a locked item (shouldn't normally reach here — modal fires first) */}
         {isAuthenticated && !isPremium && selectedId !== null && !canViewSelected && (
           <BlurredOverlay type="premium" featureName="SoundBytes™">
             <SoundBytesPreviewGrid items={PREVIEW_ITEMS} />
           </BlurredOverlay>
         )}
 
-        {/* Content visible to premium OR free user on a free item */}
-        {(isPremium || (isAuthenticated && canViewSelected)) && (
+        {/* Content visible to premium users */}
+        {isPremium && (
           <>
             {/* Detail view */}
             {selectedId !== null && selected && (
@@ -506,17 +677,12 @@ export default function SoundBytesPage() {
                 {!isLoading && items.length > 0 && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {items.map((item) => {
-                      const itemIsFree = item.isFree ?? false;
-                      const isLocked = !isPremium && isAuthenticated && !itemIsFree;
+                      const isLocked = false; // Premium users see everything unlocked
                       return (
                         <button
                           key={item.id}
-                          onClick={() => handleSelect(item.id)}
-                          className={`bg-white rounded-xl border overflow-hidden text-left group transition-all ${
-                            isLocked
-                              ? "border-gray-100 opacity-70 cursor-pointer hover:opacity-90"
-                              : "border-gray-100 hover:shadow-md hover:border-[#189aa1]/20"
-                          }`}
+                          onClick={() => handlePremiumSelect(item.id)}
+                          className="bg-white rounded-xl border border-gray-100 overflow-hidden text-left group transition-all hover:shadow-md hover:border-[#189aa1]/20"
                         >
                           {/* Thumbnail */}
                           <div className="aspect-video bg-gradient-to-br from-[#0e1e2e] to-[#0e4a50] relative overflow-hidden">
@@ -524,7 +690,7 @@ export default function SoundBytesPage() {
                               <img
                                 src={item.thumbnailUrl}
                                 alt={item.title}
-                                className={`w-full h-full object-cover ${isLocked ? "brightness-50" : ""}`}
+                                className="w-full h-full object-cover"
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
@@ -536,32 +702,15 @@ export default function SoundBytesPage() {
                                 </div>
                               </div>
                             )}
-                            {/* Free badge */}
-                            {itemIsFree && (
-                              <span className="absolute top-2 left-2 text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-white shadow">
-                                Free
-                              </span>
-                            )}
-                            {/* Lock overlay for premium items shown to free users */}
-                            {isLocked && (
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                                <div className="flex flex-col items-center gap-1">
-                                  <Lock className="w-7 h-7 text-white/80" />
-                                  <span className="text-xs text-white/70 font-semibold">Premium</span>
-                                </div>
+                            {/* Play overlay on hover */}
+                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <div
+                                className="w-12 h-12 rounded-full flex items-center justify-center"
+                                style={{ background: "#189aa1" }}
+                              >
+                                <Play className="w-5 h-5 text-white fill-white ml-0.5" />
                               </div>
-                            )}
-                            {/* Play overlay on hover (non-locked) */}
-                            {!isLocked && (
-                              <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                <div
-                                  className="w-12 h-12 rounded-full flex items-center justify-center"
-                                  style={{ background: "#189aa1" }}
-                                >
-                                  <Play className="w-5 h-5 text-white fill-white ml-0.5" />
-                                </div>
-                              </div>
-                            )}
+                            </div>
                           </div>
 
                           {/* Info */}
@@ -749,7 +898,12 @@ function DiscussionThread({ discussion, isExpanded, onToggleReplies }: Discussio
 }
 
 
-// ── FreeUserGrid — shown to logged-in free users: free items playable, rest locked ──
+// ── FreeUserGrid — shown to logged-in free users ───────────────────────────────
+//
+// Gate logic:
+//   • isFree=true AND category not yet watched → playable (green "Free" badge)
+//   • isFree=true AND category already watched → shows "1 used" badge, clicking fires upgrade modal
+//   • isFree=false → locked (lock overlay), clicking fires upgrade modal
 
 interface FreeUserGridProps {
   items: Array<{
@@ -764,9 +918,10 @@ interface FreeUserGridProps {
   isLoading: boolean;
   onSelect: (id: number) => void;
   previewItems: { title: string; category: string }[];
+  watchedCategories: Set<string>;
 }
 
-function FreeUserGrid({ items, isLoading, onSelect, previewItems }: FreeUserGridProps) {
+function FreeUserGrid({ items, isLoading, onSelect, previewItems, watchedCategories }: FreeUserGridProps) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -791,7 +946,7 @@ function FreeUserGrid({ items, isLoading, onSelect, previewItems }: FreeUserGrid
       <div className="mb-5 rounded-xl px-4 py-3 flex items-center gap-3" style={{ background: "linear-gradient(90deg, #0e1e2e, #0e4a50)" }}>
         <Crown className="w-5 h-5 text-[#4ad9e0] flex-shrink-0" />
         <div className="flex-1">
-          <p className="text-white text-sm font-semibold">Free Access: First 4 SoundBytes™</p>
+          <p className="text-white text-sm font-semibold">Free Access: 1 SoundByte™ per category</p>
           <p className="text-white/60 text-xs">Upgrade to Premium to unlock the full library of clinical echo micro-lessons.</p>
         </div>
         <a href="https://www.iheartecho.com" target="_blank" rel="noopener noreferrer"
@@ -804,13 +959,23 @@ function FreeUserGrid({ items, isLoading, onSelect, previewItems }: FreeUserGrid
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {displayItems.map((item) => {
           const itemIsFree = item.isFree ?? false;
-          const isLocked = !itemIsFree;
+          const categoryWatched = watchedCategories.has(item.category);
+          // Playable = first in category AND category not yet watched
+          const isPlayable = itemIsFree && !categoryWatched;
+          // Soft-locked = first in category but already watched (used their 1 free)
+          const isSoftLocked = itemIsFree && categoryWatched;
+          // Hard-locked = not the first in category
+          const isHardLocked = !itemIsFree;
+          const isLocked = isSoftLocked || isHardLocked;
+
           return (
             <button
               key={item.id}
-              onClick={() => itemIsFree && item.id > 0 ? onSelect(item.id) : undefined}
+              onClick={() => item.id > 0 ? onSelect(item.id) : undefined}
               className={`bg-white rounded-xl border overflow-hidden text-left group transition-all ${
-                isLocked ? "border-gray-100 cursor-default" : "border-gray-100 hover:shadow-md hover:border-[#189aa1]/20 cursor-pointer"
+                isPlayable
+                  ? "border-gray-100 hover:shadow-md hover:border-[#189aa1]/20 cursor-pointer"
+                  : "border-gray-100 cursor-pointer hover:opacity-90"
               }`}
             >
               <div className="aspect-video bg-gradient-to-br from-[#0e1e2e] to-[#0e4a50] relative overflow-hidden">
@@ -827,27 +992,47 @@ function FreeUserGrid({ items, isLoading, onSelect, previewItems }: FreeUserGrid
                     </div>
                   </div>
                 )}
-                {/* Free badge */}
-                {itemIsFree && (
+
+                {/* Playable: green Free badge */}
+                {isPlayable && (
                   <span className="absolute top-2 left-2 text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-white shadow">
                     Free
                   </span>
                 )}
-                {/* Lock overlay */}
+
+                {/* Soft-locked: amber "1 used" badge — they've watched this category */}
+                {isSoftLocked && (
+                  <span className="absolute top-2 left-2 text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500 text-white shadow flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" />
+                    Watched
+                  </span>
+                )}
+
+                {/* Lock overlay for all locked items */}
                 {isLocked && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/40">
                     <div className="flex flex-col items-center gap-1">
-                      <Lock className="w-7 h-7 text-white/80" />
-                      <span className="text-xs text-white/70 font-semibold">Premium</span>
+                      <Crown className="w-6 h-6 text-amber-400" />
+                      <span className="text-xs text-white/80 font-semibold">Premium</span>
                     </div>
                   </div>
                 )}
-                {/* Play overlay on hover (free items only) */}
-                {itemIsFree && (
+
+                {/* Play overlay on hover (playable items only) */}
+                {isPlayable && (
                   <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: "#189aa1" }}>
                       <Play className="w-5 h-5 text-white fill-white ml-0.5" />
                     </div>
+                  </div>
+                )}
+
+                {/* Upgrade prompt overlay on hover (locked items) */}
+                {isLocked && (
+                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <span className="text-xs text-white font-bold bg-[#189aa1] px-3 py-1.5 rounded-full shadow">
+                      Upgrade to watch
+                    </span>
                   </div>
                 )}
               </div>
@@ -859,7 +1044,7 @@ function FreeUserGrid({ items, isLoading, onSelect, previewItems }: FreeUserGrid
                   <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: "#189aa115", color: "#189aa1" }}>
                     {CATEGORY_LABELS[item.category as keyof typeof CATEGORY_LABELS] ?? item.category}
                   </span>
-                  {!isLocked && (
+                  {isPlayable && (
                     <span className="text-xs text-gray-400 flex items-center gap-1">
                       <Eye className="w-3 h-3" />
                       {(item.phantomViews ?? item.displayViews ?? 0).toLocaleString()}
