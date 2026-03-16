@@ -438,3 +438,9 @@
 - [x] Fix: createPendingUser now checks for existing row (any casing) BEFORE inserting — idempotent, returns existing id if found
 - [x] Cleanup: merged duplicate rows for mbrentmatthew@gmail.com (id 1291563 kept, 1291564 deleted, roles consolidated)
 - [x] All 730 tests pass
+
+## DB-Level Unique Email Index (Mar 16 2026)
+- [x] Bulk dedup: found 111 duplicate email groups (3249 initially reported was a query artifact); deleted 114 duplicate user rows, roles reassigned to surviving rows
+- [x] Created UNIQUE INDEX users_email_lower_unique ON users ((LOWER(email))) — case-insensitive, DB-enforced
+- [x] Verified: duplicate insert of same email with different casing correctly rejected with ER_DUP_ENTRY
+- [x] All 730 tests pass
