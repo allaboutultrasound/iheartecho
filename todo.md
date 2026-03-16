@@ -430,3 +430,11 @@
 - [x] Loading state shown during generation; Regenerate button available after first generation
 - [x] AI panel dismissible with X button; clears state on dialog close
 - [x] All 730 tests pass
+
+## Duplicate User Account Bug Fix (Mar 16 2026)
+- [x] Root cause: race condition between Thinkific user.signup and enrollment.created webhooks firing 3ms apart — both passed getUserByEmail check before either INSERT completed
+- [x] Root cause 2: getUserByEmail was case-sensitive (eq() exact match) — Thinkific email casing differences could bypass the existing-user check
+- [x] Fix: getUserByEmail now uses LOWER() for case-insensitive match, prefers real accounts over pending stubs via ORDER BY isPending ASC
+- [x] Fix: createPendingUser now checks for existing row (any casing) BEFORE inserting — idempotent, returns existing id if found
+- [x] Cleanup: merged duplicate rows for mbrentmatthew@gmail.com (id 1291563 kept, 1291564 deleted, roles consolidated)
+- [x] All 730 tests pass

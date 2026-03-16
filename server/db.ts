@@ -1,4 +1,4 @@
-import { and, avg, count, desc, eq, gte, inArray, like, lte, or, sql } from "drizzle-orm";
+import { and, asc, avg, count, desc, eq, gte, inArray, like, lte, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   InsertUser,
@@ -241,7 +241,12 @@ export async function clearPendingEmail(userId: number): Promise<void> {
 export async function getUserByEmail(email: string) {
   const db = await getDb();
   if (!db) return undefined;
-  const rows = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  // Case-insensitive match — Thinkific may send emails with different casing
+  const normalised = email.trim().toLowerCase();
+  const rows = await db.select().from(users)
+    .where(sql`LOWER(${users.email}) = ${normalised}`)
+    .orderBy(asc(users.isPending), asc(users.id)) // prefer real accounts over pending stubs
+    .limit(1);
   return rows[0];
 }
 
@@ -1980,6 +1985,19 @@ export async function createPendingUser(email: string): Promise<number> {
   const db = await getDb();
   if (!db) throw new Error("DB unavailable");
   const normalised = email.trim().toLowerCase();
+
+  // ── Idempotency guard: return existing row if one already exists ──────────
+  // This prevents duplicate rows when two webhooks arrive simultaneously
+  // (e.g. user.signup + enrollment.created both fire within milliseconds).
+  const existing = await db.select({ id: users.id }).from(users)
+    .where(sql`LOWER(${users.email}) = ${normalised}`)
+    .orderBy(asc(users.isPending), asc(users.id)) // prefer real accounts over pending stubs
+    .limit(1);
+  if (existing[0]) {
+    console.log(`[createPendingUser] Returning existing user row for ${normalised} (id=${existing[0].id})`);
+    return existing[0].id;
+  }
+
   // Generate a unique synthetic openId so the NOT NULL constraint is satisfied
   const syntheticOpenId = `pending_${normalised}_${Date.now()}`;
   await db.insert(users).values({
