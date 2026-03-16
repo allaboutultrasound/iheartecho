@@ -47,12 +47,12 @@ import { toast } from "sonner";
 const CATEGORIES = [
   { id: "all", label: "All", icon: BookOpen },
   { id: "acs", label: "ACS", icon: Stethoscope },
-  { id: "adult_echo", label: "Adult Echo", icon: Activity },
+  { id: "adult_echo", label: "Adult Echo", icon: HeartPulse },
   { id: "pediatric_echo", label: "Pediatric Echo", icon: Stethoscope },
   { id: "fetal_echo", label: "Fetal Echo", icon: Baby },
   { id: "pocus", label: "POCUS", icon: Zap },
   { id: "physics", label: "Physics", icon: Microscope },
-  { id: "ecg", label: "ECG", icon: HeartPulse },
+  { id: "ecg", label: "ECG", icon: Activity },
 ] as const;
 
 type CategoryId = (typeof CATEGORIES)[number]["id"];

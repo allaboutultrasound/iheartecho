@@ -482,3 +482,4 @@
 - [x] Add admin view to see A/B test results (impressions, clicks, CTR per variant)
 - [x] Write tests for variant assignment, determinism, and event tracking
 - [x] Add small "growing library — check back weekly" notice to SoundBytes page
+- [x] Swap SVG icons for Adult Echo and ECG categories in SoundBytes
