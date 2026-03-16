@@ -14,6 +14,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
+import { useAbTest } from "@/hooks/useAbTest";
 import Layout from "@/components/Layout";
 import { BlurredOverlay } from "@/components/BlurredOverlay";
 import {
@@ -93,13 +94,27 @@ function getEmbedUrl(videoUrl: string): string | null {
 }
 
 // ── Upgrade Modal ──────────────────────────────────────────────────────────────
+//
+// A/B Test: "soundbytes_upgrade_modal"
+//   Variant A (control)  — standard copy, no pricing callout
+//   Variant B (pricing)  — adds "Most popular: Annual Premium" pricing card
+//                          with price, savings badge, and direct checkout CTA
+
+const CHECKOUT_URL = "https://member.allaboutultrasound.com/enroll/3703267?price_id=4651832";
+const MONTHLY_PRICE = "$9.99";
+// Annual plan pricing — update these when Thinkific pricing changes
+const ANNUAL_PRICE_PER_MONTH = "$6.99";
+const ANNUAL_TOTAL = "$83.88";
+const ANNUAL_SAVINGS_PCT = "30%";
 
 interface UpgradeModalProps {
   categoryLabel: string;
   onClose: () => void;
+  onCtaClick: () => void;
+  variant: "A" | "B";
 }
 
-function UpgradeModal({ categoryLabel, onClose }: UpgradeModalProps) {
+function UpgradeModal({ categoryLabel, onClose, onCtaClick, variant }: UpgradeModalProps) {
   // Close on Escape key
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -108,6 +123,14 @@ function UpgradeModal({ categoryLabel, onClose }: UpgradeModalProps) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  const FEATURES = [
+    "All SoundBytes™ in every category",
+    "Full EchoAssist™ clinical decision support",
+    "500+ echo cases with gamified learning",
+    "DIY Accreditation tools & checklists",
+    "Unlimited Hemodynamics Lab access",
+  ];
 
   return (
     <div
@@ -147,15 +170,44 @@ function UpgradeModal({ categoryLabel, onClose }: UpgradeModalProps) {
 
         {/* Body */}
         <div className="bg-white px-6 py-5">
+
+          {/* ── Variant B: Annual pricing callout ─────────────────────────── */}
+          {variant === "B" && (
+            <div className="mb-4 rounded-xl overflow-hidden border-2 border-[#189aa1] shadow-sm">
+              {/* Most popular badge */}
+              <div
+                className="flex items-center justify-center gap-1.5 py-1.5 text-xs font-bold text-white"
+                style={{ background: "#189aa1" }}
+              >
+                <Crown className="w-3 h-3" />
+                Most popular
+              </div>
+              <div className="px-4 py-3 bg-[#f0fbfc]">
+                <div className="flex items-baseline justify-between">
+                  <div>
+                    <span className="text-2xl font-black text-gray-900">{ANNUAL_PRICE_PER_MONTH}</span>
+                    <span className="text-sm text-gray-500 ml-1">/mo</span>
+                  </div>
+                  <span
+                    className="text-xs font-bold px-2 py-1 rounded-full text-white"
+                    style={{ background: "#d97706" }}
+                  >
+                    Save {ANNUAL_SAVINGS_PCT}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Billed annually — {ANNUAL_TOTAL}/year
+                </p>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  vs {MONTHLY_PRICE}/mo billed monthly
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Feature list */}
           <ul className="space-y-2.5 mb-5">
-            {[
-              "All SoundBytes™ in every category",
-              "Full EchoAssist™ clinical decision support",
-              "500+ echo cases with gamified learning",
-              "DIY Accreditation tools & checklists",
-              "Unlimited Hemodynamics Lab access",
-            ].map((feat) => (
+            {FEATURES.map((feat) => (
               <li key={feat} className="flex items-center gap-2.5 text-sm text-gray-700">
                 <CheckCircle className="w-4 h-4 flex-shrink-0" style={{ color: "#189aa1" }} />
                 {feat}
@@ -163,21 +215,36 @@ function UpgradeModal({ categoryLabel, onClose }: UpgradeModalProps) {
             ))}
           </ul>
 
+          {/* CTA button */}
           <a
-            href="https://www.iheartecho.com"
+            href={CHECKOUT_URL}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={onCtaClick}
             className="flex items-center justify-center gap-2 w-full py-3 rounded-xl font-bold text-sm text-white transition-all hover:opacity-90 shadow-md"
             style={{ background: "linear-gradient(90deg, #189aa1, #0e4a50)" }}
           >
             <Crown className="w-4 h-4" />
-            Upgrade to Premium
+            {variant === "B" ? "Get Annual Premium" : "Upgrade to Premium"}
             <ExternalLink className="w-3.5 h-3.5 opacity-70" />
           </a>
 
+          {/* Variant B: secondary monthly option */}
+          {variant === "B" && (
+            <a
+              href={CHECKOUT_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={onCtaClick}
+              className="mt-2 flex items-center justify-center w-full py-2.5 rounded-xl text-xs font-semibold text-gray-500 hover:text-[#189aa1] hover:bg-gray-50 transition-all"
+            >
+              Or pay {MONTHLY_PRICE}/month
+            </a>
+          )}
+
           <button
             onClick={onClose}
-            className="mt-3 w-full py-2.5 rounded-xl text-sm font-semibold text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-all"
+            className="mt-2 w-full py-2.5 rounded-xl text-sm font-semibold text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-all"
           >
             Maybe later
           </button>
@@ -211,8 +278,19 @@ export default function SoundBytesPage() {
     }
   });
 
+  // A/B test for the upgrade modal
+  const { variant: abVariant, trackImpression: trackAbImpression, trackClick: trackAbClick } =
+    useAbTest("soundbytes_upgrade_modal");
+
   // Upgrade modal state: holds the category label to display in the modal
   const [upgradeModalCategory, setUpgradeModalCategory] = useState<string | null>(null);
+
+  // Track impression when the modal opens
+  useEffect(() => {
+    if (upgradeModalCategory !== null) {
+      trackAbImpression({ category: upgradeModalCategory });
+    }
+  }, [upgradeModalCategory]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch list (public procedure — returns published items with isFree per category)
   const { data: items = [], isLoading } = trpc.soundBytes.list.useQuery({
@@ -329,6 +407,8 @@ export default function SoundBytesPage() {
         <UpgradeModal
           categoryLabel={upgradeModalCategory}
           onClose={() => setUpgradeModalCategory(null)}
+          onCtaClick={() => trackAbClick({ category: upgradeModalCategory })}
+          variant={abVariant}
         />
       )}
 
@@ -397,6 +477,14 @@ export default function SoundBytesPage() {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Growing library notice */}
+      <div className="container pt-3 pb-0">
+        <p className="text-xs text-gray-400 flex items-center gap-1.5">
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#4ad9e0] animate-pulse flex-shrink-0" />
+          Our library is growing — check back weekly for new SoundBytes™.
+        </p>
       </div>
 
       {/* Main content */}

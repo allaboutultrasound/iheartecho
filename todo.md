@@ -473,3 +473,12 @@
 - [x] Add upgrade prompt modal that fires when a free user tries to play a second video in a category they already watched one in
 - [x] Update banner copy to reflect new "1 per category" rule
 - [x] Write tests for per-category gate logic
+
+## SoundBytes Upgrade Modal A/B Test (Mar 16 2026)
+- [x] Create useAbTest hook that deterministically assigns variant A or B per user (stored in localStorage)
+- [x] Variant A (control): current modal copy — no pricing callout
+- [x] Variant B (pricing): adds "Most popular: Annual Premium" callout with price, savings badge, and CTA
+- [x] Track variant impression and CTA click events via analytics (trpc mutation or analytics endpoint)
+- [x] Add admin view to see A/B test results (impressions, clicks, CTR per variant)
+- [x] Write tests for variant assignment, determinism, and event tracking
+- [x] Add small "growing library — check back weekly" notice to SoundBytes page

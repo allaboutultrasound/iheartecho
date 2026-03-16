@@ -2538,3 +2538,19 @@ export const soundByteDiscussionReplies = mysqlTable("soundByteDiscussionReplies
 });
 export type SoundByteDiscussionReply = typeof soundByteDiscussionReplies.$inferSelect;
 export type InsertSoundByteDiscussionReply = typeof soundByteDiscussionReplies.$inferInsert;
+
+// ─── A/B Test Events ──────────────────────────────────────────────────────────
+// Tracks impressions and CTA clicks for A/B tests (e.g. SoundBytes upgrade modal).
+// Each row is one event: either "impression" (modal shown) or "click" (CTA clicked).
+export const abTestEvents = mysqlTable("abTestEvents", {
+  id: int("id").autoincrement().primaryKey(),
+  testId: varchar("testId", { length: 64 }).notNull(),       // e.g. "soundbytes_upgrade_modal"
+  variant: varchar("variant", { length: 16 }).notNull(),     // "A" or "B"
+  event: mysqlEnum("event", ["impression", "click"]).notNull(),
+  userId: int("userId"),                                      // null for anonymous
+  sessionId: varchar("sessionId", { length: 64 }),           // localStorage session id
+  meta: text("meta"),                                         // optional JSON (category, page, etc.)
+  createdAt: bigint("createdAt", { mode: "number" }).notNull(),
+});
+export type AbTestEvent = typeof abTestEvents.$inferSelect;
+export type InsertAbTestEvent = typeof abTestEvents.$inferInsert;

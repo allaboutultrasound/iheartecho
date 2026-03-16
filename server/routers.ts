@@ -20,6 +20,7 @@ import { educatorRouter } from "./routers/educatorRouter";
 import { leaderboardRouter } from "./routers/leaderboardRouter";
 import { emailCampaignRouter } from "./routers/emailCampaignRouter";
 import { soundBytesRouter } from "./routers/soundBytesRouter";
+import { abTestRouter } from "./routers/abTestRouter";
 import {
   getUserById,
   getUsersByIds,
@@ -1834,6 +1835,7 @@ export const appRouter = router({
   // ─── Leaderboard & Points System ─────────────────────────────────────────────
   leaderboard: leaderboardRouter,
   soundBytes: soundBytesRouter,
+  abTest: abTestRouter,
 
   // ─── Physician Over-Read Workflow (Step 1 & Step 2) ──────────────────────────
   physicianOverRead: router({
