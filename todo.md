@@ -444,3 +444,10 @@
 - [x] Created UNIQUE INDEX users_email_lower_unique ON users ((LOWER(email))) — case-insensitive, DB-enforced
 - [x] Verified: duplicate insert of same email with different casing correctly rejected with ER_DUP_ENTRY
 - [x] All 730 tests pass
+
+## Merge Duplicate Accounts Tool (Mar 16 2026)
+- [x] Add tRPC procedure: platformAdmin.findDuplicatesByEmail — returns all user rows for a given email (case-insensitive), includes roles, pending status, created/lastSignedIn dates
+- [x] Add tRPC procedure: platformAdmin.mergeUsers — takes survivorId + duplicateIds, reassigns all FK references across all tables (userRoles, quickfireAttempts, quickfireDailySets, echoLibraryProgress, caseViewEvents, caseRatings, peerReviews, physicianOverReadRequests, labSeats, labSeatAssignments, userNotifications, echoReportDrafts, userCmeProgress, labAccreditationSubmissions), then deletes duplicates
+- [x] Build MergeAccountsPanel UI in PlatformAdmin.tsx — email search, row cards with account details (roles, pending status, created/last sign-in), survivor selection with star highlight, confirmation dialog with merge summary, success/error toasts
+- [x] Inserted between AddUserByEmailPanel and Bulk CSV section in PlatformAdmin page
+- [x] All 730 tests pass

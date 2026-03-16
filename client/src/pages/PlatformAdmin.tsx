@@ -59,6 +59,11 @@ import {
   Webhook,
   FlaskConical,
   Play,
+  GitMerge,
+  AlertTriangle,
+  CheckCircle,
+  Loader2,
+  Star,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import BulkCsvUploadPanel, { type BulkResult } from "@/components/BulkCsvUploadPanel";
@@ -624,6 +629,256 @@ function DIYOrgsPanel() {
   );
 }
 
+// ─── Merge Accounts Panel ───────────────────────────────────────────────────
+
+type DuplicateRow = {
+  id: number;
+  email: string | null;
+  name: string | null;
+  isPending: boolean;
+  openId: string | null;
+  createdAt: Date;
+  lastSignedIn: Date;
+  roles: string[];
+};
+
+function MergeAccountsPanel() {
+  const [email, setEmail] = useState("");
+  const [searchEmail, setSearchEmail] = useState("");
+  const [survivorId, setSurvivorId] = useState<number | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const { data, isFetching, error } = trpc.platformAdmin.findDuplicatesByEmail.useQuery(
+    { email: searchEmail },
+    { enabled: !!searchEmail && searchEmail.includes("@") },
+  );
+
+  const utils = trpc.useUtils();
+  const mergeMutation = trpc.platformAdmin.mergeUsers.useMutation({
+    onSuccess: (result) => {
+      toast.success(
+        `Merged ${result.deletedIds.length} duplicate row${result.deletedIds.length !== 1 ? "s" : ""} into account #${result.survivorId}. ${result.tablesUpdated} tables updated.`
+      );
+      setEmail("");
+      setSearchEmail("");
+      setSurvivorId(null);
+      setConfirmOpen(false);
+      utils.platformAdmin.listUsers.invalidate();
+    },
+    onError: (err) => {
+      toast.error(`Merge failed: ${err.message}`);
+      setConfirmOpen(false);
+    },
+  });
+
+  const rows: DuplicateRow[] = data?.rows ?? [];
+  const duplicateIds = rows.filter(r => r.id !== survivorId).map(r => r.id);
+  const survivor = rows.find(r => r.id === survivorId);
+  const hasDuplicates = rows.length > 1;
+
+  const handleSearch = () => {
+    const trimmed = email.trim().toLowerCase();
+    if (!trimmed || !trimmed.includes("@")) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+    setSurvivorId(null);
+    setSearchEmail(trimmed);
+  };
+
+  return (
+    <Card className="mb-6 border-0 shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base font-semibold text-gray-800 flex items-center gap-2">
+          <GitMerge className="w-4 h-4 text-[#189aa1]" />
+          Merge Duplicate Accounts
+        </CardTitle>
+        <p className="text-xs text-gray-500 mt-0.5">
+          Search by email to find duplicate user rows, choose which account to keep as the survivor, and merge all data (roles, progress, cases) into it.
+        </p>
+      </CardHeader>
+      <CardContent className="pt-0 space-y-4">
+        {/* Email search */}
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              type="email"
+              placeholder="user@example.com"
+              value={email}
+              onChange={e => {
+                setEmail(e.target.value);
+                if (searchEmail) { setSearchEmail(""); setSurvivorId(null); }
+              }}
+              onKeyDown={e => e.key === "Enter" && handleSearch()}
+              className="pl-9"
+            />
+          </div>
+          <Button
+            onClick={handleSearch}
+            disabled={isFetching || !email.trim()}
+            style={{ background: "#189aa1" }}
+            className="text-white gap-2 flex-shrink-0"
+          >
+            {isFetching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+            Search
+          </Button>
+        </div>
+
+        {/* Results */}
+        {searchEmail && !isFetching && (
+          <>
+            {error ? (
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 border border-red-100 text-sm text-red-700">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                {error.message}
+              </div>
+            ) : rows.length === 0 ? (
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-gray-50 text-sm text-gray-500">
+                <Search className="w-4 h-4 flex-shrink-0" />
+                No accounts found for <strong className="ml-1">{searchEmail}</strong>.
+              </div>
+            ) : rows.length === 1 ? (
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-green-50 border border-green-100 text-sm text-green-700">
+                <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                Only one account exists for this email — no duplicates found.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-800">
+                  <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                  <span><strong>{rows.length} duplicate accounts</strong> found for <strong>{searchEmail}</strong>. Select the account to keep as the survivor.</span>
+                </div>
+
+                {/* Row cards */}
+                <div className="space-y-2">
+                  {rows.map(row => (
+                    <button
+                      key={row.id}
+                      onClick={() => setSurvivorId(row.id)}
+                      className={`w-full text-left p-3 rounded-xl border-2 transition-all ${
+                        survivorId === row.id
+                          ? "border-[#189aa1] bg-[#189aa1]/5"
+                          : "border-gray-100 bg-white hover:border-gray-200"
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${
+                          survivorId === row.id ? "bg-[#189aa1] text-white" : "bg-gray-100 text-gray-500"
+                        }`}>
+                          {survivorId === row.id ? <Star className="w-4 h-4" /> : (row.name ?? row.email ?? "?")[0]?.toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-sm font-semibold text-gray-800">
+                              {row.name ?? row.email ?? "Unknown"}
+                            </span>
+                            <span className="text-xs text-gray-400">ID #{row.id}</span>
+                            {row.isPending && (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-orange-100 text-orange-700">
+                                <Clock className="w-2.5 h-2.5" /> Pending
+                              </span>
+                            )}
+                            {!row.isPending && (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-700">
+                                <CheckCircle2 className="w-2.5 h-2.5" /> Active
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-gray-400 mt-0.5">{row.email}</div>
+                          <div className="flex flex-wrap gap-1 mt-1.5">
+                            {row.roles.length > 0
+                              ? row.roles.map(r => (
+                                <span key={r} className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-teal-50 text-teal-700">{r}</span>
+                              ))
+                              : <span className="text-[10px] text-gray-400 italic">No roles</span>
+                            }
+                          </div>
+                          <div className="text-[10px] text-gray-400 mt-1">
+                            Created: {new Date(row.createdAt).toLocaleString()}
+                            {row.lastSignedIn && !row.isPending && (
+                              <> &nbsp;·&nbsp; Last sign-in: {new Date(row.lastSignedIn).toLocaleString()}</>
+                            )}
+                          </div>
+                        </div>
+                        {survivorId === row.id && (
+                          <span className="flex-shrink-0 text-xs font-semibold text-[#189aa1] flex items-center gap-1">
+                            <Star className="w-3 h-3" /> Survivor
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Merge button */}
+                {survivorId !== null && hasDuplicates && (
+                  <div className="pt-1">
+                    <Button
+                      onClick={() => setConfirmOpen(true)}
+                      disabled={mergeMutation.isPending}
+                      className="w-full gap-2"
+                      style={{ background: "#189aa1" }}
+                    >
+                      <GitMerge className="w-4 h-4" />
+                      Merge {duplicateIds.length} duplicate{duplicateIds.length !== 1 ? "s" : ""} into Account #{survivorId}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </CardContent>
+
+      {/* Confirm dialog */}
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-700">
+              <AlertTriangle className="w-5 h-5" />
+              Confirm Merge
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-2 space-y-3">
+            <p className="text-sm text-gray-700">
+              This will permanently delete <strong>{duplicateIds.length} duplicate account{duplicateIds.length !== 1 ? "s" : ""}</strong> and reassign all their data to:
+            </p>
+            {survivor && (
+              <div className="p-3 rounded-lg bg-[#189aa1]/10 border border-[#189aa1]/20">
+                <div className="text-sm font-semibold text-gray-800">{survivor.name ?? survivor.email}</div>
+                <div className="text-xs text-gray-500">{survivor.email} &nbsp;·&nbsp; ID #{survivor.id}</div>
+                <div className="flex flex-wrap gap-1 mt-1.5">
+                  {survivor.roles.map(r => (
+                    <span key={r} className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-teal-50 text-teal-700">{r}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            <p className="text-xs text-gray-500">
+              <strong>This action cannot be undone.</strong> All roles, quiz attempts, case progress, and other data from the duplicate accounts will be merged. Duplicate rows will be deleted.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmOpen(false)}>Cancel</Button>
+            <Button
+              onClick={() => {
+                if (survivorId === null || duplicateIds.length === 0) return;
+                mergeMutation.mutate({ survivorId, duplicateIds });
+              }}
+              disabled={mergeMutation.isPending}
+              className="bg-amber-600 hover:bg-amber-700 text-white gap-2"
+            >
+              {mergeMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <GitMerge className="w-4 h-4" />}
+              {mergeMutation.isPending ? "Merging…" : "Confirm Merge"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </Card>
+  );
+}
+
 // ─── Demo Mode Panel ─────────────────────────────────────────────────────────
 
 function DemoModePanel() {
@@ -982,6 +1237,9 @@ export default function PlatformAdmin() {
 
         {/* Add User by Email */}
         <AddUserByEmailPanel onSuccess={() => refetchUsers()} isPlatformAdminOrOwner={isPlatformAdminOrOwner} />
+
+        {/* Merge Duplicate Accounts */}
+        <MergeAccountsPanel />
 
         {/* Bulk CSV Role Assignment */}
         <Card className="mb-6 border-0 shadow-sm">
