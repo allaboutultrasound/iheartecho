@@ -39,6 +39,8 @@ import {
   X,
   CheckCircle2,
   Upload,
+  Sparkles,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import DragDropUploadZone from "@/components/DragDropUploadZone";
@@ -321,6 +323,9 @@ export default function CaseEditorDialog({ caseId, open, onClose, onSaved }: Pro
     setActiveTab("details");
     setEditingQuestionId(null);
     setAddingQuestion(false);
+    setAiGeneratedQuestion(null);
+    setShowAiPanel(false);
+    setAiQuestionFocusArea("");
     onClose();
   };
 
@@ -423,6 +428,15 @@ export default function CaseEditorDialog({ caseId, open, onClose, onSaved }: Pro
   // ── Question state ──────────────────────────────────────────────────────────
   const [editingQuestionId, setEditingQuestionId] = useState<number | null>(null);
   const [addingQuestion, setAddingQuestion] = useState(false);
+  // AI question generation state
+  const [aiQuestionFocusArea, setAiQuestionFocusArea] = useState("");
+  const [aiGeneratedQuestion, setAiGeneratedQuestion] = useState<{
+    question: string;
+    options: string[];
+    correctAnswer: number;
+    explanation: string;
+  } | null>(null);
+  const [showAiPanel, setShowAiPanel] = useState(false);
 
   const addQuestionMutation = trpc.caseLibrary.adminAddQuestion.useMutation({
     onSuccess: () => {
@@ -448,6 +462,15 @@ export default function CaseEditorDialog({ caseId, open, onClose, onSaved }: Pro
       toast.success("Question deleted.");
     },
     onError: (err) => toast.error(err.message || "Failed to delete question."),
+  });
+
+  const aiGenerateQuestionMutation = trpc.caseLibrary.aiGenerateQuestion.useMutation({
+    onSuccess: (data) => {
+      setAiGeneratedQuestion(data);
+      setAddingQuestion(false); // close any open manual form
+      toast.success("AI question generated — review and save below.");
+    },
+    onError: (err) => toast.error(err.message || "AI generation failed."),
   });
 
   const media: MediaItem[] = (caseData?.media ?? []) as MediaItem[];
@@ -918,7 +941,82 @@ export default function CaseEditorDialog({ caseId, open, onClose, onSaved }: Pro
                     </div>
                   )}
 
-                  {/* Add new question */}
+                  {/* AI Generate Question panel */}
+                  {showAiPanel && (
+                    <div className="rounded-xl border border-[#189aa1]/30 bg-[#f0fbfc] p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-[#189aa1]" />
+                          <span className="text-sm font-semibold text-[#189aa1]">AI Question Generator</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => { setShowAiPanel(false); setAiGeneratedQuestion(null); }}
+                          className="text-gray-400 hover:text-gray-600"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        The AI will read this case's clinical history, diagnosis, and teaching points to generate a relevant MCQ question.
+                      </p>
+                      <div>
+                        <label className="text-xs font-semibold text-gray-600 mb-1.5 block">
+                          Focus area <span className="text-gray-400 font-normal">(optional)</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={aiQuestionFocusArea}
+                          onChange={(e) => setAiQuestionFocusArea(e.target.value)}
+                          placeholder="e.g. mitral valve assessment, LVEF calculation, diastolic function…"
+                          className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#189aa1]/30 bg-white"
+                          maxLength={200}
+                          disabled={aiGenerateQuestionMutation.isPending}
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="gap-2 text-white flex-1"
+                          style={{ background: "#189aa1" }}
+                          disabled={aiGenerateQuestionMutation.isPending || !caseId}
+                          onClick={() =>
+                            aiGenerateQuestionMutation.mutate({
+                              caseId: caseId!,
+                              focusArea: aiQuestionFocusArea.trim() || undefined,
+                            })
+                          }
+                        >
+                          {aiGenerateQuestionMutation.isPending ? (
+                            <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Generating…</>
+                          ) : aiGeneratedQuestion ? (
+                            <><RefreshCw className="w-3.5 h-3.5" /> Regenerate</>  
+                          ) : (
+                            <><Sparkles className="w-3.5 h-3.5" /> Generate Question</>
+                          )}
+                        </Button>
+                      </div>
+                      {/* Generated question preview — editable via QuestionEditor */}
+                      {aiGeneratedQuestion && !aiGenerateQuestionMutation.isPending && (
+                        <div className="pt-2 border-t border-[#189aa1]/20">
+                          <p className="text-xs font-semibold text-[#189aa1] mb-2">Review &amp; edit before saving:</p>
+                          <QuestionEditor
+                            q={aiGeneratedQuestion}
+                            onSave={(data) => {
+                              addQuestionMutation.mutate({ caseId: caseId!, ...data });
+                              setAiGeneratedQuestion(null);
+                              setShowAiPanel(false);
+                            }}
+                            onCancel={() => { setAiGeneratedQuestion(null); }}
+                            isSaving={addQuestionMutation.isPending}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Add new question manually */}
                   {addingQuestion ? (
                     <QuestionEditor
                       q={{ caseId: caseId! }}
@@ -929,14 +1027,26 @@ export default function CaseEditorDialog({ caseId, open, onClose, onSaved }: Pro
                       isSaving={addQuestionMutation.isPending}
                     />
                   ) : (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full gap-2 border-dashed border-2 h-12 text-gray-500 hover:border-[#189aa1] hover:text-[#189aa1]"
-                      onClick={() => setAddingQuestion(true)}
-                    >
-                      <Plus className="w-4 h-4" /> Add Question
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="flex-1 gap-2 border-dashed border-2 h-12 text-gray-500 hover:border-[#189aa1] hover:text-[#189aa1]"
+                        onClick={() => { setAddingQuestion(true); setShowAiPanel(false); }}
+                      >
+                        <Plus className="w-4 h-4" /> Add Question
+                      </Button>
+                      {!showAiPanel && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="gap-2 h-12 px-4 border-dashed border-2 text-[#189aa1] border-[#189aa1]/40 hover:bg-[#f0fbfc] hover:border-[#189aa1]"
+                          onClick={() => { setShowAiPanel(true); setAddingQuestion(false); }}
+                        >
+                          <Sparkles className="w-4 h-4" /> AI Generate
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </div>
               )}

@@ -422,3 +422,11 @@
 - [x] Fix: editing a case in AdminCaseManagement resets scroll to top — root cause: Radix Dialog focus-return scrolls the trigger button into view on close
 - [x] Fix: save window.scrollY before opening editor/preview dialogs, restore via double-rAF after close
 - [x] Fix: same scroll preservation applied to both the Edit (pencil) and Preview (eye) dialogs
+
+## AI Generate Question in Case Editor (Mar 15 2026)
+- [x] Add tRPC procedure: caseLibrary.aiGenerateQuestion — takes caseId + optional focusArea, generates MCQ from case data (title, modality, difficulty, clinical history, diagnosis, teaching points, tags) using gpt-4o via Forge API; avoids duplicating existing questions
+- [x] Add "AI Generate" button in CaseEditorDialog Questions tab (alongside "Add Question" button)
+- [x] Show generated question pre-filled in QuestionEditor for admin review/edit before saving
+- [x] Loading state shown during generation; Regenerate button available after first generation
+- [x] AI panel dismissible with X button; clears state on dialog close
+- [x] All 730 tests pass

@@ -1632,6 +1632,108 @@ Guidelines:
       return { success: true, flagged: input.flagged };
     }),
 
+  /**
+   * AI-generate a single MCQ question based on the case's clinical data.
+   * Returns a draft question for the admin to review and optionally save.
+   */
+  aiGenerateQuestion: adminProcedure
+    .input(
+      z.object({
+        caseId: z.number().int().positive(),
+        focusArea: z.string().max(200).optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const forgeBaseUrl = (process.env.BUILT_IN_FORGE_API_URL ?? "").replace(/\/+$/, "");
+      const forgeApiKey = process.env.BUILT_IN_FORGE_API_KEY ?? "";
+      if (!forgeBaseUrl || !forgeApiKey) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "AI service not configured." });
+      }
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const [caseRow] = await db
+        .select()
+        .from(echoLibraryCases)
+        .where(eq(echoLibraryCases.id, input.caseId))
+        .limit(1);
+      if (!caseRow) throw new TRPCError({ code: "NOT_FOUND", message: "Case not found" });
+      const existingQs = await db
+        .select({ question: echoLibraryCaseQuestions.question })
+        .from(echoLibraryCaseQuestions)
+        .where(eq(echoLibraryCaseQuestions.caseId, input.caseId));
+      const existingList = existingQs.map((q, i) => `${i + 1}. ${q.question}`).join("\n");
+      const tags: string[] = caseRow.tags ? JSON.parse(caseRow.tags as string) : [];
+      const teachingPoints: string[] = caseRow.teachingPoints ? JSON.parse(caseRow.teachingPoints as string) : [];
+      const focusHint = input.focusArea ? `\nFocus the question specifically on: ${input.focusArea}` : "";
+      const avoidHint = existingList ? `\nAvoid duplicating these existing questions:\n${existingList}` : "";
+      const promptText = `You are an expert echocardiography educator creating a high-quality multiple-choice question for the following echo case study.
+
+Case Details:
+- Title: ${caseRow.title}
+- Modality: ${caseRow.modality}
+- Difficulty: ${caseRow.difficulty}
+- Clinical History: ${caseRow.clinicalHistory ?? "Not provided"}
+- Diagnosis: ${caseRow.diagnosis ?? "Not provided"}
+- Summary: ${caseRow.summary}
+- Teaching Points: ${teachingPoints.join("; ") || "None"}
+- Tags: ${tags.join(", ") || "None"}${focusHint}${avoidHint}
+
+Generate exactly ONE multiple-choice question that tests understanding of this specific case. Return ONLY a valid JSON object with NO markdown, NO code fences, NO explanation — just the raw JSON.
+
+Required JSON format:
+{"question":"...","options":["...","...","...","..."],"correctAnswer":0,"explanation":"..."}
+
+Field requirements:
+- question: a clear, clinically relevant question about this specific case (not generic)
+- options: exactly 4 answer choices (no A./B. prefixes); make distractors plausible but clearly distinguishable
+- correctAnswer: 0-indexed integer (0=first option, 1=second, 2=third, 3=fourth)
+- explanation: 2-3 sentences explaining why the correct answer is right and why the distractors are wrong, referencing ASE/AHA guidelines where applicable
+- Use United States English spelling throughout
+- Difficulty level: ${caseRow.difficulty}`;
+      let text: string;
+      try {
+        const baseURL = forgeBaseUrl.endsWith("/v1") ? forgeBaseUrl : `${forgeBaseUrl}/v1`;
+        const openai = createOpenAI({ baseURL, apiKey: forgeApiKey });
+        const result = await generateText({
+          model: openai.chat("gpt-4o"),
+          messages: [{ role: "user", content: promptText }],
+          temperature: 0.7,
+          maxOutputTokens: 800,
+        });
+        text = result.text ?? "";
+        if (!text) throw new Error("AI returned empty response");
+      } catch (aiErr) {
+        const errMsg = aiErr instanceof Error ? aiErr.message : String(aiErr);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `AI generation failed: ${errMsg.substring(0, 300)}` });
+      }
+      let parsed: { question: string; options: string[]; correctAnswer: number; explanation: string };
+      try {
+        let cleaned = text.replace(/^```(?:json)?\s*/im, "").replace(/\s*```\s*$/im, "").trim();
+        const jsonMatch = cleaned.match(/({[\s\S]*})/);
+        if (jsonMatch) cleaned = jsonMatch[1].trim();
+        parsed = JSON.parse(cleaned);
+        if (!parsed.question || !Array.isArray(parsed.options) || parsed.options.length !== 4) {
+          throw new Error("Invalid question structure from AI");
+        }
+        if (typeof parsed.correctAnswer !== "number" || parsed.correctAnswer < 0 || parsed.correctAnswer > 3) {
+          throw new Error("Invalid correctAnswer index");
+        }
+        // Strip A./B./C./D. prefixes if the model included them
+        parsed.options = parsed.options.map((opt) => opt.replace(/^[A-D][\.):]\s*/i, "").trim());
+      } catch (parseErr) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to parse AI response: ${parseErr instanceof Error ? parseErr.message : String(parseErr)}`,
+        });
+      }
+      return {
+        question: parsed.question,
+        options: parsed.options,
+        correctAnswer: parsed.correctAnswer,
+        explanation: parsed.explanation ?? "",
+      };
+    }),
+
   /** List all cases flagged for review (admin only). */
   listFlaggedCases: adminProcedure.query(async () => {
     const db = await getDb();
