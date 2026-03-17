@@ -1514,14 +1514,17 @@ export default function QuickFire() {
               </div>
             )}
 
-            {/* Already completed */}
-            {(activeCategory ? !todaySetQuery.isLoading : !isLoading && !error) && alreadyCompleted && !showResults && sessionResults.length === 0 && !allDoneDaily && (
+            {/* Already completed — only show when a specific category is active.
+               When no category is selected, the category grid handles the completed state.
+               Showing this card in legacy (no-category) mode causes a false "1/1" score
+               because questions[] contains only the single getLiveChallenge question. */}
+            {activeCategory && !todaySetQuery.isLoading && alreadyCompleted && !showResults && sessionResults.length === 0 && (
               <div className="rounded-2xl p-8 text-center" style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}>
                 <Trophy className="w-14 h-14 text-[#4ad9e0] mx-auto mb-4" />
                 <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "Merriweather, serif" }}>
-                  Today's Challenge Complete!
+                  {activeCategory} Complete!
                 </h2>
-                <p className="text-white/60 text-sm mb-1">Today's score</p>
+                <p className="text-white/60 text-sm mb-1">{activeCategory} score</p>
                 <div className="text-5xl font-black text-white mb-1" style={{ fontFamily: "JetBrains Mono, monospace" }}>
                   {questions.filter((q) => effectiveUserAttempts[q.id]?.isCorrect === true).length}/{questions.length}
                 </div>

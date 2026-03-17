@@ -509,6 +509,10 @@
 - [x] Add per-category "Refresh" icon button in the category tally row (rebuilds today's set for that category only)
 - [x] Trigger a full refresh of all categories immediately via the new procedure
 
+## Challenge Summary Card Bug (Mar 17 2026)
+- [x] Fix: alreadyCompleted card showed "1/1" in no-category mode (legacy getLiveChallenge had 1 question) — fixed to only show when activeCategory is set; category grid handles the no-category completed state
+- [x] Fix: per-category completed card title updated to "{Category} Complete!" instead of "Today's Challenge Complete!"
+
 ## Stale Challenge Display Bug (Mar 17 2026)
 - [x] Investigate: users still seeing yesterday's challenge questions and results after refresh
 - [x] Fix: adminRefreshTodaySet and adminRefreshCategory were resetting live challenges to 'scheduled' (re-picked same ones) — fixed to ARCHIVE them so ensureTodaySet advances to next in queue
