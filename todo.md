@@ -486,3 +486,4 @@
 - [x] Fix bug: edits to live challenge questions not displaying after save
 - [x] Lower refetchInterval on getTodaySet and getLiveChallenge from 5 minutes to 60 seconds
 - [x] Fix duplicate completion card bug: legacy getLiveChallenge "0/1" card renders alongside new getTodaySet "2/5" card
+- [x] Fix "View Archive" button in daily challenge banner — scrolls to tab bar and activates archive tab

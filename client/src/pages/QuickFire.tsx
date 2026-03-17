@@ -994,7 +994,12 @@ export default function QuickFire() {
   };
   const switchToArchive = () => {
     setActiveTab("archive");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // Scroll to the tab bar so the archive content is immediately visible
+    setTimeout(() => {
+      const el = document.getElementById("quickfire-tab-bar");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      else window.scrollTo({ top: 0, behavior: "smooth" });
+    }, 50);
   };
 
   return (
@@ -1148,7 +1153,7 @@ export default function QuickFire() {
         )}
 
         {/* Tab bar */}
-        <div className="flex gap-2 mb-6 flex-wrap">
+        <div id="quickfire-tab-bar" className="flex gap-2 mb-6 flex-wrap">
           {([
             { id: "challenge" as const, label: "Daily Challenge", icon: Zap },
             { id: "archive" as const, label: "Archive", icon: Archive },
