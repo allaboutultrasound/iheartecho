@@ -483,3 +483,4 @@
 - [x] Write tests for variant assignment, determinism, and event tracking
 - [x] Add small "growing library — check back weekly" notice to SoundBytes page
 - [x] Swap SVG icons for Adult Echo and ECG categories in SoundBytes
+- [x] Fix bug: edits to live challenge questions not displaying after save

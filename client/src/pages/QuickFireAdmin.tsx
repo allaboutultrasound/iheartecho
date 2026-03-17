@@ -732,7 +732,11 @@ export default function QuickFireAdmin() {
   });
   const updateMutation = trpc.quickfire.updateQuestion.useMutation({
     onSuccess: () => {
+      // Invalidate both the admin list AND the live daily set so edits
+      // appear immediately for users on the QuickFire page without waiting
+      // for the 5-minute refetch interval to expire.
       utils.quickfire.listAllQuestions.invalidate();
+      utils.quickfire.getTodaySet.invalidate();
       if (saveAndQueuePending && editingId !== null) {
         approveToQueueMutation.mutate({ questionId: editingId });
         setFormOpen(false);
