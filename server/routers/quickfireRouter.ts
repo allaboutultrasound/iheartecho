@@ -25,6 +25,8 @@ import { generateText } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createPatchedFetch } from "../_core/patchedFetch";
 import { ENV } from "../_core/env";
+import { notifyOwner } from "../_core/notification";
+import { sendEmail, buildAdminNewSubmissionEmail } from "../_core/email";
 import {
   quickfireQuestions,
   quickfireDailySets,
@@ -2668,6 +2670,52 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       const newId = (result as any).insertId as number;
       const qid = `QID-${String(newId).padStart(4, "0")}`;
       await db.update(quickfireQuestions).set({ qid }).where(eq(quickfireQuestions.id, newId));
+
+      // ── Admin notifications (fire-and-forget, never block the response) ──────
+      const questionPreview = input.question.replace(/<[^>]+>/g, "").slice(0, 200) +
+        (input.question.length > 200 ? "…" : "");
+      const reviewUrl = `${process.env.VITE_APP_URL ?? "https://app.iheartecho.com"}/quickfire?adminTab=submissions`;
+
+      // 1. In-app push notification to owner
+      notifyOwner({
+        title: `📋 New Question Submission — ${input.category}`,
+        content: `${input.submitterName ?? ctx.user.displayName ?? "A user"} submitted a new ${input.category} question (${input.difficulty}) for review.\n\nPreview: ${questionPreview}\n\nReview at: ${reviewUrl}`,
+      }).catch((err) => console.warn("[submitUserQuestion] notifyOwner failed:", err));
+
+      // 2. Email all admin users
+      (async () => {
+        try {
+          const adminUsers = await db
+            .select({ id: users.id, email: users.email, displayName: users.displayName, name: users.name })
+            .from(users)
+            .where(eq(users.role, "admin"));
+          const { subject, htmlBody } = buildAdminNewSubmissionEmail({
+            submitterName: input.submitterName ?? ctx.user.displayName ?? ctx.user.name ?? "Unknown",
+            submitterEmail: ctx.user.email ?? undefined,
+            category: input.category,
+            difficulty: input.difficulty,
+            questionPreview,
+            qid,
+            reviewUrl,
+            hasImage: !!input.imageUrl,
+            hasVideo: !!input.videoUrl,
+          });
+          await Promise.all(
+            adminUsers
+              .filter((u) => !!u.email)
+              .map((u) =>
+                sendEmail({
+                  to: { name: u.displayName ?? u.name ?? "Admin", email: u.email! },
+                  subject,
+                  htmlBody,
+                })
+              )
+          );
+        } catch (err) {
+          console.warn("[submitUserQuestion] admin email failed:", err);
+        }
+      })();
+
       return { id: newId, qid };
     }),
 

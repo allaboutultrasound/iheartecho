@@ -522,3 +522,7 @@
 - [x] Add videoUrl field to submitUserQuestion tRPC schema and DB insert
 - [x] Add image/video upload UI to SubmitQuestionTab with drag-drop zone, preview, and remove button
 - [x] Show attached media (image/video) in admin Submissions review panel
+
+## Admin Email Notification — User Question Submission (Mar 17 2026)
+- [x] Add notifyOwner() call in submitUserQuestion mutation so admins get an immediate in-app notification
+- [x] Send admin email via SendGrid when a user submits a question for review (include question preview, submitter name, category, difficulty)

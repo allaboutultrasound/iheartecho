@@ -864,3 +864,83 @@ export function buildWelcomeWithMagicLinkEmail(opts: {
   `);
   return { subject, htmlBody, previewText };
 }
+
+export function buildAdminNewSubmissionEmail(opts: {
+  submitterName: string;
+  submitterEmail?: string;
+  category: string;
+  difficulty: string;
+  questionPreview: string;
+  qid: string;
+  reviewUrl: string;
+  hasImage: boolean;
+  hasVideo: boolean;
+}): { subject: string; htmlBody: string; previewText: string } {
+  const subject = `📋 New Question Submission — ${opts.category} (${opts.qid})`;
+  const previewText = `${opts.submitterName} submitted a new ${opts.category} question for review.`;
+
+  const difficultyColor =
+    opts.difficulty === "beginner" ? "#16a34a" :
+    opts.difficulty === "advanced" ? "#dc2626" : "#2563eb";
+
+  const mediaLine = [
+    opts.hasImage ? "📷 Image attached" : "",
+    opts.hasVideo ? "🎬 Video attached" : "",
+  ].filter(Boolean).join(" &nbsp;·&nbsp; ");
+
+  const htmlBody = emailWrapper(`
+    <h2 style="margin:0 0 8px;font-size:20px;color:${brandDark};font-family:Georgia,serif;">
+      New Question Submission
+    </h2>
+    <p style="margin:0 0 20px;font-size:15px;color:#475569;line-height:1.6;">
+      A user has submitted a new challenge question for your review.
+    </p>
+
+    <!-- Metadata row -->
+    <table cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 20px;">
+      <tr>
+        <td style="padding:12px 16px;background:#f0fbfc;border-radius:8px;">
+          <table cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+              <td style="font-size:12px;color:#64748b;padding-bottom:6px;"><strong>Submitter</strong></td>
+              <td style="font-size:12px;color:#0e1e2e;padding-bottom:6px;">${opts.submitterName}${opts.submitterEmail ? ` &lt;${opts.submitterEmail}&gt;` : ""}</td>
+            </tr>
+            <tr>
+              <td style="font-size:12px;color:#64748b;padding-bottom:6px;"><strong>Category</strong></td>
+              <td style="font-size:12px;color:#0e1e2e;padding-bottom:6px;">${opts.category}</td>
+            </tr>
+            <tr>
+              <td style="font-size:12px;color:#64748b;padding-bottom:6px;"><strong>Difficulty</strong></td>
+              <td style="font-size:12px;color:${difficultyColor};font-weight:600;padding-bottom:6px;">${opts.difficulty}</td>
+            </tr>
+            <tr>
+              <td style="font-size:12px;color:#64748b;"><strong>Question ID</strong></td>
+              <td style="font-size:12px;color:#0e1e2e;font-family:monospace;">${opts.qid}</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Question preview -->
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:0 0 20px;">
+      <p style="margin:0 0 8px;font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;">Question Preview</p>
+      <p style="margin:0;font-size:14px;color:#1e293b;line-height:1.6;">${opts.questionPreview}</p>
+      ${mediaLine ? `<p style="margin:10px 0 0;font-size:12px;color:#64748b;">${mediaLine}</p>` : ""}
+    </div>
+
+    <!-- CTA -->
+    <div style="text-align:center;margin:28px 0;">
+      <a href="${opts.reviewUrl}"
+        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;" target="_blank" rel="noopener noreferrer">
+        Review Submission
+      </a>
+    </div>
+
+    <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;line-height:1.5;">
+      Go to Admin → Submissions tab to approve or reject this question.
+    </p>
+  `);
+
+  return { subject, htmlBody, previewText };
+}
