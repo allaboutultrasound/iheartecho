@@ -539,3 +539,8 @@
 - [x] Remove Case Mix section from Readiness Assessment tab — N/A: Case Studies is now Step 6 in the IAC 2025 checklist (caseMixStep), already correctly integrated
 - [x] CME auto-verification: upgraded getReadinessAutoChecks to check actual hour totals (MD: 30h total/15h echo; Medical Staff: 15h/5h echo; Tech: 15h) against IAC 2025 thresholds
 - [x] Print Checklist PDF button: added "Print Checklist" button to header (calls window.print()); print CSS hides nav/sidebar and formats checklist cleanly
+
+## User Submission Confirmation Email (Mar 17 2026)
+- [x] Add buildUserSubmissionConfirmationEmail template to email.ts (branded HTML, submission summary card, "What Happens Next" steps)
+- [x] Wire confirmation email into submitUserQuestion procedure (fire-and-forget, sends to ctx.user.email)
+- [x] Email includes: QID, category, difficulty, question preview, image/video flags, estimated review timeline (5-7 business days), "Submit Another Question" CTA

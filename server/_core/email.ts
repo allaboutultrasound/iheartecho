@@ -944,3 +944,93 @@ export function buildAdminNewSubmissionEmail(opts: {
 
   return { subject, htmlBody, previewText };
 }
+
+// --- User Submission Confirmation Email ---
+interface UserSubmissionConfirmationEmailOpts {
+  recipientName: string;
+  qid: string;
+  category: string;
+  difficulty: string;
+  questionPreview: string;
+  hasImage?: boolean;
+  hasVideo?: boolean;
+}
+
+export function buildUserSubmissionConfirmationEmail(opts: UserSubmissionConfirmationEmailOpts): {
+  subject: string;
+  htmlBody: string;
+  previewText: string;
+} {
+  const subject = `✅ Question Received — ${opts.qid} | iHeartEcho™`;
+  const previewText = `Thank you for submitting your ${opts.category} question! We will review it within 5–7 business days.`;
+
+  const difficultyColor =
+    opts.difficulty === 'beginner' ? '#16a34a' :
+    opts.difficulty === 'intermediate' ? '#d97706' : '#dc2626';
+
+  const mediaLine = [
+    opts.hasImage ? '📷 Image attached' : '',
+    opts.hasVideo ? '🎦 Video attached' : '',
+  ].filter(Boolean).join(' &nbsp;&middot;&nbsp; ');
+
+  const htmlBody = emailWrapper(`
+    <h2 style="margin:0 0 8px;font-size:20px;color:${brandDark};font-family:Georgia,serif;">
+      Thank You for Your Submission!
+    </h2>
+    <p style="margin:0 0 20px;font-size:15px;color:#475569;line-height:1.6;">
+      Hi ${opts.recipientName}, we received your challenge question and it is now in our review queue.
+      Our editorial team will review it within <strong>5&ndash;7 business days</strong>.
+      You will receive another email once a decision has been made.
+    </p>
+    <table cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 20px;">
+      <tr>
+        <td style="padding:16px 20px;background:#f0fbfc;border-radius:10px;border-left:4px solid ${brandColor};">
+          <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;">Submission Summary</p>
+          <table cellpadding="0" cellspacing="0" width="100%" style="margin-top:10px;">
+            <tr>
+              <td style="font-size:12px;color:#64748b;padding-bottom:7px;width:120px;"><strong>Question ID</strong></td>
+              <td style="font-size:13px;color:#0e1e2e;font-family:monospace;font-weight:700;padding-bottom:7px;">${opts.qid}</td>
+            </tr>
+            <tr>
+              <td style="font-size:12px;color:#64748b;padding-bottom:7px;"><strong>Category</strong></td>
+              <td style="font-size:12px;color:#0e1e2e;padding-bottom:7px;">${opts.category}</td>
+            </tr>
+            <tr>
+              <td style="font-size:12px;color:#64748b;padding-bottom:7px;"><strong>Difficulty</strong></td>
+              <td style="font-size:12px;color:${difficultyColor};font-weight:600;padding-bottom:7px;">${opts.difficulty.charAt(0).toUpperCase() + opts.difficulty.slice(1)}</td>
+            </tr>
+            <tr>
+              <td style="font-size:12px;color:#64748b;"><strong>Status</strong></td>
+              <td style="font-size:12px;color:#d97706;font-weight:600;">Pending Review</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+    <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:0 0 20px;">
+      <p style="margin:0 0 8px;font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;">Your Question</p>
+      <p style="margin:0;font-size:14px;color:#1e293b;line-height:1.6;">${opts.questionPreview}</p>
+      ${mediaLine ? `<p style="margin:10px 0 0;font-size:12px;color:#64748b;">${mediaLine}</p>` : ''}
+    </div>
+    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:16px;margin:0 0 24px;">
+      <p style="margin:0 0 8px;font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.05em;">What Happens Next?</p>
+      <ol style="margin:0;padding-left:18px;font-size:13px;color:#78350f;line-height:1.8;">
+        <li>Our editorial team reviews your question for clinical accuracy and guideline alignment.</li>
+        <li>If approved, your question will be added to the daily challenge queue.</li>
+        <li>If revisions are needed, we may reach out with feedback.</li>
+        <li>You will receive a confirmation email once a decision is made.</li>
+      </ol>
+    </div>
+    <div style="text-align:center;margin:28px 0 8px;">
+      <a href="https://app.iheartecho.com/quickfire?tab=submit"
+        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:14px;padding:13px 28px;border-radius:8px;text-decoration:none;" target="_blank" rel="noopener noreferrer">
+        Submit Another Question
+      </a>
+    </div>
+    <p style="margin:16px 0 0;font-size:12px;color:#94a3b8;text-align:center;line-height:1.5;">
+      Questions? Reply to this email or visit <a href="https://www.iheartecho.com" style="color:${brandColor};">iheartecho.com</a>.
+    </p>
+  `);
+
+  return { subject, htmlBody, previewText };
+}

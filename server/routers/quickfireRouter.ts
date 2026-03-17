@@ -26,7 +26,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { createPatchedFetch } from "../_core/patchedFetch";
 import { ENV } from "../_core/env";
 import { notifyOwner } from "../_core/notification";
-import { sendEmail, buildAdminNewSubmissionEmail } from "../_core/email";
+import { sendEmail, buildAdminNewSubmissionEmail, buildUserSubmissionConfirmationEmail } from "../_core/email";
 import {
   quickfireQuestions,
   quickfireDailySets,
@@ -2682,7 +2682,24 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
         content: `${input.submitterName ?? ctx.user.displayName ?? "A user"} submitted a new ${input.category} question (${input.difficulty}) for review.\n\nPreview: ${questionPreview}\n\nReview at: ${reviewUrl}`,
       }).catch((err) => console.warn("[submitUserQuestion] notifyOwner failed:", err));
 
-      // 2. Email all admin users
+      // 2. Confirmation email to the submitting user (fire-and-forget)
+      if (ctx.user.email) {
+        const { subject: userSubject, htmlBody: userHtmlBody } = buildUserSubmissionConfirmationEmail({
+          recipientName: input.submitterName ?? ctx.user.displayName ?? ctx.user.name ?? "there",
+          qid,
+          category: input.category,
+          difficulty: input.difficulty,
+          questionPreview,
+          hasImage: !!input.imageUrl,
+          hasVideo: !!input.videoUrl,
+        });
+        sendEmail({
+          to: { name: input.submitterName ?? ctx.user.displayName ?? ctx.user.name ?? "User", email: ctx.user.email },
+          subject: userSubject,
+          htmlBody: userHtmlBody,
+        }).catch((err) => console.warn("[submitUserQuestion] user confirmation email failed:", err));
+      }
+      // 3. Email all admin users
       (async () => {
         try {
           const adminUsers = await db
