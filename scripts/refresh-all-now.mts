@@ -58,17 +58,18 @@ async function main() {
     console.log(`[refresh-all-now] No existing daily set for today — will build fresh.`);
   }
 
-  // 2. Reset live challenges published today back to scheduled
-  const resetResult = await db
+  // 2. ARCHIVE (not reset to scheduled) live challenges published today so that
+  //    ensureTodaySet advances to the NEXT challenge in the queue.
+  await db
     .update(quickfireChallenges)
-    .set({ status: "scheduled", publishedAt: null, archivedAt: null })
+    .set({ status: "archived", archivedAt: new Date() })
     .where(
       and(
         eq(quickfireChallenges.status, "live"),
         sql`DATE(${quickfireChallenges.publishedAt}) = ${date}` as any
       )
     );
-  console.log(`[refresh-all-now] Reset live challenges back to scheduled.`);
+  console.log(`[refresh-all-now] Archived today's live challenges (will pick new ones from queue).`);
 
   // 3. Rebuild: pick one challenge per category
   const CHALLENGE_CATEGORIES = ["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "POCUS"] as const;

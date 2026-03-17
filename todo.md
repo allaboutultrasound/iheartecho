@@ -508,3 +508,7 @@
 - [x] Add "Refresh All" button in QuickFireAdmin queue header (rebuilds today's set for all 5 categories)
 - [x] Add per-category "Refresh" icon button in the category tally row (rebuilds today's set for that category only)
 - [x] Trigger a full refresh of all categories immediately via the new procedure
+
+## Stale Challenge Display Bug (Mar 17 2026)
+- [x] Investigate: users still seeing yesterday's challenge questions and results after refresh
+- [x] Fix: adminRefreshTodaySet and adminRefreshCategory were resetting live challenges to 'scheduled' (re-picked same ones) — fixed to ARCHIVE them so ensureTodaySet advances to next in queue

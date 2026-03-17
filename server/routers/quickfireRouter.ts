@@ -2814,11 +2814,12 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
 
     // Delete today's cached daily set
     await db.delete(quickfireDailySets).where(eq(quickfireDailySets.setDate, date));
-    // Reset any challenges that were set live by today's set back to scheduled
-    // so they can be re-picked by the ensureTodaySet rebuild below
+    // ARCHIVE (not reset to scheduled) any live challenges published today so that
+    // ensureTodaySet advances to the NEXT challenge in the queue instead of re-picking
+    // the same ones.
     await db
       .update(quickfireChallenges)
-      .set({ status: "scheduled", publishedAt: null, archivedAt: null })
+      .set({ status: "archived", archivedAt: new Date() })
       .where(and(
         eq(quickfireChallenges.status, "live"),
         sql`DATE(${quickfireChallenges.publishedAt}) = ${date}` as any
@@ -2878,10 +2879,12 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
               : eq(quickfireChallenges.category, input.category)
           )
         );
+      // ARCHIVE (not reset to scheduled) the live challenge for this category so that
+      // ensureTodaySet advances to the next challenge in the queue.
       for (const row of liveForCat) {
         await db
           .update(quickfireChallenges)
-          .set({ status: "scheduled", publishedAt: null, archivedAt: null })
+          .set({ status: "archived", archivedAt: new Date() })
           .where(eq(quickfireChallenges.id, row.id));
       }
 
@@ -2892,10 +2895,11 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       } else {
         // Delete and fully rebuild so ensureTodaySet can re-pick all categories cleanly
         await db.delete(quickfireDailySets).where(eq(quickfireDailySets.setDate, date));
-        // Also reset any other live challenges published today so they aren't double-counted
+        // ARCHIVE any remaining live challenges published today so they aren't double-counted
+        // and so ensureTodaySet picks fresh ones from the queue.
         await db
           .update(quickfireChallenges)
-          .set({ status: "scheduled", publishedAt: null, archivedAt: null })
+          .set({ status: "archived", archivedAt: new Date() })
           .where(
             and(
               eq(quickfireChallenges.status, "live"),
