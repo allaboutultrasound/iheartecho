@@ -45,209 +45,326 @@ interface ChecklistStep {
 }
 
 const IAC_CHECKLIST: ChecklistStep[] = [
+  // ─── 1. FACILITY ──────────────────────────────────────────────────────────
   {
-    id: "step2",
+    id: "facility",
     step: 1,
-    title: "Personnel",
-    description: "Medical Director, Technical Director, sonographers, and interpreting physicians must meet IAC qualifications.",
+    title: "Facility",
+    description: "Getting started: review standards, perform a self-assessment, and set up your IAC Online Accreditation account.",
     sections: [
       {
-        id: "s2-medical-director",
+        id: "fac-setup",
+        title: "Getting Started",
+        items: [
+          { id: "fac-1", text: "Review the IAC Standards and Guidelines for Adult or Pediatric/Congenital Echocardiography Accreditation (intersocietal.org/programs/echocardiography/standards)", required: true },
+          { id: "fac-2", text: "Perform a thorough facility self-assessment — review current policies, protocols, and final reports for IAC Standards compliance", required: true },
+          { id: "fac-3", text: "Create or access existing IAC Online Accreditation account at iaconlineaccreditation.org", required: true },
+          { id: "fac-4", text: "For reaccreditation: verify all facility details and staff contact information are accurate and current before starting a new application", required: false, note: "Reaccreditation only" },
+        ],
+      },
+      {
+        id: "fac-info",
+        title: "Facility Information to Gather",
+        items: [
+          { id: "fac-5", text: "Procedure volumes ready: estimated annual facility and staff procedure volume information", required: true },
+          { id: "fac-6", text: "Physician Medical License on file for each state the interpreting physician is licensed to practice", required: true },
+          { id: "fac-7", text: "Estimate of number of studies interpreted by the Medical Director and every Medical Staff member", required: true },
+          { id: "fac-8", text: "Estimate of number of studies performed by the Technical Director and every Technical Staff member", required: true },
+          { id: "fac-9", text: "For ACTE applicants: estimate of studies interpreted by Lead Congenital Echocardiographer and every Adult Congenital Medical Staff member", required: false, note: "Adult Congenital Transthoracic applicants only" },
+          { id: "fac-10", text: "For ACTE applicants: estimate of studies performed by Lead Congenital Sonographer and every Congenital Technical Staff member", required: false, note: "Adult Congenital Transthoracic applicants only" },
+        ],
+      },
+    ],
+  },
+
+  // ─── 2. EQUIPMENT ─────────────────────────────────────────────────────────
+  {
+    id: "equipment",
+    step: 2,
+    title: "Equipment",
+    description: "All ultrasound equipment must be listed with manufacturer, model, and year for each modality applied for.",
+    sections: [
+      {
+        id: "eq-inventory",
+        title: "Equipment Inventory",
+        items: [
+          { id: "eq-1", text: "All ultrasound equipment listed with manufacturer, model, and year", required: true },
+          { id: "eq-2", text: "Equipment information entered in the IAC Online Accreditation account profile (Manage Equipment)", required: true },
+          { id: "eq-3", text: "Equipment meets minimum technical specifications for each accreditation modality applied for", required: true },
+          { id: "eq-4", text: "Equipment maintenance and service records on file", required: true },
+          { id: "eq-5", text: "Equipment cleaning and disinfection schedule documented per manufacturer specifications", required: true },
+          { id: "eq-6", text: "Routine safety inspections and electrical testing policy established and adhered to", required: true },
+        ],
+      },
+      {
+        id: "eq-storage",
+        title: "Image Storage & Reporting Systems",
+        items: [
+          { id: "eq-7", text: "Digital image archiving system in place (PACS, CD/DVD, or other digital archiving media — digital storage required)", required: true },
+          { id: "eq-8", text: "Image retention policy documented (minimum per IAC Standards for each modality)", required: true },
+          { id: "eq-9", text: "Report generation system in place with structured, fully typewritten final reports", required: true },
+        ],
+      },
+    ],
+  },
+
+  // ─── 3. STAFF ─────────────────────────────────────────────────────────────
+  {
+    id: "staff",
+    step: 3,
+    title: "Staff",
+    description: "Training/experience qualification pathways and credential/certificate information for all physicians and sonographers.",
+    sections: [
+      {
+        id: "staff-md",
         title: "Medical Director",
         subtitle: "Must be a licensed physician with appropriate training and credentials",
         items: [
-          { id: "s2-md-1", text: "Medical Director identified and CV on file", required: true },
-          { id: "s2-md-2", text: "Medical Director holds appropriate board certification (ABNM, ABR, ABIM, ABPN, or equivalent)", required: true },
-          { id: "s2-md-3", text: "Medical Director has documented echocardiography training/experience", required: true },
-          { id: "s2-md-4", text: "Medical Director oversees quality assurance program", required: true },
-          { id: "s2-md-5", text: "Medical Director reviews and approves all policies and procedures", required: true },
-          { id: "s2-md-6", text: "Medical Director continuing education documented (30 CME/3 years in echo)", required: true },
+          { id: "st-md-1", text: "Medical Director identified and CV on file", required: true },
+          { id: "st-md-2", text: "Medical Director holds appropriate board certification (ABIM, ABP, or equivalent) with echocardiography training/experience", required: true },
+          { id: "st-md-3", text: "Medical Director NBE or ABIM/ABP certificate(s) on file (including dates and certificate numbers)", required: true },
+          { id: "st-md-4", text: "Medical Director oversees quality improvement program", required: true },
+          { id: "st-md-5", text: "Medical Director reviews and approves all policies and procedures", required: true },
         ],
       },
       {
-        id: "s2-tech-director",
+        id: "staff-td",
         title: "Technical Director",
-        subtitle: "Must hold appropriate credential (RDCS, RCS, RCCS, or equivalent)",
+        subtitle: "Must hold RDCS, RCCS, RCS, ACS, or CRCS credential",
         items: [
-          { id: "s2-td-1", text: "Technical Director identified and CV on file", required: true },
-          { id: "s2-td-2", text: "Technical Director holds RDCS, RCS, RCCS, or equivalent credential", required: true },
-          { id: "s2-td-3", text: "Technical Director has ≥3 years clinical experience in applicable echo modality", required: true },
-          { id: "s2-td-4", text: "Technical Director oversees sonographer training and competency", required: true },
-          { id: "s2-td-5", text: "Technical Director continuing education documented (30 CME/3 years)", required: true },
+          { id: "st-td-1", text: "Technical Director identified and CV on file", required: true },
+          { id: "st-td-2", text: "Technical Director holds RDCS, RCCS, RCS, ACS, or CRCS credential (including dates and registry numbers)", required: true },
+          { id: "st-td-3", text: "Technical Director has documented clinical experience in applicable echo modality", required: true },
+          { id: "st-td-4", text: "Technical Director oversees sonographer training and competency", required: true },
         ],
       },
       {
-        id: "s2-sonographers",
-        title: "Sonographers",
+        id: "staff-sono",
+        title: "Sonographers (Technical Staff)",
         subtitle: "All performing sonographers must meet minimum credential requirements",
         items: [
-          { id: "s2-s-1", text: "All sonographers hold RDCS, RCS, RCCS, or equivalent credential (or are in training under supervision)", required: true },
-          { id: "s2-s-2", text: "Sonographer credentials and CVs on file for all performing staff", required: true },
-          { id: "s2-s-3", text: "Sonographers performing stress echo have documented stress echo training", required: true },
-          { id: "s2-s-4", text: "Sonographers performing TEE have documented TEE training", required: true },
-          { id: "s2-s-5", text: "Sonographers performing pediatric/fetal echo have documented pediatric/fetal training", required: true },
-          { id: "s2-s-6", text: "Continuing education documented for all sonographers (30 CME/3 years)", required: true },
+          { id: "st-s-1", text: "All sonographers hold RDCS, RCCS, RCS, ACS, or CRCS credential (or are in training under supervision)", required: true },
+          { id: "st-s-2", text: "Sonographer credentials and CVs on file for all performing staff", required: true },
+          { id: "st-s-3", text: "Sonographers performing stress echo have documented stress echo training", required: false, note: "If applying for Stress Echo" },
+          { id: "st-s-4", text: "Sonographers performing TEE have documented TEE training", required: false, note: "If applying for TEE" },
+          { id: "st-s-5", text: "Sonographers performing pediatric/fetal echo have documented pediatric/fetal training", required: false, note: "If applying for Pediatric/Fetal" },
         ],
       },
       {
-        id: "s2-physicians",
-        title: "Interpreting Physicians",
+        id: "staff-phys",
+        title: "Interpreting Physicians (Medical Staff)",
         subtitle: "All interpreting physicians must meet minimum training requirements",
         items: [
-          { id: "s2-p-1", text: "All interpreting physicians identified with CVs on file", required: true },
-          { id: "s2-p-2", text: "Interpreting physicians have documented echo training/experience (ASE Level II or equivalent)", required: true },
-          { id: "s2-p-3", text: "Interpreting physicians hold appropriate board certification", required: true },
-          { id: "s2-p-4", text: "Continuing education documented for all interpreting physicians (30 CME/3 years)", required: true },
-          { id: "s2-p-5", text: "Physician peer review (inter-reader variability) program in place", required: true },
+          { id: "st-p-1", text: "All interpreting physicians identified with CVs on file", required: true },
+          { id: "st-p-2", text: "Interpreting physicians have documented echo training/experience per IAC qualification pathways", required: true },
+          { id: "st-p-3", text: "Interpreting physicians hold appropriate board certification (ABIM/ABP or equivalent)", required: true },
+          { id: "st-p-4", text: "Physician certificate(s) on file (NBE, ABIM/ABP including dates and certificate numbers)", required: true },
+        ],
+      },
+      {
+        id: "staff-congenital",
+        title: "Adult Congenital Staff (ACTE applicants only)",
+        subtitle: "Required only for facilities applying in Adult Congenital Transthoracic",
+        items: [
+          { id: "st-ac-1", text: "Lead Congenital Echocardiographer identified with CV and credentials on file", required: false, note: "ACTE applicants only" },
+          { id: "st-ac-2", text: "Lead Congenital Sonographer identified with CV and credentials on file", required: false, note: "ACTE applicants only" },
+          { id: "st-ac-3", text: "Adult Congenital Medical Staff CVs and credentials on file", required: false, note: "ACTE applicants only" },
+          { id: "st-ac-4", text: "Congenital Technical Staff CVs and credentials on file", required: false, note: "ACTE applicants only" },
         ],
       },
     ],
   },
+
+  // ─── 4. CME ───────────────────────────────────────────────────────────────
   {
-    id: "step3",
-    step: 2,
-    title: "Equipment",
-    description: "All equipment must meet IAC technical standards and be properly maintained.",
-    sections: [
-      {
-        id: "s3-equipment",
-        title: "Ultrasound Equipment",
-        items: [
-          { id: "s3-1", text: "All ultrasound equipment listed with make, model, and serial number", required: true },
-          { id: "s3-2", text: "Equipment meets minimum technical specifications for each accreditation program", required: true },
-          { id: "s3-3", text: "Equipment maintenance and service records on file", required: true },
-          { id: "s3-4", text: "Equipment cleaning and disinfection protocols documented", required: true },
-          { id: "s3-5", text: "Transducer inventory documented with cleaning/disinfection logs", required: true },
-          { id: "s3-6", text: "Backup equipment plan documented", required: false },
-        ],
-      },
-      {
-        id: "s3-stress",
-        title: "Stress Echo Equipment (if applicable)",
-        items: [
-          { id: "s3-st-1", text: "Treadmill or bicycle ergometer available and maintained (exercise stress)", required: false },
-          { id: "s3-st-2", text: "Pharmacologic stress agents available with emergency protocols", required: false },
-          { id: "s3-st-3", text: "Crash cart and defibrillator available in stress echo area", required: false },
-          { id: "s3-st-4", text: "ECG monitoring equipment available during stress testing", required: false },
-          { id: "s3-st-5", text: "Reversal agents available for pharmacologic stress (atropine, aminophylline)", required: false },
-        ],
-      },
-      {
-        id: "s3-reporting",
-        title: "Reporting & Storage",
-        items: [
-          { id: "s3-r-1", text: "Digital image storage system in place (PACS or equivalent)", required: true },
-          { id: "s3-r-2", text: "Image retention policy documented (minimum 5 years for adults, longer for pediatric)", required: true },
-          { id: "s3-r-3", text: "Report generation system in place with structured reporting", required: true },
-          { id: "s3-r-4", text: "Turnaround time for reports documented and monitored", required: true },
-        ],
-      },
-    ],
-  },
-  {
-    id: "step4",
-    step: 3,
-    title: "Policies & Procedures",
-    description: "Written policies and procedures must be in place, reviewed annually, and signed by the Medical Director.",
-    sections: [
-      {
-        id: "s4-clinical",
-        title: "Clinical Policies",
-        items: [
-          { id: "s4-c-1", text: "Written protocol for each accreditation program (ATTE, ATEE, STRESS, etc.)", required: true },
-          { id: "s4-c-2", text: "Indications and contraindications for each procedure documented", required: true },
-          { id: "s4-c-3", text: "Patient preparation instructions documented", required: true },
-          { id: "s4-c-4", text: "Procedure protocols reviewed and signed by Medical Director within last 12 months", required: true },
-          { id: "s4-c-5", text: "Contrast echo protocol (if applicable) including indications and safety monitoring", required: false },
-          { id: "s4-c-6", text: "TEE protocol including patient preparation, sedation, and monitoring (if applicable)", required: false },
-          { id: "s4-c-7", text: "Stress echo emergency protocol including physician availability", required: false },
-        ],
-      },
-      {
-        id: "s4-safety",
-        title: "Safety & Emergency Policies",
-        items: [
-          { id: "s4-s-1", text: "Emergency response plan documented and staff trained", required: true },
-          { id: "s4-s-2", text: "Infection control and hand hygiene protocols documented", required: true },
-          { id: "s4-s-3", text: "Patient safety and incident reporting policy in place", required: true },
-          { id: "s4-s-4", text: "Radiation safety policy (if applicable)", required: false },
-          { id: "s4-s-5", text: "Latex allergy protocol documented", required: true },
-          { id: "s4-s-6", text: "Patient identification verification protocol documented", required: true },
-        ],
-      },
-      {
-        id: "s4-qa",
-        title: "Quality Assurance Policies",
-        items: [
-          { id: "s4-qa-1", text: "Written QA program in place with defined metrics and review frequency", required: true },
-          { id: "s4-qa-2", text: "Image quality review process documented (IQR program)", required: true },
-          { id: "s4-qa-3", text: "Physician inter-reader variability program documented", required: true },
-          { id: "s4-qa-4", text: "Turnaround time monitoring policy documented", required: true },
-          { id: "s4-qa-5", text: "Corrected report policy documented", required: true },
-          { id: "s4-qa-6", text: "Correlation study policy documented (echo vs. other imaging or cath)", required: true },
-          { id: "s4-qa-7", text: "QA results reviewed at least annually with documented action plans", required: true },
-        ],
-      },
-      {
-        id: "s4-admin",
-        title: "Administrative Policies",
-        items: [
-          { id: "s4-a-1", text: "Patient confidentiality and HIPAA compliance policy documented", required: true },
-          { id: "s4-a-2", text: "Informed consent policy documented", required: true },
-          { id: "s4-a-3", text: "Competency assessment policy for all staff documented", required: true },
-          { id: "s4-a-4", text: "New employee orientation and training policy documented", required: true },
-          { id: "s4-a-5", text: "Continuing education policy documented", required: true },
-          { id: "s4-a-6", text: "Supervision policy for students and trainees documented", required: true },
-        ],
-      },
-    ],
-  },
-  {
-    id: "step5",
+    id: "cme",
     step: 4,
-    title: "Quality Assurance Program",
-    description: "Active QA program with documented results is required for all accreditation programs.",
+    title: "CME",
+    description: "Continuing Medical Education (CME) records must be on file and available for submission to the IAC upon request. CME must be earned within the 3-year period prior to application submission.",
     sections: [
       {
-        id: "s5-iqr",
-        title: "Image Quality Review (IQR)",
-        subtitle: "Required for ATTE, ATEE, STRESS, ACTE, PTTE, PTEE, and FETAL",
+        id: "cme-md",
+        title: "Medical Director CME",
         items: [
-          { id: "s5-iqr-1", text: "IQR program active with documented reviews for each sonographer", required: true },
-          { id: "s5-iqr-2", text: "IQR reviews conducted at least annually per sonographer", required: true },
-          { id: "s5-iqr-3", text: "IQR scoring criteria documented and applied consistently", required: true },
-          { id: "s5-iqr-4", text: "IQR results reviewed with sonographers and action plans documented", required: true },
-          { id: "s5-iqr-5", text: "Technical Director reviews and signs off on all IQR results", required: true },
+          { id: "cme-md-1", text: "Medical Director: 30 hours CME relevant to cardiac imaging over the past 3 years (on file)", required: true },
+          { id: "cme-md-2", text: "Medical Director: at least 15 of those 30 hours must be echocardiography-related", required: true },
         ],
       },
       {
-        id: "s5-peer",
-        title: "Physician Peer Review (Inter-Reader Variability)",
+        id: "cme-ms",
+        title: "Medical Staff CME",
         items: [
-          { id: "s5-pr-1", text: "Physician peer review program active with documented reviews", required: true },
-          { id: "s5-pr-2", text: "Peer reviews conducted at least annually per interpreting physician", required: true },
-          { id: "s5-pr-3", text: "Concordance/discordance rates tracked and documented", required: true },
-          { id: "s5-pr-4", text: "Discordant findings reviewed and action plans documented", required: true },
-          { id: "s5-pr-5", text: "Medical Director reviews and signs off on all peer review results", required: true },
+          { id: "cme-ms-1", text: "Each Medical Staff member: 15 hours CME relevant to cardiac imaging over the past 3 years (on file)", required: true },
+          { id: "cme-ms-2", text: "Each Medical Staff member: at least 5 of those 15 hours must be echocardiography-related", required: true },
         ],
       },
       {
-        id: "s5-correlation",
-        title: "Correlation Studies",
+        id: "cme-tech",
+        title: "Technical Director & Technical Staff CME",
         items: [
-          { id: "s5-cor-1", text: "Echo-to-catheterization or echo-to-other-imaging correlation studies documented", required: true },
-          { id: "s5-cor-2", text: "Minimum required correlation studies submitted per IAC requirements", required: true },
-          { id: "s5-cor-3", text: "Correlation study results reviewed and action plans documented", required: true },
+          { id: "cme-td-1", text: "Technical Director: at least 15 hours of cardiac imaging-related CME during their credentialing triennial cycle (on file)", required: true },
+          { id: "cme-ts-1", text: "Each Technical Staff member: at least 15 hours of cardiac imaging-related CME during their credentialing triennial cycle (on file)", required: true },
         ],
       },
       {
-        id: "s5-reporting",
-        title: "Reporting & Turnaround Times",
+        id: "cme-congenital",
+        title: "Adult Congenital Staff CME (ACTE applicants only)",
+        subtitle: "Required for adult echocardiography facilities applying in Adult Congenital Transthoracic",
         items: [
-          { id: "s5-rt-1", text: "Report turnaround time monitored and documented (inpatient: ≤24h, outpatient: ≤48h recommended)", required: true },
-          { id: "s5-rt-2", text: "Corrected report rate tracked and documented", required: true },
-          { id: "s5-rt-3", text: "Structured reporting format used consistently", required: true },
-          { id: "s5-rt-4", text: "Final reports include all required IAC elements (measurements, calculations, clinical impression)", required: true },
+          { id: "cme-lce-1", text: "Lead Congenital Echocardiographer: minimum 5 hours CME relevant to congenital echocardiography (on file)", required: false, note: "ACTE applicants only — may be included in overall echo CME" },
+          { id: "cme-ls-1", text: "Lead Congenital Sonographer: minimum 5 hours CME relevant to congenital echocardiography (on file)", required: false, note: "ACTE applicants only" },
+          { id: "cme-acms-1", text: "Adult Congenital Medical Staff: minimum 3 hours CME relevant to congenital echocardiography (on file)", required: false, note: "ACTE applicants only" },
+          { id: "cme-cts-1", text: "Congenital Technical Staff: minimum 3 hours CME relevant to congenital echocardiography (on file)", required: false, note: "ACTE applicants only" },
+        ],
+      },
+    ],
+  },
+
+  // ─── 5. POLICIES ──────────────────────────────────────────────────────────
+  {
+    id: "policies",
+    step: 5,
+    title: "Policies & Protocols",
+    description: "Written policies and procedures must be in place, reviewed, and signed by the Medical Director. Sample documents are available in the IAC Sample Document Repository.",
+    sections: [
+      {
+        id: "pol-required",
+        title: "Required Policies (All Facilities)",
+        items: [
+          { id: "pol-1", text: "Infection Control Policy — appropriate precautions to protect patients and facility personnel per universal precautions", required: true },
+          { id: "pol-2", text: "Critical Results Communication Policy — steps for communication of critical findings to the referring provider", required: true },
+          { id: "pol-3", text: "Primary Source Verification Policy — verifying all medical and technical staff credentials through the applicable issuing agencies", required: true },
+          { id: "pol-4", text: "Patient Complaint Policy — process for patients to issue a complaint/grievance regarding care/services received", required: true },
+          { id: "pol-5", text: "Personnel Safety Policy (Ergonomics) — addresses technical staff safety, comfort, and avoidance of work-related musculoskeletal disorders (MSD)", required: true },
+          { id: "pol-6", text: "Facility-Specific, Step-by-Step Technical Protocols — for all modalities the facility is applying for (TTE, TEE, SE, ACTE, Fetal)", required: true },
+          { id: "pol-7", text: "Quality Improvement (QI) Policy — written policy regarding QI that includes all procedures performed in the facility", required: true },
+        ],
+      },
+      {
+        id: "pol-conditional",
+        title: "Conditional Policies (If Applicable)",
+        items: [
+          { id: "pol-8", text: "Radiation Safety Policy — employee safety when in the presence of ionizing radiation", required: false, note: "If applicable" },
+          { id: "pol-9", text: "Preliminary vs. Final Report Policy — steps taken when there is a difference between preliminary and final reports", required: false, note: "If applicable" },
+          { id: "pol-10", text: "Policy for Use of Ultrasound Enhancing Agents (UEAs) — indications, administration, system settings, monitoring for hypersensitivity reactions, and training", required: false, note: "If applicable" },
+          { id: "pol-11", text: "Policy for Recommended Alternative Imaging (Adult Echo only) — when UEAs cannot be used or do not provide adequate visualization", required: false, note: "Adult Echo only" },
+          { id: "pol-12", text: "Policy for cleaning/decontaminating and leakage testing of TEE transducer", required: false, note: "If performing TEE" },
+          { id: "pol-13", text: "Moderate Sedation Policies — training requirements, vital sign monitoring, type of sedatives and dosing", required: false, note: "If applicable" },
+        ],
+      },
+      {
+        id: "pol-qi",
+        title: "Quality Improvement (QI) Measures",
+        subtitle: "Active QI program with documented results required for all accreditation programs",
+        items: [
+          { id: "pol-qi-1", text: "Test Appropriateness — minimum 2 cases per modality (TTE, TEE, SE, ACTE) per quarter evaluated and categorized as appropriate/may be appropriate/rarely appropriate", required: true },
+          { id: "pol-qi-2", text: "Interpretive Quality Review (Physician Interpretation Variability) — minimum 2 cases per modality (TTE, TEE, SE, ACTE, Fetal) per quarter; must represent as many physicians as possible; discrepancies reconciled", required: true },
+          { id: "pol-qi-3", text: "Technical Quality Review (Sonographer Performance Variability) — 2 cases per modality per quarter reviewed for image quality, completeness, and protocol adherence; must represent as many sonographers as possible; discrepancies reconciled", required: true },
+          { id: "pol-qi-4", text: "Final Report Completeness and Timeliness — minimum 2 cases per modality per quarter evaluated for completeness and timeliness per IAC Standards 3.2A, 3.2.4A, 3.3A–3.6A; must represent as many physicians as possible", required: true },
+          { id: "pol-qi-5", text: "Correlation (Pediatric Only) — minimum 4 cases annually with at least 2 cases per relevant testing area, performed with appropriate imaging modality, surgical findings, or clinical outcomes", required: false, note: "Pediatric facilities only" },
+        ],
+      },
+    ],
+  },
+
+  // ─── 6. CASE STUDIES ──────────────────────────────────────────────────────
+  {
+    id: "cases",
+    step: 6,
+    title: "Case Studies",
+    description: "Case study submissions assess interpretative and technical quality. All cases must be complete examinations from within the required time window. Limited exams are not acceptable.",
+    caseMixStep: true,
+    sections: [
+      {
+        id: "cs-general",
+        title: "General Requirements (All Modalities)",
+        items: [
+          { id: "cs-gen-1", text: "Cases selected from within the required time window (12 months for ATTE, ATEE, ACTE, PTTE, Fetal; 36 months for Stress, PTEE)", required: true, caseMixItem: true },
+          { id: "cs-gen-2", text: "Cases represent as many CURRENT staff members as possible without duplicating", required: true, caseMixItem: true },
+          { id: "cs-gen-3", text: "No case submitted twice within a testing section", required: true, caseMixItem: true },
+          { id: "cs-gen-4", text: "No cases independently performed by sonographer or physician trainees", required: true, caseMixItem: true },
+          { id: "cs-gen-5", text: "One case study submitted from the Technical Director", required: true, caseMixItem: true },
+          { id: "cs-gen-6", text: "Medical Director is represented in submitted cases", required: true, caseMixItem: true },
+          { id: "cs-gen-7", text: "All cases are complete examinations (limited exams not acceptable)", required: true, caseMixItem: true },
+        ],
+      },
+      {
+        id: "cs-atte",
+        title: "Adult Transthoracic (ATTE)",
+        subtitle: "Number of cases based on total staff count; mix of AS and LV cases required",
+        items: [
+          { id: "cs-atte-1", text: "≤5 staff: 4 cases (2 AS, 2 LV) | 6–8 staff: 6 cases (3 AS, 3 LV) | 9–15 staff: 8 cases (4 AS, 4 LV) | 16–25 staff: 10 cases (5 AS, 5 LV) | >25 staff: 12 cases (6 AS, 6 LV)", required: true, caseMixItem: true, note: "LV = regional wall motion abnormalities due to CAD/MI (not global LV dysfunction or diastolic dysfunction). AS = native valvular AS with velocity ≥2 m/sec. Takotsubo with regional abnormalities accepted for LV." },
+        ],
+      },
+      {
+        id: "cs-stress",
+        title: "Adult Stress Echo",
+        subtitle: "Based on total number of staff (medical and technical) performing/interpreting stress echo",
+        items: [
+          { id: "cs-stress-1", text: "≤5 staff: 4 cases | 6–8: 6 cases | 9–15: 8 cases | 16–25: 10 cases | >25: 12 cases", required: true, caseMixItem: true, note: "Acceptable case types: (1) abnormal regional wall motion at rest due to CAD/MI, OR (2) inducible regional wall motion abnormality due to CAD/MI, OR (3) stress case using UEAs (normal or abnormal). Cases from within past 36 months." },
+        ],
+      },
+      {
+        id: "cs-atee",
+        title: "Adult Transesophageal (ATEE)",
+        items: [
+          { id: "cs-atee-1", text: "One complete adult TEE case per physician that performs TEE (all standard views and Doppler assessments)", required: true, caseMixItem: true },
+          { id: "cs-atee-2", text: "TEE cases must have indication/finding of significant mitral regurgitation or suspected cardiac source of embolus; at least one case from the facility must have significant MR", required: true, caseMixItem: true },
+          { id: "cs-atee-3", text: "Intraoperative TEE may be submitted if physician performed entire study: probe passing, image acquisition, documentation, reporting, and archiving on echo lab system", required: false, caseMixItem: true, note: "Cases from within past 12 months" },
+        ],
+      },
+      {
+        id: "cs-acte",
+        title: "Adult Congenital Transthoracic (ACTE)",
+        subtitle: "Based on total number of staff performing/interpreting adult congenital echo",
+        items: [
+          { id: "cs-acte-1", text: "≤5 staff: 4 cases | 6–8: 6 cases | 9–15: 8 cases | 16–25: 10 cases | >25: 12 cases", required: true, caseMixItem: true, note: "One case must demonstrate Tetralogy of Fallot (repaired or palliated). Remainder: complex CHD — Conotruncal defects, AV canal defects, ToF, Single ventricle (Fontan), D-TGA repaired or L-TGA, Ross procedure. One case from Lead Congenital Sonographer; Lead Congenital Echocardiographer must be represented. Cases from within past 12 months." },
+        ],
+      },
+      {
+        id: "cs-ptte",
+        title: "Pediatric Transthoracic (PTTE)",
+        subtitle: "All cases must be abnormal",
+        items: [
+          { id: "cs-ptte-1", text: "≤5 staff: 4 cases (2 shunts, 1 simple obstruction, 1 complex defect) | 6–8: 6 cases (2 shunts, 2 simple, 2 complex) | 9–15: 8 cases (4 shunts, 2 simple, 2 complex) | 16–25: 10 cases (4 shunts, 3 simple, 3 complex) | >25: 12 cases (4 shunts, 4 simple, 4 complex)", required: true, caseMixItem: true, note: "Shunts: ASD, VSD, PDA. Complex: shunt + obstruction, mitral/tricuspid atresia, AV canal, ToF, ventricular hypoplasia, anomalous coronary, truncus arteriosus, interrupted aortic arch. Simple obstruction: aortic/pulmonary valve stenosis, CoA. Initial (unrepaired) studies preferred; repaired accepted if unavailable. Cases from within past 12 months." },
+        ],
+      },
+      {
+        id: "cs-ptee",
+        title: "Pediatric Transesophageal (PTEE)",
+        items: [
+          { id: "cs-ptee-1", text: "First-time application: 1 complete TEE case per physician (not focused/limited; all standard views per IAC Standards)", required: true, caseMixItem: true, note: "Cases from within past 36 months" },
+          { id: "cs-ptee-2", text: "Reaccreditation: 1 case per physician — may be focused if physician was represented with a complete exam on previous application; otherwise must be complete", required: false, caseMixItem: true, note: "Reaccreditation only" },
+        ],
+      },
+      {
+        id: "cs-fetal",
+        title: "Fetal Echocardiography",
+        subtitle: "Based on total number of staff performing and interpreting fetal echo",
+        items: [
+          { id: "cs-fetal-1", text: "≤5 staff: 4 cases (1 shunt, 1 simple obstruction, 1 fetal arrhythmia, 1 hypoplastic ventricle) | 6–8: 6 cases (2 shunts, 2 simple, 1 arrhythmia, 1 hypoplastic) | 9–15: 8 cases (4 shunts, 2 simple, 1 arrhythmia, 1 hypoplastic) | 16–25: 10 cases (4 shunts, 3 simple, 1 complex, 1 arrhythmia, 1 hypoplastic) | >25: 12 cases (4 shunts, 4 simple, 2 complex, 1 arrhythmia, 1 hypoplastic)", required: true, caseMixItem: true, note: "Cases from within past 12 months" },
+        ],
+      },
+      {
+        id: "cs-multisite",
+        title: "Multiple Sites (Additional Cases)",
+        subtitle: "Required in addition to base facility cases if application includes one or more multiple sites",
+        items: [
+          { id: "cs-ms-1", text: "Adult facility: 1 abnormal TTE (AS or LV case) from each site", required: false, caseMixItem: true, note: "Multiple sites only" },
+          { id: "cs-ms-2", text: "Adult facility: 1 representative TEE case per physician performing TEE at each site (unless previously represented at main site)", required: false, caseMixItem: true, note: "Multiple sites only" },
+          { id: "cs-ms-3", text: "Adult facility: 1 stress echocardiogram from each site (abnormal regional WMA at rest, inducible WMA, or stress with UEAs)", required: false, caseMixItem: true, note: "Multiple sites only" },
+          { id: "cs-ms-4", text: "Adult facility: 1 adult congenital transthoracic echo from each site (Conotruncal, AV canal, ToF, Single ventricle, D-TGA/L-TGA, or Ross)", required: false, caseMixItem: true, note: "Multiple sites only" },
+          { id: "cs-ms-5", text: "Pediatric facility: 1 abnormal PTTE from each site (shunt, simple obstruction, or complex defect)", required: false, caseMixItem: true, note: "Multiple sites only" },
+          { id: "cs-ms-6", text: "Pediatric facility: 1 representative PTEE case per physician performing PTEE at each site (unless previously represented at main site)", required: false, caseMixItem: true, note: "Multiple sites only" },
+          { id: "cs-ms-7", text: "Pediatric facility: 1 abnormal fetal case from each site (complex defect, fetal arrhythmia, shunt, simple obstruction, or hypoplastic ventricle)", required: false, caseMixItem: true, note: "Multiple sites only" },
+        ],
+      },
+      {
+        id: "cs-submission",
+        title: "Case Submission Process",
+        items: [
+          { id: "cs-sub-1", text: "Case study images uploaded via IAC's HIPAA-compliant, secure medical imaging sharing service (intersocietal.org/case-study-upload-submission)", required: true, caseMixItem: true },
+          { id: "cs-sub-2", text: "For expedited applications: case study images received by IAC within 2 business days after final submission", required: false, caseMixItem: true, note: "Expedited applications only" },
         ],
       },
     ],
@@ -400,10 +517,10 @@ export default function AccreditationReadiness({ trpcNamespace = "accreditationR
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-            Accreditation Readiness Checklist
+            IAC 2025 Accreditation Readiness Checklist
           </h2>
           <p className="text-sm text-gray-500 mt-1">
-            IAC Echocardiography Accreditation Checklist — track your lab's readiness for each requirement.
+            Based on the IAC Echocardiography Accreditation Checklist (2025). Organized by Facility, Equipment, Staff, CME, Policies, and Case Studies.
           </p>
         </div>
         <Button

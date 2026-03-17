@@ -526,3 +526,11 @@
 ## Admin Email Notification — User Question Submission (Mar 17 2026)
 - [x] Add notifyOwner() call in submitUserQuestion mutation so admins get an immediate in-app notification
 - [x] Send admin email via SendGrid when a user submits a question for review (include question preview, submitter name, category, difficulty)
+
+## IAC 2025 Accreditation Checklist Update (Mar 17 2026)
+- [x] Download and parse IAC 2025 Echocardiography Accreditation Checklist PDF
+- [x] Map all checklist items to 6 areas: Facility, Equipment, CME, Staff, Policies, Case Studies
+- [x] Update IAC_CHECKLIST data in AccreditationReadiness.tsx to exactly match 2025 PDF items (Facility, Equipment, Staff, CME, Policies, Case Studies)
+- [x] Standards Navigator (AccreditationNavigator) remains separate — organized by IAC standard topic with checklist mode toggle
+- [x] DIY Accreditation Tool → Readiness tab now shows IAC 2025 Accreditation Readiness Checklist with 6 areas
+- [x] Updated header title to "IAC 2025 Accreditation Readiness Checklist" with updated subtitle
