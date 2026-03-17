@@ -498,3 +498,7 @@
 - [x] Fix: cases with questions incorrectly showing "No questions" badge in admin list
 - [x] Add media icon indicator to admin case row (show icon if has media, dimmed if no media)
 - [x] Add question count selector (1-10) to AI case generator dialog
+
+## Question Edit & Daily Challenge Bugs (Mar 17 2026)
+- [x] Fix: edited challenge questions still showing old content to users — added getLiveChallenge.invalidate() to updateMutation and updateArchivedQuestionMutation
+- [x] Fix: today's daily challenge — ECONNRESET was transient (recovered); daily set confirmed correct in DB; getLiveChallenge now fully invalidated on question edit

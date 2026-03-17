@@ -551,6 +551,9 @@ export default function QuickFire() {
     onSuccess: () => {
       toast.success("Question updated.");
       archiveDetailQuery.refetch();
+      // Also invalidate the live views in case this question is referenced there
+      trpc.useUtils().quickfire.getLiveChallenge.invalidate();
+      trpc.useUtils().quickfire.getTodaySet.invalidate();
       setArchiveEditOpen(false);
     },
     onError: (err) => toast.error(err.message || "Failed to update question."),
