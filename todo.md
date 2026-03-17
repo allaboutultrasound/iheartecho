@@ -492,3 +492,9 @@
 - [x] Fix case library cards showing raw HTML tags in description preview
 - [x] Add has-questions / no-questions marker to admin case management list
 - [x] Fix HTML stripping in CaseDetail.tsx related cases preview
+- [x] Add sortBy/sortDir params to listAllCases router (question count, title, date, views)
+- [x] Add column sort UI to admin case list with clickable sort headers/buttons
+- [x] Default sort: question count ascending (no-questions cases at top)
+- [x] Fix: cases with questions incorrectly showing "No questions" badge in admin list
+- [x] Add media icon indicator to admin case row (show icon if has media, dimmed if no media)
+- [x] Add question count selector (1-10) to AI case generator dialog

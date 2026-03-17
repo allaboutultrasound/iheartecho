@@ -55,6 +55,9 @@ import {
   Bookmark,
   BookmarkCheck,
   Flag,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import {
   BarChart,
@@ -594,6 +597,18 @@ export default function AdminCaseManagement() {
   const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
   const [mediaFilter, setMediaFilter] = useState<"all" | "has_media" | "no_media">("all");
   const [questionsFilter, setQuestionsFilter] = useState<"all" | "has_questions" | "no_questions">("all");
+  const [sortBy, setSortBy] = useState<"submittedAt" | "questionCount" | "viewCount" | "title">("questionCount");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  const toggleSort = (col: typeof sortBy) => {
+    if (sortBy === col) {
+      setSortDir(d => d === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(col);
+      setSortDir(col === "questionCount" ? "asc" : "desc");
+    }
+    setPage(1);
+  };
 
   // Preview dialog
   const [previewCaseId, setPreviewCaseId] = useState<number | null>(null);
@@ -663,6 +678,8 @@ export default function AdminCaseManagement() {
       difficulty: (difficultyFilter === "all" ? undefined : difficultyFilter) as any,
       mediaFilter: mediaFilter === "all" ? undefined : mediaFilter,
       questionsFilter: questionsFilter === "all" ? undefined : questionsFilter,
+      sortBy,
+      sortDir,
     },
     { enabled: tab === "all" }
   );
@@ -1189,6 +1206,26 @@ export default function AdminCaseManagement() {
                     <SelectItem value="no_questions">No Questions</SelectItem>
                   </SelectContent>
                 </Select>
+                {/* Sort controls */}
+                <div className="flex items-center gap-1 border border-gray-200 rounded-lg px-2 py-1">
+                  <span className="text-xs text-gray-400 mr-1">Sort:</span>
+                  {(["questionCount", "submittedAt", "viewCount", "title"] as const).map((col) => {
+                    const labels: Record<string, string> = { questionCount: "Questions", submittedAt: "Date", viewCount: "Views", title: "Title" };
+                    const isActive = sortBy === col;
+                    const Icon = isActive ? (sortDir === "asc" ? ArrowUp : ArrowDown) : ArrowUpDown;
+                    return (
+                      <button
+                        key={col}
+                        onClick={() => toggleSort(col)}
+                        className={`flex items-center gap-0.5 text-xs px-2 py-0.5 rounded transition-colors ${
+                          isActive ? "bg-[#189aa1]/10 text-[#189aa1] font-semibold" : "text-gray-400 hover:text-gray-600"
+                        }`}
+                      >
+                        <Icon className="w-3 h-3" /> {labels[col]}
+                      </button>
+                    );
+                  })}
+                </div>
                 {hasActiveFilters && (
                   <Button variant="ghost" size="sm" onClick={handleClearFilters} className="text-gray-400 hover:text-gray-600 gap-1">
                     <XCircle className="w-3.5 h-3.5" /> Clear filters
@@ -1337,13 +1374,13 @@ export default function AdminCaseManagement() {
                   </Select>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-600 mb-1.5 block">MCQ Count (1–5)</label>
+                  <label className="text-xs font-semibold text-gray-600 mb-1.5 block">MCQ Count (1–10)</label>
                   <Input
                     type="number"
                     min={1}
-                    max={5}
+                    max={10}
                     value={aiQCount}
-                    onChange={(e) => setAiQCount(Math.min(5, Math.max(1, parseInt(e.target.value) || 1)))}
+                    onChange={(e) => setAiQCount(Math.min(10, Math.max(1, parseInt(e.target.value) || 1)))}
                   />
                 </div>
               </div>

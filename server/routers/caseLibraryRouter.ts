@@ -1104,6 +1104,8 @@ export const caseLibraryRouter = router({
         difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
         mediaFilter: z.enum(["all", "has_media", "no_media"]).optional(),
         questionsFilter: z.enum(["all", "has_questions", "no_questions"]).optional(),
+        sortBy: z.enum(["submittedAt", "title", "viewCount", "questionCount", "difficulty", "modality"]).default("questionCount").optional(),
+        sortDir: z.enum(["asc", "desc"]).default("asc").optional(),
       })
     )
     .query(async ({ input }) => {
@@ -1148,12 +1150,50 @@ export const caseLibraryRouter = router({
 
       const where = conditions.length > 0 ? and(...conditions) : undefined;
 
+      // Question count subquery used for sorting
+      const questionCountSubquery = sql<number>`(
+        SELECT COUNT(*) FROM echoLibraryCaseQuestions
+        WHERE echoLibraryCaseQuestions.caseId = ${echoLibraryCases.id}
+      )`;
+
+      // Build ORDER BY clause
+      const sortDir = input.sortDir ?? "asc";
+      const sortBy = input.sortBy ?? "questionCount";
+      let orderByClause: any;
+      if (sortBy === "questionCount") {
+        orderByClause = sortDir === "asc"
+          ? asc(questionCountSubquery)
+          : desc(questionCountSubquery);
+      } else if (sortBy === "title") {
+        orderByClause = sortDir === "asc"
+          ? asc(echoLibraryCases.title)
+          : desc(echoLibraryCases.title);
+      } else if (sortBy === "viewCount") {
+        orderByClause = sortDir === "asc"
+          ? asc(echoLibraryCases.viewCount)
+          : desc(echoLibraryCases.viewCount);
+      } else if (sortBy === "difficulty") {
+        // Sort by difficulty: beginner < intermediate < advanced
+        orderByClause = sortDir === "asc"
+          ? asc(sql`CASE ${echoLibraryCases.difficulty} WHEN 'beginner' THEN 1 WHEN 'intermediate' THEN 2 WHEN 'advanced' THEN 3 ELSE 4 END`)
+          : desc(sql`CASE ${echoLibraryCases.difficulty} WHEN 'beginner' THEN 1 WHEN 'intermediate' THEN 2 WHEN 'advanced' THEN 3 ELSE 4 END`);
+      } else if (sortBy === "modality") {
+        orderByClause = sortDir === "asc"
+          ? asc(echoLibraryCases.modality)
+          : desc(echoLibraryCases.modality);
+      } else {
+        // default: submittedAt
+        orderByClause = sortDir === "asc"
+          ? asc(echoLibraryCases.submittedAt)
+          : desc(echoLibraryCases.submittedAt);
+      }
+
       const [cases, totalResult] = await Promise.all([
         db
           .select()
           .from(echoLibraryCases)
           .where(where)
-          .orderBy(desc(echoLibraryCases.submittedAt))
+          .orderBy(orderByClause)
           .limit(input.limit)
           .offset(offset),
         db
@@ -1175,20 +1215,35 @@ export const caseLibraryRouter = router({
         }
       }
 
-      // Fetch question counts for each case in this page
+      // Fetch question counts and media counts for each case in this page
       const caseIds = cases.map((c) => c.id);
       let questionCountMap: Record<number, number> = {};
+      let mediaCountMap: Record<number, number> = {};
       if (caseIds.length > 0) {
-        const qCounts = await db
-          .select({
-            caseId: echoLibraryCaseQuestions.caseId,
-            cnt: count(echoLibraryCaseQuestions.id),
-          })
-          .from(echoLibraryCaseQuestions)
-          .where(sql`${echoLibraryCaseQuestions.caseId} IN (${caseIds.join(",")})`)
-          .groupBy(echoLibraryCaseQuestions.caseId);
+        const [qCounts, mCounts] = await Promise.all([
+          db
+            .select({
+              caseId: echoLibraryCaseQuestions.caseId,
+              cnt: count(echoLibraryCaseQuestions.id),
+            })
+            .from(echoLibraryCaseQuestions)
+            .where(sql`${echoLibraryCaseQuestions.caseId} IN (${caseIds.join(",")})`)
+            .groupBy(echoLibraryCaseQuestions.caseId),
+          db
+            .select({
+              caseId: echoLibraryCaseMedia.caseId,
+              cnt: count(echoLibraryCaseMedia.id),
+            })
+            .from(echoLibraryCaseMedia)
+            .where(sql`${echoLibraryCaseMedia.caseId} IN (${caseIds.join(",")})`)
+            .groupBy(echoLibraryCaseMedia.caseId),
+        ]);
+        // Use Number() to coerce caseId in case MySQL driver returns string
         for (const row of qCounts) {
-          questionCountMap[row.caseId] = row.cnt;
+          questionCountMap[Number(row.caseId)] = row.cnt;
+        }
+        for (const row of mCounts) {
+          mediaCountMap[Number(row.caseId)] = row.cnt;
         }
       }
 
@@ -1197,11 +1252,14 @@ export const caseLibraryRouter = router({
           ...c,
           tags: c.tags ? JSON.parse(c.tags) : [],
           submitterName: submitterMap[c.submittedByUserId] ?? "Unknown",
-          questionCount: questionCountMap[c.id] ?? 0,
+          questionCount: questionCountMap[Number(c.id)] ?? 0,
+          mediaCount: mediaCountMap[Number(c.id)] ?? 0,
         })),
         total: totalResult[0]?.count ?? 0,
         page: input.page,
         limit: input.limit,
+        sortBy,
+        sortDir,
       };
     }),
 
@@ -1217,7 +1275,7 @@ export const caseLibraryRouter = router({
         prompt: z.string().min(10).max(1000).describe("Clinical scenario description"),
         modality: z.enum(["TTE", "TEE", "ICE", "Stress", "Pediatric", "Fetal", "POCUS", "ECG", "Other"]).default("TTE"),
         difficulty: z.enum(["beginner", "intermediate", "advanced"]).default("intermediate"),
-        questionCount: z.number().int().min(1).max(5).default(3),
+        questionCount: z.number().int().min(1).max(10).default(3),
       })
     )
     .mutation(async ({ input }) => {
@@ -1669,6 +1727,7 @@ Guidelines:
       z.object({
         caseId: z.number().int().positive(),
         focusArea: z.string().max(200).optional(),
+        count: z.number().int().min(1).max(10).default(1),
       })
     )
     .mutation(async ({ input }) => {
@@ -1694,7 +1753,8 @@ Guidelines:
       const teachingPoints: string[] = caseRow.teachingPoints ? JSON.parse(caseRow.teachingPoints as string) : [];
       const focusHint = input.focusArea ? `\nFocus the question specifically on: ${input.focusArea}` : "";
       const avoidHint = existingList ? `\nAvoid duplicating these existing questions:\n${existingList}` : "";
-      const promptText = `You are an expert echocardiography educator creating a high-quality multiple-choice question for the following echo case study.
+      const count = input.count ?? 1;
+      const buildPrompt = (index: number) => `You are an expert echocardiography educator creating a high-quality multiple-choice question for the following echo case study.
 
 Case Details:
 - Title: ${caseRow.title}
@@ -1706,7 +1766,7 @@ Case Details:
 - Teaching Points: ${teachingPoints.join("; ") || "None"}
 - Tags: ${tags.join(", ") || "None"}${focusHint}${avoidHint}
 
-Generate exactly ONE multiple-choice question that tests understanding of this specific case. Return ONLY a valid JSON object with NO markdown, NO code fences, NO explanation — just the raw JSON.
+Generate exactly ONE unique multiple-choice question (question ${index + 1} of ${count}) that tests understanding of this specific case. Return ONLY a valid JSON object with NO markdown, NO code fences, NO explanation — just the raw JSON.
 
 Required JSON format:
 {"question":"...","options":["...","...","...","..."],"correctAnswer":0,"explanation":"..."}
@@ -1718,48 +1778,55 @@ Field requirements:
 - explanation: 2-3 sentences explaining why the correct answer is right and why the distractors are wrong, referencing ASE/AHA guidelines where applicable
 - Use United States English spelling throughout
 - Difficulty level: ${caseRow.difficulty}`;
-      let text: string;
-      try {
-        const baseURL = forgeBaseUrl.endsWith("/v1") ? forgeBaseUrl : `${forgeBaseUrl}/v1`;
-        const openai = createOpenAI({ baseURL, apiKey: forgeApiKey });
-        const result = await generateText({
-          model: openai.chat("gpt-4o"),
-          messages: [{ role: "user", content: promptText }],
-          temperature: 0.7,
-          maxOutputTokens: 800,
-        });
-        text = result.text ?? "";
-        if (!text) throw new Error("AI returned empty response");
-      } catch (aiErr) {
-        const errMsg = aiErr instanceof Error ? aiErr.message : String(aiErr);
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `AI generation failed: ${errMsg.substring(0, 300)}` });
-      }
-      let parsed: { question: string; options: string[]; correctAnswer: number; explanation: string };
-      try {
-        let cleaned = text.replace(/^```(?:json)?\s*/im, "").replace(/\s*```\s*$/im, "").trim();
-        const jsonMatch = cleaned.match(/({[\s\S]*})/);
-        if (jsonMatch) cleaned = jsonMatch[1].trim();
-        parsed = JSON.parse(cleaned);
-        if (!parsed.question || !Array.isArray(parsed.options) || parsed.options.length !== 4) {
-          throw new Error("Invalid question structure from AI");
+      const promptText = buildPrompt(0);
+      const baseURL = forgeBaseUrl.endsWith("/v1") ? forgeBaseUrl : `${forgeBaseUrl}/v1`;
+      const openai = createOpenAI({ baseURL, apiKey: forgeApiKey });
+
+      const parseOne = async (index: number): Promise<{ question: string; options: string[]; correctAnswer: number; explanation: string }> => {
+        let text: string;
+        try {
+          const result = await generateText({
+            model: openai.chat("gpt-4o"),
+            messages: [{ role: "user", content: buildPrompt(index) }],
+            temperature: 0.8,
+            maxOutputTokens: 800,
+          });
+          text = result.text ?? "";
+          if (!text) throw new Error("AI returned empty response");
+        } catch (aiErr) {
+          const errMsg = aiErr instanceof Error ? aiErr.message : String(aiErr);
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: `AI generation failed: ${errMsg.substring(0, 300)}` });
         }
-        if (typeof parsed.correctAnswer !== "number" || parsed.correctAnswer < 0 || parsed.correctAnswer > 3) {
-          throw new Error("Invalid correctAnswer index");
+        let parsed: { question: string; options: string[]; correctAnswer: number; explanation: string };
+        try {
+          let cleaned = text.replace(/^```(?:json)?\s*/im, "").replace(/\s*```\s*$/im, "").trim();
+          const jsonMatch = cleaned.match(/({[\s\S]*})/);
+          if (jsonMatch) cleaned = jsonMatch[1].trim();
+          parsed = JSON.parse(cleaned);
+          if (!parsed.question || !Array.isArray(parsed.options) || parsed.options.length !== 4) {
+            throw new Error("Invalid question structure from AI");
+          }
+          if (typeof parsed.correctAnswer !== "number" || parsed.correctAnswer < 0 || parsed.correctAnswer > 3) {
+            throw new Error("Invalid correctAnswer index");
+          }
+          parsed.options = parsed.options.map((opt) => opt.replace(/^[A-D][\.):]\ */i, "").trim());
+        } catch (parseErr) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: `Failed to parse AI response: ${parseErr instanceof Error ? parseErr.message : String(parseErr)}`,
+          });
         }
-        // Strip A./B./C./D. prefixes if the model included them
-        parsed.options = parsed.options.map((opt) => opt.replace(/^[A-D][\.):]\s*/i, "").trim());
-      } catch (parseErr) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: `Failed to parse AI response: ${parseErr instanceof Error ? parseErr.message : String(parseErr)}`,
-        });
-      }
-      return {
-        question: parsed.question,
-        options: parsed.options,
-        correctAnswer: parsed.correctAnswer,
-        explanation: parsed.explanation ?? "",
+        return {
+          question: parsed.question,
+          options: parsed.options,
+          correctAnswer: parsed.correctAnswer,
+          explanation: parsed.explanation ?? "",
+        };
       };
+
+      const questions = await Promise.all(Array.from({ length: count }, (_, i) => parseOne(i)));
+      // Return array for multi, or single object for backward compat when count=1
+      return { questions };
     }),
 
   /** List all cases flagged for review (admin only). */

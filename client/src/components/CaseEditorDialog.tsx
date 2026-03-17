@@ -323,9 +323,10 @@ export default function CaseEditorDialog({ caseId, open, onClose, onSaved }: Pro
     setActiveTab("details");
     setEditingQuestionId(null);
     setAddingQuestion(false);
-    setAiGeneratedQuestion(null);
+    setAiGeneratedQuestions([]);
     setShowAiPanel(false);
     setAiQuestionFocusArea("");
+    setAiQuestionCount(1);
     onClose();
   };
 
@@ -430,12 +431,15 @@ export default function CaseEditorDialog({ caseId, open, onClose, onSaved }: Pro
   const [addingQuestion, setAddingQuestion] = useState(false);
   // AI question generation state
   const [aiQuestionFocusArea, setAiQuestionFocusArea] = useState("");
-  const [aiGeneratedQuestion, setAiGeneratedQuestion] = useState<{
+  const [aiQuestionCount, setAiQuestionCount] = useState(1);
+  const [aiGeneratedQuestions, setAiGeneratedQuestions] = useState<Array<{
     question: string;
     options: string[];
     correctAnswer: number;
     explanation: string;
-  } | null>(null);
+  }>>([]);
+  // Keep single-question alias for backward compat with existing render logic
+  const aiGeneratedQuestion = aiGeneratedQuestions.length === 1 ? aiGeneratedQuestions[0] : null;
   const [showAiPanel, setShowAiPanel] = useState(false);
 
   const addQuestionMutation = trpc.caseLibrary.adminAddQuestion.useMutation({
@@ -466,9 +470,10 @@ export default function CaseEditorDialog({ caseId, open, onClose, onSaved }: Pro
 
   const aiGenerateQuestionMutation = trpc.caseLibrary.aiGenerateQuestion.useMutation({
     onSuccess: (data) => {
-      setAiGeneratedQuestion(data);
+      setAiGeneratedQuestions(data.questions);
       setAddingQuestion(false); // close any open manual form
-      toast.success("AI question generated — review and save below.");
+      const n = data.questions.length;
+      toast.success(n === 1 ? "AI question generated — review and save below." : `${n} AI questions generated — review and save below.`);
     },
     onError: (err) => toast.error(err.message || "AI generation failed."),
   });
@@ -951,28 +956,43 @@ export default function CaseEditorDialog({ caseId, open, onClose, onSaved }: Pro
                         </div>
                         <button
                           type="button"
-                          onClick={() => { setShowAiPanel(false); setAiGeneratedQuestion(null); }}
+                          onClick={() => { setShowAiPanel(false); setAiGeneratedQuestions([]); }}
                           className="text-gray-400 hover:text-gray-600"
                         >
                           <X className="w-4 h-4" />
                         </button>
                       </div>
                       <p className="text-xs text-gray-500">
-                        The AI will read this case's clinical history, diagnosis, and teaching points to generate a relevant MCQ question.
+                        The AI will read this case's clinical history, diagnosis, and teaching points to generate relevant MCQ questions.
                       </p>
-                      <div>
-                        <label className="text-xs font-semibold text-gray-600 mb-1.5 block">
-                          Focus area <span className="text-gray-400 font-normal">(optional)</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={aiQuestionFocusArea}
-                          onChange={(e) => setAiQuestionFocusArea(e.target.value)}
-                          placeholder="e.g. mitral valve assessment, LVEF calculation, diastolic function…"
-                          className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#189aa1]/30 bg-white"
-                          maxLength={200}
-                          disabled={aiGenerateQuestionMutation.isPending}
-                        />
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs font-semibold text-gray-600 mb-1.5 block">
+                            Focus area <span className="text-gray-400 font-normal">(optional)</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={aiQuestionFocusArea}
+                            onChange={(e) => setAiQuestionFocusArea(e.target.value)}
+                            placeholder="e.g. mitral valve, LVEF, diastolic function…"
+                            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#189aa1]/30 bg-white"
+                            maxLength={200}
+                            disabled={aiGenerateQuestionMutation.isPending}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-semibold text-gray-600 mb-1.5 block">Number of questions</label>
+                          <select
+                            value={aiQuestionCount}
+                            onChange={(e) => setAiQuestionCount(Number(e.target.value))}
+                            disabled={aiGenerateQuestionMutation.isPending}
+                            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#189aa1]/30 bg-white"
+                          >
+                            {[1,2,3,4,5,6,7,8,9,10].map(n => (
+                              <option key={n} value={n}>{n} question{n !== 1 ? "s" : ""}</option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
                       <div className="flex gap-2">
                         <Button
@@ -981,23 +1001,54 @@ export default function CaseEditorDialog({ caseId, open, onClose, onSaved }: Pro
                           className="gap-2 text-white flex-1"
                           style={{ background: "#189aa1" }}
                           disabled={aiGenerateQuestionMutation.isPending || !caseId}
-                          onClick={() =>
+                          onClick={() => {
+                            setAiGeneratedQuestions([]);
                             aiGenerateQuestionMutation.mutate({
                               caseId: caseId!,
                               focusArea: aiQuestionFocusArea.trim() || undefined,
-                            })
-                          }
+                              count: aiQuestionCount,
+                            });
+                          }}
                         >
                           {aiGenerateQuestionMutation.isPending ? (
-                            <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Generating…</>
-                          ) : aiGeneratedQuestion ? (
-                            <><RefreshCw className="w-3.5 h-3.5" /> Regenerate</>  
+                            <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Generating {aiQuestionCount > 1 ? `${aiQuestionCount} questions` : "question"}…</>
+                          ) : aiGeneratedQuestions.length > 0 ? (
+                            <><RefreshCw className="w-3.5 h-3.5" /> Regenerate</>
                           ) : (
-                            <><Sparkles className="w-3.5 h-3.5" /> Generate Question</>
+                            <><Sparkles className="w-3.5 h-3.5" /> Generate {aiQuestionCount > 1 ? `${aiQuestionCount} Questions` : "Question"}</>
                           )}
                         </Button>
                       </div>
-                      {/* Generated question preview — editable via QuestionEditor */}
+                      {/* Multi-question review list */}
+                      {aiGeneratedQuestions.length > 1 && !aiGenerateQuestionMutation.isPending && (
+                        <div className="pt-2 border-t border-[#189aa1]/20 space-y-4">
+                          <p className="text-xs font-semibold text-[#189aa1]">{aiGeneratedQuestions.length} questions generated — review and save each:</p>
+                          {aiGeneratedQuestions.map((q, idx) => (
+                            <div key={idx} className="border border-gray-200 rounded-lg p-3 bg-white">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-xs font-semibold text-gray-500">Question {idx + 1} of {aiGeneratedQuestions.length}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setAiGeneratedQuestions(prev => prev.filter((_, i) => i !== idx))}
+                                  className="text-gray-300 hover:text-red-400 transition-colors"
+                                  title="Discard this question"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                              <QuestionEditor
+                                q={q}
+                                onSave={(data) => {
+                                  addQuestionMutation.mutate({ caseId: caseId!, ...data });
+                                  setAiGeneratedQuestions(prev => prev.filter((_, i) => i !== idx));
+                                }}
+                                onCancel={() => setAiGeneratedQuestions(prev => prev.filter((_, i) => i !== idx))}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {/* Single-question preview (count=1) — editable via QuestionEditor */}
                       {aiGeneratedQuestion && !aiGenerateQuestionMutation.isPending && (
                         <div className="pt-2 border-t border-[#189aa1]/20">
                           <p className="text-xs font-semibold text-[#189aa1] mb-2">Review &amp; edit before saving:</p>
@@ -1005,10 +1056,10 @@ export default function CaseEditorDialog({ caseId, open, onClose, onSaved }: Pro
                             q={aiGeneratedQuestion}
                             onSave={(data) => {
                               addQuestionMutation.mutate({ caseId: caseId!, ...data });
-                              setAiGeneratedQuestion(null);
+                              setAiGeneratedQuestions([]);
                               setShowAiPanel(false);
                             }}
-                            onCancel={() => { setAiGeneratedQuestion(null); }}
+                            onCancel={() => { setAiGeneratedQuestions([]); setShowAiPanel(false); }}
                             isSaving={addQuestionMutation.isPending}
                           />
                         </div>
