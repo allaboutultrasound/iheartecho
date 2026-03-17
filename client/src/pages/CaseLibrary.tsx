@@ -48,6 +48,20 @@ import { formatDistanceToNow } from "date-fns";
 import { formatViewCount, getDisplayViewCount } from "@/lib/caseViewCount";
 import CaseLibraryBanner from "@/components/CaseLibraryBanner";
 
+/** Strip HTML tags and decode basic entities for plain-text card previews */
+function stripHtml(html: string): string {
+  return html
+    .replace(/<[^>]*>/g, " ")          // remove all tags
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s{2,}/g, " ")           // collapse whitespace
+    .trim();
+}
+
 const MODALITY_COLORS: Record<string, string> = {
   TTE: "bg-blue-100 text-blue-700",
   TEE: "bg-purple-100 text-purple-700",
@@ -363,7 +377,7 @@ export default function CaseLibrary() {
                         </h3>
 
                         <p className="text-xs text-gray-500 leading-relaxed mb-3 flex-1 line-clamp-3">
-                          {c.summary}
+                          {stripHtml(c.summary)}
                         </p>
 
                         {/* Tags */}
@@ -480,7 +494,7 @@ export default function CaseLibrary() {
                               {c.status.charAt(0).toUpperCase() + c.status.slice(1)}
                             </span>
                           </div>
-                          <p className="text-xs text-gray-500 line-clamp-2 mb-2">{c.summary}</p>
+                          <p className="text-xs text-gray-500 line-clamp-2 mb-2">{stripHtml(c.summary)}</p>
                           <div className="flex items-center gap-3 text-xs text-gray-400 flex-wrap">
                             <span className={`px-2 py-0.5 rounded-full font-medium ${MODALITY_COLORS[c.modality] ?? "bg-gray-100 text-gray-600"}`}>
                               {c.modality}

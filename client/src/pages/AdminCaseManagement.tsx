@@ -75,6 +75,20 @@ import { formatViewCount } from "@/lib/caseViewCount";
 
 type TabType = "pending" | "all" | "flagged" | "analytics";
 
+/** Strip HTML tags and decode basic entities for plain-text previews */
+function stripHtml(html: string): string {
+  return html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-amber-100 text-amber-700 border-amber-200",
   approved: "bg-green-100 text-green-700 border-green-200",
@@ -579,6 +593,7 @@ export default function AdminCaseManagement() {
   const [modalityFilter, setModalityFilter] = useState<string>("all");
   const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
   const [mediaFilter, setMediaFilter] = useState<"all" | "has_media" | "no_media">("all");
+  const [questionsFilter, setQuestionsFilter] = useState<"all" | "has_questions" | "no_questions">("all");
 
   // Preview dialog
   const [previewCaseId, setPreviewCaseId] = useState<number | null>(null);
@@ -647,6 +662,7 @@ export default function AdminCaseManagement() {
       modality: (modalityFilter === "all" ? undefined : modalityFilter) as any,
       difficulty: (difficultyFilter === "all" ? undefined : difficultyFilter) as any,
       mediaFilter: mediaFilter === "all" ? undefined : mediaFilter,
+      questionsFilter: questionsFilter === "all" ? undefined : questionsFilter,
     },
     { enabled: tab === "all" }
   );
@@ -778,10 +794,11 @@ export default function AdminCaseManagement() {
     setDifficultyFilter("all");
     setStatusFilter("all");
     setMediaFilter("all");
+    setQuestionsFilter("all");
     setPage(1);
   };
 
-  const hasActiveFilters = search || tagFilter || modalityFilter !== "all" || difficultyFilter !== "all" || statusFilter !== "all" || mediaFilter !== "all";
+  const hasActiveFilters = search || tagFilter || modalityFilter !== "all" || difficultyFilter !== "all" || statusFilter !== "all" || mediaFilter !== "all" || questionsFilter !== "all";
 
   const CaseRow = ({ c, showActions = true }: { c: any; showActions?: boolean }) => (
     <div className="flex items-start gap-3 p-4 bg-white rounded-xl border border-gray-100 hover:border-[#189aa1]/30 transition-all">
@@ -815,7 +832,7 @@ export default function AdminCaseManagement() {
             </div>
           </div>
         </div>
-        <p className="text-xs text-gray-500 mt-1 line-clamp-2">{c.summary}</p>
+        <p className="text-xs text-gray-500 mt-1 line-clamp-2">{stripHtml(c.summary)}</p>
         {/* Clickable tag chips */}
         {Array.isArray(c.tags) && c.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-1.5">
@@ -853,6 +870,16 @@ export default function AdminCaseManagement() {
                 <ImageIcon className="w-3 h-3" /> {c.mediaCount}
               </span>
             </>
+          )}
+          <span>·</span>
+          {(c.questionCount ?? 0) > 0 ? (
+            <span className="flex items-center gap-0.5 text-green-600 font-medium">
+              <CheckCircle2 className="w-3 h-3" /> {c.questionCount} Q{c.questionCount !== 1 ? "s" : ""}
+            </span>
+          ) : (
+            <span className="flex items-center gap-0.5 text-amber-500">
+              <XCircle className="w-3 h-3" /> No questions
+            </span>
           )}
           {c.status === "approved" && (
             <>
@@ -1152,6 +1179,16 @@ export default function AdminCaseManagement() {
                     <SelectItem value="no_media">No Media</SelectItem>
                   </SelectContent>
                 </Select>
+                <Select value={questionsFilter} onValueChange={(v) => { setQuestionsFilter(v as any); setPage(1); }}>
+                  <SelectTrigger className="w-full sm:w-40">
+                    <SelectValue placeholder="All Questions" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Questions</SelectItem>
+                    <SelectItem value="has_questions">Has Questions</SelectItem>
+                    <SelectItem value="no_questions">No Questions</SelectItem>
+                  </SelectContent>
+                </Select>
                 {hasActiveFilters && (
                   <Button variant="ghost" size="sm" onClick={handleClearFilters} className="text-gray-400 hover:text-gray-600 gap-1">
                     <XCircle className="w-3.5 h-3.5" /> Clear filters
@@ -1367,7 +1404,7 @@ export default function AdminCaseManagement() {
                   </div>
                   <div>
                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-0.5">Summary</p>
-                    <p className="text-sm text-gray-700">{aiCasePreview.summary}</p>
+                    <p className="text-sm text-gray-700">{stripHtml(aiCasePreview.summary)}</p>
                   </div>
                   <div>
                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-0.5">Clinical History</p>

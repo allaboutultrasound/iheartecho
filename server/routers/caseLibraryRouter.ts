@@ -1103,6 +1103,7 @@ export const caseLibraryRouter = router({
         modality: z.enum(["TTE", "TEE", "ICE", "Stress", "Pediatric", "Fetal", "HOCM", "POCUS", "ECG", "Other"]).optional(),
         difficulty: z.enum(["beginner", "intermediate", "advanced"]).optional(),
         mediaFilter: z.enum(["all", "has_media", "no_media"]).optional(),
+        questionsFilter: z.enum(["all", "has_questions", "no_questions"]).optional(),
       })
     )
     .query(async ({ input }) => {
@@ -1122,6 +1123,15 @@ export const caseLibraryRouter = router({
       } else if (input.mediaFilter === "no_media") {
         conditions.push(
           sql`NOT EXISTS (SELECT 1 FROM echoLibraryCaseMedia WHERE echoLibraryCaseMedia.caseId = ${echoLibraryCases.id})`
+        );
+      }
+      if (input.questionsFilter === "has_questions") {
+        conditions.push(
+          sql`EXISTS (SELECT 1 FROM echoLibraryCaseQuestions WHERE echoLibraryCaseQuestions.caseId = ${echoLibraryCases.id})`
+        );
+      } else if (input.questionsFilter === "no_questions") {
+        conditions.push(
+          sql`NOT EXISTS (SELECT 1 FROM echoLibraryCaseQuestions WHERE echoLibraryCaseQuestions.caseId = ${echoLibraryCases.id})`
         );
       }
       if (input.search) {
@@ -1165,11 +1175,29 @@ export const caseLibraryRouter = router({
         }
       }
 
+      // Fetch question counts for each case in this page
+      const caseIds = cases.map((c) => c.id);
+      let questionCountMap: Record<number, number> = {};
+      if (caseIds.length > 0) {
+        const qCounts = await db
+          .select({
+            caseId: echoLibraryCaseQuestions.caseId,
+            cnt: count(echoLibraryCaseQuestions.id),
+          })
+          .from(echoLibraryCaseQuestions)
+          .where(sql`${echoLibraryCaseQuestions.caseId} IN (${caseIds.join(",")})`)
+          .groupBy(echoLibraryCaseQuestions.caseId);
+        for (const row of qCounts) {
+          questionCountMap[row.caseId] = row.cnt;
+        }
+      }
+
       return {
         cases: cases.map((c) => ({
           ...c,
           tags: c.tags ? JSON.parse(c.tags) : [],
           submitterName: submitterMap[c.submittedByUserId] ?? "Unknown",
+          questionCount: questionCountMap[c.id] ?? 0,
         })),
         total: totalResult[0]?.count ?? 0,
         page: input.page,

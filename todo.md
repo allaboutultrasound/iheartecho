@@ -487,3 +487,8 @@
 - [x] Lower refetchInterval on getTodaySet and getLiveChallenge from 5 minutes to 60 seconds
 - [x] Fix duplicate completion card bug: legacy getLiveChallenge "0/1" card renders alongside new getTodaySet "2/5" card
 - [x] Fix "View Archive" button in daily challenge banner — scrolls to tab bar and activates archive tab
+- [ ] Add progress bar to Adult Echo Navigator showing sections completed / total
+- [ ] Progress bar should update as user checks off items in each section
+- [x] Fix case library cards showing raw HTML tags in description preview
+- [x] Add has-questions / no-questions marker to admin case management list
+- [x] Fix HTML stripping in CaseDetail.tsx related cases preview
