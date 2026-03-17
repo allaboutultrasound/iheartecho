@@ -570,8 +570,25 @@ export default function QuickFireAdmin() {
     onSuccess: () => {
       toast.success("Today's challenge set has been refreshed! Users will now see the updated questions.");
       challengeListQuery.refetch();
+      utils.quickfire.getTodaySet.invalidate();
+      utils.quickfire.getLiveChallenge.invalidate();
     },
     onError: (err) => toast.error(err.message || "Failed to refresh today's set."),
+  });
+
+  const [refreshingCategory, setRefreshingCategory] = React.useState<string | null>(null);
+  const refreshCategoryMutation = trpc.quickfire.adminRefreshCategory.useMutation({
+    onSuccess: (data) => {
+      toast.success(`${data.category} challenge refreshed! New question is now live.`);
+      setRefreshingCategory(null);
+      challengeListQuery.refetch();
+      utils.quickfire.getTodaySet.invalidate();
+      utils.quickfire.getLiveChallenge.invalidate();
+    },
+    onError: (err) => {
+      toast.error(err.message || "Failed to refresh category.");
+      setRefreshingCategory(null);
+    },
   });
 
   const reorderMutation = trpc.quickfire.adminReorderChallenges.useMutation({
@@ -1164,7 +1181,7 @@ export default function QuickFireAdmin() {
                   size="sm"
                   className="gap-1.5 border-orange-400 text-orange-600 hover:bg-orange-50"
                   onClick={() => {
-                    if (confirm("Refresh today\'s challenge set? This will reset all live challenges back to scheduled and rebuild today\'s set from the current queue. Users will see the updated questions immediately.")) {
+                    if (confirm("Refresh ALL categories? This resets every live challenge back to scheduled and rebuilds today's full set from the queue. Users will see the updated questions immediately.")) {
                       refreshTodaySetMutation.mutate();
                     }
                   }}
@@ -1172,7 +1189,7 @@ export default function QuickFireAdmin() {
                   title="Clears today's cached set so the next page load rebuilds it from the current queue. Use when POCUS or other categories aren't showing."
                 >
                   {refreshTodaySetMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                  Refresh Today
+                  Refresh All Categories
                 </Button>
                 <Button
                   variant="outline"
@@ -1199,14 +1216,35 @@ export default function QuickFireAdmin() {
               }, {} as Record<string, number>);
               return (
                 <div className="space-y-2">
-                  {/* Totals row */}
+                  {/* Totals row with per-category refresh */}
                   <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                    {QUEUE_CATS.map((cat) => (
-                      <div key={cat} className="bg-white border border-gray-100 rounded-lg px-3 py-2 text-center">
-                        <div className="text-lg font-bold" style={{ color: "#189aa1" }}>{counts[cat]}</div>
-                        <div className="text-[10px] text-gray-400 leading-tight">{cat}</div>
-                      </div>
-                    ))}
+                    {QUEUE_CATS.map((cat) => {
+                      const isRefreshable = ["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "POCUS"].includes(cat);
+                      const isRefreshing = refreshingCategory === cat;
+                      return (
+                        <div key={cat} className="bg-white border border-gray-100 rounded-lg px-3 py-2 text-center relative group">
+                          <div className="text-lg font-bold" style={{ color: "#189aa1" }}>{counts[cat]}</div>
+                          <div className="text-[10px] text-gray-400 leading-tight">{cat}</div>
+                          {isRefreshable && (
+                            <button
+                              className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-teal-50"
+                              title={`Refresh today's ${cat} challenge`}
+                              disabled={isRefreshing || refreshCategoryMutation.isPending}
+                              onClick={() => {
+                                if (confirm(`Refresh today's ${cat} challenge? This will swap in the next queued ${cat} question.`)) {
+                                  setRefreshingCategory(cat);
+                                  refreshCategoryMutation.mutate({ category: cat as any });
+                                }
+                              }}
+                            >
+                              {isRefreshing
+                                ? <Loader2 className="w-3 h-3 animate-spin text-teal-500" />
+                                : <RefreshCw className="w-3 h-3 text-teal-400" />}
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                   {/* Filter buttons */}
                   <div className="flex flex-wrap gap-1.5">

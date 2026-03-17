@@ -2828,4 +2828,83 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
     await ensureTodaySet(db, date);
     return { refreshed: true, date };
   }),
+
+  /**
+   * Refresh today's daily set for a single category.
+   * Clears the category slot in the stored daily set, resets any live challenge
+   * for that category back to scheduled, then calls ensureTodaySet to rebuild
+   * the full set (which will fill the now-empty slot with the next queued challenge).
+   */
+  adminRefreshCategory: adminProcedure
+    .input(z.object({ category: z.enum(["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "POCUS"]) }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const date = todayDateStr();
+      const catKey = CAT_KEY[input.category as ChallengeCategory];
+
+      // ── Step 1: Read today's set and null out this category's slot ────────
+      const [existingSet] = await db
+        .select({ questionIds: quickfireDailySets.questionIds })
+        .from(quickfireDailySets)
+        .where(eq(quickfireDailySets.setDate, date))
+        .limit(1);
+
+      if (existingSet) {
+        const setMap = parseDailySetIds(existingSet.questionIds);
+        // Auto-activate the old question in case it went inactive
+        const oldId = setMap[catKey];
+        if (typeof oldId === "number") {
+          await autoActivateQuestions(db, [oldId]);
+        }
+        // Null out just this category slot and update the row
+        setMap[catKey] = null;
+        await db
+          .update(quickfireDailySets)
+          .set({ questionIds: JSON.stringify(setMap) })
+          .where(eq(quickfireDailySets.setDate, date));
+      }
+
+      // ── Step 2: Reset the live challenge for this category back to scheduled ─
+      // Find live challenges whose category matches
+      const liveForCat = await db
+        .select({ id: quickfireChallenges.id })
+        .from(quickfireChallenges)
+        .where(
+          and(
+            eq(quickfireChallenges.status, "live"),
+            input.category === "Adult Echo"
+              ? sql`(${quickfireChallenges.category} = ${input.category} OR ${quickfireChallenges.category} IS NULL)` as any
+              : eq(quickfireChallenges.category, input.category)
+          )
+        );
+      for (const row of liveForCat) {
+        await db
+          .update(quickfireChallenges)
+          .set({ status: "scheduled", publishedAt: null, archivedAt: null })
+          .where(eq(quickfireChallenges.id, row.id));
+      }
+
+      // ── Step 3: Rebuild the full daily set (fills the empty slot) ─────────
+      // If no set row exists yet, ensureTodaySet will create one from scratch
+      if (!existingSet) {
+        await ensureTodaySet(db, date);
+      } else {
+        // Delete and fully rebuild so ensureTodaySet can re-pick all categories cleanly
+        await db.delete(quickfireDailySets).where(eq(quickfireDailySets.setDate, date));
+        // Also reset any other live challenges published today so they aren't double-counted
+        await db
+          .update(quickfireChallenges)
+          .set({ status: "scheduled", publishedAt: null, archivedAt: null })
+          .where(
+            and(
+              eq(quickfireChallenges.status, "live"),
+              sql`DATE(${quickfireChallenges.publishedAt}) = ${date}` as any
+            )
+          );
+        await ensureTodaySet(db, date);
+      }
+
+      return { refreshed: true, category: input.category, date };
+    }),
 });

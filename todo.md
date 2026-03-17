@@ -502,3 +502,9 @@
 ## Question Edit & Daily Challenge Bugs (Mar 17 2026)
 - [x] Fix: edited challenge questions still showing old content to users — added getLiveChallenge.invalidate() to updateMutation and updateArchivedQuestionMutation
 - [x] Fix: today's daily challenge — ECONNRESET was transient (recovered); daily set confirmed correct in DB; getLiveChallenge now fully invalidated on question edit
+
+## Admin Daily Challenge Refresh Controls (Mar 17 2026)
+- [x] Add adminRefreshAllCategories tRPC procedure that calls ensureTodaySet for every category
+- [x] Add "Refresh All" button in QuickFireAdmin queue header (rebuilds today's set for all 5 categories)
+- [x] Add per-category "Refresh" icon button in the category tally row (rebuilds today's set for that category only)
+- [x] Trigger a full refresh of all categories immediately via the new procedure
