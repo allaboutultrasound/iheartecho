@@ -304,3 +304,40 @@ textarea,
   transform: rotateY(180deg);
   border: 2px solid #189aa1;
 }
+
+/* ─── Print styles for IAC Accreditation Checklist ──────────────────────────── */
+@media print {
+  /* Hide navigation, sidebars, and non-checklist UI */
+  nav,
+  header,
+  aside,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Reset page layout */
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 11pt;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  /* Avoid page breaks inside checklist cards */
+  .space-y-3 > * {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Remove shadows */
+  .shadow-lg,
+  .shadow-md,
+  .shadow-sm {
+    box-shadow: none !important;
+  }
+
+  @page {
+    margin: 1.5cm;
+  }
+}

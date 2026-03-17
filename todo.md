@@ -534,3 +534,8 @@
 - [x] Standards Navigator (AccreditationNavigator) remains separate — organized by IAC standard topic with checklist mode toggle
 - [x] DIY Accreditation Tool → Readiness tab now shows IAC 2025 Accreditation Readiness Checklist with 6 areas
 - [x] Updated header title to "IAC 2025 Accreditation Readiness Checklist" with updated subtitle
+
+## Accreditation Checklist Improvements (Mar 17 2026)
+- [x] Remove Case Mix section from Readiness Assessment tab — N/A: Case Studies is now Step 6 in the IAC 2025 checklist (caseMixStep), already correctly integrated
+- [x] CME auto-verification: upgraded getReadinessAutoChecks to check actual hour totals (MD: 30h total/15h echo; Medical Staff: 15h/5h echo; Tech: 15h) against IAC 2025 thresholds
+- [x] Print Checklist PDF button: added "Print Checklist" button to header (calls window.print()); print CSS hides nav/sidebar and formats checklist cleanly

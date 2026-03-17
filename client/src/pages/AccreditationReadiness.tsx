@@ -12,7 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import {
   CheckCircle2, Circle, ChevronDown, ChevronRight,
-  Save, AlertCircle, Info, ClipboardCheck,
+  Save, AlertCircle, Info, ClipboardCheck, Printer,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -523,15 +523,25 @@ export default function AccreditationReadiness({ trpcNamespace = "accreditationR
             Based on the IAC Echocardiography Accreditation Checklist (2025). Organized by Facility, Equipment, Staff, CME, Policies, and Case Studies.
           </p>
         </div>
-        <Button
-          onClick={handleSave}
-          disabled={!isDirty || saveMutation.isPending}
-          className="flex items-center gap-2 text-white"
-          style={{ background: BRAND }}
-        >
-          <Save className="w-4 h-4" />
-          {saveMutation.isPending ? "Saving..." : "Save Progress"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => window.print()}
+            className="flex items-center gap-2 text-gray-700 border-gray-300 hover:bg-gray-50 print:hidden"
+          >
+            <Printer className="w-4 h-4" />
+            Print Checklist
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={!isDirty || saveMutation.isPending}
+            className="flex items-center gap-2 text-white print:hidden"
+            style={{ background: BRAND }}
+          >
+            <Save className="w-4 h-4" />
+            {saveMutation.isPending ? "Saving..." : "Save Progress"}
+          </Button>
+        </div>
       </div>
 
       {/* Overall Progress Card */}

@@ -1678,20 +1678,55 @@ export async function getReadinessAutoChecks(labId: number): Promise<Record<stri
   result["s2-s-2"] = hasSonographers;
   result["s2-p-1"] = hasPhysicians;
 
-  // ── CME documented ─────────────────────────────────────────────────────────
-  const cmeRows = await db
-    .select({ labMemberId: cmeEntries.labMemberId, total: count(cmeEntries.id) })
+  // ── CME auto-verification — check actual hour totals vs IAC 2025 thresholds ──
+  // IAC 2025 thresholds:
+  //   Medical Director:   30h total cardiac imaging (≥15h echo_specific) over past 3 years
+  //   Medical Staff:      15h total cardiac imaging (≥5h echo_specific) over past 3 years
+  //   Technical Director: 15h cardiac imaging during credentialing triennial
+  //   Technical Staff:    15h cardiac imaging during credentialing triennial
+  const threeYearsAgo = new Date();
+  threeYearsAgo.setFullYear(threeYearsAgo.getFullYear() - 3);
+  const threeYearsAgoStr = threeYearsAgo.toISOString().slice(0, 10); // YYYY-MM-DD
+  const cmeDetailRows = await db
+    .select({
+      labMemberId: cmeEntries.labMemberId,
+      creditHours: cmeEntries.creditHours,
+      category: cmeEntries.category,
+    })
     .from(cmeEntries)
-    .where(eq(cmeEntries.labId, labId))
-    .groupBy(cmeEntries.labMemberId);
-
-  const membersWithCme = new Set(cmeRows.filter(r => r.total > 0).map(r => r.labMemberId));
+    .where(and(
+      eq(cmeEntries.labId, labId),
+      sql`${cmeEntries.activityDate} >= ${threeYearsAgoStr}`,
+    ));
+  // Build per-member totals: total hours (all cardiac) and echo hours (echo_specific only)
+  const memberCmeTotals = new Map<number, { total: number; echo: number }>();
+  for (const row of cmeDetailRows) {
+    const existing = memberCmeTotals.get(row.labMemberId) ?? { total: 0, echo: 0 };
+    existing.total += row.creditHours;
+    if (row.category === "echo_specific") existing.echo += row.creditHours;
+    memberCmeTotals.set(row.labMemberId, existing);
+  }
   const medDirIds = members.filter(m => m.role === "medical_director").map(m => m.id);
   const techDirIds = members.filter(m => m.role === "technical_director").map(m => m.id);
   const sonoIds = members.filter(m => m.role === "technical_staff").map(m => m.id);
   const physIds = members.filter(m => m.role === "medical_staff").map(m => m.id);
-
-  result["s2-md-6"] = medDirIds.length > 0 && medDirIds.some(id => membersWithCme.has(id));
+  // Medical Director: 30h total AND ≥15h echo_specific (all MDs must meet threshold)
+  const mdMeetsTotalCme = medDirIds.length > 0 && medDirIds.every(id => (memberCmeTotals.get(id)?.total ?? 0) >= 30);
+  const mdMeetsEchoCme  = medDirIds.length > 0 && medDirIds.every(id => (memberCmeTotals.get(id)?.echo  ?? 0) >= 15);
+  result["cme-md-1"] = mdMeetsTotalCme;
+  result["cme-md-2"] = mdMeetsEchoCme;
+  // Medical Staff: 15h total AND ≥5h echo_specific (all medical staff must meet threshold)
+  const msMeetsTotalCme = physIds.length > 0 && physIds.every(id => (memberCmeTotals.get(id)?.total ?? 0) >= 15);
+  const msMeetsEchoCme  = physIds.length > 0 && physIds.every(id => (memberCmeTotals.get(id)?.echo  ?? 0) >= 5);
+  result["cme-ms-1"] = msMeetsTotalCme;
+  result["cme-ms-2"] = msMeetsEchoCme;
+  // Technical Director: ≥15h total
+  result["cme-td-1"] = techDirIds.length > 0 && techDirIds.every(id => (memberCmeTotals.get(id)?.total ?? 0) >= 15);
+  // Technical Staff: ≥15h total (all technical staff must meet threshold)
+  result["cme-ts-1"] = sonoIds.length > 0 && sonoIds.every(id => (memberCmeTotals.get(id)?.total ?? 0) >= 15);
+  // Legacy staff-section keys (backward compat with old checklist IDs)
+  const membersWithCme = new Set(cmeDetailRows.filter(r => r.creditHours > 0).map(r => r.labMemberId));
+  result["s2-md-6"] = mdMeetsTotalCme && mdMeetsEchoCme;
   result["s2-td-5"] = techDirIds.length > 0 && techDirIds.some(id => membersWithCme.has(id));
   result["s2-s-6"] = sonoIds.length > 0 && sonoIds.some(id => membersWithCme.has(id));
   result["s2-p-4"] = physIds.length > 0 && physIds.some(id => membersWithCme.has(id));
