@@ -516,3 +516,9 @@
 ## Stale Challenge Display Bug (Mar 17 2026)
 - [x] Investigate: users still seeing yesterday's challenge questions and results after refresh
 - [x] Fix: adminRefreshTodaySet and adminRefreshCategory were resetting live challenges to 'scheduled' (re-picked same ones) — fixed to ARCHIVE them so ensureTodaySet advances to next in queue
+
+## User Question Submission — Media Upload (Mar 17 2026)
+- [x] Create /api/upload-user-question-media endpoint (authenticated users, no WMV, images ≤20MB, videos ≤200MB)
+- [x] Add videoUrl field to submitUserQuestion tRPC schema and DB insert
+- [x] Add image/video upload UI to SubmitQuestionTab with drag-drop zone, preview, and remove button
+- [x] Show attached media (image/video) in admin Submissions review panel

@@ -71,7 +71,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Pencil, Loader2, BookOpen, SendHorizonal, CheckCircle, Clock, XCircle as XCircleIcon, Plus, Minus } from "lucide-react";
+import { Pencil, Loader2, BookOpen, SendHorizonal, CheckCircle, Clock, XCircle as XCircleIcon, Plus, Minus, ImageIcon, Video, Upload, X as XIcon } from "lucide-react";
 import DailyChallengeBanner from "@/components/DailyChallengeBanner";
 import { FetalEchoIcon, PocusIcon } from "@/components/CategoryIcons";
 
@@ -150,15 +150,44 @@ function SubmitQuestionTab({ isAuthenticated }: { isAuthenticated: boolean }) {
   const [correctAnswer, setCorrectAnswer] = useState(0);
   const [explanation, setExplanation] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [mediaUrl, setMediaUrl] = useState<string | null>(null);
+  const [mediaType, setMediaType] = useState<"image" | "video" | null>(null);
+  const [mediaUploading, setMediaUploading] = useState(false);
+  const [mediaError, setMediaError] = useState<string | null>(null);
+
+  async function handleMediaUpload(file: File) {
+    setMediaError(null);
+    setMediaUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload-user-question-media", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Upload failed.");
+      setMediaUrl(data.url);
+      setMediaType(data.mediaType);
+    } catch (err: any) {
+      setMediaError(err.message ?? "Upload failed.");
+    } finally {
+      setMediaUploading(false);
+    }
+  }
 
   const submitMutation = trpc.quickfire.submitUserQuestion.useMutation({
     onSuccess: () => {
-      toast.success("✅ Question submitted for review! You’ll earn 50 bonus XP if approved.");
+      toast.success("✅ Question submitted for review! You'll earn 50 bonus XP if approved.");
       setSubmitted(true);
       setQuestion("");
       setOptions(["", "", "", ""]);
       setCorrectAnswer(0);
       setExplanation("");
+      setMediaUrl(null);
+      setMediaType(null);
+      setMediaError(null);
       utils.quickfire.getMySubmissions.invalidate();
     },
     onError: (err) => toast.error(err.message || "Failed to submit question."),
@@ -183,6 +212,8 @@ function SubmitQuestionTab({ isAuthenticated }: { isAuthenticated: boolean }) {
       difficulty,
       submitterName: submitterName.trim(),
       submitterLinkedIn: submitterLinkedIn.trim() || undefined,
+      imageUrl: mediaType === "image" && mediaUrl ? mediaUrl : undefined,
+      videoUrl: mediaType === "video" && mediaUrl ? mediaUrl : undefined,
     });
   }
 
@@ -331,6 +362,66 @@ function SubmitQuestionTab({ isAuthenticated }: { isAuthenticated: boolean }) {
             maxLength={2000}
             className="resize-none"
           />
+        </div>
+
+        {/* Media upload — image or video (no WMV) */}
+        <div>
+          <label className="text-xs font-semibold text-gray-600 mb-1.5 block">
+            Image or Video <span className="text-gray-400 font-normal">(optional — no WMV)</span>
+          </label>
+          {!mediaUrl ? (
+            <label
+              className={`flex flex-col items-center justify-center gap-2 w-full border-2 border-dashed rounded-xl p-6 cursor-pointer transition-colors ${
+                mediaUploading ? "border-[#189aa1]/40 bg-[#189aa1]/5" : "border-gray-200 hover:border-[#189aa1]/60 hover:bg-gray-50"
+              }`}
+            >
+              {mediaUploading ? (
+                <><Loader2 className="w-6 h-6 animate-spin text-[#189aa1]" /><span className="text-xs text-gray-500">Uploading…</span></>
+              ) : (
+                <>
+                  <Upload className="w-6 h-6 text-gray-400" />
+                  <span className="text-xs text-gray-500 text-center">
+                    Click to upload an image or video<br />
+                    <span className="text-[10px] text-gray-400">JPEG, PNG, WEBP, GIF (max 20 MB) · MP4, WEBM, MOV, AVI, MKV (max 200 MB)</span>
+                  </span>
+                </>
+              )}
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime,video/x-msvideo,video/x-matroska"
+                className="hidden"
+                disabled={mediaUploading}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleMediaUpload(file);
+                  e.target.value = "";
+                }}
+              />
+            </label>
+          ) : (
+            <div className="relative rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
+              {mediaType === "image" ? (
+                <img src={mediaUrl} alt="Uploaded" className="w-full max-h-64 object-contain" />
+              ) : (
+                <video src={mediaUrl} controls className="w-full max-h-64" />
+              )}
+              <button
+                type="button"
+                onClick={() => { setMediaUrl(null); setMediaType(null); setMediaError(null); }}
+                className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors"
+                title="Remove media"
+              >
+                <XIcon className="w-3.5 h-3.5 text-white" />
+              </button>
+              <div className="flex items-center gap-1.5 px-3 py-2 text-xs text-gray-500">
+                {mediaType === "image" ? <ImageIcon className="w-3.5 h-3.5" /> : <Video className="w-3.5 h-3.5" />}
+                {mediaType === "image" ? "Image attached" : "Video attached"}
+              </div>
+            </div>
+          )}
+          {mediaError && (
+            <p className="text-xs text-red-500 mt-1.5">{mediaError}</p>
+          )}
         </div>
 
         {/* Submit button */}

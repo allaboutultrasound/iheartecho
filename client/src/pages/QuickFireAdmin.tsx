@@ -2122,6 +2122,19 @@ export default function QuickFireAdmin() {
                         </div>
                       )}
 
+                      {/* Attached media */}
+                      {(q.imageUrl || q.videoUrl) && (
+                        <div className="mt-3">
+                          <p className="text-xs font-semibold text-gray-500 mb-1.5">Attached Media</p>
+                          {q.imageUrl && (
+                            <img src={q.imageUrl} alt="Submitted media" className="w-full max-h-64 object-contain rounded-lg border border-gray-200" />
+                          )}
+                          {q.videoUrl && (
+                            <video src={q.videoUrl} controls className="w-full max-h-64 rounded-lg border border-gray-200" />
+                          )}
+                        </div>
+                      )}
+
                       {/* Reject dialog */}
                       {rejectOpen && (
                         <div className="mt-3 p-3 rounded-lg border border-red-200 bg-red-50 space-y-2">
