@@ -484,3 +484,4 @@
 - [x] Add small "growing library — check back weekly" notice to SoundBytes page
 - [x] Swap SVG icons for Adult Echo and ECG categories in SoundBytes
 - [x] Fix bug: edits to live challenge questions not displaying after save
+- [x] Lower refetchInterval on getTodaySet and getLiveChallenge from 5 minutes to 60 seconds

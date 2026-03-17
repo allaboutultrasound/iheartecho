@@ -418,12 +418,12 @@ export default function QuickFire() {
   // ── Daily Challenge state ──────────────────────────────────────────────────
   // Uses the new challenge system (1 question per challenge from quickfireChallenges)
   const { data, isLoading, error, refetch } = trpc.quickfire.getLiveChallenge.useQuery(undefined, {
-    refetchInterval: 5 * 60 * 1000, // re-check every 5 min in case a new challenge goes live
+    refetchInterval: 60 * 1000, // re-check every 60 s in case a new challenge goes live
   });
 
   // ── New 4-category daily set ──────────────────────────────────────────────
   const todaySetQuery = trpc.quickfire.getTodaySet.useQuery(undefined, {
-    refetchInterval: 5 * 60 * 1000,
+    refetchInterval: 60 * 1000, // 60 seconds — reflects admin edits and queue changes faster
   });
   const categoryPrefsQuery = trpc.quickfire.getCategoryPrefs.useQuery(undefined, { enabled: isAuthenticated });
   const updateCategoryPrefsMutation = trpc.quickfire.updateCategoryPrefs.useMutation({
