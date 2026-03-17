@@ -485,3 +485,4 @@
 - [x] Swap SVG icons for Adult Echo and ECG categories in SoundBytes
 - [x] Fix bug: edits to live challenge questions not displaying after save
 - [x] Lower refetchInterval on getTodaySet and getLiveChallenge from 5 minutes to 60 seconds
+- [x] Fix duplicate completion card bug: legacy getLiveChallenge "0/1" card renders alongside new getTodaySet "2/5" card

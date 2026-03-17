@@ -1556,7 +1556,13 @@ export default function QuickFire() {
             )}
 
             {/* Session results */}
-            {showResults && (() => {
+            {/* Legacy single-challenge session results card.
+               Suppressed when the multi-category daily set is fully complete
+               (allDoneDaily) and no specific category is active — in that case
+               the new "Today's Challenge Complete" card above already shows the
+               correct aggregate score and rendering both causes the duplicate
+               score bug reported by the user. */}
+            {showResults && !(allDoneDaily && !activeCategory) && (() => {
               const correctCount = sessionResults.filter((r) => r.correct === true).length;
               const pct = Math.round((correctCount / questions.length) * 100);
               const grade =
