@@ -1411,16 +1411,44 @@ export default function QuickFire() {
                             const attempt = qId ? todayAttempts[qId] : undefined;
                             const isDone = attempt !== undefined;
                             const isCorrect = attempt?.isCorrect === true;
+                            const isClickable = isDone && !isDisabled;
                             return (
                               <div
                                 key={cat.key}
-                                className={`flex items-center gap-3 rounded-xl border-2 px-4 py-3 ${
+                                role={isClickable ? "button" : undefined}
+                                tabIndex={isClickable ? 0 : undefined}
+                                onClick={() => {
+                                  if (!isClickable) return;
+                                  // Reset review state then navigate into the category
+                                  setCurrentIndex(0);
+                                  setSelectedAnswer(null);
+                                  setAnswered(false);
+                                  setAnswerResult(null);
+                                  setSessionResults([]);
+                                  setShowResults(false);
+                                  setFlipped(false);
+                                  setActiveCategory(cat.key);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (isClickable && (e.key === "Enter" || e.key === " ")) {
+                                    e.preventDefault();
+                                    setCurrentIndex(0);
+                                    setSelectedAnswer(null);
+                                    setAnswered(false);
+                                    setAnswerResult(null);
+                                    setSessionResults([]);
+                                    setShowResults(false);
+                                    setFlipped(false);
+                                    setActiveCategory(cat.key);
+                                  }
+                                }}
+                                className={`flex items-center gap-3 rounded-xl border-2 px-4 py-3 transition-all ${
                                   isDisabled
                                     ? "border-gray-100 bg-gray-50 opacity-50"
                                     : isDone
                                     ? isCorrect
-                                      ? "border-green-200 bg-green-50"
-                                      : "border-orange-200 bg-orange-50"
+                                      ? "border-green-200 bg-green-50 cursor-pointer hover:border-green-400 hover:shadow-sm"
+                                      : "border-orange-200 bg-orange-50 cursor-pointer hover:border-orange-400 hover:shadow-sm"
                                     : "border-gray-100 bg-gray-50"
                                 }`}
                               >
@@ -1438,13 +1466,25 @@ export default function QuickFire() {
                                     isDone ? (isCorrect ? "text-green-800" : "text-orange-800") : "text-gray-500"
                                   }`}>{cat.label}</p>
                                   <p className={`text-xs ${
-                                    isDone ? (isCorrect ? "text-green-600" : "text-orange-600") : "text-gray-400"
-                                  }`}>{cat.desc}</p>
+                                    isDone
+                                      ? isCorrect
+                                        ? "text-green-600"
+                                        : "text-orange-600"
+                                      : "text-gray-400"
+                                  }`}>
+                                    {isClickable ? (isCorrect ? "Tap to review" : "Tap to review") : cat.desc}
+                                  </p>
                                 </div>
                                 {isDone ? (
-                                  isCorrect
-                                    ? <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
-                                    : <XCircle className="w-5 h-5 text-orange-400 flex-shrink-0" />
+                                  <div className="flex items-center gap-1 flex-shrink-0">
+                                    {isCorrect
+                                      ? <CheckCircle2 className="w-5 h-5 text-green-500" />
+                                      : <XCircle className="w-5 h-5 text-orange-400" />
+                                    }
+                                    <ChevronRight className={`w-4 h-4 ${
+                                      isCorrect ? "text-green-400" : "text-orange-300"
+                                    }`} />
+                                  </div>
                                 ) : (
                                   <span className="text-xs text-gray-400 flex-shrink-0">Skipped</span>
                                 )}

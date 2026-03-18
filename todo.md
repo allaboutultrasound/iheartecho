@@ -561,3 +561,6 @@
 
 ## Daily Challenge Completion View (Mar 18 2026)
 - [x] After completion banner, replace question display with category status cards (green=correct, orange=incorrect)
+
+## Clickable Completion Status Cards (Mar 18 2026)
+- [x] Make completed category status cards clickable to review answer/explanation
