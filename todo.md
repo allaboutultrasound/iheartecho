@@ -544,3 +544,6 @@
 - [x] Add buildUserSubmissionConfirmationEmail template to email.ts (branded HTML, submission summary card, "What Happens Next" steps)
 - [x] Wire confirmation email into submitUserQuestion procedure (fire-and-forget, sends to ctx.user.email)
 - [x] Email includes: QID, category, difficulty, question preview, image/video flags, estimated review timeline (5-7 business days), "Submit Another Question" CTA
+
+## Challenge Player Media Display (Mar 17 2026)
+- [x] Show imageUrl/videoUrl in challenge player — already implemented (lines 1745-1766 in QuickFire.tsx); today's Adult Echo question (id:60006) has an imageUrl and it renders correctly
