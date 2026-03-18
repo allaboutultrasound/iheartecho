@@ -1385,19 +1385,72 @@ export default function QuickFire() {
                     }).length;
                     const totalAnswered = enabledCatsWithQ.length;
                     return (
-                      <div className="rounded-2xl p-8 text-center" style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}>
-                        <Trophy className="w-14 h-14 text-[#4ad9e0] mx-auto mb-4" />
-                        <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "Merriweather, serif" }}>Today's Challenge Complete!</h2>
-                        <p className="text-white/60 text-sm mb-1">Today's score</p>
-                        <div className="text-5xl font-black text-white mb-1" style={{ fontFamily: "JetBrains Mono, monospace" }}>{correctCount}/{totalAnswered}</div>
-                        <p className="text-[#4ad9e0] font-semibold mb-6">{Math.round((correctCount / totalAnswered) * 100)}% correct</p>
-                        <div className="flex flex-wrap gap-3 justify-center">
-                          <Button className="text-white" style={{ background: "#189aa1" }} onClick={() => setActiveTab("performance")}>
-                            <BarChart3 className="w-4 h-4 mr-2" /> View My Stats
-                          </Button>
-                          <Button variant="outline" className="border-white/30 text-white hover:bg-white/10" onClick={() => setActiveTab("leaderboard")}>
-                            <Trophy className="w-4 h-4 mr-2" /> Leaderboard
-                          </Button>
+                      <div className="space-y-4">
+                        {/* Completion banner */}
+                        <div className="rounded-2xl p-8 text-center" style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}>
+                          <Trophy className="w-14 h-14 text-[#4ad9e0] mx-auto mb-4" />
+                          <h2 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: "Merriweather, serif" }}>Today's Challenge Complete!</h2>
+                          <p className="text-white/60 text-sm mb-1">Today's score</p>
+                          <div className="text-5xl font-black text-white mb-1" style={{ fontFamily: "JetBrains Mono, monospace" }}>{correctCount}/{totalAnswered}</div>
+                          <p className="text-[#4ad9e0] font-semibold mb-6">{Math.round((correctCount / totalAnswered) * 100)}% correct</p>
+                          <div className="flex flex-wrap gap-3 justify-center">
+                            <Button className="text-white" style={{ background: "#189aa1" }} onClick={() => setActiveTab("performance")}>
+                              <BarChart3 className="w-4 h-4 mr-2" /> View My Stats
+                            </Button>
+                            <Button variant="outline" className="border-white/30 text-white hover:bg-white/10" onClick={() => setActiveTab("leaderboard")}>
+                              <Trophy className="w-4 h-4 mr-2" /> Leaderboard
+                            </Button>
+                          </div>
+                        </div>
+
+                        {/* Category status cards */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {CATS.map((cat) => {
+                            const isDisabled = catPrefs[cat.prefKey] === false;
+                            const qId = categoryMap[cat.mapKey];
+                            const attempt = qId ? todayAttempts[qId] : undefined;
+                            const isDone = attempt !== undefined;
+                            const isCorrect = attempt?.isCorrect === true;
+                            return (
+                              <div
+                                key={cat.key}
+                                className={`flex items-center gap-3 rounded-xl border-2 px-4 py-3 ${
+                                  isDisabled
+                                    ? "border-gray-100 bg-gray-50 opacity-50"
+                                    : isDone
+                                    ? isCorrect
+                                      ? "border-green-200 bg-green-50"
+                                      : "border-orange-200 bg-orange-50"
+                                    : "border-gray-100 bg-gray-50"
+                                }`}
+                              >
+                                <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                  isDone ? (isCorrect ? "bg-green-500" : "bg-orange-400") : "bg-gray-300"
+                                }`}>
+                                  {(cat.mapKey === "fetalEcho" || cat.mapKey === "pocus") ? (
+                                    <cat.Icon className="w-7 h-7" />
+                                  ) : (
+                                    <cat.Icon className="w-4 h-4 text-white" />
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className={`text-sm font-bold ${
+                                    isDone ? (isCorrect ? "text-green-800" : "text-orange-800") : "text-gray-500"
+                                  }`}>{cat.label}</p>
+                                  <p className={`text-xs ${
+                                    isDone ? (isCorrect ? "text-green-600" : "text-orange-600") : "text-gray-400"
+                                  }`}>{cat.desc}</p>
+                                </div>
+                                {isDone ? (
+                                  isCorrect
+                                    ? <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
+                                    : <XCircle className="w-5 h-5 text-orange-400 flex-shrink-0" />
+                                ) : (
+                                  <span className="text-xs text-gray-400 flex-shrink-0">Skipped</span>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     );
@@ -1697,8 +1750,8 @@ export default function QuickFire() {
               );
             })()}
 
-            {/* Question card */}
-            {(activeCategory ? !todaySetQuery.isLoading : !isLoading && !error) && currentQ && !showResults && (() => {
+            {/* Question card — hidden when all daily categories are done and no specific category is active */}
+            {(activeCategory ? !todaySetQuery.isLoading : !isLoading && !error) && currentQ && !showResults && !(allDoneDaily && !activeCategory) && (() => {
               const typeInfo = TYPE_LABELS[currentQ.type] ?? TYPE_LABELS.scenario;
               const TypeIcon = typeInfo.icon;
               const options: string[] = Array.isArray(currentQ.options) ? currentQ.options : [];

@@ -558,3 +558,6 @@
 - [x] Fire fbq('track', 'Lead') on upgrade CTA click in SoundBytes upgrade modal
 - [x] Fire fbq('track', 'ViewContent', { content_name: 'SoundBytes' }) when free user opens a video
 - [x] Verify pixel fires correctly in browser
+
+## Daily Challenge Completion View (Mar 18 2026)
+- [x] After completion banner, replace question display with category status cards (green=correct, orange=incorrect)
