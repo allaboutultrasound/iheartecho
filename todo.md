@@ -550,3 +550,6 @@
 
 ## SoundBytes Gating Change (Mar 18 2026)
 - [x] SoundBytes: change free-tier gate from 1 video per category to 1 video total across all categories
+
+## Meta Pixel (Mar 18 2026)
+- [x] Add Meta Pixel (ID: 1114076277535971) to index.html head
