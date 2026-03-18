@@ -547,3 +547,6 @@
 
 ## Challenge Player Media Display (Mar 17 2026)
 - [x] Show imageUrl/videoUrl in challenge player — already implemented (lines 1745-1766 in QuickFire.tsx); today's Adult Echo question (id:60006) has an imageUrl and it renders correctly
+
+## SoundBytes Gating Change (Mar 18 2026)
+- [x] SoundBytes: change free-tier gate from 1 video per category to 1 video total across all categories

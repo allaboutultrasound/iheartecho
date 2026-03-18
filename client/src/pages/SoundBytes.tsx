@@ -5,8 +5,8 @@
  *   - Not logged in: blurred overlay with login prompt
  *   - Logged in, free user:
  *       • First video in each category is playable (isFree=true from server)
- *       • After watching 1 video in a category, clicking any other video in that
- *         same category shows an upgrade modal instead of playing
+ *       • After watching ANY 1 video (across all categories), ALL other videos
+ *         show an upgrade modal instead of playing
  *       • All other locked videos show a lock overlay
  *   - Premium user: full access to all videos
  */
@@ -69,8 +69,8 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 const PREMIUM_ROLES_SET = new Set(["premium_user", "diy_user", "diy_admin", "platform_admin"]);
 
-// localStorage key for persisting watched categories across sessions
-const WATCHED_CATEGORIES_KEY = "ihe_sb_watched_cats";
+// localStorage key for persisting whether the free user has watched any video
+const HAS_WATCHED_ANY_KEY = "ihe_sb_watched_any";
 
 // ── Video embed helper ─────────────────────────────────────────────────────────
 
@@ -161,7 +161,7 @@ function UpgradeModal({ categoryLabel, onClose, onCtaClick, variant }: UpgradeMo
             className="text-xl font-black text-white mb-1"
             style={{ fontFamily: "Merriweather, serif" }}
           >
-            You've used your free {categoryLabel} video
+            You've used your free SoundByte™
           </h2>
           <p className="text-white/70 text-sm leading-relaxed">
             Upgrade to iHeartEcho™ Premium to unlock every SoundByte™ in every category — unlimited access to the full clinical micro-lesson library.
@@ -267,14 +267,13 @@ export default function SoundBytesPage() {
   const [activeCategory, setActiveCategory] = useState<CategoryId>("all");
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
-  // Track which categories the free user has already watched a video in.
+  // Track whether the free user has already watched any video (1 total across all categories).
   // Persisted to localStorage so the gate survives page refreshes.
-  const [watchedCategories, setWatchedCategories] = useState<Set<string>>(() => {
+  const [hasWatchedAny, setHasWatchedAny] = useState<boolean>(() => {
     try {
-      const stored = localStorage.getItem(WATCHED_CATEGORIES_KEY);
-      return stored ? new Set(JSON.parse(stored) as string[]) : new Set();
+      return localStorage.getItem(HAS_WATCHED_ANY_KEY) === "true";
     } catch {
-      return new Set();
+      return false;
     }
   });
 
@@ -300,8 +299,8 @@ export default function SoundBytesPage() {
   // Determine if the selected item is free-tier (based on list data)
   const selectedItem = items.find((i) => i.id === selectedId);
   const selectedIsFree = selectedItem?.isFree ?? false;
-  // Can view detail if premium OR if the item is free-tier and user is logged in
-  const canViewSelected = isPremium || (isAuthenticated && selectedIsFree);
+  // Can view detail if premium OR if the item is free-tier, user is logged in, and they haven't used their 1 free video yet
+  const canViewSelected = isPremium || (isAuthenticated && selectedIsFree && !hasWatchedAny);
 
   // Fetch selected item detail
   const { data: selected } = trpc.soundBytes.getById.useQuery(
@@ -340,16 +339,14 @@ export default function SoundBytesPage() {
   }
 
   /**
-   * Mark a category as watched and persist to localStorage.
+   * Mark that the free user has watched their 1 free video and persist to localStorage.
    * Called when a free user successfully plays a video.
    */
-  function markCategoryWatched(category: string) {
-    if (watchedCategories.has(category)) return;
-    const next = new Set(watchedCategories);
-    next.add(category);
-    setWatchedCategories(next);
+  function markWatchedAny() {
+    if (hasWatchedAny) return;
+    setHasWatchedAny(true);
     try {
-      localStorage.setItem(WATCHED_CATEGORIES_KEY, JSON.stringify([...next]));
+      localStorage.setItem(HAS_WATCHED_ANY_KEY, "true");
     } catch {
       // localStorage unavailable — in-memory only
     }
@@ -360,27 +357,22 @@ export default function SoundBytesPage() {
    *
    * Rules:
    *   1. If the item is free (isFree=true from server) AND the user hasn't watched
-   *      this category yet → play it and mark the category as watched.
-   *   2. If the item is free but the user HAS already watched this category →
-   *      show the upgrade modal (they've used their 1 free video for this category).
+   *      any video yet → play it and mark that they've used their 1 free video.
+   *   2. If the user HAS already watched any video → show the upgrade modal.
    *   3. If the item is locked (not free) → show the upgrade modal immediately.
    */
   function handleFreeUserSelect(id: number) {
     const item = items.find((i) => i.id === id);
     if (!item) return;
-
     const itemIsFree = item.isFree ?? false;
-    const alreadyWatchedCategory = watchedCategories.has(item.category);
-
-    if (itemIsFree && !alreadyWatchedCategory) {
-      // Allow play — this is their 1 free video for this category
+    if (itemIsFree && !hasWatchedAny) {
+      // Allow play — this is their 1 free video total
       setSelectedId(id);
-      markCategoryWatched(item.category);
+      markWatchedAny();
       recordView.mutate({ soundByteId: id, watchedSeconds: 0, completed: false });
     } else {
-      // Either locked or they've already used their free video in this category
-      const label = CATEGORY_LABELS[item.category] ?? item.category;
-      setUpgradeModalCategory(label);
+      // Either locked or they've already used their 1 free video
+      setUpgradeModalCategory("SoundBytes™");
     }
   }
 
@@ -556,7 +548,7 @@ export default function SoundBytesPage() {
             {/* Upgrade CTA — inline after watching the free video */}
             <div className="mt-6 rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4" style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}>
               <div className="flex-1">
-                <p className="text-xs font-semibold text-[#4ad9e0] uppercase tracking-wider mb-1">You've used your free {CATEGORY_LABELS[selected.category] ?? selected.category} video</p>
+                <p className="text-xs font-semibold text-[#4ad9e0] uppercase tracking-wider mb-1">You've used your free SoundByte™</p>
                 <p className="text-white font-bold text-sm">Upgrade to unlock all SoundBytes™</p>
                 <p className="text-white/60 text-xs mt-0.5">Get unlimited access to the full clinical echo micro-lesson library.</p>
               </div>
@@ -576,7 +568,7 @@ export default function SoundBytesPage() {
             isLoading={isLoading}
             onSelect={handleFreeUserSelect}
             previewItems={PREVIEW_ITEMS}
-            watchedCategories={watchedCategories}
+            hasWatchedAny={hasWatchedAny}
           />
         )}
 
@@ -989,8 +981,8 @@ function DiscussionThread({ discussion, isExpanded, onToggleReplies }: Discussio
 // ── FreeUserGrid — shown to logged-in free users ───────────────────────────────
 //
 // Gate logic:
-//   • isFree=true AND category not yet watched → playable (green "Free" badge)
-//   • isFree=true AND category already watched → shows "1 used" badge, clicking fires upgrade modal
+//   • isFree=true AND hasWatchedAny=false → playable (green "Free" badge)
+//   • isFree=true AND hasWatchedAny=true → soft-locked ("Watched" badge), clicking fires upgrade modal
 //   • isFree=false → locked (lock overlay), clicking fires upgrade modal
 
 interface FreeUserGridProps {
@@ -1006,10 +998,10 @@ interface FreeUserGridProps {
   isLoading: boolean;
   onSelect: (id: number) => void;
   previewItems: { title: string; category: string }[];
-  watchedCategories: Set<string>;
+  hasWatchedAny: boolean;
 }
 
-function FreeUserGrid({ items, isLoading, onSelect, previewItems, watchedCategories }: FreeUserGridProps) {
+function FreeUserGrid({ items, isLoading, onSelect, previewItems, hasWatchedAny }: FreeUserGridProps) {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1026,7 +1018,8 @@ function FreeUserGrid({ items, isLoading, onSelect, previewItems, watchedCategor
     );
   }
 
-  const displayItems = items.length > 0 ? items : previewItems.map((p, i) => ({ ...p, id: -(i + 1), isFree: false }));
+  type GridItem = { id: number; title: string; category: string; thumbnailUrl?: string | null; displayViews?: number | null; phantomViews?: number | null; isFree?: boolean };
+  const displayItems: GridItem[] = items.length > 0 ? items : previewItems.map((p, i) => ({ ...p, id: -(i + 1), isFree: false }));
 
   return (
     <>
@@ -1034,7 +1027,7 @@ function FreeUserGrid({ items, isLoading, onSelect, previewItems, watchedCategor
       <div className="mb-5 rounded-xl px-4 py-3 flex items-center gap-3" style={{ background: "linear-gradient(90deg, #0e1e2e, #0e4a50)" }}>
         <Crown className="w-5 h-5 text-[#4ad9e0] flex-shrink-0" />
         <div className="flex-1">
-          <p className="text-white text-sm font-semibold">Free Access: 1 SoundByte™ per category</p>
+          <p className="text-white text-sm font-semibold">Free Access: 1 SoundByte™ total</p>
           <p className="text-white/60 text-xs">Upgrade to Premium to unlock the full library of clinical echo micro-lessons.</p>
         </div>
         <a href="https://www.iheartecho.com" target="_blank" rel="noopener noreferrer"
@@ -1047,11 +1040,10 @@ function FreeUserGrid({ items, isLoading, onSelect, previewItems, watchedCategor
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {displayItems.map((item) => {
           const itemIsFree = item.isFree ?? false;
-          const categoryWatched = watchedCategories.has(item.category);
-          // Playable = first in category AND category not yet watched
-          const isPlayable = itemIsFree && !categoryWatched;
-          // Soft-locked = first in category but already watched (used their 1 free)
-          const isSoftLocked = itemIsFree && categoryWatched;
+          // Playable = first in category AND user hasn't watched any video yet
+          const isPlayable = itemIsFree && !hasWatchedAny;
+          // Soft-locked = first in category but user has already watched their 1 free video
+          const isSoftLocked = itemIsFree && hasWatchedAny;
           // Hard-locked = not the first in category
           const isHardLocked = !itemIsFree;
           const isLocked = isSoftLocked || isHardLocked;
