@@ -72,6 +72,17 @@ const PREMIUM_ROLES_SET = new Set(["premium_user", "diy_user", "diy_admin", "pla
 // localStorage key for persisting whether the free user has watched any video
 const HAS_WATCHED_ANY_KEY = "ihe_sb_watched_any";
 
+// ── Meta Pixel helpers ────────────────────────────────────────────────────────
+// Safe wrapper — no-ops if the pixel hasn't loaded yet (e.g. ad-blockers)
+function fbTrack(event: string, params?: Record<string, unknown>) {
+  try {
+    const fbq = (window as any).fbq;
+    if (typeof fbq === "function") fbq("track", event, params ?? {});
+  } catch {
+    // silently ignore if fbq is unavailable
+  }
+}
+
 // ── Video embed helper ─────────────────────────────────────────────────────────
 
 function getEmbedUrl(videoUrl: string): string | null {
@@ -110,6 +121,7 @@ const ANNUAL_SAVINGS_PCT = "30%";
 interface UpgradeModalProps {
   categoryLabel: string;
   onClose: () => void;
+  /** Called when the user clicks any upgrade CTA — fires Meta Pixel Lead + Subscribe events */
   onCtaClick: () => void;
   variant: "A" | "B";
 }
@@ -236,6 +248,7 @@ function UpgradeModal({ categoryLabel, onClose, onCtaClick, variant }: UpgradeMo
               target="_blank"
               rel="noopener noreferrer"
               onClick={onCtaClick}
+
               className="mt-2 flex items-center justify-center w-full py-2.5 rounded-xl text-xs font-semibold text-gray-500 hover:text-[#189aa1] hover:bg-gray-50 transition-all"
             >
               Or pay {MONTHLY_PRICE}/month
@@ -290,6 +303,16 @@ export default function SoundBytesPage() {
       trackAbImpression({ category: upgradeModalCategory });
     }
   }, [upgradeModalCategory]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /**
+   * Fired when the user clicks any upgrade CTA inside the modal.
+   * Tracks A/B click + fires Meta Pixel Lead and Subscribe events.
+   */
+  function handleUpgradeCtaClick() {
+    trackAbClick({ category: upgradeModalCategory ?? "" });
+    fbTrack("Lead", { content_name: "SoundBytes Upgrade", content_category: "SoundBytes" });
+    fbTrack("Subscribe", { content_name: "SoundBytes Upgrade", predicted_ltv: 83.88 });
+  }
 
   // Fetch list (public procedure — returns published items with isFree per category)
   const { data: items = [], isLoading } = trpc.soundBytes.list.useQuery({
@@ -370,6 +393,8 @@ export default function SoundBytesPage() {
       setSelectedId(id);
       markWatchedAny();
       recordView.mutate({ soundByteId: id, watchedSeconds: 0, completed: false });
+      // Meta Pixel: free user opened a SoundByte — build retargeting audience
+      fbTrack("ViewContent", { content_name: "SoundBytes", content_category: item.category });
     } else {
       // Either locked or they've already used their 1 free video
       setUpgradeModalCategory("SoundBytes™");
@@ -399,7 +424,7 @@ export default function SoundBytesPage() {
         <UpgradeModal
           categoryLabel={upgradeModalCategory}
           onClose={() => setUpgradeModalCategory(null)}
-          onCtaClick={() => trackAbClick({ category: upgradeModalCategory })}
+          onCtaClick={handleUpgradeCtaClick}
           variant={abVariant}
         />
       )}

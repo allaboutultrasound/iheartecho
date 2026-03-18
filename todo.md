@@ -553,3 +553,8 @@
 
 ## Meta Pixel (Mar 18 2026)
 - [x] Add Meta Pixel (ID: 1114076277535971) to index.html head
+
+## Meta Pixel Event Tracking (Mar 18 2026)
+- [x] Fire fbq('track', 'Lead') on upgrade CTA click in SoundBytes upgrade modal
+- [x] Fire fbq('track', 'ViewContent', { content_name: 'SoundBytes' }) when free user opens a video
+- [x] Verify pixel fires correctly in browser
