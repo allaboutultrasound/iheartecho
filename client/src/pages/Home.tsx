@@ -10,7 +10,7 @@ import Layout from "@/components/Layout";
 import { trpc } from "@/lib/trpc";
 import {
   Calculator, ClipboardList, Activity, BookOpen, FileText,
-  ArrowRight, Users, Award, Zap, Stethoscope, ExternalLink, MessageCircle, GraduationCap, BookMarked, Crown, Shield, Trophy, Volume2
+  ArrowRight, Users, Award, Zap, Stethoscope, ExternalLink, MessageCircle, GraduationCap, BookMarked, Crown, Shield, Trophy, Volume2, Layers, CreditCard
 } from "lucide-react";
 
 const BRAND = "#189aa1";
@@ -231,7 +231,7 @@ export default function Home() {
             <p className="text-white/70 text-sm md:text-base leading-relaxed mb-6 max-w-lg">
               A real-time echo interpretation and measurement assistant for cardiac ultrasound students, sonographers, echocardiographers, cardiologists, physicians, residents, ACS professionals, and echo educators. Guideline-based, fast, and built for the clinical environment.
             </p>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-3 mb-6">
               <Link href="/echo-assist-hub">
                 <button className="flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90 hover:scale-105"
                   style={{ background: "#189aa1" }}>
@@ -250,6 +250,55 @@ export default function Home() {
                 <ExternalLink className="w-4 h-4" />
                 iheartecho.com
               </a>
+            </div>
+
+            {/* Banner quick-links — Daily Challenge · Case Library · Flashcards · SoundBytes */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {[
+                {
+                  href: "/quickfire",
+                  img: "https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/daily-challenge-banner-v3_AAUS_12d47e49.webp",
+                  label: "Daily Challenge",
+                  icon: <Trophy className="w-3.5 h-3.5" />,
+                },
+                {
+                  href: "/case-library",
+                  img: "https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/caselibrary-banner-final_AAUS_d0043ef2.webp",
+                  label: "Case Library",
+                  icon: <BookOpen className="w-3.5 h-3.5" />,
+                },
+                {
+                  href: "/flashcards",
+                  img: "https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/flashcards-banner-final_AAUS_0a0bdc19.webp",
+                  label: "Flashcards",
+                  icon: <Layers className="w-3.5 h-3.5" />,
+                },
+                {
+                  href: "/soundbytes",
+                  img: "https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/ihe-hero-MNscA4NaWNyxrdkewtLGLG.webp",
+                  label: "SoundBytes™",
+                  icon: <Volume2 className="w-3.5 h-3.5" />,
+                },
+              ].map(({ href, img, label, icon }) => (
+                <Link key={href} href={href}>
+                  <div className="relative overflow-hidden rounded-xl cursor-pointer group h-20">
+                    {/* Background image */}
+                    <div
+                      className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-105"
+                      style={{ backgroundImage: `url("${img}")` }}
+                    />
+                    {/* Dark overlay */}
+                    <div className="absolute inset-0 bg-black/40 group-hover:bg-black/30 transition-colors" />
+                    {/* Label */}
+                    <div className="relative h-full flex flex-col items-start justify-end p-2.5">
+                      <div className="flex items-center gap-1 text-white">
+                        {icon}
+                        <span className="text-xs font-bold leading-tight">{label}</span>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
             </div>
           </div>
         </div>

@@ -564,3 +564,10 @@
 
 ## Clickable Completion Status Cards (Mar 18 2026)
 - [x] Make completed category status cards clickable to review answer/explanation
+
+## Hero Banner Images (Mar 19 2026)
+- [x] Upload daily-challenge-banner-v3_AAUS.webp to CDN
+- [x] Upload caselibrary-banner-final_AAUS.webp to CDN
+- [x] Apply daily challenge banner to Daily Challenge (QuickFire) hero section
+- [x] Apply case library banner to Case Library hero section
+- [x] Add banner quick-links to dashboard hero (Daily Challenge, Case Library, Flashcards, SoundBytes)
