@@ -577,3 +577,10 @@
 - [x] Add MPI scan coach entry to Adult Echo module (ScanCoach.tsx)
 - [x] Add MPI (Tei Index) calculator to Fetal Echo module (FetalEchoAssist already has Tei Index engine)
 - [x] Add MPI scan coach entry to Fetal Echo module (FetalNavigator.tsx)
+
+## GuidelinesAssist™ (Mar 20 2026)
+- [x] Research all current ASE guidelines and compile measurement cut-off values
+- [x] Build GuidelinesAssist page with topic cards, accordion sub-topics, measurement tables
+- [x] Add sidenav link (just below EchoAssist)
+- [x] Add dashboard card
+- [x] Add cross-links to EchoAssist calculators, navigators, and ScanCoach

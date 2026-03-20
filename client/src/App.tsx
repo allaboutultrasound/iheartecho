@@ -113,6 +113,8 @@ import SoundBytesPage from "./pages/SoundBytes";
 import SoundBytesAdmin from "./pages/SoundBytesAdmin";
 // Accreditation Sales Page
 import AccreditationProSalesPage from "./pages/AccreditationProSalesPage";
+// GuidelinesAssist™
+import GuidelinesAssist from "./pages/GuidelinesAssist";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -208,6 +210,7 @@ function Router() {
       <Route path="/structural-heart-scan-coach">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><StructuralHeartScanCoach /></RoleGuard>}</Route>
       <Route path="/pulm-htn" component={PulmHTNNavigator} />
       <Route path="/diastolic">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><DiastolicNavigator /></RoleGuard>}</Route>
+      <Route path="/guidelines-assist" component={GuidelinesAssist} />
       <Route path="/echo-assist-hub" component={EchoAssistHub} />
       {/* ── LMS Engines ──────────────────────────────────────────────────── */}
       <Route path="/quickfire" component={QuickFire} />

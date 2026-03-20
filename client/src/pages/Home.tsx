@@ -10,7 +10,7 @@ import Layout from "@/components/Layout";
 import { trpc } from "@/lib/trpc";
 import {
   Calculator, ClipboardList, Activity, BookOpen, FileText,
-  ArrowRight, Users, Award, Zap, Stethoscope, ExternalLink, MessageCircle, GraduationCap, BookMarked, Crown, Shield, Trophy, Volume2, Layers, CreditCard
+  ArrowRight, Users, Award, Zap, Stethoscope, ExternalLink, MessageCircle, GraduationCap, BookMarked, Crown, Shield, Trophy, Volume2, Layers, CreditCard, BookCheck
 } from "lucide-react";
 
 const BRAND = "#189aa1";
@@ -46,6 +46,15 @@ const modules: Module[] = [
     badge: "Guideline-Based",
     color: BRAND,
     interests: ["adultEcho", "acs"],
+  },
+  {
+    path: "/guidelines-assist",
+    icon: BookCheck,
+    title: "GuidelinesAssist™",
+    description: "Fast-lookup ASE guideline quick-reference: measurement cut-offs, grading algorithms, and normal values for every major echo domain — linked to EchoAssist calculators and ScanCoach.",
+    badge: "ASE Guidelines",
+    color: BRAND,
+    interests: ["adultEcho", "pediatricEcho", "fetalEcho", "acs"],
   },
   {
     path: "/quickfire",

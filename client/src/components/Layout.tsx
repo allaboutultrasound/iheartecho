@@ -10,7 +10,7 @@ import {
   Scan, BookOpen, FileText, Menu, X, ChevronRight,
   Stethoscope, Zap, ExternalLink, ShoppingBag, FlaskConical, MessageCircle, Award, Shield, GraduationCap,
   BookMarked, Library, Plus, Crown, Droplets, Building2, Users, UserPlus,
-  LogIn, LogOut, Settings, ChevronDown, Webhook, Layers, CreditCard, Lock, Trophy, Volume2
+  LogIn, LogOut, Settings, ChevronDown, Webhook, Layers, CreditCard, Lock, Trophy, Volume2, BookCheck
 } from "lucide-react";
 
 import { trpc } from "@/lib/trpc";
@@ -63,6 +63,7 @@ const navGroups = [
       { path: "/pocus-assist-hub", label: "POCUS-Assist™", icon: Shield },
       { path: "/hemodynamics", label: "Hemodynamics Lab", icon: Activity },
       { path: "/echoassist", label: "EchoAssist™ Calculators", icon: Calculator },
+      { path: "/guidelines-assist", label: "GuidelinesAssist™", icon: BookCheck },
       { path: "/report", label: "Report Builder", icon: FileText },
     ],
   },
@@ -115,6 +116,7 @@ const hiddenNavItems = [
   { path: "/admin/quickfire", label: "Daily Challenge Admin" },
   { path: "/admin/thinkific-webhook", label: "Thinkific Webhook" },
   { path: "/echo-assist-hub", label: "EchoAssist™" },
+  { path: "/guidelines-assist", label: "GuidelinesAssist™" },
   { path: "/scan-coach", label: "EchoAssist™ — Scan Coach" },
   { path: "/pocus-assist-hub", label: "POCUS-Assist™" },
   { path: "/pocus-efast", label: "eFAST Navigator" },
