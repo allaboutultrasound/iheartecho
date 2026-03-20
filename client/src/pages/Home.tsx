@@ -101,15 +101,7 @@ const modules: Module[] = [
     color: BRAND,
     interests: ["adultEcho", "pediatricEcho", "fetalEcho", "acs"],
   },
-  {
-    path: "/report",
-    icon: FileText,
-    title: "Report Builder",
-    description: "Enter measurements and generate a complete, structured echo report instantly.",
-    badge: "Time Saver",
-    color: BRAND,
-    interests: ["adultEcho", "acs"],
-  },
+
   {
     path: "/accreditation-navigator",
     icon: Award,
