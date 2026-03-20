@@ -1177,6 +1177,79 @@ function SVCalculator() {
   );
 }
 
+// --- MPI (TEI INDEX) -------------------------------------------------------
+// Per Tei et al. JASE 1995 | ASE 2005 Chamber Quantification Guidelines
+function MPICalculator() {
+  const [chamber, setChamber] = useState<"LV" | "RV">("LV");
+  const [ict, setIct] = useState("");
+  const [irt, setIrt] = useState("");
+  const [et, setEt] = useState("");
+  const i = parseFloat(ict);
+  const r = parseFloat(irt);
+  const e = parseFloat(et);
+  const valid = i > 0 && r > 0 && e > 0;
+  const mpi = valid ? (i + r) / e : null;
+  // PW Doppler thresholds: LV MPI ≤0.40, RV MPI ≤0.40 (ASE 2005)
+  // Tissue Doppler thresholds: LV MPI ≤0.54, RV MPI ≤0.54
+  const normalThreshold = 0.40;
+  const normal = mpi !== null ? mpi <= normalThreshold : null;
+  const sev: Severity = mpi === null ? "none"
+    : mpi <= normalThreshold ? "normal"
+    : mpi <= normalThreshold + 0.10 ? "mild"
+    : mpi <= normalThreshold + 0.20 ? "moderate"
+    : "severe";
+  const severityLabel = sev === "normal" ? "Normal" : sev === "mild" ? "Mildly Elevated" : sev === "moderate" ? "Moderately Elevated" : sev === "severe" ? "Severely Elevated" : "";
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-2 mb-2">
+        {(["LV", "RV"] as const).map((c) => (
+          <button key={c} onClick={() => setChamber(c)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+              chamber === c ? "text-white border-transparent" : "bg-white border-gray-200 text-gray-600 hover:border-[#189aa1] hover:text-[#189aa1]"
+            }`}
+            style={chamber === c ? { background: "#189aa1" } : {}}>
+            {c} MPI
+          </button>
+        ))}
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        <InputField label="ICT" unit="ms" value={ict} onChange={setIct} placeholder="e.g. 65" hint="Isovolumetric contraction time" />
+        <InputField label="IRT" unit="ms" value={irt} onChange={setIrt} placeholder="e.g. 70" hint="Isovolumetric relaxation time" />
+        <InputField label="ET" unit="ms" value={et} onChange={setEt} placeholder="e.g. 300" hint="Ejection time" />
+      </div>
+      {mpi !== null && (
+        <ResultPanel guideline={`MPI (Tei Index) = (ICT + IRT) / ET | Normal ${chamber} MPI ≤0.40 (PW Doppler) | Tei et al. JASE 1995 | ASE 2005`}>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div>
+              <div className="text-xs text-gray-500 mb-0.5">{chamber} MPI (Tei Index)</div>
+              <div className="text-2xl font-black" style={{ fontFamily: "JetBrains Mono, monospace", color: normal ? "#189aa1" : "#dc2626" }}>
+                {mpi.toFixed(2)}
+              </div>
+              <div className="text-xs text-gray-400">Normal ≤0.40</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-500 mb-0.5">Interpretation</div>
+              <SeverityBadge severity={sev} />
+              <div className="text-xs text-gray-400 mt-1">{severityLabel}</div>
+            </div>
+            <div>
+              <div className="text-xs text-gray-500 mb-0.5">Formula</div>
+              <div className="text-xs font-mono text-gray-600 bg-gray-50 rounded px-2 py-1">
+                ({ict} + {irt}) / {et}
+              </div>
+            </div>
+          </div>
+          {!normal && (
+            <div className="mt-3 text-xs text-amber-700 bg-amber-50 rounded px-3 py-2 border border-amber-100">
+              <strong>Elevated MPI</strong> — suggests global {chamber} myocardial dysfunction. Consider cardiomyopathy, ischaemia, pressure/volume overload, or systemic disease.
+            </div>
+          )}
+        </ResultPanel>
+      )}
+      <p className="text-[10px] text-gray-400">Reference: Tei C et al. J Am Soc Echocardiogr. 1995;8:259-268. | ASE 2005 Guidelines for Chamber Quantification. | Tissue Doppler MPI normal: LV ≤0.54, RV ≤0.54</p>
+    </div>
+  );
+}
 // --- DIASTOLOGY LAP ESTIMATION -----------------------------------------------
 // Per ASE 2025 LV Diastolic Function Guidelines
 function LAPEstimationCalculator() {
@@ -1643,6 +1716,7 @@ const calculators = [
   { id: "lv", label: "LV Function + GLS", sub: "Guideline-Based Strain Assessment" },
   { id: "rv", label: "RV Function + Strain", sub: "Guideline-Based Strain Assessment" },
   { id: "sv", label: "Stroke Volume / CO", sub: "LVOT Method" },
+  { id: "mpi", label: "MPI (Tei Index)", sub: "Global Ventricular Performance" },
 ];
 
 const componentMap: Record<string, React.ReactNode> = {
@@ -1658,6 +1732,7 @@ const componentMap: Record<string, React.ReactNode> = {
   lv: <LVFunctionCalculator />,
   rv: <RVFunctionCalculator />,
   sv: <SVCalculator />,
+  mpi: <MPICalculator />,
 };
 
 export default function EchoCalculator() {

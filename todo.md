@@ -571,3 +571,9 @@
 - [x] Apply daily challenge banner to Daily Challenge (QuickFire) hero section
 - [x] Apply case library banner to Case Library hero section
 - [x] Add banner quick-links to dashboard hero (Daily Challenge, Case Library, Flashcards, SoundBytes)
+
+## MPI / Tei Index Addition (Mar 20 2026)
+- [x] Add MPI (Tei Index) calculator to Adult Echo module (EchoCalculator.tsx)
+- [x] Add MPI scan coach entry to Adult Echo module (ScanCoach.tsx)
+- [x] Add MPI (Tei Index) calculator to Fetal Echo module (FetalEchoAssist already has Tei Index engine)
+- [x] Add MPI scan coach entry to Fetal Echo module (FetalNavigator.tsx)

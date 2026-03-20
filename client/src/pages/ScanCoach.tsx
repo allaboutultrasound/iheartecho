@@ -375,9 +375,49 @@ const tteViews = [
       <text x="100" y="218" text-anchor="middle" font-size="10" fill="#189aa1" font-family="sans-serif">Suprasternal notch, neck extended</text>
     </svg>`,
   },
+  {
+    id: "mpi_tei", name: "MPI / Tei Index (Doppler)", abbr: "MPI",
+    probePosition: "Apical window (A4C for RV MPI; A5C or A4C for LV MPI)",
+    probeOrientation: "Standard apical orientation; PW Doppler sample placed between AV valve tips and LVOT/RVOT outflow",
+    patientPosition: "Left lateral decubitus; same position as apical views",
+    structures: ["Mitral valve inflow (LV MPI)", "LVOT outflow (LV MPI)", "Tricuspid valve inflow (RV MPI)", "RVOT / pulmonic outflow (RV MPI)"],
+    doppler: "PW Doppler: measure ICT (AV valve closure to outflow valve opening), IRT (outflow valve closure to AV valve opening), and ET (outflow valve opening to closure). MPI = (ICT + IRT) / ET. Single-beat method: position sample between inflow and outflow to capture both signals on the same cardiac cycle.",
+    anatomyImageUrl: "",
+    echoImageUrl: "",
+    tips: [
+      "Single-beat method: place PW sample between AV inflow and outflow valve to capture both on one cycle",
+      "LV MPI normal \u22640.40 (PW Doppler) | \u22640.54 (Tissue Doppler / TDI)",
+      "RV MPI normal \u22640.40 (PW Doppler) | \u22640.54 (Tissue Doppler / TDI)",
+      "TDI-MPI: sample at lateral mitral or tricuspid annulus \u2014 more reproducible than PW method",
+      "Elevated MPI (>0.40 PW or >0.54 TDI) suggests global ventricular dysfunction regardless of aetiology",
+      "Use the Echo Severity Calculator (MPI tab) to interpret your measurements",
+    ],
+    pitfalls: [
+      "Atrial fibrillation: MPI is unreliable due to variable RR intervals",
+      "Elevated filling pressures shorten IRT, which can falsely normalise MPI",
+      "Ensure outflow valve opening and closure clicks are clearly identifiable on the Doppler trace",
+      "Do not confuse ICT with the pre-ejection period \u2014 ICT begins at AV valve closure, not QRS onset",
+      "Angle dependence: ensure PW beam is parallel to flow in LVOT/RVOT for accurate ET measurement",
+    ],
+    measurements: ["ICT (ms)", "IRT (ms)", "ET (ms)", "MPI = (ICT + IRT) / ET"],
+    color: "#0e7490",
+    transducerImageUrl: "",
+    probeSvg: `<svg viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-height:200px">
+      <defs><marker id="ahMPI" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#4ad9e0"/></marker></defs>
+      <ellipse cx="100" cy="115" rx="82" ry="98" fill="none" stroke="#cbd5e1" stroke-width="1.5"/>
+      <line x1="100" y1="28" x2="100" y2="185" stroke="#cbd5e1" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <path d="M100,62 Q58,67 42,83" fill="none" stroke="#cbd5e1" stroke-width="1.2"/>
+      <path d="M100,82 Q56,87 40,103" fill="none" stroke="#cbd5e1" stroke-width="1.2"/>
+      <path d="M100,102 Q56,107 40,123" fill="none" stroke="#cbd5e1" stroke-width="1.2"/>
+      <path d="M100,122 Q58,127 44,143" fill="none" stroke="#cbd5e1" stroke-width="1.2"/>
+      <rect x="118" y="148" width="16" height="30" rx="4" fill="#0e7490" transform="rotate(30,126,163)"/>
+      <circle cx="128" cy="148" r="4" fill="#4ad9e0"/>
+      <line x1="128" y1="148" x2="145" y2="132" stroke="#4ad9e0" stroke-width="1.8" marker-end="url(#ahMPI)"/>
+      <text x="100" y="218" text-anchor="middle" font-size="10" fill="#0e7490" font-family="sans-serif">Apex (5th ICS MCL) \u2192 PW inflow + outflow</text>
+    </svg>`,
+  },
 ];
-
-// ─── Fetal Echo Views ─────────────────────────────────────────────────────────
+// ─── Fetal Echo Viewss ─────────────────────────────────────────────────────────
 const fetalViews = [
   {
     id: "abdominal-situs", step: 1,

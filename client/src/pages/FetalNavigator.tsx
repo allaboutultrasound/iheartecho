@@ -213,8 +213,28 @@ const fetalViews = [
     pitfalls: ["TAPVR is easily missed without color Doppler", "Dilated LA with no visible PV connections: suspect obstructed TAPVR"],
     color: "#0e7490",
   },
+  {
+    name: "MPI / Tei Index (Fetal Doppler)",
+    description: "Assesses global ventricular function using the Myocardial Performance Index (MPI / Tei Index). Load-independent and applicable to both RV and LV. Elevated MPI indicates global myocardial dysfunction and warrants evaluation for CHD, cardiomyopathy, fetal infection, or metabolic disorder.",
+    probe: "Apical 4-chamber view | PW Doppler at AV valve tips (inflow) and outflow tract",
+    anatomy: ["Tricuspid valve inflow (RV MPI)", "Pulmonic outflow / RVOT (RV MPI)", "Mitral valve inflow (LV MPI)", "Aortic outflow / LVOT (LV MPI)"],
+    technique: [
+      "Single-beat method: position PW sample between inflow and outflow to capture both on the same cardiac cycle",
+      "Measure ICT (AV valve closure to outflow valve opening), IRT (outflow valve closure to AV valve opening), ET (outflow valve opening to closure)",
+      "MPI = (ICT + IRT) / ET",
+      "Fetal normal values: RV MPI \u22640.55, LV MPI \u22640.53 (ASE 2023 Fetal Echo Guidelines)",
+      "Tissue Doppler MPI is more reproducible \u2014 sample at lateral tricuspid or mitral annulus",
+    ],
+    doppler: "PW Doppler: ICT, IRT, and ET measured from AV valve and outflow valve opening/closure signals. MPI = (ICT + IRT) / ET. Use FetalEchoAssist\u2122 Tei Index engine for guideline-based interpretation.",
+    pitfalls: [
+      "Fetal arrhythmia: MPI is unreliable with irregular RR intervals",
+      "Elevated fetal filling pressures (e.g. hydrops) shorten IRT, which may falsely normalise MPI",
+      "Ensure outflow valve clicks are clearly visible on the Doppler trace before measuring ET",
+      "Do not confuse ICT with the pre-ejection period \u2014 ICT starts at AV valve closure",
+    ],
+    color: "#189aa1",
+  },
 ];
-
 const fetalProtocol = [
   { id: "fp_situs", label: "Situs determination (stomach, liver, IVC, Ao)", critical: true },
   { id: "fp_axis", label: "Cardiac axis (normal 45° ± 20°)", critical: true },
