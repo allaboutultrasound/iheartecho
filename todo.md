@@ -584,3 +584,13 @@
 - [x] Add sidenav link (just below EchoAssist)
 - [x] Add dashboard card
 - [x] Add cross-links to EchoAssist calculators, navigators, and ScanCoach
+
+## GuidelinesAssist™ Print Reference Card (Mar 20 2026)
+- [ ] Print Reference Card: premium-only feature — show icon to all users, prompt upgrade for free users
+- [ ] Print Reference Card: premium users get clean single-page print view of measurement table + grading algorithm
+
+## GuidelinesAssist™ Branding & Print Feature (Mar 20 2026)
+- [x] Remove all "ASE" references from visible UI — use "Guideline-Based" / "Current Guidelines" language; keep "ASE" only in disclaimer
+- [x] Remove year badges (e.g. "ASE 2025") from guideline cards — replace with "Current Guidelines" or "Updated"
+- [x] Add premium-gated Print Reference Card feature — show icon to all, upgrade prompt for free users, print for premium
+- [x] Remove "Updated 2025" from GuidelinesAssist™ search/filter chips

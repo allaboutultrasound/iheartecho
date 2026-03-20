@@ -1,19 +1,24 @@
 /*
   iHeartEcho™ — GuidelinesAssist™
-  Fast-lookup ASE guideline quick-reference for experienced sonographers & cardiologists
+  Fast-lookup guideline-based quick-reference for experienced sonographers & cardiologists
   Brand: Teal #189aa1, Aqua #4ad9e0
   Layout: Topic cards → accordion sub-topics → measurement tables
 */
 import { useState, useMemo } from "react";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { getLoginUrl } from "@/const";
 import {
   Search, ChevronDown, ChevronRight, ExternalLink,
   Activity, Heart, Baby, Users, Zap, BarChart3,
   Stethoscope, Microscope, Shield, Wind, Droplets,
   Calculator, BookOpen, ArrowRight, Clock, Star,
-  AlertCircle, CheckCircle2, Info, Filter, X
+  AlertCircle, CheckCircle2, Info, Filter, X,
+  Printer, Lock
 } from "lucide-react";
+
+const PREMIUM_ROLES = new Set(["premium", "admin", "pro", "member", "paid"]);
 
 const BRAND = "#189aa1";
 const BRAND_LIGHT = "#f0fbfc";
@@ -59,10 +64,10 @@ const guidelines: Guideline[] = [
     icon: Activity,
     title: "LV Diastolic Function & HFpEF",
     shortTitle: "Diastology",
-    year: "ASE 2025",
-    badge: "Updated 2025",
-    isNew: true,
-    description: "Evaluation of LV diastolic function and HFpEF diagnosis. Replaces the 2016 Nagueh guidelines.",
+    year: "Current Guidelines",
+    badge: "LV Diastolic Function",
+    isNew: false,
+    description: "Evaluation of LV diastolic function and HFpEF diagnosis using current guideline-based algorithms.",
     subTopics: [
       {
         id: "grading",
@@ -100,7 +105,7 @@ const guidelines: Guideline[] = [
       {
         id: "hfpef",
         title: "HFpEF Diagnosis",
-        description: "H2FPEF Score and 2025 ASE diagnostic criteria for HFpEF.",
+        description: "H2FPEF Score and guideline-based diagnostic criteria for HFpEF.",
         tables: [
           {
             title: "H2FPEF Score",
@@ -144,9 +149,9 @@ const guidelines: Guideline[] = [
     icon: Wind,
     title: "Right Heart & Pulmonary Hypertension",
     shortTitle: "Right Heart / PH",
-    year: "ASE 2025",
-    badge: "Updated 2025",
-    isNew: true,
+    year: "Current Guidelines",
+    badge: "Right Heart / PH",
+    isNew: false,
     description: "Comprehensive RV assessment, RA size, and pulmonary hypertension probability grading.",
     subTopics: [
       {
@@ -205,7 +210,7 @@ const guidelines: Guideline[] = [
       {
         id: "ph-probability",
         title: "Pulmonary Hypertension Probability",
-        description: "2025 ASE three-tier PH probability classification based on TR velocity and additional signs.",
+        description: "Guideline-based three-tier PH probability classification based on TR velocity and additional signs.",
         tables: [
           {
             title: "PH Probability Classification",
@@ -244,8 +249,8 @@ const guidelines: Guideline[] = [
     icon: Heart,
     title: "Cardiac Chamber Quantification",
     shortTitle: "Chamber Quant",
-    year: "ASE 2015",
-    badge: "Reference Standard",
+    year: "Current Guidelines",
+    badge: "Chamber Quantification",
     description: "LV dimensions, volumes, EF, LA size, and aortic root measurements in adults.",
     subTopics: [
       {
@@ -338,8 +343,8 @@ const guidelines: Guideline[] = [
     icon: Stethoscope,
     title: "Valvular Heart Disease",
     shortTitle: "Valves",
-    year: "ASE 2017",
-    badge: "Core Reference",
+    year: "Current Guidelines",
+    badge: "Valvular Disease",
     description: "Severity grading for AS, AR, MR, TR, and MS using integrated multi-parameter approach.",
     subTopics: [
       {
@@ -453,9 +458,9 @@ const guidelines: Guideline[] = [
     icon: BarChart3,
     title: "Clinical Applications of Strain",
     shortTitle: "Strain",
-    year: "ASE 2025",
-    badge: "Updated 2025",
-    isNew: true,
+    year: "Current Guidelines",
+    badge: "LV Systolic Function",
+    isNew: false,
     description: "LV GLS, RV strain, LA strain, and cardiotoxicity monitoring thresholds.",
     subTopics: [
       {
@@ -532,8 +537,8 @@ const guidelines: Guideline[] = [
     icon: Baby,
     title: "Fetal Echocardiography",
     shortTitle: "Fetal Echo",
-    year: "ASE 2023",
-    badge: "2023 Guidelines",
+    year: "Current Guidelines",
+    badge: "Fetal Echocardiography",
     description: "Performance standards, normal values, and assessment criteria for fetal cardiac evaluation.",
     subTopics: [
       {
@@ -595,7 +600,7 @@ const guidelines: Guideline[] = [
     icon: Users,
     title: "Pediatric Echocardiography",
     shortTitle: "Pediatric Echo",
-    year: "ASE 2016",
+    year: "Current Guidelines",
     badge: "Congenital Heart",
     description: "CHD assessment, BSA-indexed Z-scores, and Qp/Qs shunt estimation.",
     subTopics: [
@@ -630,8 +635,8 @@ const guidelines: Guideline[] = [
     icon: Shield,
     title: "Cardiac POCUS",
     shortTitle: "POCUS",
-    year: "ASE 2024",
-    badge: "Updated 2024",
+    year: "Current Guidelines",
+    badge: "POCUS",
     description: "Cardiac point-of-care ultrasound nomenclature, IVC assessment, and rapid assessment protocols.",
     subTopics: [
       {
@@ -693,8 +698,8 @@ const guidelines: Guideline[] = [
     icon: Stethoscope,
     title: "Comprehensive TTE Examination",
     shortTitle: "TTE Protocol",
-    year: "ASE 2019",
-    badge: "Protocol Standard",
+    year: "Current Guidelines",
+    badge: "Stress Echocardiography",
     description: "Required components of a comprehensive adult TTE examination including views, measurements, and reporting.",
     subTopics: [
       {
@@ -745,7 +750,7 @@ const guidelines: Guideline[] = [
     icon: Activity,
     title: "Myocardial Performance Index (MPI / Tei Index)",
     shortTitle: "MPI / Tei Index",
-    year: "ASE Reference",
+    year: "Current Guidelines",
     badge: "Global Function",
     description: "Global ventricular function index combining systolic and diastolic time intervals.",
     subTopics: [
@@ -761,10 +766,8 @@ const guidelines: Guideline[] = [
               { parameter: "LV MPI (PW Doppler)", normal: "≤ 0.40", mild: "> 0.40 = abnormal global LV function" },
               { parameter: "LV MPI (TDI)", normal: "≤ 0.54", mild: "> 0.54 = abnormal" },
               { parameter: "RV MPI (PW Doppler)", normal: "≤ 0.40", mild: "> 0.40 = abnormal global RV function" },
-              { parameter: "RV MPI (TDI)", normal: "≤ 0.54", mild: "> 0.54 = abnormal" },
-              { parameter: "Fetal LV MPI", normal: "≤ 0.53", mild: "ASE 2023 Fetal Echo Guidelines" },
-              { parameter: "Fetal RV MPI", normal: "≤ 0.55", mild: "ASE 2023 Fetal Echo Guidelines" },
-            ],
+              { parameter: "RV MPI (TDI)", normal: "≤ 0.54", mild: "> 0.54 = abnormal" },              { parameter: "Fetal LV MPI", normal: "\u2264 0.53", mild: "Guideline-based reference" },
+              { parameter: "Fetal RV MPI", normal: "\u2264 0.55", mild: "Guideline-based reference" },    ],
           },
         ],
         links: [
@@ -903,8 +906,88 @@ function SubTopicCard({ sub }: { sub: SubTopic }) {
   );
 }
 
+// ─── Print Reference Card (premium) ──────────────────────────────────────────
+function PrintRefCard({ g, isPremium }: { g: Guideline; isPremium: boolean }) {
+  const [showUpgrade, setShowUpgrade] = useState(false);
+
+  const handlePrint = () => {
+    if (!isPremium) { setShowUpgrade(true); return; }
+    const win = window.open("", "_blank");
+    if (!win) return;
+    const rows = g.subTopics.flatMap(s =>
+      (s.tables ?? []).flatMap(t =>
+        t.rows.filter(r => r.parameter && r.parameter !== "Parameter")
+          .map(r => `<tr><td>${r.parameter}</td><td>${r.normal ?? ""}</td><td>${r.mild ?? ""}</td><td>${r.moderate ?? ""}</td><td>${r.severe ?? ""}</td></tr>`)
+      )
+    ).join("");
+    win.document.write(`<!DOCTYPE html><html><head><title>${g.title} — Reference Card</title>
+      <style>body{font-family:Arial,sans-serif;padding:20px;font-size:12px}h1{color:#189aa1;font-size:16px;margin-bottom:4px}h2{font-size:13px;color:#0e4a50;margin-top:16px;margin-bottom:4px}table{width:100%;border-collapse:collapse;margin-bottom:12px}th{background:#189aa1;color:white;padding:5px 8px;text-align:left;font-size:11px}td{padding:4px 8px;border-bottom:1px solid #e5e7eb;font-size:11px}tr:nth-child(even){background:#f0fbfc}.footer{margin-top:20px;font-size:10px;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:8px}@media print{body{padding:0}}</style>
+      </head><body>
+      <h1>iHeartEcho™ GuidelinesAssist™</h1>
+      <p style="color:#189aa1;font-weight:600;margin:0 0 4px">${g.title}</p>
+      <p style="color:#6b7280;font-size:11px;margin:0 0 12px">${g.description}</p>
+      <table><thead><tr><th>Parameter</th><th>Normal / Mild</th><th>Mild / Moderate</th><th>Moderate</th><th>Severe</th></tr></thead><tbody>${rows}</tbody></table>
+      <div class="footer">GuidelinesAssist™ is a quick-reference tool based on published guidelines for educational purposes. Always refer to original guideline documents for full clinical context. &copy; iHeartEcho™ ${new Date().getFullYear()}</div>
+      </body></html>`);
+    win.document.close();
+    win.focus();
+    setTimeout(() => win.print(), 300);
+  };
+
+  return (
+    <>
+      <button
+        onClick={e => { e.stopPropagation(); handlePrint(); }}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border"
+        style={isPremium
+          ? { color: BRAND, borderColor: BRAND + "40", background: BRAND + "10" }
+          : { color: "#9ca3af", borderColor: "#e5e7eb", background: "#f9fafb" }}
+        title={isPremium ? "Print Reference Card" : "Premium feature — upgrade to print"}
+      >
+        {isPremium ? <Printer className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+        Print Card
+      </button>
+      {showUpgrade && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowUpgrade(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm mx-4" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: BRAND + "18" }}>
+                <Printer className="w-5 h-5" style={{ color: BRAND }} />
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-800 text-sm">Premium Feature</h3>
+                <p className="text-xs text-gray-500">Print Reference Cards</p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+              Printable reference cards are available to <strong>iHeartEcho™ Premium</strong> members. Upgrade to print clean, single-page PDF reference cards for any guideline — perfect for the scanner or study desk.
+            </p>
+            <div className="flex gap-2">
+              <a
+                href="https://www.iheartecho.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
+                style={{ background: BRAND }}
+              >
+                Upgrade to Premium
+              </a>
+              <button
+                onClick={() => setShowUpgrade(false)}
+                className="px-4 py-2.5 rounded-lg font-semibold text-sm text-gray-600 border border-gray-200 hover:bg-gray-50 transition-all"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 // ─── Guideline card ────────────────────────────────────────────────────────────
-function GuidelineCard({ g, defaultOpen }: { g: Guideline; defaultOpen?: boolean }) {
+function GuidelineCard({ g, isPremium, defaultOpen }: { g: Guideline; isPremium: boolean; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen ?? false);
   const Icon = g.icon;
   return (
@@ -924,12 +1007,12 @@ function GuidelineCard({ g, defaultOpen }: { g: Guideline; defaultOpen?: boolean
             )}
           </div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: BRAND + "15", color: BRAND }}>{g.year}</span>
-            <span className="text-xs text-gray-400">{g.badge}</span>
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ background: BRAND + "15", color: BRAND }}>{g.badge}</span>
           </div>
           <p className="text-xs text-gray-500 leading-relaxed">{g.description}</p>
         </div>
-        <div className="flex-shrink-0 mt-1">
+        <div className="flex items-center gap-2 flex-shrink-0 mt-1">
+          <PrintRefCard g={g} isPremium={isPremium} />
           {open
             ? <ChevronDown className="w-5 h-5 text-[#189aa1]" />
             : <ChevronRight className="w-5 h-5 text-gray-400" />}
@@ -950,10 +1033,11 @@ function GuidelineCard({ g, defaultOpen }: { g: Guideline; defaultOpen?: boolean
 export default function GuidelinesAssist() {
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<string>("all");
+  const { user } = useAuth();
+  const isPremium = user ? PREMIUM_ROLES.has(user.role ?? "") : false;
 
   const filters = [
     { id: "all", label: "All Guidelines" },
-    { id: "new", label: "Updated 2025" },
     { id: "valves", label: "Valves" },
     { id: "lv", label: "LV Function" },
     { id: "rv", label: "RV / PH" },
@@ -1003,14 +1087,14 @@ export default function GuidelinesAssist() {
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1 mb-4">
               <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
-              <span className="text-xs text-white/80 font-medium">ASE Guidelines — Quick Reference</span>
+              <span className="text-xs text-white/80 font-medium">Guideline-Based Quick Reference</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-black text-white leading-tight mb-2" style={{ fontFamily: "Merriweather, serif" }}>
               GuidelinesAssist™
             </h1>
-            <p className="text-[#4ad9e0] font-semibold text-base mb-3">ASE Guideline Quick-Reference for Clinical Practice</p>
+            <p className="text-[#4ad9e0] font-semibold text-base mb-3">Current Guidelines — Quick Reference for Clinical Practice</p>
             <p className="text-white/70 text-sm leading-relaxed mb-5 max-w-lg">
-              Fast-lookup measurement cut-offs, grading algorithms, and severity thresholds from every current ASE guideline — with direct links to EchoAssist™ calculators, navigators, and ScanCoach.
+              Fast-lookup measurement cut-offs, grading algorithms, and severity thresholds based on current published guidelines — with direct links to EchoAssist™ calculators, navigators, and ScanCoach.
             </p>
             {/* Stats strip */}
             <div className="flex flex-wrap gap-4">
@@ -1086,7 +1170,7 @@ export default function GuidelinesAssist() {
           <>
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-lg font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
-                {activeFilter === "all" ? "All ASE Guidelines" : filters.find(f => f.id === activeFilter)?.label}
+                {activeFilter === "all" ? "All Guidelines" : filters.find(f => f.id === activeFilter)?.label}
                 <span className="ml-2 text-sm font-normal text-gray-400">({filtered.length})</span>
               </h2>
               {(search || activeFilter !== "all") && (
@@ -1100,7 +1184,7 @@ export default function GuidelinesAssist() {
             </div>
             <div className="space-y-3">
               {filtered.map(g => (
-                <GuidelineCard key={g.id} g={g} />
+                <GuidelineCard key={g.id} g={g} isPremium={isPremium} />
               ))}
             </div>
           </>
