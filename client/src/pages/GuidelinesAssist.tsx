@@ -1094,7 +1094,7 @@ export default function GuidelinesAssist() {
             </h1>
             <p className="text-[#4ad9e0] font-semibold text-base mb-3">Current Guidelines — Quick Reference for Clinical Practice</p>
             <p className="text-white/70 text-sm leading-relaxed mb-5 max-w-lg">
-              Fast-lookup measurement cut-offs, grading algorithms, and severity thresholds based on current published guidelines — with direct links to EchoAssist™ calculators, navigators, and ScanCoach.
+              Fast-lookup measurement cut-offs, grading algorithms, and severity thresholds based on current published guidelines.
             </p>
             {/* Stats strip */}
             <div className="flex flex-wrap gap-4">
