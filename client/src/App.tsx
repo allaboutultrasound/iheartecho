@@ -35,6 +35,7 @@ import { RoleGuard } from "@/components/RoleGuard";
 import AccreditationNavigator from "./pages/AccreditationNavigator";
 import LabAdmin from "./pages/LabAdmin";
 import PlatformAdmin from "./pages/PlatformAdmin";
+import EngagementDashboard from "./pages/EngagementDashboard";
 import ImageQualityReview from "./pages/ImageQualityReview";
 import EchoCorrelation from "./pages/EchoCorrelation";
 import EchoNavigatorHub from "./pages/EchoNavigatorHub";
@@ -189,6 +190,13 @@ function Router() {
         {() => (
           <RoleGuard roles={["platform_admin"]} allowAdmin={false}>
             <PlatformAdmin />
+          </RoleGuard>
+        )}
+      </Route>
+      <Route path="/admin/engagement">
+        {() => (
+          <RoleGuard roles={["platform_admin"]} allowAdmin>
+            <EngagementDashboard />
           </RoleGuard>
         )}
       </Route>

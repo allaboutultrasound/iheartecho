@@ -64,6 +64,7 @@ import {
   CheckCircle,
   Loader2,
   Star,
+  TrendingUp,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import BulkCsvUploadPanel, { type BulkResult } from "@/components/BulkCsvUploadPanel";
@@ -1215,6 +1216,13 @@ export default function PlatformAdmin() {
                 label: "SoundBytes™",
                 description: "Create, publish, and track premium micro-lesson videos by clinical category",
                 color: "#189aa1",
+              },
+              {
+                href: "/admin/engagement",
+                icon: TrendingUp,
+                label: "Engagement Dashboard",
+                description: "Real usage metrics for daily challenges, flashcards, and case library with per-member drill-down",
+                color: "#059669",
               },
             ].map(({ href, icon: Icon, label, description, color }) => (
               <Link key={href} href={href}>

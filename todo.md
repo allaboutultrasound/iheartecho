@@ -620,3 +620,10 @@
 
 ## Live Member Count (Mar 21 2026)
 - [x] Updated DISPLAY_OFFSET from 3392 to 3997 in stats.userCount procedure (real DB count + 3997 shown publicly)
+
+## Engagement Dashboard (Mar 21 2026)
+- [x] Server: getEngagementOverview procedure (platform admin) — totals + 30-day daily activity chart data
+- [x] Server: getEngagementMemberList procedure — per-user summary rows with challenge/flashcard/case counts + last active
+- [x] Server: getEngagementMemberDrilldown procedure — full activity breakdown for one user
+- [x] Client: EngagementDashboard page with KPI cards, 30-day line chart, member table, drill-down modal
+- [x] Register /admin/engagement route and add nav link in PlatformAdmin admin tools grid

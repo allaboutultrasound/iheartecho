@@ -19,6 +19,7 @@ import { accreditationManagerRouter } from "./routers/accreditationManagerRouter
 import { educatorRouter } from "./routers/educatorRouter";
 import { leaderboardRouter } from "./routers/leaderboardRouter";
 import { emailCampaignRouter } from "./routers/emailCampaignRouter";
+import { engagementRouter } from "./routers/engagementRouter";
 import { soundBytesRouter } from "./routers/soundBytesRouter";
 import { abTestRouter } from "./routers/abTestRouter";
 import {
@@ -1836,6 +1837,7 @@ export const appRouter = router({
   leaderboard: leaderboardRouter,
   soundBytes: soundBytesRouter,
   abTest: abTestRouter,
+  engagement: engagementRouter,
 
   // ─── Physician Over-Read Workflow (Step 1 & Step 2) ──────────────────────────
   physicianOverRead: router({
