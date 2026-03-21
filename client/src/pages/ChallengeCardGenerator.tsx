@@ -445,28 +445,28 @@ function QuestionCard({
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 16,
+                gap: 20,
                 background: i % 2 === 0 ? "rgba(255,255,255,0.04)" : `${BRAND}0a`,
                 border: `1px solid ${i % 2 === 0 ? "rgba(255,255,255,0.07)" : BRAND + "33"}`,
-                borderRadius: 12,
-                padding: "13px 20px",
+                borderRadius: 14,
+                padding: "16px 24px",
               }}
             >
               <div
                 style={{
-                  width: 34,
-                  height: 34,
-                  borderRadius: 9,
+                  width: 52,
+                  height: 52,
+                  borderRadius: 13,
                   flexShrink: 0,
                   background: i % 2 === 0 ? "rgba(255,255,255,0.07)" : `${BRAND}33`,
-                  border: `1.5px solid ${i % 2 === 0 ? "rgba(255,255,255,0.12)" : BRAND_AQUA + "55"}`,
+                  border: `2px solid ${i % 2 === 0 ? "rgba(255,255,255,0.12)" : BRAND_AQUA + "55"}`,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   color: i % 2 === 0 ? "rgba(255,255,255,0.65)" : BRAND_AQUA,
                   fontWeight: 800,
-                  fontSize: 14,
-                  boxShadow: i % 2 !== 0 ? `0 0 10px ${BRAND}44` : "none",
+                  fontSize: 22,
+                  boxShadow: i % 2 !== 0 ? `0 0 14px ${BRAND}44` : "none",
                 }}
               >
                 {letters[i]}
