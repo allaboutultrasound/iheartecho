@@ -1055,7 +1055,7 @@ export default function HemodynamicsLab() {
         </div>
 
         {/* Desktop: 3-column layout — controls | wiggers | doppler. Mobile: single column stack */}
-        <div className="grid grid-cols-1 xl:grid-cols-[280px_1fr_300px] gap-5">
+        <div className="grid grid-cols-1 xl:grid-cols-[260px_340px_1fr] gap-5">
 
           {/* ---- CONTROLS ---- */}
           <div className="xl:col-span-1 space-y-4">
@@ -1169,7 +1169,7 @@ export default function HemodynamicsLab() {
                   <span className="flex items-center gap-1"><b className="text-amber-600">T</b> wave</span>
                 </div>
               </div>
-              <ResponsiveContainer width="100%" height={80}>
+              <ResponsiveContainer width="100%" height={100}>
                 <ComposedChart data={wiggersData} margin={{ top: 16, right: 10, bottom: 0, left: 40 }}>
                   <XAxis dataKey="time" type="number" domain={[0, rr_ms]} hide />
                   <YAxis domain={[-0.4, 1.4]} hide />
@@ -1224,7 +1224,7 @@ export default function HemodynamicsLab() {
                   <span className="flex items-center gap-1"><span className="w-3 h-0.5 inline-block bg-[#189aa1]"></span> LA Pressure</span>
                 </div>
               </div>
-              <ResponsiveContainer width="100%" height={150}>
+              <ResponsiveContainer width="100%" height={200}>
                 <ComposedChart data={wiggersData} margin={{ top: 4, right: 10, bottom: 0, left: 40 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="time" type="number" domain={[0, rr_ms]} hide />
@@ -1255,7 +1255,7 @@ export default function HemodynamicsLab() {
                   <span>SV: <b style={{ color: "#189aa1" }}>{Math.round(hemo.sv)} mL</b></span>
                 </div>
               </div>
-              <ResponsiveContainer width="100%" height={100}>
+              <ResponsiveContainer width="100%" height={140}>
                 <ComposedChart data={wiggersData} margin={{ top: 4, right: 10, bottom: 18, left: 40 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="time" type="number" domain={[0, rr_ms]} tick={{ fontSize: 9 }} label={{ value: "Time (ms)", position: "insideBottom", offset: -4, fontSize: 9 }} />
