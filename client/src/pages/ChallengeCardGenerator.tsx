@@ -23,8 +23,144 @@ const BRAND_AQUA = "#4ad9e0";
 const LOGO_URL =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/icon-192_df958e9b.png";
 // Daily challenge card background (trophy + ECG)
-const HERO_URL =
+const HERO_URL_DARK =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/daily-challenge-card-generator_c0aea189.webp";
+const HERO_URL_LIGHT = HERO_URL_DARK; // same image, brightened via CSS filter
+
+// ---- Theme tokens -----------------------------------------------------------
+type CardTheme = "dark" | "light";
+
+interface ThemeTokens {
+  // card shell
+  cardBg: string;
+  heroOverlay: string;
+  heroFilter: string;
+  accentBar: string;
+  leftStripe: string;
+  cornerGlow: string;
+  // text
+  headingColor: string;
+  subheadingColor: string;
+  bodyColor: string;
+  mutedColor: string;
+  footerColor: string;
+  footerRight: string;
+  // options
+  optionEvenBg: string;
+  optionOddBg: string;
+  optionEvenBorder: string;
+  optionOddBorder: string;
+  bubbleEvenBg: string;
+  bubbleOddBg: string;
+  bubbleEvenBorder: string;
+  bubbleOddBorder: string;
+  bubbleEvenColor: string;
+  bubbleOddColor: string;
+  // divider
+  dividerFade: string;
+  // footer border
+  footerBorder: string;
+  // answer box
+  answerBoxBg: string;
+  answerBoxBorder: string;
+  answerTextColor: string;
+  explanationBg: string;
+  explanationBorder: string;
+  explanationTextColor: string;
+  // question recap
+  recapColor: string;
+  recapBorder: string;
+  // pill (question)
+  qPillBg: string;
+  qPillBorder: string;
+  qPillColor: string;
+  // pill (answer)
+  aPillBg: string;
+  aPillBorder: string;
+  aPillColor: string;
+}
+
+const DARK_THEME: ThemeTokens = {
+  cardBg: "#071318",
+  heroOverlay: "linear-gradient(160deg, rgba(5,14,22,0.88) 0%, rgba(7,25,35,0.82) 50%, rgba(5,14,22,0.90) 100%)",
+  heroFilter: "none",
+  accentBar: `linear-gradient(90deg, ${BRAND_DARK}, ${BRAND}, ${BRAND_AQUA}, ${BRAND})`,
+  leftStripe: `linear-gradient(180deg, ${BRAND_AQUA}bb 0%, ${BRAND}44 60%, transparent 100%)`,
+  cornerGlow: `linear-gradient(225deg, ${BRAND}1a 0%, transparent 60%)`,
+  headingColor: "#fff",
+  subheadingColor: "rgba(255,255,255,0.32)",
+  bodyColor: "rgba(255,255,255,0.88)",
+  mutedColor: "rgba(255,255,255,0.65)",
+  footerColor: BRAND_AQUA,
+  footerRight: "rgba(255,255,255,0.25)",
+  optionEvenBg: "rgba(255,255,255,0.04)",
+  optionOddBg: `${BRAND}0a`,
+  optionEvenBorder: "rgba(255,255,255,0.07)",
+  optionOddBorder: `${BRAND}33`,
+  bubbleEvenBg: "rgba(255,255,255,0.07)",
+  bubbleOddBg: `${BRAND}33`,
+  bubbleEvenBorder: "rgba(255,255,255,0.12)",
+  bubbleOddBorder: `${BRAND_AQUA}55`,
+  bubbleEvenColor: "rgba(255,255,255,0.65)",
+  bubbleOddColor: BRAND_AQUA,
+  dividerFade: `${BRAND}55`,
+  footerBorder: `${BRAND}44`,
+  answerBoxBg: "linear-gradient(135deg, rgba(34,197,94,0.12), rgba(74,222,128,0.05))",
+  answerBoxBorder: "rgba(34,197,94,0.4)",
+  answerTextColor: "#fff",
+  explanationBg: `linear-gradient(135deg, ${BRAND}12, rgba(255,255,255,0.02))`,
+  explanationBorder: `${BRAND}44`,
+  explanationTextColor: "rgba(255,255,255,0.82)",
+  recapColor: "rgba(255,255,255,0.50)",
+  recapBorder: `${BRAND}66`,
+  qPillBg: `linear-gradient(135deg, ${BRAND}33, ${BRAND_AQUA}18)`,
+  qPillBorder: BRAND_AQUA,
+  qPillColor: BRAND_AQUA,
+  aPillBg: "linear-gradient(135deg, #22c55e22, #4ade8012)",
+  aPillBorder: "#22c55e",
+  aPillColor: "#4ade80",
+};
+
+const LIGHT_THEME: ThemeTokens = {
+  cardBg: "#e8f7f8",
+  heroOverlay: "linear-gradient(160deg, rgba(220,245,248,0.92) 0%, rgba(200,238,242,0.86) 50%, rgba(215,244,247,0.93) 100%)",
+  heroFilter: "brightness(1.6) saturate(0.5)",
+  accentBar: `linear-gradient(90deg, ${BRAND_DARK}, ${BRAND}, ${BRAND_AQUA}, ${BRAND})`,
+  leftStripe: `linear-gradient(180deg, ${BRAND}cc 0%, ${BRAND}55 60%, transparent 100%)`,
+  cornerGlow: `linear-gradient(225deg, ${BRAND}22 0%, transparent 60%)`,
+  headingColor: BRAND_DARK,
+  subheadingColor: `${BRAND_DARK}99`,
+  bodyColor: "#0d3d44",
+  mutedColor: `${BRAND_DARK}bb`,
+  footerColor: BRAND,
+  footerRight: `${BRAND_DARK}66`,
+  optionEvenBg: "rgba(24,154,161,0.06)",
+  optionOddBg: "rgba(74,217,224,0.10)",
+  optionEvenBorder: `${BRAND}33`,
+  optionOddBorder: `${BRAND_AQUA}55`,
+  bubbleEvenBg: `${BRAND}22`,
+  bubbleOddBg: `${BRAND_AQUA}33`,
+  bubbleEvenBorder: `${BRAND}55`,
+  bubbleOddBorder: `${BRAND_AQUA}88`,
+  bubbleEvenColor: BRAND_DARK,
+  bubbleOddColor: BRAND,
+  dividerFade: `${BRAND}44`,
+  footerBorder: `${BRAND}55`,
+  answerBoxBg: "linear-gradient(135deg, rgba(24,154,161,0.10), rgba(74,217,224,0.06))",
+  answerBoxBorder: `${BRAND}88`,
+  answerTextColor: BRAND_DARK,
+  explanationBg: `linear-gradient(135deg, ${BRAND}0e, rgba(74,217,224,0.06))`,
+  explanationBorder: `${BRAND}44`,
+  explanationTextColor: "#0d3d44",
+  recapColor: `${BRAND_DARK}bb`,
+  recapBorder: `${BRAND}77`,
+  qPillBg: `linear-gradient(135deg, ${BRAND}22, ${BRAND_AQUA}18)`,
+  qPillBorder: BRAND,
+  qPillColor: BRAND_DARK,
+  aPillBg: `linear-gradient(135deg, ${BRAND}22, ${BRAND_AQUA}14)`,
+  aPillBorder: BRAND,
+  aPillColor: BRAND_DARK,
+};
 
 // Required hashtags for all posts
 const REQUIRED_HASHTAGS = [
@@ -153,7 +289,9 @@ async function renderCardToPng(el: HTMLElement): Promise<string> {
 
 // ---- shared card shell ------------------------------------------------------
 
-function CardShell({ children }: { children: React.ReactNode }) {
+function CardShell({ children, t }: { children: React.ReactNode; t: ThemeTokens }) {
+  const isLight = t === LIGHT_THEME;
+  const heroUrl = isLight ? HERO_URL_LIGHT : HERO_URL_DARK;
   return (
     <div
       style={{
@@ -163,7 +301,7 @@ function CardShell({ children }: { children: React.ReactNode }) {
         overflow: "hidden",
         fontFamily: "'Segoe UI', 'Open Sans', sans-serif",
         boxSizing: "border-box",
-        background: "#071318",
+        background: t.cardBg,
       }}
     >
       {/* Full-bleed background image */}
@@ -171,28 +309,19 @@ function CardShell({ children }: { children: React.ReactNode }) {
         style={{
           position: "absolute",
           inset: 0,
-          backgroundImage: `url("${HERO_URL}")`,
+          backgroundImage: `url("${heroUrl}")`,
           backgroundSize: "cover",
           backgroundPosition: "center",
           opacity: 1,
+          filter: t.heroFilter,
         }}
       />
-      {/* Dark overlay to ensure text readability */}
+      {/* Overlay for readability */}
       <div
         style={{
           position: "absolute",
           inset: 0,
-          background: "linear-gradient(160deg, rgba(5,14,22,0.88) 0%, rgba(7,25,35,0.82) 50%, rgba(5,14,22,0.90) 100%)",
-        }}
-      />
-
-      {/* Subtle left-side darkening gradient for text area */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: "linear-gradient(90deg, rgba(5,14,22,0.35) 0%, transparent 70%)",
-          pointerEvents: "none",
+          background: t.heroOverlay,
         }}
       />
 
@@ -204,7 +333,7 @@ function CardShell({ children }: { children: React.ReactNode }) {
           left: 0,
           right: 0,
           height: 7,
-          background: `linear-gradient(90deg, ${BRAND_DARK}, ${BRAND}, ${BRAND_AQUA}, ${BRAND})`,
+          background: t.accentBar,
         }}
       />
 
@@ -216,7 +345,7 @@ function CardShell({ children }: { children: React.ReactNode }) {
           left: 0,
           bottom: 0,
           width: 4,
-          background: `linear-gradient(180deg, ${BRAND_AQUA}bb 0%, ${BRAND}44 60%, transparent 100%)`,
+          background: t.leftStripe,
         }}
       />
 
@@ -228,7 +357,7 @@ function CardShell({ children }: { children: React.ReactNode }) {
           right: 0,
           width: 260,
           height: 260,
-          background: `linear-gradient(225deg, ${BRAND}1a 0%, transparent 60%)`,
+          background: t.cornerGlow,
           clipPath: "polygon(100% 0, 0 0, 100% 100%)",
         }}
       />
@@ -253,12 +382,13 @@ function CardShell({ children }: { children: React.ReactNode }) {
 
 // ---- card header ------------------------------------------------------------
 
-function CardHeader({ pill, pillColor, pillBg, pillBorder }: {
-  pill: string;
-  pillColor: string;
-  pillBg: string;
-  pillBorder: string;
+function CardHeader({ pill, t }: {
+  pill: "QUESTION" | "ANSWER";
+  t: ThemeTokens;
 }) {
+  const pillBg = pill === "QUESTION" ? t.qPillBg : t.aPillBg;
+  const pillBorder = pill === "QUESTION" ? t.qPillBorder : t.aPillBorder;
+  const pillColor = pill === "QUESTION" ? t.qPillColor : t.aPillColor;
   return (
     <div
       style={{
@@ -287,7 +417,7 @@ function CardHeader({ pill, pillColor, pillBg, pillBorder }: {
           <div style={{ display: "flex", alignItems: "baseline", gap: 7 }}>
             <span
               style={{
-                color: "#fff",
+                color: t.headingColor,
                 fontSize: 28,
                 fontWeight: 800,
                 letterSpacing: "-0.5px",
@@ -346,19 +476,19 @@ function CardHeader({ pill, pillColor, pillBg, pillBorder }: {
 
 // ---- teal divider -----------------------------------------------------------
 
-function TealDivider() {
+function TealDivider({ t }: { t: ThemeTokens }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 26 }}>
       <div style={{ height: 3, width: 44, borderRadius: 2, background: `linear-gradient(90deg, ${BRAND_AQUA}, ${BRAND})` }} />
-      <div style={{ height: 3, width: 10, borderRadius: 2, background: `${BRAND}55` }} />
-      <div style={{ height: 3, width: 5, borderRadius: 2, background: `${BRAND}33` }} />
+      <div style={{ height: 3, width: 10, borderRadius: 2, background: t.dividerFade }} />
+      <div style={{ height: 3, width: 5, borderRadius: 2, background: t.dividerFade + "88" }} />
     </div>
   );
 }
 
 // ---- card footer ------------------------------------------------------------
 
-function CardFooter({ right }: { right?: string }) {
+function CardFooter({ right, t }: { right?: string; t: ThemeTokens }) {
   return (
     <div
       style={{
@@ -367,14 +497,14 @@ function CardFooter({ right }: { right?: string }) {
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        borderTop: `1px solid ${BRAND}44`,
+        borderTop: `1px solid ${t.footerBorder}`,
       }}
     >
-      <div style={{ color: BRAND_AQUA, fontSize: 13, fontWeight: 700, opacity: 0.7, letterSpacing: "0.3px" }}>
+      <div style={{ color: t.footerColor, fontSize: 13, fontWeight: 700, opacity: 0.8, letterSpacing: "0.3px" }}>
         iheartecho.com
       </div>
       {right && (
-        <div style={{ color: "rgba(255,255,255,0.25)", fontSize: 12 }}>{right}</div>
+        <div style={{ color: t.footerRight, fontSize: 12 }}>{right}</div>
       )}
     </div>
   );
@@ -387,27 +517,24 @@ function QuestionCard({
   questionText,
   options,
   qid,
+  t,
 }: {
   challengeTitle: string;
   questionText: string;
   options: string[];
   qid: string | null;
+  t: ThemeTokens;
 }) {
   const letters = ["A", "B", "C", "D", "E"];
   const cleanQ = stripHtml(questionText);
 
   return (
-    <CardShell>
-      <CardHeader
-        pill="QUESTION"
-        pillColor={BRAND_AQUA}
-        pillBg={`linear-gradient(135deg, ${BRAND}33, ${BRAND_AQUA}18)`}
-        pillBorder={BRAND_AQUA}
-      />
+    <CardShell t={t}>
+      <CardHeader pill="QUESTION" t={t} />
 
       <div
         style={{
-          color: "rgba(255,255,255,0.32)",
+          color: t.subheadingColor,
           fontSize: 13,
           fontWeight: 600,
           marginBottom: 18,
@@ -418,19 +545,19 @@ function QuestionCard({
         {challengeTitle}
       </div>
 
-      <TealDivider />
+      <TealDivider t={t} />
 
       {/* Question text */}
       <div
         style={{
-          color: "#fff",
+          color: t.headingColor,
           fontSize: options.length > 0 ? 36 : 48,
           fontWeight: 700,
           lineHeight: 1.45,
           marginBottom: options.length > 0 ? 28 : 0,
           flex: options.length > 0 ? "0 0 auto" : "1 1 auto",
           fontFamily: "'Georgia', 'Merriweather', serif",
-          textShadow: "0 2px 20px rgba(0,0,0,0.5)",
+          textShadow: t === DARK_THEME ? "0 2px 20px rgba(0,0,0,0.5)" : "none",
         }}
       >
         {cleanQ}
@@ -446,8 +573,8 @@ function QuestionCard({
                 display: "flex",
                 alignItems: "center",
                 gap: 20,
-                background: i % 2 === 0 ? "rgba(255,255,255,0.04)" : `${BRAND}0a`,
-                border: `1px solid ${i % 2 === 0 ? "rgba(255,255,255,0.07)" : BRAND + "33"}`,
+                background: i % 2 === 0 ? t.optionEvenBg : t.optionOddBg,
+                border: `1px solid ${i % 2 === 0 ? t.optionEvenBorder : t.optionOddBorder}`,
                 borderRadius: 14,
                 padding: "16px 24px",
               }}
@@ -458,12 +585,12 @@ function QuestionCard({
                   height: 52,
                   borderRadius: 13,
                   flexShrink: 0,
-                  background: i % 2 === 0 ? "rgba(255,255,255,0.07)" : `${BRAND}33`,
-                  border: `2px solid ${i % 2 === 0 ? "rgba(255,255,255,0.12)" : BRAND_AQUA + "55"}`,
+                  background: i % 2 === 0 ? t.bubbleEvenBg : t.bubbleOddBg,
+                  border: `2px solid ${i % 2 === 0 ? t.bubbleEvenBorder : t.bubbleOddBorder}`,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: i % 2 === 0 ? "rgba(255,255,255,0.65)" : BRAND_AQUA,
+                  color: i % 2 === 0 ? t.bubbleEvenColor : t.bubbleOddColor,
                   fontWeight: 800,
                   fontSize: 22,
                   boxShadow: i % 2 !== 0 ? `0 0 14px ${BRAND}44` : "none",
@@ -471,7 +598,7 @@ function QuestionCard({
               >
                 {letters[i]}
               </div>
-              <span style={{ color: "rgba(255,255,255,0.88)", fontSize: 30, fontWeight: 500, lineHeight: 1.35 }}>
+              <span style={{ color: t.bodyColor, fontSize: 30, fontWeight: 500, lineHeight: 1.35 }}>
                 {stripHtml(opt)}
               </span>
             </div>
@@ -479,7 +606,7 @@ function QuestionCard({
         </div>
       )}
 
-      <CardFooter right={qid ?? undefined} />
+      <CardFooter right={qid ?? undefined} t={t} />
     </CardShell>
   );
 }
@@ -494,6 +621,7 @@ function AnswerCard({
   explanation,
   reviewAnswer,
   qid,
+  t,
 }: {
   challengeTitle: string;
   questionText: string;
@@ -502,6 +630,7 @@ function AnswerCard({
   explanation: string | null;
   reviewAnswer: string | null;
   qid: string | null;
+  t: ThemeTokens;
 }) {
   const letters = ["A", "B", "C", "D", "E"];
   const answerText =
@@ -514,17 +643,12 @@ function AnswerCard({
   const cleanQ = stripHtml(questionText);
 
   return (
-    <CardShell>
-      <CardHeader
-        pill="ANSWER"
-        pillColor="#4ade80"
-        pillBg="linear-gradient(135deg, #22c55e22, #4ade8012)"
-        pillBorder="#22c55e"
-      />
+    <CardShell t={t}>
+      <CardHeader pill="ANSWER" t={t} />
 
       <div
         style={{
-          color: "rgba(255,255,255,0.32)",
+          color: t.subheadingColor,
           fontSize: 13,
           fontWeight: 600,
           marginBottom: 18,
@@ -535,18 +659,18 @@ function AnswerCard({
         {challengeTitle}
       </div>
 
-      <TealDivider />
+      <TealDivider t={t} />
 
       {/* Question recap */}
       <div
         style={{
-          color: "rgba(255,255,255,0.50)",
+          color: t.recapColor,
           fontSize: 24,
           fontWeight: 500,
           lineHeight: 1.45,
           marginBottom: 24,
           fontFamily: "'Georgia', 'Merriweather', serif",
-          borderLeft: `4px solid ${BRAND}66`,
+          borderLeft: `4px solid ${t.recapBorder}`,
           paddingLeft: 18,
         }}
       >
@@ -557,13 +681,13 @@ function AnswerCard({
       {answerText && (
         <div
           style={{
-            background: "linear-gradient(135deg, rgba(34,197,94,0.12), rgba(74,222,128,0.05))",
-            border: "2px solid rgba(34,197,94,0.4)",
+            background: t.answerBoxBg,
+            border: `2px solid ${t.answerBoxBorder}`,
             borderRadius: 16,
             padding: "20px 26px",
             marginBottom: 18,
             position: "relative",
-            boxShadow: "0 0 36px rgba(34,197,94,0.1)",
+            boxShadow: `0 0 36px ${t.answerBoxBorder}44`,
           }}
         >
           <div
@@ -574,13 +698,13 @@ function AnswerCard({
               width: 52,
               height: 4,
               borderRadius: 2,
-              background: `linear-gradient(90deg, ${BRAND_AQUA}, #4ade80)`,
+              background: `linear-gradient(90deg, ${BRAND_AQUA}, ${BRAND})`,
             }}
           />
-          <div style={{ color: "#4ade80", fontSize: 10, fontWeight: 800, marginBottom: 8, letterSpacing: "2px" }}>
+          <div style={{ color: BRAND, fontSize: 10, fontWeight: 800, marginBottom: 8, letterSpacing: "2px" }}>
             CORRECT ANSWER
           </div>
-          <div style={{ color: "#fff", fontSize: 36, fontWeight: 700, lineHeight: 1.35, textShadow: "0 2px 16px rgba(0,0,0,0.4)" }}>
+          <div style={{ color: t.answerTextColor, fontSize: 36, fontWeight: 700, lineHeight: 1.35 }}>
             {answerText}
           </div>
         </div>
@@ -590,8 +714,8 @@ function AnswerCard({
       {explanationText && (
         <div
           style={{
-            background: `linear-gradient(135deg, ${BRAND}12, rgba(255,255,255,0.02))`,
-            border: `1px solid ${BRAND}44`,
+            background: t.explanationBg,
+            border: `1px solid ${t.explanationBorder}`,
             borderRadius: 16,
             padding: "18px 24px",
             flex: "1 1 auto",
@@ -599,12 +723,12 @@ function AnswerCard({
             boxShadow: `0 0 28px ${BRAND}16`,
           }}
         >
-          <div style={{ color: BRAND_AQUA, fontSize: 10, fontWeight: 800, marginBottom: 10, letterSpacing: "2px" }}>
+          <div style={{ color: BRAND, fontSize: 10, fontWeight: 800, marginBottom: 10, letterSpacing: "2px" }}>
             EXPLANATION
           </div>
           <div
             style={{
-              color: "rgba(255,255,255,0.82)",
+              color: t.explanationTextColor,
               fontSize: 22,
               lineHeight: 1.6,
               display: "-webkit-box",
@@ -618,7 +742,7 @@ function AnswerCard({
         </div>
       )}
 
-      <CardFooter right="Follow for daily echo challenges" />
+      <CardFooter right="Follow for daily echo challenges" t={t} />
     </CardShell>
   );
 }
@@ -820,11 +944,14 @@ function CategorySection({
   item,
   onQuestionRef,
   onAnswerRef,
+  theme,
 }: {
   item: CategoryItem;
   onQuestionRef: (cat: string, h: DownloadableCardHandle) => void;
   onAnswerRef: (cat: string, h: DownloadableCardHandle) => void;
+  theme: CardTheme;
 }) {
+  const t = theme === "dark" ? DARK_THEME : LIGHT_THEME;
   const { category, challenge, questions } = item;
   const q = questions[0];
 
@@ -879,6 +1006,7 @@ function CategorySection({
                 questionText={q.question}
                 options={options}
                 qid={q.qid}
+                t={t}
               />
             </DownloadableCard>
           </div>
@@ -901,6 +1029,7 @@ function CategorySection({
                 explanation={q.explanation}
                 reviewAnswer={q.reviewAnswer}
                 qid={q.qid}
+                t={t}
               />
             </DownloadableCard>
           </div>
@@ -950,6 +1079,9 @@ export default function ChallengeCardGenerator() {
     retry: false,
   });
 
+  // Theme toggle
+  const [cardTheme, setCardTheme] = useState<CardTheme>("dark");
+
   // Refs for batch export
   const questionRefs = useRef<Record<string, DownloadableCardHandle>>({});
   const answerRefs = useRef<Record<string, DownloadableCardHandle>>({});
@@ -996,6 +1128,32 @@ export default function ChallengeCardGenerator() {
             Admin
           </Badge>
           <div className="ml-auto flex items-center gap-2">
+            {/* Dark / Light toggle */}
+            <div
+              className="flex items-center gap-1 rounded-lg p-0.5"
+              style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)" }}
+            >
+              <button
+                onClick={() => setCardTheme("dark")}
+                className="px-3 py-1 rounded-md text-xs font-semibold transition-all"
+                style={{
+                  background: cardTheme === "dark" ? `linear-gradient(90deg, ${BRAND_DARK}, ${BRAND})` : "transparent",
+                  color: cardTheme === "dark" ? "#fff" : "rgba(255,255,255,0.4)",
+                }}
+              >
+                🌙 Dark
+              </button>
+              <button
+                onClick={() => setCardTheme("light")}
+                className="px-3 py-1 rounded-md text-xs font-semibold transition-all"
+                style={{
+                  background: cardTheme === "light" ? `linear-gradient(90deg, ${BRAND}, ${BRAND_AQUA})` : "transparent",
+                  color: cardTheme === "light" ? "#fff" : "rgba(255,255,255,0.4)",
+                }}
+              >
+                ☀️ Light
+              </button>
+            </div>
             {hasData && (
               <>
                 <Button
@@ -1074,6 +1232,7 @@ export default function ChallengeCardGenerator() {
                 <CategorySection
                   key={item.category}
                   item={item}
+                  theme={cardTheme}
                   onQuestionRef={(cat, h) => { questionRefs.current[cat] = h; }}
                   onAnswerRef={(cat, h) => { answerRefs.current[cat] = h; }}
                 />
