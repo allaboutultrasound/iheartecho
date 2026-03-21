@@ -1034,7 +1034,7 @@ export default function HemodynamicsLab() {
       </div>
       <div className="container py-6">
         {/* Desktop: 4-column layout — presets | controls | wiggers | doppler. Mobile: single column stack */}
-        <div className="grid grid-cols-1 xl:grid-cols-[180px_300px_340px_1fr] gap-4">
+        <div className="grid grid-cols-1 xl:grid-cols-[260px_600px_340px_1fr] gap-4">
 
           {/* ---- DISEASE STATE PRESETS (leftmost column on desktop) ---- */}
           <div className="xl:col-span-1">
@@ -1186,9 +1186,9 @@ export default function HemodynamicsLab() {
               </div>
               <div className="px-3 pb-0">
               <ResponsiveContainer width="100%" height={100}>
-                <ComposedChart data={wiggersData} margin={{ top: 8, right: 10, bottom: 0, left: 40 }}>
+                <ComposedChart data={wiggersData} margin={{ top: 8, right: 10, bottom: 0, left: 0 }}>
                   <XAxis dataKey="time" type="number" domain={[0, rr_ms]} hide />
-                  <YAxis domain={[-0.4, 1.4]} hide />
+                  <YAxis domain={[-0.4, 1.4]} hide width={50} tick={false} axisLine={false} tickLine={false} />
                   {/* Valve event lines */}
                   <ReferenceLine x={events.mvc} stroke="#189aa1" strokeDasharray="4 3" strokeWidth={1.5} />
                   <ReferenceLine x={events.avo} stroke="#dc2626" strokeWidth={1.5} />
@@ -1242,10 +1242,11 @@ export default function HemodynamicsLab() {
               </div>
               <div className="px-3 pb-0">
               <ResponsiveContainer width="100%" height={200}>
-                <ComposedChart data={wiggersData} margin={{ top: 4, right: 10, bottom: 0, left: 40 }}>
+                <ComposedChart data={wiggersData} margin={{ top: 4, right: 10, bottom: 0, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="time" type="number" domain={[0, rr_ms]} hide />
                   <YAxis
+                    width={50}
                     tick={{ fontSize: 9 }}
                     label={{ value: "mmHg", angle: -90, position: "insideLeft", fontSize: 9, offset: 10 }}
                     domain={[0, Math.max(250, Math.round(hemo.sbp + (params.lvaoGradient ?? 0) + 20))]}
@@ -1275,10 +1276,10 @@ export default function HemodynamicsLab() {
               </div>
               <div className="px-3 pb-3">
               <ResponsiveContainer width="100%" height={140}>
-                <ComposedChart data={wiggersData} margin={{ top: 4, right: 10, bottom: 18, left: 40 }}>
+                <ComposedChart data={wiggersData} margin={{ top: 4, right: 10, bottom: 18, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="time" type="number" domain={[0, rr_ms]} tick={{ fontSize: 9 }} label={{ value: "Time (ms)", position: "insideBottom", offset: -4, fontSize: 9 }} />
-                  <YAxis tick={{ fontSize: 9 }} label={{ value: "mL", angle: -90, position: "insideLeft", fontSize: 9, offset: 10 }} />
+                  <YAxis width={50} tick={{ fontSize: 9 }} label={{ value: "mL", angle: -90, position: "insideLeft", fontSize: 9, offset: 10 }} />
                   <Tooltip content={<WiggersTooltip />} />
                   <ReferenceLine x={events.mvc} stroke="#189aa1" strokeDasharray="4 3" strokeWidth={1.5} />
                   <ReferenceLine x={events.avo} stroke="#dc2626" strokeWidth={1.5} />
