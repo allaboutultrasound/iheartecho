@@ -240,7 +240,7 @@ ${allHashtags}`;
   } else {
     const answerLine = cleanA ? `✅ Answer: ${cleanA}` : "";
     const explanationLine = cleanE
-      ? `\n💡 ${cleanE.length > 200 ? cleanE.slice(0, 197) + "..." : cleanE}`
+      ? `\n💡 ${cleanE}`
       : "";
     return `🫀 Daily Echo Challenge — ${category} | ANSWER
 
