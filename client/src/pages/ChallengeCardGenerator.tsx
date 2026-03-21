@@ -225,7 +225,7 @@ function buildSocialPost(
   const categoryTags = getCategoryHashtags(category);
   const allHashtags = [...REQUIRED_HASHTAGS, ...categoryTags].join(" ");
 
-  const cta = "👉🏆 Take the Daily Challenge now at app.iheartecho.com";
+  const cta = "👉🏆 Secure your spot on the leaderboard — Take the Daily Challenge now at app.iheartecho.com";
 
   if (type === "question") {
     const questionPreview = cleanQ.length > 160 ? cleanQ.slice(0, 157) + "..." : cleanQ;
