@@ -634,3 +634,6 @@
 
 ## Engagement Dashboard Data Fix (Mar 21 2026)
 - [x] Fix engagement dashboard showing no analytics data - fixed Drizzle ORM bug (JS || instead of or()) in getMemberList where clause; added error display to surface query errors in UI
+
+## Engagement Dashboard Query Fix 2 (Mar 21 2026)
+- [x] Fix: dailyFlashcard chart now uses quickfireAttempts with type=quickReview (removed invalid userPointsLog activityType='flashcard_session' query)

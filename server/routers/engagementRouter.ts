@@ -93,21 +93,22 @@ export const engagementRouter = router({
       .groupBy(quickfireAttempts.setDate)
       .orderBy(quickfireAttempts.setDate);
 
-    // 30-day flashcard sessions (from userPointsLog)
+    // 30-day flashcard attempts (from quickfireAttempts where type=quickReview)
     const dailyFlashcardRows = await db
       .select({
-        day: sql<string>`DATE(${userPointsLog.createdAt})`,
+        day: sql<string>`DATE(${quickfireAttempts.createdAt})`,
         total: count(),
       })
-      .from(userPointsLog)
+      .from(quickfireAttempts)
+      .innerJoin(quickfireQuestions, eq(quickfireAttempts.questionId, quickfireQuestions.id))
       .where(
         and(
-          eq(userPointsLog.activityType, "flashcard_session"),
-          gte(userPointsLog.createdAt, since30),
+          eq(quickfireQuestions.type, "quickReview"),
+          gte(quickfireAttempts.createdAt, since30),
         )
       )
-      .groupBy(sql`DATE(${userPointsLog.createdAt})`)
-      .orderBy(sql`DATE(${userPointsLog.createdAt})`);
+      .groupBy(sql`DATE(${quickfireAttempts.createdAt})`)
+      .orderBy(sql`DATE(${quickfireAttempts.createdAt})`);
 
     // 30-day case views
     const dailyCaseViewRows = await db
