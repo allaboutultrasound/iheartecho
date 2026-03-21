@@ -66,21 +66,23 @@ const LAST_NAMES = [
 ];
 
 const CREDENTIALS = [
-  // Single credentials
+  // Single credentials (ultrasound/echo specific)
   "RDCS",
   "RDCS (AE)",
   "RDCS (PE)",
   "RDCS (FE)",
   "RCS",
   "RCCS",
-  "RCES",
-  "CCI",
   "FASE",
   "FACC",
   "MD",
   "DO",
   "RN",
   "RT(R)",
+  // RCES only in combination with a primary echo credential (RDCS or RCS)
+  "RDCS, RCES",
+  "RDCS (AE), RCES",
+  "RCS, RCES",
   // Multi-credential combos — ACS always first when present
   "ACS, RDCS",
   "ACS, RDCS (AE)",
@@ -91,13 +93,10 @@ const CREDENTIALS = [
   "ACS, RDCS (PE, FE)",
   "ACS, RCS",
   "ACS, RCCS",
-  "ACS, CCI",
   "RDCS (AE, PE)",
   "RDCS (AE, FE)",
   "RDCS (PE, FE)",
   "RDCS (AE, PE, FE)",
-  "RDCS, CCI",
-  "RDCS (AE), CCI",
   "RDCS (AE), FASE",
   "RDCS (AE), FACC",
   "MD, FASE",
