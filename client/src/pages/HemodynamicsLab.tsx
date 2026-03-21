@@ -476,7 +476,7 @@ function WiggersTooltip({ active, payload }: { active?: boolean; payload?: any[]
 // Each generator returns SVG path data for 2 cardiac cycles
 // All velocities in m/s, rendered on a dark echo-style background
 
-function generateMitralInflowPath(p: Params, W: number, H: number): {
+function generateMitralInflowPath(p: Params, W: number, H: number, cycles = 2): {
   path: string; eVel: number; aVel: number; eaRatio: number; pattern: string; decTime: number;
   ePeakX: number; ePeakY: number; aPeakX: number; aPeakY: number;
 } {
@@ -525,9 +525,9 @@ function generateMitralInflowPath(p: Params, W: number, H: number): {
   } else if (eaRatio > 1.5 || (eVel > 1.2 && decTime < 160)) pattern = "Restrictive (Grade III)";
   else if (eaRatio < 0.8) pattern = "Grade I Diastolic Dysfunction";
 
-  // Generate SVG path for 2 cycles
+  // Generate SVG path for N cycles
   const maxVelDisplay = Math.max(eVel, aVel) * 1.25; // auto-scale to fill canvas
-  const cycleW = W / 2;
+  const cycleW = W / cycles;
   const baseline = H * 0.92; // baseline near bottom
   const velScale = (H * 0.85) / maxVelDisplay; // pixels per m/s
 
@@ -546,7 +546,7 @@ function generateMitralInflowPath(p: Params, W: number, H: number): {
   let ePeakX = 0, ePeakY = baseline, aPeakX = 0, aPeakY = baseline;
   let ePeakVel = 0, aPeakVel = 0;
 
-  for (let cycle = 0; cycle < 2; cycle++) {
+  for (let cycle = 0; cycle < cycles; cycle++) {
     const ox = cycle * cycleW;
     const N = 200;
     for (let i = 0; i <= N; i++) {
@@ -595,7 +595,7 @@ function generateMitralInflowPath(p: Params, W: number, H: number): {
   return { path: d, eVel, aVel, eaRatio, pattern, decTime, ePeakX, ePeakY, aPeakX, aPeakY };
 }
 
-function generateTricuspidInflowPath(p: Params, W: number, H: number): {
+function generateTricuspidInflowPath(p: Params, W: number, H: number, cycles = 2): {
   path: string; eVel: number; aVel: number; pattern: string;
   ePeakX: number; ePeakY: number; aPeakX: number; aPeakY: number;
 } {
@@ -626,7 +626,7 @@ function generateTricuspidInflowPath(p: Params, W: number, H: number): {
   else if (p.tamponade) pattern = "Tamponade — Respiratory Variation";
 
   const maxVelDisplay = Math.max(eVel, aVel) * 1.25; // auto-scale to fill canvas
-  const cycleW = W / 2;
+  const cycleW = W / cycles;
   const baseline = H * 0.92;
   const velScale = (H * 0.85) / maxVelDisplay;
 
@@ -637,7 +637,7 @@ function generateTricuspidInflowPath(p: Params, W: number, H: number): {
   let ePeakX = 0, ePeakY = baseline, aPeakX = 0, aPeakY = baseline;
   let ePeakVel = 0, aPeakVel = 0;
 
-  for (let cycle = 0; cycle < 2; cycle++) {
+  for (let cycle = 0; cycle < cycles; cycle++) {
     const ox = cycle * cycleW;
     const N = 200;
     for (let i = 0; i <= N; i++) {
@@ -671,7 +671,7 @@ function generateTricuspidInflowPath(p: Params, W: number, H: number): {
   return { path: d, eVel, aVel, pattern, ePeakX, ePeakY, aPeakX, aPeakY };
 }
 
-function generateAVOutflowPath(p: Params, W: number, H: number): {
+function generateAVOutflowPath(p: Params, W: number, H: number, cycles = 2): {
   path: string; vmax: number; vti: number; pattern: string; shape: string;
   vmaxPeakX: number; vmaxPeakY: number;
 } {
@@ -709,7 +709,7 @@ function generateAVOutflowPath(p: Params, W: number, H: number): {
   else if (vmax > 2.0) pattern = "Elevated Velocity";
 
   const maxVelDisplay = vmax * 1.2; // auto-scale so Vmax fills ~83% of canvas
-  const cycleW = W / 2;
+  const cycleW = W / cycles;
   // AV outflow is BELOW baseline — baseline at top (8% from top), waveform goes downward
   const baseline = H * 0.08;
   const velScale = (H * 0.88) / maxVelDisplay;
@@ -721,7 +721,7 @@ function generateAVOutflowPath(p: Params, W: number, H: number): {
   let d = `M 0 ${baseline}`;
   let vmaxPeakX = 0, vmaxPeakY = baseline, vmaxPeakVel = 0;
 
-  for (let cycle = 0; cycle < 2; cycle++) {
+  for (let cycle = 0; cycle < cycles; cycle++) {
     const ox = cycle * cycleW;
     const N = 200;
     for (let i = 0; i <= N; i++) {
@@ -769,10 +769,140 @@ function generateAVOutflowPath(p: Params, W: number, H: number): {
   return { path: d, vmax, vti: Math.round(vti), pattern, shape, vmaxPeakX, vmaxPeakY };
 }
 
+// ---- TDI MITRAL ANNULAR PATH GENERATOR ----
+// Generates septal or lateral mitral annular TDI (tissue Doppler) waveform
+// Shows s', e', a' waves. Velocities in cm/s, rendered above baseline.
+// Septal: e' 7-10 cm/s normal; Lateral: e' 10-15 cm/s normal
+function generateTDIPath(p: Params, W: number, H: number, site: "septal" | "lateral", cycles = 2): {
+  path: string;
+  ePrime: number;   // cm/s
+  aPrime: number;   // cm/s
+  sPrime: number;   // cm/s
+  eeRatio: number;  // E/e' (using mitral E)
+  pattern: string;
+  ePeakX: number; ePeakY: number;
+  aPeakX: number; aPeakY: number;
+  sPeakX: number; sPeakY: number;
+} {
+  const { preload, afterload, contractility, heartRate } = p;
+
+  // Lateral annulus moves faster than septal
+  const latFactor = site === "lateral" ? 1.35 : 1.0;
+
+  // e' (early diastolic): reflects myocardial relaxation
+  // Decreases with impaired relaxation (high afterload, low contractility, HCM)
+  // Normal septal e' ≥ 7 cm/s, lateral e' ≥ 10 cm/s
+  let ePrime = (9.0 + (contractility - 50) * 0.10 - (afterload - 50) * 0.06 - (preload - 50) * 0.02) * latFactor;
+  if (p.hcmGradient && p.hcmGradient > 30) ePrime *= 0.55;  // HCM: severely impaired relaxation
+  if (p.msInflow) ePrime *= 0.70;                            // MS: restricted annular motion
+  if (p.tamponade) ePrime *= 0.80;
+  ePrime = Math.max(2.0, Math.min(20.0, ePrime));
+
+  // a' (late diastolic / atrial kick): increases with impaired relaxation
+  let aPrime = (7.0 - (contractility - 50) * 0.04 + (afterload - 50) * 0.04 + (preload - 50) * 0.03) * latFactor;
+  if (p.hcmGradient && p.hcmGradient > 30) aPrime *= 1.3;
+  aPrime = Math.max(2.0, Math.min(16.0, aPrime));
+
+  // s' (systolic): reflects LV longitudinal systolic function
+  // Normal ≥ 8 cm/s; reduced with systolic dysfunction
+  let sPrime = (8.0 + (contractility - 50) * 0.10 - (afterload - 50) * 0.04) * latFactor;
+  if (p.hcmGradient && p.hcmGradient > 30) sPrime *= 0.75;
+  sPrime = Math.max(2.0, Math.min(18.0, sPrime));
+
+  // E/e' ratio (use mitral E from physiology engine)
+  const mitralE = Math.max(0.3, Math.min(2.0, 0.5 + (p.preload - 50) * 0.012 + (p.contractility - 50) * 0.004));
+  const eeRatio = (mitralE * 100) / ePrime; // E in cm/s = m/s * 100
+
+  // Pattern interpretation
+  const normalEPrime = site === "septal" ? 7.0 : 10.0;
+  let pattern = "Normal";
+  if (ePrime < normalEPrime) {
+    if (eeRatio > 14) pattern = "Elevated Filling Pressures";
+    else pattern = "Impaired Relaxation";
+  } else if (eeRatio > 14) {
+    pattern = "Elevated Filling Pressures";
+  }
+
+  // SVG path generation
+  const maxVel = Math.max(ePrime, aPrime, sPrime) * 1.2; // cm/s, auto-scale
+  const cycleW = W / cycles;
+  const baseline = H * 0.50; // baseline in middle — s' above, e'/a' below
+  const velScale = (H * 0.42) / maxVel; // pixels per cm/s
+
+  // Timing (as fraction of RR):
+  // s' wave: systolic, 0.05–0.35 (AVO to AVC)
+  // e' wave: early diastolic, 0.40–0.58 (just after AVC, IVRT + early filling)
+  // a' wave: late diastolic, 0.85–0.97 (atrial kick, just before MVC)
+  const sStart = 0.05, sEnd = 0.35;
+  const eStart = 0.42, eEnd = 0.60;
+  const aStart = 0.85, aEnd = 0.98;
+  const sPeakT = 0.20, ePeakT = 0.50, aPeakT = 0.91;
+
+  let d = `M 0 ${baseline}`;
+  let ePeakX = 0, ePeakY = baseline;
+  let aPeakX = 0, aPeakY = baseline;
+  let sPeakX = 0, sPeakY = baseline;
+  let ePeakVel = 0, aPeakVel = 0, sPeakVel = 0;
+
+  for (let cycle = 0; cycle < cycles; cycle++) {
+    const ox = cycle * cycleW;
+    const N = 300;
+    for (let i = 0; i <= N; i++) {
+      const t = i / N;
+      const x = ox + t * cycleW;
+      let velAbove = 0; // s' (above baseline)
+      let velBelow = 0; // e', a' (below baseline)
+
+      // s' wave: Gaussian, above baseline
+      if (t >= sStart && t <= sEnd) {
+        const w = 0.06;
+        velAbove = sPrime * Math.exp(-0.5 * Math.pow((t - sPeakT) / w, 2));
+      }
+
+      // e' wave: Gaussian, below baseline
+      if (t >= eStart && t <= eEnd) {
+        const w = 0.05;
+        velBelow = ePrime * Math.exp(-0.5 * Math.pow((t - ePeakT) / w, 2));
+      }
+
+      // a' wave: Gaussian, below baseline
+      if (t >= aStart && t <= aEnd) {
+        const w = 0.025;
+        const aV = aPrime * Math.exp(-0.5 * Math.pow((t - aPeakT) / w, 2));
+        velBelow = Math.max(velBelow, aV);
+      }
+
+      // Net Y: above baseline = baseline - velAbove*scale; below = baseline + velBelow*scale
+      const y = baseline - velAbove * velScale + velBelow * velScale;
+      d += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
+
+      if (cycle === 0) {
+        if (t >= sStart && t <= sEnd) {
+          const w = 0.06;
+          const v = sPrime * Math.exp(-0.5 * Math.pow((t - sPeakT) / w, 2));
+          if (v > sPeakVel) { sPeakVel = v; sPeakX = x; sPeakY = baseline - v * velScale; }
+        }
+        if (t >= eStart && t <= eEnd) {
+          const w = 0.05;
+          const v = ePrime * Math.exp(-0.5 * Math.pow((t - ePeakT) / w, 2));
+          if (v > ePeakVel) { ePeakVel = v; ePeakX = x; ePeakY = baseline + v * velScale; }
+        }
+        if (t >= aStart && t <= aEnd) {
+          const w = 0.025;
+          const v = aPrime * Math.exp(-0.5 * Math.pow((t - aPeakT) / w, 2));
+          if (v > aPeakVel) { aPeakVel = v; aPeakX = x; aPeakY = baseline + v * velScale; }
+        }
+      }
+    }
+  }
+
+  return { path: d, ePrime, aPrime, sPrime, eeRatio, pattern, ePeakX, ePeakY, aPeakX, aPeakY, sPeakX, sPeakY };
+}
+
 // ---- DOPPLER DISPLAY COMPONENT ----
 
 function DopplerTracing({
-  title, subtitle, pathData, color, annotations, W = 520, H = 240, belowBaseline = false, scaleMax = 2.0
+  title, subtitle, pathData, color, annotations, W = 520, H = 240, belowBaseline = false, scaleMax = 2.0, cycles = 2
 }: {
   title: string;
   subtitle: string;
@@ -783,6 +913,7 @@ function DopplerTracing({
   H?: number;
   belowBaseline?: boolean;
   scaleMax?: number; // m/s full-scale
+  cycles?: number;
 }) {
   // Layout constants — left margin for Y-axis labels
   const MARGIN_LEFT = 38;
@@ -869,9 +1000,13 @@ function DopplerTracing({
               stroke="#0d1f3c" strokeWidth={0.4} />
           ))}
 
-          {/* ── Cycle divider ── */}
-          <line x1={MARGIN_LEFT + plotW * 0.5} y1={0} x2={MARGIN_LEFT + plotW * 0.5} y2={H}
-            stroke="#1e3f6a" strokeWidth={1} strokeDasharray="3 5" />
+          {/* ── Cycle dividers ── */}
+          {Array.from({ length: cycles - 1 }, (_, i) => (
+            <line key={i}
+              x1={MARGIN_LEFT + plotW * ((i + 1) / cycles)} y1={0}
+              x2={MARGIN_LEFT + plotW * ((i + 1) / cycles)} y2={H}
+              stroke="#1e3f6a" strokeWidth={1} strokeDasharray="3 5" />
+          ))}
 
           {/* ── Baseline ── */}
           <line x1={MARGIN_LEFT} y1={baselineY} x2={W} y2={baselineY}
@@ -993,6 +1128,9 @@ export default function HemodynamicsLab() {
   const mitralData = useMemo(() => generateMitralInflowPath(params, W_DOPPLER, H_DOPPLER), [params]);
   const tricuspidData = useMemo(() => generateTricuspidInflowPath(params, W_DOPPLER, H_DOPPLER), [params]);
   const avOutflowData = useMemo(() => generateAVOutflowPath(params, W_DOPPLER, H_DOPPLER), [params]);
+  const tdiSeptalData = useMemo(() => generateTDIPath(params, W_DOPPLER, H_DOPPLER, "septal"), [params]);
+  const tdiLateralData = useMemo(() => generateTDIPath(params, W_DOPPLER, H_DOPPLER, "lateral"), [params]);
+  const avOutflow3CycleData = useMemo(() => generateAVOutflowPath(params, W_DOPPLER * 2, H_DOPPLER, 3), [params]);
 
   // Annotation positions — use exact peak pixel coordinates returned by path generators
   // This guarantees dots land precisely on the waveform peaks regardless of scale
@@ -1007,6 +1145,17 @@ export default function HemodynamicsLab() {
   const avAnnotations = [
     { x: avOutflowData.vmaxPeakX, y: avOutflowData.vmaxPeakY, label: `Vmax ${avOutflowData.vmax.toFixed(1)} m/s`, sub: `VTI ~${avOutflowData.vti} cm` },
   ];
+  const tdiSeptalAnnotations = [
+    { x: tdiSeptalData.sPeakX, y: tdiSeptalData.sPeakY, label: `s' ${tdiSeptalData.sPrime.toFixed(1)}` },
+    { x: tdiSeptalData.ePeakX, y: tdiSeptalData.ePeakY, label: `e' ${tdiSeptalData.ePrime.toFixed(1)}` },
+    { x: tdiSeptalData.aPeakX, y: tdiSeptalData.aPeakY, label: `a' ${tdiSeptalData.aPrime.toFixed(1)}` },
+  ];
+  const tdiLateralAnnotations = [
+    { x: tdiLateralData.sPeakX, y: tdiLateralData.sPeakY, label: `s' ${tdiLateralData.sPrime.toFixed(1)}` },
+    { x: tdiLateralData.ePeakX, y: tdiLateralData.ePeakY, label: `e' ${tdiLateralData.ePrime.toFixed(1)}` },
+    { x: tdiLateralData.aPeakX, y: tdiLateralData.aPeakY, label: `a' ${tdiLateralData.aPrime.toFixed(1)}` },
+  ];
+  const eeAvg = ((tdiSeptalData.eeRatio + tdiLateralData.eeRatio) / 2);
 
   return (
     <Layout>
@@ -1034,7 +1183,7 @@ export default function HemodynamicsLab() {
       </div>
       <div className="container py-6">
         {/* Desktop: 4-column layout — presets | controls | wiggers | doppler. Mobile: single column stack */}
-        <div className="grid grid-cols-1 xl:grid-cols-[260px_520px_360px_1fr] gap-4">
+        <div className="grid grid-cols-1 xl:grid-cols-[200px_480px_260px_1fr] gap-4">
 
           {/* ---- DISEASE STATE PRESETS (leftmost column on desktop) ---- */}
           <div className="xl:col-span-1">
@@ -1185,7 +1334,7 @@ export default function HemodynamicsLab() {
                 </div>
               </div>
               <div className="px-3 pb-0">
-              <ResponsiveContainer width="100%" height={100}>
+              <ResponsiveContainer width="100%" height={130}>
                 <ComposedChart data={wiggersData} margin={{ top: 8, right: 10, bottom: 0, left: 0 }}>
                   <XAxis dataKey="time" type="number" domain={[0, rr_ms]} hide />
                   <YAxis domain={[-0.4, 1.4]} hide width={50} tick={false} axisLine={false} tickLine={false} />
@@ -1241,7 +1390,7 @@ export default function HemodynamicsLab() {
                 </div>
               </div>
               <div className="px-3 pb-0">
-              <ResponsiveContainer width="100%" height={200}>
+              <ResponsiveContainer width="100%" height={260}>
                 <ComposedChart data={wiggersData} margin={{ top: 4, right: 10, bottom: 0, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="time" type="number" domain={[0, rr_ms]} hide />
@@ -1274,7 +1423,7 @@ export default function HemodynamicsLab() {
                 </div>
               </div>
               <div className="px-3 pb-3">
-              <ResponsiveContainer width="100%" height={140}>
+              <ResponsiveContainer width="100%" height={170}>
                 <ComposedChart data={wiggersData} margin={{ top: 4, right: 10, bottom: 18, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="time" type="number" domain={[0, rr_ms]} tick={{ fontSize: 9 }} label={{ value: "Time (ms)", position: "insideBottom", offset: -4, fontSize: 9 }} />
@@ -1391,92 +1540,27 @@ export default function HemodynamicsLab() {
 
           </div>
 
-          {/* ---- DOPPLER TRACINGS (desktop: right column, mobile: below) ---- */}
-          <div className="xl:col-span-1 space-y-3">
-            <div className="hidden xl:flex items-center gap-2 mb-1">
+          {/* ---- DOPPLER TRACINGS ---- */}
+          <div className="xl:col-span-1 space-y-2">
+            <div className="flex items-center gap-2 mb-1">
               <h2 className="text-sm font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Doppler Tracings</h2>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-200 font-semibold">Live</span>
             </div>
-            {/* Mobile-only Doppler header */}
-            <div className="xl:hidden flex items-center gap-2 mt-4 mb-1">
-              <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Representative Doppler Tracings</h2>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-200 font-semibold">Live — updates with hemodynamic state</span>
-            </div>
-            {/* Mitral Inflow */}
-            <div>
-              <DopplerTracing
-                title="Mitral Inflow (PW)"
-                subtitle={mitralData.pattern}
-                pathData={mitralData.path}
-                color="#4ad9e0"
-                annotations={mitralAnnotations}
-                W={W_DOPPLER} H={H_DOPPLER}
-                scaleMax={Math.max(mitralData.eVel, mitralData.aVel) * 1.25}
-              />
-              <div className="mt-2 grid grid-cols-3 gap-1 text-[10px]">
-                <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
-                  <div className="font-bold text-gray-700">E wave</div>
-                  <div className="font-mono" style={{color:"#0e9aa7"}}>{mitralData.eVel.toFixed(2)} m/s</div>
-                </div>
-                <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
-                  <div className="font-bold text-gray-700">A wave</div>
-                  <div className="font-mono" style={{color:"#0e9aa7"}}>{mitralData.aVel.toFixed(2)} m/s</div>
-                </div>
-                <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
-                  <div className="font-bold text-gray-700">E/A</div>
-                  <div className={`font-mono font-bold ${mitralData.eaRatio < 0.8 ? "text-amber-600" : mitralData.eaRatio > 2.0 ? "text-red-600" : ""}`} style={mitralData.eaRatio >= 0.8 && mitralData.eaRatio <= 2.0 ? {color:"#0e9aa7"} : {}}>{mitralData.eaRatio.toFixed(1)}</div>
-                </div>
-                <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100 col-span-3">
-                  <div className="font-bold text-gray-700">Dec. Time</div>
-                  <div className="font-mono text-teal-600">{mitralData.decTime} ms</div>
-                </div>
-              </div>
-            </div>
 
-            {/* Tricuspid Inflow */}
-            <div>
-              <DopplerTracing
-                title="Tricuspid Inflow (PW)"
-                subtitle={tricuspidData.pattern}
-                pathData={tricuspidData.path}
-                color="#189aa1"
-                annotations={tricuspidAnnotations}
-                W={W_DOPPLER} H={H_DOPPLER}
-                scaleMax={Math.max(tricuspidData.eVel, tricuspidData.aVel) * 1.25}
-              />
-              <div className="mt-2 grid grid-cols-3 gap-1 text-[10px]">
-                <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
-                  <div className="font-bold text-gray-700">E wave</div>
-                  <div className="font-mono" style={{color:"#189aa1"}}>{tricuspidData.eVel.toFixed(2)} m/s</div>
-                </div>
-                <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
-                  <div className="font-bold text-gray-700">A wave</div>
-                  <div className="font-mono" style={{color:"#189aa1"}}>{tricuspidData.aVel.toFixed(2)} m/s</div>
-                </div>
-                <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
-                  <div className="font-bold text-gray-700">E/A</div>
-                  <div className={`font-mono font-bold ${(tricuspidData.eVel/tricuspidData.aVel) > 2.0 ? "text-red-600" : ""}`} style={(tricuspidData.eVel/tricuspidData.aVel) <= 2.0 ? {color:"#189aa1"} : {}}>{(tricuspidData.eVel/tricuspidData.aVel).toFixed(1)}</div>
-                </div>
-                <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100 col-span-3">
-                  <div className="font-bold text-gray-700">Est. RVSP</div>
-                  <div className={`font-mono font-bold ${hemo.rvsp > 40 ? "text-red-600" : ""}`} style={hemo.rvsp <= 40 ? {color:"#189aa1"} : {}}>{Math.round(hemo.rvsp)} mmHg</div>
-                </div>
-              </div>
-            </div>
-
-            {/* AV Outflow */}
+            {/* Row 1: Aortic Outflow — full width, 3 cycles */}
             <div>
               <DopplerTracing
                 title="Aortic Outflow (CW)"
                 subtitle={avOutflowData.pattern}
-                pathData={avOutflowData.path}
+                pathData={avOutflow3CycleData.path}
                 color="#22d3ee"
-                annotations={avAnnotations}
-                W={W_DOPPLER} H={H_DOPPLER}
+                annotations={[{ x: avOutflow3CycleData.vmaxPeakX, y: avOutflow3CycleData.vmaxPeakY, label: `Vmax ${avOutflow3CycleData.vmax.toFixed(1)} m/s`, sub: `VTI ~${avOutflow3CycleData.vti} cm` }]}
+                W={W_DOPPLER * 2} H={H_DOPPLER}
                 belowBaseline={true}
                 scaleMax={avOutflowData.vmax * 1.2}
+                cycles={3}
               />
-              <div className="mt-2 grid grid-cols-3 gap-1 text-[10px]">
+              <div className="mt-1 grid grid-cols-3 gap-1 text-[10px]">
                 <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
                   <div className="font-bold text-gray-700">Vmax</div>
                   <div className={`font-mono font-bold ${avOutflowData.vmax > 4.0 ? "text-red-600" : avOutflowData.vmax > 3.0 ? "text-amber-600" : ""}`} style={avOutflowData.vmax <= 3.0 ? {color:"#22d3ee"} : {}}>{avOutflowData.vmax.toFixed(1)} m/s</div>
@@ -1486,14 +1570,128 @@ export default function HemodynamicsLab() {
                   <div className="font-mono" style={{color:"#22d3ee"}}>~{avOutflowData.vti} cm</div>
                 </div>
                 <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100">
-                  <div className="font-bold text-gray-700">Shape</div>
-                  <div className={`font-mono font-bold ${avOutflowData.shape === "tardus" ? "text-red-600" : avOutflowData.shape === "dynamic" ? "text-amber-600" : "text-green-700"}`}>
-                    {avOutflowData.shape === "tardus" ? "Tardus" : avOutflowData.shape === "dynamic" ? "Dagger" : "Normal"}
+                  <div className="font-bold text-gray-700">Mean Gradient</div>
+                  <div className={`font-mono font-bold ${4 * avOutflowData.vmax ** 2 > 40 ? "text-red-600" : 4 * avOutflowData.vmax ** 2 > 20 ? "text-amber-600" : ""}`} style={4 * avOutflowData.vmax ** 2 <= 20 ? {color:"#22d3ee"} : {}}>{Math.round(4 * avOutflowData.vmax ** 2 * 0.6)} mmHg</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Row 2: Mitral + Tricuspid side by side */}
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <DopplerTracing
+                  title="Mitral Inflow (PW)"
+                  subtitle={mitralData.pattern}
+                  pathData={mitralData.path}
+                  color="#4ad9e0"
+                  annotations={mitralAnnotations}
+                  W={W_DOPPLER} H={H_DOPPLER}
+                  scaleMax={Math.max(mitralData.eVel, mitralData.aVel) * 1.25}
+                />
+                <div className="mt-1 grid grid-cols-3 gap-1 text-[10px]">
+                  <div className="bg-gray-50 rounded p-1 text-center border border-gray-100">
+                    <div className="font-bold text-gray-700">E</div>
+                    <div className="font-mono" style={{color:"#0e9aa7"}}>{mitralData.eVel.toFixed(2)}</div>
+                  </div>
+                  <div className="bg-gray-50 rounded p-1 text-center border border-gray-100">
+                    <div className="font-bold text-gray-700">A</div>
+                    <div className="font-mono" style={{color:"#0e9aa7"}}>{mitralData.aVel.toFixed(2)}</div>
+                  </div>
+                  <div className="bg-gray-50 rounded p-1 text-center border border-gray-100">
+                    <div className="font-bold text-gray-700">E/A</div>
+                    <div className={`font-mono font-bold ${mitralData.eaRatio < 0.8 ? "text-amber-600" : mitralData.eaRatio > 2.0 ? "text-red-600" : ""}`} style={mitralData.eaRatio >= 0.8 && mitralData.eaRatio <= 2.0 ? {color:"#0e9aa7"} : {}}>{mitralData.eaRatio.toFixed(1)}</div>
+                  </div>
+                  <div className="bg-gray-50 rounded p-1 text-center border border-gray-100 col-span-3">
+                    <div className="font-bold text-gray-700">DT: <span className="font-mono text-teal-600">{mitralData.decTime} ms</span></div>
                   </div>
                 </div>
-                <div className="bg-gray-50 rounded p-1.5 text-center border border-gray-100 col-span-3">
-                  <div className="font-bold text-gray-700">Mean Gradient (est.)</div>
-                  <div className={`font-mono font-bold ${4 * avOutflowData.vmax ** 2 > 40 ? "text-red-600" : 4 * avOutflowData.vmax ** 2 > 20 ? "text-amber-600" : ""}`} style={4 * avOutflowData.vmax ** 2 <= 20 ? {color:"#22d3ee"} : {}}>{Math.round(4 * avOutflowData.vmax ** 2 * 0.6)} mmHg</div>
+              </div>
+              <div>
+                <DopplerTracing
+                  title="Tricuspid Inflow (PW)"
+                  subtitle={tricuspidData.pattern}
+                  pathData={tricuspidData.path}
+                  color="#189aa1"
+                  annotations={tricuspidAnnotations}
+                  W={W_DOPPLER} H={H_DOPPLER}
+                  scaleMax={Math.max(tricuspidData.eVel, tricuspidData.aVel) * 1.25}
+                />
+                <div className="mt-1 grid grid-cols-3 gap-1 text-[10px]">
+                  <div className="bg-gray-50 rounded p-1 text-center border border-gray-100">
+                    <div className="font-bold text-gray-700">E</div>
+                    <div className="font-mono" style={{color:"#189aa1"}}>{tricuspidData.eVel.toFixed(2)}</div>
+                  </div>
+                  <div className="bg-gray-50 rounded p-1 text-center border border-gray-100">
+                    <div className="font-bold text-gray-700">A</div>
+                    <div className="font-mono" style={{color:"#189aa1"}}>{tricuspidData.aVel.toFixed(2)}</div>
+                  </div>
+                  <div className="bg-gray-50 rounded p-1 text-center border border-gray-100">
+                    <div className="font-bold text-gray-700">E/A</div>
+                    <div className={`font-mono font-bold ${(tricuspidData.eVel/tricuspidData.aVel) > 2.0 ? "text-red-600" : ""}`} style={(tricuspidData.eVel/tricuspidData.aVel) <= 2.0 ? {color:"#189aa1"} : {}}>{(tricuspidData.eVel/tricuspidData.aVel).toFixed(1)}</div>
+                  </div>
+                  <div className="bg-gray-50 rounded p-1 text-center border border-gray-100 col-span-3">
+                    <div className="font-bold text-gray-700">RVSP: <span className={`font-mono font-bold ${hemo.rvsp > 40 ? "text-red-600" : "text-[#189aa1]"}`}>{Math.round(hemo.rvsp)} mmHg</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Row 3: Septal TDI + Lateral TDI side by side */}
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <DopplerTracing
+                  title="Septal TDI (PW)"
+                  subtitle={tdiSeptalData.pattern}
+                  pathData={tdiSeptalData.path}
+                  color="#f59e0b"
+                  annotations={tdiSeptalAnnotations}
+                  W={W_DOPPLER} H={H_DOPPLER}
+                  scaleMax={Math.max(tdiSeptalData.ePrime, tdiSeptalData.aPrime, tdiSeptalData.sPrime) * 1.2 / 100}
+                />
+                <div className="mt-1 grid grid-cols-3 gap-1 text-[10px]">
+                  <div className="bg-gray-50 rounded p-1 text-center border border-gray-100">
+                    <div className="font-bold text-gray-700">s'</div>
+                    <div className="font-mono text-amber-600">{tdiSeptalData.sPrime.toFixed(1)}</div>
+                  </div>
+                  <div className="bg-gray-50 rounded p-1 text-center border border-gray-100">
+                    <div className="font-bold text-gray-700">e'</div>
+                    <div className={`font-mono font-bold ${tdiSeptalData.ePrime < 7 ? "text-red-600" : "text-amber-600"}`}>{tdiSeptalData.ePrime.toFixed(1)}</div>
+                  </div>
+                  <div className="bg-gray-50 rounded p-1 text-center border border-gray-100">
+                    <div className="font-bold text-gray-700">a'</div>
+                    <div className="font-mono text-amber-600">{tdiSeptalData.aPrime.toFixed(1)}</div>
+                  </div>
+                  <div className="bg-gray-50 rounded p-1 text-center border border-gray-100 col-span-3">
+                    <div className="font-bold text-gray-700">E/e' sep: <span className={`font-mono font-bold ${tdiSeptalData.eeRatio > 15 ? "text-red-600" : tdiSeptalData.eeRatio > 13 ? "text-amber-600" : "text-green-700"}`}>{tdiSeptalData.eeRatio.toFixed(1)}</span></div>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <DopplerTracing
+                  title="Lateral TDI (PW)"
+                  subtitle={tdiLateralData.pattern}
+                  pathData={tdiLateralData.path}
+                  color="#a78bfa"
+                  annotations={tdiLateralAnnotations}
+                  W={W_DOPPLER} H={H_DOPPLER}
+                  scaleMax={Math.max(tdiLateralData.ePrime, tdiLateralData.aPrime, tdiLateralData.sPrime) * 1.2 / 100}
+                />
+                <div className="mt-1 grid grid-cols-3 gap-1 text-[10px]">
+                  <div className="bg-gray-50 rounded p-1 text-center border border-gray-100">
+                    <div className="font-bold text-gray-700">s'</div>
+                    <div className="font-mono text-violet-500">{tdiLateralData.sPrime.toFixed(1)}</div>
+                  </div>
+                  <div className="bg-gray-50 rounded p-1 text-center border border-gray-100">
+                    <div className="font-bold text-gray-700">e'</div>
+                    <div className={`font-mono font-bold ${tdiLateralData.ePrime < 10 ? "text-red-600" : "text-violet-500"}`}>{tdiLateralData.ePrime.toFixed(1)}</div>
+                  </div>
+                  <div className="bg-gray-50 rounded p-1 text-center border border-gray-100">
+                    <div className="font-bold text-gray-700">a'</div>
+                    <div className="font-mono text-violet-500">{tdiLateralData.aPrime.toFixed(1)}</div>
+                  </div>
+                  <div className="bg-gray-50 rounded p-1 text-center border border-gray-100 col-span-3">
+                    <div className="font-bold text-gray-700">E/e' lat: <span className={`font-mono font-bold ${tdiLateralData.eeRatio > 13 ? "text-red-600" : tdiLateralData.eeRatio > 11 ? "text-amber-600" : "text-green-700"}`}>{tdiLateralData.eeRatio.toFixed(1)}</span> &nbsp; avg: <span className={`font-mono font-bold ${eeAvg > 14 ? "text-red-600" : eeAvg > 12 ? "text-amber-600" : "text-green-700"}`}>{eeAvg.toFixed(1)}</span></div>
+                  </div>
                 </div>
               </div>
             </div>
