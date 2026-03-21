@@ -630,7 +630,7 @@ interface DownloadableCardHandle {
 }
 
 // PREVIEW_SIZE: the card is 1080px, we scale it to PREVIEW_SIZE for display
-const PREVIEW_SIZE = 270; // px — 1080 * 0.25
+const PREVIEW_SIZE = 700; // px — 1080 * ~0.648
 const SCALE = PREVIEW_SIZE / 1080;
 
 function DownloadableCard({
@@ -705,7 +705,6 @@ function DownloadableCard({
         size="sm"
         className="w-full gap-2 text-white font-semibold text-xs rounded-t-none"
         style={{
-          width: PREVIEW_SIZE,
           background: `linear-gradient(90deg, ${BRAND}, ${BRAND_DARK})`,
           borderRadius: "0 0 10px 10px",
         }}
@@ -863,8 +862,8 @@ function CategorySection({
 
       {/* Cards + social posts */}
       <div className="p-4 space-y-4">
-        {/* Cards row */}
-        <div className="flex gap-6">
+        {/* Cards row — side by side */}
+        <div className="grid grid-cols-2 gap-4">
           {/* Question card */}
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-1.5">
@@ -905,12 +904,14 @@ function CategorySection({
               />
             </DownloadableCard>
           </div>
+        </div>
 
-          {/* Social posts column */}
-          <div className="flex-1 flex flex-col gap-3 min-w-0">
+        {/* Social posts row — side by side below cards */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col gap-2">
             <div className="flex items-center gap-1.5">
               <Share2 className="w-3 h-3" style={{ color: BRAND_AQUA }} />
-              <span className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Social Posts</span>
+              <span className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Question Post</span>
             </div>
             <SocialPostPanel
               type="question"
@@ -920,6 +921,12 @@ function CategorySection({
               answerText={answerText}
               explanationText={explanationText}
             />
+          </div>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-1.5">
+              <Share2 className="w-3 h-3" style={{ color: BRAND_AQUA }} />
+              <span className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Answer Post</span>
+            </div>
             <SocialPostPanel
               type="answer"
               category={category}
@@ -977,7 +984,7 @@ export default function ChallengeCardGenerator() {
     <div className="min-h-screen" style={{ background: "#0a1018" }}>
       {/* Header */}
       <div style={{ background: "#0e1a24", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-2">
+        <div className="max-w-screen-2xl mx-auto px-6 py-3 flex items-center gap-2">
           <Link href="/platform-admin">
             <button className="p-1.5 rounded-lg hover:bg-white/10 transition-colors">
               <ArrowLeft className="w-4 h-4 text-white/50" />
@@ -1025,7 +1032,7 @@ export default function ChallengeCardGenerator() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-4">
+      <div className="max-w-screen-2xl mx-auto px-6 py-4">
         {/* Info bar */}
         <div
           className="rounded-lg p-3 mb-4 text-xs"
