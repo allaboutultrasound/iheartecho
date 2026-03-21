@@ -24,7 +24,7 @@ export default function CaseLibraryBanner({ isAuthenticated }: CaseLibraryBanner
         style={{
           backgroundImage: `url("${BANNER_IMG}")`,
           backgroundSize: "cover",
-          backgroundPosition: "center right",
+          backgroundPosition: "top center",
         }}
       />
       <div className="relative container py-10 md:py-14">
