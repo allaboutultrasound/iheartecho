@@ -163,7 +163,6 @@ const sortedModules = [
 const STATIC_STATS = [
   { label: "Clinical Calculators", value: "20+", icon: Calculator },
   { label: "Echo Cases", value: "500+", icon: BookOpen },
-  { label: "Protocols Covered", value: "15", icon: ClipboardList },
 ];
 
 export default function Home() {
