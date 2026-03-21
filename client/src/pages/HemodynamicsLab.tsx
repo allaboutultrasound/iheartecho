@@ -1316,8 +1316,8 @@ export default function HemodynamicsLab() {
                   <h3 className="font-bold text-gray-700 text-xs" style={{ fontFamily: "Merriweather, serif" }}>Pressure (mmHg)</h3>
                   <div className="flex flex-wrap items-center gap-2 text-[10px]">
                     <span className="flex items-center gap-1"><span className="w-3 h-0.5 inline-block bg-[#189aa1]"></span> LV</span>
-                    <span className="flex items-center gap-1"><span className="w-3 h-0.5 inline-block bg-[#dc2626]"></span> Ao</span>
-                    <span className="flex items-center gap-1"><span className="w-3 h-0.5 inline-block bg-[#a855f7] opacity-80"></span> LA</span>
+                    <span className="flex items-center gap-1"><span className="w-3 h-0.5 inline-block bg-[#9333ea]"></span> Ao</span>
+                    <span className="flex items-center gap-1"><span className="w-3 h-0.5 inline-block bg-[#ec4899] opacity-80"></span> LA</span>
                   </div>
                 </div>
               </div>
@@ -1336,9 +1336,9 @@ export default function HemodynamicsLab() {
                   <ReferenceLine x={events.avo} stroke="#dc2626" strokeWidth={1.5} label={{ value: "AVO", position: "top", fontSize: 8, fill: "#dc2626" }} />
                   <ReferenceLine x={events.avc} stroke="#d97706" strokeWidth={1.5} label={{ value: "AVC", position: "top", fontSize: 8, fill: "#d97706" }} />
                   <ReferenceLine x={events.mvo} stroke="#16a34a" strokeDasharray="4 3" strokeWidth={1.5} label={{ value: "MVO", position: "top", fontSize: 8, fill: "#16a34a" }} />
-                  <Area type="monotone" dataKey="aop" stroke="#dc2626" fill="#fecaca" fillOpacity={0.25} strokeWidth={2.5} dot={false} name="Aortic Pressure" />
+                  <Area type="monotone" dataKey="aop" stroke="#9333ea" fill="#e9d5ff" fillOpacity={0.25} strokeWidth={2.5} dot={false} name="Aortic Pressure" />
                   <Line type="monotone" dataKey="lvp" stroke="#189aa1" strokeWidth={2.5} dot={false} name="LV Pressure" />
-                  <Line type="monotone" dataKey="lap" stroke="#a855f7" strokeWidth={1.8} strokeDasharray="5 2" dot={false} name="LA Pressure" />
+                  <Line type="monotone" dataKey="lap" stroke="#ec4899" strokeWidth={1.8} strokeDasharray="5 2" dot={false} name="LA Pressure" />
                 </ComposedChart>
               </ResponsiveContainer>
               </div>
@@ -1615,7 +1615,7 @@ export default function HemodynamicsLab() {
                   title="Septal TDI"
                   subtitle={tdiSeptalData.pattern}
                   pathData={tdiSeptalData.path}
-                  color="#f59e0b"
+                  color="#4ad9e0"
                   annotations={tdiSeptalAnnotations}
                   W={W_DOPPLER} H={H_DOPPLER}
                   scaleMax={Math.max(tdiSeptalData.ePrime, tdiSeptalData.aPrime, tdiSeptalData.sPrime) * 1.2 / 100}
@@ -1646,7 +1646,7 @@ export default function HemodynamicsLab() {
                   title="Lateral TDI"
                   subtitle={tdiLateralData.pattern}
                   pathData={tdiLateralData.path}
-                  color="#a78bfa"
+                  color="#4ad9e0"
                   annotations={tdiLateralAnnotations}
                   W={W_DOPPLER} H={H_DOPPLER}
                   scaleMax={Math.max(tdiLateralData.ePrime, tdiLateralData.aPrime, tdiLateralData.sPrime) * 1.2 / 100}
