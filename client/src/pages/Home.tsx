@@ -201,12 +201,9 @@ export default function Home() {
     staleTime: 24 * 60 * 60 * 1000, // 24 hours
     refetchOnWindowFocus: false,
   });
-  const USER_COUNT_FLOOR = 15_174;
-  const totalMembers = userCountData?.total ?? null;
-  // The final number to count up to
-  const memberTarget = totalMembers !== null
-    ? Math.max(totalMembers, USER_COUNT_FLOOR)
-    : USER_COUNT_FLOOR;
+  // The server already adds the display offset, so use the returned total directly.
+  // Fall back to 15_174 only if the query hasn't resolved yet.
+  const memberTarget = userCountData?.total ?? 15_174;
   // Animated count-up — starts as soon as the target is known
   const animatedCount = useCountUp(memberTarget, 1800, true);
   const displayedMembers = animatedCount.toLocaleString();

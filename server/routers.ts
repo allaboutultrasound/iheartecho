@@ -2286,10 +2286,16 @@ export const appRouter = router({
   }),
 
   stats: router({
-    /** Total user count (active + pending) — refreshed by the client daily */
+    /**
+     * Total user count for public display.
+     * Returns realCount + DISPLAY_OFFSET so the displayed number is always
+     * ahead of the true registration count by a fixed amount.
+     * Admin panel uses admin.userCount which returns the raw count.
+     */
     userCount: publicProcedure.query(async () => {
-      const total = await countUsers();
-      return { total };
+      const DISPLAY_OFFSET = 3392; // keeps displayed count ~15,174 ahead of real count as of 2026-03-21
+      const real = await countUsers();
+      return { total: real + DISPLAY_OFFSET };
     }),
   }),
 
