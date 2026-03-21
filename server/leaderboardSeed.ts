@@ -25,7 +25,7 @@ const FIRST_NAMES = [
   "Olivia","Martha","Cheryl","Megan","Andrea","Ann","Alice","Jean","Doris","Gloria",
   "Hannah","Kathryn","Teresa","Sara","Janice","Julia","Marie","Madison","Grace","Judy",
   "Theresa","Beverly","Denise","Marilyn","Amber","Danielle","Brittany","Diana","Abigail","Jane",
-  "Lara","Priya","Aisha","Sofia","Mei","Yuki","Fatima","Nadia","Leila","Amara",
+  "Priya","Aisha","Sofia","Mei","Yuki","Fatima","Nadia","Leila","Amara","Zara",
   "Zoe","Chloe","Isabelle","Camille","Elise","Margot","Vivienne","Celeste","Simone","Renee",
   "Carlos","Miguel","Diego","Alejandro","Rafael","Luis","Eduardo","Fernando","Pablo","Javier",
   "Ahmed","Omar","Hassan","Ali","Khalid","Tariq","Yusuf","Ibrahim","Samir","Karim",
