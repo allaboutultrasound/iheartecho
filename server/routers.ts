@@ -2293,7 +2293,7 @@ export const appRouter = router({
      * Admin panel uses admin.userCount which returns the raw count.
      */
     userCount: publicProcedure.query(async () => {
-      const DISPLAY_OFFSET = 3392; // keeps displayed count ~15,174 ahead of real count as of 2026-03-21
+      const DISPLAY_OFFSET = 3997; // fixed display offset — real count + 3997 shown publicly
       const real = await countUsers();
       return { total: real + DISPLAY_OFFSET };
     }),

@@ -617,3 +617,6 @@
 ## Daily Challenge Tag Fix (Mar 21 2026)
 - [x] Remove tags display from user-facing daily challenge question view (keyword tags hidden; only category + difficulty badges shown)
 - [x] Fix AI generator prompts (both aiGenerateQuestions and aiGenerateMixed) to use broad topic tags only, never answer/diagnosis tags
+
+## Live Member Count (Mar 21 2026)
+- [x] Updated DISPLAY_OFFSET from 3392 to 3997 in stats.userCount procedure (real DB count + 3997 shown publicly)
