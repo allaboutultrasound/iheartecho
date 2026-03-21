@@ -987,7 +987,8 @@ export default function HemodynamicsLab() {
   const rr_ms = Math.round((60 / params.heartRate) * 1000);
 
   // Doppler tracing data — computed once per params change
-  const W_DOPPLER = 520, H_DOPPLER = 240;
+  // On desktop the Dopplers are in a narrow right column, so we use a smaller canvas
+  const W_DOPPLER = 520, H_DOPPLER = 180;
   const dopplerScale = 2.0; // fixed display scale — waveforms fill the full canvas height
   const mitralData = useMemo(() => generateMitralInflowPath(params, W_DOPPLER, H_DOPPLER), [params]);
   const tricuspidData = useMemo(() => generateTricuspidInflowPath(params, W_DOPPLER, H_DOPPLER), [params]);
@@ -1053,7 +1054,8 @@ export default function HemodynamicsLab() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-5">
+        {/* Desktop: 3-column layout — controls | wiggers | doppler. Mobile: single column stack */}
+        <div className="grid grid-cols-1 xl:grid-cols-[280px_1fr_300px] gap-5">
 
           {/* ---- CONTROLS ---- */}
           <div className="xl:col-span-1 space-y-4">
@@ -1126,7 +1128,7 @@ export default function HemodynamicsLab() {
           </div>
 
           {/* ---- WIGGERS + PV LOOP ---- */}
-          <div className="xl:col-span-3 space-y-4">
+          <div className="xl:col-span-1 space-y-3">
 
             {/* Valve event legend */}
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm px-5 py-3">
@@ -1157,9 +1159,9 @@ export default function HemodynamicsLab() {
             </div>
 
             {/* ECG */}
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-bold text-gray-700 text-sm" style={{ fontFamily: "Merriweather, serif" }}>ECG</h3>
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="font-bold text-gray-700 text-xs" style={{ fontFamily: "Merriweather, serif" }}>ECG</h3>
                 <div className="flex items-center gap-3 text-xs text-gray-400">
                   <span>Lead II (simulated)</span>
                   <span className="flex items-center gap-1"><b className="text-teal-600">P</b> wave</span>
@@ -1167,7 +1169,7 @@ export default function HemodynamicsLab() {
                   <span className="flex items-center gap-1"><b className="text-amber-600">T</b> wave</span>
                 </div>
               </div>
-              <ResponsiveContainer width="100%" height={100}>
+              <ResponsiveContainer width="100%" height={80}>
                 <ComposedChart data={wiggersData} margin={{ top: 16, right: 10, bottom: 0, left: 30 }}>
                   <XAxis dataKey="time" hide />
                   <YAxis domain={[-0.4, 1.4]} hide />
@@ -1213,16 +1215,16 @@ export default function HemodynamicsLab() {
             </div>
 
             {/* LV Pressure + Aortic Pressure */}
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-bold text-gray-700 text-sm" style={{ fontFamily: "Merriweather, serif" }}>Pressure (mmHg)</h3>
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="font-bold text-gray-700 text-xs" style={{ fontFamily: "Merriweather, serif" }}>Pressure (mmHg)</h3>
                 <div className="flex flex-wrap items-center gap-3 text-xs">
                   <span className="flex items-center gap-1"><span className="w-3 h-0.5 inline-block bg-[#189aa1]"></span> LV Pressure</span>
                   <span className="flex items-center gap-1"><span className="w-3 h-0.5 inline-block bg-[#dc2626]"></span> Aortic Pressure</span>
                   <span className="flex items-center gap-1"><span className="w-3 h-0.5 inline-block bg-[#189aa1]"></span> LA Pressure</span>
                 </div>
               </div>
-              <ResponsiveContainer width="100%" height={180}>
+              <ResponsiveContainer width="100%" height={150}>
                 <ComposedChart data={wiggersData} margin={{ top: 4, right: 10, bottom: 4, left: 35 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="time" tick={{ fontSize: 9 }} label={{ value: "Time (ms)", position: "insideBottom", offset: -2, fontSize: 9 }} />
@@ -1244,16 +1246,16 @@ export default function HemodynamicsLab() {
             </div>
 
             {/* LV Volume */}
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-bold text-gray-700 text-sm" style={{ fontFamily: "Merriweather, serif" }}>LV Volume (mL)</h3>
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="font-bold text-gray-700 text-xs" style={{ fontFamily: "Merriweather, serif" }}>LV Volume (mL)</h3>
                 <div className="flex items-center gap-3 text-xs text-gray-400">
                   <span>EDV: <b style={{ color: "#189aa1" }}>{Math.round(hemo.edv)} mL</b></span>
                   <span>ESV: <b style={{ color: "#189aa1" }}>{Math.round(hemo.esv)} mL</b></span>
                   <span>SV: <b style={{ color: "#189aa1" }}>{Math.round(hemo.sv)} mL</b></span>
                 </div>
               </div>
-              <ResponsiveContainer width="100%" height={130}>
+              <ResponsiveContainer width="100%" height={100}>
                 <ComposedChart data={wiggersData} margin={{ top: 4, right: 10, bottom: 4, left: 30 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="time" tick={{ fontSize: 9 }} label={{ value: "Time (ms)", position: "insideBottom", offset: -2, fontSize: 9 }} />
@@ -1269,9 +1271,9 @@ export default function HemodynamicsLab() {
             </div>
 
             {/* PV Loop */}
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-bold text-gray-700 text-sm" style={{ fontFamily: "Merriweather, serif" }}>Pressure-Volume Loop</h3>
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="font-bold text-gray-700 text-xs" style={{ fontFamily: "Merriweather, serif" }}>Pressure-Volume Loop</h3>
                 <div className="flex items-center gap-3 text-xs text-gray-400">
                   <span>EF: <b style={{ color: hemo.ef < 40 ? "#dc2626" : hemo.ef < 55 ? "#d97706" : "#16a34a" }}>{hemo.ef}%</b></span>
                   <span>Emax: <b style={{ color: "#189aa1" }}>{hemo.emax.toFixed(2)} mmHg/mL</b></span>
@@ -1285,7 +1287,7 @@ export default function HemodynamicsLab() {
                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm inline-block" style={{ background: "#16a34a20" }}></span><span className="text-green-600 font-semibold">Diastole / Filling</span></span>
               </div>
               <div className="relative">
-                <ResponsiveContainer width="100%" height={260}>
+                <ResponsiveContainer width="100%" height={200}>
                   <ComposedChart data={pvData} margin={{ top: 20, right: 50, bottom: 20, left: 40 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis dataKey="volume" type="number" domain={["auto", "auto"]} tick={{ fontSize: 9 }}
@@ -1368,15 +1370,18 @@ export default function HemodynamicsLab() {
             </div>
 
           </div>
-        </div>
 
-        {/* ---- DOPPLER TRACINGS ---- */}
-        <div className="mt-6">
-          <div className="flex items-center gap-2 mb-3">
-            <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Representative Doppler Tracings</h2>
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-200 font-semibold">Live — updates with hemodynamic state</span>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* ---- DOPPLER TRACINGS (desktop: right column, mobile: below) ---- */}
+          <div className="xl:col-span-1 space-y-3">
+            <div className="hidden xl:flex items-center gap-2 mb-1">
+              <h2 className="text-sm font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Doppler Tracings</h2>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-200 font-semibold">Live</span>
+            </div>
+            {/* Mobile-only Doppler header */}
+            <div className="xl:hidden flex items-center gap-2 mt-4 mb-1">
+              <h2 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Representative Doppler Tracings</h2>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-200 font-semibold">Live — updates with hemodynamic state</span>
+            </div>
             {/* Mitral Inflow */}
             <div>
               <DopplerTracing
