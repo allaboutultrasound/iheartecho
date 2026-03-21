@@ -1182,42 +1182,24 @@ export default function HemodynamicsLab() {
         </div>
       </div>
       <div className="container py-6">
-        {/* Desktop: 4-column layout — presets | controls | wiggers | doppler. Mobile: single column stack */}
-        <div className="grid grid-cols-1 xl:grid-cols-[200px_480px_260px_1fr] gap-4">
-
-          {/* ---- DISEASE STATE PRESETS (leftmost column on desktop) ---- */}
-          <div className="xl:col-span-1">
-            {/* Mobile: show as horizontal scrollable row */}
-            <div className="xl:hidden mb-4 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="teal-header px-4 py-2">
-                <h3 className="font-bold text-xs text-white" style={{ fontFamily: "Merriweather, serif" }}>Clinical Presets</h3>
-              </div>
-              <div className="p-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {PRESETS.map(preset => (
-                  <button key={preset.label} onClick={() => setParams(preset.values)}
-                    className="p-2 rounded-lg border text-left transition-all hover:shadow-sm active:scale-95"
-                    style={{ borderColor: preset.color + "40", background: preset.color + "08" }}>
-                    <div className="text-[11px] font-bold" style={{ color: preset.color, fontFamily: "Merriweather, serif" }}>{preset.label}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-            {/* Desktop: vertical stacked preset buttons */}
-            <div className="hidden xl:block bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="teal-header px-3 py-2">
-                <h3 className="font-bold text-xs text-white" style={{ fontFamily: "Merriweather, serif" }}>Disease States</h3>
-              </div>
-              <div className="p-2 flex flex-col gap-1">
-                {PRESETS.map(preset => (
-                  <button key={preset.label} onClick={() => setParams(preset.values)}
-                    className="w-full px-2 py-1.5 rounded-lg border text-left transition-all hover:shadow-sm active:scale-95"
-                    style={{ borderColor: preset.color + "40", background: preset.color + "08" }}>
-                    <div className="text-[11px] font-bold leading-tight" style={{ color: preset.color, fontFamily: "Merriweather, serif" }}>{preset.label}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
+        {/* Disease States — full-width top row on desktop */}
+        <div className="mb-4 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="teal-header px-4 py-2">
+            <h3 className="font-bold text-xs text-white" style={{ fontFamily: "Merriweather, serif" }}>Disease States</h3>
           </div>
+          <div className="p-3 flex flex-wrap gap-2">
+            {PRESETS.map(preset => (
+              <button key={preset.label} onClick={() => setParams(preset.values)}
+                className="px-3 py-1.5 rounded-lg border text-left transition-all hover:shadow-sm active:scale-95"
+                style={{ borderColor: preset.color + "40", background: preset.color + "08" }}>
+                <div className="text-[11px] font-bold" style={{ color: preset.color, fontFamily: "Merriweather, serif" }}>{preset.label}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Desktop: 3-column layout — controls | wiggers | doppler. Mobile: single column stack */}
+        <div className="grid grid-cols-1 xl:grid-cols-[420px_380px_1fr] gap-4">
 
           {/* ---- CONTROLS ---- */}
           <div className="xl:col-span-1 space-y-4">
@@ -1334,10 +1316,15 @@ export default function HemodynamicsLab() {
                 </div>
               </div>
               <div className="px-3 pb-0">
-              <ResponsiveContainer width="100%" height={130}>
+              <ResponsiveContainer width="100%" height={160}>
                 <ComposedChart data={wiggersData} margin={{ top: 8, right: 10, bottom: 0, left: 0 }}>
                   <XAxis dataKey="time" type="number" domain={[0, rr_ms]} hide />
-                  <YAxis domain={[-0.4, 1.4]} hide width={50} tick={false} axisLine={false} tickLine={false} />
+                  {/* Identical YAxis config to Pressure/Volume — same width, same axisLine stroke, same tickLine — guarantees pixel-perfect left alignment */}
+                  <YAxis domain={[-0.4, 1.4]} width={50}
+                    tick={false}
+                    axisLine={{ stroke: '#f0f0f0', strokeWidth: 1 }}
+                    tickLine={{ stroke: '#f0f0f0', strokeWidth: 0 }}
+                  />
                   {/* Valve event lines */}
                   <ReferenceLine x={events.mvc} stroke="#189aa1" strokeDasharray="4 3" strokeWidth={1.5} />
                   <ReferenceLine x={events.avo} stroke="#dc2626" strokeWidth={1.5} />
@@ -1390,7 +1377,7 @@ export default function HemodynamicsLab() {
                 </div>
               </div>
               <div className="px-3 pb-0">
-              <ResponsiveContainer width="100%" height={260}>
+              <ResponsiveContainer width="100%" height={320}>
                 <ComposedChart data={wiggersData} margin={{ top: 4, right: 10, bottom: 0, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="time" type="number" domain={[0, rr_ms]} hide />
@@ -1423,7 +1410,7 @@ export default function HemodynamicsLab() {
                 </div>
               </div>
               <div className="px-3 pb-3">
-              <ResponsiveContainer width="100%" height={170}>
+              <ResponsiveContainer width="100%" height={200}>
                 <ComposedChart data={wiggersData} margin={{ top: 4, right: 10, bottom: 18, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="time" type="number" domain={[0, rr_ms]} tick={{ fontSize: 9 }} label={{ value: "Time (ms)", position: "insideBottom", offset: -4, fontSize: 9 }} />
