@@ -65,6 +65,7 @@ import {
   Loader2,
   Star,
   TrendingUp,
+  ImageIcon,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import BulkCsvUploadPanel, { type BulkResult } from "@/components/BulkCsvUploadPanel";
@@ -1223,6 +1224,13 @@ export default function PlatformAdmin() {
                 label: "Engagement Dashboard",
                 description: "Real usage metrics for daily challenges, flashcards, and case library with per-member drill-down",
                 color: "#059669",
+              },
+              {
+                href: "/admin/card-generator",
+                icon: ImageIcon,
+                label: "Card Generator",
+                description: "Generate branded 1080×1080 question & answer image cards per category for social media posting",
+                color: "#7c3aed",
               },
             ].map(({ href, icon: Icon, label, description, color }) => (
               <Link key={href} href={href}>

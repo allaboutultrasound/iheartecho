@@ -637,3 +637,9 @@
 
 ## Engagement Dashboard Query Fix 2 (Mar 21 2026)
 - [x] Fix: dailyFlashcard chart now uses quickfireAttempts with type=quickReview (removed invalid userPointsLog activityType='flashcard_session' query)
+
+## Daily Challenge Image Card Generator (Mar 21 2026)
+- [x] Query today's scheduled daily challenge questions grouped by category (adminGetCardGeneratorData procedure)
+- [x] Build admin image card generator page at /admin/card-generator with branded 1080x1080 Q&A cards per category
+- [x] Enable individual card download (PNG) via html-to-image library
+- [x] Add Card Generator card to PlatformAdmin tools grid

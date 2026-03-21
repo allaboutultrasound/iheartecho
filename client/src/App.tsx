@@ -116,6 +116,7 @@ import SoundBytesAdmin from "./pages/SoundBytesAdmin";
 import AccreditationProSalesPage from "./pages/AccreditationProSalesPage";
 // GuidelinesAssist™
 import GuidelinesAssist from "./pages/GuidelinesAssist";
+import ChallengeCardGenerator from "./pages/ChallengeCardGenerator";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -197,6 +198,13 @@ function Router() {
         {() => (
           <RoleGuard roles={["platform_admin"]} allowAdmin>
             <EngagementDashboard />
+          </RoleGuard>
+        )}
+      </Route>
+      <Route path="/admin/card-generator">
+        {() => (
+          <RoleGuard roles={["platform_admin"]} allowAdmin>
+            <ChallengeCardGenerator />
           </RoleGuard>
         )}
       </Route>
