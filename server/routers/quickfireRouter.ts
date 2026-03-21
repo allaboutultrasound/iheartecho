@@ -3039,15 +3039,18 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
    * Card Generator: returns the next queued/live challenge per category with full question details.
    * Used to generate social media image cards for each category.
    */
-  adminGetCardGeneratorData: adminProcedure.query(async () => {
+  adminGetCardGeneratorData: adminProcedure
+    .input(z.object({ dayOffset: z.number().int().min(0).max(29).default(0) }))
+    .query(async ({ input }) => {
     const db = await getDb();
     if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
 
     const categories = ["ACS", "Adult Echo", "Pediatric Echo", "Fetal Echo", "POCUS", "General"] as const;
+    const { dayOffset } = input;
 
     const results = await Promise.all(
       categories.map(async (cat) => {
-        // Get the next queued/live challenge for this category
+        // Get the challenge at dayOffset position in the queue for this category
         const [challenge] = await db
           .select()
           .from(quickfireChallenges)
@@ -3060,7 +3063,8 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
             )
           )
           .orderBy(quickfireChallenges.queuePosition, quickfireChallenges.priority)
-          .limit(1);
+          .limit(1)
+          .offset(dayOffset);
 
         if (!challenge) return { category: cat, challenge: null, questions: [] };
 

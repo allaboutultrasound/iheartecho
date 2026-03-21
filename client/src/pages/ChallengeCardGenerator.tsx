@@ -11,6 +11,7 @@ import { saveAs } from "file-saver";
 import {
   ArrowLeft, Download, Loader2, AlertCircle, ImageIcon,
   CheckCircle2, Zap, Package, Share2, Copy, Check,
+  ChevronLeft, ChevronRight, Calendar,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -1121,11 +1122,30 @@ function CategorySection({
 
 // ---- Main Page --------------------------------------------------------------
 
+const DAYS_PER_SET = 7;
+const MAX_DAYS = 30;
+
 export default function ChallengeCardGenerator() {
-  const { data, isLoading, error, refetch } = trpc.quickfire.adminGetCardGeneratorData.useQuery(undefined, {
-    staleTime: 60_000,
-    retry: false,
-  });
+  // Day offset: 0 = Day 1 (next queued), 1 = Day 2, etc.
+  const [dayOffset, setDayOffset] = useState(0);
+  // Set index: 0 = days 1-7, 1 = days 8-14, 2 = days 15-21, 3 = days 22-28, 4 = days 29-30
+  const [setIndex, setSetIndex] = useState(0);
+
+  const { data, isLoading, error, refetch } = trpc.quickfire.adminGetCardGeneratorData.useQuery(
+    { dayOffset },
+    { staleTime: 30_000, retry: false }
+  );
+
+  // Computed set info
+  const setStart = setIndex * DAYS_PER_SET; // 0-based day offset for first day in set
+  const setEnd = Math.min(setStart + DAYS_PER_SET - 1, MAX_DAYS - 1);
+  const totalSets = Math.ceil(MAX_DAYS / DAYS_PER_SET); // 5 sets
+
+  const goToSet = (newSetIndex: number) => {
+    const clampedSet = Math.max(0, Math.min(newSetIndex, totalSets - 1));
+    setSetIndex(clampedSet);
+    setDayOffset(clampedSet * DAYS_PER_SET);
+  };
 
   // Theme toggle
   const [cardTheme, setCardTheme] = useState<CardTheme>("dark");
@@ -1239,13 +1259,79 @@ export default function ChallengeCardGenerator() {
       </div>
 
       <div className="max-w-screen-2xl mx-auto px-6 py-4">
+        {/* Set pagination bar */}
+        <div
+          className="rounded-lg p-3 mb-4 flex items-center justify-between gap-4"
+          style={{ background: "#0e1a24", border: "1px solid rgba(255,255,255,0.08)" }}
+        >
+          <div className="flex items-center gap-2">
+            <Calendar className="w-4 h-4" style={{ color: BRAND_AQUA }} />
+            <span className="text-sm font-bold text-white">
+              Days {setStart + 1}–{setEnd + 1}
+            </span>
+            <span className="text-xs text-white/40">of {MAX_DAYS}</span>
+          </div>
+          {/* Day buttons within set */}
+          <div className="flex items-center gap-1">
+            {Array.from({ length: setEnd - setStart + 1 }, (_, i) => {
+              const offset = setStart + i;
+              return (
+                <button
+                  key={offset}
+                  onClick={() => setDayOffset(offset)}
+                  className="w-8 h-8 rounded-md text-xs font-bold transition-all"
+                  style={{
+                    background: dayOffset === offset
+                      ? `linear-gradient(90deg, ${BRAND_DARK}, ${BRAND})`
+                      : "rgba(255,255,255,0.06)",
+                    color: dayOffset === offset ? "#fff" : "rgba(255,255,255,0.4)",
+                    border: dayOffset === offset ? `1px solid ${BRAND}` : "1px solid rgba(255,255,255,0.08)",
+                  }}
+                >
+                  {offset + 1}
+                </button>
+              );
+            })}
+          </div>
+          {/* Prev / Next set */}
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              onClick={() => goToSet(setIndex - 1)}
+              disabled={setIndex === 0}
+              className="gap-1 text-xs font-semibold"
+              style={{
+                background: setIndex === 0 ? "rgba(255,255,255,0.05)" : `linear-gradient(90deg, ${BRAND_DARK}, ${BRAND})`,
+                color: setIndex === 0 ? "rgba(255,255,255,0.25)" : "#fff",
+              }}
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+              Prev Set
+            </Button>
+            <span className="text-xs text-white/30">{setIndex + 1} / {totalSets}</span>
+            <Button
+              size="sm"
+              onClick={() => goToSet(setIndex + 1)}
+              disabled={setIndex >= totalSets - 1}
+              className="gap-1 text-xs font-semibold"
+              style={{
+                background: setIndex >= totalSets - 1 ? "rgba(255,255,255,0.05)" : `linear-gradient(90deg, ${BRAND}, ${BRAND_AQUA})`,
+                color: setIndex >= totalSets - 1 ? "rgba(255,255,255,0.25)" : "#fff",
+              }}
+            >
+              Next Set
+              <ChevronRight className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+        </div>
+
         {/* Info bar */}
         <div
           className="rounded-lg p-3 mb-4 text-xs"
           style={{ background: BRAND + "14", border: `1px solid ${BRAND}2a` }}
         >
           <p className="text-white/60">
-            Cards are generated from the <strong className="text-white">next queued challenge</strong> per category.
+            Showing the <strong className="text-white">Day {dayOffset + 1}</strong> queued challenge per category.
             Each card is <strong className="text-white">1080×1080 px</strong> — ideal for Instagram, Facebook, and LinkedIn.
             Post the question card first, then the answer card 24 hours later.
             Use <strong className="text-white">All Questions</strong> or <strong className="text-white">All Answers</strong> to download a ZIP of all cards at once.
