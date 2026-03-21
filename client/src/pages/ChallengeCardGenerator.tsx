@@ -263,6 +263,62 @@ function stripHtml(html: string): string {
     .trim();
 }
 
+/**
+ * RichHtml — renders stored Tiptap/Quill HTML inside a card.
+ * Supports: <strong>/<b>, <em>/<i>, <ul>/<ol>/<li>, <hr>, <p>, <br>.
+ * Uses inline styles only (no Tailwind) so html-to-image captures them correctly.
+ */
+function RichHtml({
+  html,
+  color,
+  fontSize = 22,
+  lineHeight = 1.6,
+}: {
+  html: string;
+  color: string;
+  fontSize?: number;
+  lineHeight?: number;
+}) {
+  // Sanitise and transform HTML for inline-style rendering
+  const processed = html
+    // Decode entities
+    .replace(/&nbsp;/g, "\u00a0")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    // Bold — handle multi-line content by replacing tag-by-tag
+    .replace(/<strong>/g, `<span style="font-weight:800;color:${color}">`)
+    .replace(/<\/strong>/g, "</span>")
+    .replace(/<b>/g, `<span style="font-weight:800;color:${color}">`)
+    .replace(/<\/b>/g, "</span>")
+    // Italic
+    .replace(/<em>/g, `<span style="font-style:italic">`)
+    .replace(/<\/em>/g, "</span>")
+    .replace(/<i>/g, `<span style="font-style:italic">`)
+    .replace(/<\/i>/g, "</span>")
+    // Underline
+    .replace(/<u>/g, `<span style="text-decoration:underline">`)
+    .replace(/<\/u>/g, "</span>")
+    // Horizontal rule — render as a teal divider line
+    .replace(/<hr\s*\/?>/gi, `<div style="height:2px;background:linear-gradient(90deg,${BRAND_AQUA},${BRAND});border-radius:2px;margin:10px 0"></div>`)
+    // List items — wrap in flex row with bullet
+    .replace(/<li>/g, `<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:6px"><span style="color:${BRAND_AQUA};font-size:${fontSize}px;line-height:${lineHeight};flex-shrink:0">•</span><span style="flex:1">`)
+    .replace(/<\/li>/g, "</span></div>")
+    // Strip remaining block tags but keep their content
+    .replace(/<\/?(?:ul|ol|p|div|h[1-6]|blockquote|pre|code)[^>]*>/gi, "")
+    // Strip any remaining unknown tags
+    .replace(/<(?!\/?(span|div|br))[^>]+>/gi, "")
+    // Line breaks
+    .replace(/<br\s*\/?>/gi, "<br/>");
+
+  return (
+    <div
+      style={{ color, fontSize, lineHeight, overflow: "hidden" }}
+      dangerouslySetInnerHTML={{ __html: processed }}
+    />
+  );
+}
+
 function parseOptions(raw: string | null): string[] {
   if (!raw) return [];
   try {
@@ -639,8 +695,6 @@ function AnswerCard({
       : reviewAnswer
       ? stripHtml(reviewAnswer)
       : null;
-  const explanationText = explanation ? stripHtml(explanation) : null;
-  const cleanQ = stripHtml(questionText);
 
   return (
     <CardShell t={t}>
@@ -664,17 +718,13 @@ function AnswerCard({
       {/* Question recap */}
       <div
         style={{
-          color: t.recapColor,
-          fontSize: 24,
-          fontWeight: 500,
-          lineHeight: 1.45,
           marginBottom: 24,
-          fontFamily: "'Georgia', 'Merriweather', serif",
           borderLeft: `4px solid ${t.recapBorder}`,
           paddingLeft: 18,
+          fontFamily: "'Georgia', 'Merriweather', serif",
         }}
       >
-        {cleanQ}
+        <RichHtml html={questionText} color={t.recapColor} fontSize={24} lineHeight={1.45} />
       </div>
 
       {/* Answer box */}
@@ -711,7 +761,7 @@ function AnswerCard({
       )}
 
       {/* Explanation */}
-      {explanationText && (
+      {explanation && (
         <div
           style={{
             background: t.explanationBg,
@@ -726,16 +776,9 @@ function AnswerCard({
           <div style={{ color: BRAND, fontSize: 10, fontWeight: 800, marginBottom: 10, letterSpacing: "2px" }}>
             EXPLANATION
           </div>
-          <div
-            style={{
-              color: t.explanationTextColor,
-              fontSize: 22,
-              lineHeight: 1.6,
-              overflow: "hidden",
-            }}
-          >
-            {explanationText}
-          </div>
+          {explanation && (
+            <RichHtml html={explanation} color={t.explanationTextColor} fontSize={22} lineHeight={1.6} />
+          )}
         </div>
       )}
 
