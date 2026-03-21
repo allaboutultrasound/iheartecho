@@ -271,7 +271,7 @@ function stripHtml(html: string): string {
 
 /**
  * RichHtml — renders stored Tiptap/Quill HTML inside a card.
- * Supports: <strong>/<b>, <em>/<i>, <ul>/<ol>/<li>, <hr>, <p>, <br>.
+ * Supports: <strong>/<b>, <em>/<i>, <ul>/<ol>/<li>, <hr>, <p>, <br>, <img>.
  * Uses inline styles only (no Tailwind) so html-to-image captures them correctly.
  */
 function RichHtml({
@@ -307,13 +307,20 @@ function RichHtml({
     .replace(/<\/u>/g, "</span>")
     // Horizontal rule — render as a teal divider line
     .replace(/<hr\s*\/?>/gi, `<div style="height:2px;background:linear-gradient(90deg,${BRAND_AQUA},${BRAND});border-radius:2px;margin:10px 0"></div>`)
+    // Images — preserve src, apply max-width so they fit the card
+    .replace(/<img([^>]*)>/gi, (_, attrs) => {
+      const srcMatch = attrs.match(/src=["']([^"']+)["']/);
+      const src = srcMatch ? srcMatch[1] : "";
+      if (!src) return "";
+      return `<div style="margin:10px 0;text-align:center"><img src="${src}" style="max-width:100%;max-height:320px;border-radius:10px;object-fit:contain" crossorigin="anonymous" /></div>`;
+    })
     // List items — wrap in flex row with bullet
     .replace(/<li>/g, `<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:6px"><span style="color:${BRAND_AQUA};font-size:${fontSize}px;line-height:${lineHeight};flex-shrink:0">•</span><span style="flex:1">`)
     .replace(/<\/li>/g, "</span></div>")
     // Strip remaining block tags but keep their content
     .replace(/<\/?(?:ul|ol|p|div|h[1-6]|blockquote|pre|code)[^>]*>/gi, "")
-    // Strip any remaining unknown tags
-    .replace(/<(?!\/?(span|div|br))[^>]+>/gi, "")
+    // Strip any remaining unknown tags (but preserve span, div, br, img)
+    .replace(/<(?!\/?(?:span|div|br|img))[^>]+>/gi, "")
     // Line breaks
     .replace(/<br\s*\/?>/gi, "<br/>");
 
