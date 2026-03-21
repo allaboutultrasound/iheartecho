@@ -601,3 +601,8 @@
 
 ## Flashcard AI Generator Bug (Mar 21 2026)
 - [x] Fix: AI flashcard generator inserts into question bank instead of flashcards table — removed quickReview from Question Bank AI generator (Single Type + Mixed Types), hid top-level AI Generate button on Flashcard tab
+
+## Flashcard Duplicate Prevention (Mar 21 2026)
+- [x] Pass existing flashcard question summaries to AI generator prompt — aiGenerateQuestions already had dedup for quickReview type; added same dedup to aiGenerateMixed per-type
+- [x] Server: added getFlashcardSummaries admin procedure returning all active flashcard texts for client-side comparison
+- [x] Client: added visual ⚠ duplicate badge in flashcard AI preview when generated card matches existing deck (exact or substring match)

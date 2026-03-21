@@ -776,6 +776,12 @@ export default function QuickFireAdmin() {
     retry: false,
   });
 
+  // Lightweight query for client-side duplicate detection in the flashcard AI generator
+  const flashcardSummariesQuery = trpc.quickfire.getFlashcardSummaries.useQuery(undefined, {
+    staleTime: 60_000,
+    retry: false,
+  });
+
   const flashcardListQuery = trpc.quickfire.listAllQuestions.useQuery({
     page: 1,
     limit: 100,
@@ -3578,11 +3584,24 @@ export default function QuickFireAdmin() {
                   </div>
                 </div>
                 <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                  {flashcardAiPreview.map((q: any, i: number) => (
+                  {flashcardAiPreview.map((q: any, i: number) => {
+                    // Client-side duplicate detection: check if generated question closely matches any existing flashcard
+                    const existingSummaries = flashcardSummariesQuery.data ?? [];
+                    const genText = (q.question ?? "").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim().toLowerCase();
+                    const isDuplicate = existingSummaries.some((s) => {
+                      if (s.text === genText) return true;
+                      // Substring overlap: if 80%+ of the shorter string appears in the longer
+                      const shorter = s.text.length < genText.length ? s.text : genText;
+                      const longer = s.text.length >= genText.length ? s.text : genText;
+                      return shorter.length > 20 && longer.includes(shorter);
+                    });
+                    return (
                     <div
                       key={i}
                       className={`flex gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
-                        flashcardAiSelected.has(i) ? "border-purple-300 bg-purple-50" : "border-gray-100 bg-white opacity-60"
+                        isDuplicate
+                          ? "border-orange-300 bg-orange-50"
+                          : flashcardAiSelected.has(i) ? "border-purple-300 bg-purple-50" : "border-gray-100 bg-white opacity-60"
                       }`}
                       onClick={() => setFlashcardAiSelected((prev) => { const next = new Set(prev); if (next.has(i)) next.delete(i); else next.add(i); return next; })}
                     >
@@ -3590,12 +3609,20 @@ export default function QuickFireAdmin() {
                         {flashcardAiSelected.has(i) ? <CheckSquare className="w-4 h-4 text-purple-500" /> : <Square className="w-4 h-4 text-gray-300" />}
                       </div>
                       <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                          {isDuplicate && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-orange-100 text-orange-700 border border-orange-200">
+                              ⚠ Possible duplicate — review before importing
+                            </span>
+                          )}
+                        </div>
                         <p className="text-sm font-medium text-gray-800 leading-snug" dangerouslySetInnerHTML={{ __html: q.question ?? "" }} />
                         {q.reviewAnswer && <p className="text-xs text-green-700 font-semibold mt-1">Answer: {q.reviewAnswer}</p>}
                         {q.explanation && <div className="text-xs text-gray-400 mt-1 italic prose prose-xs max-w-none" dangerouslySetInnerHTML={{ __html: q.explanation }} />}
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 <Button
                   className="w-full gap-2 text-white"

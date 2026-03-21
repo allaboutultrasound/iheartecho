@@ -1436,12 +1436,42 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
         throw new Error("Response is not a questions array");
       }
 
+      // Fetch existing question summaries per type for deduplication
+      const existingSummariesByType: Record<string, string[]> = {};
+      try {
+        const db = await getDb();
+        if (db) {
+          const uniqueTypes = Array.from(new Set(activeTypes.map(([t]) => t)));
+          await Promise.all(
+            uniqueTypes.map(async (type) => {
+              const existing = await db
+                .select({ question: quickfireQuestions.question })
+                .from(quickfireQuestions)
+                .where(sql`${quickfireQuestions.deletedAt} IS NULL AND ${quickfireQuestions.type} = ${type}`)
+                .orderBy(desc(quickfireQuestions.id))
+                .limit(100);
+              existingSummariesByType[type] = existing.map((q) => {
+                const plain = q.question.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").trim();
+                return plain.length > 120 ? plain.slice(0, 117) + "..." : plain;
+              });
+            })
+          );
+        }
+      } catch { /* non-fatal */ }
+
       // Run all type generations in parallel
       let allResults: Array<{ type: string; question: any }>;
       try {
         const results = await Promise.all(
           activeTypes.map(async ([type, count]) => {
-            const prompt = buildPrompt(type, count, input.difficulty, input.topic);
+            const summaries = existingSummariesByType[type] ?? [];
+            const dedupBlock = summaries.length > 0
+              ? `\nIMPORTANT — Do NOT repeat or closely paraphrase any of the following ${summaries.length} existing questions already in the database:\n${summaries.map((q, i) => `${i + 1}. ${q}`).join("\n")}\n`
+              : "";
+            const prompt = buildPrompt(type, count, input.difficulty, input.topic).replace(
+              "Return ONLY the JSON object, no markdown, no explanation, no code fences.",
+              `${dedupBlock}Return ONLY the JSON object, no markdown, no explanation, no code fences.`
+            );
             const questions = await callForge(prompt);
             return questions.map((q: any) => ({ type, question: q }));
           })
@@ -2845,6 +2875,32 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       }
       const total = Object.values(defaults).reduce((a, b) => a + b, 0);
       return { counts: defaults, total };
+    }),
+
+  /**
+   * Returns the plain-text question of every active quickReview flashcard.
+   * Used by the admin AI generator for client-side duplicate detection.
+   * Returns only id + stripped question text — no sensitive data.
+   */
+  getFlashcardSummaries: adminProcedure
+    .query(async () => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const rows = await db
+        .select({ id: quickfireQuestions.id, question: quickfireQuestions.question })
+        .from(quickfireQuestions)
+        .where(
+          and(
+            eq(quickfireQuestions.type, "quickReview"),
+            eq(quickfireQuestions.isActive, true),
+            sql`${quickfireQuestions.deletedAt} IS NULL`,
+          )
+        );
+      return rows.map((r) => ({
+        id: r.id,
+        // Strip HTML tags and normalise whitespace for comparison
+        text: r.question.replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim().toLowerCase(),
+      }));
     }),
 
   /**
