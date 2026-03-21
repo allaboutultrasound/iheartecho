@@ -1607,7 +1607,7 @@ export default function HemodynamicsLab() {
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <DopplerTracing
-                  title="Septal TDI (PW)"
+                  title="Septal TDI"
                   subtitle={tdiSeptalData.pattern}
                   pathData={tdiSeptalData.path}
                   color="#f59e0b"
@@ -1635,7 +1635,7 @@ export default function HemodynamicsLab() {
               </div>
               <div>
                 <DopplerTracing
-                  title="Lateral TDI (PW)"
+                  title="Lateral TDI"
                   subtitle={tdiLateralData.pattern}
                   pathData={tdiLateralData.path}
                   color="#a78bfa"
