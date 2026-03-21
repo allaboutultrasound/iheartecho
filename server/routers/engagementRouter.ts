@@ -16,7 +16,7 @@ import {
   userPointsLog,
   users,
 } from "../../drizzle/schema";
-import { eq, and, gte, sql, count, desc, isNull, ne } from "drizzle-orm";
+import { eq, and, gte, sql, count, desc, isNull, ne, or } from "drizzle-orm";
 
 /** Shared guard: must be owner (role=admin) or platform_admin */
 async function requirePlatformAdmin(userId: number, userRole: string) {
@@ -180,7 +180,7 @@ export const engagementRouter = router({
         .from(users)
         .where(
           and(
-            isNull(users.isPending) || eq(users.isPending, false),
+            or(isNull(users.isPending), eq(users.isPending, false)),
             input.search
               ? sql`(${users.name} LIKE ${`%${input.search}%`} OR ${users.email} LIKE ${`%${input.search}%`} OR ${users.displayName} LIKE ${`%${input.search}%`})`
               : undefined,

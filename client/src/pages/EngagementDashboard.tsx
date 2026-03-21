@@ -342,6 +342,20 @@ export default function EngagementDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
 
+        {/* Error state */}
+        {overviewQuery.error && (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span>Overview error: {overviewQuery.error.message}</span>
+          </div>
+        )}
+        {memberQuery.error && (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span>Member list error: {memberQuery.error.message}</span>
+          </div>
+        )}
+
         {/* KPI Cards */}
         {overviewQuery.isLoading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">

@@ -627,3 +627,10 @@
 - [x] Server: getEngagementMemberDrilldown procedure — full activity breakdown for one user
 - [x] Client: EngagementDashboard page with KPI cards, 30-day line chart, member table, drill-down modal
 - [x] Register /admin/engagement route and add nav link in PlatformAdmin admin tools grid
+
+## Engagement Dashboard Bug Fix (Mar 21 2026)
+- [ ] Fix 404 on /admin/engagement route
+- [ ] Fix missing Engagement Dashboard card in PlatformAdmin tools grid
+
+## Engagement Dashboard Data Fix (Mar 21 2026)
+- [x] Fix engagement dashboard showing no analytics data - fixed Drizzle ORM bug (JS || instead of or()) in getMemberList where clause; added error display to surface query errors in UI
