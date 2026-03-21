@@ -575,6 +575,76 @@ function CardFooter({ right, t }: { right?: string; t: ThemeTokens }) {
   );
 }
 
+// ---- Auto-scaling font size helpers ----------------------------------------
+
+/**
+ * Returns scaled font sizes for the question card based on option count and text lengths.
+ * The card content area is ~709px tall after header/footer/divider.
+ * Each option row at default sizes (padding 16+16=32, bubble 52, gap 11) = ~84px.
+ * Question text at fontSize 36, lineHeight 1.45 ≈ 52px per line.
+ */
+function calcQuestionFontSizes(questionText: string, options: string[]) {
+  const n = options.length;
+  const qLen = questionText.length;
+  const maxOptLen = options.reduce((m, o) => Math.max(m, o.length), 0);
+  const totalOptLen = options.reduce((s, o) => s + o.length, 0);
+
+  // Estimate lines needed for question (chars per line at given font size)
+  // At 36px, ~38 chars per line in the 952px wide content area
+  const charsPerLineQ = 38;
+  const qLines = Math.ceil(qLen / charsPerLineQ);
+
+  // Estimate lines per option at 30px (~55 chars per line in ~860px after bubble)
+  const charsPerLineOpt = 55;
+  const optLines = options.reduce((s, o) => s + Math.ceil(Math.max(o.length, 1) / charsPerLineOpt), 0);
+
+  // Total estimated height units (each "line" ~52px for question, ~44px for option)
+  const estimatedH = qLines * 52 + optLines * 44 + n * 43; // 43 = padding + gap per row
+  const available = 680; // px available for question + options
+
+  let scale = 1;
+  if (estimatedH > available) {
+    scale = Math.max(0.62, available / estimatedH);
+  }
+
+  // Also scale down if any single option is very long
+  if (maxOptLen > 80) scale = Math.min(scale, 0.78);
+  if (maxOptLen > 120) scale = Math.min(scale, 0.65);
+  if (totalOptLen > 300) scale = Math.min(scale, 0.72);
+
+  return {
+    questionFontSize: Math.round((n > 0 ? 36 : 48) * scale),
+    optionFontSize: Math.round(30 * scale),
+    bubbleFontSize: Math.round(22 * scale),
+    bubbleSize: Math.round(52 * scale),
+    optionPaddingV: Math.round(16 * scale),
+    optionPaddingH: Math.round(24 * scale),
+    optionGap: Math.round(11 * scale),
+    optionBubbleGap: Math.round(20 * scale),
+  };
+}
+
+/**
+ * Returns scaled font sizes for the answer card based on explanation length.
+ */
+function calcAnswerFontSizes(questionText: string, explanation: string | null) {
+  const expLen = explanation ? explanation.replace(/<[^>]*>/g, "").length : 0;
+  const qLen = questionText.length;
+  const total = qLen + expLen;
+
+  let scale = 1;
+  if (total > 600) scale = 0.88;
+  if (total > 900) scale = 0.78;
+  if (total > 1200) scale = 0.68;
+  if (expLen > 800) scale = Math.min(scale, 0.65);
+
+  return {
+    recapFontSize: Math.round(24 * scale),
+    answerFontSize: Math.round(36 * scale),
+    explanationFontSize: Math.round(22 * scale),
+  };
+}
+
 // ---- Question Card ----------------------------------------------------------
 
 function QuestionCard({
@@ -592,6 +662,8 @@ function QuestionCard({
 }) {
   const letters = ["A", "B", "C", "D", "E"];
   const cleanQ = stripHtml(questionText);
+  const cleanOpts = options.map(o => stripHtml(o));
+  const sz = calcQuestionFontSizes(cleanQ, cleanOpts);
 
   return (
     <CardShell t={t}>
@@ -616,10 +688,10 @@ function QuestionCard({
       <div
         style={{
           color: t.headingColor,
-          fontSize: options.length > 0 ? 36 : 48,
+          fontSize: sz.questionFontSize,
           fontWeight: 700,
           lineHeight: 1.45,
-          marginBottom: options.length > 0 ? 28 : 0,
+          marginBottom: options.length > 0 ? 24 : 0,
           flex: options.length > 0 ? "0 0 auto" : "1 1 auto",
           fontFamily: "'Georgia', 'Merriweather', serif",
           textShadow: t === DARK_THEME ? "0 2px 20px rgba(0,0,0,0.5)" : "none",
@@ -630,25 +702,25 @@ function QuestionCard({
 
       {/* Options */}
       {options.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 11, flex: "1 1 auto" }}>
-          {options.map((opt, i) => (
+        <div style={{ display: "flex", flexDirection: "column", gap: sz.optionGap, flex: "1 1 auto" }}>
+          {cleanOpts.map((opt, i) => (
             <div
               key={i}
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 20,
+                gap: sz.optionBubbleGap,
                 background: i % 2 === 0 ? t.optionEvenBg : t.optionOddBg,
                 border: `1px solid ${i % 2 === 0 ? t.optionEvenBorder : t.optionOddBorder}`,
                 borderRadius: 14,
-                padding: "16px 24px",
+                padding: `${sz.optionPaddingV}px ${sz.optionPaddingH}px`,
               }}
             >
               <div
                 style={{
-                  width: 52,
-                  height: 52,
-                  borderRadius: 13,
+                  width: sz.bubbleSize,
+                  height: sz.bubbleSize,
+                  borderRadius: Math.round(sz.bubbleSize * 0.25),
                   flexShrink: 0,
                   background: i % 2 === 0 ? t.bubbleEvenBg : t.bubbleOddBg,
                   border: `2px solid ${i % 2 === 0 ? t.bubbleEvenBorder : t.bubbleOddBorder}`,
@@ -657,14 +729,14 @@ function QuestionCard({
                   justifyContent: "center",
                   color: i % 2 === 0 ? t.bubbleEvenColor : t.bubbleOddColor,
                   fontWeight: 800,
-                  fontSize: 22,
+                  fontSize: sz.bubbleFontSize,
                   boxShadow: i % 2 !== 0 ? `0 0 14px ${BRAND}44` : "none",
                 }}
               >
                 {letters[i]}
               </div>
-              <span style={{ color: t.bodyColor, fontSize: 30, fontWeight: 500, lineHeight: 1.35 }}>
-                {stripHtml(opt)}
+              <span style={{ color: t.bodyColor, fontSize: sz.optionFontSize, fontWeight: 500, lineHeight: 1.35 }}>
+                {opt}
               </span>
             </div>
           ))}
@@ -704,6 +776,7 @@ function AnswerCard({
       : reviewAnswer
       ? stripHtml(reviewAnswer)
       : null;
+  const asz = calcAnswerFontSizes(stripHtml(questionText), explanation);
 
   return (
     <CardShell t={t}>
@@ -727,13 +800,13 @@ function AnswerCard({
       {/* Question recap */}
       <div
         style={{
-          marginBottom: 24,
+          marginBottom: 20,
           borderLeft: `4px solid ${t.recapBorder}`,
           paddingLeft: 18,
           fontFamily: "'Georgia', 'Merriweather', serif",
         }}
       >
-        <RichHtml html={questionText} color={t.recapColor} fontSize={24} lineHeight={1.45} />
+        <RichHtml html={questionText} color={t.recapColor} fontSize={asz.recapFontSize} lineHeight={1.45} />
       </div>
 
       {/* Answer box */}
@@ -743,8 +816,8 @@ function AnswerCard({
             background: t.answerBoxBg,
             border: `2px solid ${t.answerBoxBorder}`,
             borderRadius: 16,
-            padding: "20px 26px",
-            marginBottom: 18,
+            padding: "16px 24px",
+            marginBottom: 16,
             position: "relative",
             boxShadow: `0 0 36px ${t.answerBoxBorder}44`,
           }}
@@ -763,7 +836,7 @@ function AnswerCard({
           <div style={{ color: BRAND, fontSize: 10, fontWeight: 800, marginBottom: 8, letterSpacing: "2px" }}>
             CORRECT ANSWER
           </div>
-          <div style={{ color: t.answerTextColor, fontSize: 36, fontWeight: 700, lineHeight: 1.35 }}>
+          <div style={{ color: t.answerTextColor, fontSize: asz.answerFontSize, fontWeight: 700, lineHeight: 1.35 }}>
             {answerText}
           </div>
         </div>
@@ -776,17 +849,17 @@ function AnswerCard({
             background: t.explanationBg,
             border: `1px solid ${t.explanationBorder}`,
             borderRadius: 16,
-            padding: "18px 24px",
+            padding: "16px 22px",
             flex: "1 1 auto",
             overflow: "hidden",
             boxShadow: `0 0 28px ${BRAND}16`,
           }}
         >
-          <div style={{ color: BRAND, fontSize: 10, fontWeight: 800, marginBottom: 10, letterSpacing: "2px" }}>
+          <div style={{ color: BRAND, fontSize: 10, fontWeight: 800, marginBottom: 8, letterSpacing: "2px" }}>
             EXPLANATION
           </div>
           {explanation && (
-            <RichHtml html={explanation} color={t.explanationTextColor} fontSize={22} lineHeight={1.6} />
+            <RichHtml html={explanation} color={t.explanationTextColor} fontSize={asz.explanationFontSize} lineHeight={1.55} />
           )}
         </div>
       )}
@@ -994,11 +1067,13 @@ function CategorySection({
   onQuestionRef,
   onAnswerRef,
   theme,
+  dayOffset,
 }: {
   item: CategoryItem;
   onQuestionRef: (cat: string, h: DownloadableCardHandle) => void;
   onAnswerRef: (cat: string, h: DownloadableCardHandle) => void;
   theme: CardTheme;
+  dayOffset: number;
 }) {
   const t = theme === "dark" ? DARK_THEME : LIGHT_THEME;
   const { category, challenge, questions } = item;
@@ -1047,7 +1122,7 @@ function CategorySection({
               <span className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Question Card</span>
             </div>
             <DownloadableCard
-              filename={`${category.replace(/\s+/g, "-")}-question.png`}
+              filename={`day-${String(dayOffset + 1).padStart(2, "0")}-${category.replace(/\s+/g, "-")}-question.png`}
               onRef={(h) => onQuestionRef(category, h)}
             >
               <QuestionCard
@@ -1067,7 +1142,7 @@ function CategorySection({
               <span className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Answer Card</span>
             </div>
             <DownloadableCard
-              filename={`${category.replace(/\s+/g, "-")}-answer.png`}
+              filename={`day-${String(dayOffset + 1).padStart(2, "0")}-${category.replace(/\s+/g, "-")}-answer.png`}
               onRef={(h) => onAnswerRef(category, h)}
             >
               <AnswerCard
