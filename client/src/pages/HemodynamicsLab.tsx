@@ -902,7 +902,7 @@ function generateTDIPath(p: Params, W: number, H: number, site: "septal" | "late
 // ---- DOPPLER DISPLAY COMPONENT ----
 
 function DopplerTracing({
-  title, subtitle, pathData, color, annotations, W = 520, H = 240, belowBaseline = false, scaleMax = 2.0, cycles = 2
+  title, subtitle, pathData, color, annotations, W = 520, H = 240, belowBaseline = false, scaleMax = 2.0, cycles = 2, noFill = false
 }: {
   title: string;
   subtitle: string;
@@ -914,6 +914,7 @@ function DopplerTracing({
   belowBaseline?: boolean;
   scaleMax?: number; // m/s full-scale
   cycles?: number;
+  noFill?: boolean;
 }) {
   // Layout constants — left margin for Y-axis labels
   const MARGIN_LEFT = 38;
@@ -1010,10 +1011,10 @@ function DopplerTracing({
 
           {/* ── Baseline ── */}
           <line x1={MARGIN_LEFT} y1={baselineY} x2={W} y2={baselineY}
-            stroke="#3a6fa8" strokeWidth={1.5} />
+            stroke="#6ab0d4" strokeWidth={2} />
           {/* Baseline "0" label */}
           <text x={MARGIN_LEFT - 6} y={baselineY + 3.5}
-            fill="#3a6fa8" fontSize={9} fontFamily="JetBrains Mono, monospace"
+            fill="#6ab0d4" fontSize={9} fontFamily="JetBrains Mono, monospace"
             textAnchor="end">0</text>
 
           {/* ── Y-axis vertical line ── */}
@@ -1021,8 +1022,10 @@ function DopplerTracing({
             stroke="#2a4f7a" strokeWidth={1} />
 
           {/* ── Waveform fill ── */}
-          <path d={pathData + fillClose}
-            fill={`url(#wfill-${title.replace(/\s/g,"")})`} stroke="none" />
+          {!noFill && (
+            <path d={pathData + fillClose}
+              fill={`url(#wfill-${title.replace(/\s/g,"")})`} stroke="none" />
+          )}
           {/* ── Waveform stroke ── */}
           <path d={pathData} fill="none" stroke={color} strokeWidth={3} strokeLinejoin="round" strokeLinecap="round" />
 
@@ -1614,6 +1617,7 @@ export default function HemodynamicsLab() {
                   annotations={tdiSeptalAnnotations}
                   W={W_DOPPLER} H={H_DOPPLER}
                   scaleMax={Math.max(tdiSeptalData.ePrime, tdiSeptalData.aPrime, tdiSeptalData.sPrime) * 1.2 / 100}
+                  noFill
                 />
                 <div className="mt-1 grid grid-cols-3 gap-1 text-[10px]">
                   <div className="bg-gray-50 rounded p-1 text-center border border-gray-100">
@@ -1642,6 +1646,7 @@ export default function HemodynamicsLab() {
                   annotations={tdiLateralAnnotations}
                   W={W_DOPPLER} H={H_DOPPLER}
                   scaleMax={Math.max(tdiLateralData.ePrime, tdiLateralData.aPrime, tdiLateralData.sPrime) * 1.2 / 100}
+                  noFill
                 />
                 <div className="mt-1 grid grid-cols-3 gap-1 text-[10px]">
                   <div className="bg-gray-50 rounded p-1 text-center border border-gray-100">
