@@ -227,7 +227,7 @@ function buildSocialPost(
   const allHashtags = [...REQUIRED_HASHTAGS, ...categoryTags].join(" ");
 
   if (type === "question") {
-    const questionPreview = cleanQ.length > 160 ? cleanQ.slice(0, 157) + "..." : cleanQ;
+    const questionPreview = cleanQ;
     return `🫀 Daily Echo Challenge — ${category}
 
 Can you answer today's question?
@@ -1032,7 +1032,7 @@ function SocialPostPanel({
       {/* Post preview */}
       <div
         className="px-3 py-2.5 text-[11px] leading-relaxed whitespace-pre-wrap"
-        style={{ color: "rgba(255,255,255,0.65)", maxHeight: 160, overflowY: "auto" }}
+        style={{ color: "rgba(255,255,255,0.65)", maxHeight: 400, overflowY: "auto" }}
       >
         {post}
       </div>
