@@ -643,3 +643,15 @@
 - [x] Build admin image card generator page at /admin/card-generator with branded 1080x1080 Q&A cards per category
 - [x] Enable individual card download (PNG) via html-to-image library
 - [x] Add Card Generator card to PlatformAdmin tools grid
+
+## Card Generator Logo Fix (Mar 21 2026)
+- [x] Replace heart placeholder in card header with actual iHeartEcho logo image (icon-192 CDN URL with teal glow border)
+
+## Card Generator Redesign (Mar 21 2026)
+- [x] Remove category tag and difficulty level badge from image cards
+- [x] Add teal color pops to card design (radial glows, accent bars, letter bubbles, glow effects)
+- [x] Use hero image (trophy area) as background element in cards
+- [x] Fix syntax error (middot encoding issue) in ChallengeCardGenerator.tsx
+
+## Card Generator Visual Redesign (Mar 21 2026)
+- [x] Full visual redesign of Q&A cards: CardShell with layered backgrounds, dot grid, geometric accents, TealDivider, glowing answer box, premium typography
