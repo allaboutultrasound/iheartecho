@@ -1302,82 +1302,22 @@ export default function HemodynamicsLab() {
               </div>
             </div>
 
-            {/* ---- Unified Wiggers Card: ECG + Pressure + Volume seamlessly stacked ---- */}
+            {/* ---- Unified Wiggers Card: classic order Pressure → Volume → ECG ---- */}
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-              {/* ECG sub-panel */}
-              <div className="px-3 pt-2 pb-0 border-b border-gray-100">
-                <div className="flex items-center justify-between mb-0.5">
-                  <h3 className="font-bold text-gray-700 text-xs" style={{ fontFamily: "Merriweather, serif" }}>ECG <span className="font-normal text-gray-400 text-[10px] ml-1">Lead II (simulated)</span></h3>
-                  <div className="flex items-center gap-2 text-[10px] text-gray-400">
-                    <span className="flex items-center gap-0.5"><b className="text-teal-600">P</b></span>
-                    <span className="flex items-center gap-0.5"><b className="text-red-600">QRS</b></span>
-                    <span className="flex items-center gap-0.5"><b className="text-amber-600">T</b></span>
-                  </div>
-                </div>
-              </div>
-              <div className="px-3 pb-0">
-              <ResponsiveContainer width="100%" height={160}>
-                <ComposedChart data={wiggersData} margin={{ top: 8, right: 10, bottom: 0, left: 0 }}>
-                  <XAxis dataKey="time" type="number" domain={[0, rr_ms]} hide />
-                  {/* Identical YAxis config to Pressure/Volume — same width, same axisLine stroke, same tickLine — guarantees pixel-perfect left alignment */}
-                  <YAxis domain={[-0.4, 1.4]} width={50}
-                    tick={false}
-                    axisLine={{ stroke: '#f0f0f0', strokeWidth: 1 }}
-                    tickLine={{ stroke: '#f0f0f0', strokeWidth: 0 }}
-                  />
-                  {/* Valve event lines */}
-                  <ReferenceLine x={events.mvc} stroke="#189aa1" strokeDasharray="4 3" strokeWidth={1.5} />
-                  <ReferenceLine x={events.avo} stroke="#dc2626" strokeWidth={1.5} />
-                  <ReferenceLine x={events.avc} stroke="#d97706" strokeWidth={1.5} />
-                  <ReferenceLine x={events.mvo} stroke="#16a34a" strokeDasharray="4 3" strokeWidth={1.5} />
-                  {/* P wave label — at ~88% of RR */}
-                  <ReferenceLine
-                    x={Math.round(0.88 * rr_ms)}
-                    stroke="transparent"
-                    label={{ value: "P", position: "top", fontSize: 9, fill: "#189aa1", fontWeight: 700 }}
-                  />
-                  {/* QRS label — at ~2% of RR */}
-                  <ReferenceLine
-                    x={Math.round(0.02 * rr_ms)}
-                    stroke="transparent"
-                    label={{ value: "QRS", position: "top", fontSize: 9, fill: "#dc2626", fontWeight: 700 }}
-                  />
-                  {/* T wave label — at ~18% of RR */}
-                  <ReferenceLine
-                    x={Math.round(0.18 * rr_ms)}
-                    stroke="transparent"
-                    label={{ value: "T", position: "top", fontSize: 9, fill: "#d97706", fontWeight: 700 }}
-                  />
-                  {/* PR interval bracket */}
-                  <ReferenceLine
-                    x={Math.round(0.93 * rr_ms)}
-                    stroke="#189aa1" strokeDasharray="2 3" strokeWidth={0.8}
-                  />
-                  <Line type="monotone" dataKey="ecg" stroke="#1e293b" strokeWidth={1.8} dot={false} name="ECG" />
-                </ComposedChart>
-              </ResponsiveContainer>
-              {/* ECG interval summary */}
-              <div className="px-3 py-1 flex flex-wrap gap-3 text-[10px] text-gray-400 border-b border-gray-100">
-                <span><b className="text-teal-600">PR:</b> {Math.round((0.02 - 0.88 + 1) * rr_ms)} ms</span>
-                <span><b className="text-red-600">QRS:</b> ~{Math.round(0.03 * rr_ms)} ms</span>
-                <span><b className="text-amber-600">QT:</b> {Math.round(0.40 * rr_ms)} ms</span>
-                <span><b className="text-gray-400">RR:</b> {rr_ms} ms · {params.heartRate} bpm</span>
-              </div>
-              </div>
 
-              {/* Pressure sub-panel */}
-              <div className="px-3 pt-1.5 pb-0 border-b border-gray-100">
+              {/* 1. PRESSURE sub-panel — tallest, top */}
+              <div className="px-3 pt-2 pb-0">
                 <div className="flex items-center justify-between mb-0.5">
                   <h3 className="font-bold text-gray-700 text-xs" style={{ fontFamily: "Merriweather, serif" }}>Pressure (mmHg)</h3>
                   <div className="flex flex-wrap items-center gap-2 text-[10px]">
                     <span className="flex items-center gap-1"><span className="w-3 h-0.5 inline-block bg-[#189aa1]"></span> LV</span>
                     <span className="flex items-center gap-1"><span className="w-3 h-0.5 inline-block bg-[#dc2626]"></span> Ao</span>
-                    <span className="flex items-center gap-1"><span className="w-3 h-0.5 inline-block bg-[#189aa1] opacity-50"></span> LA</span>
+                    <span className="flex items-center gap-1"><span className="w-3 h-0.5 inline-block bg-[#a855f7] opacity-80"></span> LA</span>
                   </div>
                 </div>
               </div>
               <div className="px-3 pb-0">
-              <ResponsiveContainer width="100%" height={320}>
+              <ResponsiveContainer width="100%" height={300}>
                 <ComposedChart data={wiggersData} margin={{ top: 4, right: 10, bottom: 0, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="time" type="number" domain={[0, rr_ms]} hide />
@@ -1391,17 +1331,17 @@ export default function HemodynamicsLab() {
                   <ReferenceLine x={events.avo} stroke="#dc2626" strokeWidth={1.5} label={{ value: "AVO", position: "top", fontSize: 8, fill: "#dc2626" }} />
                   <ReferenceLine x={events.avc} stroke="#d97706" strokeWidth={1.5} label={{ value: "AVC", position: "top", fontSize: 8, fill: "#d97706" }} />
                   <ReferenceLine x={events.mvo} stroke="#16a34a" strokeDasharray="4 3" strokeWidth={1.5} label={{ value: "MVO", position: "top", fontSize: 8, fill: "#16a34a" }} />
-                  <Area type="monotone" dataKey="aop" stroke="#dc2626" fill="#fecaca" fillOpacity={0.3} strokeWidth={2} dot={false} name="Aortic Pressure" />
+                  <Area type="monotone" dataKey="aop" stroke="#dc2626" fill="#fecaca" fillOpacity={0.25} strokeWidth={2.5} dot={false} name="Aortic Pressure" />
                   <Line type="monotone" dataKey="lvp" stroke="#189aa1" strokeWidth={2.5} dot={false} name="LV Pressure" />
-                  <Line type="monotone" dataKey="lap" stroke="#189aa1" strokeWidth={1.8} strokeDasharray="5 2" dot={false} name="LA Pressure" />
+                  <Line type="monotone" dataKey="lap" stroke="#a855f7" strokeWidth={1.8} strokeDasharray="5 2" dot={false} name="LA Pressure" />
                 </ComposedChart>
               </ResponsiveContainer>
               </div>
 
-              {/* Volume sub-panel */}
-              <div className="px-3 pt-1.5 pb-0">
+              {/* 2. VOLUME sub-panel — medium */}
+              <div className="px-3 pt-1 pb-0 border-t border-gray-100">
                 <div className="flex items-center justify-between mb-0.5">
-                  <h3 className="font-bold text-gray-700 text-xs" style={{ fontFamily: "Merriweather, serif" }}>LV Volume (mL)</h3>
+                  <h3 className="font-bold text-gray-700 text-xs" style={{ fontFamily: "Merriweather, serif" }}>Volume (mL)</h3>
                   <div className="flex items-center gap-2 text-[10px] text-gray-400">
                     <span>EDV <b style={{ color: "#189aa1" }}>{Math.round(hemo.edv)}</b></span>
                     <span>ESV <b style={{ color: "#189aa1" }}>{Math.round(hemo.esv)}</b></span>
@@ -1409,11 +1349,11 @@ export default function HemodynamicsLab() {
                   </div>
                 </div>
               </div>
-              <div className="px-3 pb-3">
-              <ResponsiveContainer width="100%" height={200}>
-                <ComposedChart data={wiggersData} margin={{ top: 4, right: 10, bottom: 18, left: 0 }}>
+              <div className="px-3 pb-0">
+              <ResponsiveContainer width="100%" height={160}>
+                <ComposedChart data={wiggersData} margin={{ top: 4, right: 10, bottom: 0, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="time" type="number" domain={[0, rr_ms]} tick={{ fontSize: 9 }} label={{ value: "Time (ms)", position: "insideBottom", offset: -4, fontSize: 9 }} />
+                  <XAxis dataKey="time" type="number" domain={[0, rr_ms]} hide />
                   <YAxis width={50} tick={{ fontSize: 9 }} />
                   <Tooltip content={<WiggersTooltip />} />
                   <ReferenceLine x={events.mvc} stroke="#189aa1" strokeDasharray="4 3" strokeWidth={1.5} />
@@ -1423,6 +1363,46 @@ export default function HemodynamicsLab() {
                   <Area type="monotone" dataKey="lvv" stroke="#4ad9e0" fill="#e0f9fa" fillOpacity={0.5} strokeWidth={2.5} dot={false} name="LV Volume" />
                 </ComposedChart>
               </ResponsiveContainer>
+              </div>
+
+              {/* 3. ECG sub-panel — short strip at bottom */}
+              <div className="px-3 pt-1 pb-0 border-t border-gray-100">
+                <div className="flex items-center justify-between mb-0.5">
+                  <h3 className="font-bold text-gray-700 text-xs" style={{ fontFamily: "Merriweather, serif" }}>ECG <span className="font-normal text-gray-400 text-[10px] ml-1">Lead II</span></h3>
+                  <div className="flex items-center gap-2 text-[10px]">
+                    <span><b className="text-teal-600">P</b></span>
+                    <span><b className="text-red-600">QRS</b></span>
+                    <span><b className="text-amber-600">T</b></span>
+                  </div>
+                </div>
+              </div>
+              <div className="px-3 pb-2">
+              <ResponsiveContainer width="100%" height={100}>
+                <ComposedChart data={wiggersData} margin={{ top: 4, right: 10, bottom: 0, left: 0 }}>
+                  <XAxis dataKey="time" type="number" domain={[0, rr_ms]} hide />
+                  {/* Same YAxis width/axisLine as Pressure & Volume for pixel-perfect alignment */}
+                  <YAxis domain={[-0.4, 1.4]} width={50}
+                    tick={false}
+                    axisLine={{ stroke: '#f0f0f0', strokeWidth: 1 }}
+                    tickLine={false}
+                  />
+                  <ReferenceLine x={events.mvc} stroke="#189aa1" strokeDasharray="4 3" strokeWidth={1.5} />
+                  <ReferenceLine x={events.avo} stroke="#dc2626" strokeWidth={1.5} />
+                  <ReferenceLine x={events.avc} stroke="#d97706" strokeWidth={1.5} />
+                  <ReferenceLine x={events.mvo} stroke="#16a34a" strokeDasharray="4 3" strokeWidth={1.5} />
+                  <ReferenceLine x={Math.round(0.88 * rr_ms)} stroke="transparent" label={{ value: "P", position: "top", fontSize: 9, fill: "#189aa1", fontWeight: 700 }} />
+                  <ReferenceLine x={Math.round(0.02 * rr_ms)} stroke="transparent" label={{ value: "QRS", position: "top", fontSize: 9, fill: "#dc2626", fontWeight: 700 }} />
+                  <ReferenceLine x={Math.round(0.18 * rr_ms)} stroke="transparent" label={{ value: "T", position: "top", fontSize: 9, fill: "#d97706", fontWeight: 700 }} />
+                  <Line type="monotone" dataKey="ecg" stroke="#be185d" strokeWidth={2} dot={false} name="ECG" />
+                </ComposedChart>
+              </ResponsiveContainer>
+              {/* ECG interval summary */}
+              <div className="py-1 flex flex-wrap gap-3 text-[10px] text-gray-400">
+                <span><b className="text-teal-600">PR:</b> {Math.round((0.02 - 0.88 + 1) * rr_ms)} ms</span>
+                <span><b className="text-red-600">QRS:</b> ~{Math.round(0.03 * rr_ms)} ms</span>
+                <span><b className="text-amber-600">QT:</b> {Math.round(0.40 * rr_ms)} ms</span>
+                <span><b className="text-gray-400">RR:</b> {rr_ms} ms · {params.heartRate} bpm</span>
+              </div>
               </div>
             </div>{/* end unified Wiggers card */}
 
