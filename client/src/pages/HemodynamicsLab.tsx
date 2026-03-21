@@ -1034,7 +1034,7 @@ export default function HemodynamicsLab() {
       </div>
       <div className="container py-6">
         {/* Desktop: 4-column layout — presets | controls | wiggers | doppler. Mobile: single column stack */}
-        <div className="grid grid-cols-1 xl:grid-cols-[260px_600px_340px_1fr] gap-4">
+        <div className="grid grid-cols-1 xl:grid-cols-[260px_520px_360px_1fr] gap-4">
 
           {/* ---- DISEASE STATE PRESETS (leftmost column on desktop) ---- */}
           <div className="xl:col-span-1">
@@ -1248,7 +1248,6 @@ export default function HemodynamicsLab() {
                   <YAxis
                     width={50}
                     tick={{ fontSize: 9 }}
-                    label={{ value: "mmHg", angle: -90, position: "insideLeft", fontSize: 9, offset: 10 }}
                     domain={[0, Math.max(250, Math.round(hemo.sbp + (params.lvaoGradient ?? 0) + 20))]}
                   />
                   <Tooltip content={<WiggersTooltip />} />
@@ -1279,7 +1278,7 @@ export default function HemodynamicsLab() {
                 <ComposedChart data={wiggersData} margin={{ top: 4, right: 10, bottom: 18, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis dataKey="time" type="number" domain={[0, rr_ms]} tick={{ fontSize: 9 }} label={{ value: "Time (ms)", position: "insideBottom", offset: -4, fontSize: 9 }} />
-                  <YAxis width={50} tick={{ fontSize: 9 }} label={{ value: "mL", angle: -90, position: "insideLeft", fontSize: 9, offset: 10 }} />
+                  <YAxis width={50} tick={{ fontSize: 9 }} />
                   <Tooltip content={<WiggersTooltip />} />
                   <ReferenceLine x={events.mvc} stroke="#189aa1" strokeDasharray="4 3" strokeWidth={1.5} />
                   <ReferenceLine x={events.avo} stroke="#dc2626" strokeWidth={1.5} />
