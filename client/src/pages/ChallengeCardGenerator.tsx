@@ -674,7 +674,7 @@ function AnswerCard({
           paddingLeft: 18,
         }}
       >
-        {cleanQ.length > 120 ? cleanQ.slice(0, 120) + "..." : cleanQ}
+        {cleanQ}
       </div>
 
       {/* Answer box */}
@@ -731,9 +731,6 @@ function AnswerCard({
               color: t.explanationTextColor,
               fontSize: 22,
               lineHeight: 1.6,
-              display: "-webkit-box",
-              WebkitLineClamp: 6,
-              WebkitBoxOrient: "vertical" as const,
               overflow: "hidden",
             }}
           >
