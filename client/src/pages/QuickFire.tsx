@@ -1825,11 +1825,7 @@ export default function QuickFire() {
                             {currentQ.difficulty}
                           </span>
                         )}
-                        {Array.isArray(currentQ.tags) && currentQ.tags.map((tag: string) => (
-                          <span key={tag} className={`text-xs font-semibold px-2 py-0.5 rounded-full ${CATEGORY_COLORS[tag] ?? "bg-gray-100 text-gray-600"}`}>
-                            {tag}
-                          </span>
-                        ))}
+                        {/* Tags intentionally hidden from user view — shown in admin only */}
                       </div>
                       <CardTitle className="text-base font-semibold text-gray-800 leading-snug mt-2" dangerouslySetInnerHTML={{ __html: currentQ.question ?? "" }} />
                     </CardHeader>

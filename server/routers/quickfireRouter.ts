@@ -1153,7 +1153,7 @@ Guidelines:
 - Use accurate, up-to-date ASE/AHA/ACC guidelines where applicable
 - Questions should be clinically relevant and educational
 - For MCQ: distractors should be plausible but clearly distinguishable from the correct answer
-- Tags: 2-4 specific clinical terms (e.g. "aortic stenosis", "ASE 2021", "Doppler")
+- Tags: 2-4 broad TOPIC tags only (e.g. "Doppler", "LV function", "ASE guidelines"). NEVER use the correct answer, diagnosis, or specific finding as a tag — tags must not reveal or hint at the answer
 - Difficulty: ${input.difficulty} (beginner=basic concepts, intermediate=clinical application, advanced=complex interpretation)
 - Each question MUST be unique — different clinical scenario, different patient presentation, different values
 
@@ -1378,7 +1378,7 @@ Guidelines:
 - Use accurate, up-to-date ASE/AHA/ACC guidelines where applicable
 - Questions should be clinically relevant and educational
 - For MCQ: distractors should be plausible but clearly distinguishable from the correct answer
-- Tags: 2-4 specific clinical terms (e.g. "aortic stenosis", "ASE 2021", "Doppler")
+- Tags: 2-4 broad TOPIC tags only (e.g. "Doppler", "LV function", "ASE guidelines"). NEVER use the correct answer, diagnosis, or specific finding as a tag — tags must not reveal or hint at the answer
 - Difficulty: ${difficulty} (beginner=basic concepts, intermediate=clinical application, advanced=complex interpretation)
 
 Return exactly ${count} questions as a valid JSON object:

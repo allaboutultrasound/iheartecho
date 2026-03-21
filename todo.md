@@ -606,3 +606,14 @@
 - [x] Pass existing flashcard question summaries to AI generator prompt — aiGenerateQuestions already had dedup for quickReview type; added same dedup to aiGenerateMixed per-type
 - [x] Server: added getFlashcardSummaries admin procedure returning all active flashcard texts for client-side comparison
 - [x] Client: added visual ⚠ duplicate badge in flashcard AI preview when generated card matches existing deck (exact or substring match)
+
+## Engagement Dashboard (Mar 21 2026)
+- [ ] Audit existing schema for engagement tracking tables
+- [ ] Add engagement_events table (userId, feature, action, metadata, createdAt)
+- [ ] Add server procedures: trackEvent, getEngagementSummary, getMemberEngagement, getMemberDrilldown
+- [ ] Build EngagementDashboard page (platform admin only) with overview stats, charts, member table, drill-down modal
+- [ ] Wire event tracking calls in flashcard, daily challenge, and case library user flows
+
+## Daily Challenge Tag Fix (Mar 21 2026)
+- [x] Remove tags display from user-facing daily challenge question view (keyword tags hidden; only category + difficulty badges shown)
+- [x] Fix AI generator prompts (both aiGenerateQuestions and aiGenerateMixed) to use broad topic tags only, never answer/diagnosis tags
