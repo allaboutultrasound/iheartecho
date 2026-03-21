@@ -246,9 +246,7 @@ ${allHashtags}`;
 
 ${answerLine}${explanationLine}
 
-How did you do? Follow for a new echo challenge every day! 📲
-
-Drop your answer in the comments and take your place on the leaderboard 🏆 at app.iheartecho.com
+How did you do? Take your place on the leaderboard at app.iheartecho.com and follow for a new echo challenge every day!
 
 ${allHashtags}`;
   }
