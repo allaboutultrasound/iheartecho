@@ -943,9 +943,9 @@ function DopplerTracing({
   return (
     <div className="bg-[#060e1f] rounded-xl overflow-hidden border border-[#1a3a5c]">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-[#1a3a5c]">
-        <span className="text-xs font-bold text-white" style={{ fontFamily: "Merriweather, serif" }}>{title}</span>
-        <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold" style={{ background: color + "40", color }}>{subtitle}</span>
+      <div className="flex items-center justify-between px-3 py-2 border-b border-[#1a3a5c] gap-2">
+        <span className="text-xs font-bold text-white whitespace-nowrap" style={{ fontFamily: "Merriweather, serif" }}>{title}</span>
+        <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold shrink-0" style={{ background: color + "40", color }}>{subtitle}</span>
       </div>
       {/* SVG canvas */}
       <div className="relative" style={{ background: "#060e1f" }}>
@@ -1544,8 +1544,8 @@ export default function HemodynamicsLab() {
             </div>
 
             {/* Row 2: Mitral + Tricuspid side by side */}
-            <div className="grid grid-cols-2 gap-2">
-              <div>
+            <div className="grid grid-cols-2 gap-2 items-stretch">
+              <div className="flex flex-col">
                 <DopplerTracing
                   title="Mitral Inflow (PW)"
                   subtitle={mitralData.pattern}
@@ -1575,7 +1575,7 @@ export default function HemodynamicsLab() {
               </div>
               <div>
                 <DopplerTracing
-                  title="Tricuspid Inflow (PW)"
+                  title="Tricuspid (PW)"
                   subtitle={tricuspidData.pattern}
                   pathData={tricuspidData.path}
                   color="#189aa1"
