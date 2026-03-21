@@ -667,3 +667,8 @@
 - [x] Add Download All Answers button (JSZip batch export)
 - [x] Consolidate spacing on card generator page (tighter header, smaller gaps, compact info bar, max-w-5xl)
 - [x] Update card header wordmark: "iHeartEcho" white + "EchoAssist" aqua (#4ad9e0) on same line, "Daily Challenge" subtext in teal (#189aa1)
+
+## Card Generator Spacing + Social Post (Mar 21 2026)
+- [ ] Fix card generator page spacing (tighter layout, better proportions)
+- [ ] Add Create Social Post section per category with question caption, answer caption, and copy button
+- [ ] Include required hashtags: #iHeartEcho #AllAboutUltrasound #LoveEcho #Echocardiography #DailyChallange #EchoChallenge #CardiacUltrasound #CardiacSonographer #Cardiology

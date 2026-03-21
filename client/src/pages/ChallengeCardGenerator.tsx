@@ -1,4 +1,4 @@
-/**
+/*
  * ChallengeCardGenerator -- Admin Only
  * Generates branded 1080x1080 social media image cards for daily challenges.
  */
@@ -10,10 +10,11 @@ import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import {
   ArrowLeft, Download, Loader2, AlertCircle, ImageIcon,
-  CheckCircle2, Zap, Package,
+  CheckCircle2, Zap, Package, Share2, Copy, Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 // Brand palette
 const BRAND = "#189aa1";
@@ -21,9 +22,98 @@ const BRAND_DARK = "#0d3d44";
 const BRAND_AQUA = "#4ad9e0";
 const LOGO_URL =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/icon-192_df958e9b.png";
-// Daily challenge hero (not dashboard hero)
+// Daily challenge card background (trophy + ECG)
 const HERO_URL =
-  "https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/daily-challenge-banner-v3_178feef6.png";
+  "https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/daily-challenge-card-generator_c0aea189.webp";
+
+// Required hashtags for all posts
+const REQUIRED_HASHTAGS = [
+  "#iHeartEcho",
+  "#AllAboutUltrasound",
+  "#LoveEcho",
+  "#Echocardiography",
+  "#DailyChallange",
+  "#EchoChallenge",
+  "#CardiacUltrasound",
+  "#CardiacSonographer",
+  "#Cardiology",
+];
+
+// Category-specific hashtag map
+const CATEGORY_HASHTAGS: Record<string, string[]> = {
+  "Valvular Disease": ["#ValvularDisease", "#HeartValve", "#EchoValve"],
+  "Aortic Stenosis": ["#AorticStenosis", "#AS", "#ValvularDisease"],
+  "Mitral Regurgitation": ["#MitralRegurgitation", "#MR", "#ValvularDisease"],
+  "Tricuspid Regurgitation": ["#TricuspidRegurgitation", "#TR", "#PulmonaryHypertension"],
+  "Diastolic Function": ["#DiastolicFunction", "#Diastology", "#HeartFailure"],
+  "Systolic Function": ["#SystolicFunction", "#EjectionFraction", "#LVFunction"],
+  "Pericardial Disease": ["#PericardialDisease", "#Pericarditis", "#Tamponade"],
+  "Congenital Heart": ["#CongenitalHeart", "#CHD", "#PediatricEcho"],
+  "Hemodynamics": ["#Hemodynamics", "#CardiacOutput", "#EchoDoppler"],
+  "Doppler": ["#DopplerEcho", "#EchoDoppler", "#CardiacDoppler"],
+  "Cardiomyopathy": ["#Cardiomyopathy", "#HCM", "#DCM"],
+  "Structural Heart": ["#StructuralHeart", "#TAVR", "#MitraClip"],
+  "Fetal Echo": ["#FetalEcho", "#FetalCardiology", "#CongenitalHeart"],
+  "Stress Echo": ["#StressEcho", "#ExerciseEcho", "#DSE"],
+  "TEE": ["#TEE", "#TransesophagealEcho", "#IntraoperativeEcho"],
+  "Aorta": ["#AorticDisease", "#AorticDissection", "#ThoracicAorta"],
+  "Right Heart": ["#RightHeart", "#RVFunction", "#PulmonaryHypertension"],
+  "LV Function": ["#LVFunction", "#EjectionFraction", "#SystolicFunction"],
+  "Pulmonary Hypertension": ["#PulmonaryHypertension", "#PAH", "#RightHeart"],
+};
+
+function getCategoryHashtags(category: string): string[] {
+  // Direct match
+  if (CATEGORY_HASHTAGS[category]) return CATEGORY_HASHTAGS[category];
+  // Partial match
+  for (const [key, tags] of Object.entries(CATEGORY_HASHTAGS)) {
+    if (category.toLowerCase().includes(key.toLowerCase()) || key.toLowerCase().includes(category.toLowerCase())) {
+      return tags;
+    }
+  }
+  // Default
+  return ["#EchoEducation", "#EchoTraining", "#CardiacImaging"];
+}
+
+function buildSocialPost(
+  type: "question" | "answer",
+  category: string,
+  challengeTitle: string,
+  questionText: string,
+  answerText: string | null,
+  explanationText: string | null,
+): string {
+  const cleanQ = stripHtml(questionText);
+  const cleanA = answerText ? stripHtml(answerText) : null;
+  const cleanE = explanationText ? stripHtml(explanationText) : null;
+  const categoryTags = getCategoryHashtags(category);
+  const allHashtags = [...REQUIRED_HASHTAGS, ...categoryTags].join(" ");
+
+  if (type === "question") {
+    const questionPreview = cleanQ.length > 160 ? cleanQ.slice(0, 157) + "..." : cleanQ;
+    return `🫀 Daily Echo Challenge — ${category}
+
+Can you answer today's question?
+
+❓ ${questionPreview}
+
+Drop your answer in the comments! Answer revealed tomorrow. 👇
+
+${allHashtags}`;
+  } else {
+    const answerLine = cleanA ? `✅ Answer: ${cleanA}` : "";
+    const explanationLine = cleanE
+      ? `\n💡 ${cleanE.length > 200 ? cleanE.slice(0, 197) + "..." : cleanE}`
+      : "";
+    return `🫀 Daily Echo Challenge — ${category} | ANSWER
+
+${answerLine}${explanationLine}
+
+How did you do? Follow for a new echo challenge every day! 📲
+
+${allHashtags}`;
+  }
+}
 
 // ---- helpers ----------------------------------------------------------------
 
@@ -73,62 +163,35 @@ function CardShell({ children }: { children: React.ReactNode }) {
         overflow: "hidden",
         fontFamily: "'Segoe UI', 'Open Sans', sans-serif",
         boxSizing: "border-box",
-        background: "linear-gradient(160deg, #071318 0%, #0b2a32 45%, #071318 100%)",
+        background: "#071318",
       }}
     >
-      {/* Daily challenge hero image — right side, faded */}
-      <div
-        style={{
-          position: "absolute",
-          right: 0,
-          top: 0,
-          width: 520,
-          height: 1080,
-          backgroundImage: `url("${HERO_URL}")`,
-          backgroundSize: "cover",
-          backgroundPosition: "center right",
-          opacity: 0.18,
-          maskImage: "linear-gradient(to left, rgba(0,0,0,0.6) 0%, transparent 100%)",
-          WebkitMaskImage: "linear-gradient(to left, rgba(0,0,0,0.6) 0%, transparent 100%)",
-        }}
-      />
-
-      {/* Large radial teal glow — top-left */}
-      <div
-        style={{
-          position: "absolute",
-          top: -180,
-          left: -180,
-          width: 640,
-          height: 640,
-          borderRadius: "50%",
-          background: `radial-gradient(circle, ${BRAND}44 0%, transparent 65%)`,
-          pointerEvents: "none",
-        }}
-      />
-
-      {/* Aqua glow — bottom-right */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: -80,
-          right: -80,
-          width: 420,
-          height: 420,
-          borderRadius: "50%",
-          background: `radial-gradient(circle, ${BRAND_AQUA}14 0%, transparent 65%)`,
-          pointerEvents: "none",
-        }}
-      />
-
-      {/* Dot-grid overlay */}
+      {/* Full-bleed background image */}
       <div
         style={{
           position: "absolute",
           inset: 0,
-          opacity: 0.03,
-          backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)",
-          backgroundSize: "40px 40px",
+          backgroundImage: `url("${HERO_URL}")`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          opacity: 1,
+        }}
+      />
+      {/* Dark overlay to ensure text readability */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "linear-gradient(160deg, rgba(5,14,22,0.88) 0%, rgba(7,25,35,0.82) 50%, rgba(5,14,22,0.90) 100%)",
+        }}
+      />
+
+      {/* Subtle left-side darkening gradient for text area */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "linear-gradient(90deg, rgba(5,14,22,0.35) 0%, transparent 70%)",
           pointerEvents: "none",
         }}
       />
@@ -202,52 +265,47 @@ function CardHeader({ pill, pillColor, pillBg, pillBorder }: {
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        marginBottom: 40,
+        marginBottom: 28,
       }}
     >
       {/* Logo + wordmark */}
-      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
         <div
           style={{
-            width: 58,
-            height: 58,
-            borderRadius: 14,
+            width: 72,
+            height: 72,
+            borderRadius: 18,
             overflow: "hidden",
-            border: `2px solid ${BRAND_AQUA}44`,
-            boxShadow: `0 0 20px ${BRAND}55`,
+            border: `2.5px solid ${BRAND}88`,
+            boxShadow: `0 0 24px ${BRAND}55`,
             flexShrink: 0,
           }}
         >
-          <img
-            src={LOGO_URL}
-            alt="iHeartEcho"
-            style={{ width: "100%", height: "100%", objectFit: "contain" }}
-          />
+          <img src={LOGO_URL} alt="iHeartEcho" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         </div>
         <div>
-          {/* "iHeartEcho" white + "EchoAssist" aqua on same line */}
-          <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 7 }}>
             <span
               style={{
-                color: "#ffffff",
+                color: "#fff",
+                fontSize: 28,
                 fontWeight: 800,
-                fontSize: 24,
                 letterSpacing: "-0.5px",
-                lineHeight: 1.1,
+                lineHeight: 1,
               }}
             >
-              iHeartEcho
+              iHeartEcho™
             </span>
             <span
               style={{
                 color: BRAND_AQUA,
+                fontSize: 28,
                 fontWeight: 800,
-                fontSize: 24,
                 letterSpacing: "-0.5px",
-                lineHeight: 1.1,
+                lineHeight: 1,
               }}
             >
-              EchoAssist
+              EchoAssist™
             </span>
           </div>
           {/* "Daily Challenge" subtext in teal */}
@@ -366,9 +424,9 @@ function QuestionCard({
       <div
         style={{
           color: "#fff",
-          fontSize: options.length > 0 ? 28 : 38,
+          fontSize: options.length > 0 ? 36 : 48,
           fontWeight: 700,
-          lineHeight: 1.5,
+          lineHeight: 1.45,
           marginBottom: options.length > 0 ? 28 : 0,
           flex: options.length > 0 ? "0 0 auto" : "1 1 auto",
           fontFamily: "'Georgia', 'Merriweather', serif",
@@ -413,7 +471,7 @@ function QuestionCard({
               >
                 {letters[i]}
               </div>
-              <span style={{ color: "rgba(255,255,255,0.82)", fontSize: 17, fontWeight: 500, lineHeight: 1.35 }}>
+              <span style={{ color: "rgba(255,255,255,0.88)", fontSize: 22, fontWeight: 500, lineHeight: 1.35 }}>
                 {stripHtml(opt)}
               </span>
             </div>
@@ -482,10 +540,10 @@ function AnswerCard({
       {/* Question recap */}
       <div
         style={{
-          color: "rgba(255,255,255,0.44)",
-          fontSize: 18,
+          color: "rgba(255,255,255,0.50)",
+          fontSize: 24,
           fontWeight: 500,
-          lineHeight: 1.5,
+          lineHeight: 1.45,
           marginBottom: 24,
           fontFamily: "'Georgia', 'Merriweather', serif",
           borderLeft: `4px solid ${BRAND}66`,
@@ -522,7 +580,7 @@ function AnswerCard({
           <div style={{ color: "#4ade80", fontSize: 10, fontWeight: 800, marginBottom: 8, letterSpacing: "2px" }}>
             CORRECT ANSWER
           </div>
-          <div style={{ color: "#fff", fontSize: 26, fontWeight: 700, lineHeight: 1.35, textShadow: "0 2px 16px rgba(0,0,0,0.4)" }}>
+          <div style={{ color: "#fff", fontSize: 36, fontWeight: 700, lineHeight: 1.35, textShadow: "0 2px 16px rgba(0,0,0,0.4)" }}>
             {answerText}
           </div>
         </div>
@@ -546,8 +604,8 @@ function AnswerCard({
           </div>
           <div
             style={{
-              color: "rgba(255,255,255,0.76)",
-              fontSize: 18,
+              color: "rgba(255,255,255,0.82)",
+              fontSize: 22,
               lineHeight: 1.6,
               display: "-webkit-box",
               WebkitLineClamp: 6,
@@ -570,6 +628,10 @@ function AnswerCard({
 interface DownloadableCardHandle {
   exportPng: () => Promise<string>;
 }
+
+// PREVIEW_SIZE: the card is 1080px, we scale it to PREVIEW_SIZE for display
+const PREVIEW_SIZE = 270; // px — 1080 * 0.25
+const SCALE = PREVIEW_SIZE / 1080;
 
 function DownloadableCard({
   filename,
@@ -609,17 +671,19 @@ function DownloadableCard({
   }, [exportPng, filename]);
 
   return (
-    <div className="flex flex-col gap-2">
-      {/* Preview: 1080px rendered at 25% = 270px */}
+    <div className="flex flex-col">
+      {/* Preview: fixed PREVIEW_SIZE square, no extra space */}
       <div
         style={{
-          width: "100%",
-          paddingBottom: "100%",
+          width: PREVIEW_SIZE,
+          height: PREVIEW_SIZE,
           position: "relative",
           overflow: "hidden",
-          borderRadius: 10,
+          borderRadius: "10px 10px 0 0",
           border: "1px solid rgba(255,255,255,0.1)",
+          borderBottom: "none",
           background: "#071318",
+          flexShrink: 0,
         }}
       >
         <div
@@ -629,7 +693,7 @@ function DownloadableCard({
             left: 0,
             width: 1080,
             height: 1080,
-            transform: "scale(0.25)",
+            transform: `scale(${SCALE})`,
             transformOrigin: "top left",
           }}
         >
@@ -639,12 +703,94 @@ function DownloadableCard({
       <Button
         onClick={handleDownload}
         size="sm"
-        className="w-full gap-2 text-white font-semibold text-xs"
-        style={{ background: `linear-gradient(90deg, ${BRAND}, ${BRAND_DARK})` }}
+        className="w-full gap-2 text-white font-semibold text-xs rounded-t-none"
+        style={{
+          width: PREVIEW_SIZE,
+          background: `linear-gradient(90deg, ${BRAND}, ${BRAND_DARK})`,
+          borderRadius: "0 0 10px 10px",
+        }}
       >
         <Download className="w-3 h-3" />
         Download PNG
       </Button>
+    </div>
+  );
+}
+
+// ---- Social Post Panel ------------------------------------------------------
+
+function SocialPostPanel({
+  type,
+  category,
+  challengeTitle,
+  questionText,
+  answerText,
+  explanationText,
+}: {
+  type: "question" | "answer";
+  category: string;
+  challengeTitle: string;
+  questionText: string;
+  answerText: string | null;
+  explanationText: string | null;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  const post = buildSocialPost(type, category, challengeTitle, questionText, answerText, explanationText);
+
+  const handleCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(post);
+      setCopied(true);
+      toast.success("Copied!", { description: "Social post copied to clipboard." });
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      // fallback
+      const ta = document.createElement("textarea");
+      ta.value = post;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      setCopied(true);
+      toast.success("Copied!", { description: "Social post copied to clipboard." });
+      setTimeout(() => setCopied(false), 2500);
+    }
+  }, [post, toast]);
+
+  return (
+    <div
+      className="rounded-lg overflow-hidden"
+      style={{ border: `1px solid ${BRAND}33`, background: "#0a1620" }}
+    >
+      {/* Header */}
+      <div
+        className="flex items-center justify-between px-3 py-2"
+        style={{ borderBottom: `1px solid ${BRAND}22`, background: `${BRAND}0a` }}
+      >
+        <div className="flex items-center gap-1.5">
+          <Share2 className="w-3 h-3" style={{ color: BRAND_AQUA }} />
+          <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: BRAND_AQUA }}>
+            Social Post — {type === "question" ? "Question" : "Answer"}
+          </span>
+        </div>
+        <Button
+          size="sm"
+          onClick={handleCopy}
+          className="h-6 px-2 gap-1 text-[10px] font-semibold text-white"
+          style={{ background: copied ? "#166534" : `linear-gradient(90deg, ${BRAND}, ${BRAND_DARK})` }}
+        >
+          {copied ? <Check className="w-2.5 h-2.5" /> : <Copy className="w-2.5 h-2.5" />}
+          {copied ? "Copied!" : "Copy"}
+        </Button>
+      </div>
+      {/* Post preview */}
+      <div
+        className="px-3 py-2.5 text-[11px] leading-relaxed whitespace-pre-wrap"
+        style={{ color: "rgba(255,255,255,0.65)", maxHeight: 160, overflowY: "auto" }}
+      >
+        {post}
+      </div>
     </div>
   );
 }
@@ -692,6 +838,14 @@ function CategorySection({
   }
 
   const options = parseOptions(q.options);
+  const letters = ["A", "B", "C", "D", "E"];
+  const answerText =
+    options.length > 0 && q.correctAnswer != null
+      ? `${letters[q.correctAnswer]}. ${stripHtml(options[q.correctAnswer] ?? "")}`
+      : q.reviewAnswer
+      ? stripHtml(q.reviewAnswer)
+      : null;
+  const explanationText = q.explanation ? stripHtml(q.explanation) : null;
 
   return (
     <div className="rounded-lg border border-white/10 overflow-hidden" style={{ background: "#0e1a24" }}>
@@ -707,45 +861,74 @@ function CategorySection({
         <span className="text-white/35 text-xs truncate max-w-xs">{challenge.title}</span>
       </div>
 
-      {/* Cards grid */}
-      <div className="p-4 grid grid-cols-2 gap-4">
-        <div>
-          <div className="flex items-center gap-1.5 mb-2">
-            <Zap className="w-3 h-3" style={{ color: BRAND_AQUA }} />
-            <span className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Question Card</span>
+      {/* Cards + social posts */}
+      <div className="p-4 space-y-4">
+        {/* Cards row */}
+        <div className="flex gap-6">
+          {/* Question card */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-1.5">
+              <Zap className="w-3 h-3" style={{ color: BRAND_AQUA }} />
+              <span className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Question Card</span>
+            </div>
+            <DownloadableCard
+              filename={`${category.replace(/\s+/g, "-")}-question.png`}
+              onRef={(h) => onQuestionRef(category, h)}
+            >
+              <QuestionCard
+                challengeTitle={challenge.title}
+                questionText={q.question}
+                options={options}
+                qid={q.qid}
+              />
+            </DownloadableCard>
           </div>
-          <DownloadableCard
-            filename={`${category.replace(/\s+/g, "-")}-question.png`}
-            onRef={(h) => onQuestionRef(category, h)}
-          >
-            <QuestionCard
-              challengeTitle={challenge.title}
-              questionText={q.question}
-              options={options}
-              qid={q.qid}
-            />
-          </DownloadableCard>
-        </div>
 
-        <div>
-          <div className="flex items-center gap-1.5 mb-2">
-            <CheckCircle2 className="w-3 h-3 text-green-400" />
-            <span className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Answer Card</span>
+          {/* Answer card */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-1.5">
+              <CheckCircle2 className="w-3 h-3 text-green-400" />
+              <span className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Answer Card</span>
+            </div>
+            <DownloadableCard
+              filename={`${category.replace(/\s+/g, "-")}-answer.png`}
+              onRef={(h) => onAnswerRef(category, h)}
+            >
+              <AnswerCard
+                challengeTitle={challenge.title}
+                questionText={q.question}
+                options={options}
+                correctAnswer={q.correctAnswer}
+                explanation={q.explanation}
+                reviewAnswer={q.reviewAnswer}
+                qid={q.qid}
+              />
+            </DownloadableCard>
           </div>
-          <DownloadableCard
-            filename={`${category.replace(/\s+/g, "-")}-answer.png`}
-            onRef={(h) => onAnswerRef(category, h)}
-          >
-            <AnswerCard
+
+          {/* Social posts column */}
+          <div className="flex-1 flex flex-col gap-3 min-w-0">
+            <div className="flex items-center gap-1.5">
+              <Share2 className="w-3 h-3" style={{ color: BRAND_AQUA }} />
+              <span className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Social Posts</span>
+            </div>
+            <SocialPostPanel
+              type="question"
+              category={category}
               challengeTitle={challenge.title}
               questionText={q.question}
-              options={options}
-              correctAnswer={q.correctAnswer}
-              explanation={q.explanation}
-              reviewAnswer={q.reviewAnswer}
-              qid={q.qid}
+              answerText={answerText}
+              explanationText={explanationText}
             />
-          </DownloadableCard>
+            <SocialPostPanel
+              type="answer"
+              category={category}
+              challengeTitle={challenge.title}
+              questionText={q.question}
+              answerText={answerText}
+              explanationText={explanationText}
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -794,7 +977,7 @@ export default function ChallengeCardGenerator() {
     <div className="min-h-screen" style={{ background: "#0a1018" }}>
       {/* Header */}
       <div style={{ background: "#0e1a24", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-2">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-2">
           <Link href="/platform-admin">
             <button className="p-1.5 rounded-lg hover:bg-white/10 transition-colors">
               <ArrowLeft className="w-4 h-4 text-white/50" />
@@ -842,7 +1025,7 @@ export default function ChallengeCardGenerator() {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-4">
+      <div className="max-w-6xl mx-auto px-4 py-4">
         {/* Info bar */}
         <div
           className="rounded-lg p-3 mb-4 text-xs"
@@ -850,9 +1033,10 @@ export default function ChallengeCardGenerator() {
         >
           <p className="text-white/60">
             Cards are generated from the <strong className="text-white">next queued challenge</strong> per category.
-            Each card is <strong className="text-white">1080x1080 px</strong> — ideal for Instagram, Facebook, and LinkedIn.
+            Each card is <strong className="text-white">1080×1080 px</strong> — ideal for Instagram, Facebook, and LinkedIn.
             Post the question card first, then the answer card 24 hours later.
             Use <strong className="text-white">All Questions</strong> or <strong className="text-white">All Answers</strong> to download a ZIP of all cards at once.
+            Click <strong className="text-white">Copy</strong> on any social post to get a ready-to-paste caption with hashtags.
           </p>
         </div>
 
