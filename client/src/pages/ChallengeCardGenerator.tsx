@@ -662,7 +662,7 @@ function QuestionCard({
         </div>
       )}
 
-      <CardFooter right={qid ?? undefined} t={t} />
+      <CardFooter t={t} />
     </CardShell>
   );
 }
