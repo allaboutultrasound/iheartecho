@@ -2,13 +2,15 @@
  * ChallengeCardGenerator -- Admin Only
  * Generates branded 1080x1080 social media image cards for daily challenges.
  */
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useState } from "react";
 import { trpc } from "@/lib/trpc";
 import { Link } from "wouter";
 import { toPng } from "html-to-image";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
 import {
   ArrowLeft, Download, Loader2, AlertCircle, ImageIcon,
-  CheckCircle2, Zap,
+  CheckCircle2, Zap, Package,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,11 +18,12 @@ import { Badge } from "@/components/ui/badge";
 // Brand palette
 const BRAND = "#189aa1";
 const BRAND_DARK = "#0d3d44";
-const BRAND_LIGHT = "#4ad9e0";
+const BRAND_AQUA = "#4ad9e0";
 const LOGO_URL =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/icon-192_df958e9b.png";
+// Daily challenge hero (not dashboard hero)
 const HERO_URL =
-  "https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/ihe-hero-MNscA4NaWNyxrdkewtLGLG.webp";
+  "https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/daily-challenge-banner-v3_178feef6.png";
 
 // ---- helpers ----------------------------------------------------------------
 
@@ -49,6 +52,15 @@ function parseOptions(raw: string | null): string[] {
   }
 }
 
+async function renderCardToPng(el: HTMLElement): Promise<string> {
+  return toPng(el, {
+    cacheBust: true,
+    pixelRatio: 1,
+    width: 1080,
+    height: 1080,
+  });
+}
+
 // ---- shared card shell ------------------------------------------------------
 
 function CardShell({ children }: { children: React.ReactNode }) {
@@ -61,27 +73,23 @@ function CardShell({ children }: { children: React.ReactNode }) {
         overflow: "hidden",
         fontFamily: "'Segoe UI', 'Open Sans', sans-serif",
         boxSizing: "border-box",
-        // Deep navy-teal gradient base
-        background:
-          "linear-gradient(160deg, #071318 0%, #0b2a32 45%, #071318 100%)",
+        background: "linear-gradient(160deg, #071318 0%, #0b2a32 45%, #071318 100%)",
       }}
     >
-      {/* ---- decorative layers ---- */}
-
-      {/* Hero image — soft trophy silhouette bottom-right */}
+      {/* Daily challenge hero image — right side, faded */}
       <div
         style={{
           position: "absolute",
-          right: -80,
-          bottom: -80,
-          width: 640,
-          height: 640,
+          right: 0,
+          top: 0,
+          width: 520,
+          height: 1080,
           backgroundImage: `url("${HERO_URL}")`,
           backgroundSize: "cover",
-          backgroundPosition: "65% 55%",
-          opacity: 0.13,
-          borderRadius: "50%",
-          filter: "blur(3px) saturate(0.6)",
+          backgroundPosition: "center right",
+          opacity: 0.18,
+          maskImage: "linear-gradient(to left, rgba(0,0,0,0.6) 0%, transparent 100%)",
+          WebkitMaskImage: "linear-gradient(to left, rgba(0,0,0,0.6) 0%, transparent 100%)",
         }}
       />
 
@@ -89,52 +97,51 @@ function CardShell({ children }: { children: React.ReactNode }) {
       <div
         style={{
           position: "absolute",
-          top: -200,
-          left: -200,
-          width: 700,
-          height: 700,
+          top: -180,
+          left: -180,
+          width: 640,
+          height: 640,
           borderRadius: "50%",
-          background: `radial-gradient(circle, ${BRAND}50 0%, transparent 65%)`,
+          background: `radial-gradient(circle, ${BRAND}44 0%, transparent 65%)`,
           pointerEvents: "none",
         }}
       />
 
-      {/* Smaller aqua glow — bottom-right */}
+      {/* Aqua glow — bottom-right */}
       <div
         style={{
           position: "absolute",
-          bottom: -100,
-          right: -100,
-          width: 500,
-          height: 500,
+          bottom: -80,
+          right: -80,
+          width: 420,
+          height: 420,
           borderRadius: "50%",
-          background: `radial-gradient(circle, ${BRAND_LIGHT}18 0%, transparent 65%)`,
+          background: `radial-gradient(circle, ${BRAND_AQUA}14 0%, transparent 65%)`,
           pointerEvents: "none",
         }}
       />
 
-      {/* Subtle dot-grid overlay */}
+      {/* Dot-grid overlay */}
       <div
         style={{
           position: "absolute",
           inset: 0,
-          opacity: 0.035,
-          backgroundImage:
-            "radial-gradient(circle, #fff 1px, transparent 1px)",
+          opacity: 0.03,
+          backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)",
           backgroundSize: "40px 40px",
           pointerEvents: "none",
         }}
       />
 
-      {/* Top accent bar — thick gradient stripe */}
+      {/* Top accent bar */}
       <div
         style={{
           position: "absolute",
           top: 0,
           left: 0,
           right: 0,
-          height: 8,
-          background: `linear-gradient(90deg, ${BRAND_DARK}, ${BRAND}, ${BRAND_LIGHT}, ${BRAND})`,
+          height: 7,
+          background: `linear-gradient(90deg, ${BRAND_DARK}, ${BRAND}, ${BRAND_AQUA}, ${BRAND})`,
         }}
       />
 
@@ -142,37 +149,24 @@ function CardShell({ children }: { children: React.ReactNode }) {
       <div
         style={{
           position: "absolute",
-          top: 8,
+          top: 7,
           left: 0,
           bottom: 0,
-          width: 5,
-          background: `linear-gradient(180deg, ${BRAND_LIGHT}cc 0%, ${BRAND}44 60%, transparent 100%)`,
+          width: 4,
+          background: `linear-gradient(180deg, ${BRAND_AQUA}bb 0%, ${BRAND}44 60%, transparent 100%)`,
         }}
       />
 
-      {/* Diagonal geometric accent — top-right corner */}
+      {/* Top-right geometric accent */}
       <div
         style={{
           position: "absolute",
           top: 0,
           right: 0,
-          width: 280,
-          height: 280,
-          background: `linear-gradient(225deg, ${BRAND}22 0%, transparent 60%)`,
+          width: 260,
+          height: 260,
+          background: `linear-gradient(225deg, ${BRAND}1a 0%, transparent 60%)`,
           clipPath: "polygon(100% 0, 0 0, 100% 100%)",
-        }}
-      />
-
-      {/* Bottom-left corner accent */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          width: 200,
-          height: 200,
-          background: `linear-gradient(45deg, ${BRAND_LIGHT}14 0%, transparent 60%)`,
-          clipPath: "polygon(0 100%, 0 0, 100% 100%)",
         }}
       />
 
@@ -184,7 +178,7 @@ function CardShell({ children }: { children: React.ReactNode }) {
           height: "100%",
           display: "flex",
           flexDirection: "column",
-          padding: "60px 68px 52px 72px",
+          padding: "52px 64px 44px 68px",
           boxSizing: "border-box",
         }}
       >
@@ -194,7 +188,7 @@ function CardShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-// ---- card header (shared) ---------------------------------------------------
+// ---- card header ------------------------------------------------------------
 
 function CardHeader({ pill, pillColor, pillBg, pillBorder }: {
   pill: string;
@@ -208,19 +202,19 @@ function CardHeader({ pill, pillColor, pillBg, pillBorder }: {
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        marginBottom: 48,
+        marginBottom: 40,
       }}
     >
       {/* Logo + wordmark */}
-      <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
         <div
           style={{
-            width: 62,
-            height: 62,
-            borderRadius: 16,
+            width: 58,
+            height: 58,
+            borderRadius: 14,
             overflow: "hidden",
-            border: `2px solid ${BRAND_LIGHT}44`,
-            boxShadow: `0 0 24px ${BRAND}55`,
+            border: `2px solid ${BRAND_AQUA}44`,
+            boxShadow: `0 0 20px ${BRAND}55`,
             flexShrink: 0,
           }}
         >
@@ -231,24 +225,40 @@ function CardHeader({ pill, pillColor, pillBg, pillBorder }: {
           />
         </div>
         <div>
-          <div
-            style={{
-              color: "#fff",
-              fontWeight: 800,
-              fontSize: 26,
-              letterSpacing: "-0.5px",
-              lineHeight: 1.1,
-            }}
-          >
-            iHeartEcho&#x2122;
+          {/* "iHeartEcho" white + "EchoAssist" aqua on same line */}
+          <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+            <span
+              style={{
+                color: "#ffffff",
+                fontWeight: 800,
+                fontSize: 24,
+                letterSpacing: "-0.5px",
+                lineHeight: 1.1,
+              }}
+            >
+              iHeartEcho
+            </span>
+            <span
+              style={{
+                color: BRAND_AQUA,
+                fontWeight: 800,
+                fontSize: 24,
+                letterSpacing: "-0.5px",
+                lineHeight: 1.1,
+              }}
+            >
+              EchoAssist
+            </span>
           </div>
+          {/* "Daily Challenge" subtext in teal */}
           <div
             style={{
-              color: BRAND_LIGHT,
-              fontSize: 14,
+              color: BRAND,
+              fontSize: 13,
               fontWeight: 600,
-              marginTop: 3,
-              letterSpacing: "0.5px",
+              marginTop: 4,
+              letterSpacing: "0.8px",
+              textTransform: "uppercase",
             }}
           >
             Daily Challenge
@@ -262,12 +272,12 @@ function CardHeader({ pill, pillColor, pillBg, pillBorder }: {
           background: pillBg,
           border: `1.5px solid ${pillBorder}`,
           borderRadius: 28,
-          padding: "10px 26px",
+          padding: "9px 22px",
           color: pillColor,
-          fontSize: 14,
+          fontSize: 13,
           fontWeight: 800,
           letterSpacing: "2px",
-          boxShadow: `0 0 20px ${pillBorder}55`,
+          boxShadow: `0 0 18px ${pillBorder}44`,
         }}
       >
         {pill}
@@ -280,64 +290,33 @@ function CardHeader({ pill, pillColor, pillBg, pillBorder }: {
 
 function TealDivider() {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 30 }}>
-      <div
-        style={{
-          height: 3,
-          width: 48,
-          borderRadius: 2,
-          background: `linear-gradient(90deg, ${BRAND_LIGHT}, ${BRAND})`,
-        }}
-      />
-      <div
-        style={{
-          height: 3,
-          width: 12,
-          borderRadius: 2,
-          background: `${BRAND}55`,
-        }}
-      />
-      <div
-        style={{
-          height: 3,
-          width: 6,
-          borderRadius: 2,
-          background: `${BRAND}33`,
-        }}
-      />
+    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 26 }}>
+      <div style={{ height: 3, width: 44, borderRadius: 2, background: `linear-gradient(90deg, ${BRAND_AQUA}, ${BRAND})` }} />
+      <div style={{ height: 3, width: 10, borderRadius: 2, background: `${BRAND}55` }} />
+      <div style={{ height: 3, width: 5, borderRadius: 2, background: `${BRAND}33` }} />
     </div>
   );
 }
 
-// ---- card footer (shared) ---------------------------------------------------
+// ---- card footer ------------------------------------------------------------
 
 function CardFooter({ right }: { right?: string }) {
   return (
     <div
       style={{
         marginTop: "auto",
-        paddingTop: 24,
+        paddingTop: 20,
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
         borderTop: `1px solid ${BRAND}44`,
       }}
     >
-      <div
-        style={{
-          color: BRAND_LIGHT,
-          fontSize: 14,
-          fontWeight: 700,
-          opacity: 0.75,
-          letterSpacing: "0.3px",
-        }}
-      >
+      <div style={{ color: BRAND_AQUA, fontSize: 13, fontWeight: 700, opacity: 0.7, letterSpacing: "0.3px" }}>
         iheartecho.com
       </div>
       {right && (
-        <div style={{ color: "rgba(255,255,255,0.3)", fontSize: 13 }}>
-          {right}
-        </div>
+        <div style={{ color: "rgba(255,255,255,0.25)", fontSize: 12 }}>{right}</div>
       )}
     </div>
   );
@@ -363,18 +342,17 @@ function QuestionCard({
     <CardShell>
       <CardHeader
         pill="QUESTION"
-        pillColor={BRAND_LIGHT}
-        pillBg={`linear-gradient(135deg, ${BRAND}33, ${BRAND_LIGHT}18)`}
-        pillBorder={BRAND_LIGHT}
+        pillColor={BRAND_AQUA}
+        pillBg={`linear-gradient(135deg, ${BRAND}33, ${BRAND_AQUA}18)`}
+        pillBorder={BRAND_AQUA}
       />
 
-      {/* Challenge title */}
       <div
         style={{
-          color: "rgba(255,255,255,0.38)",
-          fontSize: 14,
+          color: "rgba(255,255,255,0.32)",
+          fontSize: 13,
           fontWeight: 600,
-          marginBottom: 22,
+          marginBottom: 18,
           letterSpacing: "0.5px",
           textTransform: "uppercase",
         }}
@@ -388,10 +366,10 @@ function QuestionCard({
       <div
         style={{
           color: "#fff",
-          fontSize: options.length > 0 ? 30 : 40,
+          fontSize: options.length > 0 ? 28 : 38,
           fontWeight: 700,
           lineHeight: 1.5,
-          marginBottom: options.length > 0 ? 32 : 0,
+          marginBottom: options.length > 0 ? 28 : 0,
           flex: options.length > 0 ? "0 0 auto" : "1 1 auto",
           fontFamily: "'Georgia', 'Merriweather', serif",
           textShadow: "0 2px 20px rgba(0,0,0,0.5)",
@@ -402,63 +380,40 @@ function QuestionCard({
 
       {/* Options */}
       {options.length > 0 && (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 13,
-            flex: "1 1 auto",
-          }}
-        >
+        <div style={{ display: "flex", flexDirection: "column", gap: 11, flex: "1 1 auto" }}>
           {options.map((opt, i) => (
             <div
               key={i}
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 18,
-                background:
-                  i % 2 === 0
-                    ? "rgba(255,255,255,0.04)"
-                    : `${BRAND}0a`,
-                border: `1px solid ${i % 2 === 0 ? "rgba(255,255,255,0.08)" : BRAND + "33"}`,
-                borderRadius: 14,
-                padding: "15px 22px",
-                transition: "all 0.2s",
+                gap: 16,
+                background: i % 2 === 0 ? "rgba(255,255,255,0.04)" : `${BRAND}0a`,
+                border: `1px solid ${i % 2 === 0 ? "rgba(255,255,255,0.07)" : BRAND + "33"}`,
+                borderRadius: 12,
+                padding: "13px 20px",
               }}
             >
-              {/* Letter bubble */}
               <div
                 style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 10,
+                  width: 34,
+                  height: 34,
+                  borderRadius: 9,
                   flexShrink: 0,
-                  background:
-                    i % 2 === 0
-                      ? "rgba(255,255,255,0.08)"
-                      : `${BRAND}33`,
-                  border: `1.5px solid ${i % 2 === 0 ? "rgba(255,255,255,0.15)" : BRAND_LIGHT + "55"}`,
+                  background: i % 2 === 0 ? "rgba(255,255,255,0.07)" : `${BRAND}33`,
+                  border: `1.5px solid ${i % 2 === 0 ? "rgba(255,255,255,0.12)" : BRAND_AQUA + "55"}`,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: i % 2 === 0 ? "rgba(255,255,255,0.7)" : BRAND_LIGHT,
+                  color: i % 2 === 0 ? "rgba(255,255,255,0.65)" : BRAND_AQUA,
                   fontWeight: 800,
-                  fontSize: 15,
-                  boxShadow:
-                    i % 2 !== 0 ? `0 0 12px ${BRAND}44` : "none",
+                  fontSize: 14,
+                  boxShadow: i % 2 !== 0 ? `0 0 10px ${BRAND}44` : "none",
                 }}
               >
                 {letters[i]}
               </div>
-              <span
-                style={{
-                  color: "rgba(255,255,255,0.85)",
-                  fontSize: 18,
-                  fontWeight: 500,
-                  lineHeight: 1.35,
-                }}
-              >
+              <span style={{ color: "rgba(255,255,255,0.82)", fontSize: 17, fontWeight: 500, lineHeight: 1.35 }}>
                 {stripHtml(opt)}
               </span>
             </div>
@@ -503,19 +458,18 @@ function AnswerCard({
   return (
     <CardShell>
       <CardHeader
-        pill="&#x2713; ANSWER"
+        pill="ANSWER"
         pillColor="#4ade80"
         pillBg="linear-gradient(135deg, #22c55e22, #4ade8012)"
         pillBorder="#22c55e"
       />
 
-      {/* Challenge title */}
       <div
         style={{
-          color: "rgba(255,255,255,0.38)",
-          fontSize: 14,
+          color: "rgba(255,255,255,0.32)",
+          fontSize: 13,
           fontWeight: 600,
-          marginBottom: 22,
+          marginBottom: 18,
           letterSpacing: "0.5px",
           textTransform: "uppercase",
         }}
@@ -528,67 +482,47 @@ function AnswerCard({
       {/* Question recap */}
       <div
         style={{
-          color: "rgba(255,255,255,0.48)",
-          fontSize: 19,
+          color: "rgba(255,255,255,0.44)",
+          fontSize: 18,
           fontWeight: 500,
           lineHeight: 1.5,
-          marginBottom: 28,
+          marginBottom: 24,
           fontFamily: "'Georgia', 'Merriweather', serif",
           borderLeft: `4px solid ${BRAND}66`,
-          paddingLeft: 20,
-          paddingTop: 4,
-          paddingBottom: 4,
+          paddingLeft: 18,
         }}
       >
-        {cleanQ.length > 130 ? cleanQ.slice(0, 130) + "..." : cleanQ}
+        {cleanQ.length > 120 ? cleanQ.slice(0, 120) + "..." : cleanQ}
       </div>
 
       {/* Answer box */}
       {answerText && (
         <div
           style={{
-            background:
-              "linear-gradient(135deg, rgba(34,197,94,0.12), rgba(74,222,128,0.05))",
+            background: "linear-gradient(135deg, rgba(34,197,94,0.12), rgba(74,222,128,0.05))",
             border: "2px solid rgba(34,197,94,0.4)",
-            borderRadius: 18,
-            padding: "22px 28px",
-            marginBottom: 22,
+            borderRadius: 16,
+            padding: "20px 26px",
+            marginBottom: 18,
             position: "relative",
-            boxShadow: "0 0 40px rgba(34,197,94,0.12)",
+            boxShadow: "0 0 36px rgba(34,197,94,0.1)",
           }}
         >
-          {/* Teal-green top accent */}
           <div
             style={{
               position: "absolute",
               top: -2,
-              left: 28,
-              width: 56,
+              left: 26,
+              width: 52,
               height: 4,
               borderRadius: 2,
-              background: `linear-gradient(90deg, ${BRAND_LIGHT}, #4ade80)`,
+              background: `linear-gradient(90deg, ${BRAND_AQUA}, #4ade80)`,
             }}
           />
-          <div
-            style={{
-              color: "#4ade80",
-              fontSize: 11,
-              fontWeight: 800,
-              marginBottom: 10,
-              letterSpacing: "2px",
-            }}
-          >
+          <div style={{ color: "#4ade80", fontSize: 10, fontWeight: 800, marginBottom: 8, letterSpacing: "2px" }}>
             CORRECT ANSWER
           </div>
-          <div
-            style={{
-              color: "#fff",
-              fontSize: 27,
-              fontWeight: 700,
-              lineHeight: 1.35,
-              textShadow: "0 2px 16px rgba(0,0,0,0.4)",
-            }}
-          >
+          <div style={{ color: "#fff", fontSize: 26, fontWeight: 700, lineHeight: 1.35, textShadow: "0 2px 16px rgba(0,0,0,0.4)" }}>
             {answerText}
           </div>
         </div>
@@ -598,30 +532,22 @@ function AnswerCard({
       {explanationText && (
         <div
           style={{
-            background: `linear-gradient(135deg, ${BRAND}12, rgba(255,255,255,0.03))`,
+            background: `linear-gradient(135deg, ${BRAND}12, rgba(255,255,255,0.02))`,
             border: `1px solid ${BRAND}44`,
-            borderRadius: 18,
-            padding: "20px 26px",
+            borderRadius: 16,
+            padding: "18px 24px",
             flex: "1 1 auto",
             overflow: "hidden",
-            boxShadow: `0 0 30px ${BRAND}18`,
+            boxShadow: `0 0 28px ${BRAND}16`,
           }}
         >
-          <div
-            style={{
-              color: BRAND_LIGHT,
-              fontSize: 11,
-              fontWeight: 800,
-              marginBottom: 12,
-              letterSpacing: "2px",
-            }}
-          >
+          <div style={{ color: BRAND_AQUA, fontSize: 10, fontWeight: 800, marginBottom: 10, letterSpacing: "2px" }}>
             EXPLANATION
           </div>
           <div
             style={{
-              color: "rgba(255,255,255,0.78)",
-              fontSize: 19,
+              color: "rgba(255,255,255,0.76)",
+              fontSize: 18,
               lineHeight: 1.6,
               display: "-webkit-box",
               WebkitLineClamp: 6,
@@ -641,24 +567,37 @@ function AnswerCard({
 
 // ---- DownloadableCard wrapper -----------------------------------------------
 
+interface DownloadableCardHandle {
+  exportPng: () => Promise<string>;
+}
+
 function DownloadableCard({
   filename,
   children,
+  onRef,
 }: {
   filename: string;
   children: React.ReactNode;
+  onRef?: (handle: DownloadableCardHandle) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
+  const exportPng = useCallback(async (): Promise<string> => {
+    if (!ref.current) throw new Error("Card not mounted");
+    return renderCardToPng(ref.current);
+  }, []);
+
+  // expose handle to parent for batch download
+  const refCallback = useCallback((el: HTMLDivElement | null) => {
+    (ref as any).current = el;
+    if (el && onRef) {
+      onRef({ exportPng });
+    }
+  }, [exportPng, onRef]);
+
   const handleDownload = useCallback(async () => {
-    if (!ref.current) return;
     try {
-      const dataUrl = await toPng(ref.current, {
-        cacheBust: true,
-        pixelRatio: 1,
-        width: 1080,
-        height: 1080,
-      });
+      const dataUrl = await exportPng();
       const link = document.createElement("a");
       link.download = filename;
       link.href = dataUrl;
@@ -667,39 +606,43 @@ function DownloadableCard({
       console.error("Card export failed:", err);
       alert("Export failed. Please try again.");
     }
-  }, [filename]);
+  }, [exportPng, filename]);
 
   return (
-    <div className="flex flex-col gap-3">
-      {/* Scaled preview — 1080 rendered at 25% = 270px */}
+    <div className="flex flex-col gap-2">
+      {/* Preview: 1080px rendered at 25% = 270px */}
       <div
         style={{
           width: "100%",
-          aspectRatio: "1/1",
+          paddingBottom: "100%",
+          position: "relative",
           overflow: "hidden",
-          borderRadius: 12,
+          borderRadius: 10,
           border: "1px solid rgba(255,255,255,0.1)",
           background: "#071318",
         }}
       >
         <div
           style={{
-            transform: "scale(0.25)",
-            transformOrigin: "top left",
+            position: "absolute",
+            top: 0,
+            left: 0,
             width: 1080,
             height: 1080,
+            transform: "scale(0.25)",
+            transformOrigin: "top left",
           }}
         >
-          <div ref={ref}>{children}</div>
+          <div ref={refCallback}>{children}</div>
         </div>
       </div>
       <Button
         onClick={handleDownload}
         size="sm"
-        className="w-full gap-2 text-white font-semibold"
+        className="w-full gap-2 text-white font-semibold text-xs"
         style={{ background: `linear-gradient(90deg, ${BRAND}, ${BRAND_DARK})` }}
       >
-        <Download className="w-3.5 h-3.5" />
+        <Download className="w-3 h-3" />
         Download PNG
       </Button>
     </div>
@@ -708,35 +651,42 @@ function DownloadableCard({
 
 // ---- CategorySection --------------------------------------------------------
 
+type QuestionItem = {
+  id: number;
+  qid: string | null;
+  type: string;
+  question: string;
+  options: string | null;
+  correctAnswer: number | null;
+  explanation: string | null;
+  reviewAnswer: string | null;
+  imageUrl: string | null;
+  difficulty: string;
+  category: string | null;
+};
+
+type CategoryItem = {
+  category: string;
+  challenge: { title: string; status: string; category: string } | null;
+  questions: QuestionItem[];
+};
+
 function CategorySection({
   item,
+  onQuestionRef,
+  onAnswerRef,
 }: {
-  item: {
-    category: string;
-    challenge: { title: string; status: string; category: string } | null;
-    questions: Array<{
-      id: number;
-      qid: string | null;
-      type: string;
-      question: string;
-      options: string | null;
-      correctAnswer: number | null;
-      explanation: string | null;
-      reviewAnswer: string | null;
-      imageUrl: string | null;
-      difficulty: string;
-      category: string | null;
-    }>;
-  };
+  item: CategoryItem;
+  onQuestionRef: (cat: string, h: DownloadableCardHandle) => void;
+  onAnswerRef: (cat: string, h: DownloadableCardHandle) => void;
 }) {
   const { category, challenge, questions } = item;
   const q = questions[0];
 
   if (!challenge || !q) {
     return (
-      <div className="rounded-xl border border-white/10 bg-white/5 p-6 text-center text-white/40 text-sm">
-        No queued challenge for{" "}
-        <span className="font-semibold text-white/60">{category}</span>
+      <div className="rounded-lg border border-white/10 bg-white/5 p-4 text-center text-white/40 text-xs">
+        No queued challenge for <span className="font-semibold text-white/60">{category}</span>
       </div>
     );
   }
@@ -744,51 +694,29 @@ function CategorySection({
   const options = parseOptions(q.options);
 
   return (
-    <div
-      className="rounded-xl border border-white/10 overflow-hidden"
-      style={{ background: "#0e1a24" }}
-    >
+    <div className="rounded-lg border border-white/10 overflow-hidden" style={{ background: "#0e1a24" }}>
       {/* Category header */}
-      <div
-        className="px-5 py-4 flex items-center justify-between"
-        style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}
-      >
-        <div className="flex items-center gap-3">
-          <div
-            className="w-3 h-3 rounded-full"
-            style={{
-              background: BRAND_LIGHT,
-              boxShadow: `0 0 8px ${BRAND_LIGHT}`,
-            }}
-          />
-          <span className="font-bold text-white text-base">{category}</span>
-          <Badge
-            className="text-[11px] px-2 py-0.5"
-            style={{
-              background: BRAND + "22",
-              color: BRAND_LIGHT,
-              border: "none",
-            }}
-          >
+      <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+        <div className="flex items-center gap-2">
+          <div className="w-2.5 h-2.5 rounded-full" style={{ background: BRAND_AQUA, boxShadow: `0 0 6px ${BRAND_AQUA}` }} />
+          <span className="font-bold text-white text-sm">{category}</span>
+          <Badge className="text-[10px] px-1.5 py-0" style={{ background: BRAND + "22", color: BRAND_AQUA, border: "none" }}>
             {challenge.status}
           </Badge>
         </div>
-        <span className="text-white/40 text-xs truncate max-w-xs">
-          {challenge.title}
-        </span>
+        <span className="text-white/35 text-xs truncate max-w-xs">{challenge.title}</span>
       </div>
 
       {/* Cards grid */}
-      <div className="p-5 grid grid-cols-2 gap-5">
+      <div className="p-4 grid grid-cols-2 gap-4">
         <div>
-          <div className="flex items-center gap-1.5 mb-3">
-            <Zap className="w-3.5 h-3.5" style={{ color: BRAND_LIGHT }} />
-            <span className="text-xs font-semibold text-white/60 uppercase tracking-wider">
-              Question Card
-            </span>
+          <div className="flex items-center gap-1.5 mb-2">
+            <Zap className="w-3 h-3" style={{ color: BRAND_AQUA }} />
+            <span className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Question Card</span>
           </div>
           <DownloadableCard
             filename={`${category.replace(/\s+/g, "-")}-question.png`}
+            onRef={(h) => onQuestionRef(category, h)}
           >
             <QuestionCard
               challengeTitle={challenge.title}
@@ -800,14 +728,13 @@ function CategorySection({
         </div>
 
         <div>
-          <div className="flex items-center gap-1.5 mb-3">
-            <CheckCircle2 className="w-3.5 h-3.5 text-green-400" />
-            <span className="text-xs font-semibold text-white/60 uppercase tracking-wider">
-              Answer Card
-            </span>
+          <div className="flex items-center gap-1.5 mb-2">
+            <CheckCircle2 className="w-3 h-3 text-green-400" />
+            <span className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Answer Card</span>
           </div>
           <DownloadableCard
             filename={`${category.replace(/\s+/g, "-")}-answer.png`}
+            onRef={(h) => onAnswerRef(category, h)}
           >
             <AnswerCard
               challengeTitle={challenge.title}
@@ -828,53 +755,86 @@ function CategorySection({
 // ---- Main Page --------------------------------------------------------------
 
 export default function ChallengeCardGenerator() {
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = trpc.quickfire.adminGetCardGeneratorData.useQuery(undefined, {
+  const { data, isLoading, error, refetch } = trpc.quickfire.adminGetCardGeneratorData.useQuery(undefined, {
     staleTime: 60_000,
     retry: false,
   });
 
+  // Refs for batch export
+  const questionRefs = useRef<Record<string, DownloadableCardHandle>>({});
+  const answerRefs = useRef<Record<string, DownloadableCardHandle>>({});
+  const [batchLoading, setBatchLoading] = useState<"questions" | "answers" | null>(null);
+
+  const handleBatchDownload = useCallback(async (type: "questions" | "answers") => {
+    setBatchLoading(type);
+    const refs = type === "questions" ? questionRefs.current : answerRefs.current;
+    const zip = new JSZip();
+    const folder = zip.folder(type === "questions" ? "question-cards" : "answer-cards")!;
+    try {
+      await Promise.all(
+        Object.entries(refs).map(async ([cat, handle]) => {
+          const dataUrl = await handle.exportPng();
+          const base64 = dataUrl.split(",")[1];
+          folder.file(`${cat.replace(/\s+/g, "-")}-${type === "questions" ? "question" : "answer"}.png`, base64, { base64: true });
+        })
+      );
+      const blob = await zip.generateAsync({ type: "blob" });
+      saveAs(blob, `iheartecho-${type}-${new Date().toISOString().slice(0, 10)}.zip`);
+    } catch (err) {
+      console.error("Batch export failed:", err);
+      alert("Batch export failed. Please try again.");
+    } finally {
+      setBatchLoading(null);
+    }
+  }, []);
+
+  const hasData = data && data.some((d: any) => d.challenge && d.questions.length > 0);
+
   return (
     <div className="min-h-screen" style={{ background: "#0a1018" }}>
       {/* Header */}
-      <div
-        style={{
-          background: "#0e1a24",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
-        }}
-      >
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-3">
+      <div style={{ background: "#0e1a24", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center gap-2">
           <Link href="/platform-admin">
             <button className="p-1.5 rounded-lg hover:bg-white/10 transition-colors">
               <ArrowLeft className="w-4 h-4 text-white/50" />
             </button>
           </Link>
-          <div className="flex items-center gap-2">
-            <ImageIcon className="w-5 h-5" style={{ color: BRAND_LIGHT }} />
-            <h1 className="text-lg font-bold text-white">
-              Challenge Card Generator
-            </h1>
-          </div>
-          <Badge
-            className="text-[10px] px-2 py-0.5 ml-1"
-            style={{
-              background: BRAND + "22",
-              color: BRAND_LIGHT,
-              border: "none",
-            }}
-          >
+          <ImageIcon className="w-4 h-4" style={{ color: BRAND_AQUA }} />
+          <h1 className="text-base font-bold text-white">Challenge Card Generator</h1>
+          <Badge className="text-[10px] px-1.5 py-0 ml-0.5" style={{ background: BRAND + "22", color: BRAND_AQUA, border: "none" }}>
             Admin
           </Badge>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
+            {hasData && (
+              <>
+                <Button
+                  size="sm"
+                  onClick={() => handleBatchDownload("questions")}
+                  disabled={batchLoading !== null}
+                  className="gap-1.5 text-white text-xs font-semibold"
+                  style={{ background: `linear-gradient(90deg, ${BRAND}, ${BRAND_DARK})` }}
+                >
+                  {batchLoading === "questions" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Package className="w-3 h-3" />}
+                  All Questions
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => handleBatchDownload("answers")}
+                  disabled={batchLoading !== null}
+                  className="gap-1.5 text-white text-xs font-semibold"
+                  style={{ background: "linear-gradient(90deg, #166534, #14532d)" }}
+                >
+                  {batchLoading === "answers" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Package className="w-3 h-3" />}
+                  All Answers
+                </Button>
+              </>
+            )}
             <Button
               variant="outline"
               size="sm"
               onClick={() => refetch()}
-              className="gap-2 text-white/70 border-white/20 hover:bg-white/10"
+              className="gap-1.5 text-white/60 border-white/20 hover:bg-white/10 text-xs"
             >
               Refresh
             </Button>
@@ -882,35 +842,30 @@ export default function ChallengeCardGenerator() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
-        {/* Instructions */}
+      <div className="max-w-5xl mx-auto px-4 py-4">
+        {/* Info bar */}
         <div
-          className="rounded-xl p-4 mb-6 text-sm"
-          style={{ background: BRAND + "15", border: `1px solid ${BRAND}33` }}
+          className="rounded-lg p-3 mb-4 text-xs"
+          style={{ background: BRAND + "14", border: `1px solid ${BRAND}2a` }}
         >
-          <p className="text-white/70">
-            Cards are generated from the{" "}
-            <strong className="text-white">next queued challenge</strong> per
-            category. Each card is{" "}
-            <strong className="text-white">1080x1080 px</strong> -- ideal for
-            Instagram, Facebook, and LinkedIn. Download the question card first,
-            then post the answer card 24 hours later.
+          <p className="text-white/60">
+            Cards are generated from the <strong className="text-white">next queued challenge</strong> per category.
+            Each card is <strong className="text-white">1080x1080 px</strong> — ideal for Instagram, Facebook, and LinkedIn.
+            Post the question card first, then the answer card 24 hours later.
+            Use <strong className="text-white">All Questions</strong> or <strong className="text-white">All Answers</strong> to download a ZIP of all cards at once.
           </p>
         </div>
 
         {/* Loading */}
         {isLoading && (
-          <div className="flex items-center justify-center py-24">
-            <Loader2
-              className="w-8 h-8 animate-spin"
-              style={{ color: BRAND_LIGHT }}
-            />
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="w-7 h-7 animate-spin" style={{ color: BRAND_AQUA }} />
           </div>
         )}
 
         {/* Error */}
         {error && (
-          <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-300 flex items-center gap-2">
+          <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-300 flex items-center gap-2">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             <span>{error.message}</span>
           </div>
@@ -918,14 +873,19 @@ export default function ChallengeCardGenerator() {
 
         {/* Cards */}
         {data && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {data.length === 0 ? (
-              <div className="text-center py-16 text-white/40">
+              <div className="text-center py-12 text-white/40 text-sm">
                 No queued challenges found. Add challenges to the queue first.
               </div>
             ) : (
-              data.map((item) => (
-                <CategorySection key={item.category} item={item as any} />
+              data.map((item: any) => (
+                <CategorySection
+                  key={item.category}
+                  item={item}
+                  onQuestionRef={(cat, h) => { questionRefs.current[cat] = h; }}
+                  onAnswerRef={(cat, h) => { answerRefs.current[cat] = h; }}
+                />
               ))
             )}
           </div>

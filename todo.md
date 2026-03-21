@@ -655,3 +655,15 @@
 
 ## Card Generator Visual Redesign (Mar 21 2026)
 - [x] Full visual redesign of Q&A cards: CardShell with layered backgrounds, dot grid, geometric accents, TealDivider, glowing answer box, premium typography
+
+## Card Generator Batch Download (Mar 21 2026)
+- [ ] Install JSZip for batch card export
+- [ ] Add Download All Questions button (zips all question cards)
+- [ ] Add Download All Answers button (zips all answer cards)
+
+## Card Generator Hero Fix + Batch Download (Mar 21 2026)
+- [x] Fix: use daily challenge hero image (daily-challenge-banner-v3) in card background
+- [x] Add Download All Questions button (JSZip batch export)
+- [x] Add Download All Answers button (JSZip batch export)
+- [x] Consolidate spacing on card generator page (tighter header, smaller gaps, compact info bar, max-w-5xl)
+- [x] Update card header wordmark: "iHeartEcho" white + "EchoAssist" aqua (#4ad9e0) on same line, "Daily Challenge" subtext in teal (#189aa1)
