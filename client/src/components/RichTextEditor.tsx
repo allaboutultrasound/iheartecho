@@ -148,6 +148,8 @@ export default function RichTextEditor({
   const [linkUrl, setLinkUrl] = useState("");
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+  const [sourceMode, setSourceMode] = useState(false);
+  const [sourceHtml, setSourceHtml] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const editor = useEditor({
@@ -230,6 +232,18 @@ export default function RichTextEditor({
     }
     setLinkUrl(""); setLinkDialogOpen(false);
   }, [editor, linkUrl]);
+
+  const toggleSourceMode = useCallback(() => {
+    if (!editor) return;
+    if (!sourceMode) {
+      setSourceHtml(editor.getHTML());
+      setSourceMode(true);
+    } else {
+      editor.commands.setContent(sourceHtml || "");
+      onChange(sourceHtml === "<p></p>" ? "" : sourceHtml);
+      setSourceMode(false);
+    }
+  }, [editor, sourceMode, sourceHtml, onChange]);
 
   if (!editor) return null;
 
@@ -363,9 +377,18 @@ export default function RichTextEditor({
             <YoutubeIcon className="w-3.5 h-3.5" />
           </ToolbarBtn>
 
-          {/* Raw HTML */}
-          <ToolbarBtn title="Insert raw HTML code" onClick={() => setHtmlDialogOpen(true)}>
+          {/* Raw HTML insert */}
+          <ToolbarBtn title="Insert raw HTML snippet" onClick={() => setHtmlDialogOpen(true)}>
             <FileCode className="w-3.5 h-3.5" />
+          </ToolbarBtn>
+
+          {/* Source View toggle */}
+          <ToolbarBtn
+            title={sourceMode ? "Back to Visual Editor" : "Edit HTML Source"}
+            active={sourceMode}
+            onClick={toggleSourceMode}
+          >
+            <Code2 className="w-3.5 h-3.5" />
           </ToolbarBtn>
 
           <Sep />
@@ -393,12 +416,40 @@ export default function RichTextEditor({
         </div>
       )}
 
-      {/* Editor Content */}
-      <EditorContent
-        editor={editor}
-        className="rte-content px-4 py-3 text-sm text-gray-800 focus:outline-none"
-        style={{ minHeight, maxHeight, overflowY: "auto" }}
-      />
+      {/* Editor Content — hidden when in source mode */}
+      <div style={{ display: sourceMode ? "none" : undefined }}>
+        <EditorContent
+          editor={editor}
+          className="rte-content px-4 py-3 text-sm text-gray-800 focus:outline-none"
+          style={{ minHeight, maxHeight, overflowY: "auto" }}
+        />
+      </div>
+
+      {/* Source Mode — raw HTML textarea */}
+      {sourceMode && (
+        <div className="relative">
+          <div className="absolute top-2 right-3 text-xs text-gray-400 select-none">HTML Source</div>
+          <textarea
+            className="w-full font-mono text-xs text-gray-800 bg-gray-50 border-0 p-4 pt-7 resize-y focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#0891b2]/40"
+            style={{ minHeight: minHeight + 32, maxHeight: maxHeight + 32 }}
+            value={sourceHtml}
+            onChange={e => setSourceHtml(e.target.value)}
+            spellCheck={false}
+            autoFocus
+          />
+          <div className="flex items-center justify-end gap-2 px-3 py-2 bg-gray-50 border-t border-gray-100">
+            <span className="text-xs text-gray-400">Edit the raw HTML, then click Apply to return to visual mode.</span>
+            <button
+              type="button"
+              className="px-3 py-1 text-xs font-semibold rounded-md text-white"
+              style={{ background: "#0891b2" }}
+              onMouseDown={e => { e.preventDefault(); toggleSourceMode(); }}
+            >
+              Apply &amp; Return to Editor
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Bubble menu removed - BubbleMenu requires separate package install */}
 
