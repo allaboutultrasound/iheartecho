@@ -1170,8 +1170,8 @@ export default function HemodynamicsLab() {
                 </div>
               </div>
               <ResponsiveContainer width="100%" height={80}>
-                <ComposedChart data={wiggersData} margin={{ top: 16, right: 10, bottom: 0, left: 30 }}>
-                  <XAxis dataKey="time" hide />
+                <ComposedChart data={wiggersData} margin={{ top: 16, right: 10, bottom: 0, left: 40 }}>
+                  <XAxis dataKey="time" type="number" domain={[0, rr_ms]} hide />
                   <YAxis domain={[-0.4, 1.4]} hide />
                   {/* Valve event lines */}
                   <ReferenceLine x={events.mvc} stroke="#189aa1" strokeDasharray="4 3" strokeWidth={1.5} />
@@ -1225,9 +1225,9 @@ export default function HemodynamicsLab() {
                 </div>
               </div>
               <ResponsiveContainer width="100%" height={150}>
-                <ComposedChart data={wiggersData} margin={{ top: 4, right: 10, bottom: 4, left: 35 }}>
+                <ComposedChart data={wiggersData} margin={{ top: 4, right: 10, bottom: 0, left: 40 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="time" tick={{ fontSize: 9 }} label={{ value: "Time (ms)", position: "insideBottom", offset: -2, fontSize: 9 }} />
+                  <XAxis dataKey="time" type="number" domain={[0, rr_ms]} hide />
                   <YAxis
                     tick={{ fontSize: 9 }}
                     label={{ value: "mmHg", angle: -90, position: "insideLeft", fontSize: 9, offset: 10 }}
@@ -1256,9 +1256,9 @@ export default function HemodynamicsLab() {
                 </div>
               </div>
               <ResponsiveContainer width="100%" height={100}>
-                <ComposedChart data={wiggersData} margin={{ top: 4, right: 10, bottom: 4, left: 30 }}>
+                <ComposedChart data={wiggersData} margin={{ top: 4, right: 10, bottom: 18, left: 40 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="time" tick={{ fontSize: 9 }} label={{ value: "Time (ms)", position: "insideBottom", offset: -2, fontSize: 9 }} />
+                  <XAxis dataKey="time" type="number" domain={[0, rr_ms]} tick={{ fontSize: 9 }} label={{ value: "Time (ms)", position: "insideBottom", offset: -4, fontSize: 9 }} />
                   <YAxis tick={{ fontSize: 9 }} label={{ value: "mL", angle: -90, position: "insideLeft", fontSize: 9, offset: 10 }} />
                   <Tooltip content={<WiggersTooltip />} />
                   <ReferenceLine x={events.mvc} stroke="#189aa1" strokeDasharray="4 3" strokeWidth={1.5} />
