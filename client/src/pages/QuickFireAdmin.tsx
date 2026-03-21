@@ -95,6 +95,7 @@ import {
   CheckCircle,
   XCircle,
   Inbox,
+  Shuffle,
 } from "lucide-react";
 import { toast } from "sonner";
 import DragDropUploadZone from "@/components/DragDropUploadZone";
@@ -471,20 +472,38 @@ export default function QuickFireAdmin() {
   const [rejectReason, setRejectReason] = useState("");
 
   const approveSubmissionMutation = trpc.quickfire.adminApproveSubmission.useMutation({
+    onMutate: ({ id }) => {
+      // Optimistically remove from the pending list immediately
+      utils.quickfire.adminGetPendingSubmissions.setData(undefined, (old) =>
+        old ? old.filter((q: any) => q.id !== id) : old
+      );
+    },
     onSuccess: () => {
       toast.success("Question approved and published to the bank.");
-      pendingSubmissionsQuery.refetch();
       utils.quickfire.listAllQuestions.invalidate();
     },
-    onError: (err: any) => toast.error(err.message || "Failed to approve submission."),
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to approve submission.");
+      // Rollback: refetch to restore the correct state
+      pendingSubmissionsQuery.refetch();
+    },
   });
 
   const rejectSubmissionMutation = trpc.quickfire.adminRejectSubmission.useMutation({
+    onMutate: ({ id }) => {
+      // Optimistically remove from the pending list immediately
+      utils.quickfire.adminGetPendingSubmissions.setData(undefined, (old) =>
+        old ? old.filter((q: any) => q.id !== id) : old
+      );
+    },
     onSuccess: () => {
       toast.success("Submission rejected.");
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "Failed to reject submission.");
+      // Rollback: refetch to restore the correct state
       pendingSubmissionsQuery.refetch();
     },
-    onError: (err: any) => toast.error(err.message || "Failed to reject submission."),
   });
 
   const restoreQuestionMutation = trpc.quickfire.restoreQuestion.useMutation({
@@ -611,6 +630,40 @@ export default function QuickFireAdmin() {
     const reordered = arrayMove(queueable, oldIdx, newIdx);
     reorderMutation.mutate({ orderedIds: reordered.map((c) => c.id) });
     challengeListQuery.refetch();
+  }, [challenges, reorderMutation, challengeListQuery]);
+
+  /**
+   * Randomize queue order within each category independently using Fisher-Yates,
+   * then persist the new order via adminReorderChallenges.
+   */
+  const handleRandomizeQueue = useCallback(() => {
+    const queueable = challenges.filter((c) => c.status !== "live");
+    if (queueable.length === 0) return;
+    // Group by category
+    const byCategory: Record<string, typeof queueable> = {};
+    for (const c of queueable) {
+      if (!byCategory[c.category]) byCategory[c.category] = [];
+      byCategory[c.category].push(c);
+    }
+    // Fisher-Yates shuffle each category group
+    const shuffled: typeof queueable = [];
+    for (const cat of Object.keys(byCategory)) {
+      const arr = [...byCategory[cat]];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      shuffled.push(...arr);
+    }
+    reorderMutation.mutate(
+      { orderedIds: shuffled.map((c) => c.id) },
+      {
+        onSuccess: () => {
+          toast.success("Queue randomized within each category!");
+          challengeListQuery.refetch();
+        },
+      }
+    );
   }, [challenges, reorderMutation, challengeListQuery]);
 
   function openCreateChallenge() {
@@ -1175,6 +1228,21 @@ export default function QuickFireAdmin() {
                 >
                   {publishNextMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <PlayCircle className="w-4 h-4" />}
                   Publish Next Now
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 border-purple-400 text-purple-600 hover:bg-purple-50"
+                  onClick={() => {
+                    if (confirm("Randomize queue order within each category? This shuffles all non-live challenges using Fisher-Yates, keeping each category's items together but in random order. The new order will be saved immediately.")) {
+                      handleRandomizeQueue();
+                    }
+                  }}
+                  disabled={reorderMutation.isPending || challenges.filter((c) => c.status !== "live").length === 0}
+                  title="Shuffle queue order within each category independently to avoid chronological bias."
+                >
+                  {reorderMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shuffle className="w-4 h-4" />}
+                  Randomize Queue
                 </Button>
                 <Button
                   variant="outline"

@@ -594,3 +594,7 @@
 - [x] Remove year badges (e.g. "ASE 2025") from guideline cards — replace with "Current Guidelines" or "Updated"
 - [x] Add premium-gated Print Reference Card feature — show icon to all, upgrade prompt for free users, print for premium
 - [x] Remove "Updated 2025" from GuidelinesAssist™ search/filter chips
+
+## Admin Queue Fixes (Mar 21 2026)
+- [x] Fix admin submissions queue not clearing after approval/rejection — replaced refetch() with optimistic cache update (onMutate removes item immediately, onError rolls back via refetch)
+- [x] Add Randomize Queue button — Fisher-Yates shuffle per category, persisted via adminReorderChallenges, purple button in queue header
