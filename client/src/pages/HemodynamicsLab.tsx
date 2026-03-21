@@ -1034,7 +1034,7 @@ export default function HemodynamicsLab() {
       </div>
       <div className="container py-6">
         {/* Desktop: 4-column layout — presets | controls | wiggers | doppler. Mobile: single column stack */}
-        <div className="grid grid-cols-1 xl:grid-cols-[180px_220px_340px_1fr] gap-4">
+        <div className="grid grid-cols-1 xl:grid-cols-[180px_300px_340px_1fr] gap-4">
 
           {/* ---- DISEASE STATE PRESETS (leftmost column on desktop) ---- */}
           <div className="xl:col-span-1">
