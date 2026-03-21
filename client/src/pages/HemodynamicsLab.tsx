@@ -1169,7 +1169,7 @@ export default function HemodynamicsLab() {
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `url('https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/echoassist-hub-banner-WWGwHuDdiGx2vcpx389pUW.webp')`,
+            backgroundImage: `url('https://d2xsxph8kpxj0f.cloudfront.net/310519663401463434/etVPnUidWNWG8W4GHnRqzv/TabletBanner_d473359b.png')`,
           }}
         />
         <div
