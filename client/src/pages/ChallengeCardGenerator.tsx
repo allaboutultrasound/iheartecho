@@ -300,7 +300,7 @@ function CardHeader({ pill, pillColor, pillBg, pillBorder }: {
               style={{
                 color: BRAND_AQUA,
                 fontSize: 28,
-                fontWeight: 800,
+                fontWeight: 400,
                 letterSpacing: "-0.5px",
                 lineHeight: 1,
               }}
@@ -471,7 +471,7 @@ function QuestionCard({
               >
                 {letters[i]}
               </div>
-              <span style={{ color: "rgba(255,255,255,0.88)", fontSize: 22, fontWeight: 500, lineHeight: 1.35 }}>
+              <span style={{ color: "rgba(255,255,255,0.88)", fontSize: 30, fontWeight: 500, lineHeight: 1.35 }}>
                 {stripHtml(opt)}
               </span>
             </div>
