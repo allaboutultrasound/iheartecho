@@ -3,7 +3,28 @@
   Brand: Teal #189aa1, Aqua #4ad9e0
   Fonts: Merriweather headings, Open Sans body
 */
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
+
+// Animated count-up hook
+function useCountUp(target: number, duration = 1800, enabled = true) {
+  const [count, setCount] = useState(0);
+  const startedRef = useRef(false);
+  useEffect(() => {
+    if (!enabled || startedRef.current) return;
+    startedRef.current = true;
+    const start = performance.now();
+    const step = (now: number) => {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.round(eased * target));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [target, duration, enabled]);
+  return count;
+}
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
@@ -182,10 +203,13 @@ export default function Home() {
   });
   const USER_COUNT_FLOOR = 15_174;
   const totalMembers = userCountData?.total ?? null;
-  // Show floor value until real count surpasses it, then track in real-time
-  const displayedMembers = totalMembers !== null
-    ? Math.max(totalMembers, USER_COUNT_FLOOR).toLocaleString()
-    : USER_COUNT_FLOOR.toLocaleString();
+  // The final number to count up to
+  const memberTarget = totalMembers !== null
+    ? Math.max(totalMembers, USER_COUNT_FLOOR)
+    : USER_COUNT_FLOOR;
+  // Animated count-up — starts as soon as the target is known
+  const animatedCount = useCountUp(memberTarget, 1800, true);
+  const displayedMembers = animatedCount.toLocaleString();
 
   const stats = [
     ...STATIC_STATS,
