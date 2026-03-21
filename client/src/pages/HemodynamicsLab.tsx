@@ -1033,29 +1033,42 @@ export default function HemodynamicsLab() {
         </div>
       </div>
       <div className="container py-6">
-        {/* Clinical Presets */}
-        <div className="mb-5 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="teal-header px-5 py-3">
-            <h3 className="font-bold text-sm text-white" style={{ fontFamily: "Merriweather, serif" }}>Clinical Presets</h3>
-          </div>
-          <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {PRESETS.map(preset => (
-              <button key={preset.label} onClick={() => setParams(preset.values)}
-                className="p-3 rounded-lg border text-left transition-all hover:shadow-sm active:scale-95"
-                style={{ borderColor: preset.color + "40", background: preset.color + "08" }}>
-                <div className="text-xs font-bold mb-0.5" style={{ color: preset.color, fontFamily: "Merriweather, serif" }}>
-                  {preset.label}
-                </div>
-                <div className="text-[10px] text-gray-400">
-                  PL:{preset.values.preload} AL:{preset.values.afterload} CTR:{preset.values.contractility} HR:{preset.values.heartRate}
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Desktop: 4-column layout — presets | controls | wiggers | doppler. Mobile: single column stack */}
+        <div className="grid grid-cols-1 xl:grid-cols-[180px_220px_340px_1fr] gap-4">
 
-        {/* Desktop: 3-column layout — controls | wiggers | doppler. Mobile: single column stack */}
-        <div className="grid grid-cols-1 xl:grid-cols-[260px_340px_1fr] gap-5">
+          {/* ---- DISEASE STATE PRESETS (leftmost column on desktop) ---- */}
+          <div className="xl:col-span-1">
+            {/* Mobile: show as horizontal scrollable row */}
+            <div className="xl:hidden mb-4 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="teal-header px-4 py-2">
+                <h3 className="font-bold text-xs text-white" style={{ fontFamily: "Merriweather, serif" }}>Clinical Presets</h3>
+              </div>
+              <div className="p-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {PRESETS.map(preset => (
+                  <button key={preset.label} onClick={() => setParams(preset.values)}
+                    className="p-2 rounded-lg border text-left transition-all hover:shadow-sm active:scale-95"
+                    style={{ borderColor: preset.color + "40", background: preset.color + "08" }}>
+                    <div className="text-[11px] font-bold" style={{ color: preset.color, fontFamily: "Merriweather, serif" }}>{preset.label}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* Desktop: vertical stacked preset buttons */}
+            <div className="hidden xl:block bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="teal-header px-3 py-2">
+                <h3 className="font-bold text-xs text-white" style={{ fontFamily: "Merriweather, serif" }}>Disease States</h3>
+              </div>
+              <div className="p-2 flex flex-col gap-1">
+                {PRESETS.map(preset => (
+                  <button key={preset.label} onClick={() => setParams(preset.values)}
+                    className="w-full px-2 py-1.5 rounded-lg border text-left transition-all hover:shadow-sm active:scale-95"
+                    style={{ borderColor: preset.color + "40", background: preset.color + "08" }}>
+                    <div className="text-[11px] font-bold leading-tight" style={{ color: preset.color, fontFamily: "Merriweather, serif" }}>{preset.label}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
 
           {/* ---- CONTROLS ---- */}
           <div className="xl:col-span-1 space-y-4">
@@ -1158,19 +1171,22 @@ export default function HemodynamicsLab() {
               </div>
             </div>
 
-            {/* ECG */}
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3">
-              <div className="flex items-center justify-between mb-1">
-                <h3 className="font-bold text-gray-700 text-xs" style={{ fontFamily: "Merriweather, serif" }}>ECG</h3>
-                <div className="flex items-center gap-3 text-xs text-gray-400">
-                  <span>Lead II (simulated)</span>
-                  <span className="flex items-center gap-1"><b className="text-teal-600">P</b> wave</span>
-                  <span className="flex items-center gap-1"><b className="text-red-600">QRS</b> complex</span>
-                  <span className="flex items-center gap-1"><b className="text-amber-600">T</b> wave</span>
+            {/* ---- Unified Wiggers Card: ECG + Pressure + Volume seamlessly stacked ---- */}
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+              {/* ECG sub-panel */}
+              <div className="px-3 pt-2 pb-0 border-b border-gray-100">
+                <div className="flex items-center justify-between mb-0.5">
+                  <h3 className="font-bold text-gray-700 text-xs" style={{ fontFamily: "Merriweather, serif" }}>ECG <span className="font-normal text-gray-400 text-[10px] ml-1">Lead II (simulated)</span></h3>
+                  <div className="flex items-center gap-2 text-[10px] text-gray-400">
+                    <span className="flex items-center gap-0.5"><b className="text-teal-600">P</b></span>
+                    <span className="flex items-center gap-0.5"><b className="text-red-600">QRS</b></span>
+                    <span className="flex items-center gap-0.5"><b className="text-amber-600">T</b></span>
+                  </div>
                 </div>
               </div>
+              <div className="px-3 pb-0">
               <ResponsiveContainer width="100%" height={100}>
-                <ComposedChart data={wiggersData} margin={{ top: 16, right: 10, bottom: 0, left: 40 }}>
+                <ComposedChart data={wiggersData} margin={{ top: 8, right: 10, bottom: 0, left: 40 }}>
                   <XAxis dataKey="time" type="number" domain={[0, rr_ms]} hide />
                   <YAxis domain={[-0.4, 1.4]} hide />
                   {/* Valve event lines */}
@@ -1205,25 +1221,26 @@ export default function HemodynamicsLab() {
                 </ComposedChart>
               </ResponsiveContainer>
               {/* ECG interval summary */}
-              <div className="mt-1 flex flex-wrap gap-3 text-[10px] text-gray-500">
+              <div className="px-3 py-1 flex flex-wrap gap-3 text-[10px] text-gray-400 border-b border-gray-100">
                 <span><b className="text-teal-600">PR:</b> {Math.round((0.02 - 0.88 + 1) * rr_ms)} ms</span>
                 <span><b className="text-red-600">QRS:</b> ~{Math.round(0.03 * rr_ms)} ms</span>
                 <span><b className="text-amber-600">QT:</b> {Math.round(0.40 * rr_ms)} ms</span>
-                <span><b className="text-gray-500">RR:</b> {rr_ms} ms</span>
-                <span><b className="text-gray-500">HR:</b> {params.heartRate} bpm</span>
+                <span><b className="text-gray-400">RR:</b> {rr_ms} ms · {params.heartRate} bpm</span>
               </div>
-            </div>
+              </div>
 
-            {/* LV Pressure + Aortic Pressure */}
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3">
-              <div className="flex items-center justify-between mb-1">
-                <h3 className="font-bold text-gray-700 text-xs" style={{ fontFamily: "Merriweather, serif" }}>Pressure (mmHg)</h3>
-                <div className="flex flex-wrap items-center gap-3 text-xs">
-                  <span className="flex items-center gap-1"><span className="w-3 h-0.5 inline-block bg-[#189aa1]"></span> LV Pressure</span>
-                  <span className="flex items-center gap-1"><span className="w-3 h-0.5 inline-block bg-[#dc2626]"></span> Aortic Pressure</span>
-                  <span className="flex items-center gap-1"><span className="w-3 h-0.5 inline-block bg-[#189aa1]"></span> LA Pressure</span>
+              {/* Pressure sub-panel */}
+              <div className="px-3 pt-1.5 pb-0 border-b border-gray-100">
+                <div className="flex items-center justify-between mb-0.5">
+                  <h3 className="font-bold text-gray-700 text-xs" style={{ fontFamily: "Merriweather, serif" }}>Pressure (mmHg)</h3>
+                  <div className="flex flex-wrap items-center gap-2 text-[10px]">
+                    <span className="flex items-center gap-1"><span className="w-3 h-0.5 inline-block bg-[#189aa1]"></span> LV</span>
+                    <span className="flex items-center gap-1"><span className="w-3 h-0.5 inline-block bg-[#dc2626]"></span> Ao</span>
+                    <span className="flex items-center gap-1"><span className="w-3 h-0.5 inline-block bg-[#189aa1] opacity-50"></span> LA</span>
+                  </div>
                 </div>
               </div>
+              <div className="px-3 pb-0">
               <ResponsiveContainer width="100%" height={200}>
                 <ComposedChart data={wiggersData} margin={{ top: 4, right: 10, bottom: 0, left: 40 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -1243,18 +1260,20 @@ export default function HemodynamicsLab() {
                   <Line type="monotone" dataKey="lap" stroke="#189aa1" strokeWidth={1.8} strokeDasharray="5 2" dot={false} name="LA Pressure" />
                 </ComposedChart>
               </ResponsiveContainer>
-            </div>
+              </div>
 
-            {/* LV Volume */}
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3">
-              <div className="flex items-center justify-between mb-1">
-                <h3 className="font-bold text-gray-700 text-xs" style={{ fontFamily: "Merriweather, serif" }}>LV Volume (mL)</h3>
-                <div className="flex items-center gap-3 text-xs text-gray-400">
-                  <span>EDV: <b style={{ color: "#189aa1" }}>{Math.round(hemo.edv)} mL</b></span>
-                  <span>ESV: <b style={{ color: "#189aa1" }}>{Math.round(hemo.esv)} mL</b></span>
-                  <span>SV: <b style={{ color: "#189aa1" }}>{Math.round(hemo.sv)} mL</b></span>
+              {/* Volume sub-panel */}
+              <div className="px-3 pt-1.5 pb-0">
+                <div className="flex items-center justify-between mb-0.5">
+                  <h3 className="font-bold text-gray-700 text-xs" style={{ fontFamily: "Merriweather, serif" }}>LV Volume (mL)</h3>
+                  <div className="flex items-center gap-2 text-[10px] text-gray-400">
+                    <span>EDV <b style={{ color: "#189aa1" }}>{Math.round(hemo.edv)}</b></span>
+                    <span>ESV <b style={{ color: "#189aa1" }}>{Math.round(hemo.esv)}</b></span>
+                    <span>SV <b style={{ color: "#189aa1" }}>{Math.round(hemo.sv)}</b></span>
+                  </div>
                 </div>
               </div>
+              <div className="px-3 pb-3">
               <ResponsiveContainer width="100%" height={140}>
                 <ComposedChart data={wiggersData} margin={{ top: 4, right: 10, bottom: 18, left: 40 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -1268,7 +1287,8 @@ export default function HemodynamicsLab() {
                   <Area type="monotone" dataKey="lvv" stroke="#4ad9e0" fill="#e0f9fa" fillOpacity={0.5} strokeWidth={2.5} dot={false} name="LV Volume" />
                 </ComposedChart>
               </ResponsiveContainer>
-            </div>
+              </div>
+            </div>{/* end unified Wiggers card */}
 
             {/* PV Loop */}
             <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3">
