@@ -598,3 +598,6 @@
 ## Admin Queue Fixes (Mar 21 2026)
 - [x] Fix admin submissions queue not clearing after approval/rejection — replaced refetch() with optimistic cache update (onMutate removes item immediately, onError rolls back via refetch)
 - [x] Add Randomize Queue button — Fisher-Yates shuffle per category, persisted via adminReorderChallenges, purple button in queue header
+
+## Flashcard AI Generator Bug (Mar 21 2026)
+- [x] Fix: AI flashcard generator inserts into question bank instead of flashcards table — removed quickReview from Question Bank AI generator (Single Type + Mixed Types), hid top-level AI Generate button on Flashcard tab

@@ -1112,6 +1112,7 @@ export default function QuickFireAdmin() {
             >
               <Upload className="w-4 h-4" /> CSV Import
             </Button>
+            {activeAdminTab !== "flashcards" && (
             <Button
               variant="outline"
               size="sm"
@@ -1120,6 +1121,7 @@ export default function QuickFireAdmin() {
             >
               <Sparkles className="w-4 h-4" /> AI Generate
             </Button>
+            )}
             <Button
               size="sm"
               className="gap-1.5 text-white"
@@ -3051,7 +3053,6 @@ export default function QuickFireAdmin() {
                         <SelectContent>
                           <SelectItem value="scenario">Scenario (MCQ)</SelectItem>
                           <SelectItem value="image">Image-Based (MCQ)</SelectItem>
-                          <SelectItem value="quickReview">Quick Review (Flashcard)</SelectItem>
                           <SelectItem value="connect">Connect (Matching)</SelectItem>
                           <SelectItem value="order">Order (Sequence)</SelectItem>
                           <SelectItem value="identifier">Identifier (MCQ)</SelectItem>
@@ -3108,7 +3109,6 @@ export default function QuickFireAdmin() {
                         { key: "order", label: "Order (Sequence)" },
                         { key: "identifier", label: "Identifier (MCQ)" },
                         { key: "image", label: "Image-Based (MCQ)" },
-                        { key: "quickReview", label: "Quick Review (Flashcard)" },
                       ] as { key: string; label: string }[]).map(({ key, label }) => (
                         <div key={key} className="flex items-center gap-2 p-2 rounded-lg border border-gray-100 bg-gray-50">
                           <div className="flex-1">
