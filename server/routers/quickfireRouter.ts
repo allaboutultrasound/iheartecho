@@ -395,7 +395,10 @@ export const quickfireRouter = router({
       .map(([, id]) => id as number);
 
     // Parse fallback categories from the set record
-    const fallbackCats: string[] = set.fallbackCategories ? (() => { try { return JSON.parse(set.fallbackCategories); } catch { return []; } })() : [];
+    let fallbackCats: string[] = [];
+    if (set.fallbackCategories) {
+      try { fallbackCats = JSON.parse(String(set.fallbackCategories)) as string[]; } catch { /* ignore */ }
+    }
 
     if (allIds.length === 0) {
       return { setDate: date, questions: [], userAttempts: {}, categoryMap: questionMap, fallbackCategories: fallbackCats };

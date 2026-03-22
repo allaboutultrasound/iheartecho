@@ -5,23 +5,31 @@
 */
 import { useEffect, useState, useRef } from "react";
 
-// Animated count-up hook
+// Animated count-up hook — re-animates whenever target changes
 function useCountUp(target: number, duration = 1800, enabled = true) {
   const [count, setCount] = useState(0);
-  const startedRef = useRef(false);
+  const rafRef = useRef<number | null>(null);
   useEffect(() => {
-    if (!enabled || startedRef.current) return;
-    startedRef.current = true;
+    if (!enabled) return;
+    // Cancel any in-progress animation
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    const startValue = count; // animate from current displayed value
     const start = performance.now();
     const step = (now: number) => {
       const elapsed = now - start;
       const progress = Math.min(elapsed / duration, 1);
       // Ease-out cubic
       const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.round(eased * target));
-      if (progress < 1) requestAnimationFrame(step);
+      setCount(Math.round(startValue + eased * (target - startValue)));
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(step);
+      } else {
+        rafRef.current = null;
+      }
     };
-    requestAnimationFrame(step);
+    rafRef.current = requestAnimationFrame(step);
+    return () => { if (rafRef.current !== null) cancelAnimationFrame(rafRef.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [target, duration, enabled]);
   return count;
 }
@@ -195,14 +203,14 @@ export default function Home() {
   });
   const isPremium = premiumStatus?.isPremium ?? false;
 
-  // Live user count — cached for 24 hours so it refreshes daily
+  // Live user count — cached for 5 minutes so it stays fresh
   const { data: userCountData } = trpc.stats.userCount.useQuery(undefined, {
-    staleTime: 24 * 60 * 60 * 1000, // 24 hours
-    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: true,
   });
-  // The server already adds the display offset, so use the returned total directly.
-  // Fall back to 15_174 only if the query hasn't resolved yet.
-  const memberTarget = userCountData?.total ?? 15_174;
+  // The server already adds the display offset (3997), so use the returned total directly.
+  // Only fall back when the query hasn't resolved yet (undefined).
+  const memberTarget = userCountData?.total ?? 0;
   // Animated count-up — starts as soon as the target is known
   const animatedCount = useCountUp(memberTarget, 1800, true);
   const displayedMembers = animatedCount.toLocaleString();
