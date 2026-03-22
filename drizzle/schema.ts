@@ -963,6 +963,8 @@ export const quickfireDailySets = mysqlTable("quickfireDailySets", {
   setDate: varchar("setDate", { length: 10 }).notNull().unique(),
   // JSON: number[] — ordered list of quickfireQuestion IDs
   questionIds: text("questionIds").notNull(),
+  // JSON: string[] — categories that used a fallback question (no new challenge queued)
+  fallbackCategories: text("fallbackCategories"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 export type QuickfireDailySet = typeof quickfireDailySets.$inferSelect;

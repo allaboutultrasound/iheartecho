@@ -566,6 +566,7 @@ export default function QuickFire() {
   const todayCategoryMap: Record<string, number> = (todaySetQuery.data as any)?.categoryMap ?? {};
   const todayAllQuestions: any[] = (todaySetQuery.data as any)?.questions ?? [];
   const todayUserAttempts: Record<number, any> = (todaySetQuery.data as any)?.userAttempts ?? {};
+  const todayFallbackCategories: string[] = (todaySetQuery.data as any)?.fallbackCategories ?? [];
   // Map display names to server camelCase keys
   const CAT_DISPLAY_TO_KEY: Record<string, string> = {
     "ACS": "acs",
@@ -1274,6 +1275,22 @@ export default function QuickFire() {
         {/* ── TAB: Daily Challenge ─────────────────────────────────────────────────── */}
         {activeTab === "challenge" && (
           <>
+            {/* ── Admin Fallback Warning Banner ─────────────────────────────────── */}
+            {isAdmin && todayFallbackCategories.length > 0 && (
+              <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 flex items-start gap-3">
+                <div className="flex-shrink-0 mt-0.5">
+                  <svg className="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /></svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-amber-800">Admin Alert: Fallback Questions Active</p>
+                  <p className="text-xs text-amber-700 mt-0.5">
+                    The following categories have no new challenge queued and are showing a previously published question:
+                    {" "}<span className="font-semibold">{todayFallbackCategories.join(", ")}</span>.
+                    {" "}Please add new challenges to avoid repeated content.
+                  </p>
+                </div>
+              </div>
+            )}
             {/* ── Category Preference Settings Panel ───────────────────────────── */}
             {showCategoryPrefs && isAuthenticated && (
               <div className="mb-6 bg-white rounded-xl border border-[#189aa1]/20 p-5 shadow-sm">

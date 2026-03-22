@@ -287,11 +287,13 @@ async function ensureTodaySet(db: NonNullable<Awaited<ReturnType<typeof getDb>>>
     }
   }
 
-  // 2. Fallback: for any category still null, pick a random active question
+  // 2. Fallback: for any category still null, use the most recently published question
+  const fallbackCategories: string[] = [];
   for (const cat of CHALLENGE_CATEGORIES) {
     const key = CAT_KEY[cat];
     if (questionMap[key] !== null) continue;
-    const pool = await db
+    // Prefer the most recently created active question for this category
+    const [latestActive] = await db
       .select({ id: quickfireQuestions.id })
       .from(quickfireQuestions)
       .where(
@@ -300,13 +302,16 @@ async function ensureTodaySet(db: NonNullable<Awaited<ReturnType<typeof getDb>>>
           sql`${quickfireQuestions.type} != 'quickReview'` as any,
           sql`${quickfireQuestions.category} = ${cat}` as any
         )
-      );
-    if (pool.length > 0) {
-      questionMap[key] = sampleN(pool, 1)[0].id;
+      )
+      .orderBy(sql`${quickfireQuestions.createdAt} DESC` as any)
+      .limit(1);
+    if (latestActive) {
+      questionMap[key] = latestActive.id;
+      fallbackCategories.push(cat);
     } else {
       // No active questions in this category — try any non-deleted question and
       // auto-activate it so the slot is never silently empty.
-      const anyPool = await db
+      const [anyQuestion] = await db
         .select({ id: quickfireQuestions.id })
         .from(quickfireQuestions)
         .where(
@@ -315,18 +320,30 @@ async function ensureTodaySet(db: NonNullable<Awaited<ReturnType<typeof getDb>>>
             sql`${quickfireQuestions.category} = ${cat}` as any,
             sql`${quickfireQuestions.deletedAt} IS NULL` as any
           )
-        );
-      if (anyPool.length > 0) {
-        const picked = sampleN(anyPool, 1)[0].id;
-        await autoActivateQuestions(db, [picked]);
-        questionMap[key] = picked;
+        )
+        .orderBy(sql`${quickfireQuestions.createdAt} DESC` as any)
+        .limit(1);
+      if (anyQuestion) {
+        await autoActivateQuestions(db, [anyQuestion.id]);
+        questionMap[key] = anyQuestion.id;
+        fallbackCategories.push(cat);
       }
     }
   }
 
   const questionIds = JSON.stringify(questionMap);
-  await db.insert(quickfireDailySets).values({ setDate: date, questionIds });
-  return { setDate: date, questionIds };
+  const fallbackCategoriesJson = fallbackCategories.length > 0 ? JSON.stringify(fallbackCategories) : null;
+  await db.insert(quickfireDailySets).values({ setDate: date, questionIds, fallbackCategories: fallbackCategoriesJson });
+
+  // Notify admin if any categories used a fallback question
+  if (fallbackCategories.length > 0) {
+    notifyOwner({
+      title: `⚠️ Daily Challenge — Fallback Questions Used (${date})`,
+      content: `The following categories had no new challenge queued for ${date} and are showing a previously published question:\n\n${fallbackCategories.map((c) => `• ${c}`).join("\n")}\n\nPlease add new challenges to these categories to avoid repeated content.`,
+    }).catch((err) => console.warn("[ensureTodaySet] notifyOwner failed:", err));
+  }
+
+  return { setDate: date, questionIds, fallbackCategories };
 }
 
 // ─── Admin guard ─────────────────────────────────────────────────────────────
@@ -377,8 +394,11 @@ export const quickfireRouter = router({
       .filter(([key, id]) => enabledCats.has(key) && id !== null)
       .map(([, id]) => id as number);
 
+    // Parse fallback categories from the set record
+    const fallbackCats: string[] = set.fallbackCategories ? (() => { try { return JSON.parse(set.fallbackCategories); } catch { return []; } })() : [];
+
     if (allIds.length === 0) {
-      return { setDate: date, questions: [], userAttempts: {}, categoryMap: questionMap };
+      return { setDate: date, questions: [], userAttempts: {}, categoryMap: questionMap, fallbackCategories: fallbackCats };
     }
 
     // Fetch questions by ID — do NOT filter by isActive here; auto-activate any
@@ -442,7 +462,7 @@ export const quickfireRouter = router({
       };
     });
 
-    return { setDate: date, questions: sanitized, userAttempts, categoryMap: questionMap };
+    return { setDate: date, questions: sanitized, userAttempts, categoryMap: questionMap, fallbackCategories: fallbackCats };
   }),
 
   /** Submit an answer for a question in today's set */
