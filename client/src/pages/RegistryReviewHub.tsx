@@ -87,8 +87,6 @@ function mapLiveCourse(c: {
 
 export default function RegistryReviewHub() {
   const { user } = useAuth();
-  const [category, setCategory] = useState("All");
-
   // Fetch live courses (via DB cache)
   const { data: liveCatalog, isLoading, isError } = trpc.cmeCatalog.getRegistryCatalog.useQuery(undefined, {
     staleTime: 5 * 60 * 1000,
@@ -107,15 +105,8 @@ export default function RegistryReviewHub() {
     ? liveCatalog.map(mapLiveCourse)
     : [];
 
-  // Derive available categories from live data
-  const availableCategories = ["All", ...Array.from(new Set(allCourses.map(c => c.category))).sort()];
-
-  const filtered = category === "All"
-    ? allCourses
-    : allCourses.filter(c => c.category === category);
-
-  const featured = filtered.find(c => c.isFeatured);
-  const regular = filtered.filter(c => !c.isFeatured);
+  const featured = allCourses.find(c => c.isFeatured);
+  const regular = allCourses.filter(c => !c.isFeatured);
 
   return (
     <Layout>
@@ -153,26 +144,6 @@ export default function RegistryReviewHub() {
           <div className="flex items-center gap-1.5 text-xs text-amber-600 mb-4 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
             <Info className="w-3.5 h-3.5 flex-shrink-0" />
             <span>Some courses may be temporarily unavailable. Please refresh to retry.</span>
-          </div>
-        )}
-
-        {/* Category Filter */}
-        {availableCategories.length > 1 && (
-          <div className="flex flex-wrap gap-2 mb-8">
-            {availableCategories.map(cat => (
-              <button
-                key={cat}
-                onClick={() => setCategory(cat)}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                  category === cat
-                    ? "text-white shadow-sm"
-                    : "bg-white border border-[#189aa1]/20 text-[#189aa1] hover:bg-[#f0fbfc]"
-                }`}
-                style={category === cat ? { background: BRAND } : {}}
-              >
-                {cat}
-              </button>
-            ))}
           </div>
         )}
 
@@ -249,7 +220,7 @@ export default function RegistryReviewHub() {
         {!isLoading && regular.length > 0 && (
           <>
             <h2 className="text-lg font-bold text-gray-800 mb-4" style={{ fontFamily: "Merriweather, serif" }}>
-              {category === "All" ? "Registry Review Courses" : `${category} Courses`}
+              Registry Review Courses
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {regular.map(course => (

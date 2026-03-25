@@ -237,7 +237,6 @@ function mapLiveCourse(c: {
 
 export default function CmeHub() {
   const { user } = useAuth();
-  const [category, setCategory] = useState("All");
 
   // Fetch live courses (via DB cache)
   const { data: liveCatalog, isLoading, isError } = trpc.cmeCatalog.getCatalog.useQuery(undefined, {
@@ -258,12 +257,8 @@ export default function CmeHub() {
     ? liveCatalog.map(mapLiveCourse)
     : STATIC_CME_COURSES;
 
-  const filtered = category === "All"
-    ? allCourses
-    : allCourses.filter(c => c.category === category);
-
-  const featured = filtered.find(c => c.isFeatured);
-  const regular = filtered.filter(c => !c.isFeatured);
+  const featured = allCourses.find(c => c.isFeatured);
+  const regular = allCourses.filter(c => !c.isFeatured);
 
   return (
     <Layout>
@@ -303,24 +298,6 @@ export default function CmeHub() {
             <span>Some courses may be temporarily unavailable. Please refresh to retry.</span>
           </div>
         )}
-
-        {/* Category Filter */}
-        <div className="flex flex-wrap gap-2 mb-8">
-          {CATEGORIES.map(cat => (
-            <button
-              key={cat}
-              onClick={() => setCategory(cat)}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                category === cat
-                  ? "text-white shadow-sm"
-                  : "bg-white border border-[#189aa1]/20 text-[#189aa1] hover:bg-[#f0fbfc]"
-              }`}
-              style={category === cat ? { background: BRAND } : {}}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
 
         {/* Loading skeleton */}
         {isLoading && (
@@ -395,7 +372,7 @@ export default function CmeHub() {
         {!isLoading && regular.length > 0 && (
           <>
             <h2 className="text-lg font-bold text-gray-800 mb-4" style={{ fontFamily: "Merriweather, serif" }}>
-              {category === "All" ? "Individual Courses" : `${category} Courses`}
+              Individual Courses
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {regular.map(course => (
