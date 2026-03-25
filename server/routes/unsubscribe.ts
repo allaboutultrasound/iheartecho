@@ -5,6 +5,10 @@
  * Token format (base64url): userId:timestamp:hmac
  * HMAC uses JWT_SECRET so tokens cannot be forged.
  * Tokens expire after 30 days.
+ *
+ * On unsubscribe, the user's email is added to SendGrid's Global Unsubscribe
+ * suppression list. This blocks delivery from ALL senders on the same SendGrid
+ * account — including the All About Ultrasound app — preventing cross-app emails.
  */
 import type { Express } from "express";
 import crypto from "crypto";
@@ -47,6 +51,42 @@ function verify(token: string): { userId: number } | null {
   }
 }
 
+/**
+ * Add an email address to SendGrid's Global Unsubscribe suppression list.
+ * This prevents ALL sends from this SendGrid account to that address,
+ * including from the All About Ultrasound app if it shares the same account.
+ */
+async function addToSendGridGlobalUnsubscribe(email: string): Promise<void> {
+  const apiKey = process.env.SENDGRID_API_KEY;
+  if (!apiKey) {
+    console.warn("[Unsubscribe] SENDGRID_API_KEY not set — skipping global suppression");
+    return;
+  }
+
+  try {
+    const response = await fetch("https://api.sendgrid.com/v3/asm/suppressions/global", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        recipient_emails: [email],
+      }),
+    });
+
+    if (!response.ok) {
+      const body = await response.text();
+      console.error(`[Unsubscribe] SendGrid global suppression failed (${response.status}): ${body}`);
+    } else {
+      console.log(`[Unsubscribe] Added ${email} to SendGrid global suppression list`);
+    }
+  } catch (err) {
+    // Non-fatal — local DB unsubscribe still succeeded
+    console.error("[Unsubscribe] SendGrid global suppression request failed:", err);
+  }
+}
+
 export function generateUnsubscribeToken(userId: number): string {
   return sign(userId, Date.now());
 }
@@ -65,12 +105,11 @@ export function registerUnsubscribeRoute(app: Express) {
     }
 
     try {
-      // Parse current notificationPrefs and disable quickfireReminder
       const db = await getDb();
       if (!db) return res.redirect(302, "/profile#notifications?unsubscribe=error");
 
       const [userRow] = await db
-        .select({ notificationPrefs: users.notificationPrefs })
+        .select({ email: users.email, notificationPrefs: users.notificationPrefs })
         .from(users)
         .where(eq(users.id, parsed.userId))
         .limit(1);
@@ -89,16 +128,20 @@ export function registerUnsubscribeRoute(app: Express) {
       prefs.dailyChallenge = false;
       prefs.emailCampaigns = false;
 
+      // Update local DB — sets the global suppression flag used by all iHeartEcho email paths
       await db
         .update(users)
         .set({
           notificationPrefs: JSON.stringify(prefs),
-          // Set the global unsubscribedAt timestamp — this is the shared suppression flag
-          // used by BOTH iHeartEcho and UltrasoundAssist (same database) to prevent
-          // cross-app emails being sent to unsubscribed users.
           unsubscribedAt: new Date(),
         })
         .where(eq(users.id, parsed.userId));
+
+      // Add to SendGrid global suppression — blocks delivery from ALL senders on this
+      // SendGrid account, including the All About Ultrasound app (cross-app suppression)
+      if (userRow.email) {
+        await addToSendGridGlobalUnsubscribe(userRow.email);
+      }
 
       return res.redirect(302, "/profile#notifications?unsubscribe=success");
     } catch (err) {
