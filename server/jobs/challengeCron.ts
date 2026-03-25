@@ -18,7 +18,7 @@
 
 import { getDb } from "../db";
 import { quickfireChallenges, users } from "../../drizzle/schema";
-import { eq, and, asc } from "drizzle-orm";
+import { eq, and, asc, isNull } from "drizzle-orm";
 import sgMail from "@sendgrid/mail";
 import { generateUnsubscribeToken } from "../routes/unsubscribe";
 
@@ -207,6 +207,7 @@ async function sendChallengeNotifications(
   }
 
   // Get users who opted in and haven't been notified today
+  // isNull(users.unsubscribedAt) ensures we respect global unsubscribes (shared DB with UltrasoundAssist)
   const eligibleUsers = await db
     .select({
       id: users.id,
@@ -218,7 +219,7 @@ async function sendChallengeNotifications(
       unsubscribeToken: users.unsubscribeToken,
     })
     .from(users)
-    .where(eq(users.isDemo, false));
+    .where(and(eq(users.isDemo, false), isNull(users.unsubscribedAt)));
 
   const usersToNotify = eligibleUsers.filter((u) => {
     if (!u.email) return false;

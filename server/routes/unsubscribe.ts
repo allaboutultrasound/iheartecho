@@ -86,10 +86,18 @@ export function registerUnsubscribeRoute(app: Express) {
         prefs = {};
       }
       prefs.quickfireReminder = false;
+      prefs.dailyChallenge = false;
+      prefs.emailCampaigns = false;
 
       await db
         .update(users)
-        .set({ notificationPrefs: JSON.stringify(prefs) })
+        .set({
+          notificationPrefs: JSON.stringify(prefs),
+          // Set the global unsubscribedAt timestamp — this is the shared suppression flag
+          // used by BOTH iHeartEcho and UltrasoundAssist (same database) to prevent
+          // cross-app emails being sent to unsubscribed users.
+          unsubscribedAt: new Date(),
+        })
         .where(eq(users.id, parsed.userId));
 
       return res.redirect(302, "/profile#notifications?unsubscribe=success");

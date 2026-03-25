@@ -13,9 +13,10 @@
  * Returns a summary { sent, skipped, errors }.
  */
 
-import { and, eq, inArray, ne, notInArray, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, ne, notInArray, sql } from "drizzle-orm";
 import { getDb } from "./db";
 import { sendEmail, buildStreakReminderEmail } from "./_core/email";
+import { generateUnsubscribeToken } from "./routes/unsubscribe";
 import { users, quickfireAttempts } from "../drizzle/schema";
 
 function todayDateStr(): string {
@@ -75,12 +76,14 @@ export async function sendStreakReminders(appUrl: string): Promise<StreakReminde
       name: users.name,
       email: users.email,
       notificationPrefs: users.notificationPrefs,
+      unsubscribeToken: users.unsubscribeToken,
     })
     .from(users)
     .where(
       and(
         eq(users.isPending, false),
-        ne(users.emailVerified, false)
+        ne(users.emailVerified, false),
+        isNull(users.unsubscribedAt)  // respect global unsubscribe (shared DB with UltrasoundAssist)
       )
     );
 
@@ -137,7 +140,9 @@ export async function sendStreakReminders(appUrl: string): Promise<StreakReminde
 
     const firstName = getFirstName(user.name);
     const loginUrl = `${appUrl}/quickfire`;
-    const unsubscribeUrl = `${appUrl}/settings/notifications?unsubscribe=quickfire`;
+    // Use token-based one-click unsubscribe so clicking the link actually sets unsubscribedAt
+    const unsubToken = user.unsubscribeToken || generateUnsubscribeToken(user.id);
+    const unsubscribeUrl = `${appUrl}/api/unsubscribe?token=${unsubToken}`;
 
     const { subject, htmlBody } = buildStreakReminderEmail({
       firstName,
