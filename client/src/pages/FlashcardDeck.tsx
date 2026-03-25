@@ -64,8 +64,19 @@ export default function FlashcardDeck() {
     { staleTime: 30_000 }
   );
 
-  const submitReview = trpc.quickfire.submitFlashcardReview.useMutation();
-  const recordView = trpc.quickfire.recordFlashcardView.useMutation();
+  const trpcUtils = trpc.useUtils();
+  const submitReview = trpc.quickfire.submitFlashcardReview.useMutation({
+    onSuccess: () => {
+      // Re-fetch so dailySeenCount updates immediately for free users
+      trpcUtils.quickfire.getFlashcardDeck.invalidate();
+    },
+  });
+  const recordView = trpc.quickfire.recordFlashcardView.useMutation({
+    onSuccess: () => {
+      // Re-fetch so IP-based dailySeenCount updates immediately
+      trpcUtils.quickfire.getFlashcardDeck.invalidate();
+    },
+  });
 
   // Daily limit from server
   const dailyLimit = data?.dailyLimit ?? null; // null = unlimited (premium)

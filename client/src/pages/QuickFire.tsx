@@ -754,7 +754,7 @@ export default function QuickFire() {
       const result = await submitMutation.mutateAsync({ questionId: currentQ.id, selectedAnswer: idx });
       setAnswerResult(result);
       setSessionResults((prev) => [...prev, { correct: result.isCorrect }]);
-      if (activeCategory) trpcUtils.quickfire.getTodaySet.invalidate();
+      if (activeCategory) await trpcUtils.quickfire.getTodaySet.fetch();
     } catch {
       const existing = effectiveUserAttempts[currentQ.id];
       if (existing) {
@@ -780,7 +780,7 @@ export default function QuickFire() {
       const result = await submitMutation.mutateAsync({ questionId: currentQ.id, selfMarkedCorrect: correct });
       setAnswerResult(result);
       setSessionResults((prev) => [...prev, { correct: result.isCorrect }]);
-      if (activeCategory) trpcUtils.quickfire.getTodaySet.invalidate();
+      if (activeCategory) await trpcUtils.quickfire.getTodaySet.fetch();
     } catch {
       toast.error("Failed to record answer.");
       setAnswered(false);
@@ -1769,12 +1769,14 @@ export default function QuickFire() {
 
             {/* Session results */}
             {/* Legacy single-challenge session results card.
-               Suppressed when the multi-category daily set is fully complete
-               (allDoneDaily) and no specific category is active — in that case
-               the new "Today's Challenge Complete" card above already shows the
-               correct aggregate score and rendering both causes the duplicate
-               score bug reported by the user. */}
-            {showResults && !(allDoneDaily && !activeCategory) && (() => {
+               Suppressed when:
+               1. The multi-category daily set is fully complete (allDoneDaily) and no
+                  specific category is active — the "Today's Challenge Complete" card
+                  above already shows the correct aggregate score.
+               2. Category cards are available (_enabledDailyCatsWithQ.length > 0) and
+                  no specific category is active — the category grid is the primary UI
+                  and showing a legacy 1/1 result alongside it is confusing/incorrect. */}
+            {showResults && !(!activeCategory && _enabledDailyCatsWithQ.length > 0) && (() => {
               const correctCount = sessionResults.filter((r) => r.correct === true).length;
               const pct = Math.round((correctCount / questions.length) * 100);
               const grade =
@@ -1807,8 +1809,10 @@ export default function QuickFire() {
               );
             })()}
 
-            {/* Question card — hidden when all daily categories are done and no specific category is active */}
-            {(activeCategory ? !todaySetQuery.isLoading : !isLoading && !error) && currentQ && !showResults && !(allDoneDaily && !activeCategory) && (() => {
+            {/* Question card — hidden when:
+               1. All daily categories are done and no specific category is active (allDoneDaily)
+               2. Category cards are available and no specific category is active (legacy mode suppressed) */}
+            {(activeCategory ? !todaySetQuery.isLoading : !isLoading && !error) && currentQ && !showResults && !(allDoneDaily && !activeCategory) && !(!activeCategory && _enabledDailyCatsWithQ.length > 0) && (() => {
               const typeInfo = TYPE_LABELS[currentQ.type] ?? TYPE_LABELS.scenario;
               const TypeIcon = typeInfo.icon;
               const options: string[] = Array.isArray(currentQ.options) ? currentQ.options : [];
