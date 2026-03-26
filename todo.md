@@ -678,3 +678,4 @@
 - [x] Add getMenuLinks (public) and updateMenuLinks (admin) tRPC procedures
 - [x] Add Menu Links section to Platform Admin panel with editable URL fields
 - [x] Wire Layout.tsx sidenav to read links from DB with hardcoded fallbacks
+- [x] Move MenuLinksPanel to top of Platform Admin page

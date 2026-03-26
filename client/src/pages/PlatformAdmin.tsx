@@ -1369,6 +1369,9 @@ export default function PlatformAdmin() {
           </div>
         </div>
 
+        {/* Sidebar Menu Links */}
+        <MenuLinksPanel />
+
         {/* Add User by Email */}
         <AddUserByEmailPanel onSuccess={() => refetchUsers()} isPlatformAdminOrOwner={isPlatformAdminOrOwner} />
 
@@ -1691,8 +1694,6 @@ export default function PlatformAdmin() {
         {/* Demo Mode */}
         <DemoModePanel />
 
-        {/* Sidebar Menu Links */}
-        <MenuLinksPanel />
 
       </div>
 
