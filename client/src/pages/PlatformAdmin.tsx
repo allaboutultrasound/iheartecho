@@ -967,6 +967,124 @@ function DemoModePanel() {
   );
 }
 
+// ─── Menu Links Panel ───────────────────────────────────────────────────────
+function MenuLinksPanel() {
+  const utils = trpc.useUtils();
+  const { data: links, isLoading } = trpc.menuLinks.get.useQuery(undefined, {
+    staleTime: 30_000,
+  });
+  const [form, setForm] = useState({
+    acsUrl: '',
+    learnEchoUrl: '',
+    learnFetalEchoUrl: '',
+    learnPocusUrl: '',
+  });
+  const [initialised, setInitialised] = useState(false);
+  // Populate form once data loads
+  useEffect(() => {
+    if (links && !initialised) {
+      setForm({
+        acsUrl: links.acsUrl,
+        learnEchoUrl: links.learnEchoUrl,
+        learnFetalEchoUrl: links.learnFetalEchoUrl,
+        learnPocusUrl: links.learnPocusUrl,
+      });
+      setInitialised(true);
+    }
+  }, [links, initialised]);
+  const updateMutation = trpc.menuLinks.update.useMutation({
+    onSuccess: () => {
+      toast.success('Menu links saved successfully');
+      utils.menuLinks.get.invalidate();
+    },
+    onError: (err) => toast.error(`Failed to save: ${err.message}`),
+  });
+  const handleSave = () => {
+    const urlFields = [
+      { key: 'acsUrl' as const, label: 'ACS Mastery URL' },
+      { key: 'learnEchoUrl' as const, label: 'Learn Echo URL' },
+      { key: 'learnFetalEchoUrl' as const, label: 'Learn Fetal Echo URL' },
+      { key: 'learnPocusUrl' as const, label: 'Learn POCUS URL' },
+    ];
+    for (const { key, label } of urlFields) {
+      try { new URL(form[key]); } catch {
+        toast.error(`${label} is not a valid URL`);
+        return;
+      }
+    }
+    updateMutation.mutate(form);
+  };
+  const FIELDS = [
+    { key: 'acsUrl' as const, label: 'ACS Mastery' },
+    { key: 'learnEchoUrl' as const, label: 'Learn Echo' },
+    { key: 'learnFetalEchoUrl' as const, label: 'Learn Fetal Echo' },
+    { key: 'learnPocusUrl' as const, label: 'Learn POCUS' },
+  ];
+  return (
+    <Card className="border-0 shadow-sm">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#189aa118' }}>
+            <ExternalLink className="w-4 h-4" style={{ color: '#189aa1' }} />
+          </div>
+          Sidebar Menu Links
+        </CardTitle>
+        <p className="text-xs text-gray-500 mt-0.5">Update the external URLs for the four learning links in the sidebar navigation. Changes take effect immediately for all users.</p>
+      </CardHeader>
+      <CardContent className="pt-0">
+        {isLoading ? (
+          <div className="flex items-center gap-2 text-sm text-gray-500 py-4">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Loading current links…
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {FIELDS.map(({ key, label }) => (
+              <div key={key}>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+                <div className="flex gap-2">
+                  <Input
+                    value={form[key]}
+                    onChange={(e) => setForm(prev => ({ ...prev, [key]: e.target.value }))}
+                    placeholder="https://..."
+                    className="font-mono text-xs flex-1"
+                  />
+                  {form[key] && (
+                    <a
+                      href={form[key]}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center w-9 h-9 rounded-md border border-gray-200 hover:bg-gray-50 flex-shrink-0"
+                      title="Open link"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5 text-gray-500" />
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))}
+            <div className="flex justify-end pt-2">
+              <Button
+                onClick={handleSave}
+                disabled={updateMutation.isPending}
+                size="sm"
+                className="flex items-center gap-2 text-white"
+                style={{ background: '#189aa1' }}
+              >
+                {updateMutation.isPending ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" />Saving…</>
+                ) : (
+                  <><CheckCircle2 className="w-4 h-4" />Save Links</>
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function PlatformAdmin() {
@@ -1572,6 +1690,9 @@ export default function PlatformAdmin() {
 
         {/* Demo Mode */}
         <DemoModePanel />
+
+        {/* Sidebar Menu Links */}
+        <MenuLinksPanel />
 
       </div>
 

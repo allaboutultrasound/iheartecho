@@ -2383,6 +2383,70 @@ export const appRouter = router({
       return { success: true };
     }),
   }),
+
+  // ─── Menu Link Config ────────────────────────────────────────────────────────────────────
+  // Stores editable sidenav URLs for ACS Mastery, Learn Echo, Learn Fetal Echo, Learn POCUS.
+  // get is public (read by Layout for all users). update is admin-only.
+  menuLinks: router({
+    /** Return all 4 menu link URLs (merged with defaults for any missing keys) */
+    get: publicProcedure.query(async () => {
+      const { getDb } = await import('./db');
+      const { menuLinkConfig } = await import('../drizzle/schema');
+      const db = await getDb();
+      if (!db) return MENU_LINK_DEFAULTS;
+      const rows = await db.select().from(menuLinkConfig);
+      const result: typeof MENU_LINK_DEFAULTS = { ...MENU_LINK_DEFAULTS };
+      for (const row of rows) {
+        if (row.key in result) {
+          (result as Record<string, string>)[row.key] = row.url;
+        }
+      }
+      return result;
+    }),
+
+    /** Update one or more menu link URLs (platform_admin or owner only) */
+    update: protectedProcedure
+      .input(z.object({
+        acsUrl: z.string().url('Must be a valid URL').optional(),
+        learnEchoUrl: z.string().url('Must be a valid URL').optional(),
+        learnFetalEchoUrl: z.string().url('Must be a valid URL').optional(),
+        learnPocusUrl: z.string().url('Must be a valid URL').optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const appRoles: string[] = (ctx.user as any)?.appRoles ?? [];
+        const isAdmin = (ctx.user as any)?.role === 'admin' || appRoles.includes('platform_admin');
+        if (!isAdmin) throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' });
+        const { getDb } = await import('./db');
+        const { menuLinkConfig } = await import('../drizzle/schema');
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB unavailable' });
+        const entries = (Object.entries(input) as [string, string | undefined][])
+          .filter((entry): entry is [string, string] => entry[1] !== undefined);
+        for (const [key, url] of entries) {
+          const label = MENU_LINK_LABELS[key] ?? key;
+          await db
+            .insert(menuLinkConfig)
+            .values({ key, url, label, updatedByUserId: ctx.user.id })
+            .onDuplicateKeyUpdate({ set: { url, updatedByUserId: ctx.user.id } });
+        }
+        return { success: true, updated: entries.map(([k]) => k) };
+      }),
+  }),
 });
+
+// Default URLs used as fallback when DB has no row for a key
+const MENU_LINK_DEFAULTS = {
+  acsUrl: 'https://www.allaboutultrasound.net/acs-preview-pass-access',
+  learnEchoUrl: 'https://www.allaboutultrasound.net/adultecho-preview-pass-access',
+  learnFetalEchoUrl: 'https://www.allaboutultrasound.net/fetal-echo-preview-access-pass',
+  learnPocusUrl: 'https://www.allaboutultrasound.com/pocus-education.html',
+};
+const MENU_LINK_LABELS: Record<string, string> = {
+  acsUrl: 'ACS Mastery',
+  learnEchoUrl: 'Learn Echo',
+  learnFetalEchoUrl: 'Learn Fetal Echo',
+  learnPocusUrl: 'Learn POCUS',
+};
+
 export type AppRouter = typeof appRouter;
 

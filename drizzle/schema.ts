@@ -2556,3 +2556,17 @@ export const abTestEvents = mysqlTable("abTestEvents", {
 });
 export type AbTestEvent = typeof abTestEvents.$inferSelect;
 export type InsertAbTestEvent = typeof abTestEvents.$inferInsert;
+
+// ─── Menu Link Config ─────────────────────────────────────────────────────────
+// Stores the editable sidenav URLs for the four external learning links.
+// There is exactly one row per key; upsert on key to update.
+// Keys: acsUrl, learnEchoUrl, learnFetalEchoUrl, learnPocusUrl
+export const menuLinkConfig = mysqlTable("menuLinkConfig", {
+  key: varchar("key", { length: 64 }).primaryKey(),
+  url: text("url").notNull(),
+  label: varchar("label", { length: 128 }).notNull(),
+  updatedByUserId: int("updatedByUserId"),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type MenuLinkConfig = typeof menuLinkConfig.$inferSelect;
+export type InsertMenuLinkConfig = typeof menuLinkConfig.$inferInsert;

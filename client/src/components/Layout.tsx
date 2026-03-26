@@ -172,6 +172,25 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const hasDiyAccess = appRoles.includes("diy_user") || appRoles.includes("diy_admin") || appRoles.includes("platform_admin") || isAdmin;
   const hasDiyAdmin = appRoles.includes("diy_admin");
   const isDemoMode = !!(user as any)?.demoMode;
+  // Fetch editable menu link URLs from DB (falls back to hardcoded defaults on server)
+  const { data: menuLinks } = trpc.menuLinks.get.useQuery(undefined, {
+    staleTime: 5 * 60_000, // 5 min — rarely changes
+    retry: false,
+  });
+  // Build nav groups with dynamic external URLs injected
+  const dynamicNavGroups = navGroups.map(group => {
+    if (group.label !== 'Learning') return group;
+    return {
+      ...group,
+      items: group.items.map(item => {
+        if (item.label === 'ACS Mastery' && menuLinks?.acsUrl) return { ...item, path: menuLinks.acsUrl };
+        if (item.label === 'Learn Echo' && menuLinks?.learnEchoUrl) return { ...item, path: menuLinks.learnEchoUrl };
+        if (item.label === 'Learn Fetal Echo' && menuLinks?.learnFetalEchoUrl) return { ...item, path: menuLinks.learnFetalEchoUrl };
+        if (item.label === 'Learn POCUS' && menuLinks?.learnPocusUrl) return { ...item, path: menuLinks.learnPocusUrl };
+        return item;
+      }),
+    };
+  });
 
   return (
     <div className={`flex min-h-screen bg-[#f0fbfc]${isDemoMode ? ' pt-10' : ''}`}>
@@ -212,7 +231,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         {/* Nav */}
         <nav ref={navRef} onScroll={saveNavScroll} className="flex-1 px-3 py-4 overflow-y-auto space-y-4">
-          {navGroups.map(group => (
+          {dynamicNavGroups.map(group => (
             <div key={group.label}>
               <div className="text-xs font-semibold text-white/40 uppercase tracking-wider px-3 mb-1">{group.label}</div>
               {group.items.map(({ path, label, icon: Icon, external }) => {

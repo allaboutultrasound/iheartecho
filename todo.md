@@ -672,3 +672,9 @@
 - [ ] Fix card generator page spacing (tighter layout, better proportions)
 - [ ] Add Create Social Post section per category with question caption, answer caption, and copy button
 - [ ] Include required hashtags: #iHeartEcho #AllAboutUltrasound #LoveEcho #Echocardiography #DailyChallange #EchoChallenge #CardiacUltrasound #CardiacSonographer #Cardiology
+
+## Menu Links Admin (Mar 26 2026)
+- [x] Add menuLinkConfig table to DB schema for ACS Mastery, Learn Echo, Learn Fetal Echo, Learn POCUS URLs
+- [x] Add getMenuLinks (public) and updateMenuLinks (admin) tRPC procedures
+- [x] Add Menu Links section to Platform Admin panel with editable URL fields
+- [x] Wire Layout.tsx sidenav to read links from DB with hardcoded fallbacks
