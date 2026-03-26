@@ -2394,6 +2394,7 @@ export const appRouter = router({
         acsUrl: 'https://www.allaboutultrasound.net/acs-preview-pass-access',
         learnEchoUrl: 'https://www.allaboutultrasound.net/adultecho-preview-pass-access',
         learnFetalEchoUrl: 'https://www.allaboutultrasound.net/fetal-echo-preview-access-pass',
+        learnVascularUrl: 'https://www.allaboutultrasound.com/vascular-education.html',
         learnPocusUrl: 'https://www.allaboutultrasound.com/pocus-education.html',
       };
       try {
@@ -2420,6 +2421,7 @@ export const appRouter = router({
         acsUrl: z.string().url('Must be a valid URL').optional(),
         learnEchoUrl: z.string().url('Must be a valid URL').optional(),
         learnFetalEchoUrl: z.string().url('Must be a valid URL').optional(),
+        learnVascularUrl: z.string().url('Must be a valid URL').optional(),
         learnPocusUrl: z.string().url('Must be a valid URL').optional(),
       }))
       .mutation(async ({ ctx, input }) => {
@@ -2433,7 +2435,7 @@ export const appRouter = router({
         const entries = (Object.entries(input) as [string, string | undefined][])
           .filter((entry): entry is [string, string] => entry[1] !== undefined);
         for (const [key, url] of entries) {
-          const LABELS: Record<string, string> = { acsUrl: 'ACS Mastery', learnEchoUrl: 'Learn Echo', learnFetalEchoUrl: 'Learn Fetal Echo', learnPocusUrl: 'Learn POCUS' };
+          const LABELS: Record<string, string> = { acsUrl: 'ACS Mastery', learnEchoUrl: 'Learn Echo', learnFetalEchoUrl: 'Learn Fetal Echo', learnVascularUrl: 'Learn Vascular', learnPocusUrl: 'Learn POCUS' };
           const label = LABELS[key] ?? key;
           await db
             .insert(menuLinkConfig)

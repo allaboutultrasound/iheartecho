@@ -679,3 +679,6 @@
 - [x] Add Menu Links section to Platform Admin panel with editable URL fields
 - [x] Wire Layout.tsx sidenav to read links from DB with hardcoded fallbacks
 - [x] Move MenuLinksPanel to top of Platform Admin page
+- [x] Add learnVascularUrl to menuLinkConfig DB schema and server router
+- [x] Add Learn Vascular sidenav link in Layout.tsx (before Learn POCUS)
+- [x] Add Learn Vascular field to MenuLinksPanel in Platform Admin (before Learn POCUS)

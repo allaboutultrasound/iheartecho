@@ -977,6 +977,7 @@ function MenuLinksPanel() {
     acsUrl: '',
     learnEchoUrl: '',
     learnFetalEchoUrl: '',
+    learnVascularUrl: '',
     learnPocusUrl: '',
   });
   const [initialised, setInitialised] = useState(false);
@@ -987,6 +988,7 @@ function MenuLinksPanel() {
         acsUrl: links.acsUrl,
         learnEchoUrl: links.learnEchoUrl,
         learnFetalEchoUrl: links.learnFetalEchoUrl,
+        learnVascularUrl: (links as any).learnVascularUrl ?? '',
         learnPocusUrl: links.learnPocusUrl,
       });
       setInitialised(true);
@@ -1004,6 +1006,7 @@ function MenuLinksPanel() {
       { key: 'acsUrl' as const, label: 'ACS Mastery URL' },
       { key: 'learnEchoUrl' as const, label: 'Learn Echo URL' },
       { key: 'learnFetalEchoUrl' as const, label: 'Learn Fetal Echo URL' },
+      { key: 'learnVascularUrl' as const, label: 'Learn Vascular URL' },
       { key: 'learnPocusUrl' as const, label: 'Learn POCUS URL' },
     ];
     for (const { key, label } of urlFields) {
@@ -1018,6 +1021,7 @@ function MenuLinksPanel() {
     { key: 'acsUrl' as const, label: 'ACS Mastery' },
     { key: 'learnEchoUrl' as const, label: 'Learn Echo' },
     { key: 'learnFetalEchoUrl' as const, label: 'Learn Fetal Echo' },
+    { key: 'learnVascularUrl' as const, label: 'Learn Vascular' },
     { key: 'learnPocusUrl' as const, label: 'Learn POCUS' },
   ];
   return (
