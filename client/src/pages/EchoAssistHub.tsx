@@ -571,6 +571,66 @@ export default function EchoAssistHub() {
         </div>
       </div>
 
+      {/* UltrasoundAssist CTA */}
+      <div className="container pb-10">
+        <div
+          className="rounded-2xl overflow-hidden"
+          style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 60%, #189aa1 100%)" }}
+        >
+          <div className="p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center gap-6">
+            <div className="flex-shrink-0">
+              <div
+                className="w-14 h-14 rounded-xl flex items-center justify-center"
+                style={{ background: "rgba(74,217,224,0.15)", border: "1.5px solid rgba(74,217,224,0.3)" }}
+              >
+                <Radio className="w-7 h-7" style={{ color: "#4ad9e0" }} />
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1.5">
+                <span
+                  className="text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                  style={{ background: "rgba(74,217,224,0.15)", color: "#4ad9e0", border: "1px solid rgba(74,217,224,0.3)" }}
+                >
+                  General &amp; Vascular Ultrasound
+                </span>
+              </div>
+              <h3
+                className="text-white font-bold text-lg md:text-xl mb-1.5"
+                style={{ fontFamily: "Merriweather, serif" }}
+              >
+                UltrasoundAssist&#8482;
+              </h3>
+              <p className="text-white/70 text-sm leading-relaxed max-w-xl">
+                Extend your clinical toolkit beyond echo. UltrasoundAssist&#8482; provides structured ScanCoach guidance for general and vascular ultrasound &mdash; abdominal, MSK, thyroid, carotid, venous, and more &mdash; all built on SVU and society guidelines.
+              </p>
+            </div>
+            <div className="flex-shrink-0 flex flex-col sm:flex-row gap-3">
+              <a
+                href="https://app.allaboutultrasound.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90 hover:scale-105"
+                style={{ background: "#189aa1" }}
+              >
+                <Radio className="w-4 h-4" />
+                Open UltrasoundAssist&#8482;
+              </a>
+              <a
+                href="https://app.allaboutultrasound.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all hover:bg-white/20"
+                style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", color: "white" }}
+              >
+                <BookOpen className="w-4 h-4" />
+                Vascular ScanCoach
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Upgrade modal */}
       {upgradeModal && (
         <div

@@ -729,3 +729,5 @@
 ## Navigator Editor: Section Reorder Persistence + New Mo- [x] Add ICE, Diastology, Pulm HTN to Navigator Editor MODULES list and STATIC_DEFAULTS
 - [x] Fix: section drag-and-drop reorder does not persist — auto-save sortOrder to DB immediately on drop (upsert all sections on drag-end)
 - [x] Add ICE, Diastology, Pulm HTN to Navigator Editor MODULES list and STATIC_DEFAULTS
+## EchoAssist Hub: UltrasoundAssist CTA (Mar 27 2026)
+- [x] Add UltrasoundAssist CTA section to bottom of EchoAssist hub page (app.allaboutultrasound.com)
