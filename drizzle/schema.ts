@@ -2570,3 +2570,24 @@ export const menuLinkConfig = mysqlTable("menuLinkConfig", {
 });
 export type MenuLinkConfig = typeof menuLinkConfig.$inferSelect;
 export type InsertMenuLinkConfig = typeof menuLinkConfig.$inferInsert;
+
+// ─── Navigator Protocol Overrides ─────────────────────────────────────────────
+// Stores admin-editable protocol checklist sections for all EchoNavigator pages.
+// Each row is one section (e.g. "Parasternal Long Axis") within a navigator module.
+// The `items` field is a JSON array of { id, label, detail?, critical? } objects.
+// `sortOrder` controls display order within the module; lower = first.
+// When overrides exist for a module, they REPLACE the static hardcoded sections.
+export const navigatorProtocolOverrides = mysqlTable("navigatorProtocolOverrides", {
+  id: int("id").autoincrement().primaryKey(),
+  module: varchar("module", { length: 64 }).notNull(),        // e.g. "tte", "tee", "fetal"
+  sectionId: varchar("sectionId", { length: 128 }).notNull(), // stable slug, e.g. "plax"
+  sectionTitle: varchar("sectionTitle", { length: 256 }).notNull(),
+  probeNote: text("probeNote"),                               // probe position / angle note
+  items: text("items").notNull(),                             // JSON: ChecklistItem[]
+  sortOrder: int("sortOrder").notNull().default(0),
+  updatedByUserId: int("updatedByUserId"),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type NavigatorProtocolOverride = typeof navigatorProtocolOverrides.$inferSelect;
+export type InsertNavigatorProtocolOverride = typeof navigatorProtocolOverrides.$inferInsert;

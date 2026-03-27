@@ -26,6 +26,7 @@ import {
   type ScanCoachModule,
   type ImageSlotKey,
 } from "@/lib/scanCoachRegistry";
+import { getStaticViewContent } from "@/lib/scanCoachStaticContent";
 import {
   Upload, Trash2, Save, ChevronLeft, ChevronRight,
   Image as ImageIcon, Edit3, Eye, Loader2, CheckCircle2,
@@ -716,14 +717,19 @@ export default function ScanCoachEditor() {
     setSelectedViewId(viewId);
     setPreviewMode(false); // reset to edit mode on new view selection
     const ov = overrides.find((o: Override) => o.viewId === viewId);
+    // When no DB override exists yet, pre-populate fields from the static
+    // content registry so admins can see and edit the current default text.
+    const sc = getStaticViewContent(selectedModule, viewId);
+    const staticArrayToJson = (arr?: string[]) =>
+      arr && arr.length > 0 ? JSON.stringify(arr) : null;
     setDraft({
-      description: ov?.description ?? "",
-      howToGet: parseArrayField(ov?.howToGet ?? null),
-      tips: parseArrayField(ov?.tips ?? null),
-      pitfalls: parseArrayField(ov?.pitfalls ?? null),
-      structures: parseArrayField(ov?.structures ?? null),
-      measurements: parseArrayField(ov?.measurements ?? null),
-      criticalFindings: parseArrayField(ov?.criticalFindings ?? null),
+      description: ov?.description ?? sc?.description ?? "",
+      howToGet: parseArrayField(ov?.howToGet ?? staticArrayToJson(sc?.howToGet)),
+      tips: parseArrayField(ov?.tips ?? staticArrayToJson(sc?.tips)),
+      pitfalls: parseArrayField(ov?.pitfalls ?? staticArrayToJson(sc?.pitfalls)),
+      structures: parseArrayField(ov?.structures ?? staticArrayToJson(sc?.structures)),
+      measurements: parseArrayField(ov?.measurements ?? staticArrayToJson(sc?.measurements)),
+      criticalFindings: parseArrayField(ov?.criticalFindings ?? staticArrayToJson(sc?.criticalFindings)),
     });
   };
 

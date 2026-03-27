@@ -1313,6 +1313,13 @@ export default function PlatformAdmin() {
                 color: "#0d9488",
               },
               {
+                href: "/admin/navigator",
+                icon: ClipboardList,
+                label: "Navigator Protocol Editor",
+                description: "Edit exam protocol checklist sections for TTE, TEE, POCUS, HOCM, and Fetal navigators",
+                color: "#189aa1",
+              },
+              {
                 href: "/admin/thinkific-webhook",
                 icon: Webhook,
                 label: "Thinkific Webhook",

@@ -9,6 +9,7 @@ import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import { CheckCircle2, Circle, ChevronDown, ChevronUp, Info, Stethoscope, Printer, Scan } from "lucide-react";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
+import { useNavigatorProtocol } from "@/hooks/useNavigatorProtocol";
 
 type ChecklistItem = { id: string; label: string; detail?: string; critical?: boolean };
 type ViewSection = { view: string; probe: string; items: ChecklistItem[] };
@@ -160,6 +161,8 @@ export default function TTENavigator() {
   const [expandedView, setExpandedView] = useState<number | null>(0);
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [expandedRef, setExpandedRef] = useState<number | null>(0);
+  // Use DB overrides if available (seeded via Navigator Editor), else fall back to static
+  const { sections: protocol } = useNavigatorProtocol("tte", tteProtocol);
 
   const toggleCheck = (id: string) => {
     setChecked(prev => {
@@ -169,9 +172,9 @@ export default function TTENavigator() {
     });
   };
 
-  const totalItems = tteProtocol.reduce((acc, v) => acc + v.items.length, 0);
-  const criticalItems = tteProtocol.reduce((acc, v) => acc + v.items.filter(i => i.critical).length, 0);
-  const checkedCritical = tteProtocol.reduce((acc, v) =>
+  const totalItems = protocol.reduce((acc, v) => acc + v.items.length, 0);
+  const criticalItems = protocol.reduce((acc, v) => acc + v.items.filter(i => i.critical).length, 0);
+  const checkedCritical = protocol.reduce((acc, v) =>
     acc + v.items.filter(i => i.critical && checked.has(i.id)).length, 0);
 
   const progress = Math.round((checked.size / totalItems) * 100);
@@ -184,7 +187,7 @@ export default function TTENavigator() {
       `Progress: ${checked.size}/${totalItems} items (${progress}%) | Critical: ${checkedCritical}/${criticalItems}`,
       "",
     ];
-    tteProtocol.forEach(section => {
+    protocol.forEach(section => {
       const sectionChecked = section.items.filter(i => checked.has(i.id)).length;
       lines.push(`\n-- ${section.view} (${sectionChecked}/${section.items.length}) --`);
       lines.push(`   Probe: ${section.probe}`);
@@ -282,7 +285,7 @@ export default function TTENavigator() {
 
         {tab === "protocol" && (
           <div className="space-y-3">
-            {tteProtocol.map((section, si) => {
+            {protocol.map((section, si) => {
               const sectionChecked = section.items.filter(i => checked.has(i.id)).length;
               const isExpanded = expandedView === si;
               return (

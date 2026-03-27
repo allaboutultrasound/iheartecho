@@ -682,3 +682,10 @@
 - [x] Add learnVascularUrl to menuLinkConfig DB schema and server router
 - [x] Add Learn Vascular sidenav link in Layout.tsx (before Learn POCUS)
 - [x] Add Learn Vascular field to MenuLinksPanel in Platform Admin (before Learn POCUS)
+
+## Navigator Editor (Mar 26 2026)
+- [x] Investigate Navigator static content structure across all navigator pages
+- [x] Build navigatorProtocolOverrides DB table and server procedures
+- [x] Create NavigatorEditor page with pre-loaded items, edit/delete/add/reorder
+- [x] Fix ScanCoach editor to pre-populate fields with static content when no override exists
+- [x] Wire Navigator pages to use DB overrides (TTE, TEE, Fetal, POCUS Cardiac, UEA)

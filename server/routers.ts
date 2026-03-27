@@ -22,6 +22,7 @@ import { emailCampaignRouter } from "./routers/emailCampaignRouter";
 import { engagementRouter } from "./routers/engagementRouter";
 import { soundBytesRouter } from "./routers/soundBytesRouter";
 import { abTestRouter } from "./routers/abTestRouter";
+import { navigatorAdminRouter } from "./routers/navigatorAdminRouter";
 import {
   getUserById,
   getUsersByIds,
@@ -1824,6 +1825,7 @@ export const appRouter = router({
 
   // ─── ScanCoach WYSIWYG Admin ──────────────────────────────────────────────────
   scanCoachAdmin: scanCoachAdminRouter,
+  navigatorAdmin: navigatorAdminRouter,
 
   // ─── DIY Accreditation ─────────────────────────────────────────────────────────────
   diy: diyRouter,

@@ -11,6 +11,7 @@ import {
   CheckCircle2, Circle, ChevronDown, ChevronUp, Info,
   Heart, AlertTriangle, ArrowRight, Shield,
 } from "lucide-react";
+import { useNavigatorProtocol } from "@/hooks/useNavigatorProtocol";
 
 const BRAND = "#189aa1";
 const AQUA = "#4ad9e0";
@@ -140,17 +141,19 @@ const interpretationTable = [
 
 export default function POCUSCardiacNavigator() {
   const [checked, setChecked] = useState<Record<string, boolean>>({});
+  // Use DB overrides if available (seeded via Navigator Editor), else fall back to static
+  const { sections: protocol } = useNavigatorProtocol("pocus_cardiac", cardiacViews);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({ plax: true });
   const [showDetail, setShowDetail] = useState<string | null>(null);
 
   const toggle = (id: string) => setChecked((prev) => ({ ...prev, [id]: !prev[id] }));
   const toggleSection = (id: string) => setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
 
-  const totalItems = cardiacViews.flatMap((v) => v.items).length;
+  const totalItems = protocol.flatMap((v) => v.items).length;
   const checkedCount = Object.values(checked).filter(Boolean).length;
   const progress = Math.round((checkedCount / totalItems) * 100);
 
-  const criticalUnchecked = cardiacViews
+  const criticalUnchecked = protocol
     .flatMap((v) => v.items)
     .filter((item) => item.critical && !checked[item.id]);
 
@@ -226,7 +229,7 @@ export default function POCUSCardiacNavigator() {
         </div>
 
         {/* Views */}
-        {cardiacViews.map((section) => {
+        {protocol.map((section) => {
           const sectionItems = section.items;
           const sectionChecked = sectionItems.filter((i) => checked[i.id]).length;
           const isExpanded = expanded[section.id] ?? false;

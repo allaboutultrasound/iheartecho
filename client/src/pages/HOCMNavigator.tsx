@@ -406,7 +406,7 @@ const reportingItems = [
 export default function HOCMNavigator() {
   const [expandedSection, setExpandedSection] = useState<string | null>("morphology");
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
-  const [activeTab, setActiveTab] = useState<"protocol" | "sam" | "gradients" | "valsalva" | "reporting">("protocol");
+  const [activeTab, setActiveTab] = useState<"protocolSections" | "sam" | "gradients" | "valsalva" | "reporting">("protocolSections");
   const [valsalvaPath, setValsalvaPath] = useState<"instructed" | "goal-directed" | null>(null);
 
   const toggleItem = (key: string) => {
@@ -443,7 +443,7 @@ export default function HOCMNavigator() {
             </h1>
             <p className="text-[#4ad9e0] font-semibold mb-2">Hypertrophic Obstructive Cardiomyopathy</p>
             <p className="text-white/70 text-sm leading-relaxed mb-5 max-w-lg">
-              Comprehensive echo protocol for HOCM assessment — morphology, SAM grading, LVOT gradients, goal-directed Valsalva provocation, MR evaluation, and structured reporting.
+              Comprehensive echo protocolSections for HOCM assessment — morphology, SAM grading, LVOT gradients, goal-directed Valsalva provocation, MR evaluation, and structured reporting.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link href="/hocm-scan-coach">
@@ -491,7 +491,7 @@ export default function HOCMNavigator() {
         <div className="container">
           <div className="flex gap-1 overflow-x-auto py-2">
             {([
-              { id: "protocol", label: "Protocol Checklist", icon: ClipboardList },
+              { id: "protocolSections", label: "Protocol Checklist", icon: ClipboardList },
               { id: "sam", label: "SAM Grading", icon: Layers },
               { id: "gradients", label: "Gradient Thresholds", icon: Activity },
               { id: "valsalva", label: "Valsalva Protocol", icon: TrendingUp },
@@ -514,7 +514,7 @@ export default function HOCMNavigator() {
       </div>
 
       {/* ── Protocol Checklist Tab ───────────────────────────────────────── */}
-      {activeTab === "protocol" && (
+      {activeTab === "protocolSections" && (
         <div className="container py-6 max-w-3xl">
           <div className="space-y-3">
             {protocolSections.map(section => {
@@ -768,7 +768,7 @@ export default function HOCMNavigator() {
             <h2 className="text-lg font-bold text-gray-800 mb-1" style={{ fontFamily: "Merriweather, serif" }}>
               Valsalva Protocol
             </h2>
-            <p className="text-sm text-gray-500">Choose your Valsalva technique to see the step-by-step protocol</p>
+            <p className="text-sm text-gray-500">Choose your Valsalva technique to see the step-by-step protocolSections</p>
           </div>
 
           {/* Indication */}
@@ -881,7 +881,7 @@ export default function HOCMNavigator() {
                 <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: BRAND }}>Why Goal-Directed is Preferred</h3>
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded text-white" style={{ background: "#0369a1" }}>PMID 39886312</span>
               </div>
-              <p className="text-xs text-gray-500 mb-4">Kim et al., 2025 — select a pathway above to see the full protocol</p>
+              <p className="text-xs text-gray-500 mb-4">Kim et al., 2025 — select a pathway above to see the full protocolSections</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="rounded-xl border border-gray-200 p-4">
                   <div className="flex items-center gap-2 mb-3">

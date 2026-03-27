@@ -10,6 +10,7 @@ import BackToEchoAssist from "@/components/BackToEchoAssist";
 import { CheckCircle2, Circle, ChevronDown, ChevronUp, AlertCircle, Eye, Printer, Scan, ExternalLink } from "lucide-react";
 import { Link } from "wouter";
 import { PremiumOverlay } from "@/components/PremiumOverlay";
+import { useNavigatorProtocol } from "@/hooks/useNavigatorProtocol";
 
 type ChecklistItem = { id: string; label: string; detail?: string; critical?: boolean; angle?: string };
 type ViewSection = { view: string; position: string; angle: string; depth: string; items: ChecklistItem[]; clinicalUse?: string };
@@ -198,6 +199,8 @@ const clinicalApps = [
 // --- MAIN COMPONENT -----------------------------------------------------------
 export default function TEENavigator() {
   const [tab, setTab] = useState<"protocol" | "applications" | "reference">("protocol");
+  // Use DB overrides if available (seeded via Navigator Editor), else fall back to static
+  const { sections: protocol } = useNavigatorProtocol("tee", protocol);
   const [expandedView, setExpandedView] = useState<number | null>(0);
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [expandedApp, setExpandedApp] = useState<number | null>(null);
@@ -210,7 +213,7 @@ export default function TEENavigator() {
     });
   };
 
-  const totalItems = teeProtocol.reduce((acc, v) => acc + v.items.length, 0);
+  const totalItems = protocol.reduce((acc, v) => acc + v.items.length, 0);
   const progress = Math.round((checked.size / totalItems) * 100);
 
   const handleExport = () => {
@@ -221,7 +224,7 @@ export default function TEENavigator() {
       `Progress: ${checked.size}/${totalItems} items (${progress}%)`,
       "",
     ];
-    teeProtocol.forEach(section => {
+    protocol.forEach(section => {
       const sectionChecked = section.items.filter(i => checked.has(i.id)).length;
       lines.push(`\n-- ${section.view} [${section.position} | ${section.angle} | ${section.depth}] (${sectionChecked}/${section.items.length}) --`);
       if (section.clinicalUse) lines.push(`   Clinical use: ${section.clinicalUse}`);
@@ -337,7 +340,7 @@ export default function TEENavigator() {
 
         {tab === "protocol" && (
           <div className="space-y-3">
-            {teeProtocol.map((section, si) => {
+            {protocol.map((section, si) => {
               const sectionChecked = section.items.filter(i => checked.has(i.id)).length;
               const isExpanded = expandedView === si;
               const posColor = positionColors[section.position] || "#189aa1";

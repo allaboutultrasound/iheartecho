@@ -8,6 +8,7 @@ import Layout from "@/components/Layout";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
 import { Baby, AlertCircle, CheckCircle2, HelpCircle, Scan, ClipboardList, ChevronDown, ChevronUp, Calculator, Crown } from "lucide-react";
 import { PremiumGate } from "@/components/PremiumGate";
+import { useNavigatorProtocol } from "@/hooks/useNavigatorProtocol";
 
 const findings3VV = [
   {
@@ -393,6 +394,8 @@ function FetalProtocolChecklist() {
 
 export default function FetalNavigator() {
   const [view, setView] = useState<"protocol" | "3vv" | "4ch" | "zscore" | "fetalassist">("protocol");
+  // Use DB overrides if available (seeded via Navigator Editor), else fall back to static
+  const { sections: protocol } = useNavigatorProtocol("fetal", fetalProtocol);
   const [selected, setSelected] = useState<number | null>(null);
 
   const findings = view === "3vv" ? findings3VV : findingsFC;

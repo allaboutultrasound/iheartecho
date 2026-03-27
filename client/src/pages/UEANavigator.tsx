@@ -14,6 +14,7 @@ import {
   AlertTriangle, AlertCircle, Info, Scan, ExternalLink,
   Droplets, Shield, Eye, FileText, Activity, Zap, Heart
 } from "lucide-react";
+import { useNavigatorProtocol } from "@/hooks/useNavigatorProtocol";
 
 const BRAND = "#189aa1";
 const AQUA  = "#4ad9e0";
@@ -417,6 +418,8 @@ const referenceValues = [
 
 export default function UEANavigator() {
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
+  // Use DB overrides if available (seeded via Navigator Editor), else fall back to static
+  const { sections: protocol } = useNavigatorProtocol("uea", protocol);
   const [expandedSection, setExpandedSection] = useState<string | null>("safety");
   const [expandedView, setExpandedView] = useState<string | null>("Apical 4-Chamber (A4C)");
   const [expandedAgent, setExpandedAgent] = useState<string | null>(null);
@@ -974,7 +977,7 @@ export default function UEANavigator() {
                 <h2 className="text-sm font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>
                   View-by-View Protocol Checklist
                 </h2>
-                <p className="text-xs text-gray-400">{viewProtocol.length} views — LVO and myocardial perfusion</p>
+                <p className="text-xs text-gray-400">{protocol.length} views — LVO and myocardial perfusion</p>
               </div>
             </div>
             {expandedSection === "views" ? (
@@ -987,7 +990,7 @@ export default function UEANavigator() {
           {expandedSection === "views" && (
             <div className="px-5 pb-5 border-t border-gray-100">
               <div className="mt-4 space-y-3">
-                {viewProtocol.map(section => {
+                {protocol.map(section => {
                   const sectionChecked = section.items.filter(i => checkedItems.has(i.id)).length;
                   const isExpanded = expandedView === section.view;
                   return (
