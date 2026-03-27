@@ -713,3 +713,10 @@
 - [x] Audit all DB sectionIds vs STATIC_DEFAULTS sectionIds for every module (TTE, TEE, POCUS Cardiac, HOCM, Fetal, UEA)
 - [x] Audit all static navigator page id fields vs STATIC_DEFAULTS sectionIds (TTENavigator, TEENavigator, POCUSCardiacNavigator, UEANavigator)
 - [x] Fix any mismatches found — added psax_mv+ivc to pocus_cardiac, provocation+mitral+diastology+rvstudy to hocm, psax_mv+psax_pm+psax_apex+subcostal to uea STATIC_DEFAULTS
+
+## Navigator Editor Drag-and-Drop (Mar 27 2026)
+- [x] Install @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities (already installed)
+- [x] Add drag handle to section rows with DnD section reordering (updates sortOrder in DB on drop)
+- [x] Add drag handle to sub-item rows with DnD item reordering within each section (SortableChecklistItem component)
+- [x] Persist reordered sortOrder to DB on drop (sections and items)
+- [x] Visual feedback: opacity fade on dragged item, cursor-grab handle

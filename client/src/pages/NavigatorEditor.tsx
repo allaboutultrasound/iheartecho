@@ -558,7 +558,111 @@ const MODULES = [
 
 const BRAND = "#189aa1";
 
-// ─── Sortable Section Component ───────────────────────────────────────────────
+// ─── Sortable Checklist Item ─────────────────────────────────────────────────
+function SortableChecklistItem({
+  item,
+  idx,
+  editingItemIdx,
+  setEditingItemIdx,
+  updateItem,
+  deleteItem,
+}: {
+  item: ChecklistItem;
+  idx: number;
+  editingItemIdx: number | null;
+  setEditingItemIdx: (idx: number | null) => void;
+  updateItem: (idx: number, patch: Partial<ChecklistItem>) => void;
+  deleteItem: (idx: number) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: item.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  };
+  const isEditing = editingItemIdx === idx;
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="group flex items-start gap-2 bg-gray-50 rounded-lg px-3 py-2"
+    >
+      {/* Drag handle */}
+      <button
+        {...attributes}
+        {...listeners}
+        className="text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing flex-shrink-0 mt-0.5"
+        title="Drag to reorder"
+      >
+        <GripVertical className="w-3 h-3" />
+      </button>
+      {isEditing ? (
+        <div className="flex-1 space-y-1.5">
+          <Input
+            className="h-7 text-xs"
+            value={item.label}
+            placeholder="Item label"
+            autoFocus
+            onChange={(e) => updateItem(idx, { label: e.target.value })}
+          />
+          <Textarea
+            className="text-xs min-h-[50px] resize-none"
+            value={item.detail ?? ""}
+            placeholder="Detail / clinical note (optional)"
+            onChange={(e) => updateItem(idx, { detail: e.target.value })}
+          />
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-1.5 text-xs cursor-pointer">
+              <input
+                type="checkbox"
+                checked={!!item.critical}
+                onChange={(e) => updateItem(idx, { critical: e.target.checked })}
+                className="w-3 h-3"
+              />
+              <span className="text-amber-600 font-medium">Critical item</span>
+            </label>
+            <Button size="sm" variant="ghost" className="h-6 px-2 ml-auto" onClick={() => setEditingItemIdx(null)}>
+              <Check className="w-3 h-3 text-green-600" />
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start gap-1.5">
+            {item.critical && (
+              <AlertTriangle className="w-3 h-3 text-amber-500 flex-shrink-0 mt-0.5" />
+            )}
+            <span className="text-xs font-medium text-gray-800 leading-snug">{item.label}</span>
+          </div>
+          {item.detail && (
+            <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">{item.detail}</p>
+          )}
+        </div>
+      )}
+      <div className="flex gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-6 w-6 p-0"
+          onClick={() => setEditingItemIdx(isEditing ? null : idx)}
+        >
+          <Edit3 className="w-3 h-3" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-6 w-6 p-0 text-red-400 hover:text-red-600"
+          onClick={() => deleteItem(idx)}
+        >
+          <X className="w-3 h-3" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Sortable Section ─────────────────────────────────────────────────────────
 function SortableSection({
   section,
   onUpdate,
@@ -579,13 +683,16 @@ function SortableSection({
     transition,
     opacity: isDragging ? 0.5 : 1,
   };
-
+  const itemSensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
   const [expanded, setExpanded] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [editingProbe, setEditingProbe] = useState(false);
   const [editingItemIdx, setEditingItemIdx] = useState<number | null>(null);
   const [addingItem, setAddingItem] = useState(false);
-  const [newItem, setNewItem] = useState<ChecklistItem>({ id: "", label: "", detail: "", critical: false });
+  const [newItem, setNewItem] = useState<ChecklistItem>({ id: "", label: "", detail: "", critical: false });;
 
   const updateItem = (idx: number, patch: Partial<ChecklistItem>) => {
     const items = [...section.items];
@@ -715,92 +822,35 @@ function SortableSection({
       {/* Items */}
       {expanded && (
         <div className="px-4 pb-4 space-y-1.5 mt-2">
+          <DndContext
+            sensors={itemSensors}
+            collisionDetection={closestCenter}
+            onDragEnd={(event) => {
+              const { active, over } = event;
+              if (!over || active.id === over.id) return;
+              const oldIdx = section.items.findIndex((it) => it.id === active.id);
+              const newIdx = section.items.findIndex((it) => it.id === over.id);
+              const reordered = arrayMove(section.items, oldIdx, newIdx);
+              onUpdate({ ...section, items: reordered, dirty: true });
+            }}
+          >
+            <SortableContext
+              items={section.items.map((it) => it.id)}
+              strategy={verticalListSortingStrategy}
+            >
           {section.items.map((item, idx) => (
-            <div key={item.id} className="group flex items-start gap-2 bg-gray-50 rounded-lg px-3 py-2">
-              {/* Move buttons */}
-              <div className="flex flex-col gap-0.5 flex-shrink-0 mt-0.5">
-                <button
-                  className="text-gray-300 hover:text-gray-600 disabled:opacity-20"
-                  onClick={() => moveItem(idx, -1)}
-                  disabled={idx === 0}
-                  title="Move up"
-                >
-                  <ChevronUp className="w-3 h-3" />
-                </button>
-                <button
-                  className="text-gray-300 hover:text-gray-600 disabled:opacity-20"
-                  onClick={() => moveItem(idx, 1)}
-                  disabled={idx === section.items.length - 1}
-                  title="Move down"
-                >
-                  <ChevronDown className="w-3 h-3" />
-                </button>
-              </div>
-
-              {editingItemIdx === idx ? (
-                <div className="flex-1 space-y-1.5">
-                  <Input
-                    className="h-7 text-xs"
-                    value={item.label}
-                    placeholder="Item label"
-                    autoFocus
-                    onChange={(e) => updateItem(idx, { label: e.target.value })}
-                  />
-                  <Textarea
-                    className="text-xs min-h-[50px] resize-none"
-                    value={item.detail ?? ""}
-                    placeholder="Detail / clinical note (optional)"
-                    onChange={(e) => updateItem(idx, { detail: e.target.value })}
-                  />
-                  <div className="flex items-center gap-3">
-                    <label className="flex items-center gap-1.5 text-xs cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={!!item.critical}
-                        onChange={(e) => updateItem(idx, { critical: e.target.checked })}
-                        className="w-3 h-3"
-                      />
-                      <span className="text-amber-600 font-medium">Critical item</span>
-                    </label>
-                    <Button size="sm" variant="ghost" className="h-6 px-2 ml-auto" onClick={() => setEditingItemIdx(null)}>
-                      <Check className="w-3 h-3 text-green-600" />
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start gap-1.5">
-                    {item.critical && (
-                      <AlertTriangle className="w-3 h-3 text-amber-500 flex-shrink-0 mt-0.5" />
-                    )}
-                    <span className="text-xs font-medium text-gray-800 leading-snug">{item.label}</span>
-                  </div>
-                  {item.detail && (
-                    <p className="text-xs text-gray-400 mt-0.5 leading-relaxed">{item.detail}</p>
-                  )}
-                </div>
-              )}
-
-              <div className="flex gap-0.5 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-6 w-6 p-0"
-                  onClick={() => setEditingItemIdx(editingItemIdx === idx ? null : idx)}
-                >
-                  <Edit3 className="w-3 h-3" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-6 w-6 p-0 text-red-400 hover:text-red-600"
-                  onClick={() => deleteItem(idx)}
-                >
-                  <X className="w-3 h-3" />
-                </Button>
-              </div>
-            </div>
+            <SortableChecklistItem
+              key={item.id}
+              item={item}
+              idx={idx}
+              editingItemIdx={editingItemIdx}
+              setEditingItemIdx={setEditingItemIdx}
+              updateItem={updateItem}
+              deleteItem={deleteItem}
+            />
           ))}
+            </SortableContext>
+          </DndContext>
 
           {/* Add item */}
           {addingItem ? (
