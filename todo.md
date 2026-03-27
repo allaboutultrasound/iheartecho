@@ -720,3 +720,12 @@
 - [x] Add drag handle to sub-item rows with DnD item reordering within each section (SortableChecklistItem component)
 - [x] Persist reordered sortOrder to DB on drop (sections and items)
 - [x] Visual feedback: opacity fade on dragged item, cursor-grab handle
+
+## Navigator Editor: Add ICE, Diastology, Pulm HTN Modules (Mar 27 2026)
+- [ ] Audit ICENavigator, DiastologyNavigator, PulmHTNNavigator for section IDs and structure
+- [ ] Add ice, diastology, pulm_htn to Navigator Editor MODULES list
+- [ ] Add ice, diastology, pulm_htn STATIC_DEFAULTS with all sections matching navigator page IDs
+
+## Navigator Editor: Section Reorder Persistence + New Mo- [x] Add ICE, Diastology, Pulm HTN to Navigator Editor MODULES list and STATIC_DEFAULTS
+- [x] Fix: section drag-and-drop reorder does not persist — auto-save sortOrder to DB immediately on drop (upsert all sections on drag-end)
+- [x] Add ICE, Diastology, Pulm HTN to Navigator Editor MODULES list and STATIC_DEFAULTS

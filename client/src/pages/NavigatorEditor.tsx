@@ -544,8 +544,217 @@ const STATIC_DEFAULTS: Record<string, Omit<Section, "id" | "dirty">[]> = {
       ],
     },
   ],
+  // ─── ICE Navigatorr ────────────────────────────────────────────────────────────
+  ice: [
+    {
+      module: "ice", sectionId: "ice_home_view", sortOrder: 0,
+      sectionTitle: "Home View (Tricuspid / Right Heart)",
+      probeNote: "ICE catheter | Right atrium | 0° rotation | Anterior/neutral position",
+      items: [
+        { id: "ice_hv_tv", label: "Tricuspid valve morphology and motion", detail: "Assess leaflet coaptation, mobility, and regurgitation with color Doppler.", critical: true },
+        { id: "ice_hv_ra", label: "Right atrium size and thrombus exclusion", detail: "Assess RA for thrombus or masses before any transseptal procedure.", critical: true },
+        { id: "ice_hv_rv", label: "RV size and function", detail: "Assess RV free wall motion and TAPSE. Dilated RV may indicate elevated RV pressures.", critical: false },
+        { id: "ice_hv_ivc", label: "IVC entry and hepatic veins", detail: "Confirm catheter position; assess IVC diameter for RA pressure estimation.", critical: false },
+      ],
+    },
+    {
+      module: "ice", sectionId: "ice_aortic_view", sortOrder: 1,
+      sectionTitle: "Aortic / LVOT View",
+      probeNote: "ICE catheter | RA | Clockwise rotation from home view | Anterior tilt",
+      items: [
+        { id: "ice_av_aorta", label: "Aortic valve morphology and function", detail: "Assess leaflet number, mobility, and any regurgitation or stenosis.", critical: false },
+        { id: "ice_av_lvot", label: "LVOT and proximal ascending aorta", detail: "Assess for LVOT obstruction or subaortic membrane.", critical: false },
+        { id: "ice_av_la", label: "Left atrium and LAA ostium", detail: "Assess LA size and LAA ostium. Exclude thrombus before LAA occlusion procedures.", critical: true },
+        { id: "ice_av_pv", label: "Pulmonary veins (left-sided)", detail: "Identify LSPV and LIPV ostia. Confirm pulmonary vein anatomy before AF ablation.", critical: false },
+      ],
+    },
+    {
+      module: "ice", sectionId: "ice_fossa_view", sortOrder: 2,
+      sectionTitle: "Fossa Ovalis / Interatrial Septum View",
+      probeNote: "ICE catheter | RA | Further clockwise rotation | Posterior tilt toward IAS",
+      items: [
+        { id: "ice_fo_fossa", label: "Fossa ovalis identification", detail: "Identify thin membrane of fossa ovalis. Confirm location before transseptal puncture.", critical: true },
+        { id: "ice_fo_tenting", label: "Needle tenting confirmation", detail: "Visualise needle tenting the fossa. Confirm superior-posterior position for AF ablation; inferior-posterior for structural procedures.", critical: true },
+        { id: "ice_fo_entry", label: "LA entry confirmation", detail: "Agitated saline or contrast injection confirms LA position after transseptal crossing.", critical: true },
+        { id: "ice_fo_shunt", label: "Residual shunt / PFO assessment", detail: "Color Doppler across IAS after device deployment. Agitated saline for PFO closure confirmation.", critical: false },
+      ],
+    },
+    {
+      module: "ice", sectionId: "ice_mitral_view", sortOrder: 3,
+      sectionTitle: "Mitral / Left Heart View",
+      probeNote: "ICE catheter | RA or transseptal to LA | Posterior rotation | Leftward tilt",
+      items: [
+        { id: "ice_mv_morphology", label: "Mitral valve leaflet morphology", detail: "Assess A2/P2 coaptation gap, flail segments, and prolapse. Identify target segments for TEER.", critical: true },
+        { id: "ice_mv_mr", label: "Mitral regurgitation — severity and jet direction", detail: "Color Doppler: assess MR severity, jet origin, and direction. Eccentric jets require biplane guidance.", critical: true },
+        { id: "ice_mv_clip", label: "Clip positioning and leaflet insertion", detail: "Confirm clip arms perpendicular to coaptation line. Verify both leaflets captured before deployment.", critical: true },
+        { id: "ice_mv_gradient", label: "Post-clip mitral gradient", detail: "PW Doppler: mean gradient <5 mmHg acceptable. >5 mmHg: consider iatrogenic MS.", critical: false },
+      ],
+    },
+    {
+      module: "ice", sectionId: "ice_laa_view", sortOrder: 4,
+      sectionTitle: "LAA Occlusion View",
+      probeNote: "ICE catheter | RA or LA | Posterior/leftward rotation | Caudal tilt",
+      items: [
+        { id: "ice_laa_thrombus", label: "LAA thrombus exclusion (all lobes)", detail: "Assess all LAA lobes. If thrombus present, abort procedure. Slow-flow/spontaneous echo contrast is not thrombus.", critical: true },
+        { id: "ice_laa_ostium", label: "LAA ostium diameter measurement", detail: "Measure at 0°, 45°, 90°, 135° equivalent planes. Use largest diameter for device sizing.", critical: true },
+        { id: "ice_laa_depth", label: "Landing zone depth", detail: "Depth ≥10 mm from ostium to first lobe bifurcation required for device stability.", critical: true },
+        { id: "ice_laa_pass", label: "PASS criteria confirmation", detail: "Position (at/just distal to ostium), Anchor (tug test), Size (80–92% compressed), Seal (color Doppler <5 mm leak).", critical: true },
+      ],
+    },
+    {
+      module: "ice", sectionId: "ice_pericardial_view", sortOrder: 5,
+      sectionTitle: "Pericardial Monitoring View",
+      probeNote: "ICE catheter | RV | Posterior withdrawal | Continuous monitoring during high-risk steps",
+      items: [
+        { id: "ice_peri_baseline", label: "Baseline pericardial assessment", detail: "Confirm no pericardial effusion at procedure start. Document baseline for comparison.", critical: true },
+        { id: "ice_peri_monitor", label: "Continuous effusion monitoring", detail: "Monitor pericardial space during transseptal, device deployment, and energy delivery. Any new echo-free space warrants immediate alert.", critical: true },
+        { id: "ice_peri_tamponade", label: "Tamponade signs", detail: "RA/RV diastolic collapse, IVC plethora, respiratory variation in mitral/tricuspid inflow. Immediate pericardiocentesis if haemodynamic compromise.", critical: true },
+      ],
+    },
+  ],
+  // ─── Diastology Navigator ─────────────────────────────────────────────────────
+  diastology: [
+    {
+      module: "diastology", sectionId: "diast_tdi", sortOrder: 0,
+      sectionTitle: "Tissue Doppler Imaging (TDI) — e' Velocity",
+      probeNote: "Apical 4-chamber | Phased-array probe | Septal and lateral mitral annulus",
+      items: [
+        { id: "diast_tdi_septal", label: "Septal e' velocity (PW TDI)", detail: "Sample volume at septal mitral annulus. Normal septal e' ≥7 cm/s. Reduced e' = impaired relaxation.", critical: true },
+        { id: "diast_tdi_lateral", label: "Lateral e' velocity (PW TDI)", detail: "Sample volume at lateral mitral annulus. Normal lateral e' ≥10 cm/s.", critical: true },
+        { id: "diast_tdi_ratio", label: "E/e' ratio calculation", detail: "Use average e' (septal + lateral / 2). E/e' >14 = elevated LV filling pressures (Step 2 criterion per ASE 2025).", critical: true },
+        { id: "diast_tdi_s_wave", label: "Systolic s' velocity", detail: "Systolic annular velocity. s' <5 cm/s suggests reduced LV systolic function.", critical: false },
+      ],
+    },
+    {
+      module: "diastology", sectionId: "diast_mitral_inflow", sortOrder: 1,
+      sectionTitle: "Mitral Inflow — E/A Ratio & DT",
+      probeNote: "Apical 4-chamber | PW Doppler | Sample volume at mitral leaflet tips at end-expiration",
+      items: [
+        { id: "diast_mi_e", label: "E wave velocity (early filling)", detail: "Peak E wave. Reduced E (<50 cm/s) with low e' = Grade I. Elevated E with high e' = Grade III.", critical: true },
+        { id: "diast_mi_a", label: "A wave velocity (atrial contraction)", detail: "Peak A wave. E/A <0.8 = Grade I (impaired relaxation). E/A >2 = Grade III (restrictive).", critical: true },
+        { id: "diast_mi_dt", label: "Deceleration time (DT)", detail: "DT <160 ms = restrictive pattern (Grade III). DT >200 ms = impaired relaxation (Grade I).", critical: true },
+        { id: "diast_mi_ivrt", label: "IVRT (isovolumic relaxation time)", detail: "IVRT <60 ms = elevated filling pressures. IVRT >100 ms = impaired relaxation.", critical: false },
+      ],
+    },
+    {
+      module: "diastology", sectionId: "diast_tr_jet", sortOrder: 2,
+      sectionTitle: "TR Jet — Peak Velocity & PASP",
+      probeNote: "Apical 4-chamber or parasternal RV inflow | CW Doppler | Optimize jet alignment",
+      items: [
+        { id: "diast_tr_velocity", label: "TR peak velocity (CW Doppler)", detail: "TR velocity >2.8 m/s = elevated PASP = Step 2 criterion (ASE 2025). Try multiple windows for highest velocity.", critical: true },
+        { id: "diast_tr_pasp", label: "PASP estimation (4v² + RAP)", detail: "PASP = 4 × (TR velocity)² + estimated RAP. RAP: 3 mmHg (IVC <2.1 cm, >50% collapse), 8 mmHg (intermediate), 15 mmHg (dilated, non-collapsing).", critical: false },
+        { id: "diast_tr_contrast", label: "Agitated saline contrast if TR not visible", detail: "Right-heart contrast enhances TR jet for velocity measurement when TR is not well visualised.", critical: false },
+      ],
+    },
+    {
+      module: "diastology", sectionId: "diast_lars", sortOrder: 3,
+      sectionTitle: "LA Reservoir Strain (LARS)",
+      probeNote: "Dedicated apical 4C and 2C (LA-focused) | 50–70 fps | R-R gating | 3–5 cycles per view",
+      items: [
+        { id: "diast_lars_4c", label: "LA strain — apical 4-chamber (dedicated LA-focused view)", detail: "Ensure LA is maximally visualised. Avoid foreshortening. Track LA wall throughout cardiac cycle.", critical: true },
+        { id: "diast_lars_2c", label: "LA strain — apical 2-chamber (dedicated LA-focused view)", detail: "Acquire at similar heart rate to 4C view. Average LARS from both views.", critical: true },
+        { id: "diast_lars_threshold", label: "LARS threshold interpretation", detail: "LARS <18% = elevated LV filling pressures (Step 2 criterion per ASE 2025). Do NOT use in AF, significant MR, or heart transplant.", critical: true },
+      ],
+    },
+    {
+      module: "diastology", sectionId: "diast_lavi", sortOrder: 4,
+      sectionTitle: "Left Atrial Volume Index (LAVI)",
+      probeNote: "Apical 4C and 2C at end-systole (before MV opens) | Biplane disc summation method",
+      items: [
+        { id: "diast_lavi_measure", label: "LA volume — biplane disc summation (A4C + A2C)", detail: "Trace LA at end-systole (just before MV opens). Exclude pulmonary veins and LAA from tracing.", critical: true },
+        { id: "diast_lavi_index", label: "Index to BSA", detail: "LAVI = LA volume / BSA. Normal <34 mL/m². LAVI >34 mL/m² = Step 2 criterion (ASE 2025).", critical: true },
+        { id: "diast_lavi_pitfall", label: "Exclude confounders", detail: "AF, mitral stenosis, and significant MR cause LA enlargement independent of diastolic dysfunction. Do not use LAVI as a diastolic marker in these conditions.", critical: false },
+      ],
+    },
+    {
+      module: "diastology", sectionId: "diast_pv_flow", sortOrder: 5,
+      sectionTitle: "Pulmonary Venous Flow",
+      probeNote: "Apical 4-chamber | PW Doppler | Sample volume 1–2 cm into LSPV or RSPV",
+      items: [
+        { id: "diast_pv_s", label: "Systolic (S) wave", detail: "S wave dominant = normal or Grade I. S < D = elevated filling pressures.", critical: false },
+        { id: "diast_pv_d", label: "Diastolic (D) wave", detail: "D wave dominant with E/A >1 = pseudonormal or restrictive pattern.", critical: false },
+        { id: "diast_pv_ar", label: "Atrial reversal (Ar) wave", detail: "Ar >35 cm/s or Ar – A duration >30 ms = elevated LVEDP.", critical: false },
+      ],
+    },
+    {
+      module: "diastology", sectionId: "diast_algorithm", sortOrder: 6,
+      sectionTitle: "ASE 2025 Two-Step Grading Algorithm",
+      probeNote: "Integrate all measurements | Apply ASE 2025 algorithm (not 2016 Nagueh guidelines)",
+      items: [
+        { id: "diast_algo_step1", label: "Step 1: Is e' reduced? (Impaired relaxation)", detail: "Septal e' <7 cm/s OR lateral e' <10 cm/s = impaired relaxation present. Proceed to Step 2.", critical: true },
+        { id: "diast_algo_step2", label: "Step 2: Count elevated LAP markers", detail: "Count: E/e' >14, TR velocity >2.8 m/s, LARS <18%, LAVI >34 mL/m². 0 of 4 = Grade I. ≥2 of 4 = Grade III. 1 of 4 = Grade II (indeterminate).", critical: true },
+        { id: "diast_algo_grade", label: "Assign diastolic dysfunction grade", detail: "Grade I: impaired relaxation, normal LAP. Grade II: impaired relaxation, elevated LAP. Grade III: restrictive filling, elevated LAP.", critical: true },
+        { id: "diast_algo_af", label: "AF / special populations", detail: "In AF: use E/e' and TR velocity only (LARS and LAVI unreliable). See DiastologySpecialPopulations page for HFpEF, HCM, constrictive pericarditis.", critical: false },
+      ],
+    },
+  ],
+  // ─── Pulmonary HTN Navigator ──────────────────────────────────────────────────
+  pulm_htn: [
+    {
+      module: "pulm_htn", sectionId: "ph_tr_velocity", sortOrder: 0,
+      sectionTitle: "TR Jet Velocity & PASP",
+      probeNote: "Apical 4-chamber, parasternal RV inflow, subcostal | CW Doppler | Multiple windows",
+      items: [
+        { id: "ph_tr_cw", label: "TR peak velocity (CW Doppler) — multiple windows", detail: "Use apical 4C, parasternal RV inflow, and subcostal views. Report highest velocity obtained.", critical: true },
+        { id: "ph_tr_pasp", label: "PASP = 4v² + RAP", detail: "TR velocity >2.8 m/s = intermediate probability. >3.4 m/s = high probability of PH (ESC/ERS 2022). Add estimated RAP (3, 8, or 15 mmHg).", critical: true },
+        { id: "ph_tr_contrast", label: "Agitated saline if TR not visible", detail: "Right-heart contrast enhances TR jet. Mandatory if TR not well seen on colour Doppler.", critical: false },
+      ],
+    },
+    {
+      module: "pulm_htn", sectionId: "ph_rv_size", sortOrder: 1,
+      sectionTitle: "RV Size & Function",
+      probeNote: "Apical 4-chamber RV-focused view | Do NOT use standard LV-focused view for RV measurements",
+      items: [
+        { id: "ph_rv_basal", label: "RV basal diameter (RV-focused A4C)", detail: "Normal ≤41 mm. >41 mm = dilated RV. Measure at widest basal point perpendicular to RV long axis.", critical: true },
+        { id: "ph_rv_mid", label: "RV mid-cavity diameter", detail: "Normal ≤35 mm. Measure at mid-level of RV.", critical: false },
+        { id: "ph_rv_tapse", label: "TAPSE (tricuspid annular plane systolic excursion)", detail: "M-mode at lateral tricuspid annulus. TAPSE <17 mm = reduced RV systolic function.", critical: true },
+        { id: "ph_rv_fac", label: "RV fractional area change (FAC)", detail: "FAC = (RV end-diastolic area − RV end-systolic area) / RV end-diastolic area × 100. FAC <35% = reduced RV function.", critical: true },
+        { id: "ph_rv_s_wave", label: "RV free wall s' (TDI)", detail: "Lateral tricuspid annulus TDI. s' <9.5 cm/s = reduced RV systolic function.", critical: false },
+      ],
+    },
+    {
+      module: "pulm_htn", sectionId: "ph_rv_morphology", sortOrder: 2,
+      sectionTitle: "RV Morphology & Septal Motion",
+      probeNote: "Parasternal short-axis (mid-papillary level) | Apical 4-chamber",
+      items: [
+        { id: "ph_rv_d_sign", label: "D-sign (septal flattening) — PSAX", detail: "Flattened or D-shaped LV in PSAX at mid-papillary level = RV pressure or volume overload. Systolic D-sign = pressure overload.", critical: true },
+        { id: "ph_rv_ecc", label: "LV eccentricity index", detail: "LV eccentricity index >1.1 in systole = RV pressure overload. Measure LV anterior-posterior / septal-lateral diameters in PSAX.", critical: false },
+        { id: "ph_rv_ra", label: "RA size", detail: "RA area >18 cm² = dilated RA. Dilated RA with elevated TR velocity = high probability of PH.", critical: false },
+        { id: "ph_rv_pericardial", label: "Pericardial effusion", detail: "Pericardial effusion in PH indicates severe disease and poor prognosis.", critical: false },
+      ],
+    },
+    {
+      module: "pulm_htn", sectionId: "ph_ivc", sortOrder: 3,
+      sectionTitle: "IVC & RAP Estimation",
+      probeNote: "Subcostal | Measure 1–2 cm from RA junction | Sniff test for collapsibility",
+      items: [
+        { id: "ph_ivc_diameter", label: "IVC diameter at end-expiration", detail: "Normal <2.1 cm. Dilated IVC (>2.1 cm) with <50% collapse = RAP 15 mmHg.", critical: true },
+        { id: "ph_ivc_collapse", label: "IVC collapsibility (sniff test)", detail: ">50% collapse with sniff = RAP 3 mmHg. <50% collapse = RAP 8–15 mmHg.", critical: true },
+        { id: "ph_ivc_rap", label: "Estimated RAP for PASP calculation", detail: "RAP 3 mmHg: IVC <2.1 cm, >50% collapse. RAP 8 mmHg: intermediate. RAP 15 mmHg: IVC >2.1 cm, <50% collapse.", critical: false },
+      ],
+    },
+    {
+      module: "pulm_htn", sectionId: "ph_pa_pressure", sortOrder: 4,
+      sectionTitle: "PA Pressure — Additional Markers",
+      probeNote: "Parasternal short-axis | RVOT PW Doppler | Pulmonary valve CW Doppler",
+      items: [
+        { id: "ph_pa_rvot_at", label: "RVOT acceleration time (AT)", detail: "PW Doppler in RVOT. AT <100 ms = elevated mPAP. AT <70 ms with mid-systolic notch = severe PH.", critical: true },
+        { id: "ph_pa_pi", label: "Pulmonary regurgitation — end-diastolic velocity", detail: "CW Doppler: PR end-diastolic velocity. mPAP = 4 × (PR peak velocity)² + RAP.", critical: false },
+        { id: "ph_pa_notch", label: "Mid-systolic notch in RVOT flow", detail: "Mid-systolic notch (flying W sign) in RVOT PW Doppler = severe PH with wave reflection.", critical: false },
+      ],
+    },
+    {
+      module: "pulm_htn", sectionId: "ph_probability", sortOrder: 5,
+      sectionTitle: "PH Probability Assessment (ASE 2025 / ESC 2022)",
+      probeNote: "Integrate all findings | Classify as low, intermediate, or high probability",
+      items: [
+        { id: "ph_prob_tr", label: "TR velocity classification", detail: "≤2.8 m/s + no other signs = low probability. ≤2.8 m/s + other signs, OR 2.9–3.4 m/s = intermediate. >3.4 m/s = high probability.", critical: true },
+        { id: "ph_prob_signs", label: "Additional PH signs (A/B/C categories)", detail: "Category A: RV/RA enlargement, D-sign. Category B: RVOT AT <105 ms, PR end-diastolic velocity >2.2 m/s. Category C: TAPSE/PASP <0.55 mm/mmHg. ≥2 categories = high probability.", critical: true },
+        { id: "ph_prob_referral", label: "Referral threshold", detail: "Intermediate or high probability: refer to PH specialist centre for right heart catheterisation. Low probability with clinical suspicion: repeat echo in 6–12 months.", critical: false },
+      ],
+    },
+  ],
 };
-
 // ─── Module List ──────────────────────────────────────────────────────────────
 const MODULES = [
   { id: "tte", label: "TTE Navigator" },
@@ -554,6 +763,9 @@ const MODULES = [
   { id: "hocm", label: "HOCM Navigator" },
   { id: "fetal", label: "Fetal Navigator" },
   { id: "uea", label: "UEA (Contrast Echo) Navigator" },
+  { id: "ice", label: "ICE Navigator" },
+  { id: "diastology", label: "Diastology Navigator" },
+  { id: "pulm_htn", label: "Pulmonary HTN Navigator" },
 ];
 
 const BRAND = "#189aa1";
@@ -1089,14 +1301,24 @@ export default function NavigatorEditor() {
       sortOrder: i,
     }));
     setSections(reordered);
-    // Persist reorder for saved sections
-    const toReorder = reordered.filter((s) => s.id > 0).map((s) => ({ id: s.id, sortOrder: s.sortOrder }));
-    if (toReorder.length > 0) {
-      try {
-        await reorderMutation.mutateAsync(toReorder);
-      } catch {
-        toast.error("Failed to save order");
-      }
+    // Upsert ALL sections with their new sortOrder so reorder always persists
+    // (sections with id=0 are static defaults that haven't been saved yet — upsert creates them)
+    try {
+      await Promise.all(
+        reordered.map((s) =>
+          upsertMutation.mutateAsync({
+            module: selectedModule,
+            sectionId: s.sectionId,
+            sectionTitle: s.sectionTitle,
+            probeNote: s.probeNote,
+            items: s.items,
+            sortOrder: s.sortOrder,
+          })
+        )
+      );
+      toast.success("Section order saved");
+    } catch {
+      toast.error("Failed to save order");
     }
   };
 
