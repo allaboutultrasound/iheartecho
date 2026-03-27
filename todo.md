@@ -731,3 +731,6 @@
 - [x] Add ICE, Diastology, Pulm HTN to Navigator Editor MODULES list and STATIC_DEFAULTS
 ## EchoAssist Hub: UltrasoundAssist CTA (Mar 27 2026)
 - [x] Add UltrasoundAssist CTA section to bottom of EchoAssist hub page (app.allaboutultrasound.com)
+
+## EchoAssist Hub CTA Cleanup (Mar 27 2026)
+- [x] Remove Vascular ScanCoach button from UltrasoundAssist CTA section

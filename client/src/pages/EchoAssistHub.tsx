@@ -616,16 +616,7 @@ export default function EchoAssistHub() {
                 <Radio className="w-4 h-4" />
                 Open UltrasoundAssist&#8482;
               </a>
-              <a
-                href="https://app.allaboutultrasound.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all hover:bg-white/20"
-                style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", color: "white" }}
-              >
-                <BookOpen className="w-4 h-4" />
-                Vascular ScanCoach
-              </a>
+
             </div>
           </div>
         </div>
