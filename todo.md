@@ -706,3 +706,5 @@
 - [x] Clear bad partial TTE DB override rows (again — user saved one section)
 - [x] Fix useNavigatorProtocol hook: merge DB overrides with static defaults (DB rows override matching sections; unmatched static sections still show)
 - [x] Fix Navigator Editor save logic: always save ALL sections when user clicks Save (not just dirty/modified ones) — RESOLVED via hook merge strategy instead; per-section save is now safe
+- [x] Fix Navigator Editor useEffect load logic: now merges DB rows with static defaults (same strategy as hook), so opening Editor after a partial save shows all sections correctly
+- [x] Fix useNavigatorProtocol staleTime: set to 0 so Navigator pages always reflect latest DB state immediately after a save

@@ -61,7 +61,7 @@ export function useNavigatorProtocol<T extends ProtocolSection>(
   const { data: dbSections, isLoading } = trpc.navigatorAdmin.getModuleSections.useQuery(
     { module },
     {
-      staleTime: 5 * 60 * 1000, // 5 min cache — protocol data changes rarely
+      staleTime: 0, // always refetch so Navigator Editor saves are reflected immediately
       retry: 1,
     }
   );

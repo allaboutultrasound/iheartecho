@@ -777,30 +777,40 @@ export default function NavigatorEditor() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  // Load DB sections or fall back to empty
+  // Load sections: always start from static defaults, then overlay any DB overrides.
+  // This ensures saving one section never hides the other static sections in the editor.
   useEffect(() => {
     if (!sectionsQuery.data) return;
+    const defaults = STATIC_DEFAULTS[selectedModule] ?? [];
     if (sectionsQuery.data.length > 0) {
-      setSections(
-        sectionsQuery.data.map((s) => ({
-          id: s.id,
-          module: s.module,
-          sectionId: s.sectionId,
-          sectionTitle: s.sectionTitle,
-          probeNote: s.probeNote,
-          items: s.items,
-          sortOrder: s.sortOrder,
-          dirty: false,
-        }))
-      );
+      // Build a lookup of DB rows by sectionId
+      const dbMap = new Map(sectionsQuery.data.map((s) => [s.sectionId, s]));
+      // Merge: for each static default, use DB row if one exists, else show static (unsaved)
+      const merged: Section[] = defaults.map((d) => {
+        const dbRow = dbMap.get(d.sectionId);
+        if (dbRow) {
+          return {
+            id: dbRow.id,
+            module: dbRow.module,
+            sectionId: dbRow.sectionId,
+            sectionTitle: dbRow.sectionTitle,
+            probeNote: dbRow.probeNote,
+            items: dbRow.items,
+            sortOrder: dbRow.sortOrder,
+            dirty: false,
+          };
+        }
+        // No DB override for this section — show static default (not yet saved)
+        return { ...d, id: 0, dirty: false };
+      });
+      setSections(merged);
     } else {
-      // No DB data — load from static defaults
-      const defaults = STATIC_DEFAULTS[selectedModule] ?? [];
+      // No DB data at all — load all static defaults (none saved yet)
       setSections(
         defaults.map((d) => ({
           ...d,
           id: 0,
-          dirty: true, // mark as dirty so admin knows to save
+          dirty: false,
         }))
       );
     }
