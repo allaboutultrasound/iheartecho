@@ -11,7 +11,7 @@ import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import {
   Stethoscope, Microscope, Zap, Users, Baby, Heart,
-  Cpu, BarChart3, ArrowRight, Droplets, Activity, Wind, Crown, Lock, Shield, Radio, BookOpen
+  Cpu, BarChart3, ArrowRight, Droplets, Activity, Wind, Crown, Lock, Shield, Radio, BookOpen, CircuitBoard
 } from "lucide-react";
 import { usePremium } from "@/hooks/usePremium";
 
@@ -41,6 +41,7 @@ const specialties: Specialty[] = [
   { path: "/device", scanCoachPath: "/structural-heart-scan-coach", icon: Heart, title: "Structural Heart", description: "TAVR, MitraClip, WATCHMAN, and ASD/PFO closure — procedural echo guidance, post-implant assessment, and structural intervention checklists.", badge: "Structural Heart", free: false },
   { path: "/tee", scanCoachPath: "/tee-scan-coach", icon: Microscope, title: "TEE", description: "ME, TG, and UE views with angle/depth guidance, clinical applications, intraoperative checklist, and TEE scan coach with view acquisition tips.", badge: "TEE", free: false },
   { path: "/ice", scanCoachPath: "/ice-scan-coach", icon: Cpu, title: "ICE", description: "Intracardiac echo views, procedural checklists, key measurements for structural interventions, and ICE scan coach with view acquisition guidance.", badge: "ICE", free: false },
+  { path: "/mechanical-support-navigator", scanCoachPath: "/mechanical-support-scan-coach", icon: CircuitBoard, title: "MechanicalSupportAssist™", description: "Echo assessment for LVAD, ECMO, Impella (all versions), LifeVest, and ICD/CRT-D — pre-implant, device positioning, post-implant monitoring, and weaning protocols.", badge: "MCS", free: false },
 ];
 
 const badgeColors: Record<string, string> = {
@@ -56,6 +57,7 @@ const badgeColors: Record<string, string> = {
   "TEE": "#189aa1",
   "ICE": "#189aa1",
   "Diastology": "#189aa1",
+  "MCS": "#7c3aed",
 };
 
 export default function EchoAssistHub() {

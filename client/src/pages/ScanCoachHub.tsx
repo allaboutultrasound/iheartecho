@@ -9,7 +9,7 @@ import PremiumModal from "@/components/PremiumModal";
 import { usePremium } from "@/hooks/usePremium";
 import {
   Scan, Stethoscope, Baby, Heart, Users, Activity,
-  Zap, Microscope, Droplets, Wind, Crown, Lock
+  Zap, Microscope, Droplets, Wind, Crown, Lock, CircuitBoard
 } from "lucide-react";
 
 const BRAND = "#189aa1";
@@ -30,6 +30,7 @@ const premiumCoaches = [
   { tab: "hocm",      icon: Heart,       label: "HOCM",               views: 14, route: null as string | null },
   { tab: "tee",       icon: Microscope,  label: "TEE",                views: 13, route: null as string | null },
   { tab: "ice",       icon: Scan,        label: "ICE",                views: 9,  route: null as string | null },
+  { tab: "mcs",       icon: CircuitBoard, label: "MCS Devices",        views: 15, route: "/mechanical-support-scan-coach" },
 ];
 
 export default function ScanCoachHub() {

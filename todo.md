@@ -740,3 +740,12 @@
 
 ## Home/Hub: EchoAssist Calculators Button (Mar 27 2026)
 - [x] Add EchoAssist™ Calculators button to Adult Echo card (matching PediatricEchoAssist™ Calculators button style)
+
+## MechanicalSupportAssist™ Module (Mar 27 2026)
+- [x] MechanicalSupportNavigator.tsx — premium Navigator with 5 device tabs (LVAD, ECMO, Impella, LifeVest, ICD/CRT-D)
+- [x] MechanicalSupportScanCoach.tsx — premium ScanCoach with view-by-view acquisition protocols for all 5 devices
+- [x] App.tsx routes: /mechanical-support-navigator and /mechanical-support-scan-coach (RoleGuard premium)
+- [x] EchoNavigatorHub: MechanicalSupportAssist™ Navigator added to premium navigators list (MCS badge, purple)
+- [x] ScanCoachHub: MCS Devices added to premium coaches list (15 views, routes to /mechanical-support-scan-coach)
+- [x] EchoAssistHub: MechanicalSupportAssist™ added to specialties list (premium, links to Navigator + ScanCoach)
+- [x] Home.tsx: MechanicalSupportAssist™ module card added (purple, premium, interests: adultEcho + acs)

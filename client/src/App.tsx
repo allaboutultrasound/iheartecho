@@ -118,6 +118,9 @@ import AccreditationProSalesPage from "./pages/AccreditationProSalesPage";
 // GuidelinesAssist™
 import GuidelinesAssist from "./pages/GuidelinesAssist";
 import ChallengeCardGenerator from "./pages/ChallengeCardGenerator";
+// MechanicalSupportAssist™
+import MechanicalSupportNavigator from "./pages/MechanicalSupportNavigator";
+import MechanicalSupportScanCoach from "./pages/MechanicalSupportScanCoach";
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -228,6 +231,9 @@ function Router() {
       <Route path="/pulm-htn" component={PulmHTNNavigator} />
       <Route path="/diastolic">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><DiastolicNavigator /></RoleGuard>}</Route>
       <Route path="/guidelines-assist" component={GuidelinesAssist} />
+      {/* ── MechanicalSupportAssist™ ─────────────────────────────────────── */}
+      <Route path="/mechanical-support-navigator">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><MechanicalSupportNavigator /></RoleGuard>}</Route>
+      <Route path="/mechanical-support-scan-coach">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><MechanicalSupportScanCoach /></RoleGuard>}</Route>
       <Route path="/echo-assist-hub" component={EchoAssistHub} />
       {/* ── LMS Engines ──────────────────────────────────────────────────── */}
       <Route path="/quickfire" component={QuickFire} />

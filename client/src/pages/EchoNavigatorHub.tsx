@@ -9,7 +9,7 @@ import PremiumModal from "@/components/PremiumModal";
 import { usePremium } from "@/hooks/usePremium";
 import {
   Stethoscope, Microscope, Zap, Users, Baby, Heart,
-  Cpu, FlaskConical, BarChart3, ArrowRight, Scan, Lock, Droplets, Activity, Wind, Crown
+  Cpu, FlaskConical, BarChart3, ArrowRight, Scan, Lock, Droplets, Activity, Wind, Crown, CircuitBoard
 } from "lucide-react";
 
 const BRAND = "#189aa1";
@@ -102,6 +102,13 @@ const premiumNavigators = [
     description: "TAVR, MitraClip, WATCHMAN, and ASD/PFO closure — procedural echo guidance and post-implant assessment.",
     badge: "Structural Heart",
   },
+  {
+    path: "/mechanical-support-navigator",
+    icon: CircuitBoard,
+    title: "MechanicalSupportAssist™ Navigator",
+    description: "Echo assessment for LVAD, ECMO, Impella (all versions), LifeVest, and ICD/CRT-D — pre-implant, positioning, post-implant, and weaning protocols.",
+    badge: "MCS",
+  },
 ];
 
 const badgeColors: Record<string, string> = {
@@ -112,6 +119,7 @@ const badgeColors: Record<string, string> = {
   "Contrast Echo": "#0e7490",
   "Cardiomyopathy": "#b45309",
   "Pulmonary": "#0e7490",
+  "MCS": "#7c3aed",
 };
 
 function FreeNavCard({ path, icon: Icon, title, description, badge }: typeof freeNavigators[0]) {
