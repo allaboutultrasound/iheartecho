@@ -398,6 +398,50 @@ const STATIC_DEFAULTS: Record<string, Omit<Section, "id" | "dirty">[]> = {
       ],
     },
   ],
+  uea: [
+    {
+      module: "uea", sectionId: "plax", sortOrder: 0,
+      sectionTitle: "Parasternal Long Axis (PLAX)",
+      probeNote: "Parasternal window | Phased-array probe | Low MI contrast mode",
+      items: [
+        { id: "plax_lvo", label: "LV opacification — anterior septum and posterior wall", detail: "Confirm contrast fills LV cavity uniformly. Assess septal and posterior wall thickness.", critical: true },
+        { id: "plax_mv", label: "Mitral valve and subvalvular apparatus", detail: "Contrast helps delineate chordae, papillary muscles, and subvalvular structures." },
+        { id: "plax_aorta", label: "Aortic root and proximal ascending aorta", detail: "Contrast may enhance aortic root dimensions and identify dissection flap." },
+        { id: "plax_pericardium", label: "Pericardial effusion", detail: "Contrast outlines LV epicardium — helps differentiate effusion from artifact." },
+      ],
+    },
+    {
+      module: "uea", sectionId: "a4c", sortOrder: 1,
+      sectionTitle: "Apical 4-Chamber (A4C)",
+      probeNote: "Apical window | Lateral decubitus position | Low MI mode",
+      items: [
+        { id: "a4c_lvo", label: "LV opacification — all 4 apical segments", detail: "Apical segments most commonly non-visualised. Confirm apical cap is filled.", critical: true },
+        { id: "a4c_apex", label: "Apical thrombus screening", detail: "Contrast fills LV cavity — thrombus appears as filling defect. Sensitivity >90% vs. unenhanced echo.", critical: true },
+        { id: "a4c_ef", label: "Visual EF estimation", detail: "Contrast allows accurate visual EF in previously non-diagnostic studies." },
+        { id: "a4c_rv", label: "RV opacification (if indicated)", detail: "High-dose UEA or right-heart contrast may opacify RV for RVEF or ARVC assessment." },
+      ],
+    },
+    {
+      module: "uea", sectionId: "a2c", sortOrder: 2,
+      sectionTitle: "Apical 2-Chamber (A2C)",
+      probeNote: "Apical window | Rotate 90° CCW from A4C",
+      items: [
+        { id: "a2c_anterior", label: "Anterior wall opacification", detail: "LAD territory. Anterior wall perfusion defects most visible in A2C.", critical: true },
+        { id: "a2c_inferior", label: "Inferior wall opacification", detail: "RCA territory. Inferior wall and inferior apex." },
+        { id: "a2c_apex", label: "Apical segment — anterior and inferior", detail: "Confirm apical filling. Apical HCM: spade-shaped cavity with contrast." },
+      ],
+    },
+    {
+      module: "uea", sectionId: "aplax", sortOrder: 3,
+      sectionTitle: "Apical 3-Chamber / Long Axis (A3C/APLAX)",
+      probeNote: "Apical window | Rotate 30–40° CCW from A2C",
+      items: [
+        { id: "aplax_inferolateral", label: "Inferolateral wall opacification", detail: "LCx territory. Posterolateral wall and inferolateral apex.", critical: true },
+        { id: "aplax_anteroseptal", label: "Anteroseptal wall opacification", detail: "LAD territory. Anterior septum and anteroseptal apex." },
+        { id: "aplax_lvot", label: "LVOT and aortic valve", detail: "Contrast outlines LVOT. Useful for SAM assessment in HCM." },
+      ],
+    },
+  ],
 };
 
 // ─── Module List ──────────────────────────────────────────────────────────────
@@ -407,6 +451,7 @@ const MODULES = [
   { id: "pocus_cardiac", label: "POCUS Cardiac Navigator" },
   { id: "hocm", label: "HOCM Navigator" },
   { id: "fetal", label: "Fetal Navigator" },
+  { id: "uea", label: "UEA (Contrast Echo) Navigator" },
 ];
 
 const BRAND = "#189aa1";

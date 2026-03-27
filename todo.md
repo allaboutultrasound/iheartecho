@@ -689,3 +689,15 @@
 - [x] Create NavigatorEditor page with pre-loaded items, edit/delete/add/reorder
 - [x] Fix ScanCoach editor to pre-populate fields with static content when no override exists
 - [x] Wire Navigator pages to use DB overrides (TTE, TEE, Fetal, POCUS Cardiac, UEA)
+
+## Navigator DB Override Fixes (Mar 26 2026)
+- [x] Fix: TTE Navigator showing only 1 view — deleted bad partial DB override row (only A3C was saved), restored full static 17-view protocol
+- [x] Fix: TEENavigator circular reference bug — was passing `protocol` to itself; now correctly passes `teeProtocol` static fallback
+- [x] Fix: UEANavigator circular reference bug — was passing `protocol` to itself; now correctly passes `viewProtocol` static fallback
+- [x] Fix: FetalNavigator unused hook call removed — fetalProtocol is a flat item list, not ProtocolSection[]; FetalProtocolChecklist uses fetalProtocol directly
+- [x] Fix: TEENavigator ViewSection type — added required `probe` field; added `probe` to all 11 teeProtocol entries (using position value)
+- [x] Fix: UEANavigator ViewSection type — added required `probe` field; added `probe` to all 8 viewProtocol entries (using window value)
+- [x] Fix: useNavigatorProtocol hook — updated ProtocolSection interface to include optional extended fields (id, position, angle, depth, clinicalUse, window, tips, normalFindings, abnormalFindings, pearls) to support all navigator types without type errors
+- [x] Fix: UEANavigator tips/normalFindings/abnormalFindings — use `?? []` fallback for safe rendering when sections come from DB (which won't have these fields)
+- [x] Fix: TEENavigator positionColors index — use `section.position ?? ""` to avoid undefined index type error
+- [x] Navigator Editor: added UEA (Contrast Echo) Navigator to MODULES list and STATIC_DEFAULTS (4 sections: PLAX, A4C, A2C, A3C/APLAX)

@@ -246,7 +246,8 @@ const plsvcFindings = [
 
 type ViewSection = {
   view: string;
-  window: string;
+  probe: string;           // maps to ProtocolSection.probe (same as window for UEA)
+  window: string;          // kept for backward compat with static data
   items: CheckItem[];
   tips: string[];
   normalFindings: string[];
@@ -256,6 +257,7 @@ type ViewSection = {
 const viewProtocol: ViewSection[] = [
   {
     view: "Parasternal Long Axis (PLAX)",
+    probe: "Parasternal window",
     window: "Parasternal",
     items: [
       { id: "plax_lvo", label: "LV opacification — anterior septum and posterior wall", detail: "Confirm contrast fills LV cavity uniformly. Assess septal and posterior wall thickness.", critical: true },
@@ -274,6 +276,7 @@ const viewProtocol: ViewSection[] = [
   },
   {
     view: "Parasternal Short Axis (PSAX) — Mitral Level",
+    probe: "Parasternal window",
     window: "Parasternal",
     items: [
       { id: "psax_mv_lvo", label: "LV opacification at mitral valve level", detail: "All 6 segments at mitral level should opacify uniformly." },
@@ -289,6 +292,7 @@ const viewProtocol: ViewSection[] = [
   },
   {
     view: "Parasternal Short Axis (PSAX) — Mid-Papillary Level",
+    probe: "Parasternal window",
     window: "Parasternal",
     items: [
       { id: "psax_pap_lvo", label: "LV opacification at mid-papillary level", detail: "Critical level for myocardial perfusion imaging — 6 segments assessed.", critical: true },
@@ -305,6 +309,7 @@ const viewProtocol: ViewSection[] = [
   },
   {
     view: "Parasternal Short Axis (PSAX) — Apical Level",
+    probe: "Parasternal window",
     window: "Parasternal",
     items: [
       { id: "psax_apex_lvo", label: "LV opacification at apical level", detail: "Apical segments are often the most difficult to visualise — contrast is most beneficial here." },
@@ -319,6 +324,7 @@ const viewProtocol: ViewSection[] = [
   },
   {
     view: "Apical 4-Chamber (A4C)",
+    probe: "Apical window",
     window: "Apical",
     items: [
       { id: "a4c_lvo", label: "LV opacification — all apical and mid segments", detail: "Confirm contrast fills apex completely. Apical thrombus appears as filling defect.", critical: true },
@@ -339,6 +345,7 @@ const viewProtocol: ViewSection[] = [
   },
   {
     view: "Apical 2-Chamber (A2C)",
+    probe: "Apical window",
     window: "Apical",
     items: [
       { id: "a2c_lvo", label: "LV opacification — anterior and inferior walls", detail: "A2C provides the only apical view of the true anterior wall (LAD territory)." },
@@ -354,6 +361,7 @@ const viewProtocol: ViewSection[] = [
   },
   {
     view: "Apical 3-Chamber / Long Axis (A3C/APLAX)",
+    probe: "Apical window",
     window: "Apical",
     items: [
       { id: "a3c_lvo", label: "LV opacification — anteroseptal and inferolateral walls", detail: "Completes the 17-segment model with A4C and A2C." },
@@ -369,6 +377,7 @@ const viewProtocol: ViewSection[] = [
   },
   {
     view: "Subcostal 4-Chamber",
+    probe: "Subcostal window",
     window: "Subcostal",
     items: [
       { id: "sub_lvo", label: "LV opacification — inferior and inferoseptal walls", detail: "Subcostal view is useful when apical windows are poor." },
@@ -419,7 +428,7 @@ const referenceValues = [
 export default function UEANavigator() {
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
   // Use DB overrides if available (seeded via Navigator Editor), else fall back to static
-  const { sections: protocol } = useNavigatorProtocol("uea", protocol);
+  const { sections: protocol } = useNavigatorProtocol("uea", viewProtocol);
   const [expandedSection, setExpandedSection] = useState<string | null>("safety");
   const [expandedView, setExpandedView] = useState<string | null>("Apical 4-Chamber (A4C)");
   const [expandedAgent, setExpandedAgent] = useState<string | null>(null);
@@ -1058,7 +1067,7 @@ export default function UEANavigator() {
                               Scanning Tips
                             </div>
                             <div className="space-y-1.5">
-                              {section.tips.map((tip, i) => (
+                              {(section.tips ?? []).map((tip, i) => (
                                 <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-teal-50 border border-teal-100">
                                   <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" style={{ color: BRAND }} />
                                   <p className="text-xs text-teal-800 leading-relaxed">{tip}</p>
@@ -1072,7 +1081,7 @@ export default function UEANavigator() {
                             <div>
                               <div className="text-[10px] font-bold uppercase tracking-wider text-green-700 mb-1.5">Normal Findings</div>
                               <ul className="space-y-1">
-                                {section.normalFindings.map((f, i) => (
+                                {(section.normalFindings ?? []).map((f, i) => (
                                   <li key={i} className="flex items-start gap-1.5 text-xs text-gray-700">
                                     <span className="w-1.5 h-1.5 rounded-full bg-green-500 mt-1.5 flex-shrink-0" />
                                     {f}
@@ -1083,7 +1092,7 @@ export default function UEANavigator() {
                             <div>
                               <div className="text-[10px] font-bold uppercase tracking-wider text-red-700 mb-1.5">Abnormal / Look For</div>
                               <ul className="space-y-1">
-                                {section.abnormalFindings.map((f, i) => (
+                                {(section.abnormalFindings ?? []).map((f, i) => (
                                   <li key={i} className="flex items-start gap-1.5 text-xs text-gray-700">
                                     <span className="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 flex-shrink-0" />
                                     {f}

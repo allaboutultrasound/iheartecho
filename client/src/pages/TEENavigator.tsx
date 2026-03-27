@@ -13,11 +13,12 @@ import { PremiumOverlay } from "@/components/PremiumOverlay";
 import { useNavigatorProtocol } from "@/hooks/useNavigatorProtocol";
 
 type ChecklistItem = { id: string; label: string; detail?: string; critical?: boolean; angle?: string };
-type ViewSection = { view: string; position: string; angle: string; depth: string; items: ChecklistItem[]; clinicalUse?: string };
+type ViewSection = { view: string; probe: string; position: string; angle: string; depth: string; items: ChecklistItem[]; clinicalUse?: string };
 
 const teeProtocol: ViewSection[] = [
   {
     view: "ME 4-Chamber",
+    probe: "Mid-esophageal",
     position: "Mid-esophageal",
     angle: "0°",
     depth: "30–35 cm",
@@ -35,6 +36,7 @@ const teeProtocol: ViewSection[] = [
   },
   {
     view: "ME 2-Chamber",
+    probe: "Mid-esophageal",
     position: "Mid-esophageal",
     angle: "90°",
     depth: "30–35 cm",
@@ -48,6 +50,7 @@ const teeProtocol: ViewSection[] = [
   },
   {
     view: "ME Long Axis (LAX)",
+    probe: "Mid-esophageal",
     position: "Mid-esophageal",
     angle: "120–135°",
     depth: "30–35 cm",
@@ -62,6 +65,7 @@ const teeProtocol: ViewSection[] = [
   },
   {
     view: "ME AV SAX",
+    probe: "Mid-esophageal",
     position: "Mid-esophageal",
     angle: "30–60°",
     depth: "28–32 cm",
@@ -76,6 +80,7 @@ const teeProtocol: ViewSection[] = [
   },
   {
     view: "ME Bicaval",
+    probe: "Mid-esophageal",
     position: "Mid-esophageal",
     angle: "90–110°",
     depth: "28–32 cm",
@@ -89,6 +94,7 @@ const teeProtocol: ViewSection[] = [
   },
   {
     view: "ME RV Inflow-Outflow",
+    probe: "Mid-esophageal",
     position: "Mid-esophageal",
     angle: "60–90°",
     depth: "28–32 cm",
@@ -102,6 +108,7 @@ const teeProtocol: ViewSection[] = [
   },
   {
     view: "ME Ascending Aorta SAX / LAX",
+    probe: "Mid-esophageal (upper)",
     position: "Mid-esophageal (upper)",
     angle: "0° (SAX) / 90° (LAX)",
     depth: "20–25 cm",
@@ -114,6 +121,7 @@ const teeProtocol: ViewSection[] = [
   },
   {
     view: "UE Aortic Arch",
+    probe: "Upper esophageal",
     position: "Upper esophageal",
     angle: "0° (arch LAX) / 90° (arch SAX)",
     depth: "18–22 cm",
@@ -126,6 +134,7 @@ const teeProtocol: ViewSection[] = [
   },
   {
     view: "TG Mid SAX",
+    probe: "Transgastric",
     position: "Transgastric",
     angle: "0°",
     depth: "40–45 cm",
@@ -139,6 +148,7 @@ const teeProtocol: ViewSection[] = [
   },
   {
     view: "TG 2-Chamber / LAX",
+    probe: "Transgastric",
     position: "Transgastric",
     angle: "90° (2-chamber) / 120° (LAX)",
     depth: "40–45 cm",
@@ -151,6 +161,7 @@ const teeProtocol: ViewSection[] = [
   },
   {
     view: "Deep TG LAX",
+    probe: "Deep transgastric",
     position: "Deep transgastric",
     angle: "0° (anteflexed)",
     depth: "45–50 cm",
@@ -200,7 +211,7 @@ const clinicalApps = [
 export default function TEENavigator() {
   const [tab, setTab] = useState<"protocol" | "applications" | "reference">("protocol");
   // Use DB overrides if available (seeded via Navigator Editor), else fall back to static
-  const { sections: protocol } = useNavigatorProtocol("tee", protocol);
+  const { sections: protocol } = useNavigatorProtocol("tee", teeProtocol);
   const [expandedView, setExpandedView] = useState<number | null>(0);
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [expandedApp, setExpandedApp] = useState<number | null>(null);
@@ -343,7 +354,7 @@ export default function TEENavigator() {
             {protocol.map((section, si) => {
               const sectionChecked = section.items.filter(i => checked.has(i.id)).length;
               const isExpanded = expandedView === si;
-              const posColor = positionColors[section.position] || "#189aa1";
+              const posColor = positionColors[section.position ?? ""] || "#189aa1";
               return (
                 <div key={si} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                   <button
