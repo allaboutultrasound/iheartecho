@@ -13,10 +13,11 @@ import { PremiumOverlay } from "@/components/PremiumOverlay";
 import { useNavigatorProtocol } from "@/hooks/useNavigatorProtocol";
 
 type ChecklistItem = { id: string; label: string; detail?: string; critical?: boolean; angle?: string };
-type ViewSection = { view: string; probe: string; position: string; angle: string; depth: string; items: ChecklistItem[]; clinicalUse?: string };
+type ViewSection = { id?: string; view: string; probe: string; position: string; angle: string; depth: string; items: ChecklistItem[]; clinicalUse?: string };
 
 const teeProtocol: ViewSection[] = [
   {
+    id: "me4c",
     view: "ME 4-Chamber",
     probe: "Mid-esophageal",
     position: "Mid-esophageal",
@@ -35,6 +36,7 @@ const teeProtocol: ViewSection[] = [
     ],
   },
   {
+    id: "me2c",
     view: "ME 2-Chamber",
     probe: "Mid-esophageal",
     position: "Mid-esophageal",
@@ -49,6 +51,7 @@ const teeProtocol: ViewSection[] = [
     ],
   },
   {
+    id: "melax",
     view: "ME Long Axis (LAX)",
     probe: "Mid-esophageal",
     position: "Mid-esophageal",
@@ -64,6 +67,7 @@ const teeProtocol: ViewSection[] = [
     ],
   },
   {
+    id: "meavsax",
     view: "ME AV SAX",
     probe: "Mid-esophageal",
     position: "Mid-esophageal",
@@ -79,6 +83,7 @@ const teeProtocol: ViewSection[] = [
     ],
   },
   {
+    id: "mebicaval",
     view: "ME Bicaval",
     probe: "Mid-esophageal",
     position: "Mid-esophageal",
@@ -93,6 +98,7 @@ const teeProtocol: ViewSection[] = [
     ],
   },
   {
+    id: "mervio",
     view: "ME RV Inflow-Outflow",
     probe: "Mid-esophageal",
     position: "Mid-esophageal",
@@ -133,6 +139,7 @@ const teeProtocol: ViewSection[] = [
     ],
   },
   {
+    id: "tg_mid_sax",
     view: "TG Mid SAX",
     probe: "Transgastric",
     position: "Transgastric",
@@ -147,6 +154,7 @@ const teeProtocol: ViewSection[] = [
     ],
   },
   {
+    id: "tglax",
     view: "TG 2-Chamber / LAX",
     probe: "Transgastric",
     position: "Transgastric",
@@ -160,6 +168,7 @@ const teeProtocol: ViewSection[] = [
     ],
   },
   {
+    id: "deep_tg",
     view: "Deep TG LAX",
     probe: "Deep transgastric",
     position: "Deep transgastric",

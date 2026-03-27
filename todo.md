@@ -701,3 +701,8 @@
 - [x] Fix: UEANavigator tips/normalFindings/abnormalFindings — use `?? []` fallback for safe rendering when sections come from DB (which won't have these fields)
 - [x] Fix: TEENavigator positionColors index — use `section.position ?? ""` to avoid undefined index type error
 - [x] Navigator Editor: added UEA (Contrast Echo) Navigator to MODULES list and STATIC_DEFAULTS (4 sections: PLAX, A4C, A2C, A3C/APLAX)
+
+## Navigator Editor Partial-Save Bug Fix (Mar 26 2026)
+- [x] Clear bad partial TTE DB override rows (again — user saved one section)
+- [x] Fix useNavigatorProtocol hook: merge DB overrides with static defaults (DB rows override matching sections; unmatched static sections still show)
+- [x] Fix Navigator Editor save logic: always save ALL sections when user clicks Save (not just dirty/modified ones) — RESOLVED via hook merge strategy instead; per-section save is now safe

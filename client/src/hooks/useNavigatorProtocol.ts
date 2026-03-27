@@ -2,8 +2,14 @@
  * useNavigatorProtocol — iHeartEcho™
  *
  * Returns the protocol sections for a given navigator module.
- * If DB overrides exist (seeded/edited via the Navigator Editor), they are used.
- * Otherwise, the static default sections are returned as a fallback.
+ *
+ * MERGE STRATEGY (not replace):
+ *   - Always starts with the full static protocol as the base.
+ *   - For each DB override row, find the matching static section by sectionId
+ *     and replace it with the DB version (title, probeNote, items).
+ *   - Static sections with no DB override are kept as-is.
+ *   - This means saving ONE section in the Navigator Editor only changes that
+ *     one section — all others continue to show from the static defaults.
  *
  * Usage:
  *   const { sections, isLoading } = useNavigatorProtocol("tte", tteProtocol);
@@ -60,15 +66,32 @@ export function useNavigatorProtocol<T extends ProtocolSection>(
     }
   );
 
-  // If DB has sections for this module, use them; otherwise fall back to static
+  // Always start with the full static protocol as the base.
+  // Merge DB overrides on top: each DB row replaces the matching static section
+  // by sectionId. Unmatched static sections are kept unchanged.
   if (!isLoading && dbSections && dbSections.length > 0) {
-    const sections = dbSections.map((s) => ({
-      id: s.sectionId,
-      view: s.sectionTitle,
-      probe: s.probeNote ?? "",
-      items: s.items,
-    })) as unknown as T[];
-    return { sections, isLoading: false, isFromDb: true };
+    // Build a lookup map of DB overrides keyed by sectionId
+    const dbMap = new Map(dbSections.map((s) => [s.sectionId, s]));
+
+    const merged = staticProtocol.map((staticSection) => {
+      // The static section's id field is used as the sectionId key
+      const sectionId = (staticSection as { id?: string }).id;
+      if (sectionId && dbMap.has(sectionId)) {
+        const dbRow = dbMap.get(sectionId)!;
+        // Override only title, probeNote, and items from DB — preserve all other
+        // navigator-specific fields (position, angle, depth, tips, etc.) from static
+        return {
+          ...staticSection,
+          view: dbRow.sectionTitle,
+          probe: dbRow.probeNote ?? staticSection.probe,
+          items: dbRow.items,
+        } as T;
+      }
+      // No DB override for this section — use static as-is
+      return staticSection;
+    });
+
+    return { sections: merged, isLoading: false, isFromDb: true };
   }
 
   return { sections: staticProtocol, isLoading, isFromDb: false };

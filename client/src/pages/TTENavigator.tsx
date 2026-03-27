@@ -12,10 +12,11 @@ import BackToEchoAssist from "@/components/BackToEchoAssist";
 import { useNavigatorProtocol } from "@/hooks/useNavigatorProtocol";
 
 type ChecklistItem = { id: string; label: string; detail?: string; critical?: boolean };
-type ViewSection = { view: string; probe: string; items: ChecklistItem[] };
+type ViewSection = { id?: string; view: string; probe: string; items: ChecklistItem[] };
 
 const tteProtocol: ViewSection[] = [
   {
+    id: "plax",
     view: "Parasternal Long Axis (PLAX)",
     probe: "2nd–4th ICS, left sternal border | Notch: 10–11 o'clock",
     items: [
@@ -33,6 +34,7 @@ const tteProtocol: ViewSection[] = [
     ],
   },
   {
+    id: "psax",
     view: "Parasternal Short Axis (PSAX)",
     probe: "Rotate 90° clockwise from PLAX | Notch: 1–2 o'clock",
     items: [
@@ -48,6 +50,7 @@ const tteProtocol: ViewSection[] = [
     ],
   },
   {
+    id: "a4c",
     view: "Apical 4-Chamber (A4C)",
     probe: "Cardiac apex, 5th–6th ICS, mid-clavicular | Notch: 3 o'clock",
     items: [
@@ -65,6 +68,7 @@ const tteProtocol: ViewSection[] = [
     ],
   },
   {
+    id: "a5c",
     view: "Apical 5-Chamber (A5C)",
     probe: "Tilt anteriorly from A4C | Same position",
     items: [
@@ -75,6 +79,7 @@ const tteProtocol: ViewSection[] = [
     ],
   },
   {
+    id: "a2c",
     view: "Apical 2-Chamber (A2C)",
     probe: "Rotate 60° CCW from A4C | Notch: 12 o'clock",
     items: [
@@ -85,6 +90,7 @@ const tteProtocol: ViewSection[] = [
     ],
   },
   {
+    id: "aplax",
     view: "Apical 3-Chamber / APLAX",
     probe: "Rotate 30–40° CCW from A2C | Notch: 10–11 o'clock",
     items: [
@@ -94,6 +100,7 @@ const tteProtocol: ViewSection[] = [
     ],
   },
   {
+    id: "subcostal",
     view: "Subcostal",
     probe: "Subxiphoid, angled toward heart | Notch: 3 o'clock",
     items: [
@@ -105,6 +112,7 @@ const tteProtocol: ViewSection[] = [
     ],
   },
   {
+    id: "suprasternal",
     view: "Suprasternal Notch",
     probe: "Suprasternal notch | Notch: 12 o'clock",
     items: [

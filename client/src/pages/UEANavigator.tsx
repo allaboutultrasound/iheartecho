@@ -245,6 +245,7 @@ const plsvcFindings = [
 // ─── VIEW-BY-VIEW PROTOCOL ────────────────────────────────────────────────────
 
 type ViewSection = {
+  id?: string;             // matches sectionId in Navigator Editor for DB merge
   view: string;
   probe: string;           // maps to ProtocolSection.probe (same as window for UEA)
   window: string;          // kept for backward compat with static data
@@ -256,6 +257,7 @@ type ViewSection = {
 
 const viewProtocol: ViewSection[] = [
   {
+    id: "plax",
     view: "Parasternal Long Axis (PLAX)",
     probe: "Parasternal window",
     window: "Parasternal",
@@ -275,6 +277,7 @@ const viewProtocol: ViewSection[] = [
     abnormalFindings: ["Filling defect at apex — thrombus vs. artifact", "Non-uniform enhancement — wall motion abnormality", "Enhancing mass — consider myxoma or metastasis"],
   },
   {
+    id: "psax_mv",
     view: "Parasternal Short Axis (PSAX) — Mitral Level",
     probe: "Parasternal window",
     window: "Parasternal",
@@ -291,6 +294,7 @@ const viewProtocol: ViewSection[] = [
     abnormalFindings: ["Segmental perfusion defect — CAD territory", "Asymmetric hypertrophy — HCM"],
   },
   {
+    id: "psax_pm",
     view: "Parasternal Short Axis (PSAX) — Mid-Papillary Level",
     probe: "Parasternal window",
     window: "Parasternal",
@@ -308,6 +312,7 @@ const viewProtocol: ViewSection[] = [
     abnormalFindings: ["Delayed replenishment — ischaemia or scar", "Absent replenishment — infarct", "Patchy replenishment — microvascular disease"],
   },
   {
+    id: "psax_apex",
     view: "Parasternal Short Axis (PSAX) — Apical Level",
     probe: "Parasternal window",
     window: "Parasternal",
@@ -323,6 +328,7 @@ const viewProtocol: ViewSection[] = [
     abnormalFindings: ["Apical filling defect — thrombus", "Apical ballooning — Takotsubo", "Apical akinesis — LAD territory infarct"],
   },
   {
+    id: "a4c",
     view: "Apical 4-Chamber (A4C)",
     probe: "Apical window",
     window: "Apical",
@@ -344,6 +350,7 @@ const viewProtocol: ViewSection[] = [
     abnormalFindings: ["Apical filling defect — thrombus (sensitivity >90% with contrast)", "Apical ballooning — Takotsubo", "Apical HCM — spade-shaped cavity", "Reduced EF — systolic dysfunction"],
   },
   {
+    id: "a2c",
     view: "Apical 2-Chamber (A2C)",
     probe: "Apical window",
     window: "Apical",
@@ -360,6 +367,7 @@ const viewProtocol: ViewSection[] = [
     abnormalFindings: ["Anterior wall hypokinesis/akinesis — LAD ischaemia", "Inferior wall abnormality — RCA territory"],
   },
   {
+    id: "aplax",
     view: "Apical 3-Chamber / Long Axis (A3C/APLAX)",
     probe: "Apical window",
     window: "Apical",
@@ -376,6 +384,7 @@ const viewProtocol: ViewSection[] = [
     abnormalFindings: ["LVOT obstruction with systolic anterior motion (SAM)", "Inferolateral akinesis — LCx territory"],
   },
   {
+    id: "subcostal",
     view: "Subcostal 4-Chamber",
     probe: "Subcostal window",
     window: "Subcostal",
