@@ -323,6 +323,26 @@ const STATIC_DEFAULTS: Record<string, Omit<Section, "id" | "dirty">[]> = {
         { id: "sub_ivc", label: "IVC diameter and respiratory variation", detail: "≤21 mm + >50% collapse = RAP 3 mmHg. >21 mm + <50% = RAP 15 mmHg.", critical: true },
       ],
     },
+    {
+      module: "pocus_cardiac", sectionId: "psax_mv", sortOrder: 4,
+      sectionTitle: "Parasternal Short Axis — Mitral Valve Level",
+      probeNote: "Phased array 2–4 MHz | Rotate 90° clockwise from PLAX | Tilt cephalad",
+      items: [
+        { id: "psax_mv_fish", label: "Mitral valve fish-mouth view", detail: "Planimetry of MVA if MS suspected. Normal MVA >4 cm². Severe MS: MVA <1.5 cm².", critical: true },
+        { id: "psax_mv_wma", label: "Regional wall motion at MV level", detail: "6 segments: anteroseptal, anterior, lateral, posterior, inferior, inferoseptal." },
+        { id: "psax_mv_color", label: "MR color Doppler at MV level", detail: "Eccentric jets best seen in PSAX. Assess jet direction and severity." },
+      ],
+    },
+    {
+      module: "pocus_cardiac", sectionId: "ivc", sortOrder: 5,
+      sectionTitle: "Subcostal IVC",
+      probeNote: "Phased array 2–4 MHz | Subxiphoid | Rotate to long axis of IVC",
+      items: [
+        { id: "ivc_diameter", label: "IVC diameter (normal ≤21 mm)", detail: "Measure 1–2 cm from RA-IVC junction in end-expiration.", critical: true },
+        { id: "ivc_collapse", label: "Respiratory collapse (>50% = RAP 3 mmHg)", detail: "Sniff test or spontaneous breathing. Plethoric IVC (>21 mm, <50% collapse) = RAP 15 mmHg.", critical: true },
+        { id: "ivc_hepatic_veins", label: "Hepatic vein dilation", detail: "Dilated hepatic veins = elevated RAP, TR, or cardiac tamponade." },
+      ],
+    },
   ],
   hocm: [
     {
@@ -348,6 +368,50 @@ const STATIC_DEFAULTS: Record<string, Omit<Section, "id" | "dirty">[]> = {
         { id: "hocm_lvot_diameter", label: "LVOT diameter measurement", detail: "Measure in PLAX at end-systole, 1 cm below AV, inner edge to inner edge." },
         { id: "hocm_lvot_gradient", label: "Resting LVOT gradient (CW Doppler)", detail: "From A5C or A3C. Dagger-shaped late-peaking signal. Significant: ≥30 mmHg; severe: ≥50 mmHg.", critical: true },
         { id: "hocm_lvot_vti", label: "LVOT VTI (PW Doppler)", detail: "Sample volume 5 mm proximal to AV. Normal LVOT VTI: 18–22 cm." },
+      ],
+    },
+    {
+      module: "hocm", sectionId: "provocation", sortOrder: 2,
+      sectionTitle: "Provocation Manoeuvres",
+      probeNote: "A5C or A3C — Doppler during and after provocation",
+      items: [
+        { id: "hocm_valsalva", label: "Valsalva manoeuvre (strain phase)", detail: "Ask patient to bear down for 10–15 seconds. Record CW Doppler during strain. Gradient increase ≥20 mmHg = significant provocation.", critical: true },
+        { id: "hocm_standing", label: "Standing from squatting", detail: "Rapid standing reduces preload. Record CW Doppler immediately on standing. Alternative to Valsalva.", critical: true },
+        { id: "hocm_amyl_nitrite", label: "Amyl nitrite provocation (if available)", detail: "Inhale amyl nitrite for 3–5 seconds. Reduces preload and afterload. Record CW Doppler at peak effect (30–60 s).", critical: false },
+        { id: "hocm_exercise_gradient", label: "Post-exercise gradient (if resting gradient <50 mmHg)", detail: "Record CW Doppler immediately after treadmill or bicycle exercise. Provoked gradient ≥50 mmHg = significant obstruction.", critical: true },
+      ],
+    },
+    {
+      module: "hocm", sectionId: "mitral", sortOrder: 3,
+      sectionTitle: "Mitral Valve Assessment",
+      probeNote: "PLAX, A4C, A2C — colour Doppler and spectral Doppler",
+      items: [
+        { id: "hocm_mr_mechanism", label: "MR mechanism (SAM vs. intrinsic MV disease)", detail: "SAM-related MR: posterior jet, mid-to-late systolic. Intrinsic MV disease: central or anterior jet, holosystolic.", critical: true },
+        { id: "hocm_mr_severity", label: "MR severity (colour Doppler, PISA, vena contracta)", detail: "Significant MR (grade ≥2+) in HOCM often improves after septal reduction therapy.", critical: true },
+        { id: "hocm_mv_morphology", label: "MV leaflet morphology (elongated anterior leaflet?)", detail: "Elongated anterior MV leaflet predisposes to SAM. Measure AML length in PLAX.", critical: false },
+        { id: "hocm_mv_prolapse", label: "MV prolapse or flail leaflet", detail: "Intrinsic MV disease may coexist with HOCM. Assess leaflet tips in PLAX and A4C." },
+      ],
+    },
+    {
+      module: "hocm", sectionId: "diastology", sortOrder: 4,
+      sectionTitle: "Diastolic Function",
+      probeNote: "A4C — mitral inflow PW Doppler and tissue Doppler",
+      items: [
+        { id: "hocm_mv_inflow", label: "Mitral inflow PW Doppler (E, A, DT)", detail: "HOCM: often impaired relaxation (E/A <1, prolonged DT). Advanced: pseudonormal or restrictive pattern.", critical: true },
+        { id: "hocm_tdi_e_prime", label: "Tissue Doppler e' (septal and lateral)", detail: "Septal e' often reduced in HOCM due to hypertrophy. E/e' ratio for LV filling pressure estimation.", critical: true },
+        { id: "hocm_la_volume", label: "LA volume index", detail: "Normal: ≤34 mL/m². Dilated LA in HOCM = chronic diastolic dysfunction, AF risk.", critical: true },
+        { id: "hocm_tr_gradient", label: "TR CW Doppler (RVSP estimation)", detail: "Pulmonary hypertension may coexist. RVSP = 4 × TR Vmax² + RAP." },
+      ],
+    },
+    {
+      module: "hocm", sectionId: "rvstudy", sortOrder: 5,
+      sectionTitle: "RV Assessment",
+      probeNote: "A4C, subcostal — RV size and function",
+      items: [
+        { id: "hocm_rv_size", label: "RV size (basal diameter, normal ≤41 mm)", detail: "RV involvement uncommon in HOCM but may occur in biventricular HCM.", critical: false },
+        { id: "hocm_rv_wall", label: "RV free wall thickness (normal ≤5 mm)", detail: "RV hypertrophy >5 mm = biventricular HCM or RV outflow obstruction.", critical: false },
+        { id: "hocm_tapse", label: "TAPSE (normal ≥17 mm)", detail: "RV systolic dysfunction uncommon in early HOCM. TAPSE <17 mm = RV dysfunction.", critical: false },
+        { id: "hocm_rvot_gradient", label: "RVOT gradient (CW Doppler)", detail: "RVOT obstruction may occur in biventricular HCM. Assess RVOT PW and CW Doppler.", critical: false },
       ],
     },
   ],
@@ -439,6 +503,44 @@ const STATIC_DEFAULTS: Record<string, Omit<Section, "id" | "dirty">[]> = {
         { id: "aplax_inferolateral", label: "Inferolateral wall opacification", detail: "LCx territory. Posterolateral wall and inferolateral apex.", critical: true },
         { id: "aplax_anteroseptal", label: "Anteroseptal wall opacification", detail: "LAD territory. Anterior septum and anteroseptal apex." },
         { id: "aplax_lvot", label: "LVOT and aortic valve", detail: "Contrast outlines LVOT. Useful for SAM assessment in HCM." },
+      ],
+    },
+    {
+      module: "uea", sectionId: "psax_mv", sortOrder: 4,
+      sectionTitle: "Parasternal Short Axis (PSAX) — Mitral Level",
+      probeNote: "Parasternal window | Rotate 90° clockwise from PLAX | Low MI contrast mode",
+      items: [
+        { id: "psax_mv_lvo", label: "LV opacification at mitral valve level", detail: "All 6 segments at mitral level should opacify uniformly." },
+        { id: "psax_mv_fish", label: "Mitral valve fish-mouth view with contrast", detail: "Contrast helps delineate MV leaflet tips and subvalvular apparatus.", critical: true },
+        { id: "psax_mv_wma", label: "Regional wall motion at MV level", detail: "Anteroseptal, anterior, lateral, posterior, inferior, inferoseptal segments." },
+      ],
+    },
+    {
+      module: "uea", sectionId: "psax_pm", sortOrder: 5,
+      sectionTitle: "Parasternal Short Axis (PSAX) — Mid-Papillary Level",
+      probeNote: "Parasternal window | Tilt caudal from PSAX-MV | Low MI contrast mode",
+      items: [
+        { id: "psax_pap_lvo", label: "LV opacification at mid-papillary level", detail: "Critical level for myocardial perfusion imaging — 6 segments assessed.", critical: true },
+        { id: "psax_pap_replenishment", label: "Contrast replenishment pattern (perfusion)", detail: "Delayed replenishment = ischaemia or scar. Absent replenishment = infarct.", critical: true },
+        { id: "psax_pap_dsign", label: "D-sign assessment", detail: "Septal flattening with contrast enhancement aids RV pressure/volume overload assessment." },
+      ],
+    },
+    {
+      module: "uea", sectionId: "psax_apex", sortOrder: 6,
+      sectionTitle: "Parasternal Short Axis (PSAX) — Apical Level",
+      probeNote: "Parasternal window | Tilt caudal from PSAX-PM | Low MI contrast mode",
+      items: [
+        { id: "psax_apex_lvo", label: "LV opacification at apical level", detail: "Apical segments often most difficult to visualise — contrast most beneficial here.", critical: true },
+        { id: "psax_apex_wma", label: "Apical wall motion assessment", detail: "Symmetric apical wall motion. Apical akinesis = LAD territory infarct." },
+      ],
+    },
+    {
+      module: "uea", sectionId: "subcostal", sortOrder: 7,
+      sectionTitle: "Subcostal 4-Chamber",
+      probeNote: "Subcostal window | Phased-array probe | Alternative when apical window poor",
+      items: [
+        { id: "sub_lvo", label: "LV opacification via subcostal window", detail: "Useful when apical window is suboptimal. Contrast fills LV from subcostal approach.", critical: true },
+        { id: "sub_ivc_contrast", label: "IVC and hepatic veins (right-heart contrast)", detail: "Agitated saline or right-heart contrast for PFO/ASD shunt detection.", critical: false },
       ],
     },
   ],

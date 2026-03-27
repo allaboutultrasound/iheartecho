@@ -708,3 +708,8 @@
 - [x] Fix Navigator Editor save logic: always save ALL sections when user clicks Save (not just dirty/modified ones) — RESOLVED via hook merge strategy instead; per-section save is now safe
 - [x] Fix Navigator Editor useEffect load logic: now merges DB rows with static defaults (same strategy as hook), so opening Editor after a partial save shows all sections correctly
 - [x] Fix useNavigatorProtocol staleTime: set to 0 so Navigator pages always reflect latest DB state immediately after a save
+
+## SectionId Matching Audit (Mar 27 2026)
+- [x] Audit all DB sectionIds vs STATIC_DEFAULTS sectionIds for every module (TTE, TEE, POCUS Cardiac, HOCM, Fetal, UEA)
+- [x] Audit all static navigator page id fields vs STATIC_DEFAULTS sectionIds (TTENavigator, TEENavigator, POCUSCardiacNavigator, UEANavigator)
+- [x] Fix any mismatches found — added psax_mv+ivc to pocus_cardiac, provocation+mitral+diastology+rvstudy to hocm, psax_mv+psax_pm+psax_apex+subcostal to uea STATIC_DEFAULTS
