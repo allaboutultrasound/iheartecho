@@ -602,7 +602,7 @@ export default function EchoAssistHub() {
                 UltrasoundAssist&#8482;
               </h3>
               <p className="text-white/70 text-sm leading-relaxed max-w-xl">
-                Extend your clinical toolkit beyond echo. UltrasoundAssist&#8482; provides structured ScanCoach guidance for general and vascular ultrasound &mdash; abdominal, MSK, thyroid, carotid, venous, and more &mdash; all built on SVU and society guidelines.
+                Extend your clinical toolkit beyond echo. UltrasoundAssist&#8482; provides structured ScanCoach guidance for general and vascular ultrasound &mdash; abdominal, MSK, thyroid, carotid, venous, and more &mdash; all built on AIUM, SVU and ultrasound society guidelines.
               </p>
             </div>
             <div className="flex-shrink-0 flex flex-col sm:flex-row gap-3">

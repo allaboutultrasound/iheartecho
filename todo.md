@@ -734,3 +734,6 @@
 
 ## EchoAssist Hub CTA Cleanup (Mar 27 2026)
 - [x] Remove Vascular ScanCoach button from UltrasoundAssist CTA section
+
+## EchoAssist Hub CTA Copy Update (Mar 27 2026)
+- [x] Update UltrasoundAssist CTA description to reference AIUM, SVU and ultrasound society guidelines
