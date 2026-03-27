@@ -29,7 +29,7 @@ type Specialty = {
 };
 
 const specialties: Specialty[] = [
-  { path: "/tte", scanCoachPath: "/scan-coach?tab=tte", icon: Stethoscope, title: "Adult Echo", description: "View-by-view TTE protocol with checklist, critical item tracking, normal reference values, guideline-based reference values, and probe guidance with anatomy overlays.", badge: "Adult TTE", free: true },
+  { path: "/tte", scanCoachPath: "/scan-coach?tab=tte", echoAssistPath: "/echoassist", icon: Stethoscope, title: "Adult Echo", description: "View-by-view TTE protocol with checklist, critical item tracking, normal reference values, guideline-based reference values, and probe guidance with anatomy overlays.", badge: "Adult TTE", free: true },
   { path: "/pediatric", scanCoachPath: "/scan-coach?tab=chd", echoAssistPath: "/pediatric-echo-assist", icon: Users, title: "Pediatric Echo", description: "CHD findings, BSA Z-score calculators, Qp/Qs shunt estimation, segmental analysis, neonatal hemodynamics, and pediatric CHD scan guidance. Includes PediatricEchoAssist™ calculator engine.", badge: "Congenital Heart", free: true },
   { path: "/fetal", scanCoachPath: "/scan-coach?tab=fetal", echoAssistPath: "/fetal-echo-assist", icon: Baby, title: "Fetal Echo", description: "Fetal cardiac findings, CHD differentials, biometry Z-scores, situs, arch patterns, fetal scan coach with clinical images, and FetalEchoAssist™ calculator engine.", badge: "Fetal", free: true },
   { path: "/stress", scanCoachPath: "/stress-scan-coach", icon: Zap, title: "Stress Echo", description: "Exercise and DSE protocols, 17-segment WMSI scorer, target HR calculator, interpretation criteria, and pharmacologic stress guidance.", badge: "Stress Echo", free: false },

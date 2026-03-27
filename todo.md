@@ -737,3 +737,6 @@
 
 ## EchoAssist Hub CTA Copy Update (Mar 27 2026)
 - [x] Update UltrasoundAssist CTA description to reference AIUM, SVU and ultrasound society guidelines
+
+## Home/Hub: EchoAssist Calculators Button (Mar 27 2026)
+- [x] Add EchoAssist™ Calculators button to Adult Echo card (matching PediatricEchoAssist™ Calculators button style)
