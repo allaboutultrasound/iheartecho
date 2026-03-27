@@ -46,7 +46,7 @@ async function assertPlatformAdmin(ctx: { user: { id: number; role: string } }) 
 
 // ─── Zod schemas ─────────────────────────────────────────────────────────────
 
-const MODULE_VALUES = ["tte", "tee", "ice", "uea", "strain", "hocm", "stress", "structural", "fetal", "chd", "diastolic", "pulm", "pocus_efast", "pocus_rush", "pocus_cardiac", "pocus_lung", "achd", "ecg"] as const;
+const MODULE_VALUES = ["tte", "tee", "ice", "uea", "strain", "hocm", "stress", "structural", "fetal", "chd", "diastolic", "pulm", "pocus_efast", "pocus_rush", "pocus_cardiac", "pocus_lung", "achd", "ecg", "mcs_lvad", "mcs_ecmo", "mcs_impella", "mcs_lifevest", "mcs_icd"] as const;
 
 const upsertSchema = z.object({
   module: z.enum(MODULE_VALUES),

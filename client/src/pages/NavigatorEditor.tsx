@@ -755,6 +755,174 @@ const STATIC_DEFAULTS: Record<string, Omit<Section, "id" | "dirty">[]> = {
     },
   ],
 };
+// ─── MCS Static Defaults ──────────────────────────────────────────────────────────
+Object.assign(STATIC_DEFAULTS, {
+  mcs_lvad: [
+    {
+      module: "mcs_lvad", sectionId: "lvad_preimplant", sortOrder: 0,
+      sectionTitle: "Pre-Implant Assessment",
+      probeNote: "PLAX + A4C + Subcostal | Assess LV, RV, valves, and pericardium before LVAD implant",
+      items: [
+        { id: "lvad_pre_lvedd", label: "LVEDD and LVESD (PLAX M-mode)", detail: "Biplane Simpson's EF. Severe LV dilation (LVEDD >65 mm) typical in LVAD candidates.", critical: true },
+        { id: "lvad_pre_ef", label: "LV EF (biplane Simpson's)", detail: "EF typically <25% in LVAD candidates. Document baseline for post-implant comparison.", critical: true },
+        { id: "lvad_pre_rv", label: "RV size and function (TAPSE, RV S', FAC)", detail: "TAPSE <14 mm, RV S' <9.5 cm/s, FAC <35% = high risk for post-LVAD RV failure.", critical: true },
+        { id: "lvad_pre_tr", label: "TR severity and RVSP", detail: "Moderate-severe TR + elevated RVSP = RV failure risk post-LVAD. RVSP >50 mmHg = high risk.", critical: true },
+        { id: "lvad_pre_ar", label: "AR severity (color Doppler + CW)", detail: "Moderate-severe AR is a relative contraindication — causes LVAD recirculation. PHT <200 ms = significant AR.", critical: true },
+        { id: "lvad_pre_mr", label: "MR severity", detail: "Functional MR usually improves with LVAD unloading. Structural MR (flail/prolapse) may require repair.", critical: false },
+        { id: "lvad_pre_av", label: "Aortic valve morphology and opening", detail: "Bicuspid AV: increased AR risk post-LVAD. Severely stenotic AV may need repair/replacement at time of implant.", critical: false },
+        { id: "lvad_pre_thrombus", label: "LV thrombus (A4C, A2C, A3C)", detail: "LV thrombus must be excluded or treated before LVAD implant. Use contrast echo if apical views suboptimal.", critical: true },
+        { id: "lvad_pre_pericardium", label: "Pericardial effusion", detail: "Any pre-existing effusion must be documented. Post-LVAD effusion is common.", critical: false },
+        { id: "lvad_pre_ivc", label: "IVC diameter and collapsibility (RAP)", detail: "IVC >21 mm + <50% collapse = RAP ≥10 mmHg. Elevated RAP = RV failure risk.", critical: false },
+      ],
+    },
+    {
+      module: "mcs_lvad", sectionId: "lvad_positioning", sortOrder: 1,
+      sectionTitle: "Inflow Cannula Positioning",
+      probeNote: "PLAX (primary) + A5C (confirmation) | Measure inlet-to-AV distance",
+      items: [
+        { id: "lvad_pos_distance", label: "Inflow cannula tip to AV distance (PLAX)", detail: "Optimal: 3.5–4.5 cm below aortic valve. <3.5 cm = suction risk. >5 cm = MV entrapment risk.", critical: true },
+        { id: "lvad_pos_direction", label: "Cannula direction (toward MV)", detail: "Cannula should point toward the mitral valve, parallel to the IVS. Lateral wall impingement = obstruction risk.", critical: true },
+        { id: "lvad_pos_av_opening", label: "AV opening frequency", detail: "AV should open every 2–4 beats at optimal LVAD speed. Continuous closure = thrombus risk.", critical: true },
+        { id: "lvad_pos_flow", label: "Inflow cannula PW Doppler velocity", detail: "Normal: 1.0–2.0 m/s. >2.0 m/s = obstruction (suction, thrombus, malposition).", critical: true },
+        { id: "lvad_pos_septal", label: "Septal position (midline)", detail: "Rightward septal shift = LV over-decompression. Leftward shift = RV failure.", critical: true },
+      ],
+    },
+    {
+      module: "mcs_lvad", sectionId: "lvad_postimplant", sortOrder: 2,
+      sectionTitle: "Post-Implant Monitoring",
+      probeNote: "Serial echo: PLAX, A4C, A5C, Subcostal | Frequency: daily in ICU, then per protocol",
+      items: [
+        { id: "lvad_post_rv", label: "RV function (TAPSE, RV S', FAC)", detail: "Most critical post-LVAD parameter. RV failure: TAPSE <10 mm, RV S' <6 cm/s, FAC <20%.", critical: true },
+        { id: "lvad_post_rvsp", label: "RVSP trend (TR CW Doppler)", detail: "Rising RVSP with RV dilation = RV failure. Target RVSP <40 mmHg.", critical: true },
+        { id: "lvad_post_lv_size", label: "LV size (LVEDD, LVESD)", detail: "LV should be decompressed post-LVAD. Persistent LV dilation = inadequate unloading or obstruction.", critical: false },
+        { id: "lvad_post_ar", label: "AR severity trend", detail: "AR may worsen over time with LVAD (continuous flow). Serial monitoring required.", critical: true },
+        { id: "lvad_post_effusion", label: "Pericardial effusion", detail: "New effusion post-LVAD: assess for tamponade physiology. Loculated effusion common.", critical: true },
+        { id: "lvad_post_thrombus", label: "Inflow cannula thrombus", detail: "Hyperechoic mass at cannula tip or inlet. Velocity >2.0 m/s = obstruction. Urgent assessment.", critical: true },
+      ],
+    },
+  ],
+  mcs_ecmo: [
+    {
+      module: "mcs_ecmo", sectionId: "ecmo_va_monitoring", sortOrder: 0,
+      sectionTitle: "VA-ECMO Monitoring",
+      probeNote: "PLAX + A4C + Subcostal | Serial every 4–6 hours in ICU",
+      items: [
+        { id: "ecmo_lv_distension", label: "LV distension (LVEDD, LVESD)", detail: "LVEDD >70 mm or LVESD >60 mm = LV distension. Medical emergency — venting required.", critical: true },
+        { id: "ecmo_av_opening", label: "AV opening frequency", detail: "AV must open with each beat. Continuous closure = thrombus risk. Increase ECMO flow or add Impella.", critical: true },
+        { id: "ecmo_ef", label: "LV EF trend (biplane Simpson's)", detail: "Improving EF = myocardial recovery. EF >20–25% with AV opening = consider weaning trial.", critical: true },
+        { id: "ecmo_ar", label: "AR severity (color Doppler)", detail: "VA-ECMO retrograde aortic flow increases AR. Moderate-severe AR = recirculation, poor unloading.", critical: true },
+        { id: "ecmo_thrombus", label: "LV thrombus (A4C, A2C, A3C)", detail: "High risk when AV does not open. Use contrast echo if apical views suboptimal.", critical: true },
+        { id: "ecmo_rv", label: "RV size and function (TAPSE, RV S')", detail: "ECMO increases RV preload. Monitor for RV failure.", critical: false },
+        { id: "ecmo_effusion", label: "Pericardial effusion", detail: "New effusion post-ECMO cannulation: assess for tamponade.", critical: true },
+      ],
+    },
+    {
+      module: "mcs_ecmo", sectionId: "ecmo_cannula", sortOrder: 1,
+      sectionTitle: "Cannula Position Assessment",
+      probeNote: "TEE preferred (bicaval view) | TTE subcostal as alternative",
+      items: [
+        { id: "ecmo_venous_cannula", label: "Venous cannula tip (RA/IVC junction)", detail: "TEE bicaval view (90–100°). Tip at RA/IVC junction. Too deep in IVC = reduced drainage.", critical: true },
+        { id: "ecmo_avalon_jet", label: "Avalon dual-lumen return jet direction (VV-ECMO)", detail: "Color Doppler: return jet must point toward tricuspid valve. Misdirected jet = recirculation.", critical: true },
+        { id: "ecmo_ra_thrombus", label: "RA thrombus at cannula tip", detail: "Hyperechoic mass at venous cannula tip. Urgent assessment and anticoagulation review.", critical: true },
+      ],
+    },
+    {
+      module: "mcs_ecmo", sectionId: "ecmo_weaning", sortOrder: 2,
+      sectionTitle: "Weaning Assessment",
+      probeNote: "A4C + PLAX | During weaning trial at reduced ECMO flow",
+      items: [
+        { id: "ecmo_wean_ef", label: "LV EF at reduced ECMO flow", detail: "EF >20–25% at 1–1.5 L/min flow = candidate for weaning. EF >35–40% = strong candidate.", critical: true },
+        { id: "ecmo_wean_av", label: "AV opening at reduced ECMO flow", detail: "AV must open with each beat during weaning trial.", critical: true },
+        { id: "ecmo_wean_rv", label: "RV function during weaning trial", detail: "RV failure during weaning = not ready. TAPSE <14 mm at reduced flow = high risk.", critical: true },
+        { id: "ecmo_wean_hemodynamics", label: "Hemodynamic stability during trial", detail: "MAP >65 mmHg, HR <120 bpm, no new arrhythmias during 30–60 min weaning trial.", critical: false },
+      ],
+    },
+  ],
+  mcs_impella: [
+    {
+      module: "mcs_impella", sectionId: "imp_positioning", sortOrder: 0,
+      sectionTitle: "Device Positioning",
+      probeNote: "PLAX (primary) + A5C + TEE ME LAX | Inlet-to-AV distance is the critical measurement",
+      items: [
+        { id: "imp_inlet_av", label: "Inlet-to-AV distance (PLAX / TEE ME LAX)", detail: "Optimal: 3.5–4.5 cm below aortic valve. <3.5 cm = LVOT position, suction alarms. >5 cm = MV entrapment.", critical: true },
+        { id: "imp_outlet_aorta", label: "Outlet area in ascending aorta (above AV)", detail: "Outlet must be above the AV plane. Outlet in LVOT = recirculation.", critical: true },
+        { id: "imp_av_leaflets", label: "AV leaflets not impinged by device", detail: "Device should cross the AV without impinging on leaflets. New AR = leaflet impingement.", critical: true },
+        { id: "imp_mv_mr", label: "MR severity (new MR = pigtail entanglement)", detail: "New or worsening MR after Impella placement = pigtail entanglement in MV apparatus. Withdraw device immediately.", critical: true },
+        { id: "imp_ar", label: "AR severity (color Doppler)", detail: "Impella increases AR risk. Moderate-severe AR = recirculation, reduced net support.", critical: true },
+      ],
+    },
+    {
+      module: "mcs_impella", sectionId: "imp_versions", sortOrder: 1,
+      sectionTitle: "Device Versions — Reference",
+      probeNote: "Reference table for Impella CP, 5.5, ECP, RP, and 2.5",
+      items: [
+        { id: "imp_25", label: "Impella 2.5 — max 2.5 L/min", detail: "Femoral artery access. P-levels P1–P8. Inlet 3.5–4.5 cm below AV. Smallest profile (12F).", critical: false },
+        { id: "imp_cp", label: "Impella CP — max 3.7 L/min", detail: "Femoral artery access. P-levels P1–P8. Inlet 3.5–4.5 cm below AV. 14F sheath.", critical: false },
+        { id: "imp_55", label: "Impella 5.5 — max 5.5 L/min", detail: "Surgical cutdown (axillary or femoral). P-levels P1–P8. Inlet 3.5–4.5 cm below AV. 21F.", critical: false },
+        { id: "imp_ecp", label: "Impella ECP — max 5.0 L/min (expandable)", detail: "Femoral artery access, expandable catheter. P-levels P1–P8. Inlet 3.5–4.5 cm below AV. 9F delivery.", critical: false },
+        { id: "imp_rp", label: "Impella RP — max 4.3 L/min (RV support)", detail: "Femoral vein access. Inlet at IVC/RA junction. Outlet in main pulmonary artery. For acute RV failure.", critical: false },
+      ],
+    },
+  ],
+  mcs_lifevest: [
+    {
+      module: "mcs_lifevest", sectionId: "lv_ef_assessment", sortOrder: 0,
+      sectionTitle: "EF Assessment for WCD Prescription",
+      probeNote: "Apical 4-chamber + Apical 2-chamber | Biplane Simpson's method only",
+      items: [
+        { id: "lv_ef_biplane", label: "Biplane Simpson's EF (A4C + A2C)", detail: "EF ≤35% = WCD indication (new cardiomyopathy, post-MI, post-revascularization). Visual EF not acceptable.", critical: true },
+        { id: "lv_ef_contrast", label: "Contrast echo if ≥2 segments not visualized", detail: "Definity or Lumason for LVO. Required when endocardial definition is inadequate for EF measurement.", critical: true },
+        { id: "lv_lvedd", label: "LVEDD and LVESD (PLAX M-mode)", detail: "Document LV dimensions for serial comparison. Positive remodeling: ↓ LVEDD and LVESD over time on GDMT.", critical: false },
+        { id: "lv_wma", label: "Wall motion abnormalities (17-segment)", detail: "Document regional WMA for ischemic vs. non-ischemic cardiomyopathy differentiation.", critical: false },
+        { id: "lv_rv", label: "RV size and function (TAPSE, RV S')", detail: "Biventricular dysfunction = higher arrhythmia risk.", critical: false },
+      ],
+    },
+    {
+      module: "mcs_lifevest", sectionId: "lv_followup", sortOrder: 1,
+      sectionTitle: "Follow-Up Echo — WCD Discontinuation Decision",
+      probeNote: "Repeat echo at 3 months on GDMT | EF recovery determines WCD continuation vs. ICD implant",
+      items: [
+        { id: "lv_fu_ef", label: "Repeat biplane EF at 3 months on GDMT", detail: "EF >35% on GDMT ≥3 months: WCD discontinued, ICD not indicated (primary prevention). EF ≤35%: ICD implant.", critical: true },
+        { id: "lv_fu_remodeling", label: "Reverse remodeling assessment", detail: "↓ LVEDD, ↓ LVESD, ↑ EF = positive remodeling on GDMT. Continue GDMT regardless of WCD decision.", critical: false },
+        { id: "lv_fu_diastolic", label: "Diastolic function assessment", detail: "E/A, e', E/e', LAVI, TR velocity. Diastolic dysfunction persists despite EF recovery in some patients.", critical: false },
+      ],
+    },
+  ],
+  mcs_icd: [
+    {
+      module: "mcs_icd", sectionId: "icd_ef_decision", sortOrder: 0,
+      sectionTitle: "EF Assessment for ICD Decision",
+      probeNote: "Apical 4-chamber + Apical 2-chamber | Biplane Simpson's method only | On GDMT ≥3 months",
+      items: [
+        { id: "icd_ef_biplane", label: "Biplane Simpson's EF (A4C + A2C)", detail: "EF ≤35% on GDMT ≥3 months = ICD Class I (primary prevention). EF 36–40%: Class IIb. EF >40%: not indicated.", critical: true },
+        { id: "icd_ef_contrast", label: "Contrast echo if ≥2 segments not visualized", detail: "Required for accurate EF when endocardial definition is inadequate.", critical: true },
+        { id: "icd_gdmt", label: "Confirm GDMT ≥3 months before ICD decision", detail: "EF must be measured on optimized GDMT (ACEi/ARB/ARNI, beta-blocker, MRA, SGLT2i) for ≥3 months.", critical: true },
+        { id: "icd_wma", label: "Wall motion abnormalities (17-segment)", detail: "Ischemic vs. non-ischemic pattern. Scar burden correlates with arrhythmia risk.", critical: false },
+      ],
+    },
+    {
+      module: "mcs_icd", sectionId: "icd_crt_eligibility", sortOrder: 1,
+      sectionTitle: "CRT Eligibility Assessment",
+      probeNote: "PLAX M-mode (SPWMD) + LVOT/RVOT PW Doppler (IVMD) + TDI",
+      items: [
+        { id: "icd_crt_spwmd", label: "SPWMD (septal-to-posterior wall motion delay)", detail: "PLAX M-mode. SPWMD >130 ms = significant intraventricular dyssynchrony. Supports CRT benefit.", critical: false },
+        { id: "icd_crt_ivmd", label: "IVMD (interventricular mechanical delay)", detail: "IVMD = aortic pre-ejection time − pulmonary pre-ejection time. >40 ms = significant interventricular dyssynchrony.", critical: false },
+        { id: "icd_crt_primary", label: "Primary CRT criteria (QRS + LBBB)", detail: "EF ≤35% + LBBB + QRS ≥150 ms = Class I CRT indication. Echo dyssynchrony is supplementary.", critical: true },
+      ],
+    },
+    {
+      module: "mcs_icd", sectionId: "icd_post_implant", sortOrder: 2,
+      sectionTitle: "Post-Implant Assessment",
+      probeNote: "A4C + Subcostal | Assess for pericardial effusion and lead position",
+      items: [
+        { id: "icd_post_effusion", label: "Pericardial effusion (subcostal)", detail: "Any new effusion post-ICD implant: assess for tamponade physiology. IVC collapsibility for RAP.", critical: true },
+        { id: "icd_post_lead", label: "RV lead position (A4C)", detail: "Hyperechoic structure at RV apex or RVOT septum. Lead perforation: new effusion + new WMA.", critical: false },
+        { id: "icd_post_tr", label: "New TR (TV impingement by lead)", detail: "New TR after ICD implant: RV lead may be impinging on TV leaflets. Assess TR severity.", critical: false },
+      ],
+    },
+  ],
+});
+
 // ─── Module List ──────────────────────────────────────────────────────────────
 const MODULES = [
   { id: "tte", label: "TTE Navigator" },
@@ -766,6 +934,11 @@ const MODULES = [
   { id: "ice", label: "ICE Navigator" },
   { id: "diastology", label: "Diastology Navigator" },
   { id: "pulm_htn", label: "Pulmonary HTN Navigator" },
+  { id: "mcs_lvad", label: "MechanicalSupportAssist™ — LVAD" },
+  { id: "mcs_ecmo", label: "MechanicalSupportAssist™ — ECMO" },
+  { id: "mcs_impella", label: "MechanicalSupportAssist™ — Impella" },
+  { id: "mcs_lifevest", label: "MechanicalSupportAssist™ — LifeVest (WCD)" },
+  { id: "mcs_icd", label: "MechanicalSupportAssist™ — ICD / CRT-D" },
 ];
 
 const BRAND = "#189aa1";

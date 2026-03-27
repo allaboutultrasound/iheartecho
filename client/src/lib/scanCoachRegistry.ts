@@ -25,7 +25,13 @@ export type ScanCoachModule =
   | "pocus_lung"
   // ACHD & ECG
   | "achd"
-  | "ecg";
+  | "ecg"
+  // Mechanical Circulatory Support
+  | "mcs_lvad"
+  | "mcs_ecmo"
+  | "mcs_impella"
+  | "mcs_lifevest"
+  | "mcs_icd";
 
 export interface ScanCoachViewMeta {
   id: string;
@@ -408,6 +414,75 @@ export const SCANCOACH_MODULES: ScanCoachModuleMeta[] = [
       { id: "lbbb-rbbb",        name: "LBBB vs RBBB Morphology Reference",                 group: "ECG Reference" },
       { id: "brugada-pattern",  name: "Brugada Pattern (Type 1, 2, 3)",                    group: "ECG Reference" },
       { id: "sgarbossa",        name: "Sgarbossa Criteria Reference",                      group: "ECG Reference" },
+    ],
+  },
+  // ─── Mechanical Circulatory Support ────────────────────────────────────────
+  {
+    key: "mcs_lvad",
+    label: "LVAD ScanCoach",
+    path: "/mechanical-support-scan-coach?device=lvad",
+    views: [
+      { id: "plax_cannula",    name: "PLAX — Inflow Cannula Position",          group: "LVAD" },
+      { id: "a5c_cannula",     name: "A5C — Cannula Tip Confirmation",          group: "LVAD" },
+      { id: "a4c_rv",          name: "A4C — RV Function",                       group: "LVAD" },
+      { id: "a4c_lv",          name: "A4C — LV Decompression",                  group: "LVAD" },
+      { id: "subcostal_ivc",   name: "Subcostal — IVC / RAP",                   group: "LVAD" },
+      { id: "cw_ar",           name: "CW Doppler — AR Assessment",              group: "LVAD" },
+      { id: "pw_cannula",      name: "PW Doppler — Inflow Cannula Velocity",    group: "LVAD" },
+    ],
+  },
+  {
+    key: "mcs_ecmo",
+    label: "ECMO ScanCoach",
+    path: "/mechanical-support-scan-coach?device=ecmo",
+    views: [
+      { id: "plax_lv",         name: "PLAX — LV Distension Assessment",         group: "VA-ECMO" },
+      { id: "a4c_av",          name: "A4C — AV Opening",                        group: "VA-ECMO" },
+      { id: "a4c_ef",          name: "A4C — LV EF (Weaning)",                   group: "VA-ECMO" },
+      { id: "subcostal_ivc",   name: "Subcostal — IVC",                         group: "VA-ECMO" },
+      { id: "tee_bicaval",     name: "TEE Bicaval — Venous Cannula",            group: "Cannula" },
+      { id: "tee_melax",       name: "TEE ME LAX — Arterial Cannula",           group: "Cannula" },
+      { id: "avalon_jet",      name: "Avalon Return Jet (VV-ECMO)",             group: "VV-ECMO" },
+    ],
+  },
+  {
+    key: "mcs_impella",
+    label: "Impella ScanCoach",
+    path: "/mechanical-support-scan-coach?device=impella",
+    views: [
+      { id: "plax_inlet",      name: "PLAX — Inlet-to-AV Distance",             group: "Positioning" },
+      { id: "a5c_outlet",      name: "A5C — Outlet in Ascending Aorta",         group: "Positioning" },
+      { id: "tee_melax",       name: "TEE ME LAX — Inlet Confirmation",         group: "Positioning" },
+      { id: "cw_ar",           name: "CW Doppler — AR Assessment",              group: "Monitoring" },
+      { id: "a4c_mr",          name: "A4C — MR (Pigtail Entanglement)",         group: "Monitoring" },
+      { id: "a4c_rv",          name: "A4C — RV Function",                       group: "Monitoring" },
+    ],
+  },
+  {
+    key: "mcs_lifevest",
+    label: "LifeVest (WCD) ScanCoach",
+    path: "/mechanical-support-scan-coach?device=lifevest",
+    views: [
+      { id: "a4c_ef",          name: "A4C — Biplane EF (Simpson's)",            group: "EF Assessment" },
+      { id: "a2c_ef",          name: "A2C — Biplane EF (Simpson's)",            group: "EF Assessment" },
+      { id: "plax_lv",         name: "PLAX — LV Dimensions (M-mode)",           group: "EF Assessment" },
+      { id: "a4c_wma",         name: "A4C — Wall Motion Assessment",            group: "EF Assessment" },
+      { id: "a4c_rv",          name: "A4C — RV Function",                       group: "Follow-Up" },
+      { id: "a4c_diastolic",   name: "A4C — Diastolic Function",                group: "Follow-Up" },
+    ],
+  },
+  {
+    key: "mcs_icd",
+    label: "ICD / CRT-D ScanCoach",
+    path: "/mechanical-support-scan-coach?device=icd",
+    views: [
+      { id: "a4c_ef",          name: "A4C — Biplane EF (Simpson's)",            group: "ICD Decision" },
+      { id: "a2c_ef",          name: "A2C — Biplane EF (Simpson's)",            group: "ICD Decision" },
+      { id: "plax_lv",         name: "PLAX — LV Dimensions",                    group: "ICD Decision" },
+      { id: "plax_mmode",      name: "PLAX M-Mode — SPWMD (CRT)",               group: "CRT Eligibility" },
+      { id: "pw_ivmd",         name: "PW Doppler — IVMD (CRT)",                 group: "CRT Eligibility" },
+      { id: "subcostal_lead",  name: "Subcostal — Post-Implant Effusion",       group: "Post-Implant" },
+      { id: "a4c_lead",        name: "A4C — RV Lead Position",                  group: "Post-Implant" },
     ],
   },
 ];

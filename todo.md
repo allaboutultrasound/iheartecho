@@ -749,3 +749,7 @@
 - [x] ScanCoachHub: MCS Devices added to premium coaches list (15 views, routes to /mechanical-support-scan-coach)
 - [x] EchoAssistHub: MechanicalSupportAssist™ added to specialties list (premium, links to Navigator + ScanCoach)
 - [x] Home.tsx: MechanicalSupportAssist™ module card added (purple, premium, interests: adultEcho + acs)
+
+## MechanicalSupportAssist™ Editor Registration (Mar 27 2026)
+- [x] NavigatorEditor: add MechanicalSupportAssist™ as a selectable module (LVAD, ECMO, Impella, LifeVest, ICD tabs)
+- [x] ScanCoachEditor: add MechanicalSupportAssist™ ScanCoach as a selectable module (all device views)

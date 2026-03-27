@@ -53,6 +53,11 @@ const MODULE_ICONS: Record<string, React.ReactNode> = {
   pocus_rush:    <Zap className="w-5 h-5" />,
   pocus_cardiac: <Heart className="w-5 h-5" />,
   pocus_lung:    <Wind className="w-5 h-5" />,
+  mcs_lvad:      <Activity className="w-5 h-5" />,
+  mcs_ecmo:      <Activity className="w-5 h-5" />,
+  mcs_impella:   <Zap className="w-5 h-5" />,
+  mcs_lifevest:  <Shield className="w-5 h-5" />,
+  mcs_icd:       <Heart className="w-5 h-5" />,
 };
 
 const BRAND = "#189aa1";
