@@ -838,29 +838,177 @@ Object.assign(STATIC_DEFAULTS, {
       ],
     },
   ],
-  mcs_impella: [
+  // ─── Impella 2.5 ──────────────────────────────────────────────────────────────
+  mcs_impella_25: [
     {
-      module: "mcs_impella", sectionId: "imp_positioning", sortOrder: 0,
-      sectionTitle: "Device Positioning",
-      probeNote: "PLAX (primary) + A5C + TEE ME LAX | Inlet-to-AV distance is the critical measurement",
+      module: "mcs_impella_25", sectionId: "imp25_overview", sortOrder: 0,
+      sectionTitle: "Impella 2.5 — Device Overview",
+      probeNote: "2.5 L/min | 12Fr percutaneous femoral | P1–P8",
       items: [
-        { id: "imp_inlet_av", label: "Inlet-to-AV distance (PLAX / TEE ME LAX)", detail: "Optimal: 3.5–4.5 cm below aortic valve. <3.5 cm = LVOT position, suction alarms. >5 cm = MV entrapment.", critical: true },
-        { id: "imp_outlet_aorta", label: "Outlet area in ascending aorta (above AV)", detail: "Outlet must be above the AV plane. Outlet in LVOT = recirculation.", critical: true },
-        { id: "imp_av_leaflets", label: "AV leaflets not impinged by device", detail: "Device should cross the AV without impinging on leaflets. New AR = leaflet impingement.", critical: true },
-        { id: "imp_mv_mr", label: "MR severity (new MR = pigtail entanglement)", detail: "New or worsening MR after Impella placement = pigtail entanglement in MV apparatus. Withdraw device immediately.", critical: true },
-        { id: "imp_ar", label: "AR severity (color Doppler)", detail: "Impella increases AR risk. Moderate-severe AR = recirculation, reduced net support.", critical: true },
+        { id: "imp25_specs", label: "Device: 2.5 L/min max, 12Fr, femoral artery, P1–P8", detail: "Smallest LV Impella. Percutaneous femoral artery access. Adequate for high-risk PCI; insufficient for severe cardiogenic shock (SCAI Stage C–D).", critical: false },
+        { id: "imp25_indication", label: "Indications: high-risk PCI, mild cardiogenic shock", detail: "Elective high-risk PCI, mild-to-moderate cardiogenic shock, hemodynamic support during ablation. Not adequate for SCAI Stage C–D.", critical: false },
       ],
     },
     {
-      module: "mcs_impella", sectionId: "imp_versions", sortOrder: 1,
-      sectionTitle: "Device Versions — Reference",
-      probeNote: "Reference table for Impella CP, 5.5, ECP, RP, and 2.5",
+      module: "mcs_impella_25", sectionId: "imp25_positioning", sortOrder: 1,
+      sectionTitle: "Impella 2.5 — Positioning Protocol",
+      probeNote: "PLAX (primary) + A5C + TEE ME LAX | Inlet-to-AV: 3.5–4.5 cm",
       items: [
-        { id: "imp_25", label: "Impella 2.5 — max 2.5 L/min", detail: "Femoral artery access. P-levels P1–P8. Inlet 3.5–4.5 cm below AV. Smallest profile (12F).", critical: false },
-        { id: "imp_cp", label: "Impella CP — max 3.7 L/min", detail: "Femoral artery access. P-levels P1–P8. Inlet 3.5–4.5 cm below AV. 14F sheath.", critical: false },
-        { id: "imp_55", label: "Impella 5.5 — max 5.5 L/min", detail: "Surgical cutdown (axillary or femoral). P-levels P1–P8. Inlet 3.5–4.5 cm below AV. 21F.", critical: false },
-        { id: "imp_ecp", label: "Impella ECP — max 5.0 L/min (expandable)", detail: "Femoral artery access, expandable catheter. P-levels P1–P8. Inlet 3.5–4.5 cm below AV. 9F delivery.", critical: false },
-        { id: "imp_rp", label: "Impella RP — max 4.3 L/min (RV support)", detail: "Femoral vein access. Inlet at IVC/RA junction. Outlet in main pulmonary artery. For acute RV failure.", critical: false },
+        { id: "imp25_inlet_av", label: "Inlet-to-AV distance: 3.5–4.5 cm (PLAX / A5C)", detail: "<3.5 cm = inlet in LVOT, suction alarms. >5 cm = pigtail entanglement in MV apparatus. PLAX is gold standard.", critical: true },
+        { id: "imp25_outlet", label: "Outlet in ascending aorta (above AV)", detail: "Outlet must be above AV plane. Outlet in LVOT = recirculation.", critical: true },
+        { id: "imp25_av_leaflets", label: "AV leaflets not impinged by device shaft", detail: "New AR after insertion = leaflet impingement. Assess color Doppler in PLAX.", critical: true },
+        { id: "imp25_mv_mr", label: "MV: no new MR (pigtail entanglement)", detail: "New MR + suction alarms = pigtail entanglement. Withdraw device immediately.", critical: true },
+      ],
+    },
+    {
+      module: "mcs_impella_25", sectionId: "imp25_monitoring", sortOrder: 2,
+      sectionTitle: "Impella 2.5 — Hemodynamic Monitoring",
+      probeNote: "Serial PLAX + A4C | AR assessment at each echo",
+      items: [
+        { id: "imp25_lv_unload", label: "LV unloading: LVEDD/LVESD decreasing", detail: "LV should decompress with Impella support. Persistent dilation at high P-level = malposition or inadequate support.", critical: true },
+        { id: "imp25_ar", label: "AR assessment (color Doppler PLAX) — 12Fr profile", detail: "12Fr = lowest AR risk of all LV Impellas. Still monitor serially. Significant AR = recirculation.", critical: false },
+        { id: "imp25_suction", label: "Suction alarms: assess LV size + device position", detail: "Causes: hypovolemia, RV failure, device malposition. Do not simply reduce P-level without echo assessment.", critical: true },
+        { id: "imp25_wean", label: "Weaning: EF >25–30%, stable at P2 for 4–6 hrs", detail: "Stepwise P-level reduction. Confirm EF >25–30% and stable hemodynamics at P2 before removal.", critical: false },
+      ],
+    },
+  ],
+  // ─── Impella CP ──────────────────────────────────────────────────────────────
+  mcs_impella_cp: [
+    {
+      module: "mcs_impella_cp", sectionId: "impcp_overview", sortOrder: 0,
+      sectionTitle: "Impella CP — Device Overview",
+      probeNote: "3.7–4.3 L/min | 14Fr percutaneous femoral | P1–P8",
+      items: [
+        { id: "impcp_specs", label: "Device: 3.7–4.3 L/min max, 14Fr, femoral artery, P1–P8", detail: "Most commonly used Impella for cardiogenic shock. 14Fr profile. CP Smart: up to 4.3 L/min.", critical: false },
+        { id: "impcp_ar_risk", label: "AR risk: 14Fr profile — higher than 2.5", detail: "14Fr profile = higher AR risk. Significant AR causes recirculation. Serial color Doppler mandatory.", critical: true },
+        { id: "impcp_ecpella", label: "ECPELLA: Impella CP + VA-ECMO for LV venting", detail: "Impella CP is the standard LV vent for VA-ECMO (ECPELLA). Monitor AV opening and LV size closely.", critical: true },
+      ],
+    },
+    {
+      module: "mcs_impella_cp", sectionId: "impcp_positioning", sortOrder: 1,
+      sectionTitle: "Impella CP — Positioning Protocol",
+      probeNote: "PLAX (primary) + A5C + TEE ME LAX | Inlet-to-AV: 3.5–4.5 cm",
+      items: [
+        { id: "impcp_inlet_av", label: "Inlet-to-AV distance: 3.5–4.5 cm (PLAX / A5C)", detail: "<3.5 cm = inlet in LVOT, suction alarms. >5 cm = pigtail entanglement in MV apparatus.", critical: true },
+        { id: "impcp_outlet", label: "Outlet in ascending aorta (above AV)", detail: "Outlet must be above AV plane. Outlet in LVOT = recirculation.", critical: true },
+        { id: "impcp_av_leaflets", label: "AV leaflets not impinged by device shaft", detail: "New AR after insertion = leaflet impingement. Assess color Doppler in PLAX.", critical: true },
+        { id: "impcp_mv_mr", label: "MV: no new MR (pigtail entanglement)", detail: "New MR + suction alarms = pigtail entanglement. Withdraw device immediately.", critical: true },
+      ],
+    },
+    {
+      module: "mcs_impella_cp", sectionId: "impcp_monitoring", sortOrder: 2,
+      sectionTitle: "Impella CP — Hemodynamic Monitoring",
+      probeNote: "Serial PLAX + A4C | AR assessment mandatory at each echo",
+      items: [
+        { id: "impcp_lv_unload", label: "LV unloading: LVEDD/LVESD decreasing", detail: "LV should decompress with Impella support. Persistent dilation at high P-level = malposition.", critical: true },
+        { id: "impcp_ar", label: "AR assessment (color Doppler PLAX) — 14Fr profile", detail: "14Fr = significant AR risk. Significant AR = recirculation. Assess at every echo and every P-level change.", critical: true },
+        { id: "impcp_suction", label: "Suction alarms: assess LV size + device position", detail: "Causes: hypovolemia, RV failure, device malposition. Do not simply reduce P-level without echo assessment.", critical: true },
+        { id: "impcp_ecpella_av", label: "ECPELLA: AV opening with each beat", detail: "On VA-ECMO + Impella CP: AV must open. Continuous AV closure = LV thrombus risk despite Impella support.", critical: true },
+        { id: "impcp_wean", label: "Weaning: EF >25–30%, stable at P2 for 4–6 hrs", detail: "Stepwise P-level reduction. Confirm EF >25–30% and stable hemodynamics at P2 before removal.", critical: false },
+      ],
+    },
+  ],
+  // ─── Impella 5.5 ──────────────────────────────────────────────────────────────
+  mcs_impella_55: [
+    {
+      module: "mcs_impella_55", sectionId: "imp55_overview", sortOrder: 0,
+      sectionTitle: "Impella 5.5 — Device Overview",
+      probeNote: "5.5 L/min | 21Fr surgical cutdown (axillary or femoral) | P1–P8",
+      items: [
+        { id: "imp55_specs", label: "Device: 5.5 L/min max, 21Fr, surgical cutdown, P1–P8", detail: "Highest flow LV Impella. Surgical cutdown required (axillary preferred). Used for severe cardiogenic shock and bridge to LVAD/transplant.", critical: false },
+        { id: "imp55_ar_risk", label: "AR risk: 21Fr profile — highest of all Impellas", detail: "21Fr = highest AR risk. Significant AR is common. Serial color Doppler mandatory at every echo.", critical: true },
+        { id: "imp55_axillary", label: "Axillary access: echo positioning unchanged", detail: "Axillary access allows patient ambulation. Echo measurements (inlet-to-AV distance) unchanged from femoral access.", critical: false },
+      ],
+    },
+    {
+      module: "mcs_impella_55", sectionId: "imp55_positioning", sortOrder: 1,
+      sectionTitle: "Impella 5.5 — Positioning Protocol",
+      probeNote: "PLAX (primary) + A5C + TEE ME LAX | Inlet-to-AV: 3.5–4.5 cm | Reduce gain (blooming)",
+      items: [
+        { id: "imp55_inlet_av", label: "Inlet-to-AV distance: 3.5–4.5 cm (PLAX / A5C)", detail: "<3.5 cm = inlet in LVOT, suction alarms. >5 cm = pigtail entanglement. 21Fr device is highly echogenic.", critical: true },
+        { id: "imp55_outlet", label: "Outlet in ascending aorta (above AV)", detail: "Outlet must be above AV plane. Outlet in LVOT = recirculation.", critical: true },
+        { id: "imp55_av_leaflets", label: "AV leaflets not impinged (reduce gain for 21Fr)", detail: "21Fr device causes blooming artifact. Reduce gain to visualize AV leaflets clearly.", critical: true },
+        { id: "imp55_mv_mr", label: "MV: no new MR (pigtail entanglement)", detail: "New MR + suction alarms = pigtail entanglement. Withdraw device immediately.", critical: true },
+      ],
+    },
+    {
+      module: "mcs_impella_55", sectionId: "imp55_monitoring", sortOrder: 2,
+      sectionTitle: "Impella 5.5 — Hemodynamic Monitoring & Bridge Assessment",
+      probeNote: "Serial PLAX + A4C + A2C | AR mandatory | Serial bridge-to-LVAD/transplant assessment",
+      items: [
+        { id: "imp55_lv_unload", label: "LV unloading: LVEDD/LVESD decreasing", detail: "5.5 L/min provides near-complete LV unloading. Monitor for over-decompression (rightward septal shift).", critical: true },
+        { id: "imp55_ar", label: "AR assessment (color Doppler PLAX) — 21Fr profile", detail: "21Fr = highest AR risk. Significant AR = substantial recirculation. Mandatory at every echo.", critical: true },
+        { id: "imp55_bridge", label: "Bridge-to-LVAD/transplant: EF, TAPSE, RV FAC, AR, TR", detail: "Serial echo for LVAD/transplant candidacy. Document LVEDD, EF, TAPSE, RV FAC, AR severity, TR severity.", critical: true },
+        { id: "imp55_wean", label: "Weaning: EF >25–30%, stable at P2 for 4–6 hrs", detail: "Stepwise P-level reduction. Improving EF may indicate myocardial recovery — consider weaning trial.", critical: false },
+      ],
+    },
+  ],
+  // ─── Impella ECP ──────────────────────────────────────────────────────────────
+  mcs_impella_ecp: [
+    {
+      module: "mcs_impella_ecp", sectionId: "impecp_overview", sortOrder: 0,
+      sectionTitle: "Impella ECP — Device Overview",
+      probeNote: "5.0 L/min | 9Fr delivery, expandable | Percutaneous femoral | P1–P8",
+      items: [
+        { id: "impecp_specs", label: "Device: 5.0 L/min max, 9Fr delivery, expandable, P1–P8", detail: "Smallest percutaneous delivery for high-flow LV support. Expands to larger profile in LV. Confirm full expansion by echo before high P-levels.", critical: false },
+        { id: "impecp_ar_risk", label: "AR risk: expanded profile — significant (similar to 5.5)", detail: "When fully expanded, AR risk is similar to 5.5. Serial color Doppler mandatory at every echo.", critical: true },
+      ],
+    },
+    {
+      module: "mcs_impella_ecp", sectionId: "impecp_positioning", sortOrder: 1,
+      sectionTitle: "Impella ECP — Positioning Protocol",
+      probeNote: "PLAX (primary) + A5C + TEE ME LAX | Confirm full expansion in LV before high P-level",
+      items: [
+        { id: "impecp_expansion", label: "Confirm full pump expansion in LV (ECP-specific)", detail: "ECP must be fully expanded in LV before high P-levels. Partial expansion in LVOT = reduced flow and LVOT obstruction.", critical: true },
+        { id: "impecp_inlet_av", label: "Inlet-to-AV distance: 3.5–4.5 cm (PLAX / A5C)", detail: "<3.5 cm = inlet in LVOT, suction alarms. >5 cm = pigtail entanglement.", critical: true },
+        { id: "impecp_outlet", label: "Outlet in ascending aorta (above AV)", detail: "Outlet must be above AV plane. Outlet in LVOT = recirculation.", critical: true },
+        { id: "impecp_av_leaflets", label: "AV leaflets not impinged by expanded device", detail: "New AR after insertion = leaflet impingement. Assess color Doppler in PLAX.", critical: true },
+        { id: "impecp_mv_mr", label: "MV: no new MR (pigtail entanglement)", detail: "New MR + suction alarms = pigtail entanglement. Withdraw device immediately.", critical: true },
+      ],
+    },
+    {
+      module: "mcs_impella_ecp", sectionId: "impecp_monitoring", sortOrder: 2,
+      sectionTitle: "Impella ECP — Hemodynamic Monitoring",
+      probeNote: "Serial PLAX + A4C | AR mandatory | Confirm expansion before each P-level increase",
+      items: [
+        { id: "impecp_lv_unload", label: "LV unloading: LVEDD/LVESD decreasing", detail: "LV should decompress with Impella ECP support. Persistent dilation = malposition or inadequate expansion.", critical: true },
+        { id: "impecp_ar", label: "AR assessment (color Doppler PLAX) — expanded profile", detail: "Expanded ECP = significant AR risk. Mandatory serial color Doppler. Significant AR = recirculation.", critical: true },
+        { id: "impecp_suction", label: "Suction alarms: assess LV size + device position + expansion", detail: "Causes: hypovolemia, RV failure, device malposition, partial expansion. Do not simply reduce P-level.", critical: true },
+        { id: "impecp_wean", label: "Weaning: EF >25–30%, stable at P2 for 4–6 hrs", detail: "Stepwise P-level reduction. Confirm EF >25–30% and stable hemodynamics at P2 before removal.", critical: false },
+      ],
+    },
+  ],
+  // ─── Impella RP ──────────────────────────────────────────────────────────────
+  mcs_impella_rp: [
+    {
+      module: "mcs_impella_rp", sectionId: "imprp_overview", sortOrder: 0,
+      sectionTitle: "Impella RP — Device Overview",
+      probeNote: "4.3 L/min | 11Fr femoral vein | Inlet: IVC/RA | Outlet: main PA | P1–P8",
+      items: [
+        { id: "imprp_specs", label: "Device: 4.3 L/min max, 11Fr, femoral vein, IVC→PA", detail: "Right ventricular support device. Inlet at IVC/RA junction, outlet in main pulmonary artery. For acute RV failure.", critical: false },
+        { id: "imprp_indication", label: "Indications: RV failure post-LVAD, post-MI, post-surgery", detail: "Acute RV failure post-LVAD implant, post-MI RV failure, post-cardiac surgery RV failure, RV failure during VA-ECMO weaning.", critical: false },
+      ],
+    },
+    {
+      module: "mcs_impella_rp", sectionId: "imprp_positioning", sortOrder: 1,
+      sectionTitle: "Impella RP — Positioning Protocol",
+      probeNote: "Subcostal IVC (inlet) + PSAX at AV level (outlet) + TEE bicaval + RV inflow-outflow",
+      items: [
+        { id: "imprp_inlet", label: "Inlet at IVC/RA junction (subcostal / TEE bicaval)", detail: "Inlet too high in RA = recirculation. Inlet too deep in IVC = hepatic vein obstruction. TEE bicaval (90–100°) preferred.", critical: true },
+        { id: "imprp_outlet", label: "Outlet in main PA, above pulmonic valve (PSAX / TEE)", detail: "Outlet in RVOT (not main PA) = device too shallow. Confirm with PSAX at AV level or TEE RV inflow-outflow.", critical: true },
+        { id: "imprp_pv", label: "Pulmonic valve: new PR from device crossing", detail: "New PR after RP insertion = device crossing pulmonic valve. Significant PR = recirculation. Assess severity.", critical: true },
+        { id: "imprp_tee", label: "TEE preferred: bicaval (inlet) + RV inflow-outflow (outlet)", detail: "TEE provides superior resolution for RP positioning. Bicaval view for inlet; RV inflow-outflow for outlet.", critical: false },
+      ],
+    },
+    {
+      module: "mcs_impella_rp", sectionId: "imprp_monitoring", sortOrder: 2,
+      sectionTitle: "Impella RP — Hemodynamic Monitoring",
+      probeNote: "A4C (TAPSE, RV S', TR) + PSAX (RVSP) + subcostal (IVC)",
+      items: [
+        { id: "imprp_rv_unload", label: "RV unloading: TAPSE improving, RV size decreasing", detail: "RV should decompress with RP support. Persistent severe RV dysfunction = irreversible RV failure.", critical: true },
+        { id: "imprp_rvsp", label: "RVSP decreasing (TR CW Doppler)", detail: "RVSP should decrease with RP support. Rising RVSP despite RP = inadequate support or irreversible RV failure.", critical: true },
+        { id: "imprp_lv", label: "LV function: RP increases LV preload", detail: "Impella RP increases LV preload. Monitor for LV volume overload if LV function is severely impaired.", critical: true },
+        { id: "imprp_wean", label: "Weaning: TAPSE >10 mm, FAC >25%, stable at P2", detail: "Stepwise P-level reduction. Wean when TAPSE >10 mm, RV S' >6 cm/s, FAC >25%, stable at P2 for 4–6 hours.", critical: false },
       ],
     },
   ],
@@ -936,7 +1084,11 @@ const MODULES = [
   { id: "pulm_htn", label: "Pulmonary HTN Navigator" },
   { id: "mcs_lvad", label: "MechanicalSupportAssist™ — LVAD" },
   { id: "mcs_ecmo", label: "MechanicalSupportAssist™ — ECMO" },
-  { id: "mcs_impella", label: "MechanicalSupportAssist™ — Impella" },
+  { id: "mcs_impella_25",  label: "MechanicalSupportAssist™ — Impella 2.5" },
+  { id: "mcs_impella_cp",  label: "MechanicalSupportAssist™ — Impella CP" },
+  { id: "mcs_impella_55",  label: "MechanicalSupportAssist™ — Impella 5.5" },
+  { id: "mcs_impella_ecp", label: "MechanicalSupportAssist™ — Impella ECP" },
+  { id: "mcs_impella_rp",  label: "MechanicalSupportAssist™ — Impella RP" },
   { id: "mcs_lifevest", label: "MechanicalSupportAssist™ — LifeVest (WCD)" },
   { id: "mcs_icd", label: "MechanicalSupportAssist™ — ICD / CRT-D" },
 ];

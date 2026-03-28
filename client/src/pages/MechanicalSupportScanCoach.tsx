@@ -316,7 +316,8 @@ const ecmoViews: ScanView[] = [
 
 // ─── IMPELLA SCAN VIEWS ───────────────────────────────────────────────────────
 
-const impellaViews: ScanView[] = [
+// Shared LV Impella views (common to 2.5, CP, 5.5, ECP)
+const impellaSharedLVViews: ScanView[] = [
   {
     id: "imp_plax_position",
     name: "PLAX — Inlet-to-AV Distance (Primary)",
@@ -425,38 +426,414 @@ const impellaViews: ScanView[] = [
     critical: true,
   },
   {
-    id: "imp_rp_subcostal",
-    name: "Subcostal / PSAX — Impella RP Assessment",
-    window: "Subcostal + Parasternal",
-    patientPosition: "Supine (subcostal) or left lateral decubitus (PSAX)",
-    probe: "Subcostal: subxiphoid | PSAX: 2nd–4th ICS, left sternal border",
-    depth: "16–20 cm (subcostal), 12–16 cm (PSAX)",
+    id: "imp_a4c_lv_unload",
+    name: "Apical 4-Chamber — LV Unloading & MV",
+    window: "Apical",
+    patientPosition: "Left lateral decubitus, 45–60°",
+    probe: "Cardiac apex, 5th–6th ICS, mid-clavicular | Notch: 3 o'clock",
+    depth: "14–18 cm",
     acquisition: [
-      "Subcostal IVC view: confirm Impella RP inlet at IVC/RA junction.",
-      "PSAX at AV level: identify outlet in main pulmonary artery.",
-      "Apply color Doppler in RVOT/PA: confirm forward flow from RP outlet.",
-      "Assess RV size and function: TAPSE in A4C.",
+      "Obtain standard A4C view.",
+      "Measure LVEDD and LVESD — should decrease from baseline with adequate P-level.",
+      "Assess MV for new MR (pigtail entanglement).",
+      "Measure TAPSE and RV S' — RV failure causes suction alarms.",
     ],
     whatToSee: [
-      "RP inlet: IVC/RA junction (subcostal view).",
-      "RP outlet: main pulmonary artery (PSAX at AV level).",
-      "RV: improving size and function with RP support.",
+      "LV: decreasing LVEDD/LVESD with Impella support.",
+      "MV: no new MR (pigtail entanglement).",
+      "RV: adequate function — RV failure causes LV under-filling.",
     ],
     doppler: [
-      "Color Doppler in PA: confirm forward flow from RP outlet.",
-      "PW Doppler at RP outlet: assess flow velocity.",
-      "TAPSE: monitor RV function improvement.",
+      "MR color Doppler: new MR = pigtail entanglement.",
+      "TAPSE (M-mode): RV function monitoring.",
+      "RV S' (TDI lateral tricuspid annulus): RV function.",
     ],
     pitfalls: [
-      "RP outlet in RVOT (not main PA) = device too shallow — reposition.",
-      "RP inlet in RA (not IVC) = recirculation risk.",
+      "Persistent LV dilation at high P-level = inadequate unloading or device malposition.",
+      "New MR = pigtail entanglement — do not attribute to worsening native MV disease without checking position.",
     ],
     tips: [
-      "TEE is preferred for Impella RP positioning — bicaval and RVOT views.",
-      "Confirm both inlet and outlet positions before initiating support.",
+      "LV decompression is the key hemodynamic goal — document LVEDD at each echo.",
+      "RV failure is a common cause of suction alarms — assess TAPSE and RV S' routinely.",
+    ],
+  },
+];
+
+// Impella 2.5 — specific additional view
+const impella25Views: ScanView[] = [
+  ...impellaSharedLVViews,
+  {
+    id: "imp25_ar_serial",
+    name: "PLAX Color Doppler — AR Serial Assessment (2.5)",
+    window: "Parasternal",
+    patientPosition: "Left lateral decubitus, 30–45°",
+    probe: "2nd–4th ICS, left sternal border | Notch: 10–11 o'clock",
+    depth: "12–16 cm",
+    acquisition: [
+      "Obtain PLAX view with AV and LVOT visible.",
+      "Apply color Doppler box over LVOT and AV.",
+      "Assess AR jet width relative to LVOT diameter.",
+      "Repeat at each P-level change and at each echo assessment.",
+    ],
+    whatToSee: [
+      "AR jet: absent or trivial at 12Fr profile.",
+      "LVOT: no significant diastolic flow reversal.",
+    ],
+    doppler: [
+      "AR color Doppler: jet width / LVOT width ratio.",
+      "Descending aorta PW: holodiastolic flow reversal = significant AR.",
+    ],
+    pitfalls: [
+      "Even trivial AR causes some recirculation at high P-levels — document and trend.",
+    ],
+    tips: [
+      "Impella 2.5 (12Fr) has the lowest AR risk of all LV Impellas — but AR still occurs.",
+      "Serial AR assessment is mandatory at every echo regardless of device size.",
+    ],
+  },
+];
+
+// Impella CP — specific additional views
+const impellaCPViews: ScanView[] = [
+  ...impellaSharedLVViews,
+  {
+    id: "impcp_ar_serial",
+    name: "PLAX Color Doppler — AR Assessment (CP)",
+    window: "Parasternal",
+    patientPosition: "Left lateral decubitus, 30–45°",
+    probe: "2nd–4th ICS, left sternal border | Notch: 10–11 o'clock",
+    depth: "12–16 cm",
+    acquisition: [
+      "Obtain PLAX view with AV and LVOT visible.",
+      "Apply color Doppler box over LVOT and AV.",
+      "Assess AR jet width relative to LVOT diameter.",
+      "Repeat at each P-level change and at each echo assessment.",
+      "If significant AR: assess descending aorta for holodiastolic flow reversal.",
+    ],
+    whatToSee: [
+      "AR jet: may be moderate with 14Fr profile.",
+      "LVOT: assess for diastolic flow reversal.",
+      "Descending aorta: holodiastolic reversal = significant AR.",
+    ],
+    doppler: [
+      "AR color Doppler: jet width / LVOT width ratio (>65% = severe).",
+      "AR CW: PHT <200 ms = severe AR.",
+      "Descending aorta PW: holodiastolic flow reversal = significant AR.",
+    ],
+    pitfalls: [
+      "Significant AR with Impella CP is common — causes recirculation and reduces net forward flow.",
+      "Do not increase P-level if significant AR is present without repositioning assessment.",
+    ],
+    tips: [
+      "Impella CP (14Fr) has higher AR risk than 2.5 — serial assessment is critical.",
+      "ECPELLA configuration: AR assessment is even more important as recirculation reduces ECMO efficacy.",
     ],
     critical: true,
   },
+  {
+    id: "impcp_ecpella",
+    name: "ECPELLA Assessment — LV Venting Confirmation",
+    window: "Parasternal + Apical",
+    patientPosition: "Left lateral decubitus, 30–45°",
+    probe: "PLAX: 2nd–4th ICS, left sternal border | A4C: cardiac apex",
+    depth: "12–16 cm (PLAX), 14–18 cm (A4C)",
+    acquisition: [
+      "PLAX: confirm Impella CP inlet-to-AV distance (3.5–4.5 cm).",
+      "A4C: assess LV size — should be decompressed (LVEDD decreasing).",
+      "PLAX: confirm AV opening — AV must open on VA-ECMO to prevent thrombus.",
+      "PLAX color Doppler: assess AR from Impella CP.",
+      "A4C: assess RV function (TAPSE, RV S').",
+    ],
+    whatToSee: [
+      "LV: decompressed (decreasing LVEDD) — Impella CP venting the LV.",
+      "AV: opening with each beat — continuous closure = thrombus risk.",
+      "AR: assess severity — significant AR reduces Impella CP efficacy.",
+    ],
+    doppler: [
+      "AV color Doppler: confirm AV opening.",
+      "AR color Doppler: assess severity.",
+      "TAPSE: RV function monitoring.",
+    ],
+    pitfalls: [
+      "Continuous AV closure on VA-ECMO + Impella CP = LV thrombus risk despite Impella support.",
+      "Significant AR with Impella CP on VA-ECMO = recirculation reducing net forward flow.",
+    ],
+    tips: [
+      "ECPELLA: Impella CP is the LV vent for VA-ECMO — confirm LV decompression at every echo.",
+      "AV must open on VA-ECMO — if AV does not open despite Impella CP, increase P-level or consider repositioning.",
+    ],
+    critical: true,
+  },
+];
+
+// Impella 5.5 — specific additional views
+const impella55Views: ScanView[] = [
+  ...impellaSharedLVViews,
+  {
+    id: "imp55_ar_serial",
+    name: "PLAX Color Doppler — AR Assessment (5.5)",
+    window: "Parasternal",
+    patientPosition: "Left lateral decubitus, 30–45°",
+    probe: "2nd–4th ICS, left sternal border | Notch: 10–11 o'clock",
+    depth: "12–16 cm",
+    acquisition: [
+      "Obtain PLAX view with AV and LVOT visible.",
+      "Reduce gain to avoid blooming artifact from 21Fr device.",
+      "Apply color Doppler box over LVOT and AV.",
+      "Assess AR jet width relative to LVOT diameter.",
+      "Repeat at each P-level change and at each echo assessment.",
+    ],
+    whatToSee: [
+      "AR jet: often significant with 21Fr profile.",
+      "LVOT: assess for diastolic flow reversal.",
+      "AV leaflets: confirm not impinged (larger device = higher impingement risk).",
+    ],
+    doppler: [
+      "AR color Doppler: jet width / LVOT width ratio (>65% = severe).",
+      "AR CW: PHT <200 ms = severe AR.",
+      "Descending aorta PW: holodiastolic flow reversal = significant AR.",
+    ],
+    pitfalls: [
+      "21Fr device causes significant blooming artifact — reduce gain before color Doppler.",
+      "Significant AR is common with 5.5 — causes substantial recirculation at high P-levels.",
+    ],
+    tips: [
+      "Impella 5.5 (21Fr) has the highest AR risk — AR assessment is mandatory at every echo.",
+      "Reduce gain and use harmonic imaging to minimize blooming artifact from the large device.",
+    ],
+    critical: true,
+  },
+  {
+    id: "imp55_bridge_serial",
+    name: "Serial Echo — Bridge-to-LVAD/Transplant Assessment",
+    window: "Parasternal + Apical",
+    patientPosition: "Left lateral decubitus, 30–45°",
+    probe: "PLAX: 2nd–4th ICS | A4C: cardiac apex",
+    depth: "12–16 cm (PLAX), 14–18 cm (A4C)",
+    acquisition: [
+      "PLAX: LVEDD, LVESD, LV wall motion.",
+      "A4C + A2C: biplane EF (Simpson's method).",
+      "A4C: TAPSE (M-mode lateral tricuspid annulus), RV S' (TDI).",
+      "PLAX: AR severity (color Doppler).",
+      "A4C: TR severity (color Doppler, CW).",
+      "Document trajectory: improving, stable, or deteriorating.",
+    ],
+    whatToSee: [
+      "LVEDD: trend from baseline.",
+      "EF: trajectory — improving = myocardial recovery; stable/declining = LVAD/transplant.",
+      "TAPSE: RV function — critical for LVAD candidacy.",
+      "AR and TR: severity — affects LVAD candidacy and surgical planning.",
+    ],
+    doppler: [
+      "EF (biplane Simpson's): serial measurement.",
+      "TAPSE (M-mode): RV function.",
+      "RV S' (TDI): RV function.",
+      "TR CW: RVSP estimation.",
+      "AR color Doppler: severity.",
+    ],
+    pitfalls: [
+      "Single echo assessment is insufficient — trajectory is more important than any single value.",
+      "RV failure is a contraindication to standard LVAD — TAPSE <10 mm, FAC <25% = high risk.",
+    ],
+    tips: [
+      "Document all measurements in a standardized serial echo table for the LVAD/transplant team.",
+      "Improving EF with Impella 5.5 support may indicate myocardial recovery — consider weaning trial.",
+    ],
+    critical: true,
+  },
+];
+
+// Impella ECP — specific additional views
+const impellaECPViews: ScanView[] = [
+  ...impellaSharedLVViews,
+  {
+    id: "impecp_expansion",
+    name: "PLAX — Pump Expansion Confirmation (ECP-Specific)",
+    window: "Parasternal",
+    patientPosition: "Left lateral decubitus, 30–45°",
+    probe: "2nd–4th ICS, left sternal border | Notch: 10–11 o'clock",
+    depth: "12–16 cm",
+    acquisition: [
+      "Obtain PLAX view with LV cavity and AV clearly visible.",
+      "Identify the ECP device: confirm expanded pump body is in LV cavity.",
+      "Confirm pump is NOT in the LVOT (partial expansion = reduced flow).",
+      "Measure inlet-to-AV distance: 3.5–4.5 cm.",
+      "Apply color Doppler: assess AR from expanded device.",
+    ],
+    whatToSee: [
+      "Expanded ECP pump body in LV cavity — larger than delivery profile.",
+      "Pump fully expanded: not in LVOT.",
+      "Inlet: 3.5–4.5 cm below AV.",
+      "AR: assess severity (expanded profile = significant AR risk).",
+    ],
+    doppler: [
+      "AR color Doppler: assess jet width in LVOT.",
+      "Color Doppler: confirm no LVOT obstruction from expanded pump.",
+    ],
+    pitfalls: [
+      "Partial expansion in LVOT: pump not fully deployed — reduced flow and LVOT obstruction risk.",
+      "Expanded profile causes significant AR — do not increase P-level without AR assessment.",
+    ],
+    tips: [
+      "ECP expansion must be confirmed by echo before activating at high P-levels.",
+      "Expanded ECP is more echogenic than delivery profile — easier to identify in PLAX.",
+    ],
+    critical: true,
+  },
+];
+
+// Impella RP — right-sided views
+const impellaRPViews: ScanView[] = [
+  {
+    id: "imp_rp_subcostal",
+    name: "Subcostal IVC — Inlet Position (IVC/RA Junction)",
+    window: "Subcostal",
+    patientPosition: "Supine, legs flat",
+    probe: "Subxiphoid, angled toward right atrium | Notch: 12 o'clock",
+    depth: "16–20 cm",
+    acquisition: [
+      "Obtain subcostal IVC long-axis view.",
+      "Identify the Impella RP inlet area: should be at IVC/RA junction.",
+      "Confirm inlet is NOT in the RA body (too high) or deep IVC (too deep).",
+      "Apply color Doppler: assess flow at inlet.",
+    ],
+    whatToSee: [
+      "RP inlet at IVC/RA junction.",
+      "IVC: not obstructed by device.",
+      "RA: inlet not floating freely in RA (suction risk).",
+    ],
+    doppler: [
+      "Color Doppler at inlet: confirm drainage flow.",
+      "IVC PW Doppler: assess for obstruction.",
+    ],
+    pitfalls: [
+      "Inlet too high in RA = recirculation (oxygenated blood from RP outlet re-enters inlet).",
+      "Inlet too deep in IVC = hepatic vein obstruction.",
+    ],
+    tips: [
+      "TEE bicaval view (90–100°) provides superior resolution for inlet positioning.",
+      "Confirm inlet position before initiating support.",
+    ],
+    critical: true,
+  },
+  {
+    id: "imp_rp_psax_outlet",
+    name: "PSAX at AV Level — Outlet in Main PA",
+    window: "Parasternal",
+    patientPosition: "Left lateral decubitus, 30–45°",
+    probe: "2nd–4th ICS, left sternal border | Notch: 10–11 o'clock",
+    depth: "10–14 cm",
+    acquisition: [
+      "Obtain PSAX view at AV level (RVOT and main PA visible).",
+      "Identify the Impella RP outlet area in the main pulmonary artery.",
+      "Confirm outlet is above the pulmonic valve (not in RVOT).",
+      "Apply color Doppler in RVOT/PA: confirm forward flow from RP outlet.",
+    ],
+    whatToSee: [
+      "RP outlet in main pulmonary artery, above pulmonic valve.",
+      "RVOT: device shaft crossing pulmonic valve.",
+      "Color flow: forward flow from RP outlet into PA.",
+    ],
+    doppler: [
+      "Color Doppler in PA: confirm forward flow from RP outlet.",
+      "PR color Doppler: assess for device-related PR.",
+      "PW Doppler at RP outlet: assess flow velocity.",
+    ],
+    pitfalls: [
+      "Outlet in RVOT (not main PA) = device too shallow — reposition.",
+      "New PR after RP insertion = device crossing pulmonic valve — assess severity.",
+    ],
+    tips: [
+      "PSAX at AV level is the best TTE view for RP outlet confirmation.",
+      "TEE RV inflow-outflow view provides superior resolution for outlet positioning.",
+    ],
+    critical: true,
+  },
+  {
+    id: "imp_rp_a4c_rv",
+    name: "Apical 4-Chamber — RV Unloading Assessment",
+    window: "Apical",
+    patientPosition: "Left lateral decubitus, 45–60°",
+    probe: "Cardiac apex, 5th–6th ICS, mid-clavicular | Notch: 3 o'clock",
+    depth: "14–18 cm",
+    acquisition: [
+      "Obtain standard A4C view.",
+      "Measure TAPSE (M-mode, lateral tricuspid annulus).",
+      "Measure RV S' (TDI, lateral tricuspid annulus).",
+      "Assess RV size (RV:LV ratio).",
+      "Apply color Doppler: assess TR severity.",
+    ],
+    whatToSee: [
+      "RV: decreasing size with RP support.",
+      "TAPSE: improving trend (target >10 mm).",
+      "TR: severity — improving TR suggests RV unloading.",
+      "IVS: D-shaped septum should normalize with RV unloading.",
+    ],
+    doppler: [
+      "TAPSE (M-mode): serial RV function.",
+      "RV S' (TDI): serial RV function.",
+      "TR CW: RVSP estimation.",
+      "TR color Doppler: severity assessment.",
+    ],
+    pitfalls: [
+      "Persistent RV dilation despite RP support = irreversible RV failure.",
+      "D-shaped septum persisting at high P-level = inadequate RV unloading.",
+    ],
+    tips: [
+      "TAPSE >10 mm and FAC >25% are weaning targets for Impella RP.",
+      "LV function monitoring is essential — RP increases LV preload.",
+    ],
+    critical: true,
+  },
+  {
+    id: "imp_rp_tee",
+    name: "TEE Bicaval + RV Inflow-Outflow — Gold Standard",
+    window: "Transesophageal",
+    patientPosition: "Supine (intubated) or left lateral decubitus",
+    probe: "Bicaval: 90–100° | RV inflow-outflow: 60–90°",
+    depth: "N/A (TEE)",
+    acquisition: [
+      "Bicaval view (90–100°): confirm inlet at IVC/RA junction.",
+      "RV inflow-outflow view (60–90°): confirm outlet in main PA.",
+      "Apply color Doppler: confirm forward flow from outlet.",
+      "Assess PR: new PR = device crossing pulmonic valve.",
+    ],
+    whatToSee: [
+      "Bicaval: inlet at IVC/RA junction.",
+      "RV inflow-outflow: outlet in main PA, above pulmonic valve.",
+      "Color flow: forward flow from RP outlet.",
+    ],
+    doppler: [
+      "Color Doppler at outlet: forward flow into PA.",
+      "PR color Doppler: device-related PR severity.",
+    ],
+    pitfalls: [
+      "TEE probe may be difficult to advance in patients with large RP device.",
+      "Acoustic shadowing from device — use multiple imaging planes.",
+    ],
+    tips: [
+      "TEE is the gold standard for Impella RP positioning — preferred over TTE in ICU/cath lab.",
+      "Bicaval view confirms inlet; RV inflow-outflow view confirms outlet — both required.",
+    ],
+    critical: true,
+  },
+];
+
+// Sub-tab type for Impella ScanCoach
+type ImpellaScanSubTab = {
+  id: string;
+  label: string;
+  subtitle: string;
+  color: string;
+  views: ScanView[];
+};
+
+const IMPELLA_SCAN_SUBTABS: ImpellaScanSubTab[] = [
+  { id: "imp_25",  label: "Impella 2.5", subtitle: "2.5 L/min | 12Fr | Percutaneous Femoral",  color: "#0e7490", views: impella25Views  },
+  { id: "imp_cp",  label: "Impella CP",  subtitle: "3.7–4.3 L/min | 14Fr | Percutaneous Femoral", color: "#0f766e", views: impellaCPViews  },
+  { id: "imp_55",  label: "Impella 5.5", subtitle: "5.5 L/min | 21Fr | Surgical Cutdown",     color: "#065f46", views: impella55Views  },
+  { id: "imp_ecp", label: "Impella ECP", subtitle: "5.0 L/min | 9Fr Delivery | Expandable",   color: "#1d4ed8", views: impellaECPViews },
+  { id: "imp_rp",  label: "Impella RP",  subtitle: "4.3 L/min | 11Fr | RV Support (IVC→PA)",  color: "#7c3aed", views: impellaRPViews  },
 ];
 
 // ─── LIFEVEST SCAN VIEWS ──────────────────────────────────────────────────────
@@ -666,7 +1043,8 @@ const DEVICE_SCAN_COACHES: DeviceScanCoach[] = [
     subtitle: "Percutaneous Ventricular Support",
     color: "#0f766e",
     icon: Zap,
-    views: impellaViews,
+    // Impella uses sub-tabs — views are per sub-tab
+    views: [],
   },
   {
     id: "lifevest",
@@ -816,7 +1194,10 @@ function ScanViewCard({ view, deviceColor }: { view: ScanView; deviceColor: stri
 
 export default function MechanicalSupportScanCoach() {
   const [activeDevice, setActiveDevice] = useState("lvad");
+  const [activeImpellaSubTab, setActiveImpellaSubTab] = useState("imp_cp");
   const device = DEVICE_SCAN_COACHES.find(d => d.id === activeDevice)!;
+  const isImpella = activeDevice === "impella";
+  const impellaScanSubTab = IMPELLA_SCAN_SUBTABS.find(s => s.id === activeImpellaSubTab)!;
 
   return (
     <Layout>
@@ -882,25 +1263,90 @@ export default function MechanicalSupportScanCoach() {
       {/* Content */}
       <PremiumOverlay featureName="MechanicalSupportAssist™ ScanCoach">
         <div className="container py-6">
-          {/* Device subtitle */}
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <h2 className="text-lg font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>{device.label} ScanCoach</h2>
-              <p className="text-sm text-gray-500">{device.subtitle}</p>
-            </div>
-            <div className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border"
-              style={{ color: device.color, borderColor: device.color + "40", background: device.color + "10" }}>
-              <device.icon className="w-3.5 h-3.5" />
-              {device.views.length} views
-            </div>
-          </div>
 
-          {/* Views */}
-          <div className="space-y-4 mb-8">
-            {device.views.map(view => (
-              <ScanViewCard key={view.id} view={view} deviceColor={device.color} />
-            ))}
-          </div>
+          {/* ─── IMPELLA: Sub-tabs ──────────────────────────────────────────────────────────── */}
+          {isImpella && (
+            <>
+              {/* Impella header */}
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Impella ScanCoach</h2>
+                  <p className="text-sm text-gray-500">Select a device type below for device-specific imaging acquisition guidance</p>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border"
+                  style={{ color: "#0f766e", borderColor: "#0f766e40", background: "#0f766e10" }}>
+                  <Zap className="w-3.5 h-3.5" />
+                  5 Device Types
+                </div>
+              </div>
+
+              {/* Impella sub-tab bar */}
+              <div className="flex overflow-x-auto gap-1.5 mb-6 pb-1 scrollbar-hide">
+                {IMPELLA_SCAN_SUBTABS.map(sub => {
+                  const isActive = activeImpellaSubTab === sub.id;
+                  return (
+                    <button
+                      key={sub.id}
+                      onClick={() => setActiveImpellaSubTab(sub.id)}
+                      className="flex flex-col items-start px-4 py-2.5 rounded-xl text-left flex-shrink-0 border transition-all"
+                      style={{
+                        background: isActive ? sub.color : "white",
+                        borderColor: isActive ? sub.color : "#e5e7eb",
+                        color: isActive ? "white" : "#374151",
+                      }}
+                    >
+                      <span className="text-xs font-bold">{sub.label}</span>
+                      <span className="text-[10px] opacity-70 mt-0.5 leading-tight max-w-[140px]">{sub.subtitle}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Active Impella sub-tab header */}
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h3 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>{impellaScanSubTab.label} ScanCoach</h3>
+                  <p className="text-sm text-gray-500">{impellaScanSubTab.subtitle}</p>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border"
+                  style={{ color: impellaScanSubTab.color, borderColor: impellaScanSubTab.color + "40", background: impellaScanSubTab.color + "10" }}>
+                  {impellaScanSubTab.views.length} views
+                </div>
+              </div>
+
+              {/* Views */}
+              <div className="space-y-4 mb-8">
+                {impellaScanSubTab.views.map(view => (
+                  <ScanViewCard key={view.id} view={view} deviceColor={impellaScanSubTab.color} />
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* ─── ALL OTHER DEVICES ──────────────────────────────────────────────────────────── */}
+          {!isImpella && (
+            <>
+              {/* Device subtitle */}
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>{device.label} ScanCoach</h2>
+                  <p className="text-sm text-gray-500">{device.subtitle}</p>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border"
+                  style={{ color: device.color, borderColor: device.color + "40", background: device.color + "10" }}>
+                  <device.icon className="w-3.5 h-3.5" />
+                  {device.views.length} views
+                </div>
+              </div>
+
+              {/* Views */}
+              <div className="space-y-4 mb-8">
+                {device.views.map(view => (
+                  <ScanViewCard key={view.id} view={view} deviceColor={device.color} />
+                ))}
+              </div>
+            </>
+          )}
 
           {/* Navigator CTA */}
           <div className="mt-6 rounded-xl p-4 flex items-center justify-between gap-4"

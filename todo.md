@@ -753,3 +753,9 @@
 ## MechanicalSupportAssist™ Editor Registration (Mar 27 2026)
 - [x] NavigatorEditor: add MechanicalSupportAssist™ as a selectable module (LVAD, ECMO, Impella, LifeVest, ICD tabs)
 - [x] ScanCoachEditor: add MechanicalSupportAssist™ ScanCoach as a selectable module (all device views)
+
+## Impella Sub-Tabs (Mar 27 2026)
+- [x] MechanicalSupportNavigator: replace single Impella tab with sub-tabs for 2.5, CP, 5.5, ECP, RP — each with dedicated protocol checklist
+- [x] MechanicalSupportScanCoach: add per-device Impella sub-tabs with device-specific acquisition views
+- [x] NavigatorEditor: add per-device Impella static defaults
+- [x] ScanCoach registry + server MODULE_VALUES: add per-device Impella module keys

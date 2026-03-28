@@ -181,64 +181,303 @@ const ecmoPearls = [
   "ECMO weaning: EF >20–25%, AV opening with each beat, and stable hemodynamics at 1.0–1.5 L/min flow.",
 ];
 
-// ─── IMPELLA DATA ─────────────────────────────────────────────────────────────
+// ─── IMPELLA DATA (per-device sub-tabs) ──────────────────────────────────────
 
-const impellaSections: ProtocolSection[] = [
+// Shared positioning checklist items (common to all LV Impella devices)
+const impellaSharedPositioningItems: ChecklistItem[] = [
+  { id: "imp_pos_inlet", label: "Inlet area position (PLAX / A5C)", detail: "Inlet area (pigtail) must be in LV, 3.5–4.5 cm below aortic valve. Too shallow (<3.5 cm) = inlet in LVOT → suction alarms. Too deep (>5 cm) = mitral valve entrapment.", critical: true, reference: "Inlet: 3.5–4.5 cm below AV in PLAX or A5C" },
+  { id: "imp_pos_outlet", label: "Outlet area position (ascending aorta)", detail: "Outlet area must be in ascending aorta, above aortic valve. Outlet in LVOT = recirculation — blood is pumped back into LV rather than to systemic circulation.", critical: true, reference: "Outlet: ascending aorta, above AV" },
+  { id: "imp_pos_av", label: "AV leaflets not impinged by device shaft", detail: "Confirm AV leaflets open and close freely around device shaft. New AR after insertion = leaflet impingement. Assess by color Doppler in PLAX.", critical: true, reference: "Confirm AV leaflets not impinged" },
+  { id: "imp_pos_mv", label: "MV / subvalvular apparatus (pigtail entanglement)", detail: "Device too deep → pigtail entangles in chordae or impinges on MV leaflets. New MR or suction alarms after insertion = MV entrapment. Reposition urgently.", critical: true, reference: "New MR + suction alarms = pigtail entanglement" },
+];
+
+const impellaSharedMonitoringItems: ChecklistItem[] = [
+  { id: "imp_mon_lv_unload", label: "LV unloading (LVEDD, LVESD)", detail: "LV should decompress with Impella support. LVEDD and LVESD should decrease from baseline. Persistent LV dilation at high P-level = inadequate unloading or device malposition.", critical: true, reference: "LV should decompress with increasing P-level" },
+  { id: "imp_mon_ar", label: "Aortic regurgitation (color Doppler PLAX)", detail: "Impella crosses AV → new or worsened AR is common. Significant AR causes recirculation — blood pumped to aorta returns to LV via AR jet. Serial monitoring at each P-level.", critical: true, reference: "AR assessment at each echo — recirculation risk" },
+  { id: "imp_mon_suction", label: "Suction alarm assessment", detail: "Suction alarms = LV under-filling or device malposition. Echo: assess LV size, device position, inlet velocity. Causes: hypovolemia, RV failure, device too deep (MV entrapment).", critical: true, reference: "Suction = LV under-filling or malposition" },
+  { id: "imp_mon_weaning", label: "Weaning protocol (P-level reduction)", detail: "Stepwise P-level reduction. At each step: assess LV size, EF, hemodynamics. Wean when EF >25–30%, adequate hemodynamics at P2. Remove when stable at P2 for 4–6 hours.", reference: "Wean: EF >25–30%, stable at P2 for 4–6 hrs" },
+];
+
+// ─── Impella 2.5 ──────────────────────────────────────────────────────────────
+const impella25Sections: ProtocolSection[] = [
   {
-    id: "impella_positioning",
-    title: "Impella Positioning Assessment",
+    id: "imp25_overview",
+    title: "Impella 2.5 — Device Overview",
+    icon: Info,
+    color: "#0e7490",
+    items: [
+      { id: "imp25_specs", label: "Device specifications", detail: "Maximum flow: 2.5 L/min. Catheter profile: 12Fr. Access: percutaneous femoral artery (standard). Sheath: 13Fr. P-levels: P1–P8. Smallest Impella LV device.", reference: "Flow: 2.5 L/min | 12Fr | Femoral | P1–P8" },
+      { id: "imp25_indication", label: "Clinical indications", detail: "Elective high-risk PCI (prophylactic support), mild-to-moderate cardiogenic shock, haemodynamic support during ablation procedures. Not adequate for severe cardiogenic shock (SCAI Stage C–D).", reference: "High-risk PCI, mild cardiogenic shock" },
+      { id: "imp25_access", label: "Vascular access consideration", detail: "12Fr device via femoral artery. Assess femoral artery diameter and iliofemoral disease before insertion. Peripheral vascular disease may preclude femoral access.", reference: "Femoral artery ≥5 mm recommended" },
+    ],
+  },
+  {
+    id: "imp25_positioning",
+    title: "Impella 2.5 — Positioning Protocol",
     icon: Target,
     color: "#189aa1",
     items: [
-      { id: "imp_pos_inlet", label: "Inlet area position (PLAX / A5C)", detail: "Inlet area (pigtail) must be in LV, 3.5–4.5 cm below aortic valve. Too shallow (<3.5 cm) = inlet in LVOT → suction alarms. Too deep (>5 cm) = mitral valve entrapment.", critical: true, reference: "Inlet: 3.5–4.5 cm below AV in PLAX or A5C" },
-      { id: "imp_pos_outlet", label: "Outlet area position", detail: "Outlet area must be in ascending aorta, above aortic valve. If outlet is in LVOT (device too deep), blood is recirculated within LV rather than pumped to aorta.", critical: true, reference: "Outlet: ascending aorta, above AV" },
-      { id: "imp_pos_av", label: "Device crossing aortic valve", detail: "Device shaft crosses AV. Confirm AV leaflets are not impinged. Assess for new AR caused by device. Impella CP/5.5: larger profile, higher AR risk.", critical: true, reference: "Confirm AV leaflets not impinged by device" },
-      { id: "imp_pos_mv", label: "Mitral valve / subvalvular apparatus", detail: "Impella too deep → pigtail entangles in chordae or impinges on MV leaflets. New MR or suction alarms suggest MV entrapment. Requires repositioning.", critical: true, reference: "Pigtail entrapment in MV apparatus = reposition urgently" },
-      { id: "imp_pos_views", label: "Optimal echo views for positioning", detail: "PLAX: best for measuring inlet-to-AV distance. A5C: confirms inlet in LV apex, outlet in aorta. TEE ME LAX: gold standard for positioning in cath lab.", reference: "PLAX + A5C for TTE; ME LAX for TEE" },
+      ...impellaSharedPositioningItems,
+      { id: "imp25_views", label: "Preferred echo views (2.5)", detail: "PLAX: measure inlet-to-AV distance. A5C: confirm inlet in LV, outlet in aorta. TEE ME LAX: gold standard in cath lab. Smaller 12Fr profile — AR less common than CP/5.5.", reference: "PLAX + A5C (TTE); ME LAX (TEE)" },
     ],
   },
   {
-    id: "impella_versions",
-    title: "Impella Device Versions",
-    icon: Layers,
-    color: "#0e7490",
-    items: [
-      { id: "imp_25", label: "Impella 2.5", detail: "Flow: up to 2.5 L/min. 12Fr catheter. Percutaneous via femoral artery. Indications: elective high-risk PCI, cardiogenic shock (mild-moderate). Inlet-to-AV: 3.5–4.5 cm.", reference: "Flow: 2.5 L/min | 12Fr | Femoral" },
-      { id: "imp_cp", label: "Impella CP", detail: "Flow: up to 4.3 L/min. 14Fr catheter. Percutaneous via femoral artery. Most commonly used for cardiogenic shock. Larger profile increases AR risk.", reference: "Flow: 4.3 L/min | 14Fr | Femoral" },
-      { id: "imp_55", label: "Impella 5.5 / 5.0", detail: "Flow: up to 5.5 L/min. 21Fr catheter. Requires surgical cutdown (axillary or femoral). Used for severe cardiogenic shock, bridge to LVAD/transplant. Highest AR risk.", reference: "Flow: 5.5 L/min | 21Fr | Surgical cutdown" },
-      { id: "imp_rp", label: "Impella RP (Right-sided)", detail: "Right ventricular support. Positioned from femoral vein: inlet in IVC/RA, outlet in pulmonary artery. Flow: up to 4.0 L/min. Indications: RV failure post-LVAD, post-MI RV failure.", reference: "Flow: 4.0 L/min | Femoral vein | IVC→PA" },
-      { id: "imp_rp_position", label: "Impella RP positioning", detail: "Inlet area: IVC/RA junction. Outlet area: main pulmonary artery. Confirm with subcostal IVC view and parasternal short axis (RVOT/PA view). TEE preferred.", critical: true, reference: "RP inlet: IVC/RA; outlet: main PA" },
-    ],
-  },
-  {
-    id: "impella_monitoring",
-    title: "Hemodynamic Monitoring",
+    id: "imp25_monitoring",
+    title: "Impella 2.5 — Hemodynamic Monitoring",
     icon: Activity,
     color: "#0f766e",
     items: [
-      { id: "imp_mon_lv_unload", label: "LV unloading assessment", detail: "LV should decompress with Impella support. LVEDD and LVESD should decrease. Persistent LV dilation at high P-level suggests inadequate unloading or device malposition.", critical: true, reference: "LV should decompress with increasing P-level" },
-      { id: "imp_mon_ar", label: "Aortic regurgitation assessment", detail: "Impella crosses AV → new or worsened AR. Assess by color Doppler in PLAX. Significant AR causes recirculation (blood pumped to aorta returns to LV via AR). Serial monitoring.", critical: true, reference: "AR assessment at each echo — recirculation risk" },
-      { id: "imp_mon_suction", label: "Suction alarm assessment", detail: "Suction alarms indicate LV under-filling or device malposition. Echo: assess LV size, device position, inlet velocity. Causes: hypovolemia, RV failure, device too deep.", critical: true, reference: "Suction = LV under-filling or malposition" },
-      { id: "imp_mon_weaning", label: "Weaning assessment", detail: "Stepwise P-level reduction. At each step: assess LV size, EF, hemodynamics. Wean when EF >25–30%, adequate hemodynamics at P2. Remove when stable at P2 for 4–6 hours.", reference: "Wean: EF >25–30%, stable at P2 for 4–6 hrs" },
+      ...impellaSharedMonitoringItems,
+      { id: "imp25_plevel", label: "P-level reference (2.5)", detail: "P2: ~1.0 L/min | P4: ~1.5 L/min | P6: ~2.0 L/min | P8: ~2.5 L/min. Titrate to hemodynamic targets. Reduce P-level if suction alarms or LV over-decompression.", reference: "P8 = max 2.5 L/min" },
     ],
   },
 ];
 
-const impellaNormalValues = [
-  { label: "Inlet-to-AV Distance", value: "3.5–4.5 cm", note: "<3.5 cm = too shallow; >5 cm = MV entrapment risk" },
-  { label: "Impella 2.5 Flow", value: "Up to 2.5 L/min", note: "12Fr, percutaneous femoral" },
-  { label: "Impella CP Flow", value: "Up to 4.3 L/min", note: "14Fr, percutaneous femoral" },
-  { label: "Impella 5.5 Flow", value: "Up to 5.5 L/min", note: "21Fr, surgical cutdown" },
-  { label: "Impella RP Flow", value: "Up to 4.0 L/min", note: "Femoral vein, IVC to PA" },
+const impella25NormalValues = [
+  { label: "Maximum Flow", value: "2.5 L/min", note: "At P8" },
+  { label: "Catheter Profile", value: "12Fr", note: "Percutaneous femoral artery" },
+  { label: "Inlet-to-AV Distance", value: "3.5–4.5 cm", note: "PLAX or A5C — critical measurement" },
+  { label: "Weaning Threshold", value: "EF >25–30%", note: "Stable at P2 for 4–6 hours before removal" },
+  { label: "P-Level Range", value: "P1–P8", note: "P8 = maximum support" },
 ];
 
-const impellaPearls = [
-  "Inlet-to-AV distance is the most critical measurement — 3.5–4.5 cm in PLAX or A5C.",
-  "Pigtail entanglement in MV apparatus causes suction alarms and new MR — reposition immediately.",
-  "Impella CP and 5.5 have larger profiles — higher risk of significant AR causing recirculation.",
-  "Impella RP: confirm inlet at IVC/RA junction and outlet in main PA — TEE preferred.",
-  "Suction alarms: assess LV size, device position, and volume status — do not simply reduce P-level.",
-  "Wean Impella stepwise — confirm EF >25–30% and stable hemodynamics at P2 before removal.",
+const impella25Pearls = [
+  "Impella 2.5 provides modest support (2.5 L/min) — adequate for high-risk PCI but insufficient for severe cardiogenic shock.",
+  "12Fr profile is the smallest LV Impella — lower AR risk than CP or 5.5, but still monitor with serial color Doppler.",
+  "Inlet-to-AV distance: 3.5–4.5 cm in PLAX — the single most important measurement at every echo assessment.",
+  "Suction alarms at P2 or P4 suggest hypovolemia, RV failure, or pigtail entanglement — do not simply reduce P-level without echo assessment.",
+];
+
+// ─── Impella CP ───────────────────────────────────────────────────────────────
+const impellaCPSections: ProtocolSection[] = [
+  {
+    id: "impcp_overview",
+    title: "Impella CP — Device Overview",
+    icon: Info,
+    color: "#0e7490",
+    items: [
+      { id: "impcp_specs", label: "Device specifications", detail: "Maximum flow: 3.7–4.3 L/min (CP) / 4.0 L/min (CP Smart). Catheter profile: 14Fr. Access: percutaneous femoral artery. Sheath: 14Fr. P-levels: P1–P8.", reference: "Flow: 3.7–4.3 L/min | 14Fr | Femoral | P1–P8" },
+      { id: "impcp_indication", label: "Clinical indications", detail: "Most commonly used Impella for cardiogenic shock (SCAI Stage B–C). AMI cardiogenic shock (IABP-SHOCK II era), high-risk PCI, bridge to decision. Most widely studied Impella device.", reference: "AMI cardiogenic shock, high-risk PCI — most common" },
+      { id: "impcp_ar_risk", label: "AR risk (14Fr profile)", detail: "14Fr profile is larger than 2.5 — higher risk of significant AR. AR causes recirculation: blood pumped to aorta returns to LV via AR jet, reducing net forward flow. Assess at every echo.", critical: true, reference: "14Fr profile — higher AR risk than 2.5" },
+    ],
+  },
+  {
+    id: "impcp_positioning",
+    title: "Impella CP — Positioning Protocol",
+    icon: Target,
+    color: "#189aa1",
+    items: [
+      ...impellaSharedPositioningItems,
+      { id: "impcp_views", label: "Preferred echo views (CP)", detail: "PLAX: inlet-to-AV distance (3.5–4.5 cm). A5C: outlet confirmation in aorta. TEE ME LAX: gold standard in cath lab or ICU. Color Doppler PLAX: AR assessment at each echo.", reference: "PLAX + A5C (TTE); ME LAX (TEE)" },
+    ],
+  },
+  {
+    id: "impcp_monitoring",
+    title: "Impella CP — Hemodynamic Monitoring",
+    icon: Activity,
+    color: "#0f766e",
+    items: [
+      ...impellaSharedMonitoringItems,
+      { id: "impcp_plevel", label: "P-level reference (CP)", detail: "P2: ~1.5 L/min | P4: ~2.5 L/min | P6: ~3.0 L/min | P8: ~3.7 L/min (CP) or 4.3 L/min (CP Smart). Titrate to MAP >65 mmHg and cardiac power output targets.", reference: "P8 = max 3.7–4.3 L/min" },
+      { id: "impcp_ecmo_combo", label: "ECMO + Impella CP (ECPELLA) configuration", detail: "Impella CP is frequently combined with VA-ECMO (ECPELLA) to vent the LV. In this configuration: Impella provides LV unloading, ECMO provides oxygenation and systemic support. Monitor LV size and AV opening closely.", critical: true, reference: "ECPELLA: Impella CP + VA-ECMO for LV venting" },
+    ],
+  },
+];
+
+const impellaCPNormalValues = [
+  { label: "Maximum Flow", value: "3.7–4.3 L/min", note: "At P8 (CP / CP Smart)" },
+  { label: "Catheter Profile", value: "14Fr", note: "Percutaneous femoral artery" },
+  { label: "Inlet-to-AV Distance", value: "3.5–4.5 cm", note: "PLAX or A5C — critical measurement" },
+  { label: "AR Risk", value: "Moderate", note: "14Fr profile — serial color Doppler required" },
+  { label: "Weaning Threshold", value: "EF >25–30%", note: "Stable at P2 for 4–6 hours before removal" },
+];
+
+const impellaCPPearls = [
+  "Impella CP is the most commonly used Impella for cardiogenic shock — 14Fr profile provides meaningful support (3.7–4.3 L/min).",
+  "AR is a significant concern with CP — even moderate AR causes substantial recirculation. Assess with color Doppler at every echo.",
+  "ECPELLA (ECMO + Impella CP): the Impella vents the LV while ECMO provides oxygenation and systemic support — monitor AV opening and LV size closely.",
+  "Inlet-to-AV distance: 3.5–4.5 cm — if suction alarms occur, check position before reducing P-level.",
+];
+
+// ─── Impella 5.5 ──────────────────────────────────────────────────────────────
+const impella55Sections: ProtocolSection[] = [
+  {
+    id: "imp55_overview",
+    title: "Impella 5.5 — Device Overview",
+    icon: Info,
+    color: "#0e7490",
+    items: [
+      { id: "imp55_specs", label: "Device specifications", detail: "Maximum flow: 5.5 L/min. Catheter profile: 21Fr. Access: surgical cutdown (axillary artery preferred; femoral artery alternative). P-levels: P1–P8. Highest flow LV Impella.", reference: "Flow: 5.5 L/min | 21Fr | Surgical cutdown | P1–P8" },
+      { id: "imp55_indication", label: "Clinical indications", detail: "Severe cardiogenic shock (SCAI Stage C–D), bridge to LVAD or heart transplant, post-cardiotomy shock, high-risk complex PCI requiring maximum support. Requires surgical access.", reference: "Severe cardiogenic shock, bridge to LVAD/transplant" },
+      { id: "imp55_axillary", label: "Axillary artery access — echo implications", detail: "Axillary access allows patient ambulation. Device enters via subclavian/axillary artery — course is different from femoral. Echo positioning unchanged: PLAX inlet-to-AV distance still the key measurement.", reference: "Axillary access: patient can ambulate; echo unchanged" },
+      { id: "imp55_ar_risk", label: "AR risk (21Fr profile — highest)", detail: "21Fr is the largest Impella profile — highest AR risk. Significant AR is common and causes substantial recirculation. Serial color Doppler assessment at every echo is mandatory.", critical: true, reference: "21Fr — highest AR risk of all Impella devices" },
+    ],
+  },
+  {
+    id: "imp55_positioning",
+    title: "Impella 5.5 — Positioning Protocol",
+    icon: Target,
+    color: "#189aa1",
+    items: [
+      ...impellaSharedPositioningItems,
+      { id: "imp55_views", label: "Preferred echo views (5.5)", detail: "PLAX: inlet-to-AV distance (3.5–4.5 cm). A5C: outlet in ascending aorta. TEE ME LAX: preferred for initial positioning and repositioning. Larger device is more echogenic — easier to visualize.", reference: "PLAX + A5C (TTE); ME LAX (TEE) — device more visible" },
+      { id: "imp55_depth", label: "Depth and gain optimization", detail: "21Fr device is highly echogenic. Reduce gain to avoid blooming artifact obscuring AV leaflets. Use harmonic imaging. TEE provides superior resolution for precise positioning.", reference: "Reduce gain to avoid blooming artifact" },
+    ],
+  },
+  {
+    id: "imp55_monitoring",
+    title: "Impella 5.5 — Hemodynamic Monitoring",
+    icon: Activity,
+    color: "#0f766e",
+    items: [
+      ...impellaSharedMonitoringItems,
+      { id: "imp55_plevel", label: "P-level reference (5.5)", detail: "P2: ~2.0 L/min | P4: ~3.5 L/min | P6: ~4.5 L/min | P8: ~5.5 L/min. Higher flows provide near-complete LV unloading. Monitor for over-decompression (rightward septal shift).", reference: "P8 = max 5.5 L/min — near-complete LV unloading" },
+      { id: "imp55_bridge", label: "Bridge-to-LVAD / transplant assessment", detail: "Serial echo to assess end-organ recovery, RV function, and LVAD candidacy. Key parameters: LVEDD, EF, TAPSE, RV FAC, TR severity, AR severity. Document trajectory for LVAD team.", critical: true, reference: "Serial echo for LVAD/transplant candidacy assessment" },
+    ],
+  },
+];
+
+const impella55NormalValues = [
+  { label: "Maximum Flow", value: "5.5 L/min", note: "At P8 — near-complete LV unloading" },
+  { label: "Catheter Profile", value: "21Fr", note: "Surgical cutdown (axillary or femoral)" },
+  { label: "Inlet-to-AV Distance", value: "3.5–4.5 cm", note: "PLAX or A5C — critical measurement" },
+  { label: "AR Risk", value: "High", note: "21Fr profile — mandatory serial color Doppler" },
+  { label: "Weaning Threshold", value: "EF >25–30%", note: "Stable at P2 for 4–6 hours before removal" },
+];
+
+const impella55Pearls = [
+  "Impella 5.5 provides near-complete LV unloading (5.5 L/min) — used for severe cardiogenic shock and bridge to LVAD/transplant.",
+  "21Fr profile carries the highest AR risk of all Impella devices — AR assessment is mandatory at every echo.",
+  "Axillary access allows patient ambulation — echo positioning and measurements are unchanged from femoral access.",
+  "Larger device is more echogenic — reduce gain to avoid blooming artifact that may obscure AV leaflets.",
+  "Serial echo is essential for LVAD/transplant candidacy assessment — document LVEDD, EF, TAPSE, RV FAC, AR, and TR trajectory.",
+];
+
+// ─── Impella ECP ──────────────────────────────────────────────────────────────
+const impellaECPSections: ProtocolSection[] = [
+  {
+    id: "impecp_overview",
+    title: "Impella ECP — Device Overview",
+    icon: Info,
+    color: "#0e7490",
+    items: [
+      { id: "impecp_specs", label: "Device specifications", detail: "Maximum flow: 5.0 L/min (expandable). Delivery profile: 9Fr (smallest of all high-flow Impellas). Expands to 21Fr equivalent inside the LV. Access: percutaneous femoral artery. P-levels: P1–P8.", reference: "Flow: 5.0 L/min | 9Fr delivery | Expands in LV | P1–P8" },
+      { id: "impecp_indication", label: "Clinical indications", detail: "High-risk PCI requiring high-flow support without surgical cutdown. Cardiogenic shock where femoral artery access is preferred but high flow is needed. Combines high flow with percutaneous access.", reference: "High-risk PCI + cardiogenic shock — percutaneous high-flow" },
+      { id: "impecp_expandable", label: "Expandable catheter — echo appearance", detail: "ECP expands from 9Fr to a larger profile within the LV. Echo appearance: the expanded pump is more echogenic than the 2.5 but less than the 5.5. Confirm full expansion in LV by echo.", critical: true, reference: "Confirm full expansion in LV cavity by echo" },
+    ],
+  },
+  {
+    id: "impecp_positioning",
+    title: "Impella ECP — Positioning Protocol",
+    icon: Target,
+    color: "#189aa1",
+    items: [
+      ...impellaSharedPositioningItems,
+      { id: "impecp_expansion", label: "Confirm full pump expansion (ECP-specific)", detail: "ECP must be fully expanded in the LV before activating at high P-levels. Echo: confirm expanded pump body is in LV cavity, not LVOT. Partial expansion = reduced flow and suction risk.", critical: true, reference: "Full expansion in LV required before high P-level" },
+      { id: "impecp_views", label: "Preferred echo views (ECP)", detail: "PLAX: inlet-to-AV distance (3.5–4.5 cm) and expansion confirmation. A5C: outlet in aorta. TEE ME LAX: preferred in cath lab for expansion and position confirmation.", reference: "PLAX + A5C (TTE); ME LAX (TEE)" },
+    ],
+  },
+  {
+    id: "impecp_monitoring",
+    title: "Impella ECP — Hemodynamic Monitoring",
+    icon: Activity,
+    color: "#0f766e",
+    items: [
+      ...impellaSharedMonitoringItems,
+      { id: "impecp_plevel", label: "P-level reference (ECP)", detail: "P2: ~1.5 L/min | P4: ~3.0 L/min | P6: ~4.0 L/min | P8: ~5.0 L/min. Titrate to hemodynamic targets. Confirm full expansion before increasing above P4.", reference: "P8 = max 5.0 L/min — confirm expansion first" },
+      { id: "impecp_ar", label: "AR assessment (ECP)", detail: "ECP expands to a large profile in the LV — AR risk is significant (similar to 5.5 when fully expanded). Serial color Doppler in PLAX at each echo. AR causes recirculation and reduces net forward flow.", critical: true, reference: "Expanded profile = significant AR risk — monitor closely" },
+    ],
+  },
+];
+
+const impellaECPNormalValues = [
+  { label: "Maximum Flow", value: "5.0 L/min", note: "At P8 (expandable catheter)" },
+  { label: "Delivery Profile", value: "9Fr", note: "Smallest percutaneous delivery for high-flow Impella" },
+  { label: "Inlet-to-AV Distance", value: "3.5–4.5 cm", note: "PLAX or A5C — critical measurement" },
+  { label: "Expansion Confirmation", value: "Full expansion in LV", note: "Confirm by echo before high P-level" },
+  { label: "AR Risk", value: "High (when expanded)", note: "Serial color Doppler mandatory" },
+];
+
+const impellaECPPearls = [
+  "Impella ECP delivers 5.0 L/min via a 9Fr delivery catheter — the smallest percutaneous access for high-flow LV support.",
+  "Full expansion in the LV must be confirmed by echo before activating at high P-levels — partial expansion = reduced flow.",
+  "When fully expanded, AR risk is similar to the 5.5 — mandatory serial color Doppler at every echo.",
+  "Inlet-to-AV distance: 3.5–4.5 cm — same critical measurement as all other LV Impella devices.",
+];
+
+// ─── Impella RP ───────────────────────────────────────────────────────────────
+const impellaRPSections: ProtocolSection[] = [
+  {
+    id: "imprp_overview",
+    title: "Impella RP — Device Overview",
+    icon: Info,
+    color: "#0e7490",
+    items: [
+      { id: "imprp_specs", label: "Device specifications", detail: "Maximum flow: 4.3 L/min. Catheter profile: 11Fr. Access: femoral vein. Inlet: IVC/RA junction. Outlet: main pulmonary artery. P-levels: P1–P8. Right ventricular support device.", reference: "Flow: 4.3 L/min | 11Fr | Femoral vein | IVC → PA" },
+      { id: "imprp_indication", label: "Clinical indications", detail: "Acute RV failure post-LVAD implant, post-MI RV failure, post-cardiac surgery RV failure, RV failure during VA-ECMO weaning. Not for LV support.", reference: "Acute RV failure: post-LVAD, post-MI, post-surgery" },
+      { id: "imprp_mechanism", label: "Mechanism of action", detail: "Impella RP draws blood from IVC/RA and pumps it into the main pulmonary artery, bypassing the failing RV. Reduces RV preload and provides direct RV output support.", reference: "IVC/RA → main PA: bypasses failing RV" },
+    ],
+  },
+  {
+    id: "imprp_positioning",
+    title: "Impella RP — Positioning Protocol",
+    icon: Target,
+    color: "#7c3aed",
+    items: [
+      { id: "imprp_inlet", label: "Inlet area position (IVC/RA junction)", detail: "Inlet area must be at IVC/RA junction. Confirm with subcostal IVC view (TTE) or TEE bicaval view (90–100°). Inlet too high in RA = reduced drainage. Inlet too deep in IVC = hepatic vein obstruction.", critical: true, reference: "Inlet: IVC/RA junction — subcostal or TEE bicaval" },
+      { id: "imprp_outlet", label: "Outlet area position (main pulmonary artery)", detail: "Outlet area must be in main pulmonary artery, above pulmonic valve. Confirm with parasternal short axis (RVOT/PA view) or TEE. Outlet in RVOT = recirculation.", critical: true, reference: "Outlet: main PA, above pulmonic valve" },
+      { id: "imprp_pv", label: "Pulmonic valve — device crossing", detail: "Device shaft crosses pulmonic valve. Assess for new PR caused by device. PR causes recirculation in Impella RP (blood pumped to PA returns to RV via PR). Monitor with color Doppler.", critical: true, reference: "New PR = device-related recirculation" },
+      { id: "imprp_tee", label: "TEE preferred for positioning", detail: "TEE bicaval view (90–100°): inlet at IVC/RA junction. TEE RV inflow-outflow view: outlet in main PA. TTE subcostal + PSAX as alternatives. TEE provides superior resolution.", reference: "TEE preferred: bicaval + RV inflow-outflow views" },
+    ],
+  },
+  {
+    id: "imprp_monitoring",
+    title: "Impella RP — Hemodynamic Monitoring",
+    icon: Activity,
+    color: "#0f766e",
+    items: [
+      { id: "imprp_rv_unload", label: "RV unloading assessment (TAPSE, RV S', FAC)", detail: "RV should decompress with Impella RP support. TAPSE and RV S' may improve. Persistent severe RV dysfunction despite adequate P-level = irreversible RV failure.", critical: true, reference: "RV should decompress with increasing P-level" },
+      { id: "imprp_rvsp", label: "RVSP trend (TR CW Doppler)", detail: "RVSP should decrease with Impella RP support as RV is unloaded. Rising RVSP despite Impella RP = inadequate support or irreversible RV failure.", critical: true, reference: "RVSP should decrease with RP support" },
+      { id: "imprp_lv", label: "LV function monitoring", detail: "Impella RP increases LV preload (more blood delivered to PA → lungs → LA → LV). Monitor for LV volume overload if LV function is severely impaired. May require combined LV support.", critical: true, reference: "RP increases LV preload — monitor LV function" },
+      { id: "imprp_pr", label: "Pulmonary regurgitation (color Doppler)", detail: "New PR after Impella RP insertion = device crossing pulmonic valve. Significant PR causes recirculation. Assess severity with color Doppler in PSAX or TEE.", reference: "New PR = device-related; assess severity" },
+      { id: "imprp_weaning", label: "Weaning assessment", detail: "Stepwise P-level reduction. Wean when TAPSE >10 mm, RV S' >6 cm/s, FAC >25%, and stable hemodynamics at P2. Remove when stable at P2 for 4–6 hours.", reference: "Wean: TAPSE >10 mm, FAC >25%, stable at P2" },
+    ],
+  },
+];
+
+const impellaRPNormalValues = [
+  { label: "Maximum Flow", value: "4.3 L/min", note: "At P8" },
+  { label: "Catheter Profile", value: "11Fr", note: "Femoral vein access" },
+  { label: "Inlet Position", value: "IVC/RA junction", note: "Subcostal TTE or TEE bicaval view" },
+  { label: "Outlet Position", value: "Main pulmonary artery", note: "Above pulmonic valve — PSAX or TEE" },
+  { label: "Weaning Threshold", value: "TAPSE >10 mm, FAC >25%", note: "Stable at P2 for 4–6 hours" },
+];
+
+const impellaRPPearls = [
+  "Impella RP is the only Impella device for RV support — inlet at IVC/RA junction, outlet in main PA.",
+  "TEE is preferred for positioning — bicaval view for inlet, RV inflow-outflow view for outlet.",
+  "New PR after insertion = device crossing pulmonic valve — significant PR causes recirculation, reducing net RV output.",
+  "Impella RP increases LV preload — if LV function is severely impaired, combined LV support (Impella CP or LVAD) may be required.",
+  "Wean when TAPSE >10 mm, FAC >25%, and stable hemodynamics at P2 for 4–6 hours.",
+];
+
+// ─── Impella sub-tab type ─────────────────────────────────────────────────────
+type ImpellaSubTab = {
+  id: string;
+  label: string;
+  subtitle: string;
+  color: string;
+  sections: ProtocolSection[];
+  normalValues: { label: string; value: string; note: string }[];
+  clinicalPearls: string[];
+};
+
+const IMPELLA_SUBTABS: ImpellaSubTab[] = [
+  { id: "imp_25",  label: "Impella 2.5", subtitle: "2.5 L/min | 12Fr | Percutaneous Femoral",  color: "#0e7490", sections: impella25Sections,  normalValues: impella25NormalValues,  clinicalPearls: impella25Pearls  },
+  { id: "imp_cp",  label: "Impella CP",  subtitle: "3.7–4.3 L/min | 14Fr | Percutaneous Femoral", color: "#0f766e", sections: impellaCPSections,  normalValues: impellaCPNormalValues,  clinicalPearls: impellaCPPearls  },
+  { id: "imp_55",  label: "Impella 5.5", subtitle: "5.5 L/min | 21Fr | Surgical Cutdown",     color: "#065f46", sections: impella55Sections,  normalValues: impella55NormalValues,  clinicalPearls: impella55Pearls  },
+  { id: "imp_ecp", label: "Impella ECP", subtitle: "5.0 L/min | 9Fr Delivery | Expandable",   color: "#1d4ed8", sections: impellaECPSections, normalValues: impellaECPNormalValues, clinicalPearls: impellaECPPearls },
+  { id: "imp_rp",  label: "Impella RP",  subtitle: "4.3 L/min | 11Fr | RV Support (IVC→PA)",  color: "#7c3aed", sections: impellaRPSections,  normalValues: impellaRPNormalValues,  clinicalPearls: impellaRPPearls  },
 ];
 
 // ─── LIFEVEST DATA ────────────────────────────────────────────────────────────
@@ -377,9 +616,10 @@ const DEVICE_TABS: DeviceTab[] = [
     subtitle: "Percutaneous Ventricular Support",
     color: "#0f766e",
     icon: Zap,
-    sections: impellaSections,
-    normalValues: impellaNormalValues,
-    clinicalPearls: impellaPearls,
+    // Impella uses sub-tabs — sections/normalValues/clinicalPearls are per sub-tab
+    sections: [],
+    normalValues: [],
+    clinicalPearls: [],
   },
   {
     id: "lifevest",
@@ -511,7 +751,10 @@ function ChecklistItemRow({
 
 export default function MechanicalSupportNavigator() {
   const [activeDevice, setActiveDevice] = useState("lvad");
+  const [activeImpellaSubTab, setActiveImpellaSubTab] = useState("imp_cp");
   const device = DEVICE_TABS.find(d => d.id === activeDevice)!;
+  const isImpella = activeDevice === "impella";
+  const impellaSubTab = IMPELLA_SUBTABS.find(s => s.id === activeImpellaSubTab)!;
 
   return (
     <Layout>
@@ -577,72 +820,183 @@ export default function MechanicalSupportNavigator() {
       {/* Content */}
       <PremiumOverlay featureName="MechanicalSupportAssist™ Navigator">
         <div className="container py-6">
-          {/* Device subtitle */}
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <h2 className="text-lg font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>{device.label}</h2>
-              <p className="text-sm text-gray-500">{device.subtitle}</p>
-            </div>
-            <div className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border"
-              style={{ color: device.color, borderColor: device.color + "40", background: device.color + "10" }}>
-              <device.icon className="w-3.5 h-3.5" />
-              {device.sections.reduce((acc, s) => acc + s.items.length, 0)} checklist items
-            </div>
-          </div>
 
-          {/* Protocol Sections */}
-          <div className="space-y-4 mb-8">
-            {device.sections.map(section => (
-              <ProtocolSectionCard key={section.id} section={section} deviceColor={device.color} />
-            ))}
-          </div>
+          {/* ─── IMPELLA: Sub-tabs ──────────────────────────────────────────────────────────── */}
+          {isImpella && (
+            <>
+              {/* Impella header */}
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>Impella</h2>
+                  <p className="text-sm text-gray-500">Select a device type below for its specific protocol checklist</p>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border"
+                  style={{ color: "#0f766e", borderColor: "#0f766e40", background: "#0f766e10" }}>
+                  <Zap className="w-3.5 h-3.5" />
+                  5 Device Types
+                </div>
+              </div>
 
-          {/* Normal Reference Values */}
-          <div className="mb-6">
-            <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2" style={{ fontFamily: "Merriweather, serif" }}>
-              <Ruler className="w-4 h-4" style={{ color: device.color }} />
-              Reference Values — {device.label}
-            </h3>
-            <div className="overflow-x-auto rounded-xl border border-gray-100">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr style={{ background: device.color + "12" }}>
-                    <th className="text-left px-4 py-2.5 font-semibold text-gray-700">Parameter</th>
-                    <th className="text-left px-4 py-2.5 font-semibold" style={{ color: device.color }}>Value</th>
-                    <th className="text-left px-4 py-2.5 font-semibold text-gray-500">Clinical Note</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {device.normalValues.map((nv, i) => (
-                    <tr key={i} className="bg-white hover:bg-gray-50/50 transition-colors">
-                      <td className="px-4 py-2.5 font-medium text-gray-700">{nv.label}</td>
-                      <td className="px-4 py-2.5 font-bold" style={{ color: device.color }}>{nv.value}</td>
-                      <td className="px-4 py-2.5 text-gray-500">{nv.note}</td>
-                    </tr>
+              {/* Impella sub-tab bar */}
+              <div className="flex overflow-x-auto gap-1.5 mb-6 pb-1 scrollbar-hide">
+                {IMPELLA_SUBTABS.map(sub => {
+                  const isActive = activeImpellaSubTab === sub.id;
+                  return (
+                    <button
+                      key={sub.id}
+                      onClick={() => setActiveImpellaSubTab(sub.id)}
+                      className="flex flex-col items-start px-4 py-2.5 rounded-xl text-left flex-shrink-0 border transition-all"
+                      style={{
+                        background: isActive ? sub.color : "white",
+                        borderColor: isActive ? sub.color : "#e5e7eb",
+                        color: isActive ? "white" : "#374151",
+                      }}
+                    >
+                      <span className="text-xs font-bold">{sub.label}</span>
+                      <span className="text-[10px] opacity-70 mt-0.5 leading-tight max-w-[140px]">{sub.subtitle}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Active Impella sub-tab content */}
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h3 className="text-base font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>{impellaSubTab.label}</h3>
+                  <p className="text-sm text-gray-500">{impellaSubTab.subtitle}</p>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border"
+                  style={{ color: impellaSubTab.color, borderColor: impellaSubTab.color + "40", background: impellaSubTab.color + "10" }}>
+                  {impellaSubTab.sections.reduce((acc, s) => acc + s.items.length, 0)} checklist items
+                </div>
+              </div>
+
+              <div className="space-y-4 mb-8">
+                {impellaSubTab.sections.map(section => (
+                  <ProtocolSectionCard key={section.id} section={section} deviceColor={impellaSubTab.color} />
+                ))}
+              </div>
+
+              {/* Reference Values */}
+              <div className="mb-6">
+                <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2" style={{ fontFamily: "Merriweather, serif" }}>
+                  <Ruler className="w-4 h-4" style={{ color: impellaSubTab.color }} />
+                  Reference Values — {impellaSubTab.label}
+                </h3>
+                <div className="overflow-x-auto rounded-xl border border-gray-100">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr style={{ background: impellaSubTab.color + "12" }}>
+                        <th className="text-left px-4 py-2.5 font-semibold text-gray-700">Parameter</th>
+                        <th className="text-left px-4 py-2.5 font-semibold" style={{ color: impellaSubTab.color }}>Value</th>
+                        <th className="text-left px-4 py-2.5 font-semibold text-gray-500">Clinical Note</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {impellaSubTab.normalValues.map((nv, i) => (
+                        <tr key={i} className="bg-white hover:bg-gray-50/50 transition-colors">
+                          <td className="px-4 py-2.5 font-medium text-gray-700">{nv.label}</td>
+                          <td className="px-4 py-2.5 font-bold" style={{ color: impellaSubTab.color }}>{nv.value}</td>
+                          <td className="px-4 py-2.5 text-gray-500">{nv.note}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Clinical Pearls */}
+              <div className="rounded-xl border p-4 mb-6" style={{ background: impellaSubTab.color + "08", borderColor: impellaSubTab.color + "30" }}>
+                <h3 className="text-sm font-bold mb-3 flex items-center gap-2" style={{ color: impellaSubTab.color, fontFamily: "Merriweather, serif" }}>
+                  <Target className="w-4 h-4" />
+                  Clinical Pearls — {impellaSubTab.label}
+                </h3>
+                <ul className="space-y-2">
+                  {impellaSubTab.clinicalPearls.map((pearl, i) => (
+                    <li key={i} className="flex items-start gap-2 text-xs text-gray-700 leading-relaxed">
+                      <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-[10px] font-bold text-white"
+                        style={{ background: impellaSubTab.color }}>
+                        {i + 1}
+                      </div>
+                      {pearl}
+                    </li>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                </ul>
+              </div>
+            </>
+          )}
 
-          {/* Clinical Pearls */}
-          <div className="rounded-xl border p-4" style={{ background: device.color + "08", borderColor: device.color + "30" }}>
-            <h3 className="text-sm font-bold mb-3 flex items-center gap-2" style={{ color: device.color, fontFamily: "Merriweather, serif" }}>
-              <Target className="w-4 h-4" />
-              Clinical Pearls — {device.label}
-            </h3>
-            <ul className="space-y-2">
-              {device.clinicalPearls.map((pearl, i) => (
-                <li key={i} className="flex items-start gap-2 text-xs text-gray-700 leading-relaxed">
-                  <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-[10px] font-bold text-white"
-                    style={{ background: device.color }}>
-                    {i + 1}
-                  </div>
-                  {pearl}
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* ─── ALL OTHER DEVICES ──────────────────────────────────────────────────────────── */}
+          {!isImpella && (
+            <>
+              {/* Device subtitle */}
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-800" style={{ fontFamily: "Merriweather, serif" }}>{device.label}</h2>
+                  <p className="text-sm text-gray-500">{device.subtitle}</p>
+                </div>
+                <div className="flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border"
+                  style={{ color: device.color, borderColor: device.color + "40", background: device.color + "10" }}>
+                  <device.icon className="w-3.5 h-3.5" />
+                  {device.sections.reduce((acc, s) => acc + s.items.length, 0)} checklist items
+                </div>
+              </div>
+
+              {/* Protocol Sections */}
+              <div className="space-y-4 mb-8">
+                {device.sections.map(section => (
+                  <ProtocolSectionCard key={section.id} section={section} deviceColor={device.color} />
+                ))}
+              </div>
+
+              {/* Normal Reference Values */}
+              <div className="mb-6">
+                <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2" style={{ fontFamily: "Merriweather, serif" }}>
+                  <Ruler className="w-4 h-4" style={{ color: device.color }} />
+                  Reference Values — {device.label}
+                </h3>
+                <div className="overflow-x-auto rounded-xl border border-gray-100">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr style={{ background: device.color + "12" }}>
+                        <th className="text-left px-4 py-2.5 font-semibold text-gray-700">Parameter</th>
+                        <th className="text-left px-4 py-2.5 font-semibold" style={{ color: device.color }}>Value</th>
+                        <th className="text-left px-4 py-2.5 font-semibold text-gray-500">Clinical Note</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {device.normalValues.map((nv, i) => (
+                        <tr key={i} className="bg-white hover:bg-gray-50/50 transition-colors">
+                          <td className="px-4 py-2.5 font-medium text-gray-700">{nv.label}</td>
+                          <td className="px-4 py-2.5 font-bold" style={{ color: device.color }}>{nv.value}</td>
+                          <td className="px-4 py-2.5 text-gray-500">{nv.note}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Clinical Pearls */}
+              <div className="rounded-xl border p-4" style={{ background: device.color + "08", borderColor: device.color + "30" }}>
+                <h3 className="text-sm font-bold mb-3 flex items-center gap-2" style={{ color: device.color, fontFamily: "Merriweather, serif" }}>
+                  <Target className="w-4 h-4" />
+                  Clinical Pearls — {device.label}
+                </h3>
+                <ul className="space-y-2">
+                  {device.clinicalPearls.map((pearl, i) => (
+                    <li key={i} className="flex items-start gap-2 text-xs text-gray-700 leading-relaxed">
+                      <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-[10px] font-bold text-white"
+                        style={{ background: device.color }}>
+                        {i + 1}
+                      </div>
+                      {pearl}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </>
+          )}
 
           {/* ScanCoach CTA */}
           <div className="mt-6 rounded-xl p-4 flex items-center justify-between gap-4"

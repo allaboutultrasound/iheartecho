@@ -55,7 +55,11 @@ const MODULE_ICONS: Record<string, React.ReactNode> = {
   pocus_lung:    <Wind className="w-5 h-5" />,
   mcs_lvad:      <Activity className="w-5 h-5" />,
   mcs_ecmo:      <Activity className="w-5 h-5" />,
-  mcs_impella:   <Zap className="w-5 h-5" />,
+  mcs_impella_25:  <Zap className="w-5 h-5" />,
+  mcs_impella_cp:  <Zap className="w-5 h-5" />,
+  mcs_impella_55:  <Zap className="w-5 h-5" />,
+  mcs_impella_ecp: <Zap className="w-5 h-5" />,
+  mcs_impella_rp:  <Zap className="w-5 h-5" />,
   mcs_lifevest:  <Shield className="w-5 h-5" />,
   mcs_icd:       <Heart className="w-5 h-5" />,
 };

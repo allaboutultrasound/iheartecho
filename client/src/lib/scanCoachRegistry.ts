@@ -29,7 +29,11 @@ export type ScanCoachModule =
   // Mechanical Circulatory Support
   | "mcs_lvad"
   | "mcs_ecmo"
-  | "mcs_impella"
+  | "mcs_impella_25"
+  | "mcs_impella_cp"
+  | "mcs_impella_55"
+  | "mcs_impella_ecp"
+  | "mcs_impella_rp"
   | "mcs_lifevest"
   | "mcs_icd";
 
@@ -446,16 +450,66 @@ export const SCANCOACH_MODULES: ScanCoachModuleMeta[] = [
     ],
   },
   {
-    key: "mcs_impella",
-    label: "Impella ScanCoach",
+    key: "mcs_impella_25",
+    label: "Impella 2.5 ScanCoach",
     path: "/mechanical-support-scan-coach?device=impella",
     views: [
       { id: "plax_inlet",      name: "PLAX — Inlet-to-AV Distance",             group: "Positioning" },
-      { id: "a5c_outlet",      name: "A5C — Outlet in Ascending Aorta",         group: "Positioning" },
+      { id: "a5c_outlet",      name: "A5C — Outlet Confirmation",               group: "Positioning" },
       { id: "tee_melax",       name: "TEE ME LAX — Inlet Confirmation",         group: "Positioning" },
-      { id: "cw_ar",           name: "CW Doppler — AR Assessment",              group: "Monitoring" },
-      { id: "a4c_mr",          name: "A4C — MR (Pigtail Entanglement)",         group: "Monitoring" },
-      { id: "a4c_rv",          name: "A4C — RV Function",                       group: "Monitoring" },
+      { id: "a4c_lv_unload",   name: "A4C — LV Unloading & MV",                group: "Monitoring" },
+      { id: "plax_ar_serial",  name: "PLAX Color Doppler — AR Assessment",      group: "Monitoring" },
+    ],
+  },
+  {
+    key: "mcs_impella_cp",
+    label: "Impella CP ScanCoach",
+    path: "/mechanical-support-scan-coach?device=impella",
+    views: [
+      { id: "plax_inlet",      name: "PLAX — Inlet-to-AV Distance",             group: "Positioning" },
+      { id: "a5c_outlet",      name: "A5C — Outlet Confirmation",               group: "Positioning" },
+      { id: "tee_melax",       name: "TEE ME LAX — Inlet Confirmation",         group: "Positioning" },
+      { id: "a4c_lv_unload",   name: "A4C — LV Unloading & MV",                group: "Monitoring" },
+      { id: "plax_ar_serial",  name: "PLAX Color Doppler — AR Assessment",      group: "Monitoring" },
+      { id: "ecpella_av",       name: "PLAX — ECPELLA AV Opening",               group: "ECPELLA" },
+    ],
+  },
+  {
+    key: "mcs_impella_55",
+    label: "Impella 5.5 ScanCoach",
+    path: "/mechanical-support-scan-coach?device=impella",
+    views: [
+      { id: "plax_inlet",      name: "PLAX — Inlet-to-AV Distance",             group: "Positioning" },
+      { id: "a5c_outlet",      name: "A5C — Outlet Confirmation",               group: "Positioning" },
+      { id: "tee_melax",       name: "TEE ME LAX — Inlet Confirmation",         group: "Positioning" },
+      { id: "a4c_lv_unload",   name: "A4C — LV Unloading & MV",                group: "Monitoring" },
+      { id: "plax_ar_serial",  name: "PLAX Color Doppler — AR Assessment (21Fr)", group: "Monitoring" },
+      { id: "bridge_serial",   name: "Serial Echo — Bridge-to-LVAD/Transplant", group: "Bridge Assessment" },
+    ],
+  },
+  {
+    key: "mcs_impella_ecp",
+    label: "Impella ECP ScanCoach",
+    path: "/mechanical-support-scan-coach?device=impella",
+    views: [
+      { id: "plax_expansion",  name: "PLAX — Pump Expansion Confirmation",       group: "Positioning" },
+      { id: "plax_inlet",      name: "PLAX — Inlet-to-AV Distance",             group: "Positioning" },
+      { id: "a5c_outlet",      name: "A5C — Outlet Confirmation",               group: "Positioning" },
+      { id: "tee_melax",       name: "TEE ME LAX — Inlet Confirmation",         group: "Positioning" },
+      { id: "a4c_lv_unload",   name: "A4C — LV Unloading & MV",                group: "Monitoring" },
+      { id: "plax_ar_serial",  name: "PLAX Color Doppler — AR Assessment",      group: "Monitoring" },
+    ],
+  },
+  {
+    key: "mcs_impella_rp",
+    label: "Impella RP ScanCoach",
+    path: "/mechanical-support-scan-coach?device=impella",
+    views: [
+      { id: "subcostal_inlet", name: "Subcostal IVC — Inlet Position",           group: "Positioning" },
+      { id: "psax_outlet",     name: "PSAX at AV Level — Outlet in Main PA",     group: "Positioning" },
+      { id: "tee_bicaval",     name: "TEE Bicaval — Inlet Confirmation",         group: "Positioning" },
+      { id: "tee_rvio",        name: "TEE RV Inflow-Outflow — Outlet",          group: "Positioning" },
+      { id: "a4c_rv_unload",   name: "A4C — RV Unloading (TAPSE, RV S')",       group: "Monitoring" },
     ],
   },
   {
