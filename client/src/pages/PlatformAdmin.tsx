@@ -976,6 +976,7 @@ function MenuLinksPanel() {
   const [form, setForm] = useState({
     acsUrl: '',
     learnEchoUrl: '',
+    learnPediatricEchoUrl: '',
     learnFetalEchoUrl: '',
     learnVascularUrl: '',
     learnPocusUrl: '',
@@ -987,6 +988,7 @@ function MenuLinksPanel() {
       setForm({
         acsUrl: links.acsUrl,
         learnEchoUrl: links.learnEchoUrl,
+        learnPediatricEchoUrl: (links as any).learnPediatricEchoUrl ?? '',
         learnFetalEchoUrl: links.learnFetalEchoUrl,
         learnVascularUrl: (links as any).learnVascularUrl ?? '',
         learnPocusUrl: links.learnPocusUrl,
@@ -1005,6 +1007,7 @@ function MenuLinksPanel() {
     const urlFields = [
       { key: 'acsUrl' as const, label: 'ACS Mastery URL' },
       { key: 'learnEchoUrl' as const, label: 'Learn Echo URL' },
+      { key: 'learnPediatricEchoUrl' as const, label: 'Learn Pediatric Echo URL' },
       { key: 'learnFetalEchoUrl' as const, label: 'Learn Fetal Echo URL' },
       { key: 'learnVascularUrl' as const, label: 'Learn Vascular URL' },
       { key: 'learnPocusUrl' as const, label: 'Learn POCUS URL' },
@@ -1020,6 +1023,7 @@ function MenuLinksPanel() {
   const FIELDS = [
     { key: 'acsUrl' as const, label: 'ACS Mastery' },
     { key: 'learnEchoUrl' as const, label: 'Learn Echo' },
+    { key: 'learnPediatricEchoUrl' as const, label: 'Learn Pediatric Echo' },
     { key: 'learnFetalEchoUrl' as const, label: 'Learn Fetal Echo' },
     { key: 'learnVascularUrl' as const, label: 'Learn Vascular' },
     { key: 'learnPocusUrl' as const, label: 'Learn POCUS' },

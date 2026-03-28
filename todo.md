@@ -759,3 +759,7 @@
 - [x] MechanicalSupportScanCoach: add per-device Impella sub-tabs with device-specific acquisition views
 - [x] NavigatorEditor: add per-device Impella static defaults
 - [x] ScanCoach registry + server MODULE_VALUES: add per-device Impella module keys
+
+## Learn Pediatric Echo Sidenav Link (Mar 28 2026)
+- [x] Add "Learn Pediatric Echo" sidenav link before "Learn Fetal Echo" (URL: https://www.allaboutultrasound.net/pediatric-echo-cross-training-2cfdb)
+- [x] Add "Learn Pediatric Echo" to admin menu links editor

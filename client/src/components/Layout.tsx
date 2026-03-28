@@ -79,6 +79,7 @@ const navGroups = [
       { path: "/registry-review", label: "Registry Review", icon: BookMarked },
       { path: "https://www.allaboutultrasound.net/acs-preview-pass-access", label: "ACS Mastery", icon: Award, external: true },
       { path: "https://www.allaboutultrasound.net/adultecho-preview-pass-access", label: "Learn Echo", icon: GraduationCap, external: true },
+      { path: "https://www.allaboutultrasound.net/pediatric-echo-cross-training-2cfdb", label: "Learn Pediatric Echo", icon: BookOpen, external: true },
       { path: "https://www.allaboutultrasound.net/fetal-echo-preview-access-pass", label: "Learn Fetal Echo", icon: BookOpen, external: true },
       { path: "https://www.allaboutultrasound.com/vascular-education.html", label: "Learn Vascular", icon: Activity, external: true },
       { path: "https://www.allaboutultrasound.com/pocus-education.html", label: "Learn POCUS", icon: Stethoscope, external: true },
@@ -186,6 +187,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       items: group.items.map(item => {
         if (item.label === 'ACS Mastery' && menuLinks?.acsUrl) return { ...item, path: menuLinks.acsUrl };
         if (item.label === 'Learn Echo' && menuLinks?.learnEchoUrl) return { ...item, path: menuLinks.learnEchoUrl };
+        if (item.label === 'Learn Pediatric Echo' && (menuLinks as any)?.learnPediatricEchoUrl) return { ...item, path: (menuLinks as any).learnPediatricEchoUrl };
         if (item.label === 'Learn Fetal Echo' && menuLinks?.learnFetalEchoUrl) return { ...item, path: menuLinks.learnFetalEchoUrl };
         if (item.label === 'Learn Vascular' && (menuLinks as any)?.learnVascularUrl) return { ...item, path: (menuLinks as any).learnVascularUrl };
         if (item.label === 'Learn POCUS' && menuLinks?.learnPocusUrl) return { ...item, path: menuLinks.learnPocusUrl };
