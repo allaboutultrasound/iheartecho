@@ -4,7 +4,7 @@
   Brand: Teal #189aa1, Aqua #4ad9e0
   US spelling throughout
   Free: Adult Echo, Pediatric Echo, Fetal Echo, Strain, UEA
-  Premium: Stress Echo, HOCM, Pulmonary HTN & PE, Structural Heart, TEE, ICE
+  Premium: Stress Echo, HOCM, Pulmonary HTN & PE, Structural Heart, TEE, ICE, MechanicalSupportAssist™
 */
 import { useState } from "react";
 import { Link } from "wouter";
@@ -85,7 +85,7 @@ export default function EchoAssistHub() {
               <div className="flex flex-wrap items-center gap-2 mb-3">
                 <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-3 py-1">
                   <div className="w-2 h-2 rounded-full bg-[#4ad9e0] animate-pulse" />
-                  <span className="text-sm text-white/80 font-medium">11 Specialties · Protocol + Scan Coach</span>
+                  <span className="text-sm text-white/80 font-medium">12 Specialties · Protocol + Scan Coach</span>
                 </div>
                 <div className="inline-flex items-center gap-1.5 bg-emerald-500/20 border border-emerald-400/30 rounded-full px-3 py-1">
                   <span className="text-sm text-emerald-300 font-medium">{freeCount} Free</span>
@@ -288,10 +288,10 @@ export default function EchoAssistHub() {
                 className="text-white font-bold text-base mb-1"
                 style={{ fontFamily: "Merriweather, serif" }}
               >
-                Unlock All 6 Premium Specialties
+                Unlock All {premiumCount} Premium Specialties
               </h3>
               <p className="text-white/60 text-sm">
-                Stress Echo, HOCM, Pulmonary HTN & PE, Structural Heart, TEE, and ICE — plus all future premium content.
+                Stress Echo, HOCM, Pulmonary HTN & PE, Structural Heart, TEE, ICE, and MechanicalSupportAssist™ — plus all future premium content.
               </p>
             </div>
             <Link href="/premium" className="flex-shrink-0">

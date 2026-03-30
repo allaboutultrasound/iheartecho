@@ -763,3 +763,8 @@
 ## Learn Pediatric Echo Sidenav Link (Mar 28 2026)
 - [x] Add "Learn Pediatric Echo" sidenav link before "Learn Fetal Echo" (URL: https://www.allaboutultrasound.net/pediatric-echo-cross-training-2cfdb)
 - [x] Add "Learn Pediatric Echo" to admin menu links editor
+
+## MechanicalSupportAssist™ Gating Fix (Mar 30 2026)
+- [x] Fix gating in MechanicalSupportNavigator: change from accreditation to premium
+- [x] Fix gating in MechanicalSupportScanCoach: change from accreditation to premium
+- [x] Fix EchoAssist Hub card label/badge for MechanicalSupportAssist to show Premium (not Accreditation)
