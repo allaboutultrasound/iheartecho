@@ -768,3 +768,7 @@
 - [x] Fix gating in MechanicalSupportNavigator: change from accreditation to premium
 - [x] Fix gating in MechanicalSupportScanCoach: change from accreditation to premium
 - [x] Fix EchoAssist Hub card label/badge for MechanicalSupportAssist to show Premium (not Accreditation)
+
+## LVAD Aortic Outflow Cannula Views (Mar 30 2026)
+- [x] MechanicalSupportNavigator: add PLAX and High Parasternal Aortic Outflow Cannula checklist items to LVAD post-implant section
+- [x] MechanicalSupportScanCoach: add PLAX Aortic Outflow Cannula and High Parasternal Aortic Outflow Cannula view cards to LVAD ScanCoach

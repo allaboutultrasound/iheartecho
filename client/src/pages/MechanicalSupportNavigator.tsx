@@ -97,6 +97,8 @@ const lvadSections: ProtocolSection[] = [
       { id: "lvad_post_rv", label: "RV function (post-implant)", detail: "TAPSE, RV S', FAC. RV failure post-LVAD is a major cause of mortality. Worsening RV function requires speed optimization and possible RVAD.", critical: true, reference: "RV failure: TAPSE <10 mm, FAC <25% post-implant" },
       { id: "lvad_post_effusion", label: "Pericardial effusion", detail: "New effusion post-LVAD may indicate bleeding or tamponade. Assess for hemodynamic compromise. Tamponade may be loculated.", critical: true, reference: "New effusion = urgent assessment required" },
       { id: "lvad_post_thrombus", label: "Pump thrombus assessment", detail: "Elevated LDH, hemolysis, or power spikes suggest pump thrombus. Echo: high inflow velocity, spontaneous echo contrast, reduced LV unloading. Confirm with pump parameters.", critical: true, reference: "Pump thrombus: ↑ inflow vel, ↑ LDH, ↑ power" },
+      { id: "lvad_post_outflow_plax", label: "Outflow graft — PLAX view", detail: "PLAX view: the outflow graft appears as a circular echogenic structure in cross-section in the anterior mediastinum, anterior to the aortic root. Confirm graft patency (no thrombus, no kink). Color Doppler: continuous antegrade flow. PW Doppler: normal outflow graft velocity 1.5–2.5 m/s. Velocity >2.5 m/s with turbulence suggests obstruction (kink, thrombus, or anastomotic stenosis). Absent or reversed diastolic flow = pump malfunction or severe AR recirculation.", critical: true, reference: "Outflow graft velocity: 1.5–2.5 m/s; >2.5 m/s = obstruction" },
+      { id: "lvad_post_outflow_hpsl", label: "Outflow graft — High Parasternal Long-Axis view", detail: "High Parasternal Long-Axis (HPSL): move transducer 1–2 interspaces superior to standard PLAX position, tilt toward right shoulder. This view places the ascending aorta and the outflow graft anastomosis in long axis. Assess: (1) graft-to-ascending aorta anastomosis for turbulence or stenosis on color Doppler, (2) longitudinal graft course and any kinking, (3) CW Doppler across anastomosis if turbulence detected. HPSL is the preferred window for evaluating the outflow graft anastomosis and longitudinal graft course — superior to PLAX cross-section for anastomotic assessment.", critical: true, reference: "HPSL: preferred view for outflow graft anastomosis and longitudinal graft course" },
     ],
   },
   {
@@ -119,6 +121,8 @@ const lvadNormalValues = [
   { label: "AV Opening Frequency", value: "Every 2–4 beats", note: "Continuous closure = fusion risk" },
   { label: "Septal Position", value: "Midline", note: "Rightward = over-decompression; Leftward = RV failure" },
   { label: "TAPSE (post-implant)", value: "≥10 mm", note: "<10 mm = significant RV dysfunction" },
+  { label: "Outflow Graft Velocity", value: "1.5–2.5 m/s", note: ">2.5 m/s = obstruction (kink, thrombus, or anastomotic stenosis)" },
+  { label: "Outflow Graft Flow Pattern", value: "Continuous antegrade", note: "Absent or reversed diastolic flow = pump malfunction or severe AR recirculation" },
 ];
 
 const lvadPearls = [
@@ -128,6 +132,8 @@ const lvadPearls = [
   "Pump thrombus: suspect when LDH rises, power increases, or inflow velocity exceeds 2.5 m/s.",
   "During ramp study, optimal speed = midline septum + intermittent AV opening + no suction events.",
   "PFO/ASD must be excluded pre-implant — LVAD reduces LV pressure, enabling right-to-left shunting.",
+  "Outflow graft assessment requires two windows: PLAX (cross-section, Doppler velocity) and High Parasternal Long-Axis (anastomosis, longitudinal graft course).",
+  "Outflow graft obstruction (velocity >2.5 m/s) is a surgical emergency — kinking is the most common cause.",
 ];
 
 // ─── ECMO DATA ────────────────────────────────────────────────────────────────
