@@ -797,3 +797,4 @@
 - [x] Add Billing Codes card to TEE ScanCoach views with CPT codes (93312/93313/93314/93315/93316/93317/93318/93319 per view)
 - [x] Add Billing Codes card to Strain ScanCoach with CPT codes (93306 + 93356 add-on)
 - [x] NOT added to HOCM-Assist™, Diastology, Pulm HTN, Fetal, Pediatric, POCUS, MCS, or other non-billable modules
+- [x] Remove MPI / Tei Index view from TTE ScanCoach (was added without being requested)

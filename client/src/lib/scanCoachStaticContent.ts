@@ -103,14 +103,6 @@ const STATIC_CONTENT: Record<string, StaticViewContent> = {
     pitfalls: ["Difficult in short necks or COPD", "Probe pressure may cause discomfort"],
     measurements: ["Aortic arch diameter", "Descending aorta diastolic flow reversal"],
   },
-  "tte:mpi_tei": {
-    description: "The Myocardial Performance Index (Tei Index) is a Doppler-derived measure of global ventricular function combining systolic and diastolic time intervals. It is load-independent and applicable to both LV and RV.",
-    structures: ["Mitral valve inflow (LV MPI)", "LVOT outflow (LV MPI)", "Tricuspid valve inflow (RV MPI)", "RVOT / pulmonic outflow (RV MPI)"],
-    howToGet: ["Position PW sample between AV valve tips and outflow tract", "Single-beat method: place sample to capture both inflow and outflow on same cycle", "Measure ICT, IRT, and ET from Doppler trace"],
-    tips: ["Single-beat method: place PW sample between AV inflow and outflow valve to capture both on one cycle", "LV MPI normal ≤0.40 (PW Doppler) | ≤0.54 (Tissue Doppler / TDI)", "RV MPI normal ≤0.40 (PW Doppler) | ≤0.54 (Tissue Doppler / TDI)", "TDI-MPI: sample at lateral mitral or tricuspid annulus — more reproducible than PW method"],
-    pitfalls: ["Atrial fibrillation: MPI is unreliable due to variable RR intervals", "Elevated filling pressures shorten IRT, which can falsely normalise MPI"],
-    measurements: ["ICT (ms)", "IRT (ms)", "ET (ms)", "MPI = (ICT + IRT) / ET"],
-  },
 
   // ─── TEE ────────────────────────────────────────────────────────────────────
   "tee:me4c": {

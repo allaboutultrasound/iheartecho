@@ -128,13 +128,6 @@ export const TTE_BILLING: Record<string, BillingSection> = {
     clinicalNote: "Suprasternal notch view is used for aortic arch assessment, coarctation gradient, and descending aorta diastolic reversal in AR.",
   },
 
-  mpi_tei: {
-    codes: [
-      { code: "93306", description: "TTE complete — M-mode, 2D, spectral + color Doppler", type: "base" },
-      { code: "93320", description: "Doppler PW and/or CW (add-on)", type: "addon", note: "Required for MPI/Tei calculation" },
-    ],
-    clinicalNote: "MPI/Tei index requires both IVCT and IVRT Doppler measurements. Add 93320 when PW/CW Doppler is performed for this purpose.",
-  },
 };
 
 // ─── TEE Billing Codes by View ID ─────────────────────────────────────────────
