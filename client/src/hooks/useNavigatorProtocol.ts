@@ -11,18 +11,25 @@
  *   - This means saving ONE section in the Navigator Editor only changes that
  *     one section — all others continue to show from the static defaults.
  *
+ * FIELD MAPPING:
+ *   - DB sectionTitle → section.view (or section.title if titleField="title" option is passed)
+ *   - DB probeNote    → section.probe (and section.probeNote)
+ *   - DB items        → section.items (label + detail + critical preserved)
+ *
  * Usage:
  *   const { sections, isLoading } = useNavigatorProtocol("tte", tteProtocol);
+ *   const { sections, isLoading } = useNavigatorProtocol("hocm", protocolSections, { titleField: "title" });
  *
  * The `staticProtocol` arg is the hardcoded array from the navigator page.
- * Each section must have at minimum: { view, probe, items: { id, label, detail?, critical? }[] }
+ * Each section must have at minimum: { id, items: { label, detail?, critical? }[] }
+ * and either a `view` or `title` field for the section heading.
  * Navigator-specific extra fields (position, angle, depth, clinicalUse, window, tips,
  * pearls, normalFindings, abnormalFindings, etc.) are carried through transparently.
  */
 import { trpc } from "@/lib/trpc";
 
 export interface ChecklistItem {
-  id: string;
+  id?: string;
   label: string;
   detail?: string;
   critical?: boolean;
@@ -33,10 +40,14 @@ export interface ChecklistItem {
 
 export interface ProtocolSection {
   // Core fields (required)
-  view: string;
-  probe: string;
   items: ChecklistItem[];
-  // Optional identifier (used by some navigators as section key)
+  // Section heading — one of these must be present
+  view?: string;
+  title?: string;
+  // Probe/position note
+  probe?: string;
+  probeNote?: string;
+  // Optional identifier (used as section key)
   id?: string;
   // TEE-specific
   position?: string;
@@ -54,10 +65,17 @@ export interface ProtocolSection {
   [key: string]: unknown;
 }
 
+export interface UseNavigatorProtocolOptions {
+  /** If the navigator uses `title` instead of `view` for the section heading, set this to "title" */
+  titleField?: "view" | "title";
+}
+
 export function useNavigatorProtocol<T extends ProtocolSection>(
   module: string,
-  staticProtocol: T[]
+  staticProtocol: T[],
+  options?: UseNavigatorProtocolOptions
 ): { sections: T[]; isLoading: boolean; isFromDb: boolean } {
+  const titleField = options?.titleField ?? "view";
   const { data: dbSections, isLoading } = trpc.navigatorAdmin.getModuleSections.useQuery(
     { module },
     {
@@ -78,14 +96,19 @@ export function useNavigatorProtocol<T extends ProtocolSection>(
       const sectionId = (staticSection as { id?: string }).id;
       if (sectionId && dbMap.has(sectionId)) {
         const dbRow = dbMap.get(sectionId)!;
-        // Override only title, probeNote, and items from DB — preserve all other
+        // Override title/view, probe, and items from DB — preserve all other
         // navigator-specific fields (position, angle, depth, tips, etc.) from static
-        return {
-          ...staticSection,
-          view: dbRow.sectionTitle,
-          probe: dbRow.probeNote ?? staticSection.probe,
-          items: dbRow.items,
-        } as T;
+        const overrides: Record<string, unknown> = { items: dbRow.items };
+        if (titleField === "title") {
+          overrides.title = dbRow.sectionTitle;
+        } else {
+          overrides.view = dbRow.sectionTitle;
+        }
+        if (dbRow.probeNote) {
+          overrides.probe = dbRow.probeNote;
+          overrides.probeNote = dbRow.probeNote;
+        }
+        return { ...staticSection, ...overrides } as T;
       }
       // No DB override for this section — use static as-is
       return staticSection;

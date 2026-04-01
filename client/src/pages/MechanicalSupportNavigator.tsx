@@ -10,6 +10,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import { PremiumOverlay } from "@/components/PremiumOverlay";
+import { useNavigatorProtocol } from "@/hooks/useNavigatorProtocol";
 import {
   Activity,
   AlertTriangle,
@@ -758,9 +759,38 @@ function ChecklistItemRow({
 export default function MechanicalSupportNavigator() {
   const [activeDevice, setActiveDevice] = useState("lvad");
   const [activeImpellaSubTab, setActiveImpellaSubTab] = useState("imp_cp");
-  const device = DEVICE_TABS.find(d => d.id === activeDevice)!;
+
+  // Wire each device module to the Navigator Editor DB overrides
+  const { sections: lvadSectionsDb }       = useNavigatorProtocol("mcs_lvad",        lvadSections,       { titleField: "title" });
+  const { sections: ecmoSectionsDb }       = useNavigatorProtocol("mcs_ecmo",        ecmoSections,       { titleField: "title" });
+  const { sections: lifevestSectionsDb }   = useNavigatorProtocol("mcs_lifevest",    lifevestSections,   { titleField: "title" });
+  const { sections: icdSectionsDb }        = useNavigatorProtocol("mcs_icd",         icdSections,        { titleField: "title" });
+  const { sections: imp25SectionsDb }      = useNavigatorProtocol("mcs_impella_25",  impella25Sections,  { titleField: "title" });
+  const { sections: impCPSectionsDb }      = useNavigatorProtocol("mcs_impella_cp",  impellaCPSections,  { titleField: "title" });
+  const { sections: imp55SectionsDb }      = useNavigatorProtocol("mcs_impella_55",  impella55Sections,  { titleField: "title" });
+  const { sections: impECPSectionsDb }     = useNavigatorProtocol("mcs_impella_ecp", impellaECPSections, { titleField: "title" });
+  const { sections: impRPSectionsDb }      = useNavigatorProtocol("mcs_impella_rp",  impellaRPSections,  { titleField: "title" });
+
+  // Build live DEVICE_TABS with DB-overridden sections
+  const liveTabs = DEVICE_TABS.map(tab => {
+    if (tab.id === "lvad")     return { ...tab, sections: lvadSectionsDb };
+    if (tab.id === "ecmo")     return { ...tab, sections: ecmoSectionsDb };
+    if (tab.id === "lifevest") return { ...tab, sections: lifevestSectionsDb };
+    if (tab.id === "icd")      return { ...tab, sections: icdSectionsDb };
+    return tab;
+  });
+  const liveImpellaSubTabs = IMPELLA_SUBTABS.map(sub => {
+    if (sub.id === "imp_25")  return { ...sub, sections: imp25SectionsDb };
+    if (sub.id === "imp_cp")  return { ...sub, sections: impCPSectionsDb };
+    if (sub.id === "imp_55")  return { ...sub, sections: imp55SectionsDb };
+    if (sub.id === "imp_ecp") return { ...sub, sections: impECPSectionsDb };
+    if (sub.id === "imp_rp")  return { ...sub, sections: impRPSectionsDb };
+    return sub;
+  });
+
+  const device = liveTabs.find(d => d.id === activeDevice)!;
   const isImpella = activeDevice === "impella";
-  const impellaSubTab = IMPELLA_SUBTABS.find(s => s.id === activeImpellaSubTab)!;
+  const impellaSubTab = liveImpellaSubTabs.find(s => s.id === activeImpellaSubTab)!;
 
   return (
     <Layout>

@@ -798,3 +798,13 @@
 - [x] Add Billing Codes card to Strain ScanCoach with CPT codes (93306 + 93356 add-on)
 - [x] NOT added to HOCM-Assist™, Diastology, Pulm HTN, Fetal, Pediatric, POCUS, MCS, or other non-billable modules
 - [x] Remove MPI / Tei Index view from TTE ScanCoach (was added without being requested)
+
+## Editor → DB → Live UI Pipeline Fix
+- [ ] Audit ScanCoach editor save path: verify tRPC mutation writes to DB correctly
+- [ ] Audit Navigator editor save path: verify tRPC mutation writes to DB correctly
+- [ ] Audit useScanCoachOverrides: verify it reads from DB and merges with static defaults
+- [ ] Audit Navigator live UI: verify it reads DB overrides and displays them
+- [ ] Fix any broken save/load paths in ScanCoach editor pipeline
+- [ ] Fix any broken save/load paths in Navigator editor pipeline
+- [ ] Populate all 165 missing static content entries in scanCoachStaticContent.ts
+- [x] Populate all missing ScanCoach static content entries (achd, chd, ecg, hocm, ice, mcs_impella_25/55/ecp/rp, pocus_lung, pocus_rush, stress, structural, uea)

@@ -7,6 +7,7 @@
 */
 
 import { useState } from "react";
+import { useNavigatorProtocol } from "@/hooks/useNavigatorProtocol";
 import Layout from "@/components/Layout";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
 import {
@@ -112,7 +113,7 @@ const gradientThresholds = [
 
 // ─── PROTOCOL CHECKLIST ──────────────────────────────────────────────────────
 
-const protocolSections = [
+const staticProtocolSections = [
   {
     id: "morphology",
     title: "LV Morphology & Wall Thickness",
@@ -407,6 +408,7 @@ export default function HOCMNavigator() {
   const [expandedSection, setExpandedSection] = useState<string | null>("morphology");
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState<"protocolSections" | "sam" | "gradients" | "valsalva" | "reporting">("protocolSections");
+  const { sections: protocolSections } = useNavigatorProtocol("hocm", staticProtocolSections, { titleField: "title" });
   const [valsalvaPath, setValsalvaPath] = useState<"instructed" | "goal-directed" | null>(null);
 
   const toggleItem = (key: string) => {

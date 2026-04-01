@@ -776,7 +776,7 @@ Object.assign(STATIC_DEFAULTS, {
       ],
     },
     {
-      module: "mcs_lvad", sectionId: "lvad_positioning", sortOrder: 1,
+      module: "mcs_lvad", sectionId: "lvad_postimplant", sortOrder: 1,
       sectionTitle: "Inflow Cannula Positioning",
       probeNote: "PLAX (primary) + A5C (confirmation) | Measure inlet-to-AV distance",
       items: [
@@ -788,7 +788,7 @@ Object.assign(STATIC_DEFAULTS, {
       ],
     },
     {
-      module: "mcs_lvad", sectionId: "lvad_postimplant", sortOrder: 2,
+      module: "mcs_lvad", sectionId: "lvad_speed_optimization", sortOrder: 2,
       sectionTitle: "Post-Implant Monitoring",
       probeNote: "Serial echo: PLAX, A4C, A5C, Subcostal | Frequency: daily in ICU, then per protocol",
       items: [
@@ -803,7 +803,7 @@ Object.assign(STATIC_DEFAULTS, {
   ],
   mcs_ecmo: [
     {
-      module: "mcs_ecmo", sectionId: "ecmo_va_monitoring", sortOrder: 0,
+      module: "mcs_ecmo", sectionId: "ecmo_va_assessment", sortOrder: 0,
       sectionTitle: "VA-ECMO Monitoring",
       probeNote: "PLAX + A4C + Subcostal | Serial every 4–6 hours in ICU",
       items: [
@@ -817,7 +817,7 @@ Object.assign(STATIC_DEFAULTS, {
       ],
     },
     {
-      module: "mcs_ecmo", sectionId: "ecmo_cannula", sortOrder: 1,
+      module: "mcs_ecmo", sectionId: "ecmo_vv_assessment", sortOrder: 1,
       sectionTitle: "Cannula Position Assessment",
       probeNote: "TEE preferred (bicaval view) | TTE subcostal as alternative",
       items: [
@@ -827,7 +827,7 @@ Object.assign(STATIC_DEFAULTS, {
       ],
     },
     {
-      module: "mcs_ecmo", sectionId: "ecmo_weaning", sortOrder: 2,
+      module: "mcs_ecmo", sectionId: "ecmo_weaning_protocol", sortOrder: 2,
       sectionTitle: "Weaning Assessment",
       probeNote: "A4C + PLAX | During weaning trial at reduced ECMO flow",
       items: [
@@ -1014,7 +1014,7 @@ Object.assign(STATIC_DEFAULTS, {
   ],
   mcs_lifevest: [
     {
-      module: "mcs_lifevest", sectionId: "lv_ef_assessment", sortOrder: 0,
+      module: "mcs_lifevest", sectionId: "lifevest_indication", sortOrder: 0,
       sectionTitle: "EF Assessment for WCD Prescription",
       probeNote: "Apical 4-chamber + Apical 2-chamber | Biplane Simpson's method only",
       items: [
@@ -1026,7 +1026,7 @@ Object.assign(STATIC_DEFAULTS, {
       ],
     },
     {
-      module: "mcs_lifevest", sectionId: "lv_followup", sortOrder: 1,
+      module: "mcs_lifevest", sectionId: "lifevest_followup", sortOrder: 1,
       sectionTitle: "Follow-Up Echo — WCD Discontinuation Decision",
       probeNote: "Repeat echo at 3 months on GDMT | EF recovery determines WCD continuation vs. ICD implant",
       items: [
@@ -1038,7 +1038,7 @@ Object.assign(STATIC_DEFAULTS, {
   ],
   mcs_icd: [
     {
-      module: "mcs_icd", sectionId: "icd_ef_decision", sortOrder: 0,
+      module: "mcs_icd", sectionId: "icd_preimplant", sortOrder: 0,
       sectionTitle: "EF Assessment for ICD Decision",
       probeNote: "Apical 4-chamber + Apical 2-chamber | Biplane Simpson's method only | On GDMT ≥3 months",
       items: [
@@ -1049,7 +1049,7 @@ Object.assign(STATIC_DEFAULTS, {
       ],
     },
     {
-      module: "mcs_icd", sectionId: "icd_crt_eligibility", sortOrder: 1,
+      module: "mcs_icd", sectionId: "icd_crt_optimization", sortOrder: 1,
       sectionTitle: "CRT Eligibility Assessment",
       probeNote: "PLAX M-mode (SPWMD) + LVOT/RVOT PW Doppler (IVMD) + TDI",
       items: [
@@ -1059,7 +1059,7 @@ Object.assign(STATIC_DEFAULTS, {
       ],
     },
     {
-      module: "mcs_icd", sectionId: "icd_post_implant", sortOrder: 2,
+      module: "mcs_icd", sectionId: "icd_postimplant", sortOrder: 2,
       sectionTitle: "Post-Implant Assessment",
       probeNote: "A4C + Subcostal | Assess for pericardial effusion and lead position",
       items: [
