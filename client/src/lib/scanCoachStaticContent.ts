@@ -12,6 +12,7 @@
 
 export interface StaticViewContent {
   description?: string;
+  probePosition?: string;
   howToGet?: string[];
   structures?: string[];
   tips?: string[];

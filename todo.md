@@ -800,11 +800,17 @@
 - [x] Remove MPI / Tei Index view from TTE ScanCoach (was added without being requested)
 
 ## Editor → DB → Live UI Pipeline Fix
-- [ ] Audit ScanCoach editor save path: verify tRPC mutation writes to DB correctly
-- [ ] Audit Navigator editor save path: verify tRPC mutation writes to DB correctly
-- [ ] Audit useScanCoachOverrides: verify it reads from DB and merges with static defaults
-- [ ] Audit Navigator live UI: verify it reads DB overrides and displays them
-- [ ] Fix any broken save/load paths in ScanCoach editor pipeline
-- [ ] Fix any broken save/load paths in Navigator editor pipeline
-- [ ] Populate all 165 missing static content entries in scanCoachStaticContent.ts
+- [x] Audit ScanCoach editor save path: tRPC upsertOverride writes to DB correctly
+- [x] Audit Navigator editor save path: tRPC upsertSection writes to DB correctly
+- [x] Audit useScanCoachOverrides: confirmed reads from DB with staleTime:0, merges with static defaults
+- [x] Audit Navigator live UI: identified 5 navigators NOT wired to useNavigatorProtocol
+- [x] ScanCoach pipeline confirmed working end-to-end for all modules using useScanCoachOverrides
+- [x] Wire MechanicalSupportNavigator to useNavigatorProtocol for all 9 MCS device modules
+- [x] Wire HOCMNavigator to useNavigatorProtocol
+- [x] Fix NavigatorEditor STATIC_DEFAULTS sectionIds to match live page section IDs (mcs_lvad, mcs_ecmo, mcs_lifevest, mcs_icd)
+- [x] Populate all 319 ScanCoach static content entries (all modules, no duplicates, probePosition field added)
 - [x] Populate all missing ScanCoach static content entries (achd, chd, ecg, hocm, ice, mcs_impella_25/55/ecp/rp, pocus_lung, pocus_rush, stress, structural, uea)
+- [ ] Wire FetalNavigator to useNavigatorProtocol (requires data-driven restructure of fetalProtocol)
+- [ ] Wire DiastolicNavigator to useNavigatorProtocol (requires converting inline JSX to data array)
+- [ ] Wire PulmHTNNavigator to useNavigatorProtocol (requires converting inline JSX to data array)
+- [ ] Wire ICENavigator to useNavigatorProtocol (requires adding id fields to ICE_VIEWS)
