@@ -77,6 +77,27 @@ function applyOverride<T extends Record<string, unknown>>(view: T, override: Ove
   const criticalFindings = parseJsonArray(override.criticalFindings);
   if (criticalFindings) merged.criticalFindings = criticalFindings;
 
+  // ── CHD stage field mapping ──────────────────────────────────────────────────
+  // CHD stages use different field names than standard ScanCoach views.
+  // DB columns are reused with the following semantic mapping:
+  //   description      → overview        (paragraph text)
+  //   howToGet         → keyViews        (string[])
+  //   measurements     → keyMeasurements (string[])
+  //   structures       → doppler         (string[])
+  //   pitfalls         → normalCriteria  (string[])
+  //   criticalFindings → redFlags        (string[])
+  //   tips             → tips            (same)
+  // Only apply if the view object has CHD stage fields (duck-typing check).
+  if ('overview' in view) {
+    if (override.description)  merged.overview        = override.description;
+    if (howToGet)              merged.keyViews        = howToGet;
+    if (measurements)          merged.keyMeasurements = measurements;
+    if (structures)            merged.doppler         = structures;
+    if (pitfalls)              merged.normalCriteria  = pitfalls;
+    if (criticalFindings)      merged.redFlags        = criticalFindings;
+    // tips already applied above (same field name)
+  }
+
   return merged as T;
 }
 

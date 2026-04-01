@@ -814,3 +814,26 @@
 - [ ] Wire DiastolicNavigator to useNavigatorProtocol (requires converting inline JSX to data array)
 - [ ] Wire PulmHTNNavigator to useNavigatorProtocol (requires converting inline JSX to data array)
 - [ ] Wire ICENavigator to useNavigatorProtocol (requires adding id fields to ICE_VIEWS)
+
+## ScanCoach Editor WYSIWYG Fix (Apr 1 2026)
+- [ ] Audit why CoA saved changes don't appear in live CHD ScanCoach UI
+- [ ] Fix CHD ScanCoach live UI to read DB overrides via useScanCoachOverrides
+- [ ] Align ScanCoach Editor registry for CHD to exactly mirror live UI views (pre-op, post-op, etc.)
+- [ ] Ensure editor fields (description, tips, pitfalls, etc.) match exactly what is shown in live UI
+
+## ScanCoach WYSIWYG Editor Rebuild (Apr 1 2026)
+- [ ] Audit all ScanCoach page section structures (TTE, TEE, CHD, HOCM, Stress, Structural, ICE, POCUS, etc.)
+- [ ] Rebuild ScanCoach Editor to render the live UI layout with inline editable fields for each section
+- [ ] Fix CHD stage-level override merging (mergeCHDView must apply to selectedStage, not selectedDefect)
+- [ ] Ensure all editable fields in editor exactly match what is rendered in live UI
+- [ ] Ensure saved changes reflect immediately in live UI for all modules
+
+## CHD ScanCoach WYSIWYG Editor Fix (Apr 1 2026)
+- [x] Root cause: PedCHDCoach applied DB overrides to selectedDefect but rendered selectedStage — overrides never appeared in live UI
+- [x] Fix: added selectedStageMerged computed value using mergeCHDView on stage.id
+- [x] Fix: replaced all selectedStage.overview/keyViews/keyMeasurements/doppler/normalCriteria/redFlags/tips render references with selectedStageMerged
+- [x] Fix: extended applyOverride in useScanCoachOverrides to map DB columns to CHD stage fields (description→overview, howToGet→keyViews, measurements→keyMeasurements, structures→doppler, pitfalls→normalCriteria, criticalFindings→redFlags)
+- [x] Fix: added CHD_FIELD_LABELS mapping to ScanCoachEditor — editor now shows WYSIWYG labels (Overview, Key Views, Key Measurements, Doppler Protocol, Normal/Acceptable Criteria, Red Flags, Clinical Tips) when chd module is selected
+- [x] Verified: CHD static content already uses correct DB column names; editor pre-populates correctly for all CHD stage views
+- [x] Verified: CHD_STAGE_TO_DEFECT mapping covers all stage IDs (coa-diagnosis, coa-postop, etc.)
+- [x] Verified: URL param deep-linking (?defect=coa&stage=coa-diagnosis) already works in PedCHDCoach

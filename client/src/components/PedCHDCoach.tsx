@@ -783,8 +783,13 @@ export default function PedCHDCoach() {
   };
 
   const { mergeView: mergeCHDView } = useScanCoachOverrides("chd");
-  // Merge admin overrides into the selected defect (for image URLs)
+  // Merge admin overrides into the selected defect (for image URLs at the defect level)
   const selectedDefectMerged = useMemo(() => mergeCHDView({ ...selectedDefect, id: selectedDefect.id } as any), [selectedDefect, mergeCHDView]);
+  // Merge admin overrides into the selected stage (for text content).
+  // applyOverride maps DB columns to CHD stage fields:
+  //   description→overview, howToGet→keyViews, measurements→keyMeasurements,
+  //   structures→doppler, pitfalls→normalCriteria, criticalFindings→redFlags, tips→tips
+  const selectedStageMerged = useMemo(() => mergeCHDView({ ...selectedStage, id: selectedStage.id } as any) as typeof selectedStage, [selectedStage, mergeCHDView]);
 
   const currentIndex = chdDefects.findIndex(d => d.id === selectedDefect.id);
   const handlePrev = () => {
@@ -888,7 +893,7 @@ export default function PedCHDCoach() {
             <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>Stage Overview — {selectedStage.label}</h3>
           </div>
           <div className="px-4 py-4">
-            <p className="text-sm text-gray-600 leading-relaxed">{selectedStage.overview}</p>
+            <p className="text-sm text-gray-600 leading-relaxed">{selectedStageMerged.overview}</p>
           </div>
         </div>
 
@@ -900,7 +905,7 @@ export default function PedCHDCoach() {
               <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>Key Views</h3>
             </div>
             <ul className="px-4 py-3 space-y-2">
-              {selectedStage.keyViews.map((v, i) => (
+              {selectedStageMerged.keyViews.map((v, i) => (
                 <li key={i} className="flex gap-2 text-xs text-gray-600">
                   <span className="mt-0.5 w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center text-white text-[10px] font-bold" style={{ background: selectedDefect.color }}>{i + 1}</span>
                   <span>{v}</span>
@@ -915,7 +920,7 @@ export default function PedCHDCoach() {
               <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>Key Measurements</h3>
             </div>
             <ul className="px-4 py-3 space-y-2">
-              {selectedStage.keyMeasurements.map((m, i) => (
+              {selectedStageMerged.keyMeasurements.map((m, i) => (
                 <li key={i} className="flex gap-2 text-xs text-gray-600">
                   <span className="mt-0.5 flex-shrink-0" style={{ color: selectedDefect.color }}>▸</span>
                   <span>{m}</span>
@@ -930,7 +935,7 @@ export default function PedCHDCoach() {
               <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>Doppler Protocol</h3>
             </div>
             <ul className="px-4 py-3 space-y-2">
-              {selectedStage.doppler.map((d, i) => (
+              {selectedStageMerged.doppler.map((d, i) => (
                 <li key={i} className="flex gap-2 text-xs text-gray-600">
                   <span className="mt-0.5 flex-shrink-0" style={{ color: selectedDefect.color }}>◆</span>
                   <span>{d}</span>
@@ -949,7 +954,7 @@ export default function PedCHDCoach() {
               <h3 className="font-bold text-sm text-green-700" style={{ fontFamily: "Merriweather, serif" }}>Normal / Acceptable Criteria</h3>
             </div>
             <ul className="px-4 py-3 space-y-2">
-              {selectedStage.normalCriteria.map((c, i) => (
+              {selectedStageMerged.normalCriteria.map((c, i) => (
                 <li key={i} className="flex gap-2 text-xs text-gray-600">
                   <span className="mt-0.5 text-green-500 flex-shrink-0">✓</span>
                   <span>{c}</span>
@@ -965,7 +970,7 @@ export default function PedCHDCoach() {
               <h3 className="font-bold text-sm text-red-600" style={{ fontFamily: "Merriweather, serif" }}>Red Flags / Reintervention Criteria</h3>
             </div>
             <ul className="px-4 py-3 space-y-2">
-              {selectedStage.redFlags.map((r, i) => (
+              {selectedStageMerged.redFlags.map((r, i) => (
                 <li key={i} className="flex gap-2 text-xs text-gray-600">
                   <span className="mt-0.5 text-red-400 flex-shrink-0">⚠</span>
                   <span>{r}</span>
@@ -982,7 +987,7 @@ export default function PedCHDCoach() {
             <h3 className="font-bold text-sm text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>Clinical Scanning Tips</h3>
           </div>
           <div className="px-4 py-4 space-y-3">
-            {selectedStage.tips.map((tip, i) => (
+            {selectedStageMerged.tips.map((tip, i) => (
               <div key={i} className="flex gap-3 text-sm text-gray-600">
                 <span className="mt-0.5 w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center text-white text-[10px] font-bold" style={{ background: selectedDefect.color }}>{i + 1}</span>
                 <p className="leading-relaxed">{tip}</p>

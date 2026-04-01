@@ -660,6 +660,19 @@ function ImageUploadZone({
   );
 }
 
+// ─── CHD-specific field label mapping ───────────────────────────────────────
+// The CHD live UI uses different section names than the generic ScanCoach fields.
+// This mapping makes the editor WYSIWYG for CHD views.
+const CHD_FIELD_LABELS: Record<string, { label: string; placeholder: string }> = {
+  description:      { label: "Overview",              placeholder: "Enter stage overview paragraph…" },
+  howToGet:         { label: "Key Views",              placeholder: "Enter each key view on a new line…" },
+  measurements:     { label: "Key Measurements",       placeholder: "Enter each measurement on a new line…" },
+  structures:       { label: "Doppler Protocol",       placeholder: "Enter each Doppler item on a new line…" },
+  pitfalls:         { label: "Normal / Acceptable Criteria", placeholder: "Enter each normal criterion on a new line…" },
+  criticalFindings: { label: "Red Flags",              placeholder: "Enter each red flag on a new line…" },
+  tips:             { label: "Clinical Tips",          placeholder: "Enter each clinical tip on a new line…" },
+};
+
 // ─── Main Editor ─────────────────────────────────────────────────────────────
 
 export default function ScanCoachEditor() {
@@ -1097,10 +1110,19 @@ export default function ScanCoachEditor() {
                         <div className="space-y-5">
                           {TEXT_FIELDS.map((field) => {
                             const value = draft[field.key as keyof DraftState];
+                            // Use CHD-specific labels when editing CHD views so the editor is WYSIWYG
+                            const isCHD = selectedModule === "chd";
+                            const chdMeta = isCHD ? CHD_FIELD_LABELS[field.key] : undefined;
+                            const displayLabel = chdMeta?.label ?? field.label;
+                            const displayPlaceholder = chdMeta
+                              ? chdMeta.placeholder
+                              : field.isArray
+                                ? `Enter each ${field.label.toLowerCase()} item on a new line…`
+                                : `Enter ${field.label.toLowerCase()}…`;
                             return (
                               <div key={field.key}>
                                 <div className="flex items-center justify-between mb-1.5">
-                                  <label className="text-xs font-semibold text-gray-600">{field.label}</label>
+                                  <label className="text-xs font-semibold text-gray-600">{displayLabel}</label>
                                   {field.isArray && (
                                     <span className="text-[10px] text-gray-400">One item per line</span>
                                   )}
@@ -1111,7 +1133,7 @@ export default function ScanCoachEditor() {
                                     onChange={(html) =>
                                       setDraft((d) => d ? { ...d, [field.key]: html } : d)
                                     }
-                                    placeholder={`Enter ${field.label.toLowerCase()}…`}
+                                    placeholder={displayPlaceholder}
                                     minHeight={120}
                                     maxHeight={400}
                                   />
@@ -1121,7 +1143,7 @@ export default function ScanCoachEditor() {
                                     onChange={(e) =>
                                       setDraft((d) => d ? { ...d, [field.key]: e.target.value } : d)
                                     }
-                                    placeholder={`Enter each ${field.label.toLowerCase()} item on a new line…`}
+                                    placeholder={displayPlaceholder}
                                     rows={4}
                                     className="text-sm font-mono resize-y"
                                   />
