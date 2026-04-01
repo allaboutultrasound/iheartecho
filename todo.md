@@ -769,27 +769,31 @@
 - [x] Fix gating in MechanicalSupportScanCoach: change from accreditation to premium
 - [x] Fix EchoAssist Hub card label/badge for MechanicalSupportAssist to show Premium (not Accreditation)
 
-<<<<<<< Updated upstream
 ## LVAD Aortic Outflow Cannula Views (Mar 30 2026)
 - [x] MechanicalSupportNavigator: add PLAX and High Parasternal Aortic Outflow Cannula checklist items to LVAD post-implant section
 - [x] MechanicalSupportScanCoach: add PLAX Aortic Outflow Cannula and High Parasternal Aortic Outflow Cannula view cards to LVAD ScanCoach
 
 ## Editor Pre-Population Fix (Mar 30 2026)
-- [ ] NavigatorEditor: pre-populate each section's edit fields with current saved text (DB override or static default); persist display after save
-- [ ] ScanCoachEditor: pre-populate each view's edit fields with current saved text (DB override or static default); persist display after save
+- [x] NavigatorEditor: pre-populate each section's edit fields with current saved text (DB override or static default); persist display after save
+- [x] ScanCoachEditor: pre-populate each view's edit fields with current saved text (DB override or static default); persist display after save
 
 ## ScanCoach Editor Blank Fields Fix (Mar 30 2026)
-- [ ] Diagnose why getStaticViewContent returns empty for most views in ScanCoachEditor
-- [ ] Fix static content registry so all text fields pre-populate with actual content when a view is selected
+- [x] Diagnose why getStaticViewContent returns empty for most views in ScanCoachEditor
+- [x] Fix static content registry so all text fields pre-populate with actual content when a view is selected
 
 ## ScanCoach Editor Static Content Fix (Mar 30 2026)
 - [x] Added all missing static content entries to scanCoachStaticContent.ts for: mcs_lvad (6 views), mcs_ecmo (3 views), mcs_impella_cp (13 views), mcs_lifevest (2 views), mcs_icd (3 views), fetal (12 views), pulm (7 views), diastolic (6 views), strain (13 views)
 - [x] ScanCoach Editor fields now pre-populate with actual content instead of blank placeholders for all modules
-=======
+
 ## HOCM-Assist™ Relabeling (Apr 1 2026)
 - [x] Relabel all HOCM card titles and descriptions to "HOCM-Assist™" across EchoAssistHub, EchoNavigatorHub, ScanCoachHub, sidenav, HOCMNavigator, HOCMScanCoach, NavigatorEditor, scanCoachRegistry, ScanCoach.tsx BlurredOverlay, and Premium.tsx
 - [x] Clinical content references to the condition (HOCM gradients, pathophysiology, checklist details) left unchanged
 
 ## Reference Image Placeholder Fix (Apr 1 2026)
 - [x] Confirmed: all reference image slots in ScanCoach and Navigator pages are already correctly gated — only render when actual media URL exists; no changes needed
->>>>>>> Stashed changes
+
+## ScanCoach Billing Tab (Apr 1 2026)
+- [x] Add Billing Codes card to TTE ScanCoach views with CPT codes (93306/93307/93308/93320/93325/93356 per view)
+- [x] Add Billing Codes card to TEE ScanCoach views with CPT codes (93312/93313/93314/93315/93316/93317/93318/93319 per view)
+- [x] Add Billing Codes card to Strain ScanCoach with CPT codes (93306 + 93356 add-on)
+- [x] NOT added to HOCM-Assist™, Diastology, Pulm HTN, Fetal, Pediatric, POCUS, MCS, or other non-billable modules

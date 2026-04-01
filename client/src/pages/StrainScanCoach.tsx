@@ -19,6 +19,8 @@ import {
 } from "recharts";
 import { Link, useSearch } from "wouter";
 import ScanCoachNavBar from "@/components/ScanCoachNavBar";
+import BillingCodesCard from "@/components/BillingCodesCard";
+import { STRAIN_BILLING } from "@/lib/scanCoachBillingCodes";
 
 const BRAND = "#189aa1";
 const BRAND_DARK = "#0e4a50";
@@ -1385,6 +1387,7 @@ function StrainScanCoachInner() {
 
             {/* ── Acquisition Views Tab ── */}
             {leftTab === "acquisition" && (
+              <>
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
                 <div className="px-5 py-4 border-b" style={{ borderColor: BRAND + "30", background: BRAND + "08" }}>
                   <div className="flex items-center gap-3">
@@ -1496,6 +1499,13 @@ function StrainScanCoachInner() {
                   </div>
                 </div>
               </div>
+              {/* Billing Codes */}
+              {selectedAcqView && (
+                <div className="mt-4">
+                  <BillingCodesCard billing={STRAIN_BILLING} accentColor={BRAND} />
+                </div>
+              )}
+              </>
             )}{/* end acquisition tab */}
 
           </div>

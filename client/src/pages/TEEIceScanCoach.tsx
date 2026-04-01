@@ -15,6 +15,8 @@ import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
 import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
+import BillingCodesCard from "@/components/BillingCodesCard";
+import { TEE_BILLING } from "@/lib/scanCoachBillingCodes";
 
 // ─── Helper: render image or video based on URL extension ───────────────────
 function MediaDisplay({ src, alt, className, style }: { src: string; alt: string; className?: string; style?: React.CSSProperties }) {
@@ -835,6 +837,11 @@ export function TEEIceScanCoachContent() {
               ))}
             </ul>
           </div>
+
+          {/* Billing Codes — TEE views only */}
+          {TEE_BILLING[selectedView.id] && (
+            <BillingCodesCard billing={TEE_BILLING[selectedView.id]} accentColor="#0e7490" />
+          )}
 
           {/* Copyright */}
           <div className="text-xs text-gray-400 text-center py-2">

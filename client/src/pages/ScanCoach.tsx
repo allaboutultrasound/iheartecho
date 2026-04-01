@@ -19,6 +19,8 @@ import { TEEIceScanCoachContent } from "@/pages/TEEIceScanCoach";
 import { ICEScanCoachContent } from "@/pages/ICEScanCoach";
 import { BlurredOverlay } from "@/components/BlurredOverlay";
 import { usePremium } from "@/hooks/usePremium";
+import BillingCodesCard from "@/components/BillingCodesCard";
+import { TTE_BILLING } from "@/lib/scanCoachBillingCodes";
 
 // ─── Helper: render image or video based on URL extension ───────────────────
 function MediaDisplay({ src, alt, className, style }: { src: string; alt: string; className?: string; style?: React.CSSProperties }) {
@@ -1548,6 +1550,10 @@ export default function ScanCoach() {
                   </ul>
                  </div>
               </div>
+              {/* Billing Codes */}
+              {TTE_BILLING[selectedTTEMerged.id] && (
+                <BillingCodesCard billing={TTE_BILLING[selectedTTEMerged.id]} accentColor={selectedTTEMerged.color} />
+              )}
             </div>
             {/* View list sidebar — sticky on desktop, above content on mobile */}
             <div className="lg:col-span-1 lg:order-1 order-2 lg:sticky lg:top-4">
