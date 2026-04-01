@@ -837,3 +837,10 @@
 - [x] Verified: CHD static content already uses correct DB column names; editor pre-populates correctly for all CHD stage views
 - [x] Verified: CHD_STAGE_TO_DEFECT mapping covers all stage IDs (coa-diagnosis, coa-postop, etc.)
 - [x] Verified: URL param deep-linking (?defect=coa&stage=coa-diagnosis) already works in PedCHDCoach
+
+## WYSIWYG Editor Labels — All Modules (Apr 1 2026)
+- [x] Audit all ScanCoach modules: map live UI section names to DB column names
+- [x] Update ScanCoach Editor to show WYSIWYG labels per module — TTE, TEE, UEA, MCS field label maps added via getFieldLabels()
+- [x] Fix useScanCoachOverrides field mapping for MCS (howToGet→acquisition, structures→whatToSee) and UEA (tips→contrastTips, criticalFindings→clinicalPearls)
+- [x] Wire MechanicalSupportScanCoach to useScanCoachOverrides — mergedDeviceViews and mergedImpellaViews now apply DB overrides to all MCS views
+- [x] Update ScanCoachViewPreview badge labels and Active Overrides badges to use WYSIWYG module-specific names

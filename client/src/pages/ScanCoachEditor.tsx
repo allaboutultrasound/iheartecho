@@ -217,22 +217,26 @@ function ScanCoachViewPreview({
         </a>
       </div>
 
-      {/* Override status */}
-      {override && (
-        <div className="flex flex-wrap gap-1.5 px-1">
-          {override.echoImageUrl && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Echo Image</Badge>}
-          {override.anatomyImageUrl && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Anatomy Image</Badge>}
-          {override.transducerImageUrl && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Transducer Image</Badge>}
-          {override.description && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Description</Badge>}
-          {override.howToGet && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>How To Get</Badge>}
-          {override.tips && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Tips</Badge>}
-          {override.pitfalls && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Pitfalls</Badge>}
-          {override.structures && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Structures</Badge>}
-          {override.measurements && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Measurements</Badge>}
-          {override.criticalFindings && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Critical Findings</Badge>}
-          <span className="text-[10px] text-gray-400 self-center ml-1">Last saved: {new Date(override.updatedAt).toLocaleString()}</span>
-        </div>
-      )}
+      {/* Override status — use WYSIWYG labels matching the live UI section headings */}
+      {override && (() => {
+        const fl = getFieldLabels(moduleKey);
+        const label = (key: string, fallback: string) => fl?.[key]?.label ?? fallback;
+        return (
+          <div className="flex flex-wrap gap-1.5 px-1">
+            {override.echoImageUrl && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Echo Image</Badge>}
+            {override.anatomyImageUrl && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Anatomy Image</Badge>}
+            {override.transducerImageUrl && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>Transducer Image</Badge>}
+            {override.description && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>{label("description", "Description")}</Badge>}
+            {override.howToGet && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>{label("howToGet", "How To Get")}</Badge>}
+            {override.tips && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>{label("tips", "Tips")}</Badge>}
+            {override.pitfalls && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>{label("pitfalls", "Pitfalls")}</Badge>}
+            {override.structures && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>{label("structures", "Structures")}</Badge>}
+            {override.measurements && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>{label("measurements", "Measurements")}</Badge>}
+            {override.criticalFindings && <Badge variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>{label("criticalFindings", "Critical Findings")}</Badge>}
+            <span className="text-[10px] text-gray-400 self-center ml-1">Last saved: {new Date(override.updatedAt).toLocaleString()}</span>
+          </div>
+        );
+      })()}
       {!override && (
         <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-50 border border-gray-200">
           <AlertCircle className="w-3.5 h-3.5 text-gray-400" />
@@ -660,10 +664,71 @@ function ImageUploadZone({
   );
 }
 
-// ─── CHD-specific field label mapping ───────────────────────────────────────
-// The CHD live UI uses different section names than the generic ScanCoach fields.
-// This mapping makes the editor WYSIWYG for CHD views.
-const CHD_FIELD_LABELS: Record<string, { label: string; placeholder: string }> = {
+// ─── Module-specific field label mappings ───────────────────────────────────
+// Each ScanCoach module uses different section names in its live UI.
+// These mappings make the editor WYSIWYG — the labels shown in the editor
+// match exactly what users see in the live ScanCoach pages.
+//
+// DB column → live UI section heading (per module):
+//   TTE:  structures→Structures, measurements→Key Measurements,
+//         tips→Scanning Tips, pitfalls→Common Pitfalls
+//   TEE:  description→Description, howToGet→How to Get This View,
+//         structures→Structures Visualised, tips→Scanning Tips,
+//         pitfalls→Common Pitfalls, measurements→Key Measurements,
+//         criticalFindings→Critical Findings
+//   UEA:  howToGet→Step-by-Step Acquisition, structures→Structures Visible,
+//         tips→Contrast-Specific Tips, pitfalls→Common Pitfalls,
+//         criticalFindings→Clinical Pearls
+//   MCS:  howToGet→Acquisition (tab), structures→What to See (tab),
+//         tips→Tips (tab), pitfalls→Common Pitfalls
+//   CHD:  description→Overview, howToGet→Key Views,
+//         measurements→Key Measurements, structures→Doppler Protocol,
+//         pitfalls→Normal/Acceptable Criteria, criticalFindings→Red Flags,
+//         tips→Clinical Tips
+
+type FieldLabelMap = Record<string, { label: string; placeholder: string }>;
+
+const TTE_FIELD_LABELS: FieldLabelMap = {
+  description:      { label: "Description",           placeholder: "Enter view description…" },
+  howToGet:         { label: "How To Get",             placeholder: "Enter each acquisition step on a new line…" },
+  structures:       { label: "Structures",             placeholder: "Enter each visible structure on a new line…" },
+  measurements:     { label: "Key Measurements",       placeholder: "Enter each measurement on a new line…" },
+  tips:             { label: "Scanning Tips",          placeholder: "Enter each scanning tip on a new line…" },
+  pitfalls:         { label: "Common Pitfalls",        placeholder: "Enter each common pitfall on a new line…" },
+  criticalFindings: { label: "Critical Findings",      placeholder: "Enter each critical finding on a new line…" },
+};
+
+const TEE_FIELD_LABELS: FieldLabelMap = {
+  description:      { label: "Description",           placeholder: "Enter view description (shown in header)…" },
+  howToGet:         { label: "How to Get This View",   placeholder: "Enter each acquisition step on a new line…" },
+  structures:       { label: "Structures Visualised",  placeholder: "Enter each visible structure on a new line…" },
+  measurements:     { label: "Key Measurements",       placeholder: "Enter each measurement on a new line…" },
+  tips:             { label: "Scanning Tips",          placeholder: "Enter each scanning tip on a new line…" },
+  pitfalls:         { label: "Common Pitfalls",        placeholder: "Enter each common pitfall on a new line…" },
+  criticalFindings: { label: "Critical Findings — Do Not Miss", placeholder: "Enter each critical finding on a new line…" },
+};
+
+const UEA_FIELD_LABELS: FieldLabelMap = {
+  description:      { label: "Description",               placeholder: "Enter view description…" },
+  howToGet:         { label: "Step-by-Step Acquisition",   placeholder: "Enter each acquisition step on a new line…" },
+  structures:       { label: "Structures Visible",         placeholder: "Enter each visible structure on a new line…" },
+  tips:             { label: "Contrast-Specific Tips",     placeholder: "Enter each contrast tip on a new line…" },
+  pitfalls:         { label: "Common Pitfalls",            placeholder: "Enter each common pitfall on a new line…" },
+  criticalFindings: { label: "Clinical Pearls",            placeholder: "Enter each clinical pearl on a new line…" },
+  measurements:     { label: "Key Measurements",           placeholder: "Enter each measurement on a new line…" },
+};
+
+const MCS_FIELD_LABELS: FieldLabelMap = {
+  description:      { label: "Description",           placeholder: "Enter view description…" },
+  howToGet:         { label: "Acquisition (tab)",      placeholder: "Enter each acquisition step on a new line…" },
+  structures:       { label: "What to See (tab)",      placeholder: "Enter each item to look for on a new line…" },
+  tips:             { label: "Tips (tab)",             placeholder: "Enter each clinical tip on a new line…" },
+  pitfalls:         { label: "Common Pitfalls",        placeholder: "Enter each common pitfall on a new line…" },
+  measurements:     { label: "Key Measurements",       placeholder: "Enter each measurement on a new line…" },
+  criticalFindings: { label: "Critical Findings",      placeholder: "Enter each critical finding on a new line…" },
+};
+
+const CHD_FIELD_LABELS: FieldLabelMap = {
   description:      { label: "Overview",              placeholder: "Enter stage overview paragraph…" },
   howToGet:         { label: "Key Views",              placeholder: "Enter each key view on a new line…" },
   measurements:     { label: "Key Measurements",       placeholder: "Enter each measurement on a new line…" },
@@ -672,6 +737,16 @@ const CHD_FIELD_LABELS: Record<string, { label: string; placeholder: string }> =
   criticalFindings: { label: "Red Flags",              placeholder: "Enter each red flag on a new line…" },
   tips:             { label: "Clinical Tips",          placeholder: "Enter each clinical tip on a new line…" },
 };
+
+/** Get the WYSIWYG field label map for a given module */
+function getFieldLabels(module: string): FieldLabelMap | undefined {
+  if (module === "tte") return TTE_FIELD_LABELS;
+  if (module === "tee") return TEE_FIELD_LABELS;
+  if (module === "uea") return UEA_FIELD_LABELS;
+  if (module.startsWith("mcs_")) return MCS_FIELD_LABELS;
+  if (module === "chd") return CHD_FIELD_LABELS;
+  return undefined;
+}
 
 // ─── Main Editor ─────────────────────────────────────────────────────────────
 
@@ -1110,12 +1185,12 @@ export default function ScanCoachEditor() {
                         <div className="space-y-5">
                           {TEXT_FIELDS.map((field) => {
                             const value = draft[field.key as keyof DraftState];
-                            // Use CHD-specific labels when editing CHD views so the editor is WYSIWYG
-                            const isCHD = selectedModule === "chd";
-                            const chdMeta = isCHD ? CHD_FIELD_LABELS[field.key] : undefined;
-                            const displayLabel = chdMeta?.label ?? field.label;
-                            const displayPlaceholder = chdMeta
-                              ? chdMeta.placeholder
+                            // Use module-specific WYSIWYG labels so the editor matches the live UI
+                            const fieldLabels = getFieldLabels(selectedModule);
+                            const fieldMeta = fieldLabels?.[field.key];
+                            const displayLabel = fieldMeta?.label ?? field.label;
+                            const displayPlaceholder = fieldMeta
+                              ? fieldMeta.placeholder
                               : field.isArray
                                 ? `Enter each ${field.label.toLowerCase()} item on a new line…`
                                 : `Enter ${field.label.toLowerCase()}…`;
@@ -1204,13 +1279,16 @@ export default function ScanCoachEditor() {
                               </Badge>
                             ) : null
                           )}
-                          {TEXT_FIELDS.map((field) =>
-                            currentOverride[field.key as keyof Override] ? (
+                          {TEXT_FIELDS.map((field) => {
+                            if (!currentOverride[field.key as keyof Override]) return null;
+                            const fl = getFieldLabels(selectedModule);
+                            const displayLabel = fl?.[field.key]?.label ?? field.label;
+                            return (
                               <Badge key={field.key} variant="outline" className="text-xs" style={{ borderColor: BRAND, color: BRAND }}>
-                                {field.label}
+                                {displayLabel}
                               </Badge>
-                            ) : null
-                          )}
+                            );
+                          })}
                         </div>
                       </div>
                     )}

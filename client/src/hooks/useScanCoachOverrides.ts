@@ -12,6 +12,32 @@
  * only changes when overrideMap changes (i.e. when DB data loads). Previously
  * it was a plain function re-created every render, causing useMemo dependencies
  * to always be "new" and images to not appear until a forced re-render.
+ *
+ * Field mapping (2026-04-01):
+ * Different ScanCoach modules use different field names in their live UI.
+ * The DB has 7 text columns that are reused with module-specific semantics:
+ *
+ * TTE:  structures→structures, measurements→measurements, tips→tips,
+ *       pitfalls→pitfalls  (direct match — no remapping needed)
+ *
+ * TEE:  description→description, howToGet→howToGet, structures→structures,
+ *       tips→tips, pitfalls→pitfalls, measurements→measurements,
+ *       criticalFindings→criticalFindings  (direct match)
+ *
+ * UEA:  howToGet→howToGet (Step-by-Step Acquisition),
+ *       structures→structures (Structures Visible),
+ *       tips→contrastTips (Contrast-Specific Tips),
+ *       pitfalls→pitfalls (Common Pitfalls),
+ *       criticalFindings→clinicalPearls (Clinical Pearls)
+ *
+ * MCS:  howToGet→acquisition (Acquisition tab),
+ *       structures→whatToSee (What to See tab),
+ *       tips→tips (Tips tab),
+ *       pitfalls→pitfalls (Common Pitfalls)
+ *
+ * CHD:  description→overview, howToGet→keyViews, measurements→keyMeasurements,
+ *       structures→doppler, pitfalls→normalCriteria, criticalFindings→redFlags,
+ *       tips→tips
  */
 import { useMemo, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
@@ -44,8 +70,17 @@ function parseJsonArray(value: string | null): string[] | null {
   return null;
 }
 
+/** Determine if a module key is an MCS module */
+function isMCSModule(module: ScanCoachModule): boolean {
+  return module.startsWith("mcs_");
+}
+
 /** Merge a single override row onto a static view object */
-function applyOverride<T extends Record<string, unknown>>(view: T, override: OverrideRow | undefined): T {
+function applyOverride<T extends Record<string, unknown>>(
+  view: T,
+  override: OverrideRow | undefined,
+  module: ScanCoachModule
+): T {
   if (!override) return view;
 
   const merged: Record<string, unknown> = { ...view };
@@ -55,27 +90,13 @@ function applyOverride<T extends Record<string, unknown>>(view: T, override: Ove
   if (override.anatomyImageUrl)    merged.anatomyImageUrl    = override.anatomyImageUrl;
   if (override.transducerImageUrl) merged.transducerImageUrl = override.transducerImageUrl;
 
-  // Text overrides
-  if (override.description) merged.description = override.description;
-
-  // Array overrides
-  const howToGet = parseJsonArray(override.howToGet);
-  if (howToGet) merged.howToGet = howToGet;
-
-  const tips = parseJsonArray(override.tips);
-  if (tips) merged.tips = tips;
-
-  const pitfalls = parseJsonArray(override.pitfalls);
-  if (pitfalls) merged.pitfalls = pitfalls;
-
-  const structures = parseJsonArray(override.structures);
-  if (structures) merged.structures = structures;
-
-  const measurements = parseJsonArray(override.measurements);
-  if (measurements) merged.measurements = measurements;
-
+  // Parse all array fields upfront
+  const howToGet        = parseJsonArray(override.howToGet);
+  const tips            = parseJsonArray(override.tips);
+  const pitfalls        = parseJsonArray(override.pitfalls);
+  const structures      = parseJsonArray(override.structures);
+  const measurements    = parseJsonArray(override.measurements);
   const criticalFindings = parseJsonArray(override.criticalFindings);
-  if (criticalFindings) merged.criticalFindings = criticalFindings;
 
   // ── CHD stage field mapping ──────────────────────────────────────────────────
   // CHD stages use different field names than standard ScanCoach views.
@@ -95,8 +116,51 @@ function applyOverride<T extends Record<string, unknown>>(view: T, override: Ove
     if (structures)            merged.doppler         = structures;
     if (pitfalls)              merged.normalCriteria  = pitfalls;
     if (criticalFindings)      merged.redFlags        = criticalFindings;
-    // tips already applied above (same field name)
+    if (tips)                  merged.tips            = tips;
+    return merged as T;
   }
+
+  // ── MCS field mapping ────────────────────────────────────────────────────────
+  // MCS ScanCoach views use acquisition/whatToSee/doppler tabs.
+  // DB columns are reused with the following semantic mapping:
+  //   howToGet   → acquisition  (Acquisition tab — step-by-step)
+  //   structures → whatToSee   (What to See tab)
+  //   tips       → tips        (Tips tab — same field name)
+  //   pitfalls   → pitfalls    (Common Pitfalls — same field name)
+  if (isMCSModule(module)) {
+    if (howToGet)   merged.acquisition = howToGet;
+    if (structures) merged.whatToSee   = structures;
+    if (tips)       merged.tips        = tips;
+    if (pitfalls)   merged.pitfalls    = pitfalls;
+    return merged as T;
+  }
+
+  // ── UEA field mapping ────────────────────────────────────────────────────────
+  // UEA ScanCoach views use contrastTips and clinicalPearls instead of generic tips/criticalFindings.
+  // DB columns are reused with the following semantic mapping:
+  //   howToGet         → howToGet      (Step-by-Step Acquisition — same field name)
+  //   structures       → structures    (Structures Visible — same field name)
+  //   tips             → contrastTips  (Contrast-Specific Tips)
+  //   pitfalls         → pitfalls      (Common Pitfalls — same field name)
+  //   criticalFindings → clinicalPearls (Clinical Pearls)
+  if (module === "uea") {
+    if (howToGet)          merged.howToGet       = howToGet;
+    if (structures)        merged.structures     = structures;
+    if (tips)              merged.contrastTips   = tips;
+    if (pitfalls)          merged.pitfalls       = pitfalls;
+    if (criticalFindings)  merged.clinicalPearls = criticalFindings;
+    return merged as T;
+  }
+
+  // ── Default / TTE / TEE field mapping ───────────────────────────────────────
+  // TTE and TEE use the same field names as DB columns (direct mapping).
+  if (override.description) merged.description = override.description;
+  if (howToGet)             merged.howToGet    = howToGet;
+  if (tips)                 merged.tips        = tips;
+  if (pitfalls)             merged.pitfalls    = pitfalls;
+  if (structures)           merged.structures  = structures;
+  if (measurements)         merged.measurements = measurements;
+  if (criticalFindings)     merged.criticalFindings = criticalFindings;
 
   return merged as T;
 }
@@ -135,9 +199,9 @@ export function useScanCoachOverrides(module: ScanCoachModule) {
    */
   const mergeView = useCallback(
     function mergeViewFn<T extends Record<string, unknown>>(view: T & { id: string }): T {
-      return applyOverride(view, overrideMap.get(view.id));
+      return applyOverride(view, overrideMap.get(view.id), module);
     },
-    [overrideMap]
+    [overrideMap, module]
   );
 
   /** Check if a specific view has any override */

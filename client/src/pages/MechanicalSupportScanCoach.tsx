@@ -5,7 +5,9 @@
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
+import type { ScanCoachModule } from "@/lib/scanCoachRegistry";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import { PremiumOverlay } from "@/components/PremiumOverlay";
@@ -1273,12 +1275,49 @@ function ScanViewCard({ view, deviceColor }: { view: ScanView; deviceColor: stri
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 
+/** Map device ID + optional Impella sub-tab ID to a ScanCoachModule key */
+function getActiveModule(deviceId: string, impellaSubTabId: string): ScanCoachModule {
+  if (deviceId === "impella") {
+    const map: Record<string, ScanCoachModule> = {
+      imp_25:  "mcs_impella_25",
+      imp_cp:  "mcs_impella_cp",
+      imp_55:  "mcs_impella_55",
+      imp_ecp: "mcs_impella_ecp",
+      imp_rp:  "mcs_impella_rp",
+    };
+    return map[impellaSubTabId] ?? "mcs_impella_cp";
+  }
+  const map: Record<string, ScanCoachModule> = {
+    lvad:     "mcs_lvad",
+    ecmo:     "mcs_ecmo",
+    lifevest: "mcs_lifevest",
+    icd:      "mcs_icd",
+  };
+  return map[deviceId] ?? "mcs_lvad";
+}
+
 export default function MechanicalSupportScanCoach() {
   const [activeDevice, setActiveDevice] = useState("lvad");
   const [activeImpellaSubTab, setActiveImpellaSubTab] = useState("imp_cp");
   const device = DEVICE_SCAN_COACHES.find(d => d.id === activeDevice)!;
   const isImpella = activeDevice === "impella";
   const impellaScanSubTab = IMPELLA_SCAN_SUBTABS.find(s => s.id === activeImpellaSubTab)!;
+
+  // Determine the active ScanCoach module key for DB override lookup
+  const activeModule = getActiveModule(activeDevice, activeImpellaSubTab);
+  const { mergeView } = useScanCoachOverrides(activeModule);
+
+  // Merge DB overrides onto the current device's views
+  const mergedDeviceViews = useMemo(
+    () => device.views.map(v => mergeView(v as unknown as Record<string, unknown> & { id: string }) as unknown as ScanView),
+    [device.views, mergeView]
+  );
+
+  // Merge DB overrides onto the active Impella sub-tab's views
+  const mergedImpellaViews = useMemo(
+    () => impellaScanSubTab.views.map(v => mergeView(v as unknown as Record<string, unknown> & { id: string }) as unknown as ScanView),
+    [impellaScanSubTab.views, mergeView]
+  );
 
   return (
     <Layout>
@@ -1397,7 +1436,7 @@ export default function MechanicalSupportScanCoach() {
 
               {/* Views */}
               <div className="space-y-4 mb-8">
-                {impellaScanSubTab.views.map(view => (
+                {mergedImpellaViews.map(view => (
                   <ScanViewCard key={view.id} view={view} deviceColor={impellaScanSubTab.color} />
                 ))}
               </div>
@@ -1422,7 +1461,7 @@ export default function MechanicalSupportScanCoach() {
 
               {/* Views */}
               <div className="space-y-4 mb-8">
-                {device.views.map(view => (
+                {mergedDeviceViews.map(view => (
                   <ScanViewCard key={view.id} view={view} deviceColor={device.color} />
                 ))}
               </div>
