@@ -27,7 +27,7 @@ const premiumCoaches = [
   { tab: "diastolic", icon: Wind,        label: "Diastolic Function", views: 7,  route: null as string | null },
   { tab: "stress",    icon: Zap,         label: "Stress Echo",        views: 13, route: "/stress-scan-coach" },
   { tab: "pulm",      icon: Wind,        label: "Pulm HTN & PE",      views: 8,  route: null as string | null },
-  { tab: "hocm",      icon: Heart,       label: "HOCM",               views: 14, route: null as string | null },
+  { tab: "hocm",      icon: Heart,       label: "HOCM-Assist™",      views: 14, route: null as string | null },
   { tab: "tee",       icon: Microscope,  label: "TEE",                views: 13, route: null as string | null },
   { tab: "ice",       icon: Scan,        label: "ICE",                views: 9,  route: null as string | null },
   { tab: "mcs",       icon: CircuitBoard, label: "MCS Devices",        views: 15, route: "/mechanical-support-scan-coach" },

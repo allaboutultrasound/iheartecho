@@ -32,7 +32,7 @@ const PREMIUM_FEATURES = [
   },
   {
     icon: Stethoscope,
-    title: "HOCM Navigator & ScanCoach",
+    title: "HOCM-Assist™ Navigator & ScanCoach",
     description: "HOCM morphology, SAM grading, resting and provoked LVOT gradients, Valsalva, MR evaluation, and HOCM LVOT Gradient calculator.",
   },
   {
@@ -102,11 +102,11 @@ const FREE_FEATURES = [
 ];
 
 const PREMIUM_ONLY_LABELS = [
-  "Stress Echo, Pulmonary HTN, HOCM, TEE, ICE & Structural Heart Navigators",
-  "Stress Echo, HOCM, TEE, ICE & Structural Heart ScanCoaches",
+  "Stress Echo, Pulmonary HTN, HOCM-Assist™, TEE, ICE & Structural Heart Navigators",
+  "Stress Echo, HOCM-Assist™, TEE, ICE & Structural Heart ScanCoaches",
   "POCUS RUSH & Lung POCUS Modules",
   "EchoAssist™ LAP Grading, Diastology Special Populations & StressEchoAssist™",
-  "HOCM LVOT Gradient Calculator",
+  "HOCM-Assist™ LVOT Gradient Calculator",
   "Report Builder",
   "Unlimited Case Library (500+ cases)",
   "Unlimited Echo Flashcards (no daily limit)",

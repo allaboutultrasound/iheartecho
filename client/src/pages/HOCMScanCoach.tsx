@@ -1732,7 +1732,7 @@ export default function HOCMScanCoach({ _noLayout }: { _noLayout?: boolean } = {
             style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}>
             <div className="flex-1">
               <p className="text-xs font-semibold text-[#4ad9e0] uppercase tracking-wider mb-0.5">Protocol Reference</p>
-              <p className="text-white text-sm font-bold">HOCM Navigator</p>
+              <p className="text-white text-sm font-bold">HOCM-Assist™ Navigator</p>
               <p className="text-white/60 text-xs">SAM grading, gradient thresholds, Valsalva protocol, and reporting guide</p>
             </div>
             <Link href="/hocm-navigator">
@@ -1749,8 +1749,8 @@ export default function HOCMScanCoach({ _noLayout }: { _noLayout?: boolean } = {
   if (_noLayout) return inner;
   return (
     <Layout>
-      <ScanCoachNavBar navigatorPath="/hocm-navigator" navigatorLabel="HOCM Navigator" />
-      <PremiumOverlay featureName="HOCM ScanCoach™">
+      <ScanCoachNavBar navigatorPath="/hocm-navigator" navigatorLabel="HOCM-Assist™ Navigator" />
+      <PremiumOverlay featureName="HOCM-Assist™ ScanCoach">
         {inner}
       </PremiumOverlay>
     </Layout>

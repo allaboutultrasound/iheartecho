@@ -1076,7 +1076,7 @@ const MODULES = [
   { id: "tte", label: "TTE Navigator" },
   { id: "tee", label: "TEE Navigator" },
   { id: "pocus_cardiac", label: "POCUS Cardiac Navigator" },
-  { id: "hocm", label: "HOCM Navigator" },
+  { id: "hocm", label: "HOCM-Assist™ Navigator" },
   { id: "fetal", label: "Fetal Navigator" },
   { id: "uea", label: "UEA (Contrast Echo) Navigator" },
   { id: "ice", label: "ICE Navigator" },

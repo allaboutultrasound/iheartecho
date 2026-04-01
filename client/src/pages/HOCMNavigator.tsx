@@ -439,7 +439,7 @@ export default function HOCMNavigator() {
               <span className="text-xs text-white/80 font-medium">Guideline-Based HCM Assessment</span>
             </div>
             <h1 className="text-2xl md:text-3xl font-black text-white mb-2" style={{ fontFamily: "Merriweather, serif" }}>
-              EchoAssist™ Navigator — HOCM
+              HOCM-Assist™ Navigator
             </h1>
             <p className="text-[#4ad9e0] font-semibold mb-2">Hypertrophic Obstructive Cardiomyopathy</p>
             <p className="text-white/70 text-sm leading-relaxed mb-5 max-w-lg">
@@ -464,7 +464,7 @@ export default function HOCMNavigator() {
         </div>
       </div>
 
-      <PremiumOverlay featureName="HOCM Navigator">
+      <PremiumOverlay featureName="HOCM-Assist™ Navigator">
       {/* ── Progress Bar ─────────────────────────────────────────────────── */}
       <div className="bg-white border-b border-gray-100">
         <div className="container py-3">
@@ -1207,7 +1207,7 @@ export default function HOCMNavigator() {
             style={{ background: "linear-gradient(135deg, #0e1e2e, #0e4a50)" }}>
             <div className="flex-1">
               <p className="text-xs font-semibold text-[#4ad9e0] uppercase tracking-wider mb-0.5">Acquisition Guide</p>
-              <p className="text-white text-sm font-bold">HOCM ScanCoach</p>
+              <p className="text-white text-sm font-bold">HOCM-Assist™ ScanCoach</p>
               <p className="text-white/60 text-xs">View-by-view probe positioning, CW Doppler technique, and Valsalva acquisition tips</p>
             </div>
             <Link href="/hocm-scan-coach">

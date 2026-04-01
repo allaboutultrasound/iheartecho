@@ -1325,7 +1325,7 @@ export default function ScanCoach() {
             diastolic: { path: "/diastolic", label: "Diastolic Navigator" },
             strain: { path: "/strain", label: "Strain Navigator" },
             uea: { path: "/uea-navigator", label: "UEA Navigator" },
-            hocm: { path: "/hocm-navigator", label: "HOCM Navigator" },
+            hocm: { path: "/hocm-navigator", label: "HOCM-Assist™ Navigator" },
             pulm: { path: "/pulm-htn", label: "Pulm HTN Navigator" },
             tee: { path: "/tee", label: "TEE Navigator" },
             ice: { path: "/ice", label: "ICE Navigator" },
@@ -1336,7 +1336,7 @@ export default function ScanCoach() {
             { key: "ice",      label: "ICE",                shortLabel: "ICE",               icon: Scan,        views: 9,  premium: true },
             { key: "uea",      label: "UEA",                shortLabel: "UEA",               icon: Zap,         views: 7,  premium: true },
             { key: "strain",   label: "Strain",             shortLabel: "Strain",            icon: Activity,    views: 4,  premium: true },
-            { key: "hocm",     label: "HOCM",               shortLabel: "HOCM",              icon: Heart,       views: 14, premium: true },
+            { key: "hocm",     label: "HOCM-Assist™",      shortLabel: "HOCM",              icon: Heart,       views: 14, premium: true },
             { key: "chd",      label: "Pediatric CHD",      shortLabel: "Pediatric CHD",     icon: Users,       views: 14, premium: true },
             { key: "fetal",    label: "Fetal Echo",         shortLabel: "Fetal Echo",        icon: Baby,        views: 13, premium: true },
             { key: "achd",     label: "Adult Congenital",   shortLabel: "Adult Congenital",  icon: Heart,       views: 13, premium: true },
@@ -2601,9 +2601,9 @@ export default function ScanCoach() {
         {/* ─── HOCM TAB ─── */}
         {activeTab === "hocm" && (
           !loading && !isAuthenticated
-            ? <BlurredOverlay type="login" featureName="HOCM ScanCoach"><HOCMScanCoachContent /></BlurredOverlay>
+            ? <BlurredOverlay type="login" featureName="HOCM-Assist™ ScanCoach"><HOCMScanCoachContent /></BlurredOverlay>
             : !loading && !isPremium
-              ? <BlurredOverlay type="premium" featureName="HOCM ScanCoach"><HOCMScanCoachContent /></BlurredOverlay>
+              ? <BlurredOverlay type="premium" featureName="HOCM-Assist™ ScanCoach"><HOCMScanCoachContent /></BlurredOverlay>
               : <HOCMScanCoachContent />
         )}
         {/* ─── UEA TAB ─── */}

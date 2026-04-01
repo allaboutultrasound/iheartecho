@@ -769,6 +769,7 @@
 - [x] Fix gating in MechanicalSupportScanCoach: change from accreditation to premium
 - [x] Fix EchoAssist Hub card label/badge for MechanicalSupportAssist to show Premium (not Accreditation)
 
+<<<<<<< Updated upstream
 ## LVAD Aortic Outflow Cannula Views (Mar 30 2026)
 - [x] MechanicalSupportNavigator: add PLAX and High Parasternal Aortic Outflow Cannula checklist items to LVAD post-implant section
 - [x] MechanicalSupportScanCoach: add PLAX Aortic Outflow Cannula and High Parasternal Aortic Outflow Cannula view cards to LVAD ScanCoach
@@ -784,3 +785,11 @@
 ## ScanCoach Editor Static Content Fix (Mar 30 2026)
 - [x] Added all missing static content entries to scanCoachStaticContent.ts for: mcs_lvad (6 views), mcs_ecmo (3 views), mcs_impella_cp (13 views), mcs_lifevest (2 views), mcs_icd (3 views), fetal (12 views), pulm (7 views), diastolic (6 views), strain (13 views)
 - [x] ScanCoach Editor fields now pre-populate with actual content instead of blank placeholders for all modules
+=======
+## HOCM-Assist™ Relabeling (Apr 1 2026)
+- [x] Relabel all HOCM card titles and descriptions to "HOCM-Assist™" across EchoAssistHub, EchoNavigatorHub, ScanCoachHub, sidenav, HOCMNavigator, HOCMScanCoach, NavigatorEditor, scanCoachRegistry, ScanCoach.tsx BlurredOverlay, and Premium.tsx
+- [x] Clinical content references to the condition (HOCM gradients, pathophysiology, checklist details) left unchanged
+
+## Reference Image Placeholder Fix (Apr 1 2026)
+- [x] Confirmed: all reference image slots in ScanCoach and Navigator pages are already correctly gated — only render when actual media URL exists; no changes needed
+>>>>>>> Stashed changes

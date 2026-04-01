@@ -76,9 +76,8 @@ const premiumNavigators = [
   },
   {
     path: "/hocm-navigator",
-    icon: Activity,
-    title: "HOCM Navigator",
-    description: "Comprehensive HOCM protocol: morphology assessment, SAM grading, resting and provoked LVOT gradients, goal-directed Valsalva, MR evaluation, and ASE/AHA reporting thresholds.",
+    icon: Activity,    title: "HOCM-Assist™ Navigator",
+    description: "Comprehensive HOCM-Assist™ protocol: morphology assessment, SAM grading, resting and provoked LVOT gradients, goal-directed Valsalva, MR evaluation, and ASE/AHA reporting thresholds.",
     badge: "Cardiomyopathy",
   },
   {

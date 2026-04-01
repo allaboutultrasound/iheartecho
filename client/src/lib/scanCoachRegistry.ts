@@ -139,7 +139,7 @@ export const SCANCOACH_MODULES: ScanCoachModuleMeta[] = [
   // ─── HOCM ─────────────────────────────────────────────────────────────────
   {
     key: "hocm",
-    label: "HOCM ScanCoach",
+    label: "HOCM-Assist™ ScanCoach",
     path: "/hocm-scan-coach",
     views: [
       { id: "plax",          name: "Parasternal Long Axis (PLAX)",          group: "2D Assessment" },

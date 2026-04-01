@@ -4,7 +4,7 @@
   Brand: Teal #189aa1, Aqua #4ad9e0
   US spelling throughout
   Free: Adult Echo, Pediatric Echo, Fetal Echo, Strain, UEA
-  Premium: Stress Echo, HOCM, Pulmonary HTN & PE, Structural Heart, TEE, ICE, MechanicalSupportAssist™
+  Premium: Stress Echo, HOCM-Assist™, Pulmonary HTN & PE, Structural Heart, TEE, ICE, MechanicalSupportAssist™
 */
 import { useState } from "react";
 import { Link } from "wouter";
@@ -36,7 +36,7 @@ const specialties: Specialty[] = [
   { path: "/diastolic", scanCoachPath: "/scan-coach?tab=diastolic", echoAssistPath: "/echoassist#engine-diastologyassist", icon: Activity, title: "Diastolic Function", description: "Step-by-step diastolic assessment: mitral inflow, TDI e', E/e' ratio, LAVI, TR velocity, pulmonary venous flow, and guideline-based grading algorithm with scan coach.", badge: "Diastology", free: true },
   { path: "/strain", scanCoachPath: "/strain-scan-coach", icon: BarChart3, title: "Strain", description: "LV GLS, RV strain, LA strain, bull's-eye display, clinical interpretation, segmental curves, and strain scan coach with tips and clinical pattern library.", badge: "Strain", free: true },
   { path: "/uea-navigator", scanCoachPath: "/uea-scan-coach", icon: Droplets, title: "UEA (Contrast Echo)", description: "Contrast echo protocol: safety screening, agent preparation, view-by-view LVO and myocardial perfusion assessment, and reporting guidance.", badge: "Contrast Echo", free: true },
-  { path: "/hocm-navigator", scanCoachPath: "/hocm-scan-coach", icon: Activity, title: "HOCM", description: "Morphology assessment, SAM grading, resting and provoked LVOT gradients, goal-directed Valsalva, MR evaluation, and guideline-based reporting thresholds.", badge: "Cardiomyopathy", free: false },
+  { path: "/hocm-navigator", scanCoachPath: "/hocm-scan-coach", icon: Activity, title: "HOCM-Assist™", description: "Morphology assessment, SAM grading, resting and provoked LVOT gradients, goal-directed Valsalva, MR evaluation, and guideline-based reporting thresholds.", badge: "Cardiomyopathy", free: false },
   { path: "/pulm-htn", scanCoachPath: "/scan-coach?tab=pulm", icon: Wind, title: "Pulmonary HTN & PE", description: "TRV-based PH probability, RVSP estimation, RV function, PA dilation, PE echo signs (McConnell's, 60/60, D-sign), risk stratification, and guideline-based thresholds.", badge: "Pulmonary", free: false },
   { path: "/device", scanCoachPath: "/structural-heart-scan-coach", icon: Heart, title: "Structural Heart", description: "TAVR, MitraClip, WATCHMAN, and ASD/PFO closure — procedural echo guidance, post-implant assessment, and structural intervention checklists.", badge: "Structural Heart", free: false },
   { path: "/tee", scanCoachPath: "/tee-scan-coach", icon: Microscope, title: "TEE", description: "ME, TG, and UE views with angle/depth guidance, clinical applications, intraoperative checklist, and TEE scan coach with view acquisition tips.", badge: "TEE", free: false },
@@ -291,7 +291,7 @@ export default function EchoAssistHub() {
                 Unlock All {premiumCount} Premium Specialties
               </h3>
               <p className="text-white/60 text-sm">
-                Stress Echo, HOCM, Pulmonary HTN & PE, Structural Heart, TEE, ICE, and MechanicalSupportAssist™ — plus all future premium content.
+                Stress Echo, HOCM-Assist™, Pulmonary HTN & PE, Structural Heart, TEE, ICE, and MechanicalSupportAssist™ — plus all future premium content.
               </p>
             </div>
             <Link href="/premium" className="flex-shrink-0">
