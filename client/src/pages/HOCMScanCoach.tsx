@@ -9,6 +9,7 @@ import { useState, useMemo } from "react";
 import Layout from "@/components/Layout";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
 import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
+import { validateViewsAgainstRegistry } from "@/lib/scanCoachRegistry";
 import {
   Activity,
   AlertTriangle,
@@ -529,9 +530,297 @@ const views = [
       },
     ],
   },
+  // ─── Papillary Muscle Level ──────────────────────────────────────────────────
+  {
+    id: "psax_pap",
+    label: "PSAX PAP",
+    fullName: "Parasternal Short Axis — Papillary Muscle Level",
+    color: BRAND,
+    badge: "Mid-LV / Midventricular HOCM",
+    patientPosition: "Left lateral decubitus (30–45°)",
+    probePosition: "Left parasternal border, 3rd–4th ICS — tilt inferiorly from PSAX MV level",
+    depth: "12–14 cm",
+    focus: "Mid-LV wall thickness, papillary muscle morphology, midventricular obstruction",
+    description: "PSAX at papillary muscle level assesses mid-LV wall thickness, LV cavity size, and papillary muscle morphology. Midventricular HOCM shows obstruction at this level rather than the LVOT. Both papillary muscles appear as 'eyes' in a symmetric LV cross-section.",
+    howToGet: [
+      "From PSAX MV level, tilt probe slightly inferiorly",
+      "Both papillary muscles visible as symmetric 'eyes' in LV cross-section",
+      "Measure wall thickness at end-diastole, perpendicular to septum",
+      "Use PW Doppler to localize obstruction at PM level if midventricular HOCM suspected",
+    ],
+    tips: [
+      { label: "Midventricular HOCM", text: "Obstruction at papillary muscle level — assess with PW Doppler stepwise from apex toward LVOT. Gradient increases at PM level, not LVOT." },
+      { label: "PM hypertrophy", text: "Papillary muscle hypertrophy is a substrate for SAM and midventricular obstruction. Measure PM diameter." },
+      { label: "Anomalous PM insertion", text: "Direct PM-to-MV leaflet attachment causes obstruction independent of SAM. Assess at PM level and correlate with PLAX." },
+    ],
+    pitfalls: [
+      "Oblique cut overestimates wall thickness — ensure beam is perpendicular to septum",
+      "Confusing PM hypertrophy with LV wall thickening — trace endocardial border carefully",
+    ],
+    structures: ["LV mid-cavity", "Papillary muscles (anterolateral, posteromedial)", "Interventricular septum", "Posterior wall"],
+    measurements: ["IVS thickness at PM level (mm)", "Posterior wall thickness at PM level (mm)", "LV internal diameter at PM level (mm)", "PM diameter (mm)"],
+    criteria: [
+      {
+        parameter: "Midventricular Wall Thickness",
+        normal: "< 1.2 cm",
+        borderline: "1.2–1.4 cm",
+        abnormal: "≥ 1.5 cm — midventricular hypertrophy",
+        provocationTrigger: false,
+        note: "Midventricular hypertrophy with cavity obliteration at PM level = midventricular HOCM. Use PW Doppler to confirm obstruction at this level.",
+      },
+      {
+        parameter: "LV Cavity at PM Level",
+        normal: "Normal cavity size",
+        borderline: "Mild cavity reduction",
+        abnormal: "Cavity obliteration at end-systole → midventricular HOCM",
+        provocationTrigger: true,
+        note: "Midventricular cavity obliteration at end-systole is the hallmark of midventricular HOCM. Provocation may worsen obliteration.",
+      },
+    ],
+  },
+  // ─── Provocation ─────────────────────────────────────────────────────────────
+  {
+    id: "valsalva_pos",
+    label: "Valsalva",
+    fullName: "Valsalva — Patient Positioning & Technique",
+    color: "#0f766e",
+    badge: "Provocation",
+    patientPosition: "Left lateral decubitus — same position as A5C/A3C acquisition",
+    probePosition: "A5C or A3C — maintain CW beam on LVOT throughout maneuver",
+    depth: "16–18 cm",
+    focus: "Provoked LVOT gradient measurement",
+    description: "Proper patient positioning and coaching for the Valsalva maneuver is essential for provokable HOCM gradient assessment. The strain phase reduces preload, increasing LVOT obstruction. The peak provoked gradient occurs on the FIRST beat after Valsalva release — do not stop recording at end of strain.",
+    howToGet: [
+      "Maintain CW beam on LVOT from A5C or A3C — do not reposition during maneuver",
+      "Coach patient to strain against closed glottis for 10–15 seconds",
+      "Record CW Doppler continuously through strain phase and release",
+      "Measure peak gradient on FIRST beat after release — this is typically the highest",
+      "Goal-Directed Valsalva: aim for 40 mmHg intrathoracic pressure if pressure gauge available",
+    ],
+    tips: [
+      { label: "Peak gradient timing", text: "Measure peak gradient on FIRST beat after Valsalva release — not during strain. The release causes a sudden preload reduction that maximally provokes obstruction." },
+      { label: "Goal-Directed Valsalva", text: "Standard Valsalva underestimates gradient in ~30% of patients. Goal-Directed Valsalva (40 mmHg intrathoracic pressure) improves sensitivity for provokable obstruction." },
+      { label: "Keep CW on LVOT", text: "Do not reposition the probe during the maneuver — maintain CW beam alignment on LVOT throughout strain and release." },
+    ],
+    pitfalls: [
+      "Stopping recording at end of strain — misses peak provoked gradient on release",
+      "Inadequate strain — patient must achieve adequate intrathoracic pressure (40 mmHg goal)",
+      "Repositioning probe during maneuver — loses CW alignment",
+    ],
+    structures: ["LVOT", "Aortic valve"],
+    measurements: ["Provoked LVOT gradient (mmHg)", "Peak CW velocity post-Valsalva (m/s)"],
+    criteria: [
+      {
+        parameter: "Provoked LVOT Gradient",
+        normal: "< 30 mmHg",
+        borderline: "30–49 mmHg",
+        abnormal: "≥ 50 mmHg — significant provokable obstruction",
+        provocationTrigger: true,
+        note: "Provoked gradient ≥50 mmHg guides septal reduction therapy decisions. Measure on FIRST beat after Valsalva release.",
+      },
+    ],
+  },
+  // ─── Doppler / LVOT Outflow ───────────────────────────────────────────────────
+  {
+    id: "cw_lvot",
+    label: "CW LVOT",
+    fullName: "CW Doppler — LVOT Dagger Waveform",
+    color: "#7c3aed",
+    badge: "Doppler / LVOT Outflow",
+    patientPosition: "Steep left lateral decubitus (60–90°)",
+    probePosition: "A5C or A3C — align CW beam parallel to LVOT flow (color Doppler first)",
+    depth: "16–18 cm",
+    focus: "LVOT gradient measurement — dagger-shaped late-peaking signal",
+    description: "CW Doppler from A5C or A3C captures the characteristic dagger-shaped LVOT waveform of HOCM. Late-peaking, high-velocity signal. Measure at the TIP of the dagger — not the early systolic shoulder. Always use both A5C and A3C and report the HIGHEST gradient.",
+    howToGet: [
+      "A5C: tilt probe anteriorly from A4C to bring LVOT into view",
+      "Align CW beam parallel to LVOT flow — use color Doppler first to confirm direction",
+      "A3C: alternative window — rotate ~60° CCW from A4C",
+      "Use both A5C and A3C — report the HIGHEST gradient",
+      "Set CW scale to 6–8 m/s to capture full dagger peak without aliasing",
+    ],
+    tips: [
+      { label: "Dagger shape", text: "HOCM LVOT signal: slow early rise → steep late acceleration → sharp peak in late systole. Measure at the TIP of the dagger — not the early systolic shoulder." },
+      { label: "Use both windows", text: "Always measure from both A5C and A3C. Report the highest gradient. Underestimation from poor beam alignment is more common than overestimation." },
+      { label: "MR contamination", text: "MR jet may contaminate LVOT CW signal — align cursor strictly along LVOT axis, angling away from LA. MR is holosystolic with rounded envelope; LVOT is late-peaking dagger." },
+    ],
+    pitfalls: [
+      "Measuring early systolic shoulder instead of late dagger peak — underestimates gradient",
+      "MR contamination: align cursor strictly along LVOT axis, angling away from LA",
+      "Using only one apical view — always try both A5C and A3C",
+    ],
+    structures: ["LVOT", "Aortic valve"],
+    measurements: ["Resting LVOT gradient (mmHg)", "Peak CW velocity (m/s)"],
+    criteria: [
+      {
+        parameter: "Resting LVOT Gradient",
+        normal: "< 30 mmHg",
+        borderline: "30–49 mmHg",
+        abnormal: "≥ 50 mmHg — severe obstruction, guides therapy",
+        provocationTrigger: true,
+        note: "Resting gradient ≥50 mmHg = significant obstruction. Measure at dagger TIP. If resting <50 mmHg, perform Valsalva provocation.",
+      },
+    ],
+  },
+  {
+    id: "pw_lvot",
+    label: "PW LVOT",
+    fullName: "PW Doppler — LVOT Sample Site Localization",
+    color: "#7c3aed",
+    badge: "Doppler / LVOT Outflow",
+    patientPosition: "Steep left lateral decubitus (60–90°)",
+    probePosition: "A5C — PW sample volume 0.5–1 cm below AV, stepwise advancement toward AV",
+    depth: "16–18 cm",
+    focus: "Localize level of obstruction — confirm subvalvular (LVOT) not valvular",
+    description: "PW Doppler sample site localization in the LVOT confirms obstruction is at LVOT level (not valvular) and precisely localizes the level of maximum obstruction by stepwise sample volume advancement. Gradient increases as sample moves toward obstruction = subvalvular HOCM.",
+    howToGet: [
+      "A5C: place PW sample volume 0.5–1 cm below AV",
+      "Stepwise advancement toward AV: gradient increases as sample moves toward obstruction",
+      "Confirm obstruction is subvalvular (LVOT) not valvular",
+      "PW sample volume 2–5 mm for precise localization",
+    ],
+    tips: [
+      { label: "PW localization", text: "Gradient increases as sample moves from LVOT toward AV = subvalvular obstruction (HOCM). No gradient increase in LVOT on PW = valvular AS, not HOCM." },
+      { label: "Aliasing", text: "PW aliases at high velocities — use CW for peak gradient measurement. PW is for localization only." },
+    ],
+    pitfalls: [
+      "Aliasing at high velocities — use CW for peak gradient measurement, PW for localization only",
+      "Not advancing sample volume stepwise — misses localization of obstruction level",
+    ],
+    structures: ["LVOT", "Aortic valve"],
+    measurements: ["PW LVOT velocity (m/s)", "Level of maximum obstruction"],
+  },
+  {
+    id: "mr_jet",
+    label: "MR Jet",
+    fullName: "MR Jet — CW Doppler (SAM-related vs Primary MR)",
+    color: "#7c3aed",
+    badge: "Doppler / LVOT Outflow",
+    patientPosition: "Left lateral decubitus (30–45°)",
+    probePosition: "A4C or A2C — align CW beam along MR jet direction (color Doppler first)",
+    depth: "16–18 cm",
+    focus: "MR severity and mechanism — SAM-related (posterior, late-systolic) vs primary MR (central, holosystolic)",
+    description: "MR jet CW Doppler from A4C or A2C. SAM-related MR produces a posteriorly directed, late-systolic jet. Differentiate from primary MR (central/anterior jet, holosystolic). Critical for surgical planning — SAM-related MR often improves after septal reduction therapy.",
+    howToGet: [
+      "A4C: align CW beam along MR jet direction — use color Doppler first",
+      "A2C: alternative window for anterior/inferior jets",
+      "Distinguish from LVOT signal: MR is holosystolic, broad, rounded envelope",
+      "Assess jet direction: posterior = SAM-related; central/anterior = primary MV disease",
+    ],
+    tips: [
+      { label: "SAM-related MR", text: "Posteriorly directed, late-systolic, crescent-shaped envelope. Often improves after septal reduction therapy. Do not overestimate severity." },
+      { label: "Primary MR", text: "Central or anterior jet, holosystolic plateau envelope. Coexisting primary MV disease requires separate assessment and may need MV repair." },
+      { label: "MR vs LVOT", text: "MR jet velocity ~4–5 m/s (similar to LVOT). Distinguish by: MR is holosystolic with rounded envelope; LVOT is late-peaking dagger. Align cursor strictly along LVOT axis to avoid MR contamination." },
+    ],
+    pitfalls: [
+      "MR jet may contaminate LVOT CW signal — align cursor strictly along LVOT axis",
+      "Late-systolic MR may be missed if recording stops early",
+      "Overestimating MR severity in SAM-related MR — reassess after gradient reduction",
+    ],
+    structures: ["Mitral valve", "Left atrium"],
+    measurements: ["MR severity (color Doppler grade)", "MR jet direction (posterior = SAM-related)"],
+    criteria: [
+      {
+        parameter: "MR Severity",
+        normal: "None or trace",
+        borderline: "Mild-to-moderate (grade 1–2+)",
+        abnormal: "Moderate-to-severe or severe (grade ≥3+) → surgical planning",
+        provocationTrigger: false,
+        note: "SAM-related MR: posteriorly directed, late-systolic. Often improves after septal reduction therapy. Primary MR: central/anterior jet, holosystolic — may require MV repair.",
+      },
+    ],
+  },
+  // ─── SAM Assessment ───────────────────────────────────────────────────────────
+  {
+    id: "sam_plax",
+    label: "SAM M-Mode",
+    fullName: "SAM — PLAX M-Mode",
+    color: "#b45309",
+    badge: "SAM Assessment",
+    patientPosition: "Left lateral decubitus (30–45°)",
+    probePosition: "PLAX — M-mode cursor through MV anterior leaflet and aortic valve",
+    depth: "12–14 cm",
+    focus: "SAM timing, duration, AV midsystolic notching",
+    description: "SAM M-Mode from PLAX captures systolic anterior motion of the anterior mitral leaflet and midsystolic aortic valve closure — the two classic M-mode signs of HOCM. Duration of SAM-IVS contact correlates with gradient severity.",
+    howToGet: [
+      "PLAX: place M-mode cursor through MV anterior leaflet",
+      "Optimize to show both MV and AV on same M-mode sweep",
+      "Use zoom to improve temporal resolution",
+      "Record at 100 mm/s sweep speed for timing assessment",
+    ],
+    tips: [
+      { label: "SAM pattern", text: "Anterior mitral leaflet moves toward IVS in systole — contact with IVS = severe obstruction. Duration of SAM-IVS contact correlates with gradient severity." },
+      { label: "AV midsystolic notching", text: "Notching of AV M-mode in mid-systole = LVOT obstruction. Degree of notching correlates with gradient: mild notch = moderate obstruction; complete mid-systolic closure = severe obstruction (gradient often >50 mmHg)." },
+      { label: "Sweep speed", text: "Use 100 mm/s sweep speed for timing assessment of SAM and AV notching." },
+    ],
+    pitfalls: [
+      "Oblique M-mode cut may miss SAM — ensure cursor is perpendicular to MV leaflets",
+      "Confusing MV coaptation with SAM — SAM is anterior motion toward IVS, not posterior",
+    ],
+    structures: ["Anterior mitral leaflet", "Aortic valve", "LVOT"],
+    measurements: ["Duration of SAM-IVS contact (ms)", "Midsystolic AV closure (present/absent)"],
+    criteria: [
+      {
+        parameter: "SAM-IVS Contact",
+        normal: "Absent",
+        borderline: "Brief contact (< 30% of systole)",
+        abnormal: "Prolonged contact (≥ 30% of systole) → severe obstruction",
+        provocationTrigger: true,
+        note: "Duration of SAM-IVS contact correlates with gradient severity. Provocation (Valsalva) worsens SAM and prolongs contact.",
+      },
+      {
+        parameter: "AV Midsystolic Notching",
+        normal: "Smooth box-shaped opening throughout systole",
+        borderline: "Mild mid-systolic notch",
+        abnormal: "Prominent notch or complete mid-systolic closure ('W' pattern)",
+        provocationTrigger: true,
+        note: "Complete mid-systolic AV closure = severe obstruction (gradient often >50 mmHg). Provocation worsens notching.",
+      },
+    ],
+  },
+  {
+    id: "sam_zoom",
+    label: "SAM Zoom",
+    fullName: "SAM — Zoomed PLAX",
+    color: "#b45309",
+    badge: "SAM Assessment",
+    patientPosition: "Left lateral decubitus (30–45°)",
+    probePosition: "PLAX — zoom on MV and LVOT region, narrow sector for high frame rate",
+    depth: "8–10 cm (zoomed)",
+    focus: "SAM mechanism, leaflet morphology, LVOT turbulence",
+    description: "Zoomed PLAX for SAM assessment. High-resolution 2D view of the MV and LVOT provides detailed assessment of SAM mechanism, leaflet morphology, and degree of LVOT narrowing. Color Doppler shows LVOT turbulence and MR jet direction.",
+    howToGet: [
+      "PLAX: zoom on MV and LVOT region",
+      "Use narrow sector for high frame rate (>60 fps)",
+      "Color Doppler to show LVOT turbulence and MR jet direction",
+      "Reduce depth to 8–10 cm to maximize resolution",
+    ],
+    tips: [
+      { label: "Zoom improves resolution", text: "Zoom improves temporal resolution for SAM timing and leaflet morphology assessment. Use narrow sector for highest frame rate." },
+      { label: "Color Doppler", text: "LVOT turbulence (aliasing) + posteriorly directed MR jet = SAM. Color scale 50–60 cm/s Nyquist to detect low-velocity MR." },
+      { label: "Leaflet morphology", text: "Assess anterior leaflet length, accessory chordae, and coaptation point. Elongated anterior leaflet (>3 cm) predisposes to SAM." },
+    ],
+    pitfalls: [
+      "Color Doppler scale too high — misses low-velocity MR jet",
+      "Frame rate too low — misses rapid SAM motion",
+    ],
+    structures: ["Anterior mitral leaflet", "LVOT", "Interventricular septum"],
+    measurements: ["LVOT diameter at narrowest point (mm)", "SAM severity (mild/moderate/severe)"],
+    criteria: [
+      {
+        parameter: "LVOT Narrowing (Zoomed PLAX)",
+        normal: "LVOT ≥ 2.0 cm, no turbulence",
+        borderline: "LVOT 1.7–1.9 cm, mild turbulence",
+        abnormal: "LVOT < 1.7 cm or severe turbulence → significant obstruction",
+        provocationTrigger: true,
+        note: "Zoomed PLAX provides the best view for LVOT diameter measurement and SAM mechanism assessment.",
+      },
+    ],
+  },
 ];
-
-// ─── DOPPLER DIFFERENTIATION DATA ────────────────────────────────────────────
+// Dev-mode sync check: warns in console if views array is out of sync with registry
+if (import.meta.env.DEV) validateViewsAgainstRegistry("hocm", views.map((v) => v.id));
+// ─── DOPPLER DIFFERENTIATION DATA ─────────────────────────────────────────────
 
 const dopplerComparison = [
   { feature: "Signal shape", hocm: "Dagger-shaped (concave upstroke)", mr: "Broad, rounded, uniform envelope" },

@@ -572,3 +572,42 @@ export const TEXT_FIELDS = [
 ] as const;
 
 export type TextFieldKey = typeof TEXT_FIELDS[number]["key"];
+
+/**
+ * Dev-mode validation utility.
+ * Call this at the module level of each ScanCoach page to detect when the
+ * live page's `views` array is out of sync with the registry.
+ *
+ * Usage (in each ScanCoach page, outside the component):
+ *   if (import.meta.env.DEV) validateViewsAgainstRegistry("hocm", views.map(v => v.id));
+ *
+ * This ensures any view added to the registry is also added to the live page,
+ * and any view removed from the registry is removed from the live page.
+ */
+export function validateViewsAgainstRegistry(
+  module: ScanCoachModule,
+  liveViewIds: string[]
+): void {
+  if (!import.meta.env.DEV) return;
+  const meta = getModuleMeta(module);
+  if (!meta) {
+    console.warn(`[ScanCoach] Module "${module}" not found in registry.`);
+    return;
+  }
+  const registryIds = new Set(meta.views.map((v) => v.id));
+  const liveIds = new Set(liveViewIds);
+
+  const missingInLive = Array.from(registryIds).filter((id) => !liveIds.has(id));
+  const extraInLive = Array.from(liveIds).filter((id) => !registryIds.has(id));
+
+  if (missingInLive.length > 0) {
+    console.warn(
+      `[ScanCoach] Module "${module}": views in registry but MISSING from live page — add them to the views array:\n  ${missingInLive.join(", ")}`
+    );
+  }
+  if (extraInLive.length > 0) {
+    console.warn(
+      `[ScanCoach] Module "${module}": views in live page but NOT in registry — add them to scanCoachRegistry.ts:\n  ${extraInLive.join(", ")}`
+    );
+  }
+}

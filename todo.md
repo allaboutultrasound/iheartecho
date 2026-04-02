@@ -844,3 +844,15 @@
 - [x] Fix useScanCoachOverrides field mapping for MCS (howToGet→acquisition, structures→whatToSee) and UEA (tips→contrastTips, criticalFindings→clinicalPearls)
 - [x] Wire MechanicalSupportScanCoach to useScanCoachOverrides — mergedDeviceViews and mergedImpellaViews now apply DB overrides to all MCS views
 - [x] Update ScanCoachViewPreview badge labels and Active Overrides badges to use WYSIWYG module-specific names
+
+## HOCM ScanCoach Editor Fix (Apr 1 2026)
+- [x] Fix: HOCM ScanCoach editor does not show the outflow cannula view — added 7 missing views (psax_pap, valsalva_pos, cw_lvot, pw_lvot, mr_jet, sam_plax, sam_zoom) to HOCMScanCoach.tsx
+- [x] Added dev-mode validateViewsAgainstRegistry() call to HOCMScanCoach.tsx for ongoing sync checking
+
+## Single Source-of-Truth for ScanCoach & Navigator Editors (Apr 1 2026)
+- [x] Audit: ScanCoach editor sources view list from scanCoachRegistry.ts (already single source of truth for editor)
+- [x] Audit: Navigator editor had STATIC_DEFAULTS hardcoded inline in NavigatorEditor.tsx
+- [x] ScanCoach: added validateViewsAgainstRegistry() to scanCoachRegistry.ts — call in each ScanCoach page to detect sync issues at dev time
+- [x] Navigator: extracted STATIC_DEFAULTS to navigatorProtocolDefaults.ts as NAVIGATOR_PROTOCOL_DEFAULTS; NavigatorEditor.tsx now imports from it
+- [x] Fix: HOCM outflow cannula views (cw_lvot, pw_lvot, sam_plax, sam_zoom, etc.) added to live page
+- [x] Pattern established: add to scanCoachRegistry.ts or navigatorProtocolDefaults.ts → auto-appears in editor; add to live page → dev-mode warning if not in registry
