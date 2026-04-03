@@ -530,6 +530,8 @@ function _legacyStaticPreviewContent({
 
 function ImageUploadZone({
   slot,
+  module,
+  viewId,
   currentUrl,
   onUploaded,
   onCleared,
@@ -537,6 +539,8 @@ function ImageUploadZone({
   setIsUploading,
 }: {
   slot: typeof IMAGE_SLOTS[number];
+  module: string;
+  viewId: string;
   currentUrl: string | null | undefined;
   onUploaded: (url: string) => void;
   onCleared: () => void;
@@ -562,22 +566,32 @@ function ImageUploadZone({
       }
       setIsUploading(true);
       try {
-        const reader = new FileReader();
-        const base64 = await new Promise<string>((resolve, reject) => {
-          reader.onload = () => {
-            const result = reader.result as string;
-            resolve(result.split(",")[1]);
-          };
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
+        const slotKey = slot.key === "echoImageUrl" ? "echo"
+          : slot.key === "anatomyImageUrl" ? "anatomy"
+          : "transducer";
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("module", module);
+        formData.append("viewId", viewId);
+        formData.append("slot", slotKey);
+        const res = await fetch("/api/upload-scancoach-media", {
+          method: "POST",
+          credentials: "include",
+          body: formData,
         });
-        onUploaded(base64 + "|" + file.type + "|" + file.name);
-      } catch {
-        toast.error("Failed to read image file");
+        if (!res.ok) {
+          let errMsg = `Upload failed (${res.status})`;
+          try { const j = await res.json(); errMsg = j.error ?? errMsg; } catch {}
+          throw new Error(errMsg);
+        }
+        const { url } = await res.json();
+        onUploaded(url);
+      } catch (err: any) {
+        toast.error(err?.message ?? "Upload failed");
         setIsUploading(false);
       }
     },
-    [onUploaded, setIsUploading]
+    [slot, module, viewId, onUploaded, setIsUploading]
   );
 
   return (
@@ -776,18 +790,6 @@ export default function ScanCoachEditor() {
     onError: (e) => toast.error(e.message),
   });
 
-  const uploadImageMutation = trpc.scanCoachAdmin.uploadImage.useMutation({
-    onSuccess: () => {
-      utils.scanCoachAdmin.listOverrides.invalidate();
-      setUploadingSlot(null);
-      toast.success("Image uploaded and saved");
-    },
-    onError: (e) => {
-      setUploadingSlot(null);
-      toast.error(e.message);
-    },
-  });
-
   const clearImageMutation = trpc.scanCoachAdmin.clearImageField.useMutation({
     onSuccess: () => {
       utils.scanCoachAdmin.listOverrides.invalidate();
@@ -851,19 +853,12 @@ export default function ScanCoachEditor() {
     });
   };
 
-  const handleImageUploaded = (slot: ImageSlotKey, rawData: string) => {
+  const handleImageUploaded = (slot: ImageSlotKey, url: string) => {
     if (!selectedViewId) return;
-    const [base64Data, mimeType, fileName] = rawData.split("|");
-    setUploadingSlot(slot);
-    const slotKey = slot === "echoImageUrl" ? "echo" : slot === "anatomyImageUrl" ? "anatomy" : "transducer";
-    uploadImageMutation.mutate({
-      module: selectedModule,
-      viewId: selectedViewId,
-      slot: slotKey,
-      base64Data,
-      mimeType,
-      fileName,
-    });
+    // The multipart upload route already upserted the DB — just refresh overrides
+    utils.scanCoachAdmin.listOverrides.invalidate();
+    setUploadingSlot(null);
+    toast.success("Image uploaded and saved");
   };
 
   const handleClearImage = (slot: ImageSlotKey) => {
@@ -1147,10 +1142,12 @@ export default function ScanCoachEditor() {
                           <ImageUploadZone
                             key={slot.key}
                             slot={slot}
+                            module={selectedModule}
+                            viewId={selectedViewId ?? ""}
                             currentUrl={currentOverride?.[slot.key]}
                             isUploading={uploadingSlot === slot.key}
                             setIsUploading={(v) => setIsUploading(v ? slot.key : null)}
-                            onUploaded={(rawData) => handleImageUploaded(slot.key, rawData)}
+                            onUploaded={(url) => handleImageUploaded(slot.key, url)}
                             onCleared={() => handleClearImage(slot.key)}
                           />
                         ))}

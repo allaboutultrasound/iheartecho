@@ -856,3 +856,10 @@
 - [x] Navigator: extracted STATIC_DEFAULTS to navigatorProtocolDefaults.ts as NAVIGATOR_PROTOCOL_DEFAULTS; NavigatorEditor.tsx now imports from it
 - [x] Fix: HOCM outflow cannula views (cw_lvot, pw_lvot, sam_plax, sam_zoom, etc.) added to live page
 - [x] Pattern established: add to scanCoachRegistry.ts or navigatorProtocolDefaults.ts → auto-appears in editor; add to live page → dev-mode warning if not in registry
+
+## ScanCoach Media Upload Fix (Apr 3 2026)
+- [x] Fix: uploading media (image/video) in ScanCoach editor returns "unexpected JSON" error
+  - Root cause: base64 JSON payload exceeded express.json 50MB limit, returning non-JSON 413 response
+  - Fix: created /api/upload-scancoach-media multipart route (server/routes/uploadScanCoachMedia.ts)
+  - Fix: ImageUploadZone now uploads via FormData fetch instead of base64 tRPC mutation
+  - Fix: server route auto-upserts DB override; client invalidates query cache after upload

@@ -11,6 +11,7 @@ import { registerUploadCaseMediaRoute } from "../routes/uploadCaseMedia";
 import { registerUploadQuestionImageRoute } from "../routes/uploadQuestionImage";
 import { registerUploadQuestionMediaRoute } from "../routes/uploadQuestionMedia";
 import { registerUploadUserQuestionMediaRoute } from "../routes/uploadUserQuestionMedia";
+import { registerUploadScanCoachMediaRoute } from "../routes/uploadScanCoachMedia";
 import { registerUnsubscribeRoute } from "../routes/unsubscribe";
 import { registerAuthLoginRoute } from "../routes/authLogin";
 import { appRouter } from "../routers";
@@ -62,6 +63,8 @@ async function startServer() {
   registerUploadQuestionMediaRoute(app);
   // User question media upload endpoint (images + non-WMV videos, any authenticated user)
   registerUploadUserQuestionMediaRoute(app);
+  // ScanCoach media upload endpoint (multipart/form-data, platform admin only)
+  registerUploadScanCoachMediaRoute(app);
   // One-click unsubscribe from notification emails
   registerUnsubscribeRoute(app);
   // Server-side login/magic-verify routes (bypasses Cloudflare fetch-response cookie stripping)
