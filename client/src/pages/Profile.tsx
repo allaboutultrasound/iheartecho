@@ -13,6 +13,7 @@ import {
 import Layout from "@/components/Layout";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
+import { uploadFile } from "@/lib/uploadFile";
 import { toast } from "sonner";
 
 const ROLE_CONFIG: Record<string, {
@@ -132,8 +133,7 @@ export default function Profile() {
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
 
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [avatarDataUri, setAvatarDataUri] = useState<string | null>(null);
-  const [avatarMime, setAvatarMime] = useState<AcceptedMime | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
 
   // Auto-scroll to notifications section when URL has #notifications anchor
@@ -211,17 +211,16 @@ export default function Profile() {
     },
   });
 
-  const uploadAvatar = trpc.auth.uploadAvatar.useMutation({
+  const updateAvatarUrl = trpc.auth.updateAvatarUrl.useMutation({
     onSuccess: () => {
       toast.success("Profile photo updated.");
       setAvatarPreview(null);
-      setAvatarDataUri(null);
-      setAvatarMime(null);
+      setAvatarFile(null);
       setAvatarUploading(false);
       utils.auth.me.invalidate();
     },
     onError: (err) => {
-      toast.error(err.message || "Failed to upload photo.");
+      toast.error(err.message || "Failed to save photo.");
       setAvatarUploading(false);
     },
   });
@@ -316,27 +315,30 @@ export default function Profile() {
       toast.error("Image must be under 4 MB.");
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const dataUri = ev.target?.result as string;
-      setAvatarPreview(dataUri);
-      setAvatarDataUri(dataUri);
-      setAvatarMime(file.type as AcceptedMime);
-    };
-    reader.readAsDataURL(file);
+    // Store the file and generate a local preview URL
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
     e.target.value = "";
   };
 
-  const handleAvatarUpload = () => {
-    if (!avatarDataUri || !avatarMime) return;
+  const handleAvatarUpload = async () => {
+    if (!avatarFile) return;
     setAvatarUploading(true);
-    uploadAvatar.mutate({ dataUri: avatarDataUri, mimeType: avatarMime });
+    try {
+      const { url } = await uploadFile(avatarFile, `avatars/${Date.now()}`, {
+        maxMB: 4,
+        allowedTypes: "image",
+      });
+      updateAvatarUrl.mutate({ avatarUrl: url });
+    } catch (err: any) {
+      toast.error(err?.message || "Upload failed. Please try again.");
+      setAvatarUploading(false);
+    }
   };
 
   const handleAvatarCancel = () => {
     setAvatarPreview(null);
-    setAvatarDataUri(null);
-    setAvatarMime(null);
+    setAvatarFile(null);
   };
 
   const currentAvatarUrl = u.avatarUrl as string | undefined;

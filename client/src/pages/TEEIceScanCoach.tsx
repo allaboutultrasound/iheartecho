@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { uploadFile } from "@/lib/uploadFile";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
 import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
 import BillingCodesCard from "@/components/BillingCodesCard";
@@ -444,20 +445,14 @@ function AdminMediaPanel({ viewId }: { viewId: string }) {
         setUploading(false);
         return;
       }
-      const base64Data = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const result = reader.result as string;
-          // Strip data URL prefix
-          resolve(result.split(",")[1]);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
+      // Upload via multipart (no base64 size bottleneck)
+      const folder = isVideo ? "tee-ice/clips" : "tee-ice/images";
+      const allowedTypes = isVideo ? "video" : "image";
+      const { url } = await uploadFile(file, folder, { maxMB, allowedTypes });
       await uploadMutation.mutateAsync({
         viewId,
         mediaType: isVideo ? "clip" : "image",
-        base64Data,
+        url,
         mimeType: file.type,
         fileName: file.name,
         caption: caption.trim() || undefined,

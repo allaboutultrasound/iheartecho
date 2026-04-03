@@ -480,16 +480,16 @@ export const scanCoachAdminRouter = router({
     }),
 
   /**
-   * Upload a reference image or video clip for a TEE/ICE view (admin only).
-   * Accepts base64-encoded data, uploads to S3, and stores the record.
+   * Register a reference image or video clip for a TEE/ICE view (admin only).
+   * File is already in S3 (uploaded via /api/upload multipart route).
    */
   uploadViewMedia: protectedProcedure
     .input(
       z.object({
         viewId: z.string().min(1).max(64),
         mediaType: z.enum(["image", "clip"]),
-        /** Base64-encoded file data (without data: prefix) */
-        base64Data: z.string(),
+        /** S3 URL returned by the /api/upload multipart route */
+        url: z.string().url().max(2048),
         /** MIME type, e.g. image/jpeg or video/mp4 */
         mimeType: z.string().regex(/^(image\/(jpeg|png|gif|webp|svg\+xml)|video\/(mp4|webm|ogg|quicktime|x-ms-wmv|x-msvideo|avi))$/),
         /** Original filename */
@@ -501,31 +501,20 @@ export const scanCoachAdminRouter = router({
     .mutation(async ({ ctx, input }) => {
       await assertPlatformAdmin(ctx);
 
-      const buffer = Buffer.from(input.base64Data, "base64");
-      const mimeToExt: Record<string, string> = {
-        "image/jpeg": "jpg", "image/png": "png", "image/gif": "gif",
-        "image/webp": "webp", "image/svg+xml": "svg",
-        "video/mp4": "mp4", "video/webm": "webm", "video/ogg": "ogv", "video/quicktime": "mov",
-        "video/x-ms-wmv": "wmv", "video/x-msvideo": "avi", "video/avi": "avi",
-      };
-      const ext = mimeToExt[input.mimeType] ?? input.mimeType.split("/")[1];
-      const randomSuffix = Math.random().toString(36).slice(2, 10);
-      const safeFileName = input.fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
-      const key = `scancoach/tee-ice/${input.viewId}/${input.mediaType}-${safeFileName}-${randomSuffix}.${ext}`;
-
-      const { url } = await storagePut(key, buffer, input.mimeType);
+      // File is already in S3; derive key from URL for record-keeping
+      const fileKey = new URL(input.url).pathname.replace(/^\//, "");
 
       const id = await insertScanCoachMedia({
         viewId: input.viewId,
         mediaType: input.mediaType,
-        url,
-        fileKey: key,
+        url: input.url,
+        fileKey,
         caption: input.caption ?? null,
         sortOrder: input.sortOrder,
         uploadedBy: ctx.user.id,
       });
 
-      return { id, url, key };
+      return { id, url: input.url, key: fileKey };
     }),
 
   /**

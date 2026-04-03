@@ -863,3 +863,16 @@
   - Fix: created /api/upload-scancoach-media multipart route (server/routes/uploadScanCoachMedia.ts)
   - Fix: ImageUploadZone now uploads via FormData fetch instead of base64 tRPC mutation
   - Fix: server route auto-upserts DB override; client invalidates query cache after upload
+
+## Multipart Upload Migration — Site-Wide (Apr 3 2026)
+- [x] Audit all base64/readAsDataURL/tRPC file upload points across the site
+- [x] Created /api/upload generic multipart route (server/routes/uploadGeneric.ts)
+- [x] Created client uploadFile() helper (client/src/lib/uploadFile.ts)
+- [x] Profile.tsx avatar: migrated from base64 tRPC to multipart + updateAvatarUrl mutation
+- [x] SoundBytesAdmin.tsx video/thumbnail: migrated from base64 tRPC to multipart uploadFile()
+- [x] TEEIceScanCoach.tsx view media: migrated from base64 tRPC to multipart uploadFile()
+- [x] uploadViewMedia tRPC procedure: updated to accept url (not base64Data)
+- [x] RichTextEditor inline image: left as-is (client-only base64 preview, never sent to server)
+- [x] BulkCsvUploadPanel: left as-is (reads CSV text, not binary upload)
+- [x] ChallengeCardGenerator: left as-is (client-only ZIP generation)
+- [x] QuickFireAdmin, QuickFire, SubmitCase: already using multipart routes — no change needed

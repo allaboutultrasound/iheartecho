@@ -232,6 +232,14 @@ export const appRouter = router({
         return { avatarUrl: url };
       }),
 
+    // Save avatar URL returned by the generic /api/upload route (multipart)
+    updateAvatarUrl: protectedProcedure
+      .input(z.object({ avatarUrl: z.string().url().max(2048) }))
+      .mutation(async ({ ctx, input }) => {
+        await updateUserProfile(ctx.user.id, { avatarUrl: input.avatarUrl });
+        return { avatarUrl: input.avatarUrl };
+      }),
+
     // ─── Email Change Verification ────────────────────────────────────────────
 
     requestEmailChange: protectedProcedure

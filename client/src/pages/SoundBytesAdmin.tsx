@@ -6,6 +6,7 @@
 import { useState, useRef, useCallback } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
+import { uploadFile } from "@/lib/uploadFile";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -143,8 +144,6 @@ export default function SoundBytesAdmin() {
     onError: () => toast.error("Failed to reject comment."),
   });
 
-  const uploadMediaMutation = trpc.soundBytes.adminUploadMedia.useMutation();
-
   const handleFileUpload = useCallback(async (
     file: File,
     fileType: "video" | "thumbnail"
@@ -159,22 +158,9 @@ export default function SoundBytesAdmin() {
     const setSaving = fileType === "video" ? setVideoUploading : setThumbUploading;
     setSaving(true);
     try {
-      const base64Data = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const result = reader.result as string;
-          // Strip the data:mime;base64, prefix
-          resolve(result.split(",")[1]);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-      const { url } = await uploadMediaMutation.mutateAsync({
-        base64Data,
-        mimeType: file.type,
-        fileName: file.name,
-        fileType,
-      });
+      const folder = fileType === "video" ? "soundbytes/videos" : "soundbytes/thumbnails";
+      const allowedTypes = fileType === "video" ? "video" : "image";
+      const { url } = await uploadFile(file, folder, { maxMB, allowedTypes });
       if (fileType === "video") {
         setForm((p) => ({ ...p, videoUrl: url }));
         toast.success("Video uploaded and URL filled in.");
@@ -187,7 +173,7 @@ export default function SoundBytesAdmin() {
     } finally {
       setSaving(false);
     }
-  }, [uploadMediaMutation]);
+  }, []);
 
   const submitReply = trpc.soundBytes.adminSubmitReply.useMutation({
     onSuccess: () => {

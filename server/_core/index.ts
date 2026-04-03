@@ -12,6 +12,7 @@ import { registerUploadQuestionImageRoute } from "../routes/uploadQuestionImage"
 import { registerUploadQuestionMediaRoute } from "../routes/uploadQuestionMedia";
 import { registerUploadUserQuestionMediaRoute } from "../routes/uploadUserQuestionMedia";
 import { registerUploadScanCoachMediaRoute } from "../routes/uploadScanCoachMedia";
+import { registerUploadGenericRoute } from "../routes/uploadGeneric";
 import { registerUnsubscribeRoute } from "../routes/unsubscribe";
 import { registerAuthLoginRoute } from "../routes/authLogin";
 import { appRouter } from "../routers";
@@ -65,6 +66,8 @@ async function startServer() {
   registerUploadUserQuestionMediaRoute(app);
   // ScanCoach media upload endpoint (multipart/form-data, platform admin only)
   registerUploadScanCoachMediaRoute(app);
+  // Generic file upload endpoint — avatar, soundbytes media, TEE view media, etc.
+  registerUploadGenericRoute(app);
   // One-click unsubscribe from notification emails
   registerUnsubscribeRoute(app);
   // Server-side login/magic-verify routes (bypasses Cloudflare fetch-response cookie stripping)
