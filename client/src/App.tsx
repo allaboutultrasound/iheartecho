@@ -217,6 +217,8 @@ function Router() {
       <Route path="/echo-correlation" component={() => { window.location.replace("/accreditation"); return null; }} />
       {/* Legacy redirects — old Navigator and ScanCoach hub URLs now point to unified EchoAssist™ hub */}
       <Route path="/echo-navigators">{() => { window.location.replace("/echo-assist-hub"); return null; }}</Route>
+      {/* Smart DIY Accreditation redirect — sidebar uses this virtual path; direct URL access redirects to plans page */}
+      <Route path="/diy-accreditation-smart">{() => { window.location.replace("/diy-accreditation-plans"); return null; }}</Route>
       <Route path="/scan-coach-hub" component={ScanCoachHub} />
       <Route path="/strain-scan-coach">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><StrainScanCoach /></RoleGuard>}</Route>
       <Route path="/tee-scan-coach">{() => <RoleGuard roles={["premium_user", "diy_user", "diy_admin"]}><TEEScanCoach /></RoleGuard>}</Route>
