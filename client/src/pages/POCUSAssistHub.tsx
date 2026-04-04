@@ -357,7 +357,7 @@ export default function POCUSAssistHub() {
                 Structured echo protocols with view-by-view checklists, normal reference values, scanning tips, and guideline-based interpretation for 11 specialties — Adult TTE, Pediatric, Fetal, Strain, Diastology, UEA, Stress Echo, HOCM, Pulmonary HTN &amp; PE, Structural Heart, TEE, and ICE.
               </p>
               <div className="flex flex-wrap gap-2">
-                <Link href="/echoassist-hub">
+                <Link href="/echo-assist-hub">
                   <button
                     className="flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-sm text-white transition-all hover:opacity-90"
                     style={{ background: "#189aa1" }}

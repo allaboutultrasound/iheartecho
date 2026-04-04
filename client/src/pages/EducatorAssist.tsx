@@ -264,7 +264,7 @@ export default function EducatorAssist() {
                     </Button>
                   </Link>
                 ) : isStudent ? (
-                  <Link href="/educator-student">
+                  <Link href="/student-dashboard">
                     <Button className="gap-2 font-semibold" style={{ background: "#189aa1" }}>
                       <BookOpen className="w-4 h-4" />
                       Go to My Learning

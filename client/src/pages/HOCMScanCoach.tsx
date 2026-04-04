@@ -237,7 +237,7 @@ const views = [
     ],
   },
   {
-    id: "psax-mv",
+    id: "psax_mv",
     label: "PSAX MV",
     fullName: "Parasternal Short Axis — Mitral Valve Level",
     color: BRAND,
