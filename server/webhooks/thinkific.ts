@@ -445,7 +445,8 @@ export function registerThinkificWebhook(app: Router) {
         }
 
         if (isPremiumProduct(productName)) {
-          await setPremiumStatus(user.id, false, "thinkific");
+          // Use removeRole so both userRoles table and users.isPremium are synced
+          await removeRole(user.id, "premium_user");
         } else if (isDIYProduct(productName)) {
           const role = diyRoleForProduct(productName);
           await removeRole(user.id, role);
@@ -534,7 +535,8 @@ async function grantAccess(params: {
       await ensureUserRole(pendingUserId);
       // Apply product-specific role grants on top
       if (isPremiumProduct(productName)) {
-        await setPremiumStatus(pendingUserId, true, "thinkific");
+        // Use assignRole so both userRoles table and users.isPremium are synced
+        await assignRole(pendingUserId, "premium_user", 0 /* system/webhook grant */, undefined, "thinkific");
       } else if (isDIYProduct(productName)) {
         const role = diyRoleForProduct(productName);
         await assignRole(pendingUserId, role, 0 /* system/webhook grant */);
@@ -560,7 +562,8 @@ async function grantAccess(params: {
   // User already exists — ensure base user role and apply product-specific grants
   await ensureUserRole(user.id);
   if (isPremiumProduct(productName)) {
-    await setPremiumStatus(user.id, true, "thinkific");
+    // Use assignRole so both userRoles table and users.isPremium are synced
+    await assignRole(user.id, "premium_user", 0 /* system/webhook grant */, undefined, "thinkific");
   } else if (isDIYProduct(productName)) {
     const role = diyRoleForProduct(productName);
     await assignRole(user.id, role, 0 /* system/webhook grant */);

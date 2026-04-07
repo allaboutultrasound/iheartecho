@@ -177,6 +177,10 @@ export async function setPremiumStatus(
 ): Promise<void> {
   const db = await getDb();
   if (!db) return;
+  // Update the isPremium flag on the users table only.
+  // NOTE: Do NOT insert into userRoles here — that would create a circular call
+  // with assignRole() which already calls setPremiumStatus() when role="premium_user".
+  // Instead, callers that need both tables synced should call assignRole/removeRole directly.
   await db.update(users).set({
     isPremium,
     premiumGrantedAt: isPremium ? new Date() : null,
@@ -1846,13 +1850,20 @@ export async function assignRole(
   role: AppRole,
   assignedByUserId: number,
   grantedByLabId?: number,
+  premiumSource?: "thinkific" | "admin" | "manual",
 ): Promise<void> {
   const db = await getDb();
   if (!db) return;
   // Check if already assigned
   const existing = await db.select().from(userRoles)
     .where(and(eq(userRoles.userId, userId), eq(userRoles.role, role))).limit(1);
-  if (existing.length > 0) return; // already has role
+  if (existing.length > 0) {
+    // Role already exists — still sync isPremium in case it got out of sync
+    if (role === "premium_user") {
+      await setPremiumStatus(userId, true, premiumSource ?? "admin");
+    }
+    return;
+  }
   await db.insert(userRoles).values({
     userId,
     role,
@@ -1861,7 +1872,7 @@ export async function assignRole(
   });
   // Sync isPremium flag when premium_user role is granted
   if (role === "premium_user") {
-    await setPremiumStatus(userId, true, "admin");
+    await setPremiumStatus(userId, true, premiumSource ?? "admin");
   }
 }
 
@@ -1948,7 +1959,10 @@ export async function listUsersWithRoles(
     ));
   }
 
-  const baseQuery = db.select().from(users).orderBy(desc(users.createdAt)).limit(limit).offset(offset);
+  // limit=0 means fetch all (no SQL LIMIT applied)
+  const baseQuery = limit > 0
+    ? db.select().from(users).orderBy(desc(users.createdAt)).limit(limit).offset(offset)
+    : db.select().from(users).orderBy(desc(users.createdAt)).offset(offset);
   const allUsers = conditions.length > 0
     ? await baseQuery.where(and(...conditions))
     : await baseQuery;

@@ -1152,16 +1152,33 @@ export default function PlatformAdmin() {
     isLoading: loadingUsers,
     refetch: refetchUsers,
   } = trpc.platformAdmin.listUsers.useQuery(
-    { limit: 500, offset: 0, search: debouncedSearch, userType },
+    { limit: 0, offset: 0, search: debouncedSearch, userType }, // limit=0 = fetch all
+    { enabled: !!isAdmin },
+  );
+
+  const { data: platformStats, refetch: refetchStats } = trpc.platformAdmin.getPlatformStats.useQuery(
+    undefined,
     { enabled: !!isAdmin },
   );
 
   const cleanupRolesMutation = trpc.platformAdmin.cleanupUserRoles.useMutation({
     onSuccess: (data: { deduped: number; backfilled: number }) => {
       toast.success(`Roles fixed: ${data.deduped} duplicates removed, ${data.backfilled} missing roles backfilled.`);
-      refetchUsers();
+      refetchUsers(); refetchStats();
     },
     onError: (err) => toast.error(`Cleanup failed: ${err.message}`),
+  });
+
+  const backfillPremiumMutation = trpc.platformAdmin.backfillPremiumRoles.useMutation({
+    onSuccess: (data: { inserted: number; emails: string[] }) => {
+      if (data.inserted === 0) {
+        toast.success("All premium users already have the premium_user role — no backfill needed.");
+      } else {
+        toast.success(`Backfill complete: ${data.inserted} premium_user role${data.inserted !== 1 ? "s" : ""} inserted for: ${data.emails.join(", ")}`);
+      }
+      refetchUsers(); refetchStats();
+    },
+    onError: (err) => toast.error(`Backfill failed: ${err.message}`),
   });
 
   const { data: userCount } = trpc.platformAdmin.userCount.useQuery(
@@ -1172,7 +1189,7 @@ export default function PlatformAdmin() {
   const assignRoleMutation = trpc.platformAdmin.assignRole.useMutation({
     onSuccess: () => {
       toast.success("Role assigned successfully.");
-      refetchUsers();
+      refetchUsers(); refetchStats();
       setAddRoleDialogOpen(false);
       setSelectedUser(null);
     },
@@ -1182,7 +1199,7 @@ export default function PlatformAdmin() {
   const removeRoleMutation = trpc.platformAdmin.removeRole.useMutation({
     onSuccess: () => {
       toast.success("Role removed.");
-      refetchUsers();
+      refetchUsers(); refetchStats();
     },
     onError: (err) => toast.error(err.message),
   });
@@ -1260,7 +1277,7 @@ export default function PlatformAdmin() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => refetchUsers()}
+            onClick={() => { refetchUsers(); refetchStats(); }}
             className="flex items-center gap-2 self-start sm:self-auto"
           >
             <RefreshCw className="w-4 h-4" />
@@ -1271,10 +1288,10 @@ export default function PlatformAdmin() {
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
-            { label: "Total Users", value: userCount ?? 0, icon: Users, color: "#189aa1" },
-            { label: "Premium Users", value: (users ?? []).filter(u => u.roles.includes("premium_user")).length, icon: Crown, color: "#d97706" },
-            { label: "DIY Admins", value: (users ?? []).filter(u => u.roles.includes("diy_admin")).length, icon: ClipboardList, color: "#0d9488" },
-            { label: "DIY Users", value: (users ?? []).filter(u => u.roles.includes("diy_user")).length, icon: Stethoscope, color: "#2563eb" },
+            { label: "Total Users", value: platformStats?.totalUsers ?? userCount ?? 0, icon: Users, color: "#189aa1" },
+            { label: "Premium Users", value: platformStats?.premiumUsers ?? 0, icon: Crown, color: "#d97706" },
+            { label: "DIY Admins", value: platformStats?.diyAdmins ?? 0, icon: ClipboardList, color: "#0d9488" },
+            { label: "DIY Users", value: platformStats?.diyUsers ?? 0, icon: Stethoscope, color: "#2563eb" },
           ].map(({ label, value, icon: Icon, color }) => (
             <Card key={label} className="border-0 shadow-sm">
               <CardContent className="p-4 flex items-center gap-3">
@@ -1547,6 +1564,35 @@ export default function PlatformAdmin() {
               >
                 <Users className={`w-4 h-4 ${syncAllMembersMutation.isPending ? "animate-spin" : ""}`} />
                 {syncAllMembersMutation.isPending ? "Syncing…" : "Sync Members"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Backfill Premium Roles */}
+        <Card className="mb-6 border-0 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+              <Crown className="w-4 h-4" />
+              Backfill Premium Roles
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className="flex-1">
+                <p className="text-sm text-gray-600 mb-1">
+                  Find users with <code className="text-xs bg-gray-100 px-1 rounded">isPremium=true</code> but no <code className="text-xs bg-gray-100 px-1 rounded">premium_user</code> role row, and insert the missing role entries.
+                  Run this once to fix users whose premium was granted before the role-sync fix was deployed.
+                </p>
+              </div>
+              <Button
+                onClick={() => backfillPremiumMutation.mutate()}
+                disabled={backfillPremiumMutation.isPending}
+                variant="outline"
+                className="flex items-center gap-2 flex-shrink-0 bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100"
+              >
+                <Crown className={`w-4 h-4 ${backfillPremiumMutation.isPending ? "animate-spin" : ""}`} />
+                {backfillPremiumMutation.isPending ? "Running…" : "Backfill Premium Roles"}
               </Button>
             </div>
           </CardContent>

@@ -876,3 +876,12 @@
 - [x] BulkCsvUploadPanel: left as-is (reads CSV text, not binary upload)
 - [x] ChallengeCardGenerator: left as-is (client-only ZIP generation)
 - [x] QuickFireAdmin, QuickFire, SubmitCase: already using multipart routes — no change needed
+
+## Platform Admin Sync Issues (Apr 7 2026)
+- [x] Fix Thinkific premium user sync — enrolled users not getting premium_user role in app database
+- [x] Fix DIY user count in platform admin — exclude seeded/test members from count
+
+## Platform Admin Fixes (Apr 7 2026)
+- [x] Remove 500 user fetch limit in platform admin — always fetch all users
+- [x] Fix DIY user count to exclude seeded/demo members
+- [x] Fix Thinkific premium user sync — enrolled users not getting premium_user role in userRoles table

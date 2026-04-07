@@ -1,5 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import { count } from "drizzle-orm";
 import { protectedProcedure, router } from "../_core/trpc";
 import {
   getUserRoles,
@@ -61,7 +62,7 @@ export const platformAdminRouter = router({
   /** List all users with their roles (paginated, with optional search and type filter) */
   listUsers: protectedProcedure
     .input(z.object({
-      limit: z.number().max(500).default(50),
+      limit: z.number().default(0), // 0 = fetch all (no limit)
       offset: z.number().default(0),
       search: z.string().optional().default(''),
       userType: z.enum(['all','pending','active','premium','diy_admin','diy_user','platform_admin','free']).optional().default('all'),
@@ -81,6 +82,52 @@ export const platformAdminRouter = router({
       throw new TRPCError({ code: "FORBIDDEN" });
     }
     return countUsers();
+  }),
+
+  /**
+   * Get accurate platform stats server-side.
+   * DIY counts exclude demo/seeded users (isDemo=true).
+   */
+  getPlatformStats: protectedProcedure.query(async ({ ctx }) => {
+    const myRoles = await getUserRoles(ctx.user.id);
+    if (ctx.user.role !== "admin" && !myRoles.includes("platform_admin")) {
+      throw new TRPCError({ code: "FORBIDDEN" });
+    }
+    const { getDb } = await import("../db");
+    const { users, userRoles } = await import("../../drizzle/schema");
+    const { eq, and, ne } = await import("drizzle-orm");
+    const db = await getDb();
+    if (!db) return { totalUsers: 0, premiumUsers: 0, diyAdmins: 0, diyUsers: 0 };
+
+    // Total users (all, including demo)
+    const totalResult = await db.select({ total: count() }).from(users);
+    const totalUsers = totalResult[0]?.total ?? 0;
+
+    // Premium users — count userRoles rows with premium_user role (non-demo)
+    const premiumRows = await db
+      .select({ userId: userRoles.userId })
+      .from(userRoles)
+      .innerJoin(users, eq(userRoles.userId, users.id))
+      .where(and(eq(userRoles.role, "premium_user"), eq(users.isDemo, false)));
+    const premiumUsers = premiumRows.length;
+
+    // DIY Admins — exclude demo users
+    const diyAdminRows = await db
+      .select({ userId: userRoles.userId })
+      .from(userRoles)
+      .innerJoin(users, eq(userRoles.userId, users.id))
+      .where(and(eq(userRoles.role, "diy_admin"), eq(users.isDemo, false)));
+    const diyAdmins = diyAdminRows.length;
+
+    // DIY Users — exclude demo users
+    const diyUserRows = await db
+      .select({ userId: userRoles.userId })
+      .from(userRoles)
+      .innerJoin(users, eq(userRoles.userId, users.id))
+      .where(and(eq(userRoles.role, "diy_user"), eq(users.isDemo, false)));
+    const diyUsers = diyUserRows.length;
+
+    return { totalUsers, premiumUsers, diyAdmins, diyUsers };
   }),
 
   /** Get roles for a specific user */
@@ -371,6 +418,49 @@ export const platformAdminRouter = router({
 
     console.log(`[SyncThinkific] Bulk sync complete: ${created} created, ${skipped} skipped, ${errors} errors out of ${thinkificUsers.length} Thinkific users`);
     return { total: thinkificUsers.length, created, skipped, errors, syncedAt: new Date() };
+  }),
+
+  /**
+   * Backfill: find all users with isPremium=true but no premium_user row in userRoles,
+   * and insert the missing role rows. Fixes users whose premium was granted via the old
+   * setPremiumStatus path (which only updated the users table, not userRoles).
+   * Returns count of rows inserted.
+   */
+  backfillPremiumRoles: protectedProcedure.mutation(async ({ ctx }) => {
+    if (ctx.user.role !== "admin") {
+      throw new TRPCError({ code: "FORBIDDEN" });
+    }
+    const { getDb } = await import("../db");
+    const { users, userRoles } = await import("../../drizzle/schema");
+    const { eq, and } = await import("drizzle-orm");
+    const db = await getDb();
+    if (!db) return { inserted: 0, emails: [] as string[] };
+    // Find all users with isPremium=true
+    const premiumUsers = await db
+      .select({ id: users.id, email: users.email })
+      .from(users)
+      .where(eq(users.isPremium, true));
+    let inserted = 0;
+    const emails: string[] = [];
+    for (const u of premiumUsers) {
+      const existing = await db
+        .select({ id: userRoles.id })
+        .from(userRoles)
+        .where(and(eq(userRoles.userId, u.id), eq(userRoles.role, "premium_user")))
+        .limit(1);
+      if (existing.length === 0) {
+        await db.insert(userRoles).values({
+          userId: u.id,
+          role: "premium_user",
+          assignedByUserId: 0,
+          grantedByLabId: null,
+        });
+        inserted++;
+        emails.push(u.email ?? `userId:${u.id}`);
+      }
+    }
+    console.log(`[Admin] backfillPremiumRoles: inserted ${inserted} missing premium_user role rows for: ${emails.join(", ") || "none"}`);
+    return { inserted, emails };
   }),
 });
 
@@ -693,4 +783,5 @@ export const labSeatsRouter = router({
         rowsDeleted: (deleteResult as any).affectedRows ?? dupIds.length,
       };
     }),
+
 });
