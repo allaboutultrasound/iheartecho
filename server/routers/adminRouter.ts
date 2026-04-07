@@ -14,11 +14,13 @@ import {
   createPendingUser,
   countPendingUsers,
   cleanupUserRolesDb,
+  generateWelcomeMagicLink,
+  getUserById,
   type AppRole,
   type UserTypeFilter,
 } from "../db";
 import { syncCatalogToDb } from "./cmeRouter";
-import { sendEmail, buildWelcomeEmail } from "../_core/email";
+import { sendEmail, buildWelcomeEmail, buildWelcomeWithMagicLinkEmail } from "../_core/email";
 
 /** Send a branded welcome email to a pre-registered user via SendGrid */
 async function sendPreRegistrationWelcome(email: string, roles: string[]): Promise<void> {
@@ -164,6 +166,35 @@ export const platformAdminRouter = router({
         throw new TRPCError({ code: "FORBIDDEN" });
       }
       await assignRole(input.userId, input.role as AppRole, ctx.user.id, input.grantedByLabId);
+
+      // Auto-send premium welcome email when premium_user role is manually assigned
+      if (input.role === "premium_user") {
+        try {
+          const targetUser = await getUserById(input.userId);
+          if (targetUser?.email) {
+            const magicUrl = await generateWelcomeMagicLink(input.userId);
+            const firstName = targetUser.name?.split(" ")[0] || targetUser.email.split("@")[0];
+            const userRoles = await getUserRoles(input.userId);
+            const { subject, htmlBody, previewText } = buildWelcomeWithMagicLinkEmail({
+              firstName,
+              magicUrl,
+              membershipLabel: "Premium Access",
+              roles: userRoles,
+            });
+            await sendEmail({
+              to: { name: targetUser.name || firstName, email: targetUser.email },
+              subject,
+              htmlBody,
+              previewText,
+            });
+            console.log(`[Admin] Premium welcome email sent to ${targetUser.email}`);
+          }
+        } catch (emailErr) {
+          // Non-fatal: role was assigned successfully, email failure should not block the response
+          console.error(`[Admin] Failed to send premium welcome email for userId ${input.userId}:`, emailErr);
+        }
+      }
+
       return { success: true };
     }),
 

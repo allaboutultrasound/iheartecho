@@ -885,3 +885,12 @@
 - [x] Remove 500 user fetch limit in platform admin — always fetch all users
 - [x] Fix DIY user count to exclude seeded/demo members
 - [x] Fix Thinkific premium user sync — enrolled users not getting premium_user role in userRoles table
+
+## Auto Premium Welcome Email (Apr 7 2026)
+- [ ] Auto-send premium welcome email when platform admin manually assigns premium_user role
+- [ ] Send welcome emails to existing 10 new premium subscribers via backfill
+- [ ] Platform admin: show user list only on search, not load all users by default
+
+## Platform Admin UX (Apr 7 2026)
+- [x] Platform admin: show user list only on search (no default load)
+- [x] Platform admin: add role filter chips — Free, Premium, DIY, Admin

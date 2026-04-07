@@ -1147,13 +1147,16 @@ export default function PlatformAdmin() {
     return () => clearTimeout(t);
   }, [search]);
 
+  // Only fire the query when the admin has entered a search term or selected a role filter
+  const hasActiveFilter = debouncedSearch.trim().length > 0 || userType !== 'all';
+
   const {
     data: users,
     isLoading: loadingUsers,
     refetch: refetchUsers,
   } = trpc.platformAdmin.listUsers.useQuery(
     { limit: 0, offset: 0, search: debouncedSearch, userType }, // limit=0 = fetch all
-    { enabled: !!isAdmin },
+    { enabled: !!isAdmin && hasActiveFilter },
   );
 
   const { data: platformStats, refetch: refetchStats } = trpc.platformAdmin.getPlatformStats.useQuery(
@@ -1621,30 +1624,62 @@ export default function PlatformAdmin() {
         {/* User List */}
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-3">
-            <div className="flex items-center justify-between flex-wrap gap-3">
-              <CardTitle className="text-base font-semibold text-gray-800 flex items-center gap-2">
-                <Users className="w-4 h-4 text-[#189aa1]" />
-                All Users ({filteredUsers.length})
-              </CardTitle>
-              <div className="relative w-full sm:w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  placeholder="Search by name or email…"
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  className="pl-9 h-8 text-sm"
-                />
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <CardTitle className="text-base font-semibold text-gray-800 flex items-center gap-2">
+                  <Users className="w-4 h-4 text-[#189aa1]" />
+                  {hasActiveFilter ? `Users (${filteredUsers.length})` : "User Search"}
+                </CardTitle>
+                <div className="relative w-full sm:w-72">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    placeholder="Search by name or email…"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    className="pl-9 h-8 text-sm"
+                  />
+                </div>
+              </div>
+              {/* Role filter chips */}
+              <div className="flex flex-wrap gap-2">
+                {([
+                  { label: "All", value: "all" },
+                  { label: "Free", value: "free" },
+                  { label: "Premium", value: "premium" },
+                  { label: "DIY User", value: "diy_user" },
+                  { label: "DIY Admin", value: "diy_admin" },
+                  { label: "Platform Admin", value: "platform_admin" },
+                  { label: "Pending", value: "pending" },
+                ] as { label: string; value: typeof userType }[]).map(({ label, value }) => (
+                  <button
+                    key={value}
+                    onClick={() => setUserType(value)}
+                    className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${
+                      userType === value
+                        ? "bg-[#189aa1] text-white border-[#189aa1]"
+                        : "bg-white text-gray-600 border-gray-200 hover:border-[#189aa1] hover:text-[#189aa1]"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            {loadingUsers ? (
+            {!hasActiveFilter ? (
+              <div className="text-center py-12 text-gray-400 text-sm">
+                <Search className="w-8 h-8 mx-auto mb-3 text-gray-300" />
+                <p className="font-medium text-gray-500">Search or filter to find users</p>
+                <p className="text-xs mt-1">Enter a name or email above, or select a role filter</p>
+              </div>
+            ) : loadingUsers ? (
               <div className="flex items-center justify-center py-12">
                 <RefreshCw className="w-5 h-5 animate-spin text-[#189aa1]" />
               </div>
             ) : filteredUsers.length === 0 ? (
               <div className="text-center py-12 text-gray-400 text-sm">
-                {search ? "No users match your search." : "No users found."}
+                {search ? "No users match your search." : "No users found for this filter."}
               </div>
             ) : (
               <div className="divide-y divide-gray-100">
