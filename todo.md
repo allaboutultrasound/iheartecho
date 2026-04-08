@@ -903,3 +903,6 @@
 - [x] EchoAssist narrative gate: EchoAssistPanel Note and Tip sections gated with PremiumPearlGate via context
 - [x] CaseDetail post-case modal: UpgradeTriggerModal("post_case") fires 1.5s after free user submits answers
 - [x] CaseLab streak trigger: UpgradeTriggerModal("streak") fires 2s after page load when streak >= 3 and not premium
+
+## Premium Gate Unification (Apr 8 2026)
+- [x] Update BlurredOverlay, PremiumGate, and PremiumOverlay components to use soft PremiumPearlGate-style teaser lock across all 30+ usages

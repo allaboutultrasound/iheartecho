@@ -1,18 +1,16 @@
 /**
  * PremiumGate — wraps content that requires an active Premium Access subscription.
  *
+ * Shows a compact inline teaser-lock bar over blurred content, consistent with
+ * PremiumPearlGate style. Replaces the old large modal card overlay.
+ *
  * Usage:
- *   <PremiumGate>
+ *   <PremiumGate featureName="Diastology — Special Populations">
  *     <MyPremiumFeature />
  *   </PremiumGate>
- *
- * When the user is not premium, the children are rendered underneath a
- * blurred + semi-transparent overlay so they can see what they are missing.
- * The upgrade/sign-in prompt floats on top.
  */
 import { Link } from "wouter";
-import { Crown, Lock, Sparkles, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Crown, Lock, LogIn } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 
@@ -31,7 +29,6 @@ export function PremiumGate({ children, featureName, compact = false }: PremiumG
   });
 
   // Only reveal content once we have CONFIRMED premium status.
-  // During loading, show the locked state (not a spinner) to prevent bypass.
   const isConfirmedPremium = !authLoading && !statusLoading && !!user && !!status?.isPremium;
 
   if (isConfirmedPremium) {
@@ -68,119 +65,85 @@ export function PremiumGate({ children, featureName, compact = false }: PremiumG
     );
   }
 
-  // Full-size variant — render children blurred behind the overlay
+  // Full-size variant — compact inline lock bar over blurred content
   const isLoading = authLoading || (!!user && statusLoading);
   const isNotLoggedIn = !isLoading && !user;
 
+  const label = isNotLoggedIn
+    ? (featureName ? `${featureName} — Sign In Required` : "Sign In Required")
+    : (featureName ? `${featureName} — Premium Only` : "Premium Feature");
+
+  const subtext = isNotLoggedIn
+    ? "Create a free account to access this feature and core tools."
+    : "Upgrade to iHeartEcho™ Premium to unlock this and the full clinical suite.";
+
+  const btnBg = isNotLoggedIn
+    ? "linear-gradient(135deg, #0e4a50, #189aa1)"
+    : "linear-gradient(135deg, #b45309, #d97706)";
+
   return (
     <div className="relative rounded-xl overflow-hidden">
-      {/* Blurred content preview — pointer-events disabled so users can't interact */}
+      {/* Blurred content preview */}
       <div
         className="select-none pointer-events-none"
-        style={{ filter: "blur(4px)", opacity: 0.45 }}
+        style={{ filter: "blur(5px)", opacity: 0.3, maxHeight: "220px", overflow: "hidden" }}
         aria-hidden="true"
       >
         {children}
       </div>
 
-      {/* Overlay */}
-      <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[2px] z-10">
-        <div className="w-full max-w-sm mx-4">
-          {isLoading ? (
-            <LoadingPrompt />
-          ) : isNotLoggedIn ? (
-            <NotLoggedInPrompt featureName={featureName} />
-          ) : (
-            <UpgradePrompt featureName={featureName} checkoutUrl={status?.checkoutUrl} />
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
+      {/* Compact inline lock bar */}
+      <div
+        className="absolute inset-0 flex items-center justify-center p-4"
+        style={{ background: "linear-gradient(135deg, rgba(14,30,46,0.93), rgba(14,74,80,0.93))" }}
+      >
+        {isLoading ? (
+          <div className="flex items-center gap-2 text-white/60 text-xs">
+            <Lock className="w-4 h-4 animate-pulse" />
+            <span>Checking access…</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 w-full max-w-md">
+            {/* Icon circle */}
+            <div
+              className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ background: btnBg }}
+            >
+              {isNotLoggedIn
+                ? <LogIn className="w-4 h-4 text-white" />
+                : <Lock className="w-4 h-4 text-white" />}
+            </div>
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+            {/* Text */}
+            <div className="flex-1 min-w-0">
+              <p className="text-white text-xs font-semibold leading-tight truncate">{label}</p>
+              <p className="text-white/55 text-xs leading-tight mt-0.5 line-clamp-2">{subtext}</p>
+            </div>
 
-function LoadingPrompt() {
-  return (
-    <div className="rounded-2xl border border-gray-200 bg-white/90 shadow-xl p-7 text-center">
-      <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3 animate-pulse">
-        <Lock className="w-6 h-6 text-gray-400" />
-      </div>
-      <p className="text-sm text-gray-400">Checking access…</p>
-    </div>
-  );
-}
-
-function NotLoggedInPrompt({ featureName }: { featureName?: string }) {
-  return (
-    <div className="rounded-2xl border border-[#189aa1]/30 bg-white/95 shadow-2xl p-7 text-center">
-      <div className="w-14 h-14 rounded-full bg-[#189aa1]/10 flex items-center justify-center mx-auto mb-4">
-        <Lock className="w-7 h-7 text-[#189aa1]" />
-      </div>
-      <h3 className="font-bold text-gray-800 text-lg mb-2" style={{ fontFamily: "Merriweather, serif" }}>
-        Sign in to Continue
-      </h3>
-      <p className="text-gray-500 text-sm mb-5">
-        {featureName
-          ? `${featureName} requires an account.`
-          : "Please sign in to access this feature."}
-      </p>
-      <a href="/login">
-        <Button className="bg-[#189aa1] hover:bg-[#147a80] text-white w-full">
-          Sign In <ArrowRight className="w-4 h-4 ml-1" />
-        </Button>
-      </a>
-    </div>
-  );
-}
-
-function UpgradePrompt({
-  featureName,
-  checkoutUrl,
-}: {
-  featureName?: string;
-  checkoutUrl?: string;
-}) {
-  const url = checkoutUrl ?? "https://member.allaboutultrasound.com/enroll/3703267?price_id=4651832";
-
-  return (
-    <div className="rounded-2xl border border-amber-200/80 bg-white/95 shadow-2xl p-7 text-center">
-      {/* Crown icon */}
-      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center mx-auto mb-4 shadow-md">
-        <Crown className="w-7 h-7 text-amber-500" />
-      </div>
-
-      {/* Badge */}
-      <div className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold px-3 py-1 rounded-full mb-3">
-        <Sparkles className="w-3 h-3" />
-        Premium Feature
-      </div>
-
-      {/* Heading */}
-      <h3 className="font-bold text-gray-800 text-lg mb-2 leading-snug" style={{ fontFamily: "Merriweather, serif" }}>
-        {featureName ? `Unlock ${featureName}` : "Premium Access Required"}
-      </h3>
-
-      {/* Body */}
-      <p className="text-gray-500 text-sm mb-5 leading-relaxed">
-        Upgrade to iHeartEcho™ Premium for <strong className="text-gray-700">$9.97/month</strong> — advanced
-        protocols, 500+ echo cases, all calculator engines, and every premium tool.
-      </p>
-
-      {/* CTAs */}
-      <div className="flex flex-col gap-2.5">
-        <a href={url} target="_blank" rel="noopener noreferrer">
-          <Button className="bg-[#189aa1] hover:bg-[#147a80] text-white w-full font-semibold">
-            <Crown className="w-4 h-4 mr-1.5" />
-            Upgrade — $9.97/month
-          </Button>
-        </a>
-        <Link href="/premium">
-          <Button variant="outline" className="w-full">
-            Learn More <ArrowRight className="w-4 h-4 ml-1" />
-          </Button>
-        </Link>
+            {/* CTA button */}
+            {isNotLoggedIn ? (
+              <a href="/login" className="flex-shrink-0">
+                <button
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90 whitespace-nowrap"
+                  style={{ background: btnBg }}
+                >
+                  <LogIn className="w-3 h-3" />
+                  Sign In
+                </button>
+              </a>
+            ) : (
+              <Link href="/premium">
+                <button
+                  className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90 whitespace-nowrap"
+                  style={{ background: btnBg }}
+                >
+                  <Crown className="w-3 h-3" />
+                  Upgrade
+                </button>
+              </Link>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

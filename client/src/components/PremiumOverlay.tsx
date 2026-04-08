@@ -1,6 +1,6 @@
 /*
   PremiumOverlay.tsx — iHeartEcho™
-  Transparent premium gate: shows content blurred behind a lock overlay
+  Compact inline teaser-lock: shows content blurred behind a slim lock bar
   so free users can see what they're missing before upgrading.
 
   Security model:
@@ -16,8 +16,7 @@
     </PremiumOverlay>
 */
 import { Link } from "wouter";
-import { Crown, Lock, Sparkles, ArrowRight, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Crown, Lock, LogIn } from "lucide-react";
 import { usePremium } from "@/hooks/usePremium";
 
 interface PremiumOverlayProps {
@@ -28,112 +27,92 @@ interface PremiumOverlayProps {
   checkoutUrl?: string;
 }
 
-export function PremiumOverlay({ children, featureName, checkoutUrl }: PremiumOverlayProps) {
+export function PremiumOverlay({ children, featureName }: PremiumOverlayProps) {
   const { isPremium, loading, isAuthenticated } = usePremium();
 
-  // While auth is still loading, show the overlay with a spinner — never reveal content early.
-  // Once loaded: if premium, render children directly with no overlay at all.
+  // Once loaded and confirmed premium, render children directly.
   if (!loading && isPremium) {
     return <>{children}</>;
   }
 
   const isLoading = loading;
   const isLoggedIn = isAuthenticated;
-  const upgradeUrl = checkoutUrl ?? "https://member.allaboutultrasound.com/enroll/3703267?price_id=4651832";
+
+  const label = featureName
+    ? `${featureName} — ${isLoggedIn ? "Premium Only" : "Sign In Required"}`
+    : (isLoggedIn ? "Premium Feature" : "Sign In Required");
+
+  const subtext = isLoggedIn
+    ? "Upgrade to iHeartEcho™ Premium to unlock this and the full clinical suite."
+    : "Create a free account to access this feature and core tools.";
+
+  const btnBg = isLoggedIn
+    ? "linear-gradient(135deg, #b45309, #d97706)"
+    : "linear-gradient(135deg, #0e4a50, #189aa1)";
 
   return (
     <div className="relative rounded-xl overflow-hidden">
       {/* Blurred content preview — always shown, never accessible */}
       <div
         className="pointer-events-none select-none"
-        style={{ filter: "blur(3px)", opacity: 0.45 }}
+        style={{ filter: "blur(5px)", opacity: 0.3, maxHeight: "220px", overflow: "hidden" }}
         aria-hidden="true"
       >
         {children}
       </div>
 
-      {/* Overlay — shown during loading AND when not premium */}
-      <div className="absolute inset-0 flex items-center justify-center z-10">
-        <div
-          className="mx-4 rounded-2xl border shadow-xl px-6 py-6 text-center max-w-sm w-full"
-          style={{
-            background: "rgba(14, 30, 46, 0.92)",
-            borderColor: "rgba(74, 217, 224, 0.3)",
-            backdropFilter: "blur(8px)",
-          }}
-        >
-          {isLoading ? (
-            /* Loading state — show spinner inside the overlay card, not instead of it */
-            <div className="flex flex-col items-center gap-3 py-4">
-              <Loader2 className="w-8 h-8 text-[#4ad9e0] animate-spin" />
-              <p className="text-white/60 text-xs">Checking membership…</p>
+      {/* Compact inline lock bar */}
+      <div
+        className="absolute inset-0 flex items-center justify-center p-4"
+        style={{ background: "linear-gradient(135deg, rgba(14,30,46,0.93), rgba(14,74,80,0.93))" }}
+      >
+        {isLoading ? (
+          <div className="flex items-center gap-2 text-white/60 text-xs">
+            <Lock className="w-4 h-4 animate-pulse" />
+            <span>Checking membership…</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 w-full max-w-md">
+            {/* Icon circle */}
+            <div
+              className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ background: btnBg }}
+            >
+              {isLoggedIn
+                ? <Lock className="w-4 h-4 text-white" />
+                : <LogIn className="w-4 h-4 text-white" />}
             </div>
-          ) : (
-            <>
-              {/* Icon */}
-              <div
-                className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3"
-                style={{ background: "rgba(24, 154, 161, 0.2)", border: "1px solid rgba(74, 217, 224, 0.3)" }}
-              >
-                <Lock className="w-6 h-6 text-[#4ad9e0]" />
-              </div>
 
-              {/* Badge */}
-              <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 mb-3 text-xs font-semibold"
-                style={{ background: "rgba(24, 154, 161, 0.2)", color: "#4ad9e0", border: "1px solid rgba(74, 217, 224, 0.2)" }}>
-                <Crown className="w-3 h-3" />
-                Premium Feature
-              </div>
+            {/* Text */}
+            <div className="flex-1 min-w-0">
+              <p className="text-white text-xs font-semibold leading-tight truncate">{label}</p>
+              <p className="text-white/55 text-xs leading-tight mt-0.5 line-clamp-2">{subtext}</p>
+            </div>
 
-              <h3 className="font-bold text-white text-base mb-1.5" style={{ fontFamily: "Merriweather, serif" }}>
-                {featureName ?? "Premium Content"}
-              </h3>
-              <p className="text-white/60 text-xs mb-4 leading-relaxed">
-                {isLoggedIn
-                  ? "Upgrade to iHeartEcho™ Premium to unlock this feature and the full clinical suite."
-                  : "Sign in and upgrade to access this feature and the full iHeartEcho™ clinical suite."}
-              </p>
-
-              <div className="flex flex-col gap-2">
-                {isLoggedIn ? (
-                  <>
-                    <a href={upgradeUrl} target="_blank" rel="noopener noreferrer">
-                      <Button
-                        className="w-full text-sm font-semibold text-white"
-                        style={{ background: "linear-gradient(135deg, #189aa1, #0e7490)" }}
-                      >
-                        <Sparkles className="w-4 h-4 mr-1.5" />
-                        Upgrade — $9.97/month
-                      </Button>
-                    </a>
-                    <Link href="/premium">
-                      <Button variant="outline" className="w-full text-xs border-white/20 text-white/70 hover:bg-white/10">
-                        Learn More <ArrowRight className="w-3 h-3 ml-1" />
-                      </Button>
-                    </Link>
-                  </>
-                ) : (
-                  <>
-                    <a href="/login">
-                      <Button
-                        className="w-full text-sm font-semibold text-white"
-                        style={{ background: "linear-gradient(135deg, #189aa1, #0e7490)" }}
-                      >
-                        Sign In to Continue
-                      </Button>
-                    </a>
-                    <a href={upgradeUrl} target="_blank" rel="noopener noreferrer">
-                      <Button variant="outline" className="w-full text-xs border-white/20 text-white/70 hover:bg-white/10">
-                        <Crown className="w-3 h-3 mr-1" />
-                        View Premium Plans
-                      </Button>
-                    </a>
-                  </>
-                )}
-              </div>
-            </>
-          )}
-        </div>
+            {/* CTA button */}
+            {isLoggedIn ? (
+              <Link href="/premium">
+                <button
+                  className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90 whitespace-nowrap"
+                  style={{ background: btnBg }}
+                >
+                  <Crown className="w-3 h-3" />
+                  Upgrade
+                </button>
+              </Link>
+            ) : (
+              <a href="/login" className="flex-shrink-0">
+                <button
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90 whitespace-nowrap"
+                  style={{ background: btnBg }}
+                >
+                  <LogIn className="w-3 h-3" />
+                  Sign In
+                </button>
+              </a>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

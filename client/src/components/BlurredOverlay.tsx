@@ -1,8 +1,8 @@
 /**
- * BlurredOverlay — wraps page content with a blur + lock overlay.
+ * BlurredOverlay — wraps page content with a blur + compact inline lock bar.
  *
- * The overlay card is positioned near the TOP of the viewport on mobile
- * (no scrolling required) and centered on desktop.
+ * Replaces the old full-page modal card with a slim teaser-lock bar that sits
+ * over the blurred content — consistent with PremiumPearlGate style.
  *
  * Types:
  *   "login"   — unauthenticated users, CTA: Sign In / Create Free Account
@@ -24,156 +24,99 @@ interface BlurredOverlayProps {
   disabled?: boolean;
 }
 
-const CONFIGS: Record<
-  OverlayType,
-  {
-    icon: React.ReactNode;
-    badge: string;
-    title: string;
-    description: string;
-    primaryLabel: string;
-    primaryHref: string;
-    secondaryLabel?: string;
-    secondaryHref?: string;
-    gradient: string;
-    badgeColor: string;
-  }
-> = {
-  login: {
-    icon: <LogIn className="w-8 h-8 text-white" />,
-    badge: "Sign In Required",
-    title: "Sign In to Continue",
-    description:
-      "Create a free account to access this feature. Free members get access to core tools, daily challenges, and the Echo Case Library.",
-    primaryLabel: "Sign In or Create Free Account",
-    primaryHref: getLoginUrl(),
-    gradient: "linear-gradient(135deg, #0e4a50, #189aa1)",
-    badgeColor: "#189aa1",
-  },
-  premium: {
-    icon: <Crown className="w-8 h-8 text-white" />,
-    badge: "Premium Feature",
-    title: "Upgrade to Premium",
-    description:
-      "This feature requires a Premium membership. Unlock all EchoNavigator protocols, ScanCoach guides, EchoAssist™ engines, unlimited flashcards, and more.",
-    primaryLabel: "Upgrade to Premium",
-    primaryHref: "/premium",
-    secondaryLabel: "Back to Dashboard",
-    secondaryHref: "/",
-    gradient: "linear-gradient(135deg, #b45309, #d97706)",
-    badgeColor: "#d97706",
-  },
-  diy: {
-    icon: <Layers className="w-8 h-8 text-white" />,
-    badge: "DIY Accreditation",
-    title: "DIY Membership Required",
-    description:
-      "This tool is available to DIY Accreditation members. Join to access the Lab Admin portal, accreditation navigator, quality review tools, and seat management.",
-    primaryLabel: "View DIY Plans",
-    primaryHref: "/diy-accreditation-plans",
-    secondaryLabel: "Back to Dashboard",
-    secondaryHref: "/",
-    gradient: "linear-gradient(135deg, #0e4a50, #189aa1)",
-    badgeColor: "#189aa1",
-  },
-};
-
 export function BlurredOverlay({ type, featureName, children, disabled }: BlurredOverlayProps) {
   if (disabled) return <>{children}</>;
-  // Build config lazily so getLoginUrl() is called at render time (not module init),
-  // ensuring window.location.origin is available and up-to-date.
-  const cfg = type === "login"
-    ? { ...CONFIGS.login, primaryHref: getLoginUrl() }
-    : CONFIGS[type];
+
+  const loginUrl = getLoginUrl();
+
+  const isLogin = type === "login";
+  const isDiy = type === "diy";
+
+  const icon = isLogin ? (
+    <LogIn className="w-4 h-4 text-white" />
+  ) : isDiy ? (
+    <Layers className="w-4 h-4 text-white" />
+  ) : (
+    <Lock className="w-4 h-4 text-white" />
+  );
+
+  const iconBg = isLogin || isDiy
+    ? "linear-gradient(135deg, #0e4a50, #189aa1)"
+    : "linear-gradient(135deg, #b45309, #d97706)";
+
+  const label = isLogin
+    ? (featureName ? `${featureName} — Sign In Required` : "Sign In Required")
+    : isDiy
+    ? (featureName ? `${featureName} — DIY Membership Required` : "DIY Membership Required")
+    : (featureName ? `${featureName} — Premium Only` : "Premium Feature");
+
+  const subtext = isLogin
+    ? "Create a free account to access this feature and core tools."
+    : isDiy
+    ? "Join DIY Accreditation to access this feature."
+    : "Upgrade to iHeartEcho™ Premium to unlock this and the full clinical suite.";
+
+  const btnLabel = isLogin ? "Sign In" : isDiy ? "View Plans" : "Upgrade";
+  const btnBg = isLogin || isDiy
+    ? "linear-gradient(135deg, #0e4a50, #189aa1)"
+    : "linear-gradient(135deg, #b45309, #d97706)";
+
+  const btnHref = isLogin ? loginUrl : isDiy ? "/diy-accreditation-plans" : "/premium";
+  const btnIsExternal = isLogin;
 
   return (
-    <div className="relative">
-      {/* Blurred background content */}
+    <div className="relative rounded-xl overflow-hidden">
+      {/* Blurred content preview */}
       <div
         className="pointer-events-none select-none"
-        style={{ filter: "blur(6px)", opacity: 0.35, maxHeight: "60vh", overflow: "hidden" }}
+        style={{ filter: "blur(5px)", opacity: 0.3, maxHeight: "220px", overflow: "hidden" }}
         aria-hidden="true"
       >
         {children}
       </div>
 
-      {/* Overlay — fixed on mobile (near top), absolute-centered on desktop */}
+      {/* Compact inline lock bar */}
       <div
-        className="
-          fixed inset-x-0 top-16 z-50 flex justify-center px-4
-          sm:absolute sm:inset-0 sm:top-0 sm:flex sm:items-center sm:justify-center sm:px-6
-        "
+        className="absolute inset-0 flex items-center justify-center p-4"
+        style={{ background: "linear-gradient(135deg, rgba(14,30,46,0.93), rgba(14,74,80,0.93))" }}
       >
-        <div
-          className="w-full max-w-sm rounded-2xl border shadow-2xl px-6 py-7 text-center"
-          style={{
-            background: "rgba(14, 30, 46, 0.97)",
-            borderColor: "#4ad9e040",
-            backdropFilter: "blur(12px)",
-          }}
-        >
-          {/* Icon */}
+        <div className="flex items-center gap-3 w-full max-w-md">
+          {/* Icon circle */}
           <div
-            className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4"
-            style={{ background: cfg.gradient }}
+            className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: iconBg }}
           >
-            {cfg.icon}
+            {icon}
           </div>
 
-          {/* Badge */}
-          <div
-            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 mb-3 text-xs font-semibold"
-            style={{
-              background: cfg.badgeColor + "22",
-              color: cfg.badgeColor,
-              border: `1px solid ${cfg.badgeColor}33`,
-            }}
-          >
-            {cfg.badge}
+          {/* Text */}
+          <div className="flex-1 min-w-0">
+            <p className="text-white text-xs font-semibold leading-tight truncate">{label}</p>
+            <p className="text-white/55 text-xs leading-tight mt-0.5 line-clamp-2">{subtext}</p>
           </div>
 
-          {/* Title */}
-          <h2
-            className="font-bold text-white text-lg mb-2"
-            style={{ fontFamily: "Merriweather, serif" }}
-          >
-            {featureName ? `${featureName}: ${cfg.title}` : cfg.title}
-          </h2>
-
-          {/* Description */}
-          <p className="text-white/60 text-sm mb-5 leading-relaxed">{cfg.description}</p>
-
-          {/* CTAs */}
-          <div className="flex flex-col gap-2">
-            {type === "login" ? (
-              <a href={cfg.primaryHref} className="block">
-                <button
-                  className="w-full font-semibold text-white py-2.5 px-4 rounded-lg flex items-center justify-center gap-2"
-                  style={{ background: cfg.gradient }}
-                >
-                  <LogIn className="w-4 h-4" />
-                  {cfg.primaryLabel}
-                </button>
-              </a>
-            ) : (
-              <Link href={cfg.primaryHref}>
-                <button
-                  className="w-full font-semibold text-white py-2.5 px-4 rounded-lg flex items-center justify-center gap-2"
-                  style={{ background: cfg.gradient }}
-                >
-                  {type === "premium" ? <Crown className="w-4 h-4" /> : <Layers className="w-4 h-4" />}
-                  {cfg.primaryLabel}
-                </button>
-              </Link>
-            )}
-            {cfg.secondaryLabel && cfg.secondaryHref && (
-              <Link href={cfg.secondaryHref}>
-                <button className="w-full text-white/50 text-sm py-2 hover:text-white/70 transition-colors">
-                  {cfg.secondaryLabel}
-                </button>
-              </Link>
-            )}
-          </div>
+          {/* CTA button */}
+          {btnIsExternal ? (
+            <a href={btnHref} className="flex-shrink-0">
+              <button
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90 whitespace-nowrap"
+                style={{ background: btnBg }}
+              >
+                <LogIn className="w-3 h-3" />
+                {btnLabel}
+              </button>
+            </a>
+          ) : (
+            <Link href={btnHref}>
+              <button
+                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-opacity hover:opacity-90 whitespace-nowrap"
+                style={{ background: btnBg }}
+              >
+                {isDiy ? <Layers className="w-3 h-3" /> : <Crown className="w-3 h-3" />}
+                {btnLabel}
+              </button>
+            </Link>
+          )}
         </div>
       </div>
     </div>
