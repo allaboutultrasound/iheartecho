@@ -236,6 +236,7 @@ export const caseLibraryRouter = router({
                 viewCount: echoLibraryCases.viewCount,
                 submittedAt: echoLibraryCases.submittedAt,
                 isAdminSubmission: echoLibraryCases.isAdminSubmission,
+                categorySortOrder: echoLibraryCases.categorySortOrder,
               })
               .from(echoLibraryCases)
               .where(

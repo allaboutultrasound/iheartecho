@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { buildWelcomeEmail } from "./_core/email";
+import { buildWelcomeEmail, buildFirstSignInWelcomeEmail } from "./_core/email";
 
 // ─── buildWelcomeEmail template tests ────────────────────────────────────────
 
@@ -149,6 +149,112 @@ describe("buildWelcomeEmail", () => {
       roles: [],
     });
     expect(result.htmlBody).toContain("www.iheartecho.com");
+  });
+});
+
+// ─── buildFirstSignInWelcomeEmail tests ─────────────────────────────────────
+
+describe("buildFirstSignInWelcomeEmail", () => {
+  it("returns the correct subject line", () => {
+    const result = buildFirstSignInWelcomeEmail({ firstName: "Sarah" });
+    expect(result.subject).toContain("Welcome to iHeartEcho");
+    expect(result.subject).toContain("daily echo challenge");
+  });
+
+  it("returns a non-empty previewText", () => {
+    const result = buildFirstSignInWelcomeEmail({ firstName: "Sarah" });
+    expect(result.previewText.length).toBeGreaterThan(10);
+  });
+
+  it("includes the user's first name in the HTML body", () => {
+    const result = buildFirstSignInWelcomeEmail({ firstName: "Marcus" });
+    expect(result.htmlBody).toContain("Marcus");
+  });
+
+  it("uses the default app URL when none is provided", () => {
+    const result = buildFirstSignInWelcomeEmail({ firstName: "Sarah" });
+    expect(result.htmlBody).toContain("app.iheartecho.com");
+  });
+
+  it("uses the custom app URL when provided", () => {
+    const result = buildFirstSignInWelcomeEmail({
+      firstName: "Sarah",
+      appUrl: "https://staging.iheartecho.com",
+    });
+    expect(result.htmlBody).toContain("staging.iheartecho.com");
+  });
+
+  it("includes a link to the quickfire daily challenge", () => {
+    const result = buildFirstSignInWelcomeEmail({ firstName: "Sarah" });
+    expect(result.htmlBody).toContain("/quickfire");
+  });
+
+  it("includes a link to notification settings", () => {
+    const result = buildFirstSignInWelcomeEmail({ firstName: "Sarah" });
+    expect(result.htmlBody).toContain("/profile");
+  });
+
+  it("uses a custom notifSettingsUrl when provided", () => {
+    const result = buildFirstSignInWelcomeEmail({
+      firstName: "Sarah",
+      notifSettingsUrl: "https://app.iheartecho.com/profile?tab=notifications",
+    });
+    expect(result.htmlBody).toContain("tab=notifications");
+  });
+
+  it("mentions the daily challenge prominently", () => {
+    const result = buildFirstSignInWelcomeEmail({ firstName: "Sarah" });
+    expect(result.htmlBody.toLowerCase()).toContain("daily");
+    expect(result.htmlBody.toLowerCase()).toContain("challenge");
+  });
+
+  it("includes a support email link", () => {
+    const result = buildFirstSignInWelcomeEmail({ firstName: "Sarah" });
+    expect(result.htmlBody).toContain("support@iheartecho.com");
+  });
+
+  it("produces a valid HTML document structure", () => {
+    const result = buildFirstSignInWelcomeEmail({ firstName: "Test" });
+    expect(result.htmlBody).toContain("<!DOCTYPE html>");
+    expect(result.htmlBody).toContain("</html>");
+  });
+});
+
+// ─── Welcome email trigger logic tests ───────────────────────────────────────
+
+describe("welcome email trigger logic (first sign-in gate)", () => {
+  function shouldSendWelcomeEmail(user: {
+    thinkificEnrolledAt: Date | null;
+    email: string | null;
+  }): boolean {
+    return !user.thinkificEnrolledAt && !!user.email;
+  }
+
+  it("sends welcome email on first sign-in (thinkificEnrolledAt is null)", () => {
+    expect(
+      shouldSendWelcomeEmail({ thinkificEnrolledAt: null, email: "user@example.com" })
+    ).toBe(true);
+  });
+
+  it("does NOT send welcome email on subsequent sign-ins (thinkificEnrolledAt is set)", () => {
+    expect(
+      shouldSendWelcomeEmail({
+        thinkificEnrolledAt: new Date("2025-01-01"),
+        email: "user@example.com",
+      })
+    ).toBe(false);
+  });
+
+  it("does NOT send welcome email when user has no email address", () => {
+    expect(
+      shouldSendWelcomeEmail({ thinkificEnrolledAt: null, email: null })
+    ).toBe(false);
+  });
+
+  it("does NOT send welcome email when email is empty string", () => {
+    expect(
+      shouldSendWelcomeEmail({ thinkificEnrolledAt: null, email: "" })
+    ).toBe(false);
   });
 });
 

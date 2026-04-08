@@ -5,6 +5,7 @@ import { activatePendingUser } from "../db";
 import { enrollInFreeMembership } from "../thinkific";
 import { getSessionCookieOptions } from "./cookies";
 import { sdk } from "./sdk";
+import { sendEmail, buildFirstSignInWelcomeEmail } from "./email";
 
 function getQueryParam(req: Request, key: string): string | undefined {
   const value = req.query[key];
@@ -66,7 +67,7 @@ export function registerOAuthRoutes(app: Express) {
       if (createdUser) {
         await db.ensureUserRole(createdUser.id);
 
-        // Auto-enroll new users into the Thinkific Free Membership (first sign-in only)
+          // Auto-enroll new users into the Thinkific Free Membership (first sign-in only)
         if (!createdUser.thinkificEnrolledAt && createdUser.email) {
           const nameParts = (createdUser.name ?? "").split(" ");
           const firstName = nameParts[0] ?? "Member";
@@ -81,6 +82,26 @@ export function registerOAuthRoutes(app: Express) {
             })
             .catch((err) => {
               console.error(`[Thinkific] Auto-enrollment failed for ${createdUser.email}:`, err);
+            });
+
+          // Send one-time welcome email on first sign-in (fire-and-forget)
+          const appUrl = process.env.VITE_APP_URL ?? "https://app.iheartecho.com";
+          const welcomeOpts = buildFirstSignInWelcomeEmail({
+            firstName,
+            appUrl,
+            notifSettingsUrl: `${appUrl}/profile`,
+          });
+          sendEmail({
+            to: { name: createdUser.name ?? firstName, email: createdUser.email },
+            subject: welcomeOpts.subject,
+            htmlBody: welcomeOpts.htmlBody,
+            previewText: welcomeOpts.previewText,
+          })
+            .then((ok) => {
+              if (ok) console.log(`[OAuth] Welcome email sent to ${createdUser.email}`);
+            })
+            .catch((err) => {
+              console.error(`[OAuth] Welcome email failed for ${createdUser.email}:`, err);
             });
         }
       }

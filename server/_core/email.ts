@@ -1034,3 +1034,59 @@ export function buildUserSubmissionConfirmationEmail(opts: UserSubmissionConfirm
 
   return { subject, htmlBody, previewText };
 }
+
+
+// --- First Sign-In Welcome Email ---
+export function buildFirstSignInWelcomeEmail(opts: {
+  firstName: string;
+  appUrl?: string;
+  notifSettingsUrl?: string;
+}): { subject: string; htmlBody: string; previewText: string } {
+  const appUrl = opts.appUrl ?? "https://app.iheartecho.com";
+  const notifUrl = opts.notifSettingsUrl ?? appUrl + "/profile";
+  const subject = "Welcome to iHeartEcho™ — your daily echo challenge starts now";
+  const previewText = "You are in! Expect a daily echo challenge in your inbox every morning.";
+  const htmlBody = emailWrapper(`
+    <h2 style="margin:0 0 8px;font-size:22px;color:${brandDark};font-family:Georgia,serif;">
+      Welcome to iHeartEcho™, ${opts.firstName}!
+    </h2>
+    <p style="margin:0 0 16px;font-size:15px;color:#475569;line-height:1.6;">
+      You are now part of a community of sonographers, cardiologists, and ACS professionals
+      sharpening their echo skills every day.
+    </p>
+    <div style="background:linear-gradient(135deg,#0e1e2e,#0e4a50);border-radius:12px;padding:20px 24px;margin:0 0 24px;">
+      <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:#4ad9e0;text-transform:uppercase;letter-spacing:0.08em;">
+        Daily Echo Challenge
+      </p>
+      <p style="margin:0 0 12px;font-size:15px;color:rgba(255,255,255,0.9);line-height:1.6;">
+        A new clinical echo question lands in your inbox every morning. Test your knowledge,
+        earn Echo Ninja points, and climb the leaderboard.
+      </p>
+      <a href="${appUrl}/quickfire"
+        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:14px;padding:11px 24px;border-radius:8px;text-decoration:none;" target="_blank" rel="noopener noreferrer">
+        Try Today Challenge
+      </a>
+    </div>
+    <p style="margin:0 0 10px;font-size:14px;font-weight:700;color:${brandDark};">What is waiting for you:</p>
+    <table cellpadding="0" cellspacing="0" style="width:100%;margin:0 0 24px;">
+      <tr><td style="padding:8px 0;font-size:14px;color:#475569;border-bottom:1px solid #e2e8f0;">Adult TTE and TEE EchoNavigator</td></tr>
+      <tr><td style="padding:8px 0;font-size:14px;color:#475569;border-bottom:1px solid #e2e8f0;">Pediatric and Fetal Echo Coaches</td></tr>
+      <tr><td style="padding:8px 0;font-size:14px;color:#475569;border-bottom:1px solid #e2e8f0;">Echo Severity Calculator (ASE 2025)</td></tr>
+      <tr><td style="padding:8px 0;font-size:14px;color:#475569;">500+ Echo Cases with gamified learning</td></tr>
+    </table>
+    <div style="text-align:center;margin:28px 0 20px;">
+      <a href="${appUrl}"
+        style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 36px;border-radius:8px;text-decoration:none;" target="_blank" rel="noopener noreferrer">
+        Open iHeartEcho
+      </a>
+    </div>
+    <p style="margin:0 0 6px;font-size:12px;color:#94a3b8;line-height:1.5;text-align:center;">
+      You will receive the daily challenge email each morning. To manage your email preferences,
+      <a href="${notifUrl}" style="color:${brandColor};" target="_blank" rel="noopener noreferrer">update your notification settings</a>.
+    </p>
+    <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;">
+      Questions? Contact us at <a href="mailto:support@iheartecho.com" style="color:${brandColor};">support@iheartecho.com</a>
+    </p>
+  `);
+  return { subject, htmlBody, previewText };
+}

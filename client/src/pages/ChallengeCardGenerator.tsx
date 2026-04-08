@@ -1442,6 +1442,7 @@ export default function ChallengeCardGenerator() {
                   key={item.category}
                   item={item}
                   theme={cardTheme}
+                  dayOffset={dayOffset}
                   onQuestionRef={(cat, h) => { questionRefs.current[cat] = h; }}
                   onAnswerRef={(cat, h) => { answerRefs.current[cat] = h; }}
                 />

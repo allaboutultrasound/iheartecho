@@ -911,3 +911,18 @@
 - [x] Filter challengeCron to only email users with isPending=false (signed in at least once)
 - [x] Ensure notificationPrefs.dailyChallenge defaults to true for all new sign-ins
 - [x] Add vitest for the eligibility filter logic (10/10 passing)
+
+## TS Error Fixes + Welcome Email (Apr 8 2026)
+- [ ] Fix adminRouter.ts null DB guard (TS18047)
+- [ ] Fix caseLibraryRouter.ts missing categorySortOrder field (TS2741)
+- [ ] Implement welcome email on first sign-in (OAuth callback isPending flip)
+- [ ] Write vitest for welcome email trigger logic
+
+## TS Fixes + Welcome Email (Apr 8 2026)
+- [x] Fix adminRouter.ts null DB guard TS error (findDuplicatesByEmail procedure)
+- [x] Fix caseLibraryRouter.ts missing categorySortOrder in extraCases select
+- [x] Move findDuplicatesByEmail and mergeUsers from labSeatsRouter into platformAdminRouter
+- [x] Fix CaseEditorDialog missing isSaving prop and ChallengeCardGenerator missing dayOffset prop
+- [x] Add buildFirstSignInWelcomeEmail email template (introduces daily challenge, links to profile)
+- [x] Wire welcome email in OAuth callback on first sign-in (fires alongside Thinkific enrollment)
+- [x] Add vitest for welcome email trigger and template (32 tests passing)

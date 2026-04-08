@@ -1038,6 +1038,7 @@ export default function CaseEditorDialog({ caseId, open, onClose, onSaved }: Pro
                               </div>
                               <QuestionEditor
                                 q={q}
+                                isSaving={addQuestionMutation.isPending}
                                 onSave={(data) => {
                                   addQuestionMutation.mutate({ caseId: caseId!, ...data });
                                   setAiGeneratedQuestions(prev => prev.filter((_, i) => i !== idx));

@@ -490,12 +490,121 @@ export const platformAdminRouter = router({
         emails.push(u.email ?? `userId:${u.id}`);
       }
     }
-    console.log(`[Admin] backfillPremiumRoles: inserted ${inserted} missing premium_user role rows for: ${emails.join(", ") || "none"}`);
-    return { inserted, emails };
+    console.log(`[Admin] backfillPremiumRoles: inserted ${inserted} missing premium_user role rows for: ${emails.join(", ") || "none"}`);    return { inserted, emails };
   }),
+
+  /**
+   * Find all user rows sharing the same email (case-insensitive).
+   * Returns the list of matching rows with their roles, so the admin
+   * can choose which row to keep as the survivor.
+   */
+  findDuplicatesByEmail: protectedProcedure
+    .input(z.object({ email: z.string().email() }))
+    .query(async ({ ctx, input }) => {
+      const myRoles = await getUserRoles(ctx.user.id);
+      if (ctx.user.role !== "admin" && !myRoles.includes("platform_admin")) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+      const db = await import("../db").then(m => m.getDb());
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      const { users, userRoles } = await import("../../drizzle/schema");
+      const { sql, eq } = await import("drizzle-orm");
+      const rows = await db
+        .select()
+        .from(users)
+        .where(sql`LOWER(${users.email}) = LOWER(${input.email})`);
+      if (rows.length === 0) return { rows: [] };
+      const allRoles = await db
+        .select()
+        .from(userRoles)
+        .where(
+          rows.length === 1
+            ? eq(userRoles.userId, rows[0].id)
+            : sql`${userRoles.userId} IN (${sql.join(rows.map(r => sql`${r.id}`), sql`, `)})`
+        );
+      const rolesByUser = allRoles.reduce<Record<number, string[]>>((acc, r) => {
+        if (!acc[r.userId]) acc[r.userId] = [];
+        acc[r.userId].push(r.role);
+        return acc;
+      }, {});
+      return {
+        rows: rows.map(r => ({
+          id: r.id,
+          email: r.email,
+          name: r.name,
+          isPending: r.isPending,
+          openId: r.openId,
+          createdAt: r.createdAt,
+          lastSignedIn: r.lastSignedIn,
+          roles: rolesByUser[r.id] ?? [],
+        })),
+      };
+    }),
+
+  /**
+   * Merge duplicate user accounts.
+   * Keeps survivorId, reassigns all data from duplicateIds to survivorId,
+   * then deletes the duplicate rows.
+   */
+  mergeUsers: protectedProcedure
+    .input(z.object({
+      survivorId: z.number().int().positive(),
+      duplicateIds: z.array(z.number().int().positive()).min(1),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const myRoles = await getUserRoles(ctx.user.id);
+      if (ctx.user.role !== "admin" && !myRoles.includes("platform_admin")) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+      if (input.duplicateIds.includes(input.survivorId)) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "survivorId cannot be in duplicateIds" });
+      }
+      const db = await import("../db").then(m => m.getDb());
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      const schema = await import("../../drizzle/schema");
+      const { sql, eq, inArray } = await import("drizzle-orm");
+      const dupIds = input.duplicateIds;
+      const userIdTables = [
+        schema.userRoles, schema.peerReviews, schema.qaLogs, schema.appropriateUseCases,
+        schema.echoCases, schema.strainSnapshots, schema.imageQualityReviews,
+        schema.echoCorrelations, schema.physicianPeerReviews, schema.accreditationReadiness,
+        schema.accreditationReadinessNavigator, schema.cmeEnrollmentCache,
+        schema.quickfireAttempts, schema.echoLibraryCaseAttempts, schema.educatorOrgMembers,
+        schema.educatorStudentProgress, schema.educatorStudentCompetencies,
+        schema.educatorQuizAttempts, schema.userPointsLog, schema.caseViewEvents,
+        schema.soundByteDiscussions, schema.soundByteDiscussionReplies, schema.soundByteViews,
+      ] as any[];
+      const singletonTables = [schema.userPointsTotals] as any[];
+      let tablesUpdated = 0;
+      for (const table of userIdTables) {
+        try {
+          await db.update(table).set({ userId: input.survivorId }).where(inArray((table as any).userId, dupIds));
+          tablesUpdated++;
+        } catch (_e) { /* ignore dup key */ }
+      }
+      for (const table of singletonTables) {
+        await db.delete(table).where(inArray((table as any).userId, dupIds));
+      }
+      try { await db.update(schema.labMembers).set({ userId: input.survivorId }).where(inArray(schema.labMembers.userId, dupIds)); } catch (_e) { /* ignore */ }
+      try { await db.update(schema.diyOrgMembers).set({ userId: input.survivorId }).where(inArray(schema.diyOrgMembers.userId, dupIds)); } catch (_e) { /* ignore */ }
+      try {
+        const accreditationChecklist = (schema as any).accreditationChecklist;
+        if (accreditationChecklist) {
+          await db.update(accreditationChecklist).set({ userId: input.survivorId }).where(inArray(accreditationChecklist.userId, dupIds));
+        }
+      } catch (_e) { /* ignore */ }
+      await db.delete(schema.userRoles).where(inArray(schema.userRoles.userId, dupIds));
+      const deleteResult = await db.delete(schema.users).where(inArray(schema.users.id, dupIds));
+      return {
+        survivorId: input.survivorId,
+        deletedIds: dupIds,
+        tablesUpdated,
+        rowsDeleted: (deleteResult as any).affectedRows ?? dupIds.length,
+      };
+    }),
 });
 
-// ─── Lab Seat Management Router ───────────────────────────────────────────────
+// ─── Lab Seat Management Routerr ───────────────────────────────────────────────
 // DIY Accreditation Tool™ seat management — controlled by diy_admin role
 
 export const labSeatsRouter = router({
@@ -633,186 +742,5 @@ export const labSeatsRouter = router({
     return { used: seats.length, total: (lab as any).seatCount ?? 1 };
   }),
 
-  /**
-   * Find all user rows sharing the same email (case-insensitive).
-   * Returns the list of matching rows with their roles, so the admin
-   * can choose which row to keep as the survivor.
-   */
-  findDuplicatesByEmail: protectedProcedure
-    .input(z.object({ email: z.string().email() }))
-    .query(async ({ ctx, input }) => {
-      const myRoles = await getUserRoles(ctx.user.id);
-      if (ctx.user.role !== "admin" && !myRoles.includes("platform_admin")) {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
-      const db = await import("../db").then(m => m.getDb());
-      const { users, userRoles } = await import("../../drizzle/schema");
-      const { sql, eq } = await import("drizzle-orm");
-
-      // Find all rows with matching lowercase email
-      const rows = await db
-        .select()
-        .from(users)
-        .where(sql`LOWER(${users.email}) = LOWER(${input.email})`);
-
-      if (rows.length === 0) return { rows: [] };
-
-      // Fetch roles for each row
-      const allRoles = await db
-        .select()
-        .from(userRoles)
-        .where(
-          rows.length === 1
-            ? eq(userRoles.userId, rows[0].id)
-            : sql`${userRoles.userId} IN (${sql.join(rows.map(r => sql`${r.id}`), sql`, `)})`
-        );
-
-      const rolesByUser = allRoles.reduce<Record<number, string[]>>((acc, r) => {
-        if (!acc[r.userId]) acc[r.userId] = [];
-        acc[r.userId].push(r.role);
-        return acc;
-      }, {});
-
-      return {
-        rows: rows.map(r => ({
-          id: r.id,
-          email: r.email,
-          name: r.name,
-          isPending: r.isPending,
-          openId: r.openId,
-          createdAt: r.createdAt,
-          lastSignedIn: r.lastSignedIn,
-          roles: rolesByUser[r.id] ?? [],
-        })),
-      };
-    }),
-
-  /**
-   * Merge duplicate user accounts.
-   * Keeps survivorId, reassigns all data from duplicateIds to survivorId,
-   * then deletes the duplicate rows.
-   * Admin / platform_admin only.
-   */
-  mergeUsers: protectedProcedure
-    .input(z.object({
-      survivorId: z.number().int().positive(),
-      duplicateIds: z.array(z.number().int().positive()).min(1),
-    }))
-    .mutation(async ({ ctx, input }) => {
-      const myRoles = await getUserRoles(ctx.user.id);
-      if (ctx.user.role !== "admin" && !myRoles.includes("platform_admin")) {
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }
-      if (input.duplicateIds.includes(input.survivorId)) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "survivorId cannot be in duplicateIds" });
-      }
-
-      const db = await import("../db").then(m => m.getDb());
-      const schema = await import("../../drizzle/schema");
-      const { sql, eq, inArray } = await import("drizzle-orm");
-
-      const dupIds = input.duplicateIds;
-
-      // Tables where userId should be re-pointed to the survivor
-      const userIdTables = [
-        schema.userRoles,
-        schema.peerReviews,
-        schema.qaLogs,
-        schema.appropriateUseCases,
-        schema.echoCases,
-        schema.strainSnapshots,
-        schema.imageQualityReviews,
-        schema.echoCorrelations,
-        schema.physicianPeerReviews,
-        schema.accreditationReadiness,
-        schema.accreditationReadinessNavigator,
-        schema.cmeEnrollmentCache,
-        schema.quickfireAttempts,
-        schema.echoLibraryCaseAttempts,
-        schema.educatorOrgMembers,
-        schema.educatorStudentProgress,
-        schema.educatorStudentCompetencies,
-        schema.educatorQuizAttempts,
-        schema.userPointsLog,
-        schema.caseViewEvents,
-        schema.soundByteDiscussions,
-        schema.soundByteDiscussionReplies,
-        schema.soundByteViews,
-      ] as any[];
-
-      // For tables with a unique (userId) primary key, use upsert-style handling
-      const singletonTables = [
-        schema.userPointsTotals,
-      ] as any[];
-
-      let tablesUpdated = 0;
-
-      // Re-point userId on regular tables
-      for (const table of userIdTables) {
-        try {
-          await db
-            .update(table)
-            .set({ userId: input.survivorId })
-            .where(inArray((table as any).userId, dupIds));
-          tablesUpdated++;
-        } catch (_e) {
-          // Ignore duplicate key errors (e.g. userRoles unique constraint)
-          // — leftover rows will be cleaned up in the delete step
-        }
-      }
-
-      // For singleton tables (one row per user), delete duplicate rows
-      // (survivor row already exists or will be created fresh)
-      for (const table of singletonTables) {
-        await db
-          .delete(table)
-          .where(inArray((table as any).userId, dupIds));
-      }
-
-      // Handle labMembers — has userId column
-      try {
-        await db
-          .update(schema.labMembers)
-          .set({ userId: input.survivorId })
-          .where(inArray(schema.labMembers.userId, dupIds));
-      } catch (_e) { /* ignore dup key */ }
-
-      // Handle diyOrgMembers — has userId column
-      try {
-        await db
-          .update(schema.diyOrgMembers)
-          .set({ userId: input.survivorId })
-          .where(inArray(schema.diyOrgMembers.userId, dupIds));
-      } catch (_e) { /* ignore dup key */ }
-
-      // Handle accreditationChecklist — has userId column
-      try {
-        const accreditationChecklist = (schema as any).accreditationChecklist;
-        if (accreditationChecklist) {
-          await db
-            .update(accreditationChecklist)
-            .set({ userId: input.survivorId })
-            .where(inArray(accreditationChecklist.userId, dupIds));
-        }
-      } catch (_e) { /* ignore */ }
-
-      // Clean up any remaining userRoles on duplicate rows that couldn't be
-      // re-pointed due to unique constraint (role already exists on survivor)
-      await db
-        .delete(schema.userRoles)
-        .where(inArray(schema.userRoles.userId, dupIds));
-
-      // Delete the duplicate user rows
-      const deleteResult = await db
-        .delete(schema.users)
-        .where(inArray(schema.users.id, dupIds));
-
-      return {
-        survivorId: input.survivorId,
-        deletedIds: dupIds,
-        tablesUpdated,
-        rowsDeleted: (deleteResult as any).affectedRows ?? dupIds.length,
-      };
-    }),
 
 });
