@@ -3,9 +3,11 @@
   Gamified daily echo cases
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import { BookOpen, Trophy, Flame, Star, CheckCircle2, XCircle, ChevronRight } from "lucide-react";
+import { usePremium } from "@/hooks/usePremium";
+import { UpgradeTriggerModal, useUpgradeTrigger } from "@/components/UpgradeTriggerModal";
 
 const cases = [
   {
@@ -107,12 +109,26 @@ const leaderboard = [
 ];
 
 export default function CaseLab() {
+  const { isPremium } = usePremium();
+  const { triggerType, moduleName, showUpgrade, closeUpgrade } = useUpgradeTrigger();
   const [caseIdx, setCaseIdx] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [totalPoints, setTotalPoints] = useState(1200);
   const [streak, setStreak] = useState(3);
   const [view, setView] = useState<"cases" | "leaderboard">("cases");
+  const [streakPromptShown, setStreakPromptShown] = useState(false);
+
+  // Show streak upgrade prompt once per session when streak >= 3 and user is not premium
+  useEffect(() => {
+    if (!isPremium && streak >= 3 && !streakPromptShown) {
+      const timer = setTimeout(() => {
+        showUpgrade("streak");
+        setStreakPromptShown(true);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [streak, isPremium, streakPromptShown]);
 
   const currentCase = cases[caseIdx];
 
@@ -313,6 +329,8 @@ export default function CaseLab() {
           </div>
         )}
       </div>
+      {/* Streak upgrade trigger modal */}
+      <UpgradeTriggerModal triggerType={triggerType} moduleName={moduleName} onClose={closeUpgrade} />
     </Layout>
   );
 }

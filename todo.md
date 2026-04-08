@@ -894,3 +894,12 @@
 ## Platform Admin UX (Apr 7 2026)
 - [x] Platform admin: show user list only on search (no default load)
 - [x] Platform admin: add role filter chips — Free, Premium, DIY, Admin
+
+## Upgrade Trigger System (Apr 8 2026)
+- [x] Annual pricing: drop to $99.70/yr (exact 2-months-free), add savings callout badge ($19.94 saved)
+- [x] ScanCoach Fetal tab: remove top-level premium gate, open to free users with PremiumPearlGate on pitfalls/redFlags
+- [x] ScanCoach PedCHD tab: remove top-level BlurredOverlay, add PremiumPearlGate on Red Flags and Clinical Tips
+- [x] ScanCoach Strain tab: remove top-level BlurredOverlay, add PremiumPearlGate on Tips & Tricks tab
+- [x] EchoAssist narrative gate: EchoAssistPanel Note and Tip sections gated with PremiumPearlGate via context
+- [x] CaseDetail post-case modal: UpgradeTriggerModal("post_case") fires 1.5s after free user submits answers
+- [x] CaseLab streak trigger: UpgradeTriggerModal("streak") fires 2s after page load when streak >= 3 and not premium

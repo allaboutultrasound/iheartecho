@@ -224,7 +224,10 @@ export default function Premium() {
                 <div className="text-5xl font-black text-[#189aa1] mb-0.5" style={{ fontFamily: "Merriweather, serif" }}>
                   $99.70
                 </div>
-                <div className="text-gray-500 text-sm mb-4">per year · ~$8.31/mo · 2 months free</div>
+                <div className="text-gray-500 text-sm mb-1">per year · ~$8.31/mo</div>
+                <div className="inline-flex items-center gap-1 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold px-2.5 py-1 rounded-full mb-4">
+                  <span>💚</span> Save $19.94 vs monthly
+                </div>
                 {loading ? (
                   <div className="flex items-center justify-center gap-2 text-gray-400 text-sm py-2">
                     <div className="w-4 h-4 border-2 border-[#189aa1] border-t-transparent rounded-full animate-spin" />

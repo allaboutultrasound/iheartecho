@@ -5,11 +5,13 @@
  * teaching points, diagnosis, and submitter info.
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useParams, Link } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { usePremium } from "@/hooks/usePremium";
 import { BlurredOverlay } from "@/components/BlurredOverlay";
+import { UpgradeTriggerModal, useUpgradeTrigger } from "@/components/UpgradeTriggerModal";
 import Layout from "@/components/Layout";
 import { RichTextDisplay } from "@/components/RichTextEditor";
 import { Button } from "@/components/ui/button";
@@ -66,6 +68,8 @@ export default function CaseDetail() {
   const { id } = useParams<{ id: string }>();
   const caseId = parseInt(id ?? "0", 10);
   const { isAuthenticated, loading: authLoading } = useAuth();
+  const { isPremium } = usePremium();
+  const { triggerType, moduleName, showUpgrade, closeUpgrade } = useUpgradeTrigger();
   const utils = trpc.useUtils();
 
   const { data: caseData, isLoading, error } = trpc.caseLibrary.getCase.useQuery(
@@ -89,6 +93,10 @@ export default function CaseDetail() {
     onSuccess: () => {
       utils.caseLibrary.getCase.invalidate({ id: caseId });
       toast.success("Answers submitted!");
+      // Show upgrade prompt for non-premium users after case completion
+      if (!isPremium) {
+        setTimeout(() => showUpgrade("post_case"), 1500);
+      }
     },
     onError: () => toast.error("Failed to submit answers."),
   });
@@ -599,6 +607,8 @@ export default function CaseDetail() {
           </div>
         )}
       </div>
+      {/* Post-case upgrade trigger modal */}
+      <UpgradeTriggerModal triggerType={triggerType} moduleName={moduleName} onClose={closeUpgrade} />
     </Layout>
   );
 }

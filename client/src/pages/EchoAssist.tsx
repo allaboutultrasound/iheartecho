@@ -5,7 +5,7 @@
   Brand: Teal #189aa1, Aqua #4ad9e0
   Fonts: Merriweather headings, Open Sans body, JetBrains Mono data
 */
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, createContext, useContext } from "react";
 import { useSearch } from "wouter";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
@@ -16,6 +16,12 @@ import FrankStarlingGraph, { type FrankStarlingParams } from "@/components/Frank
 import DiastologySpecialPopulations from "@/pages/DiastologySpecialPopulations";
 import { PremiumGate } from "@/components/PremiumGate";
 import { PremiumOverlay } from "@/components/PremiumOverlay";
+import { PremiumPearlGate } from "@/components/PremiumPearlGate";
+import { usePremium } from "@/hooks/usePremium";
+import { UpgradeTriggerModal, useUpgradeTrigger } from "@/components/UpgradeTriggerModal";
+
+// ─── PREMIUM CONTEXT (avoids prop-drilling through engine sub-components) ────
+const EchoAssistPremiumContext = createContext<boolean>(false);
 
 // ─── UI PRIMITIVES ────────────────────────────────────────────────────────────
 
@@ -162,10 +168,11 @@ interface EchoAssistOutput {
 }
 
 function EchoAssistPanel({ output }: { output: EchoAssistOutput | null }) {
+  const isPremium = useContext(EchoAssistPremiumContext);
   if (!output) return null;
   return (
     <div className="mt-4 rounded-xl overflow-hidden border border-[#189aa1]/30 shadow-sm">
-      {/* Suggests */}
+      {/* Suggests — always visible */}
       <div className="flex items-start gap-3 px-4 py-3 bg-[#f0fbfc] border-b border-[#189aa1]/20">
         <MessageSquare className="w-4 h-4 text-[#189aa1] flex-shrink-0 mt-0.5" />
         <div>
@@ -175,8 +182,9 @@ function EchoAssistPanel({ output }: { output: EchoAssistOutput | null }) {
           <p className="text-sm text-[#0e7490] font-medium leading-snug">{output.suggests}</p>
         </div>
       </div>
-      {/* Note */}
+      {/* Note — premium-gated clinical narrative */}
       {output.note && (
+        <PremiumPearlGate isPremium={isPremium} label="Clinical Note" context="Unlock the full clinical narrative, management guidance, and expert tips with Premium.">
         <div className="flex items-start gap-3 px-4 py-3 bg-amber-50 border-b border-amber-100">
           <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
           <div>
@@ -186,9 +194,11 @@ function EchoAssistPanel({ output }: { output: EchoAssistOutput | null }) {
             <p className="text-sm text-amber-800 leading-snug">{output.note}</p>
           </div>
         </div>
+        </PremiumPearlGate>
       )}
-      {/* Tip */}
+      {/* Tip — premium-gated */}
       {output.tip && (
+        <PremiumPearlGate isPremium={isPremium} label="Clinical Tip" context="Unlock expert scanning tips and clinical pearls with Premium.">
         <div className="flex items-start gap-3 px-4 py-3 bg-white">
           <Lightbulb className="w-4 h-4 text-[#189aa1] flex-shrink-0 mt-0.5" />
           <div>
@@ -198,6 +208,7 @@ function EchoAssistPanel({ output }: { output: EchoAssistOutput | null }) {
             <p className="text-sm text-gray-600 leading-snug">{output.tip}</p>
           </div>
         </div>
+        </PremiumPearlGate>
       )}
     </div>
   );
@@ -3102,6 +3113,9 @@ function DiastologyAssistEngine() {
 
 // ─── MAIN PAGE ──────────────────────────────────────────────────────────────────────────────
 export default function EchoAssist() {
+  const { isPremium } = usePremium();
+  const { triggerType, moduleName, showUpgrade, closeUpgrade } = useUpgradeTrigger();
+  // Expose isPremium via context so all EchoAssistPanel instances can read it
   // Fire hash-based deep-link event on mount — retries at 100ms, 400ms, 800ms
   // so it works reliably for both in-app navigation AND external deep-links
   // (external links need more time for React to fully hydrate all engine components)
@@ -3117,6 +3131,7 @@ export default function EchoAssist() {
   }, []);
 
   return (
+    <EchoAssistPremiumContext.Provider value={isPremium}>
     <Layout>
       <div className="container py-6">
         {/* Header */}
@@ -3209,6 +3224,9 @@ export default function EchoAssist() {
           <p className="pt-1">© All About Ultrasound — iHeartEcho™ | www.iheartecho.com</p>
         </div>
       </div>
+      {/* Narrative upgrade trigger modal */}
+      <UpgradeTriggerModal triggerType={triggerType} moduleName={moduleName} onClose={closeUpgrade} />
     </Layout>
+    </EchoAssistPremiumContext.Provider>
   );
 }

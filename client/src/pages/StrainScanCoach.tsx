@@ -18,6 +18,7 @@ import {
   Legend, ResponsiveContainer, ReferenceLine
 } from "recharts";
 import { Link, useSearch } from "wouter";
+import { PremiumPearlGate } from "@/components/PremiumPearlGate";
 import ScanCoachNavBar from "@/components/ScanCoachNavBar";
 import BillingCodesCard from "@/components/BillingCodesCard";
 import { STRAIN_BILLING } from "@/lib/scanCoachBillingCodes";
@@ -934,11 +935,11 @@ const CLINICAL_PATTERNS: {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 // Named export for embedding as a tab inside ScanCoach.tsx (no Layout wrapper)
-export function StrainScanCoachContent() {
-  return <StrainScanCoachInner />;
+export function StrainScanCoachContent({ isPremium = false }: { isPremium?: boolean }) {
+  return <StrainScanCoachInner isPremium={isPremium} />;
 }
 
-function StrainScanCoachInner() {
+function StrainScanCoachInner({ isPremium = false }: { isPremium?: boolean }) {
   // Bull's-eye state — default to -22 (normal) per preference
   const [segValues, setSegValues] = useState<Record<number, number | null>>(
     () => Object.fromEntries(SEGMENTS_17.map(s => [s.id, -22])) as Record<number, number | null>
@@ -1308,6 +1309,7 @@ function StrainScanCoachInner() {
 
             {/* ── Tips & Tricks Tab ── */}
             {leftTab === "tips" && (
+              <PremiumPearlGate isPremium={isPremium} label="Tips & Tricks" context="Unlock acquisition tips, ASE 2025 guideline updates, and common pitfalls for every strain view with Premium.">
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
                 <div className="flex items-center gap-3 mb-5">
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: BRAND + "18" }}>
@@ -1383,6 +1385,7 @@ function StrainScanCoachInner() {
 
                 </div>
               </div>
+              </PremiumPearlGate>
             )}{/* end tips tab */}
 
             {/* ── Acquisition Views Tab ── */}

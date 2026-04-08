@@ -7,6 +7,7 @@
 import { useState, useRef, useMemo, useEffect } from "react";
 import { AlertTriangle, ChevronRight, ChevronLeft, Heart, Activity, Eye, Info, Stethoscope } from "lucide-react";
 import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
+import { PremiumPearlGate } from "@/components/PremiumPearlGate";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface ScanStage {
@@ -750,7 +751,7 @@ function StageTab({ stage, isSelected, color, onClick }: { stage: ScanStage; isS
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
-export default function PedCHDCoach() {
+export default function PedCHDCoach({ isPremium = false }: { isPremium?: boolean }) {
   // Support deep-linking via URL params: ?defect=tof&stage=tof-preop
   const getInitialFromParams = () => {
     const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
@@ -964,6 +965,7 @@ export default function PedCHDCoach() {
           </div>
 
           {/* Red Flags */}
+          <PremiumPearlGate isPremium={isPremium} label="Red Flags" count={selectedStageMerged.redFlags.length} context="Unlock reintervention criteria and red flags for every CHD stage with Premium.">
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
             <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2" style={{ background: "#fff1f2" }}>
               <AlertTriangle size={14} className="text-red-500" />
@@ -978,9 +980,11 @@ export default function PedCHDCoach() {
               ))}
             </ul>
           </div>
+          </PremiumPearlGate>
         </div>
 
         {/* Clinical Tips */}
+        <PremiumPearlGate isPremium={isPremium} label="Clinical Scanning Tips" count={selectedStageMerged.tips.length} context="Unlock expert clinical scanning tips for every CHD defect and stage with Premium.">
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2" style={{ background: `${selectedDefect.color}10` }}>
             <Stethoscope size={14} style={{ color: selectedDefect.color }} />
@@ -995,6 +999,7 @@ export default function PedCHDCoach() {
             ))}
           </div>
         </div>
+        </PremiumPearlGate>
 
       </div>
 
