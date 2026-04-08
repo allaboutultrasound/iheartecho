@@ -926,3 +926,6 @@
 - [x] Add buildFirstSignInWelcomeEmail email template (introduces daily challenge, links to profile)
 - [x] Wire welcome email in OAuth callback on first sign-in (fires alongside Thinkific enrollment)
 - [x] Add vitest for welcome email trigger and template (32 tests passing)
+
+## Premium Gate Bug Fix (Apr 8 2026)
+- [x] Fix: premium_user role holders incorrectly seeing upgrade/auth gates — usePremium now uses premium.getStatus as authoritative source
