@@ -218,13 +218,13 @@ export default function Premium() {
               {/* Annual — highlighted */}
               <div className="bg-white rounded-2xl shadow-xl px-7 py-6 text-center flex-1 max-w-xs border-2 border-[#189aa1] relative">
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#189aa1] text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider whitespace-nowrap">
-                  Best Value — Save 16%
+                  Best Value — 2 Months Free
                 </div>
                 <div className="text-xs font-semibold text-[#189aa1] uppercase tracking-wider mb-1">Annual</div>
                 <div className="text-5xl font-black text-[#189aa1] mb-0.5" style={{ fontFamily: "Merriweather, serif" }}>
-                  $99.97
+                  $99.70
                 </div>
-                <div className="text-gray-500 text-sm mb-4">per year · ~$8.33/mo</div>
+                <div className="text-gray-500 text-sm mb-4">per year · ~$8.31/mo · 2 months free</div>
                 {loading ? (
                   <div className="flex items-center justify-center gap-2 text-gray-400 text-sm py-2">
                     <div className="w-4 h-4 border-2 border-[#189aa1] border-t-transparent rounded-full animate-spin" />
@@ -368,7 +368,7 @@ export default function Premium() {
                 <a href={CHECKOUT_URL_ANNUAL} target="_blank" rel="noopener noreferrer">
                   <Button className="bg-[#189aa1] hover:bg-[#147a80] text-white font-bold px-8 py-3 text-base rounded-xl">
                     <Crown className="w-4 h-4 mr-2" />
-                    Annual — $99.97/yr
+                    Annual — $99.70/yr (2 mo free)
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </a>
