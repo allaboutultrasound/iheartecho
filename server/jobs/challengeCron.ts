@@ -219,7 +219,9 @@ async function sendChallengeNotifications(
       unsubscribeToken: users.unsubscribeToken,
     })
     .from(users)
-    .where(and(eq(users.isDemo, false), isNull(users.unsubscribedAt)));
+    // isPending=false ensures we only email users who have signed in at least once.
+    // Pending users are admin-created stubs that have never authenticated.
+    .where(and(eq(users.isDemo, false), eq(users.isPending, false), isNull(users.unsubscribedAt)));
 
   const usersToNotify = eligibleUsers.filter((u) => {
     if (!u.email) return false;

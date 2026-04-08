@@ -1632,10 +1632,12 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       return {
         quickfireReminder: prefs.quickfireReminder !== false,
         reminderTime: typeof prefs.reminderTime === "string" ? prefs.reminderTime : "09:00",
+        // dailyChallenge email opt-in — defaults to true (opted in) if not explicitly set to false
+        dailyChallenge: prefs.dailyChallenge !== false,
         timezone: userRow.timezone ?? "America/New_York",
       };
     } catch {
-      return { quickfireReminder: true, reminderTime: "09:00", timezone: userRow.timezone ?? "America/New_York" };
+      return { quickfireReminder: true, reminderTime: "09:00", dailyChallenge: true, timezone: userRow.timezone ?? "America/New_York" };
     }
   }),
 
@@ -1648,6 +1650,8 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
           .string()
           .regex(/^\d{2}:\d{2}$/, "Must be HH:MM format")
           .default("09:00"),
+        // dailyChallenge email opt-in — true by default for all signed-in users
+        dailyChallenge: z.boolean().default(true),
         timezone: z.string().max(64).default("America/New_York"),
       })
     )

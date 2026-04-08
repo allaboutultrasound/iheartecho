@@ -100,10 +100,12 @@ export default function Profile() {
     { enabled: !!user }
   );
   const [notifEnabled, setNotifEnabled] = useState(true);
+  const [dailyChallengeEmail, setDailyChallengeEmail] = useState(true);
   const [notifTimezone, setNotifTimezone] = useState("America/New_York");
   useEffect(() => {
     if (notifPrefs) {
       setNotifEnabled(notifPrefs.quickfireReminder);
+      setDailyChallengeEmail((notifPrefs as any).dailyChallenge !== false);
       setNotifTimezone(notifPrefs.timezone ?? "America/New_York");
     }
   }, [notifPrefs]);
@@ -1078,15 +1080,42 @@ export default function Profile() {
                     </div>
                   ) : (
                     <>
-                      {/* Daily Challenge Reminder Toggle */}
+                      {/* Daily Challenge Email Toggle */}
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <Bell className="w-4 h-4" style={{ color: "#189aa1" }} />
-                            <span className="text-sm font-semibold text-gray-800">Daily Challenge Reminder</span>
+                            <span className="text-sm font-semibold text-gray-800">Daily Challenge Email</span>
+                            <span className="text-xs px-1.5 py-0.5 rounded-full font-semibold" style={{ background: "#f0fbfc", color: "#189aa1" }}>Recommended</span>
                           </div>
                           <p className="text-xs text-gray-500 leading-relaxed">
-                            Receive a daily email reminder if you haven't completed your Daily Challenge session.
+                            Receive a daily email at 6 AM ET when new challenges go live. Includes today's
+                            challenge preview and a direct link to start. You can unsubscribe anytime.
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => setDailyChallengeEmail((v) => !v)}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 mt-0.5 ${
+                            dailyChallengeEmail ? "bg-[#189aa1]" : "bg-gray-200"
+                          }`}
+                        >
+                          <span
+                            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                              dailyChallengeEmail ? "translate-x-6" : "translate-x-1"
+                            }`}
+                          />
+                        </button>
+                      </div>
+
+                      {/* In-App Streak Reminder Toggle */}
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Bell className="w-4 h-4 text-gray-400" />
+                            <span className="text-sm font-semibold text-gray-800">In-App Streak Reminder</span>
+                          </div>
+                          <p className="text-xs text-gray-500 leading-relaxed">
+                            Receive a daily in-app reminder if you haven't completed your Daily Challenge session.
                             Includes your current streak so you never lose momentum.
                           </p>
                         </div>
@@ -1177,9 +1206,10 @@ export default function Profile() {
                           onClick={() =>
                             updateNotifPrefsMutation.mutate({
                               quickfireReminder: notifEnabled,
+                              dailyChallenge: dailyChallengeEmail,
                               reminderTime: "09:00",
                               timezone: notifTimezone,
-                            })
+                            } as any)
                           }
                           disabled={updateNotifPrefsMutation.isPending}
                           className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold text-white transition-all hover:opacity-90 disabled:opacity-50"

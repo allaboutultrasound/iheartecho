@@ -906,3 +906,8 @@
 
 ## Premium Gate Unification (Apr 8 2026)
 - [x] Update BlurredOverlay, PremiumGate, and PremiumOverlay components to use soft PremiumPearlGate-style teaser lock across all 30+ usages
+
+## Daily Challenge Email Auto-Enrollment (Apr 8 2026)
+- [x] Filter challengeCron to only email users with isPending=false (signed in at least once)
+- [x] Ensure notificationPrefs.dailyChallenge defaults to true for all new sign-ins
+- [x] Add vitest for the eligibility filter logic (10/10 passing)
