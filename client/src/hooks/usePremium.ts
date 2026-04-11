@@ -6,13 +6,17 @@
  * assigned after their last login see the correct premium state immediately
  * without needing to log out and back in.
  *
+ * IMPORTANT: `loading` is true until BOTH auth AND premium.getStatus have resolved.
+ * This prevents the premium gate from flashing for premium users while the live
+ * status is still in flight.
+ *
  * Returns:
  *   isPremium  — true if the user has any premium-tier role or the isPremium DB flag
  *   isDiyUser  — true if the user has DIY Accreditation access
  *   isLabAdmin — true if the user has Lab Admin access
  *   isAdmin    — true if the user is a platform admin
  *   appRoles   — raw array of role strings
- *   loading    — true while either auth or premium status is loading
+ *   loading    — true while auth or premium status is still resolving
  */
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
@@ -28,15 +32,16 @@ export function usePremium() {
   const appRoles: string[] = (user as any)?.appRoles ?? [];
 
   // Use premium.getStatus as the authoritative live source.
-  // Only enabled when the user is authenticated to avoid unnecessary requests.
-  const { data: premiumStatus, isLoading: premiumLoading } =
-    trpc.premium.getStatus.useQuery(undefined, {
-      enabled: isAuthenticated,
-      // Stale time of 2 minutes — fresh enough to catch role changes without
-      // hammering the server on every render.
-      staleTime: 2 * 60 * 1000,
-      refetchOnWindowFocus: true,
-    });
+  // Only enabled when the user is authenticated and auth has finished loading.
+  const {
+    data: premiumStatus,
+    isLoading: premiumLoading,
+    isFetched: premiumFetched,
+  } = trpc.premium.getStatus.useQuery(undefined, {
+    enabled: isAuthenticated && !authLoading,
+    staleTime: 2 * 60 * 1000,
+    refetchOnWindowFocus: true,
+  });
 
   // isPremium: authoritative source is premium.getStatus.isPremium.
   // Fall back to auth.me isPremium flag (fast initial value before getStatus resolves).
@@ -47,9 +52,16 @@ export function usePremium() {
 
   const isPremium: boolean = isPremiumFromStatus || isPremiumFromAuthMe || isPremiumFromRoles;
 
-  // loading is true while auth OR premium status is still resolving.
-  // For unauthenticated users, premiumLoading is always false (query disabled).
-  const loading = authLoading || (isAuthenticated && premiumLoading);
+  // loading is true while:
+  //   1. Auth is still loading, OR
+  //   2. User is authenticated but premium.getStatus hasn't resolved yet
+  //      (covers both the isLoading state AND the pre-fetch frame where
+  //       isFetched=false and isLoading=false simultaneously)
+  //
+  // This prevents the premium gate from flashing for premium users while
+  // the live status is still in flight.
+  const premiumStillPending = isAuthenticated && !authLoading && !premiumFetched;
+  const loading = authLoading || premiumLoading || premiumStillPending;
 
   const isDiyUser = hasDiyAccess(appRoles);
   const isLabAdmin = hasLabAdminAccess(appRoles);

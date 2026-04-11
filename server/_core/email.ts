@@ -442,9 +442,11 @@ export function buildWelcomeEmail(opts: {
   firstName: string;
   loginUrl: string;
   roles: string[];
+  /** Override the CTA button label. Defaults to 'Set Up Your Account' */
+  ctaLabel?: string;
 }): { subject: string; htmlBody: string; previewText: string } {
   const subject = "Your iHeartEcho™ account is ready";
-  const previewText = "Your account has been set up — sign in to get started";
+  const previewText = "Your account has been set up — click to get started";
   const roleLabels: Record<string, string> = {
     premium_user: "Premium Access",
     diy_user: "DIY Accreditation",
@@ -461,7 +463,7 @@ export function buildWelcomeEmail(opts: {
       Welcome to iHeartEcho, ${opts.firstName}!
     </h2>
     <p style="margin:0 0 16px;font-size:15px;color:#475569;line-height:1.6;">
-      Your account has been set up by an administrator. You now have access to the iHeartEcho™ clinical platform.
+      An account has been created for you on the iHeartEcho™ clinical platform. Click the button below to complete your registration and set your password.
     </p>
     ${roleList ? `
     <div style="background:#f0fbfc;border-left:3px solid ${brandColor};padding:12px 16px;border-radius:0 8px 8px 0;margin:0 0 20px;">
@@ -473,7 +475,7 @@ export function buildWelcomeEmail(opts: {
     <div style="text-align:center;margin:28px 0;">
       <a href="${opts.loginUrl}"
         style="display:inline-block;background:linear-gradient(135deg,${brandColor},#4ad9e0);color:#ffffff;font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;text-decoration:none;" target="_blank" rel="noopener noreferrer">
-        Sign In to iHeartEcho™
+        ${opts.ctaLabel ?? "Set Up Your Account"}
       </a>
     </div>
     <p style="margin:0;font-size:13px;color:#94a3b8;line-height:1.5;">

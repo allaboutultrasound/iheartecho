@@ -1206,6 +1206,10 @@ export default function PlatformAdmin() {
     },
     onError: (err) => toast.error(err.message),
   });
+  const resendWelcomeMutation = trpc.platformAdmin.resendWelcomeEmail.useMutation({
+    onSuccess: (data) => toast.success(`Welcome email resent to ${data.email}`),
+    onError: (err) => toast.error(`Failed to resend: ${err.message}`),
+  });
 
   // Auth checks
   if (loading || checkingAdmin) {
@@ -1719,6 +1723,12 @@ export default function PlatformAdmin() {
                             Demo
                           </span>
                         )}
+                        {!((u as UserWithRoles).isPending) && (u as UserWithRoles).roles.includes("premium_user") && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+                            <Crown className="w-3 h-3" />
+                            Premium
+                          </span>
+                        )}
                       </div>
                       <div className="text-xs text-gray-400 mt-0.5">{u.email ?? "No email"}</div>
                       <div className="flex flex-wrap gap-1.5 mt-2">
@@ -1739,22 +1749,41 @@ export default function PlatformAdmin() {
                       </div>
                     </div>
 
-                    {/* Add Role button */}
-                    {u.role !== "admin" && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex-shrink-0 h-7 text-xs gap-1"
-                        onClick={() => {
-                          setSelectedUser(u as UserWithRoles);
-                          setRoleToAdd("premium_user");
-                          setAddRoleDialogOpen(true);
-                        }}
-                      >
-                        <Plus className="w-3 h-3" />
-                        Add Role
-                      </Button>
-                    )}
+                    {/* Action buttons */}
+                    <div className="flex flex-col gap-1.5 flex-shrink-0">
+                      {u.role !== "admin" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs gap-1"
+                          onClick={() => {
+                            setSelectedUser(u as UserWithRoles);
+                            setRoleToAdd("premium_user");
+                            setAddRoleDialogOpen(true);
+                          }}
+                        >
+                          <Plus className="w-3 h-3" />
+                          Add Role
+                        </Button>
+                      )}
+                      {(u as UserWithRoles).isPending && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs gap-1 text-orange-700 border-orange-200 hover:bg-orange-50"
+                          disabled={resendWelcomeMutation.isPending}
+                          onClick={() => resendWelcomeMutation.mutate({ userId: u.id })}
+                          title="Resend the registration welcome email to this pending user"
+                        >
+                          {resendWelcomeMutation.isPending ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <Mail className="w-3 h-3" />
+                          )}
+                          Resend Email
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

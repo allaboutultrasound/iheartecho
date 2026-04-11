@@ -106,11 +106,21 @@ describe("buildWelcomeEmail", () => {
     expect(result.previewText.length).toBeGreaterThan(10);
   });
 
-  it("includes a Sign In CTA button in the HTML body", () => {
+  it("includes a Set Up Your Account CTA button in the HTML body by default", () => {
     const result = buildWelcomeEmail({
       firstName: "Jane",
       loginUrl: "https://app.iheartecho.com/login",
       roles: [],
+    });
+    expect(result.htmlBody).toContain("Set Up Your Account");
+  });
+
+  it("uses a custom ctaLabel when provided", () => {
+    const result = buildWelcomeEmail({
+      firstName: "Jane",
+      loginUrl: "https://app.iheartecho.com/login",
+      roles: [],
+      ctaLabel: "Sign In to iHeartEcho™",
     });
     expect(result.htmlBody).toContain("Sign In to iHeartEcho™");
   });

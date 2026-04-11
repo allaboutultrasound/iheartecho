@@ -27,7 +27,7 @@ async function sendPreRegistrationWelcome(email: string, roles: string[]): Promi
   const appUrl = process.env.VITE_APP_URL ?? "https://app.iheartecho.com";
   const payload = buildWelcomeEmail({
     firstName: email.split("@")[0], // best-effort first name from email
-    loginUrl: `${appUrl}/login`,
+    loginUrl: `${appUrl}/register`, // pending users must register (set password) before they can sign in
     roles,
   });
   const sent = await sendEmail({
@@ -595,15 +595,53 @@ export const platformAdminRouter = router({
       } catch (_e) { /* ignore */ }
       await db.delete(schema.userRoles).where(inArray(schema.userRoles.userId, dupIds));
       const deleteResult = await db.delete(schema.users).where(inArray(schema.users.id, dupIds));
-      return {
+       return {
         survivorId: input.survivorId,
         deletedIds: dupIds,
         tablesUpdated,
         rowsDeleted: (deleteResult as any).affectedRows ?? dupIds.length,
       };
     }),
-});
 
+  /**
+   * Resend the pre-registration welcome email to a pending user.
+   * Useful when the original email was sent with the wrong link or was never received.
+   */
+  resendWelcomeEmail: protectedProcedure
+    .input(z.object({ userId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const myRoles = await getUserRoles(ctx.user.id);
+      const isOwner = ctx.user.role === "admin";
+      const isPlatformAdmin = myRoles.includes("platform_admin");
+      if (!isOwner && !isPlatformAdmin) {
+        throw new TRPCError({ code: "FORBIDDEN" });
+      }
+      const targetUser = await getUserById(input.userId);
+      if (!targetUser?.email) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "User not found or has no email" });
+      }
+      const userRoles = await getUserRoles(input.userId);
+      const appUrl = process.env.VITE_APP_URL ?? "https://app.iheartecho.com";
+      const registerUrl = `${appUrl}/register`;
+      const payload = buildWelcomeEmail({
+        firstName: targetUser.name?.split(" ")[0] || targetUser.email.split("@")[0],
+        loginUrl: registerUrl,
+        roles: userRoles,
+        ctaLabel: "Set Up Your Account",
+      });
+      const sent = await sendEmail({
+        to: { name: targetUser.name || targetUser.email, email: targetUser.email },
+        subject: payload.subject,
+        htmlBody: payload.htmlBody,
+        previewText: payload.previewText,
+      });
+      if (!sent) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to send welcome email \u2014 check SendGrid configuration" });
+      }
+      console.log(`[Admin] Resent welcome email to ${targetUser.email} (userId=${input.userId})`);
+      return { success: true, email: targetUser.email };
+    }),
+});
 // ─── Lab Seat Management Routerr ───────────────────────────────────────────────
 // DIY Accreditation Tool™ seat management — controlled by diy_admin role
 
@@ -741,6 +779,5 @@ export const labSeatsRouter = router({
     const seats = await getDiyUsersForLab(lab.id);
     return { used: seats.length, total: (lab as any).seatCount ?? 1 };
   }),
-
 
 });

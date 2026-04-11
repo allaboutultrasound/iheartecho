@@ -929,3 +929,15 @@
 
 ## Premium Gate Bug Fix (Apr 8 2026)
 - [x] Fix: premium_user role holders incorrectly seeing upgrade/auth gates — usePremium now uses premium.getStatus as authoritative source
+
+## URGENT: Premium Gate Still Broken (Apr 11 2026)
+- [ ] Full trace of premium detection chain and definitive fix
+
+## Welcome Email & Admin Improvements (2026-04-11)
+- [x] Welcome email CTA changed from "Sign In to iHeartEcho™" to "Set Up Your Account"
+- [x] Welcome email CTA now links to /register instead of /login for pre-registered users
+- [x] buildWelcomeEmail accepts optional ctaLabel override parameter
+- [x] Admin: resendWelcomeEmail procedure added to platformAdminRouter (accessible to owner and platform_admin)
+- [x] Admin: "Resend Email" button shown in user list for pending users (orange, with mail icon)
+- [x] Admin: Premium badge (amber Crown) shown in user list for active premium users
+- [x] welcome-email.test.ts updated to match new default CTA label
