@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import Layout from "@/components/Layout";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { usePremium } from "@/hooks/usePremium";
 import { trpc } from "@/lib/trpc";
 import { uploadFile } from "@/lib/uploadFile";
 import { toast } from "sonner";
@@ -75,6 +76,7 @@ const SPECIALTY_OPTIONS = [
 
 export default function Profile() {
   const { user, isAuthenticated, loading } = useAuth();
+  const { isPremium: isPremiumUser } = usePremium();
   const utils = trpc.useUtils();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -244,8 +246,6 @@ export default function Profile() {
 
   const u = user as any;
   const roles = (u.appRoles as string[] | undefined) ?? [];
-  const PREMIUM_ROLE_SET = new Set(["premium_user", "diy_user", "diy_admin", "platform_admin"]);
-  const isPremiumUser = u.isPremium === true || roles.some((r: string) => PREMIUM_ROLE_SET.has(r));
   // Filter out 'premium_user' Thinkific role since we now track isPremium from DB
   const activeSubscriptions = roles.filter((r: string) => ROLE_CONFIG[r] && r !== "premium_user");
 

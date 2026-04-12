@@ -5,6 +5,7 @@
   Brand: Teal #189aa1, Aqua #4ad9e0
 */
 import { useState, useMemo, useRef, useCallback } from "react";
+import { usePremium } from "@/hooks/usePremium";
 import Layout from "@/components/Layout";
 import BackToEchoAssist from "@/components/BackToEchoAssist";
 import { useScanCoachOverrides } from "@/hooks/useScanCoachOverrides";
@@ -1685,10 +1686,11 @@ function StrainScanCoachInner({ isPremium = false }: { isPremium?: boolean }) {
 }
 
 export default function StrainScanCoach() {
+  const { isPremium } = usePremium();
   return (
     <Layout>
       <ScanCoachNavBar navigatorPath="/strain" navigatorLabel="Strain Navigator" />
-<StrainScanCoachInner />
+      <StrainScanCoachInner isPremium={isPremium} />
     </Layout>
   );
 }

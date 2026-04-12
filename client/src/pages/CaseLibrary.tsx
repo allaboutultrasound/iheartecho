@@ -10,6 +10,7 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { usePremium } from "@/hooks/usePremium";
 import { getLoginUrl } from "@/const";
 import Layout from "@/components/Layout";
 import { BlurredOverlay } from "@/components/BlurredOverlay";
@@ -105,7 +106,7 @@ type TabType = "browse" | "mySubmissions";
 
 export default function CaseLibrary() {
   const { isAuthenticated, loading: authLoading, user } = useAuth();
-  const isPremium = (user as any)?.isPremium === true || (user as any)?.role === "admin";
+  const { isPremium } = usePremium();
   const [, navigate] = useLocation();
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>("browse");

@@ -942,3 +942,14 @@
 - [x] Admin: "Resend Email" button shown in user list for pending users (orange, with mail icon)
 - [x] Admin: Premium badge (amber Crown) shown in user list for active premium users
 - [x] welcome-email.test.ts updated to match new default CTA label
+
+## Premium Gate Audit (2026-04-12)
+- [x] Audit all premium gate checks across codebase — fix any using stale/incorrect role logic
+- [x] GuidelinesAssist.tsx: replaced stale PREMIUM_ROLES Set (wrong role names) with usePremium() hook
+- [x] CaseLibrary.tsx: replaced manual isPremium check with usePremium() hook
+- [x] SoundBytes.tsx: replaced PREMIUM_ROLES_SET + manual check with usePremium() hook
+- [x] QuickFire.tsx: replaced PREMIUM_ROLES_SET + manual check with usePremium() hook
+- [x] Home.tsx: replaced direct trpc.premium.getStatus query with usePremium() hook
+- [x] StrainScanCoach.tsx: default export now passes isPremium from usePremium() to StrainScanCoachInner
+- [x] Profile.tsx: replaced PREMIUM_ROLE_SET + manual check with usePremium() hook
+- [x] Verified: EchoAssist.tsx, ScanCoach.tsx, RoleGuard.tsx, Layout.tsx all use correct patterns

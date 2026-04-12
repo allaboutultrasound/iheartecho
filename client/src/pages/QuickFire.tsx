@@ -12,6 +12,7 @@ import { useState, useMemo, useEffect } from "react";
 import { isVideoUrl } from "@/lib/utils";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { usePremium } from "@/hooks/usePremium";
 import Layout from "@/components/Layout";
 import { BlurredOverlay } from "@/components/BlurredOverlay";
 import { Button } from "@/components/ui/button";
@@ -488,9 +489,7 @@ function SubmitQuestionTab({ isAuthenticated }: { isAuthenticated: boolean }) {
 
 export default function QuickFire() {
   const { isAuthenticated, user } = useAuth();
-  const appRoles: string[] = (user as any)?.appRoles ?? [];
-  const PREMIUM_ROLES_SET = new Set(["premium_user", "diy_user", "diy_admin", "platform_admin"]);
-  const isPremium = (user as any)?.isPremium === true || appRoles.some(r => PREMIUM_ROLES_SET.has(r)) || (user as any)?.role === "admin";
+  const { isPremium } = usePremium();
 
   // Notification opt-in prompt state
   const [showNotifPrompt, setShowNotifPrompt] = useState(true);

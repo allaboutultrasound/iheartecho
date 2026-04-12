@@ -12,6 +12,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { usePremium } from "@/hooks/usePremium";
 import { trpc } from "@/lib/trpc";
 import { useAbTest } from "@/hooks/useAbTest";
 import Layout from "@/components/Layout";
@@ -65,8 +66,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   physics: "Physics",
   ecg: "ECG",
 };
-
-const PREMIUM_ROLES_SET = new Set(["premium_user", "diy_user", "diy_admin", "platform_admin"]);
 
 // Number of free SoundBytes available to logged-in free members (from the "All" view)
 const FREE_SOUNDBYTES_LIMIT = 3;
@@ -270,11 +269,7 @@ function UpgradeModal({ categoryLabel, onClose, onCtaClick, variant }: UpgradeMo
 
 export default function SoundBytesPage() {
   const { isAuthenticated, user } = useAuth();
-  const appRoles: string[] = (user as any)?.appRoles ?? [];
-  const isPremium =
-    (user as any)?.isPremium === true ||
-    appRoles.some((r) => PREMIUM_ROLES_SET.has(r)) ||
-    (user as any)?.role === "admin";
+  const { isPremium } = usePremium();
 
   const [activeCategory, setActiveCategory] = useState<CategoryId>("all");
   const [selectedId, setSelectedId] = useState<number | null>(null);

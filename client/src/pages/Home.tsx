@@ -34,6 +34,7 @@ function useCountUp(target: number, duration = 1800, enabled = true) {
   return count;
 }
 import { useAuth } from "@/_core/hooks/useAuth";
+import { usePremium } from "@/hooks/usePremium";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import { trpc } from "@/lib/trpc";
@@ -185,6 +186,7 @@ const STATIC_STATS = [
 
 export default function Home() {
   const { user } = useAuth();
+  const { isPremium } = usePremium();
 
   // SEO: set page title, description, and keywords
   useEffect(() => {
@@ -206,12 +208,6 @@ export default function Home() {
     }
     kw.content = "echocardiography, echo, ultrasound, cardiology, sonography, POCUS, TTE, TEE, ASE guidelines, echo protocols, cardiac imaging, echo calculator, daily challenge, CME, ARDMS, CCI";
   }, []);
-
-  const { data: premiumStatus } = trpc.premium.getStatus.useQuery(undefined, {
-    enabled: !!user,
-    staleTime: 60_000,
-  });
-  const isPremium = premiumStatus?.isPremium ?? false;
 
   // Live user count — cached for 5 minutes so it stays fresh
   const { data: userCountData } = trpc.stats.userCount.useQuery(undefined, {
