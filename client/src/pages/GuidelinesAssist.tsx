@@ -8,6 +8,7 @@ import { useState, useMemo } from "react";
 import { Link } from "wouter";
 import Layout from "@/components/Layout";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { usePremium } from "@/hooks/usePremium";
 import { getLoginUrl } from "@/const";
 import {
   Search, ChevronDown, ChevronRight, ExternalLink,
@@ -17,8 +18,6 @@ import {
   AlertCircle, CheckCircle2, Info, Filter, X,
   Printer, Lock
 } from "lucide-react";
-
-const PREMIUM_ROLES = new Set(["premium", "admin", "pro", "member", "paid"]);
 
 const BRAND = "#189aa1";
 const BRAND_LIGHT = "#f0fbfc";
@@ -1034,7 +1033,7 @@ export default function GuidelinesAssist() {
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const { user } = useAuth();
-  const isPremium = user ? PREMIUM_ROLES.has(user.role ?? "") : false;
+  const { isPremium } = usePremium();
 
   const filters = [
     { id: "all", label: "All Guidelines" },

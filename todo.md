@@ -15,6 +15,7 @@
 - [x] POCUS category wired in QuickFire prefs panel and CATS array
 
 ## Pending Features
+- [x] Fix: Premium users prompted to upgrade when attempting to print (premium gate check broken for active premium_user role)
 - [ ] Tricuspid Regurgitation engine in EchoAssist™
 - [ ] "Copy to Report" button in EchoAssist™ → Report Builder deep-link
 - [ ] Hub — Paid/boosted post system (Stripe integration)
