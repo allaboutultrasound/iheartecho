@@ -957,3 +957,7 @@
 ## Mechanical Support Assist Gate Fix (2026-04-12)
 - [x] Fix: Mechanical Support Assist shows "Accreditation Subscription Required" instead of Premium gate
 - [x] Root cause: RoleGuard only checked appRoles array, not isPremium DB flag — fixed RoleGuard to accept isPremium=true as equivalent to premium_user role
+
+## Dashboard Card Tag Fix (2026-04-12)
+- [x] Fix: Mechanical Support Assist dashboard card shows "Accreditation Subscription" tag instead of "Premium"
+- [x] Root cause: hardcoded string in card renderer — replaced with per-module subscriptionTag field

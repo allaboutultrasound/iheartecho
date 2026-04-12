@@ -46,7 +46,7 @@ import {
 const BRAND = "#189aa1";
 
 type InterestKey = "acs" | "adultEcho" | "pediatricEcho" | "fetalEcho";
-type Module = { path: string; icon: any; title: string; description: string; badge: string; color: string; premium?: boolean; external?: boolean; pinLast?: boolean; interests?: InterestKey[] };
+type Module = { path: string; icon: any; title: string; description: string; badge: string; color: string; premium?: boolean; subscriptionTag?: string; external?: boolean; pinLast?: boolean; interests?: InterestKey[] };
 // NOTE: Any module with pinLast: true will always render at the end of the grid,
 // regardless of its position in this array. Add new modules ABOVE the Community Hub entry.
 const modules: Module[] = [
@@ -112,6 +112,7 @@ const modules: Module[] = [
     badge: "MCS · Premium",
     color: "#7c3aed",
     premium: true,
+    subscriptionTag: "Premium",
     interests: ["adultEcho", "acs"],
   },
   {
@@ -159,6 +160,7 @@ const modules: Module[] = [
     badge: "Accreditation",
     color: BRAND,
     premium: true,
+    subscriptionTag: "Accreditation Subscription",
     interests: ["adultEcho", "pediatricEcho", "fetalEcho", "acs"],
   },
   // ⚠️ pinLast: true — Community Hub always renders last. Do not remove this flag.
@@ -319,13 +321,13 @@ export default function Home() {
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {sortedModules.map(({ path, icon: Icon, title, description, badge, color, premium, external }) => {
+          {sortedModules.map(({ path, icon: Icon, title, description, badge, color, premium, subscriptionTag, external }) => {
             const cardContent = (
               <div className="module-card bg-white rounded-xl p-5 cursor-pointer group h-full relative overflow-hidden">
-                {premium && (
+                {premium && subscriptionTag && (
                   <div className="absolute top-0 right-0">
                     <div className="bg-gradient-to-r from-[#0e4a50] to-[#189aa1] text-white text-[10px] font-bold px-3 py-0.5 rounded-bl-lg tracking-wide uppercase shadow-sm">
-                      Accreditation Subscription
+                      {subscriptionTag}
                     </div>
                   </div>
                 )}
