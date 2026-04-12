@@ -104,7 +104,10 @@ export function RoleGuard({ roles, allowAdmin = true, children }: RoleGuardProps
   // Check roles — appRoles is the array returned by auth.me
   const userRoles: AppRole[] = (user as any).appRoles ?? [];
   const isPlatformAdmin = userRoles.includes("platform_admin");
-  const hasRequiredRole = roles.some(r => userRoles.includes(r));
+  // Also treat isPremium=true (DB flag) as equivalent to premium_user role,
+  // since some users are granted premium directly via admin panel without a Thinkific role row.
+  const isPremiumByFlag = (user as any).isPremium === true && roles.includes("premium_user");
+  const hasRequiredRole = roles.some(r => userRoles.includes(r)) || isPremiumByFlag;
   const isAuthorised = hasRequiredRole || (allowAdmin && isPlatformAdmin);
 
    if (isAuthorised) {

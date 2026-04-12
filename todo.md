@@ -953,3 +953,7 @@
 - [x] StrainScanCoach.tsx: default export now passes isPremium from usePremium() to StrainScanCoachInner
 - [x] Profile.tsx: replaced PREMIUM_ROLE_SET + manual check with usePremium() hook
 - [x] Verified: EchoAssist.tsx, ScanCoach.tsx, RoleGuard.tsx, Layout.tsx all use correct patterns
+
+## Mechanical Support Assist Gate Fix (2026-04-12)
+- [x] Fix: Mechanical Support Assist shows "Accreditation Subscription Required" instead of Premium gate
+- [x] Root cause: RoleGuard only checked appRoles array, not isPremium DB flag — fixed RoleGuard to accept isPremium=true as equivalent to premium_user role
