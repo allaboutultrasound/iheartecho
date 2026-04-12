@@ -961,3 +961,6 @@
 ## Dashboard Card Tag Fix (2026-04-12)
 - [x] Fix: Mechanical Support Assist dashboard card shows "Accreditation Subscription" tag instead of "Premium"
 - [x] Root cause: hardcoded string in card renderer — replaced with per-module subscriptionTag field
+
+## Dashboard Card Removal (2026-04-12)
+- [x] Remove MechanicalSupportAssist™ card from dashboard home page (should only appear in EchoAssist menu)

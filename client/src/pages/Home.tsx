@@ -40,7 +40,7 @@ import Layout from "@/components/Layout";
 import { trpc } from "@/lib/trpc";
 import {
   Calculator, ClipboardList, Activity, BookOpen, FileText,
-  ArrowRight, Users, Award, Zap, Stethoscope, ExternalLink, MessageCircle, GraduationCap, BookMarked, Crown, Shield, Trophy, Volume2, Layers, CreditCard, BookCheck, CircuitBoard
+  ArrowRight, Users, Award, Zap, Stethoscope, ExternalLink, MessageCircle, GraduationCap, BookMarked, Crown, Shield, Trophy, Volume2, Layers, CreditCard, BookCheck
 } from "lucide-react";
 
 const BRAND = "#189aa1";
@@ -104,17 +104,7 @@ const modules: Module[] = [
     color: BRAND,
     interests: ["adultEcho", "pediatricEcho", "fetalEcho", "acs"],
   },
-  {
-    path: "/mechanical-support-navigator",
-    icon: CircuitBoard,
-    title: "MechanicalSupportAssist™",
-    description: "Echo assessment for LVAD, ECMO, Impella (all versions), LifeVest, and ICD/CRT-D — pre-implant, device positioning, post-implant monitoring, and weaning protocols with ScanCoach.",
-    badge: "MCS · Premium",
-    color: "#7c3aed",
-    premium: true,
-    subscriptionTag: "Premium",
-    interests: ["adultEcho", "acs"],
-  },
+
   {
     path: "/hemodynamics",
     icon: Activity,
