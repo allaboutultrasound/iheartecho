@@ -26,12 +26,13 @@ type Specialty = {
   scanCoachPath?: string;
   echoAssistPath?: string;
   free: boolean;
+  scanCoachPremium?: boolean;
 };
 
 const specialties: Specialty[] = [
   { path: "/tte", scanCoachPath: "/scan-coach?tab=tte", echoAssistPath: "/echoassist", icon: Stethoscope, title: "Adult Echo", description: "View-by-view TTE protocol with checklist, critical item tracking, normal reference values, guideline-based reference values, and probe guidance with anatomy overlays.", badge: "Adult TTE", free: true },
-  { path: "/pediatric", scanCoachPath: "/scan-coach?tab=chd", echoAssistPath: "/pediatric-echo-assist", icon: Users, title: "Pediatric Echo", description: "CHD findings, BSA Z-score calculators, Qp/Qs shunt estimation, segmental analysis, neonatal hemodynamics, and pediatric CHD scan guidance. Includes PediatricEchoAssist™ calculator engine.", badge: "Congenital Heart", free: true },
-  { path: "/fetal", scanCoachPath: "/scan-coach?tab=fetal", echoAssistPath: "/fetal-echo-assist", icon: Baby, title: "Fetal Echo", description: "Fetal cardiac findings, CHD differentials, biometry Z-scores, situs, arch patterns, fetal scan coach with clinical images, and FetalEchoAssist™ calculator engine.", badge: "Fetal", free: true },
+  { path: "/pediatric", scanCoachPath: "/scan-coach?tab=chd", echoAssistPath: "/pediatric-echo-assist", icon: Users, title: "Pediatric Echo", description: "CHD findings, BSA Z-score calculators, Qp/Qs shunt estimation, segmental analysis, neonatal hemodynamics, and pediatric CHD scan guidance. Includes PediatricEchoAssist™ calculator engine.", badge: "Congenital Heart", free: true, scanCoachPremium: true },
+  { path: "/fetal", scanCoachPath: "/scan-coach?tab=fetal", echoAssistPath: "/fetal-echo-assist", icon: Baby, title: "Fetal Echo", description: "Fetal cardiac findings, CHD differentials, biometry Z-scores, situs, arch patterns, fetal scan coach with clinical images, and FetalEchoAssist™ calculator engine.", badge: "Fetal", free: true, scanCoachPremium: true },
   { path: "/stress", scanCoachPath: "/stress-scan-coach", icon: Zap, title: "Stress Echo", description: "Exercise and DSE protocols, 17-segment WMSI scorer, target HR calculator, interpretation criteria, and pharmacologic stress guidance.", badge: "Stress Echo", free: false },
   { path: "/diastolic", scanCoachPath: "/scan-coach?tab=diastolic", echoAssistPath: "/echoassist#engine-diastologyassist", icon: Activity, title: "Diastolic Function", description: "Step-by-step diastolic assessment: mitral inflow, TDI e', E/e' ratio, LAVI, TR velocity, pulmonary venous flow, and guideline-based grading algorithm with scan coach.", badge: "Diastology", free: true },
   { path: "/strain", scanCoachPath: "/strain-scan-coach", icon: BarChart3, title: "Strain", description: "LV GLS, RV strain, LA strain, bull's-eye display, clinical interpretation, segmental curves, and strain scan coach with tips and clinical pattern library.", badge: "Strain", free: true },
@@ -114,14 +115,8 @@ export default function EchoAssistHub() {
       <div className="container py-8">
         {/* Free section */}
         <div className="mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-2 h-2 rounded-full bg-emerald-500" />
-            <h2 className="text-base font-bold text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>
-              Free — Available to All Members
-            </h2>
-          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {specialties.filter(s => s.free).map(({ path, scanCoachPath, echoAssistPath, icon: Icon, title, description, badge }) => {
+            {specialties.filter(s => s.free).map(({ path, scanCoachPath, echoAssistPath, icon: Icon, title, description, badge, scanCoachPremium }) => {
               const badgeColor = badgeColors[badge] ?? BRAND;
               return (
                 <div
@@ -133,17 +128,12 @@ export default function EchoAssistHub() {
                     <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: BRAND + "15" }}>
                       <Icon className="w-5 h-5" style={{ color: BRAND }} />
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        Free
-                      </span>
-                      <span
-                        className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                        style={{ background: badgeColor + "15", color: badgeColor }}
-                      >
-                        {badge}
-                      </span>
-                    </div>
+                    <span
+                      className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                      style={{ background: badgeColor + "15", color: badgeColor }}
+                    >
+                      {badge}
+                    </span>
                   </div>
                   <h3
                     className="font-bold text-gray-800 mb-1.5 text-base leading-snug"
@@ -163,14 +153,25 @@ export default function EchoAssistHub() {
                         </button>
                       </Link>
                       {scanCoachPath && (
-                        <Link href={scanCoachPath} className="flex-1">
+                        scanCoachPremium && !isPremium ? (
                           <button
-                            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border transition-all hover:bg-[#189aa1]/5"
-                            style={{ borderColor: BRAND + "40", color: BRAND }}
+                            className="flex-1 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border transition-all hover:bg-amber-50"
+                            style={{ borderColor: "#f59e0b40", color: "#d97706" }}
+                            onClick={() => setUpgradeModal({ title })}
                           >
-                            Go to ScanCoach
+                            <Crown className="w-3.5 h-3.5" />
+                            ScanCoach
                           </button>
-                        </Link>
+                        ) : (
+                          <Link href={scanCoachPath} className="flex-1">
+                            <button
+                              className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold border transition-all hover:bg-[#189aa1]/5"
+                              style={{ borderColor: BRAND + "40", color: BRAND }}
+                            >
+                              Go to ScanCoach
+                            </button>
+                          </Link>
+                        )
                       )}
                     </div>
                     {echoAssistPath && (
@@ -193,12 +194,6 @@ export default function EchoAssistHub() {
 
         {/* Premium section */}
         <div>
-          <div className="flex items-center gap-2 mb-4">
-            <Crown className="w-4 h-4 text-amber-500" />
-            <h2 className="text-base font-bold text-gray-700" style={{ fontFamily: "Merriweather, serif" }}>
-              Premium — Available with Paid Membership
-            </h2>
-          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {specialties.filter(s => !s.free).map(({ path, scanCoachPath, icon: Icon, title, description, badge }) => {
               const badgeColor = badgeColors[badge] ?? BRAND;

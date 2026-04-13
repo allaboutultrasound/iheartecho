@@ -964,3 +964,10 @@
 
 ## Dashboard Card Removal (2026-04-12)
 - [x] Remove MechanicalSupportAssist™ card from dashboard home page (should only appear in EchoAssist menu)
+
+## EchoAssist Hub Gating Changes (2026-04-13)
+- [x] Gate Pediatric Echo ScanCoach as premium (keep Navigator free)
+- [x] Gate Fetal Echo ScanCoach as premium (keep Navigator free)
+- [x] Remove "Free — Available to All Members" section header text
+- [x] Remove "Premium — Available with Paid Membership" section header text
+- [x] ScanCoach button for gated modules shows Crown icon + upgrade modal for non-premium users
