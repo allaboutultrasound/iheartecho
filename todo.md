@@ -971,3 +971,22 @@
 - [x] Remove "Free — Available to All Members" section header text
 - [x] Remove "Premium — Available with Paid Membership" section header text
 - [x] ScanCoach button for gated modules shows Crown icon + upgrade modal for non-premium users
+
+## Media Repository (2026-04-23)
+- [ ] Add media schema tables to drizzle/schema.ts (mediaAssets, mediaVersions, mediaAccessRules, mediaAccessLogs, mediaFolders)
+- [ ] Implement server/routers/mediaRouter.ts with CRUD, folder management, analytics, invite, and embed procedures
+- [ ] Implement server/routes/mediaServe.ts for public/private media serving and embed pages
+- [ ] Register mediaRouter in server/routers.ts and mediaServe route in server/_core/index.ts
+- [ ] Build client/src/pages/MediaRepository.tsx with thumbnail previews, folder sidebar, analytics panel
+- [ ] Add /admin/media route in App.tsx with RoleGuard
+- [ ] Add Media Repository card to PlatformAdmin admin tools grid
+
+## Media Repository — Phase 2 Enhancements (2026-04-23)
+- [x] Thumbnail previews in asset grid (images show actual thumbnails, video shows poster frame with play icon, other types show icon)
+- [x] Folder/category organisation — folder sidebar with create/delete, per-folder asset counts, Unfiled filter
+- [x] Embed analytics — view/play counts per asset, daily 30-day bar chart, recent access log with IP/referer
+- [x] Asset detail panel with 5 tabs: Info, Versions, Access, Analytics, Embed
+- [x] Upload dialog with drag-and-drop, folder assignment, access mode selection
+- [x] Media Repository card added to Platform Admin Admin Tools Hub
+- [x] Route registered at /admin/media-repository (platform_admin only)
+- [x] 19 unit tests for input validation (all passing)

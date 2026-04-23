@@ -23,6 +23,7 @@ import { engagementRouter } from "./routers/engagementRouter";
 import { soundBytesRouter } from "./routers/soundBytesRouter";
 import { abTestRouter } from "./routers/abTestRouter";
 import { navigatorAdminRouter } from "./routers/navigatorAdminRouter";
+import { mediaRouter } from "./routers/mediaRouter";
 import {
   getUserById,
   getUsersByIds,
@@ -1834,6 +1835,8 @@ export const appRouter = router({
   // ─── ScanCoach WYSIWYG Admin ──────────────────────────────────────────────────
   scanCoachAdmin: scanCoachAdminRouter,
   navigatorAdmin: navigatorAdminRouter,
+  // ─── Media Repository ─────────────────────────────────────────────────────────
+  media: mediaRouter,
 
   // ─── DIY Accreditation ─────────────────────────────────────────────────────────────
   diy: diyRouter,

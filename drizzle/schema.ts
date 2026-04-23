@@ -2591,3 +2591,106 @@ export const navigatorProtocolOverrides = mysqlTable("navigatorProtocolOverrides
 });
 export type NavigatorProtocolOverride = typeof navigatorProtocolOverrides.$inferSelect;
 export type InsertNavigatorProtocolOverride = typeof navigatorProtocolOverrides.$inferInsert;
+
+// ─── Media Repository ─────────────────────────────────────────────────────────
+// mediaAssets        — one row per logical asset (stable ID, never changes on re-upload)
+// mediaVersions      — one row per uploaded file version; current version pointer on asset
+// mediaAccessRules   — per-asset access rules: public or email-invite
+// mediaAccessLogs    — audit log of every serve/embed access
+// mediaFolders       — hierarchical folder/category system for organizing media assets
+
+export const mediaAssets = mysqlTable("mediaAssets", {
+  id: int("id").autoincrement().primaryKey(),
+  // Stable public-facing slug used in all embed/serve URLs — never changes
+  slug: varchar("slug", { length: 64 }).notNull().unique(),
+  title: varchar("title", { length: 256 }).notNull(),
+  description: text("description"),
+  // Broad media type bucket for filtering
+  mediaType: mysqlEnum("mediaType", [
+    "image", "audio", "video", "html", "scorm", "zip", "lms", "document", "other"
+  ]).notNull(),
+  // Original filename of the first upload (display only)
+  originalFilename: varchar("originalFilename", { length: 512 }),
+  // Tags — JSON string array for search/filter
+  tags: text("tags"),
+  // Access mode: "public" = anyone with link; "private" = email-invite only
+  accessMode: mysqlEnum("accessMode", ["public", "private"]).default("private").notNull(),
+  // ID of the currently active version
+  currentVersionId: int("currentVersionId"),
+  uploadedByUserId: int("uploadedByUserId").notNull(),
+  // Folder/category organization (FK to mediaFolders.id)
+  folderId: int("folderId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  // Soft delete
+  deletedAt: timestamp("deletedAt"),
+});
+export type MediaAsset = typeof mediaAssets.$inferSelect;
+export type InsertMediaAsset = typeof mediaAssets.$inferInsert;
+
+export const mediaVersions = mysqlTable("mediaVersions", {
+  id: int("id").autoincrement().primaryKey(),
+  assetId: int("assetId").notNull(),
+  versionNumber: int("versionNumber").notNull(),   // 1-indexed, increments on each re-upload
+  // S3 key — stored so we can generate presigned URLs server-side
+  s3Key: text("s3Key").notNull(),
+  // Public CDN/S3 URL (non-expiring for public assets; presigned on-demand for private)
+  s3Url: text("s3Url").notNull(),
+  mimeType: varchar("mimeType", { length: 128 }),
+  fileSizeBytes: bigint("fileSizeBytes", { mode: "number" }),
+  originalFilename: varchar("originalFilename", { length: 512 }),
+  changeNote: text("changeNote"),                  // optional admin note about this version
+  uploadedByUserId: int("uploadedByUserId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type MediaVersion = typeof mediaVersions.$inferSelect;
+export type InsertMediaVersion = typeof mediaVersions.$inferInsert;
+
+export const mediaAccessRules = mysqlTable("mediaAccessRules", {
+  id: int("id").autoincrement().primaryKey(),
+  assetId: int("assetId").notNull(),
+  // Email address granted access (for private assets)
+  email: varchar("email", { length: 320 }).notNull(),
+  // Opaque token embedded in the private serve URL for this recipient
+  accessToken: varchar("accessToken", { length: 128 }).notNull().unique(),
+  grantedByUserId: int("grantedByUserId").notNull(),
+  // Optional expiry — null means no expiry
+  expiresAt: timestamp("expiresAt"),
+  revokedAt: timestamp("revokedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export type MediaAccessRule = typeof mediaAccessRules.$inferSelect;
+export type InsertMediaAccessRule = typeof mediaAccessRules.$inferInsert;
+
+export const mediaAccessLogs = mysqlTable("mediaAccessLogs", {
+  id: int("id").autoincrement().primaryKey(),
+  assetId: int("assetId").notNull(),
+  versionId: int("versionId"),
+  // "serve" = direct file access, "embed" = iframe embed page load
+  accessType: mysqlEnum("accessType", ["serve", "embed"]).notNull(),
+  // For private access: which rule was used
+  accessRuleId: int("accessRuleId"),
+  // For authenticated admin access
+  userId: int("userId"),
+  ipAddress: varchar("ipAddress", { length: 64 }),
+  userAgent: text("userAgent"),
+  referer: text("referer"),
+  accessedAt: timestamp("accessedAt").defaultNow().notNull(),
+});
+export type MediaAccessLog = typeof mediaAccessLogs.$inferSelect;
+export type InsertMediaAccessLog = typeof mediaAccessLogs.$inferInsert;
+
+export const mediaFolders = mysqlTable("mediaFolders", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 128 }).notNull(),
+  description: text("description"),
+  // Optional parent folder for nested categories (null = top-level)
+  parentId: int("parentId"),
+  // Display order within parent
+  sortOrder: int("sortOrder").default(0).notNull(),
+  createdByUserId: int("createdByUserId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type MediaFolder = typeof mediaFolders.$inferSelect;
+export type InsertMediaFolder = typeof mediaFolders.$inferInsert;
