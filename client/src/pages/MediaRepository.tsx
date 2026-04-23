@@ -538,49 +538,47 @@ function AssetDetailPanel({
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Modal header row: thumbnail + meta + action buttons */}
-      <div className="flex items-start gap-4 px-6 pt-5 pb-4 border-b border-gray-100">
+      {/* Modal header row: compact single-line */}
+      <div className="flex-shrink-0 flex items-center gap-3 px-4 pt-3 pb-3 border-b border-gray-100">
         <div className="flex-shrink-0">
-          <AssetThumbnail asset={asset as AssetRow} size="md" />
+          <AssetThumbnail asset={asset as AssetRow} size="sm" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap mb-1">
+          <p className="text-sm font-semibold text-gray-800 truncate leading-tight">{asset.title}</p>
+          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
             <Badge
-              className="text-xs flex items-center gap-1"
+              className="text-xs flex items-center gap-1 h-5 px-1.5"
               style={{ background: asset.accessMode === "public" ? "#10b981" : "#f59e0b", color: "#fff", border: "none" }}
             >
-              {asset.accessMode === "public" ? <Globe className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+              {asset.accessMode === "public" ? <Globe className="w-2.5 h-2.5" /> : <Lock className="w-2.5 h-2.5" />}
               {asset.accessMode === "public" ? "Public" : "Private"}
             </Badge>
-            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-mono">{asset.currentVersionMime ?? asset.mediaType}</span>
-          </div>
-          <p className="text-sm font-semibold text-gray-700 mt-0.5">
-            {versions[0] ? `v${versions.length} · ` : ""}{versions[0]?.fileSizeBytes ? formatBytes(versions[0].fileSizeBytes) : ""}
-          </p>
-          <div className="flex flex-wrap gap-2 mt-3">
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8 text-xs gap-1.5"
-              onClick={() => updateAsset.mutate({ assetId: asset.id, accessMode: asset.accessMode === "public" ? "private" : "public" })}
-            >
-              {asset.accessMode === "public" ? <Lock className="w-3 h-3" /> : <Globe className="w-3 h-3" />}
-              {asset.accessMode === "public" ? "Make Private" : "Make Public"}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8 text-xs gap-1.5"
-              onClick={() => setActiveTab("versions")}
-            >
-              <UploadCloud className="w-3 h-3" /> New Version
-            </Button>
+            <span className="text-xs bg-gray-100 text-gray-500 px-1.5 rounded font-mono">{asset.currentVersionMime ?? asset.mediaType}</span>
+            {versions[0] && <span className="text-xs text-gray-400">v{versions.length} · {versions[0]?.fileSizeBytes ? formatBytes(versions[0].fileSizeBytes) : ""}</span>}
           </div>
         </div>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-xs gap-1 px-2"
+            onClick={() => updateAsset.mutate({ assetId: asset.id, accessMode: asset.accessMode === "public" ? "private" : "public" })}
+          >
+            {asset.accessMode === "public" ? <Lock className="w-3 h-3" /> : <Globe className="w-3 h-3" />}
+            {asset.accessMode === "public" ? "Make Private" : "Make Public"}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-7 text-xs gap-1 px-2"
+            onClick={() => setActiveTab("versions")}
+          >
+            <UploadCloud className="w-3 h-3" /> New Version
+          </Button>
+        </div>
       </div>
-
-      {/* Tabs */}
-      <div className="flex gap-0 border-b border-gray-100 px-4 mt-3 overflow-x-auto">
+      {/* Tabs — always visible, flex-shrink-0 */}
+      <div className="flex-shrink-0 flex gap-0 border-b border-gray-100 px-4 overflow-x-auto">
         {tabs.map((tab) => (
           <button
             key={tab.id}
