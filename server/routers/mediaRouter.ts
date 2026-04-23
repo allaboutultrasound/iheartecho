@@ -15,7 +15,7 @@
  */
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { and, desc, eq, isNull, like, or, sql } from "drizzle-orm";
+import { and, desc, eq, isNotNull, isNull, like, lt, or, sql } from "drizzle-orm";
 import { adminProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { storagePut } from "../storage";
@@ -539,6 +539,34 @@ export const mediaRouter = router({
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
       await db.update(mediaAssets)
         .set({ deletedAt: new Date() })
+        .where(eq(mediaAssets.id, input.assetId));
+      return { success: true };
+    }),
+  // ── List soft-deleted assets (Recycle Bin) ────────────────────────────────
+  listDeletedAssets: adminProcedure
+    .query(async () => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const rows = await db
+        .select()
+        .from(mediaAssets)
+        .where(isNotNull(mediaAssets.deletedAt))
+        .orderBy(desc(mediaAssets.deletedAt));
+      return rows.map((a) => {
+        const deletedAt = a.deletedAt ? new Date(a.deletedAt).getTime() : Date.now();
+        const daysElapsed = Math.floor((Date.now() - deletedAt) / (1000 * 60 * 60 * 24));
+        const daysRemaining = Math.max(0, 30 - daysElapsed);
+        return { ...a, daysRemaining };
+      });
+    }),
+  // ── Restore a soft-deleted asset ─────────────────────────────────────────
+  restoreAsset: adminProcedure
+    .input(z.object({ assetId: z.number() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      await db.update(mediaAssets)
+        .set({ deletedAt: null })
         .where(eq(mediaAssets.id, input.assetId));
       return { success: true };
     }),

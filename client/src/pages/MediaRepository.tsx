@@ -2,9 +2,10 @@
   Media Repository — iHeartEcho™ Platform Admin
   ─────────────────────────────────────────────
   Features:
-  - Thumbnail grid with visual previews for images/video/audio/documents
+  - List view (default) and card/icon grid view with toggle
   - Folder sidebar for organizing assets by course, module, or topic
-  - Upload dialog (base64 → S3 via tRPC)
+  - Recycle Bin — soft-deleted assets with restore and 30-day expiry
+  - Chunked upload (5 MB chunks) for files of any size
   - Asset detail panel: metadata, versions, access rules, embed code
   - Analytics panel: view/play counts, daily breakdown chart, recent access log
   - Email invite for private assets
@@ -58,6 +59,10 @@ import {
   UploadCloud,
   Trash2,
   AlertTriangle,
+  ArchiveRestore,
+  RotateCcw,
+  LayoutList,
+  LayoutGrid,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -131,6 +136,47 @@ const MEDIA_TYPE_COLOR: Record<MediaType, string> = {
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+const CHUNK_SIZE = 5 * 1024 * 1024; // 5 MB
+
+async function chunkedUpload(
+  file: File,
+  folder: string,
+  onProgress: (pct: number) => void
+): Promise<{ url: string; fileKey: string; sizeBytes: number }> {
+  const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+  // 1. Initiate
+  const initRes = await fetch("/api/media-upload/initiate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ fileName: file.name, mimeType: file.type || "application/octet-stream", totalChunks }),
+  });
+  if (!initRes.ok) throw new Error(await initRes.text());
+  const { uploadId } = await initRes.json() as { uploadId: string };
+  // 2. Upload chunks
+  for (let i = 0; i < totalChunks; i++) {
+    const start = i * CHUNK_SIZE;
+    const blob = file.slice(start, start + CHUNK_SIZE);
+    const form = new FormData();
+    form.append("uploadId", uploadId);
+    form.append("chunkIndex", String(i));
+    form.append("chunk", blob, file.name);
+    const chunkRes = await fetch("/api/media-upload/chunk", { method: "POST", credentials: "include", body: form });
+    if (!chunkRes.ok) throw new Error(await chunkRes.text());
+    onProgress(Math.round(((i + 1) / totalChunks) * 90));
+  }
+  // 3. Complete
+  const completeRes = await fetch("/api/media-upload/complete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ uploadId, folder }),
+  });
+  if (!completeRes.ok) throw new Error(await completeRes.text());
+  onProgress(100);
+  return completeRes.json() as Promise<{ url: string; fileKey: string; sizeBytes: number }>;
+}
+
 function formatBytes(bytes: number | null | undefined): string {
   if (!bytes) return "—";
   if (bytes < 1024) return `${bytes} B`;
@@ -188,21 +234,27 @@ function AssetThumbnail({ asset, size = "md" }: { asset: AssetRow; size?: "sm" |
   );
 }
 
-// ─── Folder Sidebar ────────────────────────────────────────────────────────────
+// ─── Folder Sidebar ──────────────────────────────────────────────────────
 function FolderSidebar({
   folders,
   selectedFolderId,
+  showTrash,
   onSelectFolder,
+  onSelectTrash,
   onCreateFolder,
   onDeleteFolder,
   assetCounts,
+  trashCount,
 }: {
   folders: FolderRow[];
   selectedFolderId: number | null | undefined;
+  showTrash: boolean;
   onSelectFolder: (id: number | null | undefined) => void;
+  onSelectTrash: () => void;
   onCreateFolder: (name: string) => void;
   onDeleteFolder: (id: number) => void;
   assetCounts: Record<string, number>;
+  trashCount: number;
 }) {
   const [newFolderName, setNewFolderName] = useState("");
   const [showNewFolder, setShowNewFolder] = useState(false);
@@ -215,7 +267,7 @@ function FolderSidebar({
         <button
           onClick={() => onSelectFolder(undefined)}
           className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition-colors ${
-            selectedFolderId === undefined ? "bg-[#f0fbfc] text-[#189aa1] font-semibold" : "text-gray-600 hover:bg-gray-50"
+            !showTrash && selectedFolderId === undefined ? "bg-[#f0fbfc] text-[#189aa1] font-semibold" : "text-gray-600 hover:bg-gray-50"
           }`}
         >
           <Folder className="w-4 h-4 flex-shrink-0" />
@@ -225,7 +277,7 @@ function FolderSidebar({
         <button
           onClick={() => onSelectFolder(null)}
           className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition-colors ${
-            selectedFolderId === null ? "bg-[#f0fbfc] text-[#189aa1] font-semibold" : "text-gray-600 hover:bg-gray-50"
+            !showTrash && selectedFolderId === null ? "bg-[#f0fbfc] text-[#189aa1] font-semibold" : "text-gray-600 hover:bg-gray-50"
           }`}
         >
           <File className="w-4 h-4 flex-shrink-0 text-gray-400" />
@@ -239,7 +291,7 @@ function FolderSidebar({
           <div
             key={folder.id}
             className={`group flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-sm cursor-pointer transition-colors ${
-              selectedFolderId === folder.id ? "bg-[#f0fbfc] text-[#189aa1] font-semibold" : "text-gray-600 hover:bg-gray-50"
+              !showTrash && selectedFolderId === folder.id ? "bg-[#f0fbfc] text-[#189aa1] font-semibold" : "text-gray-600 hover:bg-gray-50"
             }`}
             onClick={() => onSelectFolder(folder.id)}
           >
@@ -261,6 +313,21 @@ function FolderSidebar({
         ))}
       </div>
 
+      {/* Trash */}
+      <div className="px-2 pb-1 border-t border-gray-100 pt-2">
+        <button
+          onClick={onSelectTrash}
+          className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition-colors ${
+            showTrash ? "bg-red-50 text-red-600 font-semibold" : "text-gray-500 hover:bg-gray-50"
+          }`}
+        >
+          <Trash2 className="w-4 h-4 flex-shrink-0" />
+          <span className="flex-1 text-left truncate">Recycle Bin</span>
+          {trashCount > 0 && (
+            <span className="text-xs text-red-400 font-medium">{trashCount}</span>
+          )}
+        </button>
+      </div>
       <div className="p-2 border-t border-gray-100">
         {showNewFolder ? (
           <div className="flex gap-1">
@@ -390,25 +457,21 @@ function AssetDetailPanel({
     setVersionUploading(true);
     setVersionProgress(0);
     try {
-      // Read file as base64 in chunks, reporting progress
-      const arrayBuf = await versionFile.arrayBuffer();
-      setVersionProgress(40);
-      const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuf)));
-      setVersionProgress(70);
+      const { url, fileKey, sizeBytes } = await chunkedUpload(versionFile, "media-assets", setVersionProgress);
       await addVersionMutation.mutateAsync({
         assetId: asset.id,
-        fileBase64: base64,
+        fileS3Url: url,
+        fileS3Key: fileKey,
         mimeType: versionFile.type || "application/octet-stream",
-        fileSizeBytes: versionFile.size,
+        fileSizeBytes: sizeBytes,
         originalFilename: versionFile.name,
         changeNote: versionNote || undefined,
         promoteToActive: true,
       });
-      setVersionProgress(100);
       setVersionFile(null);
       setVersionNote("");
-    } catch (e) {
-      // error handled by mutation onError
+    } catch (e: any) {
+      toast.error(e?.message ?? "Upload failed");
     } finally {
       setVersionUploading(false);
       setVersionProgress(0);
@@ -638,12 +701,12 @@ function AssetDetailPanel({
                   onClick={() => setConfirmDeleteAsset(true)}
                 >
                   <Trash2 className="w-3 h-3 mr-1.5" />
-                  Delete This Asset
+                  Move to Recycle Bin
                 </Button>
               ) : (
                 <div className="space-y-2">
                   <p className="text-xs text-red-700 font-medium">
-                    Permanently delete &quot;{asset.title}&quot;? This cannot be undone.
+                    Move &quot;{asset.title}&quot; to Recycle Bin? It will be permanently deleted after 30 days.
                   </p>
                   <div className="flex gap-2">
                     <Button
@@ -655,7 +718,7 @@ function AssetDetailPanel({
                       {deleteAssetMutation.isPending ? (
                         <Loader2 className="w-3 h-3 animate-spin" />
                       ) : (
-                        "Yes, Delete"
+                        "Yes, Move to Bin"
                       )}
                     </Button>
                     <Button
@@ -789,7 +852,7 @@ function AssetDetailPanel({
                           className="h-6 text-xs"
                           onClick={() => promoteVersion.mutate({ assetId: asset.id, versionId: v.id })}
                         >
-                          Promote to Active
+                          Revert to This Version
                         </Button>
                         {confirmDeleteVersionId === v.id ? (
                           <div className="flex gap-1">
@@ -1028,6 +1091,7 @@ function UploadDialog({
   const [file, setFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const createAsset = trpc.media.createAsset.useMutation({
@@ -1037,11 +1101,11 @@ function UploadDialog({
       onClose();
       resetForm();
     },
-    onError: (e) => { toast.error(e.message); setUploading(false); },
+    onError: (e) => { toast.error(e.message); setUploading(false); setUploadProgress(0); },
   });
 
   function resetForm() {
-    setTitle(""); setDescription(""); setTags(""); setAccessMode("private"); setFile(null); setUploading(false);
+    setTitle(""); setDescription(""); setTags(""); setAccessMode("private"); setFile(null); setUploading(false); setUploadProgress(0);
   }
 
   const handleFile = (f: File) => { setFile(f); if (!title) setTitle(f.name.replace(/\.[^.]+$/, "")); };
@@ -1054,23 +1118,27 @@ function UploadDialog({
   const handleSubmit = async () => {
     if (!file || !title.trim()) return;
     setUploading(true);
-    const reader = new FileReader();
-    reader.onload = () => {
-      const b64 = (reader.result as string).split(",")[1];
+    setUploadProgress(0);
+    try {
+      const { url, fileKey, sizeBytes } = await chunkedUpload(file, "media-assets", setUploadProgress);
       createAsset.mutate({
         title: title.trim(),
         description: description.trim() || undefined,
         tags: tags.split(",").map((t) => t.trim()).filter(Boolean),
         accessMode,
         folderId: folderId ?? undefined,
-        fileBase64: b64,
+        fileS3Url: url,
+        fileS3Key: fileKey,
         mimeType: file.type || undefined,
-        fileSizeBytes: file.size,
+        fileSizeBytes: sizeBytes,
         originalFilename: file.name,
         changeNote: "Initial upload",
       });
-    };
-    reader.readAsDataURL(file);
+    } catch (err: any) {
+      toast.error(err?.message ?? "Upload failed");
+      setUploading(false);
+      setUploadProgress(0);
+    }
   };
 
   return (
@@ -1147,8 +1215,22 @@ function UploadDialog({
           </div>
         </div>
 
+        {uploading && (
+          <div className="space-y-1">
+            <div className="flex justify-between text-xs text-gray-500">
+              <span>Uploading…</span>
+              <span>{uploadProgress}%</span>
+            </div>
+            <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-[#189aa1] transition-all duration-300 rounded-full"
+                style={{ width: `${uploadProgress}%` }}
+              />
+            </div>
+          </div>
+        )}
         <DialogFooter>
-          <Button variant="outline" onClick={() => { onClose(); resetForm(); }}>Cancel</Button>
+          <Button variant="outline" onClick={() => { onClose(); resetForm(); }} disabled={uploading}>Cancel</Button>
           <Button disabled={!file || !title.trim() || uploading} style={{ background: BRAND }} onClick={handleSubmit}>
             {uploading
               ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Uploading…</>
@@ -1167,11 +1249,13 @@ export default function MediaRepository() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [mediaTypeFilter, setMediaTypeFilter] = useState<MediaType | "all">("all");
   const [accessFilter, setAccessFilter] = useState<AccessMode | "all">("all");
-  const [selectedFolderId, setSelectedFolderId] = useState<number | null | undefined>(undefined);
+   const [selectedFolderId, setSelectedFolderId] = useState<number | null | undefined>(undefined);
   const [selectedAssetId, setSelectedAssetId] = useState<number | null>(null);
   const [showUpload, setShowUpload] = useState(false);
   const [showFolderSidebar, setShowFolderSidebar] = useState(false);
   const [showDetailPanel, setShowDetailPanel] = useState(false);
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  const [showTrash, setShowTrash] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 300);
@@ -1185,6 +1269,15 @@ export default function MediaRepository() {
     folderId: selectedFolderId,
     limit: 100,
     offset: 0,
+  }, { enabled: !showTrash });
+
+  const { data: deletedAssetsData, isLoading: trashLoading, refetch: refetchTrash } = trpc.media.listDeletedAssets.useQuery(
+    undefined, { enabled: showTrash }
+  );
+
+  const restoreAsset = trpc.media.restoreAsset.useMutation({
+    onSuccess: () => { toast.success("Asset restored"); refetchTrash(); refetchAssets(); },
+    onError: (e) => toast.error(e.message),
   });
 
   const { data: folders = [], refetch: refetchFolders } = trpc.media.listFolders.useQuery();
@@ -1201,7 +1294,8 @@ export default function MediaRepository() {
 
   const assets: AssetRow[] = (assetsData?.assets ?? []) as AssetRow[];
   const total = assetsData?.total ?? 0;
-
+  const deletedAssets = (deletedAssetsData ?? []) as Array<AssetRow & { daysRemaining: number }>;
+  const trashCount = deletedAssets.length;
   // Build per-folder asset counts for the sidebar
   const assetCounts: Record<string, number> = { null: 0 };
   for (const a of assets) {
@@ -1262,10 +1356,13 @@ export default function MediaRepository() {
                 <FolderSidebar
                   folders={folders as FolderRow[]}
                   selectedFolderId={selectedFolderId}
-                  onSelectFolder={(id) => { setSelectedFolderId(id); setShowFolderSidebar(false); }}
+                  showTrash={showTrash}
+                  onSelectFolder={(id) => { setSelectedFolderId(id); setShowTrash(false); setShowFolderSidebar(false); }}
+                  onSelectTrash={() => { setShowTrash(true); setSelectedAssetId(null); setShowFolderSidebar(false); }}
                   onCreateFolder={(name) => createFolder.mutate({ name })}
                   onDeleteFolder={(id) => deleteFolder.mutate({ folderId: id })}
                   assetCounts={assetCounts}
+                  trashCount={trashCount}
                 />
               </div>
             </div>
@@ -1293,137 +1390,320 @@ export default function MediaRepository() {
             <FolderSidebar
               folders={folders as FolderRow[]}
               selectedFolderId={selectedFolderId}
-              onSelectFolder={setSelectedFolderId}
+              showTrash={showTrash}
+              onSelectFolder={(id) => { setSelectedFolderId(id); setShowTrash(false); }}
+              onSelectTrash={() => { setShowTrash(true); setSelectedAssetId(null); }}
               onCreateFolder={(name) => createFolder.mutate({ name })}
               onDeleteFolder={(id) => deleteFolder.mutate({ folderId: id })}
               assetCounts={assetCounts}
+              trashCount={trashCount}
             />
           </div>
 
           <div className="flex flex-1 overflow-hidden">
-            {/* Asset grid */}
+            {/* Asset panel */}
             <div className={`flex flex-col flex-1 overflow-hidden ${selectedAssetId ? "sm:border-r sm:border-gray-100" : ""}`}>
-              {/* Filter bar */}
+              {/* Filter / toolbar bar */}
               <div className="flex items-center gap-2 p-2 sm:p-3 border-b border-gray-100 bg-white flex-wrap">
-                <div className="relative flex-1 min-w-0">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
-                  <Input
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search assets…"
-                    className="pl-8 h-8 text-sm"
-                  />
-                </div>
+                {!showTrash && (
+                  <div className="relative flex-1 min-w-0">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                    <Input
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      placeholder="Search assets…"
+                      className="pl-8 h-8 text-sm"
+                    />
+                  </div>
+                )}
+                {showTrash && (
+                  <p className="flex-1 text-sm font-semibold text-red-600 flex items-center gap-1.5">
+                    <Trash2 className="w-4 h-4" /> Recycle Bin
+                    <span className="text-xs font-normal text-gray-400 ml-1">Items are permanently deleted after 30 days</span>
+                  </p>
+                )}
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <Select value={mediaTypeFilter} onValueChange={(v) => setMediaTypeFilter(v as any)}>
-                    <SelectTrigger className="h-8 w-28 sm:w-36 text-xs"><SelectValue placeholder="All types" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All types</SelectItem>
-                      {(Object.keys(MEDIA_TYPE_LABELS) as MediaType[]).map((t) => (
-                        <SelectItem key={t} value={t}>{MEDIA_TYPE_LABELS[t]}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select value={accessFilter} onValueChange={(v) => setAccessFilter(v as any)}>
-                    <SelectTrigger className="h-8 w-24 sm:w-32 text-xs"><SelectValue placeholder="All access" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All access</SelectItem>
-                      <SelectItem value="public">Public</SelectItem>
-                      <SelectItem value="private">Private</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => refetchAssets()}>
-                    <RefreshCw className="w-3.5 h-3.5 text-gray-400" />
-                  </Button>
+                  {!showTrash && (
+                    <>
+                      <Select value={mediaTypeFilter} onValueChange={(v) => setMediaTypeFilter(v as any)}>
+                        <SelectTrigger className="h-8 w-28 sm:w-36 text-xs"><SelectValue placeholder="All types" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All types</SelectItem>
+                          {(Object.keys(MEDIA_TYPE_LABELS) as MediaType[]).map((t) => (
+                            <SelectItem key={t} value={t}>{MEDIA_TYPE_LABELS[t]}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select value={accessFilter} onValueChange={(v) => setAccessFilter(v as any)}>
+                        <SelectTrigger className="h-8 w-24 sm:w-32 text-xs"><SelectValue placeholder="All access" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All access</SelectItem>
+                          <SelectItem value="public">Public</SelectItem>
+                          <SelectItem value="private">Private</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => refetchAssets()}>
+                        <RefreshCw className="w-3.5 h-3.5 text-gray-400" />
+                      </Button>
+                    </>
+                  )}
+                  {showTrash && (
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => refetchTrash()}>
+                      <RefreshCw className="w-3.5 h-3.5 text-gray-400" />
+                    </Button>
+                  )}
+                  {/* View mode toggle */}
+                  <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
+                    <button
+                      className={`h-8 w-8 flex items-center justify-center transition-colors ${
+                        viewMode === "list" ? "bg-[#189aa1] text-white" : "text-gray-400 hover:bg-gray-50"
+                      }`}
+                      onClick={() => setViewMode("list")}
+                      title="List view"
+                    >
+                      <LayoutList className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      className={`h-8 w-8 flex items-center justify-center transition-colors ${
+                        viewMode === "grid" ? "bg-[#189aa1] text-white" : "text-gray-400 hover:bg-gray-50"
+                      }`}
+                      onClick={() => setViewMode("grid")}
+                      title="Grid view"
+                    >
+                      <LayoutGrid className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              {/* Grid */}
-              <div className="flex-1 overflow-y-auto p-2 sm:p-4">
-                {assetsLoading ? (
-                  <div className="flex items-center justify-center h-32">
-                    <Loader2 className="w-6 h-6 animate-spin text-[#189aa1]" />
-                  </div>
-                ) : assets.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-48 text-center">
-                    <Upload className="w-10 h-10 text-gray-200 mb-3" />
-                    <p className="text-sm font-medium text-gray-500">No assets found</p>
-                    <p className="text-xs text-gray-400 mt-1">Upload your first asset to get started</p>
-                    <Button size="sm" className="mt-3" style={{ background: BRAND }} onClick={() => setShowUpload(true)}>
-                      <Upload className="w-3.5 h-3.5 mr-1.5" /> Upload Asset
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3">
-                    {assets.map((asset) => {
-                      const views = (analyticsSummary as any)?.[asset.id]?.total ?? 0;
-                      const isSelected = selectedAssetId === asset.id;
-                      return (
-                        <div
-                          key={asset.id}
-                          className={`group rounded-xl border cursor-pointer transition-all hover:shadow-md ${
-                            isSelected
-                              ? "border-[#189aa1] shadow-md ring-1 ring-[#189aa1]/20"
-                              : "border-gray-100 hover:border-gray-200"
-                          } bg-white overflow-hidden`}
-                          onClick={() => {
-                            if (isSelected) {
-                              setSelectedAssetId(null);
-                              setShowDetailPanel(false);
-                            } else {
-                              setSelectedAssetId(asset.id);
-                              setShowDetailPanel(true);
-                            }
-                          }}
-                        >
-                          <AssetThumbnail asset={asset} size="lg" />
-                          <div className="p-2 sm:p-2.5">
-                            <p className="text-xs font-semibold text-gray-800 truncate leading-snug">{asset.title}</p>
-                            <div className="flex items-center justify-between mt-1">
-                              <span className="text-xs text-gray-400 capitalize">{asset.mediaType}</span>
-                              <div className="flex items-center gap-1">
-                                {asset.accessMode === "public"
-                                  ? <Globe className="w-3 h-3 text-emerald-500" />
-                                  : <Lock className="w-3 h-3 text-amber-500" />
-                                }
-                                {views > 0 && (
-                                  <span className="text-xs text-gray-400 flex items-center gap-0.5">
-                                    <Eye className="w-2.5 h-2.5" />{views}
+              {/* Content area */}
+              <div className="flex-1 overflow-y-auto">
+
+                {/* ── Trash view ──────────────────────────────────────────── */}
+                {showTrash && (
+                  <div className="p-2 sm:p-4">
+                    {trashLoading ? (
+                      <div className="flex items-center justify-center h-32">
+                        <Loader2 className="w-6 h-6 animate-spin text-[#189aa1]" />
+                      </div>
+                    ) : deletedAssets.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center h-48 text-center">
+                        <Trash2 className="w-10 h-10 text-gray-200 mb-3" />
+                        <p className="text-sm font-medium text-gray-500">Recycle Bin is empty</p>
+                        <p className="text-xs text-gray-400 mt-1">Deleted assets appear here for 30 days</p>
+                      </div>
+                    ) : (
+                      <table className="w-full text-sm border-collapse">
+                        <thead>
+                          <tr className="border-b border-gray-100">
+                            <th className="text-left py-2 px-2 text-xs font-semibold text-gray-500 w-8"></th>
+                            <th className="text-left py-2 px-2 text-xs font-semibold text-gray-500">Name</th>
+                            <th className="text-left py-2 px-2 text-xs font-semibold text-gray-500 hidden sm:table-cell">Type</th>
+                            <th className="text-left py-2 px-2 text-xs font-semibold text-gray-500 hidden md:table-cell">Expires in</th>
+                            <th className="text-right py-2 px-2 text-xs font-semibold text-gray-500">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {deletedAssets.map((asset) => {
+                            const Icon = MEDIA_TYPE_ICONS[asset.mediaType];
+                            return (
+                              <tr key={asset.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                                <td className="py-2 px-2">
+                                  <div className="w-7 h-7 rounded flex items-center justify-center" style={{ background: MEDIA_TYPE_BG[asset.mediaType] }}>
+                                    <Icon className="w-3.5 h-3.5" style={{ color: MEDIA_TYPE_COLOR[asset.mediaType] }} />
+                                  </div>
+                                </td>
+                                <td className="py-2 px-2">
+                                  <p className="text-sm font-medium text-gray-700">{asset.title}</p>
+                                  {asset.originalFilename && (
+                                    <p className="text-xs text-gray-400">{asset.originalFilename}</p>
+                                  )}
+                                </td>
+                                <td className="py-2 px-2 hidden sm:table-cell">
+                                  <span className="text-xs text-gray-500 capitalize">{asset.mediaType}</span>
+                                </td>
+                                <td className="py-2 px-2 hidden md:table-cell">
+                                  <span className={`text-xs font-medium ${
+                                    asset.daysRemaining <= 3 ? "text-red-500" : "text-gray-500"
+                                  }`}>
+                                    {asset.daysRemaining}d
                                   </span>
-                                )}
-                              </div>
-                            </div>
-                            {/* Quick-action buttons */}
-                            <div className="flex gap-1 mt-1.5 sm:mt-2" onClick={(e) => e.stopPropagation()}>
-                              <a
-                                href={asset.viewUrl ?? asset.serveUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                title="View in browser"
-                                className="flex-1"
-                              >
-                                <button className="w-full flex items-center justify-center gap-1 text-xs py-1 rounded border border-gray-200 hover:border-[#189aa1] hover:text-[#189aa1] text-gray-500 transition-colors min-h-[32px]">
-                                  <ExternalLink className="w-3 h-3" /> View
-                                </button>
-                              </a>
-                              <a
-                                href={asset.downloadUrl ?? (asset.serveUrl + "/download")}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                title="Download file"
-                                className="flex-1"
-                              >
-                                <button className="w-full flex items-center justify-center gap-1 text-xs py-1 rounded border border-gray-200 hover:border-[#189aa1] hover:text-[#189aa1] text-gray-500 transition-colors min-h-[32px]">
-                                  <Download className="w-3 h-3" /> <span className="hidden sm:inline">Download</span><span className="sm:hidden">DL</span>
-                                </button>
-                              </a>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
+                                </td>
+                                <td className="py-2 px-2 text-right">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 text-xs gap-1.5 text-[#189aa1] border-[#189aa1]/30 hover:bg-[#f0fbfc]"
+                                    disabled={restoreAsset.isPending}
+                                    onClick={() => restoreAsset.mutate({ assetId: asset.id })}
+                                  >
+                                    <ArchiveRestore className="w-3 h-3" /> Restore
+                                  </Button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    )}
                   </div>
                 )}
+
+                {/* ── Normal assets view ──────────────────────────────────── */}
+                {!showTrash && (
+                  <>
+                    {assetsLoading ? (
+                      <div className="flex items-center justify-center h-32">
+                        <Loader2 className="w-6 h-6 animate-spin text-[#189aa1]" />
+                      </div>
+                    ) : assets.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center h-48 text-center">
+                        <Upload className="w-10 h-10 text-gray-200 mb-3" />
+                        <p className="text-sm font-medium text-gray-500">No assets found</p>
+                        <p className="text-xs text-gray-400 mt-1">Upload your first asset to get started</p>
+                        <Button size="sm" className="mt-3" style={{ background: BRAND }} onClick={() => setShowUpload(true)}>
+                          <Upload className="w-3.5 h-3.5 mr-1.5" /> Upload Asset
+                        </Button>
+                      </div>
+                    ) : viewMode === "list" ? (
+                      /* ── List view (Windows-style) ── */
+                      <table className="w-full text-sm border-collapse">
+                        <thead className="sticky top-0 bg-white z-10">
+                          <tr className="border-b border-gray-100">
+                            <th className="text-left py-2 px-2 sm:px-3 text-xs font-semibold text-gray-500 w-8"></th>
+                            <th className="text-left py-2 px-2 sm:px-3 text-xs font-semibold text-gray-500">Name</th>
+                            <th className="text-left py-2 px-2 sm:px-3 text-xs font-semibold text-gray-500 hidden sm:table-cell w-24">Type</th>
+                            <th className="text-left py-2 px-2 sm:px-3 text-xs font-semibold text-gray-500 hidden md:table-cell w-20">Access</th>
+                            <th className="text-left py-2 px-2 sm:px-3 text-xs font-semibold text-gray-500 hidden lg:table-cell w-20">Size</th>
+                            <th className="text-left py-2 px-2 sm:px-3 text-xs font-semibold text-gray-500 hidden xl:table-cell w-28">Modified</th>
+                            <th className="text-right py-2 px-2 sm:px-3 text-xs font-semibold text-gray-500 w-28">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {assets.map((asset) => {
+                            const Icon = MEDIA_TYPE_ICONS[asset.mediaType];
+                            const views = (analyticsSummary as any)?.[asset.id]?.total ?? 0;
+                            const isSelected = selectedAssetId === asset.id;
+                            return (
+                              <tr
+                                key={asset.id}
+                                className={`border-b border-gray-50 cursor-pointer transition-colors ${
+                                  isSelected ? "bg-[#f0fbfc]" : "hover:bg-gray-50"
+                                }`}
+                                onClick={() => {
+                                  if (isSelected) { setSelectedAssetId(null); setShowDetailPanel(false); }
+                                  else { setSelectedAssetId(asset.id); setShowDetailPanel(true); }
+                                }}
+                              >
+                                <td className="py-1.5 px-2 sm:px-3">
+                                  <div className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0" style={{ background: MEDIA_TYPE_BG[asset.mediaType] }}>
+                                    <Icon className="w-3.5 h-3.5" style={{ color: MEDIA_TYPE_COLOR[asset.mediaType] }} />
+                                  </div>
+                                </td>
+                                <td className="py-1.5 px-2 sm:px-3">
+                                  <p className="text-sm font-medium text-gray-800 leading-snug">{asset.title}</p>
+                                  {asset.originalFilename && asset.originalFilename !== asset.title && (
+                                    <p className="text-xs text-gray-400 leading-tight">{asset.originalFilename}</p>
+                                  )}
+                                </td>
+                                <td className="py-1.5 px-2 sm:px-3 hidden sm:table-cell">
+                                  <span className="text-xs text-gray-500 capitalize">{MEDIA_TYPE_LABELS[asset.mediaType]}</span>
+                                </td>
+                                <td className="py-1.5 px-2 sm:px-3 hidden md:table-cell">
+                                  {asset.accessMode === "public"
+                                    ? <span className="inline-flex items-center gap-1 text-xs text-emerald-600"><Globe className="w-3 h-3" />Public</span>
+                                    : <span className="inline-flex items-center gap-1 text-xs text-amber-600"><Lock className="w-3 h-3" />Private</span>
+                                  }
+                                </td>
+                                <td className="py-1.5 px-2 sm:px-3 hidden lg:table-cell">
+                                  <span className="text-xs text-gray-500">—</span>
+                                </td>
+                                <td className="py-1.5 px-2 sm:px-3 hidden xl:table-cell">
+                                  <span className="text-xs text-gray-500">{formatDate(asset.updatedAt)}</span>
+                                </td>
+                                <td className="py-1.5 px-2 sm:px-3 text-right" onClick={(e) => e.stopPropagation()}>
+                                  <div className="flex items-center justify-end gap-1">
+                                    {views > 0 && (
+                                      <span className="text-xs text-gray-400 flex items-center gap-0.5 mr-1">
+                                        <Eye className="w-3 h-3" />{views}
+                                      </span>
+                                    )}
+                                    <a href={asset.viewUrl ?? asset.serveUrl} target="_blank" rel="noopener noreferrer" title="View">
+                                      <button className="h-7 w-7 flex items-center justify-center rounded border border-gray-200 hover:border-[#189aa1] hover:text-[#189aa1] text-gray-400 transition-colors">
+                                        <ExternalLink className="w-3 h-3" />
+                                      </button>
+                                    </a>
+                                    <a href={asset.downloadUrl ?? (asset.serveUrl + "/download")} target="_blank" rel="noopener noreferrer" title="Download">
+                                      <button className="h-7 w-7 flex items-center justify-center rounded border border-gray-200 hover:border-[#189aa1] hover:text-[#189aa1] text-gray-400 transition-colors">
+                                        <Download className="w-3 h-3" />
+                                      </button>
+                                    </a>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    ) : (
+                      /* ── Grid / icon view ── */
+                      <div className="p-2 sm:p-4">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3">
+                          {assets.map((asset) => {
+                            const views = (analyticsSummary as any)?.[asset.id]?.total ?? 0;
+                            const isSelected = selectedAssetId === asset.id;
+                            return (
+                              <div
+                                key={asset.id}
+                                className={`group rounded-xl border cursor-pointer transition-all hover:shadow-md ${
+                                  isSelected
+                                    ? "border-[#189aa1] shadow-md ring-1 ring-[#189aa1]/20"
+                                    : "border-gray-100 hover:border-gray-200"
+                                } bg-white overflow-hidden`}
+                                onClick={() => {
+                                  if (isSelected) { setSelectedAssetId(null); setShowDetailPanel(false); }
+                                  else { setSelectedAssetId(asset.id); setShowDetailPanel(true); }
+                                }}
+                              >
+                                <AssetThumbnail asset={asset} size="lg" />
+                                <div className="p-2 sm:p-2.5">
+                                  <p className="text-xs font-semibold text-gray-800 leading-snug">{asset.title}</p>
+                                  <div className="flex items-center justify-between mt-1">
+                                    <span className="text-xs text-gray-400 capitalize">{asset.mediaType}</span>
+                                    <div className="flex items-center gap-1">
+                                      {asset.accessMode === "public"
+                                        ? <Globe className="w-3 h-3 text-emerald-500" />
+                                        : <Lock className="w-3 h-3 text-amber-500" />
+                                      }
+                                      {views > 0 && (
+                                        <span className="text-xs text-gray-400 flex items-center gap-0.5">
+                                          <Eye className="w-2.5 h-2.5" />{views}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex gap-1 mt-1.5 sm:mt-2" onClick={(e) => e.stopPropagation()}>
+                                    <a href={asset.viewUrl ?? asset.serveUrl} target="_blank" rel="noopener noreferrer" title="View in browser" className="flex-1">
+                                      <button className="w-full flex items-center justify-center gap-1 text-xs py-1 rounded border border-gray-200 hover:border-[#189aa1] hover:text-[#189aa1] text-gray-500 transition-colors min-h-[32px]">
+                                        <ExternalLink className="w-3 h-3" /> View
+                                      </button>
+                                    </a>
+                                    <a href={asset.downloadUrl ?? (asset.serveUrl + "/download")} target="_blank" rel="noopener noreferrer" title="Download file" className="flex-1">
+                                      <button className="w-full flex items-center justify-center gap-1 text-xs py-1 rounded border border-gray-200 hover:border-[#189aa1] hover:text-[#189aa1] text-gray-500 transition-colors min-h-[32px]">
+                                        <Download className="w-3 h-3" /> <span className="hidden sm:inline">Download</span><span className="sm:hidden">DL</span>
+                                      </button>
+                                    </a>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+
               </div>
             </div>
 

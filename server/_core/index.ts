@@ -13,6 +13,7 @@ import { registerUploadQuestionMediaRoute } from "../routes/uploadQuestionMedia"
 import { registerUploadUserQuestionMediaRoute } from "../routes/uploadUserQuestionMedia";
 import { registerUploadScanCoachMediaRoute } from "../routes/uploadScanCoachMedia";
 import { registerMediaServeRoute } from "../routes/mediaServe";
+import { registerMediaChunkedUploadRoute } from "../routes/mediaChunkedUpload";
 import { registerUploadGenericRoute } from "../routes/uploadGeneric";
 import { registerUnsubscribeRoute } from "../routes/unsubscribe";
 import { registerAuthLoginRoute } from "../routes/authLogin";
@@ -47,8 +48,8 @@ async function startServer() {
   app.set("trust proxy", 1);
   const server = createServer(app);
   // Configure body parser with larger size limit for file uploads
-  app.use(express.json({ limit: "50mb" }));
-  app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  app.use(express.json({ limit: "100mb" }));
+  app.use(express.urlencoded({ limit: "100mb", extended: true }));
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
   // Chat API with streaming and tool calling
@@ -69,6 +70,8 @@ async function startServer() {
   registerUploadScanCoachMediaRoute(app);
   // Media Repository serve & embed routes (/api/media/:slug and /api/media/:slug/embed)
   registerMediaServeRoute(app);
+  // Media Repository chunked upload routes — supports files of any size
+  registerMediaChunkedUploadRoute(app);
   // Generic file upload endpoint — avatar, soundbytes media, TEE view media, etc.
   registerUploadGenericRoute(app);
   // One-click unsubscribe from notification emails

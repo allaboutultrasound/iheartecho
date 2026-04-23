@@ -1026,3 +1026,13 @@
 - [x] Add deleteVersion procedure to mediaRouter.ts (prevents deleting active version)
 - [x] Add Delete Asset danger zone to Info tab with two-step confirmation
 - [x] Add Delete Version button to each non-active version row with two-step confirmation
+
+## Media Repository — UX Improvements (2026-04-23)
+- [x] Chunked upload for large files (5 MB chunks via /api/media-upload/initiate, /chunk, /complete) — both new asset upload and version upload
+- [x] Upload progress bar with percentage indicator
+- [x] List/Grid view toggle — list view is Windows-style (full filename, icon, type, access, size, date, quick action icons); grid view is card thumbnails
+- [x] List view is now the default
+- [x] Recycle Bin — soft-deleted assets visible in sidebar "Recycle Bin" entry with restore button and 30-day expiry countdown
+- [x] restoreAsset and listDeletedAssets tRPC procedures (adminProcedure)
+- [x] Rename "Promote to Active" → "Revert to This Version"
+- [x] Delete button renamed "Move to Recycle Bin" with updated confirmation text (30-day warning)
