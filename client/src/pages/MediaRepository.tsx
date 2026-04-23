@@ -835,7 +835,7 @@ function UploadDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) { onClose(); resetForm(); } }}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg w-[calc(100vw-2rem)] sm:w-full max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Upload className="w-5 h-5" style={{ color: BRAND }} />
@@ -930,6 +930,8 @@ export default function MediaRepository() {
   const [selectedFolderId, setSelectedFolderId] = useState<number | null | undefined>(undefined);
   const [selectedAssetId, setSelectedAssetId] = useState<number | null>(null);
   const [showUpload, setShowUpload] = useState(false);
+  const [showFolderSidebar, setShowFolderSidebar] = useState(false);
+  const [showDetailPanel, setShowDetailPanel] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 300);
@@ -975,42 +977,95 @@ export default function MediaRepository() {
       <div className="flex flex-col" style={{ minHeight: "calc(100vh - 64px)" }}>
         {/* Page header */}
         <div
-          className="border-b border-gray-100 px-6 py-4"
+          className="border-b border-gray-100 px-4 sm:px-6 py-3 sm:py-4"
           style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 100%)" }}
         >
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-black text-white" style={{ fontFamily: "Merriweather, serif" }}>
-                Media Repository
-              </h1>
-              <p className="text-sm text-white/60 mt-0.5">
-                {total} asset{total !== 1 ? "s" : ""} · Upload, organize, and share media with embed links
-              </p>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              {/* Mobile: folder sidebar toggle */}
+              <button
+                className="sm:hidden flex-shrink-0 p-1.5 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors"
+                onClick={() => setShowFolderSidebar(true)}
+                aria-label="Open folders"
+              >
+                <Folder className="w-4 h-4" />
+              </button>
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-xl font-black text-white truncate" style={{ fontFamily: "Merriweather, serif" }}>
+                  Media Repository
+                </h1>
+                <p className="text-xs sm:text-sm text-white/60 mt-0.5 truncate">
+                  {total} asset{total !== 1 ? "s" : ""} · Upload, organize, and share media
+                </p>
+              </div>
             </div>
-            <Button className="flex items-center gap-2" style={{ background: "#189aa1" }} onClick={() => setShowUpload(true)}>
+            <Button className="flex-shrink-0 flex items-center gap-1.5 text-sm" style={{ background: "#189aa1" }} onClick={() => setShowUpload(true)}>
               <Upload className="w-4 h-4" />
-              Upload Asset
+              <span className="hidden sm:inline">Upload Asset</span>
+              <span className="sm:hidden">Upload</span>
             </Button>
           </div>
         </div>
 
+        {/* Mobile: Folder sidebar overlay */}
+        {showFolderSidebar && (
+          <div className="fixed inset-0 z-50 sm:hidden">
+            <div className="absolute inset-0 bg-black/40" onClick={() => setShowFolderSidebar(false)} />
+            <div className="absolute left-0 top-0 bottom-0 w-64 bg-white shadow-xl flex flex-col overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                <p className="text-sm font-bold text-gray-700">Folders</p>
+                <button onClick={() => setShowFolderSidebar(false)} className="p-1 rounded hover:bg-gray-100">
+                  <X className="w-4 h-4 text-gray-500" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto">
+                <FolderSidebar
+                  folders={folders as FolderRow[]}
+                  selectedFolderId={selectedFolderId}
+                  onSelectFolder={(id) => { setSelectedFolderId(id); setShowFolderSidebar(false); }}
+                  onCreateFolder={(name) => createFolder.mutate({ name })}
+                  onDeleteFolder={(id) => deleteFolder.mutate({ folderId: id })}
+                  assetCounts={assetCounts}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Mobile: Detail panel overlay */}
+        {selectedAssetId && showDetailPanel && (
+          <div className="fixed inset-0 z-50 sm:hidden">
+            <div className="absolute inset-0 bg-black/40" onClick={() => { setShowDetailPanel(false); setSelectedAssetId(null); }} />
+            <div className="absolute right-0 top-0 bottom-0 w-full max-w-sm bg-white shadow-xl flex flex-col overflow-hidden">
+              <AssetDetailPanel
+                assetId={selectedAssetId}
+                onClose={() => { setShowDetailPanel(false); setSelectedAssetId(null); }}
+                folders={folders as FolderRow[]}
+              />
+            </div>
+          </div>
+        )}
+
         {/* Body: sidebar + main */}
         <div className="flex flex-1 overflow-hidden">
-          <FolderSidebar
-            folders={folders as FolderRow[]}
-            selectedFolderId={selectedFolderId}
-            onSelectFolder={setSelectedFolderId}
-            onCreateFolder={(name) => createFolder.mutate({ name })}
-            onDeleteFolder={(id) => deleteFolder.mutate({ folderId: id })}
-            assetCounts={assetCounts}
-          />
+          {/* Desktop folder sidebar — hidden on mobile */}
+          <div className="hidden sm:flex">
+            <FolderSidebar
+              folders={folders as FolderRow[]}
+              selectedFolderId={selectedFolderId}
+              onSelectFolder={setSelectedFolderId}
+              onCreateFolder={(name) => createFolder.mutate({ name })}
+              onDeleteFolder={(id) => deleteFolder.mutate({ folderId: id })}
+              assetCounts={assetCounts}
+            />
+          </div>
 
           <div className="flex flex-1 overflow-hidden">
             {/* Asset grid */}
-            <div className={`flex flex-col flex-1 overflow-hidden ${selectedAssetId ? "border-r border-gray-100" : ""}`}>
+            <div className={`flex flex-col flex-1 overflow-hidden ${selectedAssetId ? "sm:border-r sm:border-gray-100" : ""}`}>
               {/* Filter bar */}
-              <div className="flex items-center gap-2 p-3 border-b border-gray-100 bg-white flex-wrap">
-                <div className="relative flex-1 min-w-48">
+              <div className="flex items-center gap-2 p-2 sm:p-3 border-b border-gray-100 bg-white flex-wrap">
+                <div className="relative flex-1 min-w-0">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                   <Input
                     value={search}
@@ -1019,30 +1074,32 @@ export default function MediaRepository() {
                     className="pl-8 h-8 text-sm"
                   />
                 </div>
-                <Select value={mediaTypeFilter} onValueChange={(v) => setMediaTypeFilter(v as any)}>
-                  <SelectTrigger className="h-8 w-36 text-xs"><SelectValue placeholder="All types" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All types</SelectItem>
-                    {(Object.keys(MEDIA_TYPE_LABELS) as MediaType[]).map((t) => (
-                      <SelectItem key={t} value={t}>{MEDIA_TYPE_LABELS[t]}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select value={accessFilter} onValueChange={(v) => setAccessFilter(v as any)}>
-                  <SelectTrigger className="h-8 w-32 text-xs"><SelectValue placeholder="All access" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All access</SelectItem>
-                    <SelectItem value="public">Public</SelectItem>
-                    <SelectItem value="private">Private</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => refetchAssets()}>
-                  <RefreshCw className="w-3.5 h-3.5 text-gray-400" />
-                </Button>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <Select value={mediaTypeFilter} onValueChange={(v) => setMediaTypeFilter(v as any)}>
+                    <SelectTrigger className="h-8 w-28 sm:w-36 text-xs"><SelectValue placeholder="All types" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All types</SelectItem>
+                      {(Object.keys(MEDIA_TYPE_LABELS) as MediaType[]).map((t) => (
+                        <SelectItem key={t} value={t}>{MEDIA_TYPE_LABELS[t]}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={accessFilter} onValueChange={(v) => setAccessFilter(v as any)}>
+                    <SelectTrigger className="h-8 w-24 sm:w-32 text-xs"><SelectValue placeholder="All access" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All access</SelectItem>
+                      <SelectItem value="public">Public</SelectItem>
+                      <SelectItem value="private">Private</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => refetchAssets()}>
+                    <RefreshCw className="w-3.5 h-3.5 text-gray-400" />
+                  </Button>
+                </div>
               </div>
 
               {/* Grid */}
-              <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex-1 overflow-y-auto p-2 sm:p-4">
                 {assetsLoading ? (
                   <div className="flex items-center justify-center h-32">
                     <Loader2 className="w-6 h-6 animate-spin text-[#189aa1]" />
@@ -1057,7 +1114,7 @@ export default function MediaRepository() {
                     </Button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3">
                     {assets.map((asset) => {
                       const views = (analyticsSummary as any)?.[asset.id]?.total ?? 0;
                       const isSelected = selectedAssetId === asset.id;
@@ -1069,10 +1126,18 @@ export default function MediaRepository() {
                               ? "border-[#189aa1] shadow-md ring-1 ring-[#189aa1]/20"
                               : "border-gray-100 hover:border-gray-200"
                           } bg-white overflow-hidden`}
-                          onClick={() => setSelectedAssetId(isSelected ? null : asset.id)}
+                          onClick={() => {
+                            if (isSelected) {
+                              setSelectedAssetId(null);
+                              setShowDetailPanel(false);
+                            } else {
+                              setSelectedAssetId(asset.id);
+                              setShowDetailPanel(true);
+                            }
+                          }}
                         >
                           <AssetThumbnail asset={asset} size="lg" />
-                          <div className="p-2.5">
+                          <div className="p-2 sm:p-2.5">
                             <p className="text-xs font-semibold text-gray-800 truncate leading-snug">{asset.title}</p>
                             <div className="flex items-center justify-between mt-1">
                               <span className="text-xs text-gray-400 capitalize">{asset.mediaType}</span>
@@ -1089,7 +1154,7 @@ export default function MediaRepository() {
                               </div>
                             </div>
                             {/* Quick-action buttons */}
-                            <div className="flex gap-1 mt-2" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex gap-1 mt-1.5 sm:mt-2" onClick={(e) => e.stopPropagation()}>
                               <a
                                 href={asset.viewUrl ?? asset.serveUrl}
                                 target="_blank"
@@ -1097,7 +1162,7 @@ export default function MediaRepository() {
                                 title="View in browser"
                                 className="flex-1"
                               >
-                                <button className="w-full flex items-center justify-center gap-1 text-xs py-1 rounded border border-gray-200 hover:border-[#189aa1] hover:text-[#189aa1] text-gray-500 transition-colors">
+                                <button className="w-full flex items-center justify-center gap-1 text-xs py-1 rounded border border-gray-200 hover:border-[#189aa1] hover:text-[#189aa1] text-gray-500 transition-colors min-h-[32px]">
                                   <ExternalLink className="w-3 h-3" /> View
                                 </button>
                               </a>
@@ -1108,8 +1173,8 @@ export default function MediaRepository() {
                                 title="Download file"
                                 className="flex-1"
                               >
-                                <button className="w-full flex items-center justify-center gap-1 text-xs py-1 rounded border border-gray-200 hover:border-[#189aa1] hover:text-[#189aa1] text-gray-500 transition-colors">
-                                  <Download className="w-3 h-3" /> Download
+                                <button className="w-full flex items-center justify-center gap-1 text-xs py-1 rounded border border-gray-200 hover:border-[#189aa1] hover:text-[#189aa1] text-gray-500 transition-colors min-h-[32px]">
+                                  <Download className="w-3 h-3" /> <span className="hidden sm:inline">Download</span><span className="sm:hidden">DL</span>
                                 </button>
                               </a>
                             </div>
@@ -1122,9 +1187,9 @@ export default function MediaRepository() {
               </div>
             </div>
 
-            {/* Detail panel */}
+            {/* Desktop detail panel — hidden on mobile (shown as overlay instead) */}
             {selectedAssetId && (
-              <div className="w-80 flex-shrink-0 bg-white overflow-hidden flex flex-col border-l border-gray-100">
+              <div className="hidden sm:flex w-80 flex-shrink-0 bg-white overflow-hidden flex-col border-l border-gray-100">
                 <AssetDetailPanel
                   assetId={selectedAssetId}
                   onClose={() => setSelectedAssetId(null)}

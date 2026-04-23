@@ -271,16 +271,74 @@ function buildScormPage(title: string, entryUrl: string): string {
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>${escapeHtml(title)} — iHeartEcho™</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { height: 100%; overflow: hidden; background: #000; }
-    iframe { width: 100%; height: 100%; border: none; display: block; }
+    html { height: 100%; height: -webkit-fill-available; }
+    body {
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      overflow: hidden;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+    }
+    iframe {
+      flex: 1;
+      width: 100%;
+      border: none;
+      display: block;
+      /* iOS Safari: use dvh for dynamic viewport */
+      height: 100dvh;
+      height: 100vh;
+    }
+    /* Fallback message for browsers that block iframes */
+    .fallback {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #f0fbfc;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+      padding: 24px;
+      text-align: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    .fallback h2 { color: #1a2e3b; font-size: clamp(16px, 4vw, 20px); }
+    .fallback p { color: #6b7280; font-size: clamp(13px, 3.5vw, 15px); }
+    .fallback a {
+      display: inline-block;
+      background: #189aa1;
+      color: #fff;
+      text-decoration: none;
+      padding: 12px 28px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: clamp(14px, 3.5vw, 16px);
+      min-height: 44px;
+      line-height: 1.5;
+    }
   </style>
 </head>
 <body>
-  <iframe src="${entryUrl}" title="${escapeHtml(title)}" allowfullscreen allow="fullscreen"></iframe>
+  <iframe
+    src="${entryUrl}"
+    title="${escapeHtml(title)}"
+    allowfullscreen
+    allow="fullscreen; autoplay"
+    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"
+    onerror="document.querySelector('.fallback').style.display='flex'"
+  ></iframe>
+  <div class="fallback">
+    <h2>${escapeHtml(title)}</h2>
+    <p>This content could not be displayed inline.<br/>Open it directly in your browser.</p>
+    <a href="${entryUrl}" target="_blank" rel="noopener">Open Content</a>
+  </div>
 </body>
 </html>`;
 }
@@ -292,19 +350,56 @@ function buildExtractingPage(title: string, slug: string, token?: string): strin
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta http-equiv="refresh" content="4;url=/api/media/${slug}/view${tokenParam}" />
   <title>Loading ${escapeHtml(title)}…</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { display: flex; align-items: center; justify-content: center; height: 100vh;
-           background: #f0fbfc; font-family: Merriweather, Georgia, serif; }
-    .card { text-align: center; padding: 40px; max-width: 420px; }
-    .spinner { width: 48px; height: 48px; border: 4px solid #e0f7f8; border-top-color: #189aa1;
-               border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 24px; }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { height: 100%; height: -webkit-fill-available; }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      background: #f0fbfc;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Merriweather, Georgia, serif;
+      padding: env(safe-area-inset-top, 24px) env(safe-area-inset-right, 24px)
+               env(safe-area-inset-bottom, 24px) env(safe-area-inset-left, 24px);
+    }
+    .card {
+      text-align: center;
+      padding: clamp(28px, 8vw, 48px) clamp(20px, 6vw, 40px);
+      max-width: min(420px, 92vw);
+      width: 100%;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(24,154,161,0.12);
+    }
+    .spinner {
+      width: clamp(36px, 10vw, 52px);
+      height: clamp(36px, 10vw, 52px);
+      border: 4px solid #e0f7f8;
+      border-top-color: #189aa1;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 20px;
+    }
     @keyframes spin { to { transform: rotate(360deg); } }
-    h2 { color: #1a2e3b; font-size: 18px; margin-bottom: 8px; }
-    p { color: #6b7280; font-size: 14px; font-family: 'Open Sans', sans-serif; }
+    h2 {
+      color: #1a2e3b;
+      font-size: clamp(15px, 4vw, 18px);
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+    p {
+      color: #6b7280;
+      font-size: clamp(12px, 3.2vw, 14px);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      line-height: 1.5;
+    }
   </style>
 </head>
 <body>
@@ -316,43 +411,214 @@ function buildExtractingPage(title: string, slug: string, token?: string): strin
 </body>
 </html>`;
 }
-
 /** Build a viewer page for non-zip media types. */
+
 function buildViewerPage(title: string, url: string, mediaType: string, mime: string): string {
-  let body = "";
-  if (mediaType === "video" || mime.startsWith("video/")) {
-    body = `<video src="${url}" controls autoplay muted playsinline style="width:100%;max-height:100vh;display:block;background:#000;" title="${escapeHtml(title)}"></video>`;
-  } else if (mediaType === "audio" || mime.startsWith("audio/")) {
-    body = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#f0fbfc;">
-      <div style="text-align:center;padding:32px;max-width:480px;">
-        <div style="font-size:48px;margin-bottom:16px;">🎵</div>
-        <p style="font-family:Merriweather,Georgia,serif;font-size:18px;color:#1a2e3b;margin:0 0 20px;">${escapeHtml(title)}</p>
-        <audio src="${url}" controls style="width:100%;"></audio>
-      </div>
-    </div>`;
-  } else if (mediaType === "image" || mime.startsWith("image/")) {
-    body = `<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#111;">
-      <img src="${url}" alt="${escapeHtml(title)}" style="max-width:100%;max-height:100vh;display:block;" />
-    </div>`;
-  } else if (mediaType === "document" || mime === "application/pdf") {
-    body = `<iframe src="${url}" style="width:100%;height:100vh;border:none;" title="${escapeHtml(title)}"></iframe>`;
-  } else {
-    body = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#f0fbfc;">
-      <div style="text-align:center;padding:32px;">
-        <p style="font-family:Merriweather,Georgia,serif;font-size:18px;color:#1a2e3b;margin:0 0 20px;">${escapeHtml(title)}</p>
-        <a href="${url}" download style="display:inline-block;background:#189aa1;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;">Download File</a>
-      </div>
-    </div>`;
-  }
-  return `<!DOCTYPE html>
+  const safeTitle = escapeHtml(title);
+  const safeUrl = escapeHtml(url);
+
+  // ── Shared CSS reset + mobile-safe viewport ──────────────────────────────
+  const head = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${escapeHtml(title)} — iHeartEcho™</title>
-  <style>* { margin: 0; padding: 0; box-sizing: border-box; } body { background: #000; }</style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>${safeTitle} — iHeartEcho™</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { height: 100%; height: -webkit-fill-available; }
+    body {
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+    /* Responsive typography base */
+    :root { font-size: clamp(14px, 3.5vw, 16px); }
+  </style>
 </head>
-<body>${body}</body>
+<body>`;
+
+  let body = "";
+
+  if (mediaType === "video" || mime.startsWith("video/")) {
+    body = `
+  <style>
+    body { background: #000; justify-content: center; align-items: center; }
+    video {
+      width: 100%;
+      max-width: 100vw;
+      /* Use dvh so iOS Safari address bar doesn't clip controls */
+      max-height: 100dvh;
+      max-height: 100vh;
+      display: block;
+      object-fit: contain;
+    }
+  </style>
+  <video
+    src="${safeUrl}"
+    controls
+    autoplay
+    muted
+    playsinline
+    webkit-playsinline
+    title="${safeTitle}"
+  ></video>`;
+  } else if (mediaType === "audio" || mime.startsWith("audio/")) {
+    body = `
+  <style>
+    body {
+      background: linear-gradient(135deg, #f0fbfc 0%, #e0f7f8 100%);
+      justify-content: center;
+      align-items: center;
+      padding: env(safe-area-inset-top, 16px) env(safe-area-inset-right, 16px)
+               env(safe-area-inset-bottom, 16px) env(safe-area-inset-left, 16px);
+    }
+    .card {
+      text-align: center;
+      padding: clamp(20px, 6vw, 40px);
+      max-width: min(480px, 92vw);
+      width: 100%;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(24,154,161,0.12);
+    }
+    .icon { font-size: clamp(36px, 10vw, 56px); margin-bottom: 12px; }
+    h2 {
+      font-family: Merriweather, Georgia, serif;
+      font-size: clamp(15px, 4vw, 20px);
+      color: #1a2e3b;
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+    audio { width: 100%; min-height: 44px; }
+  </style>
+  <div class="card">
+    <div class="icon">🎵</div>
+    <h2>${safeTitle}</h2>
+    <audio src="${safeUrl}" controls></audio>
+  </div>`;
+  } else if (mediaType === "image" || mime.startsWith("image/")) {
+    body = `
+  <style>
+    body {
+      background: #111;
+      justify-content: center;
+      align-items: center;
+      padding: env(safe-area-inset-top, 8px) env(safe-area-inset-right, 8px)
+               env(safe-area-inset-bottom, 8px) env(safe-area-inset-left, 8px);
+    }
+    img {
+      max-width: 100%;
+      max-height: 100dvh;
+      max-height: 100vh;
+      object-fit: contain;
+      display: block;
+    }
+  </style>
+  <img src="${safeUrl}" alt="${safeTitle}" />`;
+  } else if (mediaType === "document" || mime === "application/pdf") {
+    body = `
+  <style>
+    body { background: #525659; }
+    iframe {
+      flex: 1;
+      width: 100%;
+      height: 100dvh;
+      height: 100vh;
+      border: none;
+      display: block;
+    }
+    /* Mobile fallback: PDF iframes often don't work on iOS */
+    .pdf-fallback {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: clamp(20px, 6vw, 40px);
+      text-align: center;
+      background: #f0fbfc;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    .pdf-fallback h2 { color: #1a2e3b; font-size: clamp(16px, 4vw, 20px); }
+    .pdf-fallback p { color: #6b7280; font-size: clamp(13px, 3.5vw, 15px); }
+    .pdf-fallback a {
+      display: inline-block;
+      background: #189aa1;
+      color: #fff;
+      text-decoration: none;
+      padding: 12px 28px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: clamp(14px, 3.5vw, 16px);
+      min-height: 44px;
+      line-height: 1.5;
+    }
+    @media (max-width: 640px) {
+      /* On mobile, show fallback link instead of broken PDF iframe */
+      iframe { display: none; }
+      .pdf-fallback { display: flex; }
+    }
+  </style>
+  <iframe src="${safeUrl}" title="${safeTitle}"></iframe>
+  <div class="pdf-fallback">
+    <h2>${safeTitle}</h2>
+    <p>PDF preview is not supported on this device.<br/>Tap below to open it directly.</p>
+    <a href="${safeUrl}" target="_blank" rel="noopener">Open PDF</a>
+  </div>`;
+  } else {
+    body = `
+  <style>
+    body {
+      background: #f0fbfc;
+      justify-content: center;
+      align-items: center;
+      padding: env(safe-area-inset-top, 24px) env(safe-area-inset-right, 24px)
+               env(safe-area-inset-bottom, 24px) env(safe-area-inset-left, 24px);
+    }
+    .card {
+      text-align: center;
+      padding: clamp(24px, 7vw, 48px);
+      max-width: min(420px, 92vw);
+      width: 100%;
+    }
+    h2 {
+      font-family: Merriweather, Georgia, serif;
+      font-size: clamp(16px, 4vw, 20px);
+      color: #1a2e3b;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+    a {
+      display: inline-block;
+      background: #189aa1;
+      color: #fff;
+      text-decoration: none;
+      padding: 14px 32px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: clamp(14px, 3.5vw, 16px);
+      /* Minimum tap target size */
+      min-height: 44px;
+      line-height: 1.5;
+      transition: opacity 0.15s;
+    }
+    a:active { opacity: 0.8; }
+  </style>
+  <div class="card">
+    <h2>${safeTitle}</h2>
+    <a href="${safeUrl}" download>Download File</a>
+  </div>`;
+  }
+
+  return head + body + `
+</body>
 </html>`;
 }
 
