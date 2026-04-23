@@ -2640,6 +2640,8 @@ export const mediaVersions = mysqlTable("mediaVersions", {
   fileSizeBytes: bigint("fileSizeBytes", { mode: "number" }),
   originalFilename: varchar("originalFilename", { length: 512 }),
   changeNote: text("changeNote"),                  // optional admin note about this version
+  // For SCORM/zip assets: URL of the extracted entry-point HTML (e.g. index.html inside the zip)
+  scormEntryUrl: text("scormEntryUrl"),
   uploadedByUserId: int("uploadedByUserId").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });

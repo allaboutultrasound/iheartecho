@@ -19,6 +19,7 @@ import { and, desc, eq, isNull, like, or, sql } from "drizzle-orm";
 import { adminProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { storagePut } from "../storage";
+import JSZip from "jszip";
 import { sendEmail } from "../_core/email";
 import {
   mediaAssets,
@@ -85,6 +86,77 @@ function inferMediaType(
   return "other";
 }
 
+
+// ─── SCORM Extraction Helper ──────────────────────────────────────────────────
+/**
+ * Given a zip file buffer and a base S3 key prefix, extracts all files from the
+ * zip, uploads them to S3, and returns the URL of the SCORM entry-point HTML.
+ *
+ * Entry-point detection order:
+ *  1. href attribute of <resource> with type "webcontent" in imsmanifest.xml
+ *  2. index.html / index.htm at root
+ *  3. First .html file found
+ */
+async function extractScormZip(
+  zipBuffer: Buffer,
+  keyPrefix: string
+): Promise<string | null> {
+  try {
+    const zip = await JSZip.loadAsync(zipBuffer);
+    const files = zip.files;
+    const uploadedUrls: Record<string, string> = {};
+
+    // Upload all files in the zip to S3
+    for (const [relativePath, file] of Object.entries(files)) {
+      if (file.dir) continue;
+      const fileBuffer = Buffer.from(await file.async("arraybuffer"));
+      const ext = relativePath.split(".").pop()?.toLowerCase() ?? "";
+      const mimeMap: Record<string, string> = {
+        html: "text/html", htm: "text/html",
+        js: "application/javascript", css: "text/css",
+        json: "application/json", xml: "application/xml",
+        png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg",
+        gif: "image/gif", svg: "image/svg+xml", webp: "image/webp",
+        mp4: "video/mp4", webm: "video/webm", mp3: "audio/mpeg",
+        wav: "audio/wav", ogg: "audio/ogg",
+        woff: "font/woff", woff2: "font/woff2", ttf: "font/ttf",
+        eot: "application/vnd.ms-fontobject",
+        pdf: "application/pdf",
+      };
+      const contentType = mimeMap[ext] ?? "application/octet-stream";
+      const s3Key = `${keyPrefix}/${relativePath}`;
+      const result = await storagePut(s3Key, fileBuffer, contentType);
+      uploadedUrls[relativePath] = result.url;
+    }
+
+    // Try to find the entry point from imsmanifest.xml
+    const manifestFile = files["imsmanifest.xml"] ?? files["imsmanifest.XML"];
+    if (manifestFile) {
+      const manifestText = await manifestFile.async("text");
+      // Look for <resource ... href="..." type="webcontent"...>
+      const hrefMatch = manifestText.match(/<resource[^>]+type=["'][^"']*webcontent[^"']*["'][^>]+href=["']([^"']+)["']/i)
+        ?? manifestText.match(/<resource[^>]+href=["']([^"']+)["'][^>]+type=["'][^"']*webcontent[^"']*["']/i)
+        ?? manifestText.match(/<resource[^>]+href=["']([^"']+)["']/i);
+      if (hrefMatch) {
+        const entryPath = hrefMatch[1].replace(/\\/g, "/");
+        if (uploadedUrls[entryPath]) return uploadedUrls[entryPath];
+      }
+    }
+
+    // Fallback: index.html / index.htm at root
+    if (uploadedUrls["index.html"]) return uploadedUrls["index.html"];
+    if (uploadedUrls["index.htm"]) return uploadedUrls["index.htm"];
+
+    // Fallback: first HTML file found
+    const firstHtml = Object.keys(uploadedUrls).find(k => k.endsWith(".html") || k.endsWith(".htm"));
+    if (firstHtml) return uploadedUrls[firstHtml];
+
+    return null;
+  } catch (err) {
+    console.error("[SCORM] Extraction failed:", err);
+    return null;
+  }
+}
 // ─── Router ───────────────────────────────────────────────────────────────────
 
 export const mediaRouter = router({
@@ -174,6 +246,8 @@ export const mediaRouter = router({
           currentVersionUrl: versionMap[a.id]?.s3Url ?? null,
           currentVersionMime: versionMap[a.id]?.mimeType ?? null,
           serveUrl: `${appUrl}/api/media/${a.slug}`,
+          viewUrl: `${appUrl}/api/media/${a.slug}/view`,
+          downloadUrl: `${appUrl}/api/media/${a.slug}/download`,
           embedUrl: `${appUrl}/api/media/${a.slug}/embed`,
         })),
         total: Number(total),
@@ -202,12 +276,16 @@ export const mediaRouter = router({
         .where(and(eq(mediaAccessRules.assetId, input.assetId), isNull(mediaAccessRules.revokedAt)));
       const appUrl = getAppUrl();
       const serveUrl = `${appUrl}/api/media/${asset.slug}`;
+      const viewUrl = `${appUrl}/api/media/${asset.slug}/view`;
+      const downloadUrl = `${appUrl}/api/media/${asset.slug}/download`;
       const embedUrl = `${appUrl}/api/media/${asset.slug}/embed`;
       return {
         asset: { ...asset, tags: asset.tags ? (JSON.parse(asset.tags) as string[]) : [] },
         versions,
         accessRules,
         serveUrl,
+        viewUrl,
+        downloadUrl,
         embedUrl,
       };
     }),
@@ -250,12 +328,26 @@ export const mediaRouter = router({
         s3Key = result.key;
       }
 
+      // For SCORM/zip: extract files and find entry point
+      let scormEntryUrl: string | null = null;
+      if ((mediaType === "scorm" || mediaType === "zip" || mediaType === "lms") && s3Url) {
+        try {
+          const zipRes = await fetch(s3Url);
+          if (zipRes.ok) {
+            const zipBuf = Buffer.from(await zipRes.arrayBuffer());
+            const keyPrefix = `media-repository/${slug}-scorm`;
+            scormEntryUrl = await extractScormZip(zipBuf, keyPrefix);
+          }
+        } catch (e) {
+          console.error("[SCORM] createAsset extraction error:", e);
+        }
+      }
       // Insert asset row
       const [assetResult] = await db.insert(mediaAssets).values({
         slug,
         title: input.title,
         description: input.description ?? null,
-        mediaType,
+        mediaType: scormEntryUrl ? "scorm" : mediaType,
         originalFilename: input.originalFilename ?? null,
         tags: input.tags ? JSON.stringify(input.tags) : null,
         accessMode: input.accessMode,
@@ -264,7 +356,6 @@ export const mediaRouter = router({
         currentVersionId: null,
       });
       const assetId = (assetResult as any).insertId as number;
-
       // Insert version row
       const [versionResult] = await db.insert(mediaVersions).values({
         assetId,
@@ -275,13 +366,13 @@ export const mediaRouter = router({
         fileSizeBytes: input.fileSizeBytes ?? null,
         originalFilename: input.originalFilename ?? null,
         changeNote: input.changeNote ?? null,
+        scormEntryUrl,
         uploadedByUserId: ctx.user.id,
       });
       const versionId = (versionResult as any).insertId as number;
-
       // Point asset to first version
       await db.update(mediaAssets).set({ currentVersionId: versionId }).where(eq(mediaAssets.id, assetId));
-
+      return { assetId, versionId, slug, s3Url, scormEntryUrl };
       return { assetId, versionId, slug, s3Url };
     }),
 
@@ -327,6 +418,20 @@ export const mediaRouter = router({
         s3Key = result.key;
       }
 
+      // For SCORM/zip: extract files and find entry point
+      let scormEntryUrlV: string | null = null;
+      if ((asset.mediaType === "scorm" || asset.mediaType === "zip" || asset.mediaType === "lms") && s3Url) {
+        try {
+          const zipRes = await fetch(s3Url);
+          if (zipRes.ok) {
+            const zipBuf = Buffer.from(await zipRes.arrayBuffer());
+            const keyPrefix = `media-repository/${asset.slug}-scorm-v${versionNumber}`;
+            scormEntryUrlV = await extractScormZip(zipBuf, keyPrefix);
+          }
+        } catch (e) {
+          console.error("[SCORM] addVersion extraction error:", e);
+        }
+      }
       const [versionResult] = await db.insert(mediaVersions).values({
         assetId: input.assetId,
         versionNumber,
@@ -336,17 +441,21 @@ export const mediaRouter = router({
         fileSizeBytes: input.fileSizeBytes ?? null,
         originalFilename: input.originalFilename ?? null,
         changeNote: input.changeNote ?? null,
+        scormEntryUrl: scormEntryUrlV,
         uploadedByUserId: ctx.user.id,
       });
       const versionId = (versionResult as any).insertId as number;
-
       if (input.promoteToActive) {
         await db
           .update(mediaAssets)
-          .set({ currentVersionId: versionId, updatedAt: new Date() })
+          .set({
+            currentVersionId: versionId,
+            updatedAt: new Date(),
+            ...(scormEntryUrlV ? { mediaType: "scorm" } : {}),
+          })
           .where(eq(mediaAssets.id, input.assetId));
       }
-      return { versionId, versionNumber, s3Url };
+      return { versionId, versionNumber, s3Url, scormEntryUrl: scormEntryUrlV };
     }),
 
   // ── Promote a specific version to active ───────────────────────────────────

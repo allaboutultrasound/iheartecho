@@ -54,6 +54,7 @@ import {
   Loader2,
   ExternalLink,
   Play,
+  Download,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -74,6 +75,8 @@ interface AssetRow {
   currentVersionUrl: string | null;
   currentVersionMime: string | null;
   serveUrl: string;
+  viewUrl: string;
+  downloadUrl: string;
   embedUrl: string;
   createdAt: Date;
   updatedAt: Date;
@@ -379,7 +382,7 @@ function AssetDetailPanel({
     );
   }
 
-  const { asset, versions, accessRules, serveUrl, embedUrl } = data;
+  const { asset, versions, accessRules, serveUrl, viewUrl, downloadUrl, embedUrl } = data;
 
   const tabs = [
     { id: "info" as const, label: "Info" },
@@ -487,14 +490,26 @@ function AssetDetailPanel({
               </Select>
             </div>
             <div>
-              <p className="text-xs text-gray-500 mb-1">Serve URL</p>
+              <p className="text-xs text-gray-500 mb-1">View URL (opens inline in browser)</p>
               <div className="flex gap-1">
-                <Input value={serveUrl} readOnly className="h-7 text-xs font-mono" />
-                <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => copyToClipboard(serveUrl, "Serve URL copied")}>
+                <Input value={viewUrl ?? serveUrl} readOnly className="h-7 text-xs font-mono" />
+                <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => copyToClipboard(viewUrl ?? serveUrl, "View URL copied")}>
                   <Copy className="w-3 h-3" />
                 </Button>
-                <a href={serveUrl} target="_blank" rel="noopener noreferrer">
-                  <Button size="sm" variant="outline" className="h-7 px-2"><ExternalLink className="w-3 h-3" /></Button>
+                <a href={viewUrl ?? serveUrl} target="_blank" rel="noopener noreferrer">
+                  <Button size="sm" variant="outline" className="h-7 px-2" title="Open in browser"><ExternalLink className="w-3 h-3" /></Button>
+                </a>
+              </div>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Download URL (forces file download)</p>
+              <div className="flex gap-1">
+                <Input value={downloadUrl ?? (serveUrl + "/download")} readOnly className="h-7 text-xs font-mono" />
+                <Button size="sm" variant="outline" className="h-7 px-2" onClick={() => copyToClipboard(downloadUrl ?? (serveUrl + "/download"), "Download URL copied")}>
+                  <Copy className="w-3 h-3" />
+                </Button>
+                <a href={downloadUrl ?? (serveUrl + "/download")} target="_blank" rel="noopener noreferrer">
+                  <Button size="sm" variant="outline" className="h-7 px-2" title="Download file"><Download className="w-3 h-3" /></Button>
                 </a>
               </div>
             </div>
@@ -1048,6 +1063,31 @@ export default function MediaRepository() {
                                   </span>
                                 )}
                               </div>
+                            </div>
+                            {/* Quick-action buttons */}
+                            <div className="flex gap-1 mt-2" onClick={(e) => e.stopPropagation()}>
+                              <a
+                                href={asset.viewUrl ?? asset.serveUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title="View in browser"
+                                className="flex-1"
+                              >
+                                <button className="w-full flex items-center justify-center gap-1 text-xs py-1 rounded border border-gray-200 hover:border-[#189aa1] hover:text-[#189aa1] text-gray-500 transition-colors">
+                                  <ExternalLink className="w-3 h-3" /> View
+                                </button>
+                              </a>
+                              <a
+                                href={asset.downloadUrl ?? (asset.serveUrl + "/download")}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title="Download file"
+                                className="flex-1"
+                              >
+                                <button className="w-full flex items-center justify-center gap-1 text-xs py-1 rounded border border-gray-200 hover:border-[#189aa1] hover:text-[#189aa1] text-gray-500 transition-colors">
+                                  <Download className="w-3 h-3" /> Download
+                                </button>
+                              </a>
                             </div>
                           </div>
                         </div>

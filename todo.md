@@ -990,3 +990,19 @@
 - [x] Media Repository card added to Platform Admin Admin Tools Hub
 - [x] Route registered at /admin/media-repository (platform_admin only)
 - [x] 19 unit tests for input validation (all passing)
+
+## Media Repository — View + Download Links (2026-04-23)
+- [ ] /api/media/:slug/view — proxy file inline (Content-Disposition: inline) for all renderable types
+- [ ] /api/media/:slug/download — force download (Content-Disposition: attachment)
+- [ ] SCORM zip extraction on upload — extract files to S3 folder, store scormEntryUrl in mediaVersions
+- [ ] /api/media/:slug/view for SCORM — serve full-page iframe pointing to scormEntryUrl
+- [ ] MediaRepository.tsx — View and Download buttons in asset grid cards and detail panel Info tab
+- [ ] mediaRouter.ts — expose viewUrl and downloadUrl in listAssets and getAsset responses
+
+## Media Repository — View + Download Links (2026-04-23) — COMPLETED
+- [x] /api/media/:slug/view — proxy file inline (Content-Disposition: inline) for all renderable types
+- [x] /api/media/:slug/download — force download (Content-Disposition: attachment)
+- [x] SCORM zip extraction on upload — extract files to S3 folder, store scormEntryUrl in mediaVersions
+- [x] /api/media/:slug/view for SCORM — serve full-page iframe pointing to scormEntryUrl
+- [x] MediaRepository.tsx — View and Download buttons in asset grid cards and detail panel Info tab
+- [x] mediaRouter.ts — expose viewUrl and downloadUrl in listAssets and getAsset responses
