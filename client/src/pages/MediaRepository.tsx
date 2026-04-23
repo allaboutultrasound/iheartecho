@@ -12,7 +12,7 @@
 */
 import { useState, useRef, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
-import Layout from "@/components/Layout";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
@@ -537,31 +538,45 @@ function AssetDetailPanel({
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center gap-3 p-4 border-b border-gray-100">
-        <button onClick={onClose} className="p-1 rounded hover:bg-gray-100 transition-colors">
-          <ArrowLeft className="w-4 h-4 text-gray-500" />
-        </button>
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-gray-800 text-sm truncate">{asset.title}</p>
-          <p className="text-xs text-gray-400 capitalize">{asset.mediaType} · {asset.accessMode}</p>
+      {/* Modal header row: thumbnail + meta + action buttons */}
+      <div className="flex items-start gap-4 px-6 pt-5 pb-4 border-b border-gray-100">
+        <div className="flex-shrink-0">
+          <AssetThumbnail asset={asset as AssetRow} size="md" />
         </div>
-        <Badge
-          variant="outline"
-          className="text-xs flex items-center"
-          style={{
-            borderColor: asset.accessMode === "public" ? "#10b981" : "#f59e0b",
-            color: asset.accessMode === "public" ? "#10b981" : "#f59e0b",
-          }}
-        >
-          {asset.accessMode === "public" ? <Globe className="w-3 h-3 mr-1" /> : <Lock className="w-3 h-3 mr-1" />}
-          {asset.accessMode}
-        </Badge>
-      </div>
-
-      {/* Thumbnail */}
-      <div className="px-4 pt-3">
-        <AssetThumbnail asset={asset as AssetRow} size="lg" />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap mb-1">
+            <Badge
+              className="text-xs flex items-center gap-1"
+              style={{ background: asset.accessMode === "public" ? "#10b981" : "#f59e0b", color: "#fff", border: "none" }}
+            >
+              {asset.accessMode === "public" ? <Globe className="w-3 h-3" /> : <Lock className="w-3 h-3" />}
+              {asset.accessMode === "public" ? "Public" : "Private"}
+            </Badge>
+            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full font-mono">{asset.currentVersionMime ?? asset.mediaType}</span>
+          </div>
+          <p className="text-sm font-semibold text-gray-700 mt-0.5">
+            {versions[0] ? `v${versions.length} · ` : ""}{versions[0]?.fileSizeBytes ? formatBytes(versions[0].fileSizeBytes) : ""}
+          </p>
+          <div className="flex flex-wrap gap-2 mt-3">
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 text-xs gap-1.5"
+              onClick={() => updateAsset.mutate({ assetId: asset.id, accessMode: asset.accessMode === "public" ? "private" : "public" })}
+            >
+              {asset.accessMode === "public" ? <Lock className="w-3 h-3" /> : <Globe className="w-3 h-3" />}
+              {asset.accessMode === "public" ? "Make Private" : "Make Public"}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 text-xs gap-1.5"
+              onClick={() => setActiveTab("versions")}
+            >
+              <UploadCloud className="w-3 h-3" /> New Version
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -1307,40 +1322,84 @@ export default function MediaRepository() {
   }
 
   return (
-    <Layout>
-      <div className="flex flex-col" style={{ minHeight: "calc(100vh - 64px)" }}>
-        {/* Page header */}
-        <div
-          className="border-b border-gray-100 px-4 sm:px-6 py-3 sm:py-4"
-          style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 100%)" }}
-        >
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              {/* Mobile: folder sidebar toggle */}
-              <button
-                className="sm:hidden flex-shrink-0 p-1.5 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors"
-                onClick={() => setShowFolderSidebar(true)}
-                aria-label="Open folders"
-              >
-                <Folder className="w-4 h-4" />
-              </button>
-              <div className="min-w-0">
-                <h1 className="text-lg sm:text-xl font-black text-white truncate" style={{ fontFamily: "Merriweather, serif" }}>
-                  Media Repository
-                </h1>
-                <p className="text-xs sm:text-sm text-white/60 mt-0.5 truncate">
-                  {total} asset{total !== 1 ? "s" : ""} · Upload, organize, and share media
-                </p>
-              </div>
-            </div>
-            <Button className="flex-shrink-0 flex items-center gap-1.5 text-sm" style={{ background: "#189aa1" }} onClick={() => setShowUpload(true)}>
-              <Upload className="w-4 h-4" />
-              <span className="hidden sm:inline">Upload Asset</span>
-              <span className="sm:hidden">Upload</span>
-            </Button>
-          </div>
+    <div className="flex flex-col h-screen overflow-hidden bg-gray-50">
+      {/* ── Full-screen top bar ────────────────────────────────────────────── */}
+      <div
+        className="flex-shrink-0 flex items-center justify-between gap-3 px-4 sm:px-6 py-3 border-b border-white/10"
+        style={{ background: "linear-gradient(135deg, #0e1e2e 0%, #0e4a50 100%)" }}
+      >
+        {/* Left: back link + title */}
+        <div className="flex items-center gap-3 min-w-0">
+          <Link href="/admin">
+            <button className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors text-xs font-medium">
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Platform Admin</span>
+            </button>
+          </Link>
+          <span className="text-white/30 hidden sm:inline">|</span>
+          {/* Mobile: folder sidebar toggle */}
+          <button
+            className="sm:hidden flex-shrink-0 p-1.5 rounded-lg bg-white/10 text-white hover:bg-white/20 transition-colors"
+            onClick={() => setShowFolderSidebar(true)}
+            aria-label="Open folders"
+          >
+            <Folder className="w-4 h-4" />
+          </button>
+          <h1 className="text-base sm:text-lg font-black text-white truncate" style={{ fontFamily: "Merriweather, serif" }}>
+            Media Repository
+          </h1>
+          <span className="text-xs text-white/50 hidden sm:inline">{total} file{total !== 1 ? "s" : ""}</span>
         </div>
-
+        {/* Right: toolbar buttons */}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {/* List/Grid toggle */}
+          <div className="flex rounded-lg overflow-hidden border border-white/20">
+            <button
+              className={`h-8 w-8 flex items-center justify-center transition-colors ${
+                viewMode === "list" ? "bg-[#189aa1] text-white" : "text-white/60 hover:bg-white/10"
+              }`}
+              onClick={() => setViewMode("list")}
+              title="List view"
+            >
+              <LayoutList className="w-3.5 h-3.5" />
+            </button>
+            <button
+              className={`h-8 w-8 flex items-center justify-center transition-colors ${
+                viewMode === "grid" ? "bg-[#189aa1] text-white" : "text-white/60 hover:bg-white/10"
+              }`}
+              onClick={() => setViewMode("grid")}
+              title="Grid view"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          {/* Trash button */}
+          <button
+            className={`flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-medium transition-colors border ${
+              showTrash
+                ? "bg-red-500 text-white border-red-500"
+                : "text-white/70 border-white/20 hover:bg-white/10 hover:text-white"
+            }`}
+            onClick={() => { setShowTrash(!showTrash); setSelectedAssetId(null); }}
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Trash</span>
+            {trashCount > 0 && <span className="bg-red-400 text-white text-xs rounded-full px-1.5 py-0.5 leading-none">{trashCount}</span>}
+          </button>
+          {/* Upload button */}
+          <Button
+            className="flex items-center gap-1.5 h-8 text-xs font-semibold"
+            style={{ background: "#189aa1" }}
+            onClick={() => setShowUpload(true)}
+          >
+            <Upload className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Upload File</span>
+            <span className="sm:hidden">Upload</span>
+          </Button>
+        </div>
+      </div>
+      {/* ── Body ──────────────────────────────────────────────────────────── */}
+      <div className="flex flex-1 overflow-hidden">
         {/* Mobile: Folder sidebar overlay */}
         {showFolderSidebar && (
           <div className="fixed inset-0 z-50 sm:hidden">
@@ -1452,27 +1511,7 @@ export default function MediaRepository() {
                       <RefreshCw className="w-3.5 h-3.5 text-gray-400" />
                     </Button>
                   )}
-                  {/* View mode toggle */}
-                  <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
-                    <button
-                      className={`h-8 w-8 flex items-center justify-center transition-colors ${
-                        viewMode === "list" ? "bg-[#189aa1] text-white" : "text-gray-400 hover:bg-gray-50"
-                      }`}
-                      onClick={() => setViewMode("list")}
-                      title="List view"
-                    >
-                      <LayoutList className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      className={`h-8 w-8 flex items-center justify-center transition-colors ${
-                        viewMode === "grid" ? "bg-[#189aa1] text-white" : "text-gray-400 hover:bg-gray-50"
-                      }`}
-                      onClick={() => setViewMode("grid")}
-                      title="Grid view"
-                    >
-                      <LayoutGrid className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+
                 </div>
               </div>
 
@@ -1707,16 +1746,6 @@ export default function MediaRepository() {
               </div>
             </div>
 
-            {/* Desktop detail panel — hidden on mobile (shown as overlay instead) */}
-            {selectedAssetId && (
-              <div className="hidden sm:flex w-80 flex-shrink-0 bg-white overflow-hidden flex-col border-l border-gray-100">
-                <AssetDetailPanel
-                  assetId={selectedAssetId}
-                  onClose={() => setSelectedAssetId(null)}
-                  folders={folders as FolderRow[]}
-                />
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -1727,6 +1756,28 @@ export default function MediaRepository() {
         folderId={typeof selectedFolderId === "number" ? selectedFolderId : undefined}
         onSuccess={() => refetchAssets()}
       />
-    </Layout>
+      {/* ── Asset Detail Modal ────────────────────────────────────────────── */}
+      <Dialog
+        open={!!selectedAssetId}
+        onOpenChange={(open) => { if (!open) { setSelectedAssetId(null); setShowDetailPanel(false); } }}
+      >
+        <DialogContent
+          className="max-w-4xl w-full p-0 overflow-hidden"
+          style={{ maxHeight: "90vh", display: "flex", flexDirection: "column" }}
+        >
+          <DialogHeader className="sr-only">
+            <DialogTitle>Asset Details</DialogTitle>
+            <DialogDescription>View and manage asset settings, versions, access, and embed code.</DialogDescription>
+          </DialogHeader>
+          {selectedAssetId && (
+            <AssetDetailPanel
+              assetId={selectedAssetId}
+              onClose={() => { setSelectedAssetId(null); setShowDetailPanel(false); }}
+              folders={folders as FolderRow[]}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

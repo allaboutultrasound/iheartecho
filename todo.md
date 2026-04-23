@@ -1036,3 +1036,11 @@
 - [x] restoreAsset and listDeletedAssets tRPC procedures (adminProcedure)
 - [x] Rename "Promote to Active" → "Revert to This Version"
 - [x] Delete button renamed "Move to Recycle Bin" with updated confirmation text (30-day warning)
+
+## Media Repository — Full-Screen Layout (2026-04-23)
+- [x] Remove DashboardLayout wrapper — Media Repository goes full-screen with its own top bar
+- [x] Top bar: "← Platform Admin" back link, page title, file count, List/Grid/Trash/Upload buttons
+- [x] Asset detail panel moved from right-side drawer to a large centered modal dialog (max-w-4xl, 90vh)
+- [x] Modal dialog: fits all tabs (Info, Versions, Access, Analytics, Embed) with scrollable content
+- [x] Modal header: access badge, MIME type chip, version/size info, Make Private / New Version buttons
+- [x] Remove duplicate List/Grid toggle from filter bar (now only in top bar)
