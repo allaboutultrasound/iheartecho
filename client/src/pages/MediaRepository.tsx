@@ -64,6 +64,8 @@ import {
   RotateCcw,
   LayoutList,
   LayoutGrid,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -1267,7 +1269,15 @@ export default function MediaRepository() {
   const [showUpload, setShowUpload] = useState(false);
   const [showFolderSidebar, setShowFolderSidebar] = useState(false);
   const [showDetailPanel, setShowDetailPanel] = useState(false);
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  const [viewMode, setViewMode] = useState<"list" | "grid">(() => {
+    try { return (localStorage.getItem("mediaViewMode") as "list" | "grid") || "list"; } catch { return "list"; }
+  });
+  const [sortField, setSortField] = useState<"name" | "type" | "date" | "access">(() => {
+    try { return (localStorage.getItem("mediaSortField") as any) || "name"; } catch { return "name"; }
+  });
+  const [sortDir, setSortDir] = useState<"asc" | "desc">(() => {
+    try { return (localStorage.getItem("mediaSortDir") as any) || "asc"; } catch { return "asc"; }
+  });
   const [showTrash, setShowTrash] = useState(false);
 
   useEffect(() => {
@@ -1305,7 +1315,45 @@ export default function MediaRepository() {
     onError: (e) => toast.error(e.message),
   });
 
-  const assets: AssetRow[] = (assetsData?.assets ?? []) as AssetRow[];
+  const rawAssets: AssetRow[] = (assetsData?.assets ?? []) as AssetRow[];
+
+  // Client-side tag filter (server handles title/filename search)
+  const assets: AssetRow[] = rawAssets.filter((a) => {
+    if (!debouncedSearch) return true;
+    const q = debouncedSearch.toLowerCase();
+    const inTitle = a.title?.toLowerCase().includes(q);
+    const inFilename = a.originalFilename?.toLowerCase().includes(q);
+    const inTags = (a.tags ?? []).some((t: string) => t.toLowerCase().includes(q));
+    return inTitle || inFilename || inTags;
+  });
+
+  // Sort helper
+  const handleSort = (field: typeof sortField) => {
+    if (sortField === field) {
+      const next = sortDir === "asc" ? "desc" : "asc";
+      setSortDir(next);
+      try { localStorage.setItem("mediaSortDir", next); } catch {}
+    } else {
+      setSortField(field);
+      setSortDir("asc");
+      try { localStorage.setItem("mediaSortField", field); localStorage.setItem("mediaSortDir", "asc"); } catch {}
+    }
+  };
+
+  const sortedAssets = [...assets].sort((a, b) => {
+    let cmp = 0;
+    if (sortField === "name") {
+      cmp = (a.title ?? "").localeCompare(b.title ?? "");
+    } else if (sortField === "type") {
+      cmp = (a.mediaType ?? "").localeCompare(b.mediaType ?? "");
+    } else if (sortField === "access") {
+      cmp = (a.accessMode ?? "").localeCompare(b.accessMode ?? "");
+    } else if (sortField === "date") {
+      cmp = (a.updatedAt instanceof Date ? a.updatedAt.getTime() : new Date(a.updatedAt ?? 0).getTime())
+          - (b.updatedAt instanceof Date ? b.updatedAt.getTime() : new Date(b.updatedAt ?? 0).getTime());
+    }
+    return sortDir === "asc" ? cmp : -cmp;
+  });
   const total = assetsData?.total ?? 0;
   const deletedAssets = (deletedAssetsData ?? []) as Array<AssetRow & { daysRemaining: number }>;
   const trashCount = deletedAssets.length;
@@ -1469,8 +1517,17 @@ export default function MediaRepository() {
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                       placeholder="Search assets…"
-                      className="pl-8 h-8 text-sm"
+                      className="pl-8 pr-7 h-8 text-sm"
                     />
+                    {search && (
+                      <button
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        onClick={() => setSearch("")}
+                        aria-label="Clear search"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 )}
                 {showTrash && (
@@ -1608,16 +1665,52 @@ export default function MediaRepository() {
                         <thead className="sticky top-0 bg-white z-10">
                           <tr className="border-b border-gray-100">
                             <th className="text-left py-2 px-2 sm:px-3 text-xs font-semibold text-gray-500 w-8"></th>
-                            <th className="text-left py-2 px-2 sm:px-3 text-xs font-semibold text-gray-500">Name</th>
-                            <th className="text-left py-2 px-2 sm:px-3 text-xs font-semibold text-gray-500 hidden sm:table-cell w-24">Type</th>
-                            <th className="text-left py-2 px-2 sm:px-3 text-xs font-semibold text-gray-500 hidden md:table-cell w-20">Access</th>
+                            <th
+                              className="text-left py-2 px-2 sm:px-3 text-xs font-semibold text-gray-500 cursor-pointer select-none hover:text-[#189aa1] transition-colors"
+                              onClick={() => handleSort("name")}
+                            >
+                              <span className="inline-flex items-center gap-1">
+                                Name
+                                {sortField === "name" ? (sortDir === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />) : <ChevronUp className="w-3 h-3 opacity-20" />}
+                              </span>
+                            </th>
+                            <th
+                              className="text-left py-2 px-2 sm:px-3 text-xs font-semibold text-gray-500 hidden sm:table-cell w-24 cursor-pointer select-none hover:text-[#189aa1] transition-colors"
+                              onClick={() => handleSort("type")}
+                            >
+                              <span className="inline-flex items-center gap-1">
+                                Type
+                                {sortField === "type" ? (sortDir === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />) : <ChevronUp className="w-3 h-3 opacity-20" />}
+                              </span>
+                            </th>
+                            <th
+                              className="text-left py-2 px-2 sm:px-3 text-xs font-semibold text-gray-500 hidden md:table-cell w-20 cursor-pointer select-none hover:text-[#189aa1] transition-colors"
+                              onClick={() => handleSort("access")}
+                            >
+                              <span className="inline-flex items-center gap-1">
+                                Access
+                                {sortField === "access" ? (sortDir === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />) : <ChevronUp className="w-3 h-3 opacity-20" />}
+                              </span>
+                            </th>
                             <th className="text-left py-2 px-2 sm:px-3 text-xs font-semibold text-gray-500 hidden lg:table-cell w-20">Size</th>
-                            <th className="text-left py-2 px-2 sm:px-3 text-xs font-semibold text-gray-500 hidden xl:table-cell w-28">Modified</th>
+                            <th
+                              className="text-left py-2 px-2 sm:px-3 text-xs font-semibold text-gray-500 hidden xl:table-cell w-28 cursor-pointer select-none hover:text-[#189aa1] transition-colors"
+                              onClick={() => handleSort("date")}
+                            >
+                              <span className="inline-flex items-center gap-1">
+                                Modified
+                                {sortField === "date" ? (sortDir === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />) : <ChevronUp className="w-3 h-3 opacity-20" />}
+                              </span>
+                            </th>
                             <th className="text-right py-2 px-2 sm:px-3 text-xs font-semibold text-gray-500 w-28">Actions</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {assets.map((asset) => {
+                          {sortedAssets.length === 0 && !assetsLoading ? (
+                            <tr><td colSpan={7} className="py-12 text-center text-sm text-gray-400">
+                              {debouncedSearch ? `No results for "${debouncedSearch}"` : "No files in this folder"}
+                            </td></tr>
+                          ) : sortedAssets.map((asset) => {
                             const Icon = MEDIA_TYPE_ICONS[asset.mediaType];
                             const views = (analyticsSummary as any)?.[asset.id]?.total ?? 0;
                             const isSelected = selectedAssetId === asset.id;
@@ -1686,7 +1779,7 @@ export default function MediaRepository() {
                       /* ── Grid / icon view ── */
                       <div className="p-2 sm:p-4">
                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3">
-                          {assets.map((asset) => {
+                          {sortedAssets.map((asset) => {
                             const views = (analyticsSummary as any)?.[asset.id]?.total ?? 0;
                             const isSelected = selectedAssetId === asset.id;
                             return (

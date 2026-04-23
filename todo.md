@@ -1044,3 +1044,14 @@
 - [x] Modal dialog: fits all tabs (Info, Versions, Access, Analytics, Embed) with scrollable content
 - [x] Modal header: access badge, MIME type chip, version/size info, Make Private / New Version buttons
 - [x] Remove duplicate List/Grid toggle from filter bar (now only in top bar)
+
+## Media Repository — Sortable Columns (2026-04-23)
+- [x] Add sortField / sortDir state to MediaRepository main component
+- [x] Clickable column headers: Name, Type, Access, Modified — toggle asc/desc with ChevronUp/Down icon
+- [x] Client-side sort of the assets array before rendering
+- [x] Persist sort preference in localStorage
+
+## Media Repository — Search Function (2026-04-23)
+- [x] Wire search input to filter assets by title, filename, and tags (client-side, real-time)
+- [x] Clear search button (×) when query is non-empty
+- [x] Show "No results for '…'" empty state when search returns nothing
