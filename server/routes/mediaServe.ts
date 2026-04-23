@@ -1,11 +1,12 @@
 /**
  * Media Serve Routes
  *
- * GET  /api/media/:slug/view      — Serve file inline in the browser (Content-Disposition: inline)
- *                                   HTML/SCORM → full-page iframe wrapper
- *                                   Images/video/audio/PDF → proxied with correct Content-Type
- * GET  /api/media/:slug/download  — Force-download the file (Content-Disposition: attachment)
- * GET  /api/media/:slug           — Legacy: redirect to /view (backward-compatible)
+ * GET  /api/media/:slug/view      — Serve file inline in the browser
+ *                                   • HTML files → proxied inline with Content-Type: text/html
+ *                                   • SCORM/zip  → extracted on-demand, served as full-page iframe
+ *                                   • Images/video/audio/PDF → proxied with correct Content-Type
+ * GET  /api/media/:slug/download  — Force-download the original file
+ * GET  /api/media/:slug           — Legacy: redirect to /view
  * GET  /api/media/:slug/embed     — Embeddable player page (for iframes in other sites)
  *
  * All routes log access to mediaAccessLogs for analytics.
@@ -15,8 +16,115 @@ import { Router, Request, Response } from "express";
 import { getDb } from "../db";
 import { mediaAssets, mediaVersions, mediaAccessRules, mediaAccessLogs } from "../../drizzle/schema";
 import { and, eq, isNull } from "drizzle-orm";
+import { storagePut } from "../storage";
+import JSZip from "jszip";
 
 const router = Router();
+
+// ─── SCORM / ZIP Extraction ───────────────────────────────────────────────────
+
+const MIME_MAP: Record<string, string> = {
+  html: "text/html", htm: "text/html",
+  js: "application/javascript", mjs: "application/javascript",
+  css: "text/css",
+  json: "application/json", xml: "application/xml",
+  png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg",
+  gif: "image/gif", svg: "image/svg+xml", webp: "image/webp",
+  ico: "image/x-icon",
+  mp4: "video/mp4", webm: "video/webm", mp3: "audio/mpeg",
+  wav: "audio/wav", ogg: "audio/ogg",
+  woff: "font/woff", woff2: "font/woff2", ttf: "font/ttf",
+  eot: "application/vnd.ms-fontobject",
+  pdf: "application/pdf",
+  swf: "application/x-shockwave-flash",
+};
+
+/**
+ * Extract a SCORM/HTML zip from a remote URL, upload all files to S3, and
+ * return the URL of the entry-point HTML.
+ *
+ * Entry-point detection order:
+ *  1. href of <resource type="webcontent"> in imsmanifest.xml
+ *  2. index.html / index.htm at root
+ *  3. First .html file found
+ */
+async function extractZipAndGetEntryUrl(
+  zipUrl: string,
+  keyPrefix: string
+): Promise<string | null> {
+  try {
+    const zipRes = await fetch(zipUrl);
+    if (!zipRes.ok) {
+      console.error(`[SCORM] Failed to fetch zip: ${zipRes.status} ${zipUrl}`);
+      return null;
+    }
+    const zipBuf = Buffer.from(await zipRes.arrayBuffer());
+    const zip = await JSZip.loadAsync(zipBuf);
+    const files = zip.files;
+    const uploadedUrls: Record<string, string> = {};
+
+    // Upload all files in the zip to S3
+    for (const [relativePath, file] of Object.entries(files)) {
+      if (file.dir) continue;
+      const fileBuffer = Buffer.from(await file.async("arraybuffer"));
+      const ext = relativePath.split(".").pop()?.toLowerCase() ?? "";
+      const contentType = MIME_MAP[ext] ?? "application/octet-stream";
+      const s3Key = `${keyPrefix}/${relativePath}`;
+      try {
+        const result = await storagePut(s3Key, fileBuffer, contentType);
+        // Encode spaces and special chars in the URL path for browser compatibility
+        try {
+          const urlObj = new URL(result.url);
+          const encodedPath = urlObj.pathname.split('/').map((seg: string) => encodeURIComponent(decodeURIComponent(seg))).join('/');
+          uploadedUrls[relativePath] = urlObj.origin + encodedPath;
+        } catch {
+          uploadedUrls[relativePath] = result.url;
+        }
+      } catch (uploadErr) {
+        console.error(`[SCORM] Failed to upload ${relativePath}:`, uploadErr);
+      }
+    }
+
+    if (Object.keys(uploadedUrls).length === 0) {
+      console.error("[SCORM] No files were uploaded from zip");
+      return null;
+    }
+
+    // Try to find the entry point from imsmanifest.xml
+    const manifestFile = files["imsmanifest.xml"] ?? files["imsmanifest.XML"];
+    if (manifestFile) {
+      const manifestText = await manifestFile.async("text");
+      // Look for <resource ... href="..." type="webcontent"...>
+      const hrefMatch =
+        manifestText.match(/<resource[^>]+type=["'][^"']*webcontent[^"']*["'][^>]+href=["']([^"']+)["']/i) ??
+        manifestText.match(/<resource[^>]+href=["']([^"']+)["'][^>]+type=["'][^"']*webcontent[^"']*["']/i) ??
+        manifestText.match(/<resource[^>]+href=["']([^"']+)["']/i);
+      if (hrefMatch) {
+        const entryPath = hrefMatch[1].replace(/\\/g, "/");
+        if (uploadedUrls[entryPath]) return uploadedUrls[entryPath];
+        // Try case-insensitive match
+        const lcEntry = entryPath.toLowerCase();
+        const match = Object.keys(uploadedUrls).find(k => k.toLowerCase() === lcEntry);
+        if (match) return uploadedUrls[match];
+      }
+    }
+
+    // Fallback: index.html / index.htm at root
+    if (uploadedUrls["index.html"]) return uploadedUrls["index.html"];
+    if (uploadedUrls["index.htm"]) return uploadedUrls["index.htm"];
+
+    // Fallback: first HTML file found (sorted so root-level files come first)
+    const htmlFiles = Object.keys(uploadedUrls)
+      .filter(k => k.endsWith(".html") || k.endsWith(".htm"))
+      .sort((a, b) => a.split("/").length - b.split("/").length);
+    if (htmlFiles.length > 0) return uploadedUrls[htmlFiles[0]];
+
+    return null;
+  } catch (err) {
+    console.error("[SCORM] Extraction failed:", err);
+    return null;
+  }
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -42,7 +150,7 @@ async function logAccess(opts: {
       referer: opts.req.headers["referer"] ?? null,
     });
   } catch {
-    // Non-fatal — don't block the response
+    // Non-fatal
   }
 }
 
@@ -140,32 +248,24 @@ async function proxyFile(
     res.setHeader("Content-Type", contentType);
     res.setHeader("Content-Disposition", `${disposition}; filename="${safeFilename}"`);
     res.setHeader("Cache-Control", "private, max-age=3600");
-    // Forward content-length if available
     const cl = upstream.headers.get("content-length");
     if (cl) res.setHeader("Content-Length", cl);
 
-    // Stream body to client
     const reader = upstream.body.getReader();
-    const pump = async () => {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        res.write(value);
-      }
-      res.end();
-    };
-    await pump();
-  } catch (err) {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      res.write(value);
+    }
+    res.end();
+  } catch {
     if (!res.headersSent) {
       res.status(502).json({ error: "Proxy error" });
     }
   }
 }
 
-/**
- * Build an HTML page that renders a SCORM package in a full-page iframe.
- * The iframe src points to the extracted entry-point URL stored in scormEntryUrl.
- */
+/** Build a full-page HTML wrapper that loads a SCORM entry URL in an iframe. */
 function buildScormPage(title: string, entryUrl: string): string {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -185,57 +285,72 @@ function buildScormPage(title: string, entryUrl: string): string {
 </html>`;
 }
 
-/**
- * Build an inline viewer HTML page for a given media type.
- * Used by the /view route for HTML files and as a fallback for unsupported types.
- */
-function buildViewerPage(
-  title: string,
-  url: string,
-  mediaType: string,
-  mime: string
-): string {
+/** Build a loading/extracting page that auto-refreshes while extraction runs. */
+function buildExtractingPage(title: string, slug: string, token?: string): string {
+  const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="refresh" content="4;url=/api/media/${slug}/view${tokenParam}" />
+  <title>Loading ${escapeHtml(title)}…</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { display: flex; align-items: center; justify-content: center; height: 100vh;
+           background: #f0fbfc; font-family: Merriweather, Georgia, serif; }
+    .card { text-align: center; padding: 40px; max-width: 420px; }
+    .spinner { width: 48px; height: 48px; border: 4px solid #e0f7f8; border-top-color: #189aa1;
+               border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 24px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    h2 { color: #1a2e3b; font-size: 18px; margin-bottom: 8px; }
+    p { color: #6b7280; font-size: 14px; font-family: 'Open Sans', sans-serif; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="spinner"></div>
+    <h2>Preparing ${escapeHtml(title)}</h2>
+    <p>Extracting package files… this may take a few seconds.<br/>The page will reload automatically.</p>
+  </div>
+</body>
+</html>`;
+}
+
+/** Build a viewer page for non-zip media types. */
+function buildViewerPage(title: string, url: string, mediaType: string, mime: string): string {
   let body = "";
   if (mediaType === "video" || mime.startsWith("video/")) {
     body = `<video src="${url}" controls autoplay muted playsinline style="width:100%;max-height:100vh;display:block;background:#000;" title="${escapeHtml(title)}"></video>`;
   } else if (mediaType === "audio" || mime.startsWith("audio/")) {
-    body = `
-      <div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#f0fbfc;">
-        <div style="text-align:center;padding:32px;max-width:480px;">
-          <div style="font-size:48px;margin-bottom:16px;">🎵</div>
-          <p style="font-family:Merriweather,Georgia,serif;font-size:18px;color:#1a2e3b;margin:0 0 20px;">${escapeHtml(title)}</p>
-          <audio src="${url}" controls style="width:100%;"></audio>
-        </div>
-      </div>`;
+    body = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#f0fbfc;">
+      <div style="text-align:center;padding:32px;max-width:480px;">
+        <div style="font-size:48px;margin-bottom:16px;">🎵</div>
+        <p style="font-family:Merriweather,Georgia,serif;font-size:18px;color:#1a2e3b;margin:0 0 20px;">${escapeHtml(title)}</p>
+        <audio src="${url}" controls style="width:100%;"></audio>
+      </div>
+    </div>`;
   } else if (mediaType === "image" || mime.startsWith("image/")) {
     body = `<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#111;">
       <img src="${url}" alt="${escapeHtml(title)}" style="max-width:100%;max-height:100vh;display:block;" />
     </div>`;
   } else if (mediaType === "document" || mime === "application/pdf") {
     body = `<iframe src="${url}" style="width:100%;height:100vh;border:none;" title="${escapeHtml(title)}"></iframe>`;
-  } else if (mediaType === "html" || mime === "text/html") {
-    // HTML files are proxied directly — this branch is only reached if proxying failed
-    body = `<iframe src="${url}" style="width:100%;height:100vh;border:none;" title="${escapeHtml(title)}"></iframe>`;
   } else {
-    body = `
-      <div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#f0fbfc;">
-        <div style="text-align:center;padding:32px;">
-          <p style="font-family:Merriweather,Georgia,serif;font-size:18px;color:#1a2e3b;margin:0 0 20px;">${escapeHtml(title)}</p>
-          <a href="${url}" download style="display:inline-block;background:#189aa1;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;">Download File</a>
-        </div>
-      </div>`;
+    body = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#f0fbfc;">
+      <div style="text-align:center;padding:32px;">
+        <p style="font-family:Merriweather,Georgia,serif;font-size:18px;color:#1a2e3b;margin:0 0 20px;">${escapeHtml(title)}</p>
+        <a href="${url}" download style="display:inline-block;background:#189aa1;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;">Download File</a>
+      </div>
+    </div>`;
   }
-
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${escapeHtml(title)} — iHeartEcho™</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #000; }
-  </style>
+  <style>* { margin: 0; padding: 0; box-sizing: border-box; } body { background: #000; }</style>
 </head>
 <body>${body}</body>
 </html>`;
@@ -243,6 +358,19 @@ function buildViewerPage(
 
 function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+/** Determine if a MIME type or mediaType is a zip/SCORM package. */
+function isZipLike(mediaType: string, mime: string): boolean {
+  return (
+    mediaType === "scorm" ||
+    mediaType === "lms" ||
+    mediaType === "zip" ||
+    mime === "application/zip" ||
+    mime === "application/x-zip-compressed" ||
+    mime === "application/x-zip" ||
+    mime === "application/octet-stream" && mediaType === "zip"
+  );
 }
 
 // ── VIEW route — inline display ────────────────────────────────────────────────
@@ -260,28 +388,59 @@ router.get("/api/media/:slug/view", async (req: Request, res: Response) => {
   const filename = version.originalFilename ?? `${asset.slug}.bin`;
   const url = version.s3Url;
 
-  // SCORM: serve the extracted entry-point in a full-page iframe
-  if (asset.mediaType === "scorm" || asset.mediaType === "lms") {
-    const entryUrl = (version as any).scormEntryUrl as string | null;
-    if (entryUrl) {
+  // ── SCORM / ZIP: extract on-demand if needed ────────────────────────────────
+  if (isZipLike(asset.mediaType, mime)) {
+    const existingEntryUrl = (version as any).scormEntryUrl as string | null;
+
+    if (existingEntryUrl) {
+      // Already extracted — serve the iframe immediately
       res.setHeader("Content-Type", "text/html; charset=utf-8");
-      res.setHeader("X-Frame-Options", "SAMEORIGIN");
-      res.send(buildScormPage(asset.title, entryUrl));
+      res.send(buildScormPage(asset.title, existingEntryUrl));
       return;
     }
-    // Fallback: download the zip if not yet extracted
-    res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(filename)}"`);
-    res.redirect(302, url);
+
+    // Not yet extracted — start extraction in the background and show a loading page
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.send(buildExtractingPage(asset.title, slug, token));
+
+    // Extract asynchronously (fire-and-forget; next request will get the iframe)
+    const keyPrefix = `media-repository/${asset.slug}-scorm`;
+    extractZipAndGetEntryUrl(url, keyPrefix).then(async (entryUrl) => {
+      if (!entryUrl) {
+        console.error(`[SCORM] Extraction produced no entry URL for asset ${asset.id}`);
+        return;
+      }
+      try {
+        const db = await getDb();
+        if (!db) return;
+        // Store scormEntryUrl on the version row
+        await db
+          .update(mediaVersions)
+          .set({ scormEntryUrl: entryUrl } as any)
+          .where(eq(mediaVersions.id, version.id));
+        // Promote mediaType to "scorm" so future requests hit the right branch
+        await db
+          .update(mediaAssets)
+          .set({ mediaType: "scorm" } as any)
+          .where(eq(mediaAssets.id, asset.id));
+        console.log(`[SCORM] Extraction complete for asset ${asset.id}: ${entryUrl}`);
+      } catch (dbErr) {
+        console.error("[SCORM] Failed to save extraction result:", dbErr);
+      }
+    }).catch((err) => {
+      console.error("[SCORM] Background extraction error:", err);
+    });
+
     return;
   }
 
-  // HTML: proxy the raw HTML inline so it renders in the browser
+  // ── HTML: proxy the raw HTML inline ────────────────────────────────────────
   if (asset.mediaType === "html" || mime === "text/html" || mime === "application/xhtml+xml") {
     await proxyFile(url, "inline", filename, mime || "text/html", res);
     return;
   }
 
-  // Images, video, audio, PDF: proxy inline
+  // ── Images, video, audio, PDF: proxy inline ─────────────────────────────────
   if (
     mime.startsWith("image/") ||
     mime.startsWith("video/") ||
@@ -292,9 +451,8 @@ router.get("/api/media/:slug/view", async (req: Request, res: Response) => {
     return;
   }
 
-  // Everything else: serve a viewer HTML page (wraps in appropriate tag or offers download)
+  // ── Everything else: viewer page ────────────────────────────────────────────
   res.setHeader("Content-Type", "text/html; charset=utf-8");
-  res.setHeader("X-Frame-Options", "SAMEORIGIN");
   res.send(buildViewerPage(asset.title, url, asset.mediaType, mime));
 });
 
@@ -337,15 +495,25 @@ router.get("/api/media/:slug/embed", async (req: Request, res: Response) => {
   const mime = version.mimeType ?? "";
   const url = version.s3Url;
 
-  // SCORM: iframe to extracted entry
-  if (asset.mediaType === "scorm" || asset.mediaType === "lms") {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("X-Frame-Options", "ALLOWALL");
+
+  // SCORM/zip: iframe to extracted entry
+  if (isZipLike(asset.mediaType, mime)) {
     const entryUrl = (version as any).scormEntryUrl as string | null;
-    res.setHeader("Content-Type", "text/html; charset=utf-8");
-    res.setHeader("X-Frame-Options", "ALLOWALL");
     if (entryUrl) {
       res.send(buildScormPage(asset.title, entryUrl));
     } else {
-      res.send(buildViewerPage(asset.title, url, asset.mediaType, mime));
+      res.send(buildExtractingPage(asset.title, slug, token));
+      // Trigger extraction in background
+      const keyPrefix = `media-repository/${asset.slug}-scorm`;
+      extractZipAndGetEntryUrl(url, keyPrefix).then(async (entryUrl) => {
+        if (!entryUrl) return;
+        const db = await getDb();
+        if (!db) return;
+        await db.update(mediaVersions).set({ scormEntryUrl: entryUrl } as any).where(eq(mediaVersions.id, version.id));
+        await db.update(mediaAssets).set({ mediaType: "scorm" } as any).where(eq(mediaAssets.id, asset.id));
+      }).catch(console.error);
     }
     return;
   }
@@ -356,8 +524,6 @@ router.get("/api/media/:slug/embed", async (req: Request, res: Response) => {
     return;
   }
 
-  res.setHeader("Content-Type", "text/html; charset=utf-8");
-  res.setHeader("X-Frame-Options", "ALLOWALL");
   res.send(buildViewerPage(asset.title, url, asset.mediaType, mime));
 });
 

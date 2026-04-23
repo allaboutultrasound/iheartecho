@@ -368,6 +368,13 @@ function AssetDetailPanel({
   const updateAsset = trpc.media.updateAsset.useMutation({
     onSuccess: () => { toast.success("Updated"); utils.media.getAsset.invalidate({ assetId }); },
   });
+  const reExtractScorm = trpc.media.reExtractScorm.useMutation({
+    onSuccess: () => {
+      toast.success("Re-extraction complete — package is now viewable in the browser.");
+      utils.media.getAsset.invalidate({ assetId });
+    },
+    onError: (e) => toast.error(`Re-extraction failed: ${e.message}`),
+  });
 
   const copyToClipboard = (text: string, label = "Copied!") => {
     navigator.clipboard.writeText(text);
@@ -513,6 +520,23 @@ function AssetDetailPanel({
                 </a>
               </div>
             </div>
+            {/* Re-extract button for SCORM/zip assets */}
+            {(asset.mediaType === "scorm" || asset.mediaType === "zip" || asset.mediaType === "lms") && (
+              <div>
+                <p className="text-xs text-gray-500 mb-1">SCORM Package</p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs gap-1.5 w-full"
+                  disabled={reExtractScorm.isPending}
+                  onClick={() => reExtractScorm.mutate({ assetId: asset.id })}
+                >
+                  <RefreshCw className={`w-3 h-3 ${reExtractScorm.isPending ? "animate-spin" : ""}`} />
+                  {reExtractScorm.isPending ? "Extracting…" : "Re-extract Package Files"}
+                </Button>
+                <p className="text-xs text-gray-400 mt-1">Re-uploads all files from the zip to make them viewable in the browser.</p>
+              </div>
+            )}
             <div>
               <p className="text-xs text-gray-500 mb-1">Embed URL</p>
               <div className="flex gap-1">

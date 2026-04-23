@@ -126,7 +126,14 @@ async function extractScormZip(
       const contentType = mimeMap[ext] ?? "application/octet-stream";
       const s3Key = `${keyPrefix}/${relativePath}`;
       const result = await storagePut(s3Key, fileBuffer, contentType);
-      uploadedUrls[relativePath] = result.url;
+      // Encode spaces and special chars in the URL path for browser compatibility
+      try {
+        const urlObj = new URL(result.url);
+        const encodedPath = urlObj.pathname.split('/').map((seg: string) => encodeURIComponent(decodeURIComponent(seg))).join('/');
+        uploadedUrls[relativePath] = urlObj.origin + encodedPath;
+      } catch {
+        uploadedUrls[relativePath] = result.url;
+      }
     }
 
     // Try to find the entry point from imsmanifest.xml
@@ -458,6 +465,24 @@ export const mediaRouter = router({
       return { versionId, versionNumber, s3Url, scormEntryUrl: scormEntryUrlV };
     }),
 
+  // ── Re-extract SCORM/zip for an existing asset ─────────────────────────────
+  reExtractScorm: adminProcedure
+    .input(z.object({ assetId: z.number() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const [asset] = await db.select().from(mediaAssets).where(eq(mediaAssets.id, input.assetId));
+      if (!asset) throw new TRPCError({ code: "NOT_FOUND", message: "Asset not found" });
+      if (!asset.currentVersionId) throw new TRPCError({ code: "BAD_REQUEST", message: "No active version" });
+      const [version] = await db.select().from(mediaVersions).where(eq(mediaVersions.id, asset.currentVersionId));
+      if (!version) throw new TRPCError({ code: "NOT_FOUND", message: "Version not found" });
+      const keyPrefix = `media-repository/${asset.slug}-scorm`;
+      const entryUrl = await extractScormZip(Buffer.from(await fetch(version.s3Url).then(r => r.arrayBuffer())), keyPrefix);
+      if (!entryUrl) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Extraction failed — no entry HTML found in zip" });
+      await db.update(mediaVersions).set({ scormEntryUrl: entryUrl } as any).where(eq(mediaVersions.id, version.id));
+      await db.update(mediaAssets).set({ mediaType: "scorm", updatedAt: new Date() } as any).where(eq(mediaAssets.id, asset.id));
+      return { scormEntryUrl: entryUrl };
+    }),
   // ── Promote a specific version to active ───────────────────────────────────
   promoteVersion: adminProcedure
     .input(z.object({ assetId: z.number(), versionId: z.number() }))

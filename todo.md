@@ -1006,3 +1006,12 @@
 - [x] /api/media/:slug/view for SCORM — serve full-page iframe pointing to scormEntryUrl
 - [x] MediaRepository.tsx — View and Download buttons in asset grid cards and detail panel Info tab
 - [x] mediaRouter.ts — expose viewUrl and downloadUrl in listAssets and getAsset responses
+
+## Media Repository — Inline View Fix (2026-04-23) — COMPLETED
+- [x] /view route: on-demand SCORM/zip extraction when scormEntryUrl is null
+- [x] Loading page with auto-refresh while extraction runs in background
+- [x] Store extracted scormEntryUrl in DB and update mediaType to "scorm"
+- [x] URL-encode spaces/special chars in extracted file URLs for browser compatibility
+- [x] Fix existing asset DB entry to use encoded URL
+- [x] reExtractScorm tRPC procedure for admin-triggered re-extraction
+- [x] Re-extract button in MediaRepository Info tab for SCORM/zip assets
