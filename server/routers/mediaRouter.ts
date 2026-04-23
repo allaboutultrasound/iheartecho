@@ -544,6 +544,32 @@ export const mediaRouter = router({
     }),
 
   // ── Invite a user by email to access a private asset ───────────────────────
+  // Delete a single version (cannot delete the currently active version)
+  deleteVersion: adminProcedure
+    .input(z.object({ assetId: z.number(), versionId: z.number() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      const [asset] = await db
+        .select()
+        .from(mediaAssets)
+        .where(and(eq(mediaAssets.id, input.assetId), isNull(mediaAssets.deletedAt)));
+      if (!asset) throw new TRPCError({ code: "NOT_FOUND", message: "Asset not found" });
+      if (asset.currentVersionId === input.versionId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Cannot delete the active version. Promote another version first.",
+        });
+      }
+      const [version] = await db
+        .select()
+        .from(mediaVersions)
+        .where(and(eq(mediaVersions.id, input.versionId), eq(mediaVersions.assetId, input.assetId)));
+      if (!version) throw new TRPCError({ code: "NOT_FOUND", message: "Version not found" });
+      await db.delete(mediaVersions).where(eq(mediaVersions.id, input.versionId));
+      return { success: true };
+    }),
+
   inviteByEmail: adminProcedure
     .input(
       z.object({

@@ -56,6 +56,8 @@ import {
   Play,
   Download,
   UploadCloud,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -422,6 +424,31 @@ function AssetDetailPanel({
     onError: (e) => toast.error(`Upload failed: ${e.message}`),
   });
 
+  // ── Delete state ────────────────────────────────────────────────────────────
+  const [confirmDeleteAsset, setConfirmDeleteAsset] = useState(false);
+  const [confirmDeleteVersionId, setConfirmDeleteVersionId] = useState<number | null>(null);
+
+  const deleteAssetMutation = trpc.media.deleteAsset.useMutation({
+    onSuccess: () => {
+      toast.success("Asset deleted");
+      utils.media.listAssets.invalidate();
+      onClose();
+    },
+    onError: (e) => toast.error(`Delete failed: ${e.message}`),
+  });
+
+  const deleteVersionMutation = trpc.media.deleteVersion.useMutation({
+    onSuccess: () => {
+      toast.success("Version deleted");
+      setConfirmDeleteVersionId(null);
+      utils.media.getAsset.invalidate({ assetId });
+    },
+    onError: (e) => {
+      toast.error(e.message);
+      setConfirmDeleteVersionId(null);
+    },
+  });
+
   const copyToClipboard = (text: string, label = "Copied!") => {
     navigator.clipboard.writeText(text);
     toast.success(label);
@@ -596,6 +623,53 @@ function AssetDetailPanel({
               <p>Created: {formatDate(asset.createdAt)}</p>
               <p>Updated: {formatDate(asset.updatedAt)}</p>
             </div>
+
+            {/* Danger Zone */}
+            <div className="border border-red-100 rounded-lg p-3 bg-red-50/50">
+              <p className="text-xs font-semibold text-red-600 mb-2 flex items-center gap-1.5">
+                <AlertTriangle className="w-3.5 h-3.5" />
+                Danger Zone
+              </p>
+              {!confirmDeleteAsset ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs text-red-600 border-red-200 hover:bg-red-50 w-full"
+                  onClick={() => setConfirmDeleteAsset(true)}
+                >
+                  <Trash2 className="w-3 h-3 mr-1.5" />
+                  Delete This Asset
+                </Button>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-xs text-red-700 font-medium">
+                    Permanently delete &quot;{asset.title}&quot;? This cannot be undone.
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      className="h-7 text-xs flex-1 bg-red-600 hover:bg-red-700 text-white"
+                      disabled={deleteAssetMutation.isPending}
+                      onClick={() => deleteAssetMutation.mutate({ assetId: asset.id })}
+                    >
+                      {deleteAssetMutation.isPending ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : (
+                        "Yes, Delete"
+                      )}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs flex-1"
+                      onClick={() => setConfirmDeleteAsset(false)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -708,14 +782,46 @@ function AssetDetailPanel({
                     <p className="text-gray-400">{formatBytes(v.fileSizeBytes)}</p>
                     {v.changeNote && <p className="text-gray-500 mt-1 italic">"{v.changeNote}"</p>}
                     {v.id !== asset.currentVersionId && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="mt-2 h-6 text-xs"
-                        onClick={() => promoteVersion.mutate({ assetId: asset.id, versionId: v.id })}
-                      >
-                        Promote to Active
-                      </Button>
+                      <div className="flex gap-2 mt-2 flex-wrap">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-6 text-xs"
+                          onClick={() => promoteVersion.mutate({ assetId: asset.id, versionId: v.id })}
+                        >
+                          Promote to Active
+                        </Button>
+                        {confirmDeleteVersionId === v.id ? (
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              className="h-6 text-xs bg-red-600 hover:bg-red-700 text-white px-2"
+                              disabled={deleteVersionMutation.isPending}
+                              onClick={() => deleteVersionMutation.mutate({ assetId: asset.id, versionId: v.id })}
+                            >
+                              {deleteVersionMutation.isPending ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : "Confirm"}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-6 text-xs px-2"
+                              onClick={() => setConfirmDeleteVersionId(null)}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-6 text-xs text-red-500 border-red-200 hover:bg-red-50 px-2"
+                            title="Delete this version"
+                            onClick={() => setConfirmDeleteVersionId(v.id)}
+                          >
+                            <Trash2 className="w-2.5 h-2.5" />
+                          </Button>
+                        )}
+                      </div>
                     )}
                   </div>
                 ))}

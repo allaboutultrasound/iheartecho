@@ -1021,3 +1021,8 @@
 - [x] Add change note field for version description
 - [x] Add upload progress bar
 - [x] Show version history list with active indicator and Promote to Active button
+
+## File Deletion (2026-04-23)
+- [x] Add deleteVersion procedure to mediaRouter.ts (prevents deleting active version)
+- [x] Add Delete Asset danger zone to Info tab with two-step confirmation
+- [x] Add Delete Version button to each non-active version row with two-step confirmation
