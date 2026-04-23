@@ -86,8 +86,8 @@ async function extractZipAndGetEntryUrl(
     }
 
     if (Object.keys(uploadedUrls).length === 0) {
-      console.error("[SCORM] No files were uploaded from zip");
-      return null;
+      console.error("[SCORM] No files were uploaded from zip — all files may be empty/null");
+      return "FAILED";
     }
 
     // Try to find the entry point from imsmanifest.xml
@@ -119,10 +119,12 @@ async function extractZipAndGetEntryUrl(
       .sort((a, b) => a.split("/").length - b.split("/").length);
     if (htmlFiles.length > 0) return uploadedUrls[htmlFiles[0]];
 
-    return null;
+    // No HTML entry found — mark as failed so we don't retry indefinitely
+    console.error("[SCORM] No HTML entry point found in zip. Files uploaded:", Object.keys(uploadedUrls).slice(0, 10));
+    return "FAILED";
   } catch (err) {
     console.error("[SCORM] Extraction failed:", err);
-    return null;
+    return "FAILED";
   }
 }
 
@@ -411,6 +413,64 @@ function buildExtractingPage(title: string, slug: string, token?: string): strin
 </body>
 </html>`;
 }
+/** Build an error page for zips that have no displayable HTML entry point. */
+function buildNoEntryPage(title: string, downloadUrl: string): string {
+  const safeTitle = escapeHtml(title);
+  const safeDownload = escapeHtml(downloadUrl);
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>${safeTitle}</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { height: 100%; height: -webkit-fill-available; }
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      background: #f0fbfc;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      padding: env(safe-area-inset-top, 24px) env(safe-area-inset-right, 24px)
+               env(safe-area-inset-bottom, 24px) env(safe-area-inset-left, 24px);
+    }
+    .card {
+      text-align: center;
+      padding: clamp(28px, 8vw, 48px) clamp(20px, 6vw, 40px);
+      max-width: min(420px, 92vw);
+      width: 100%;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(24,154,161,0.12);
+    }
+    .icon { font-size: 40px; margin-bottom: 16px; }
+    h2 { color: #1a2e3b; font-size: clamp(15px, 4vw, 18px); margin-bottom: 8px; line-height: 1.4; }
+    p { color: #6b7280; font-size: clamp(12px, 3.2vw, 14px); line-height: 1.5; margin-bottom: 20px; }
+    a.btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 24px; border-radius: 8px;
+      background: #189aa1; color: #fff; text-decoration: none;
+      font-size: 14px; font-weight: 600;
+      transition: opacity 0.15s;
+    }
+    a.btn:hover { opacity: 0.88; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">📦</div>
+    <h2>${safeTitle}</h2>
+    <p>This package does not contain a displayable HTML entry point.<br/>
+    It may need to be re-exported from your authoring tool as a complete SCORM or HTML package.</p>
+    <a class="btn" href="${safeDownload}" download>⬇ Download File</a>
+  </div>
+</body>
+</html>`;
+}
 /** Build a viewer page for non-zip media types. */
 
 function buildViewerPage(title: string, url: string, mediaType: string, mime: string): string {
@@ -654,41 +714,41 @@ router.get("/api/media/:slug/view", async (req: Request, res: Response) => {
   const filename = version.originalFilename ?? `${asset.slug}.bin`;
   const url = version.s3Url;
 
-  // ── SCORM / ZIP: extract on-demand if needed ────────────────────────────────
+    // ── SCORM / ZIP: extract on-demand if needed ────────────────────────────────
   if (isZipLike(asset.mediaType, mime)) {
     const existingEntryUrl = (version as any).scormEntryUrl as string | null;
-
+    if (existingEntryUrl === "FAILED") {
+      // Previously attempted extraction found no HTML entry — show error page
+      const dlUrl = `/api/media/${slug}/download${token ? `?token=${encodeURIComponent(token)}` : ""}`;
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      res.send(buildNoEntryPage(asset.title, dlUrl));
+      return;
+    }
     if (existingEntryUrl) {
       // Already extracted — serve the iframe immediately
       res.setHeader("Content-Type", "text/html; charset=utf-8");
       res.send(buildScormPage(asset.title, existingEntryUrl));
       return;
     }
-
     // Not yet extracted — start extraction in the background and show a loading page
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.send(buildExtractingPage(asset.title, slug, token));
-
-    // Extract asynchronously (fire-and-forget; next request will get the iframe)
+    // Extract asynchronously (fire-and-forget; next request will get the iframe or error page)
     const keyPrefix = `media-repository/${asset.slug}-scorm`;
     extractZipAndGetEntryUrl(url, keyPrefix).then(async (entryUrl) => {
-      if (!entryUrl) {
-        console.error(`[SCORM] Extraction produced no entry URL for asset ${asset.id}`);
-        return;
-      }
       try {
         const db = await getDb();
         if (!db) return;
+        if (!entryUrl || entryUrl === "FAILED") {
+          // Store FAILED sentinel so we don't retry on every page load
+          await db.update(mediaVersions).set({ scormEntryUrl: "FAILED" } as any).where(eq(mediaVersions.id, version.id));
+          console.error(`[SCORM] Extraction produced no entry URL for asset ${asset.id} — stored FAILED sentinel`);
+          return;
+        }
         // Store scormEntryUrl on the version row
-        await db
-          .update(mediaVersions)
-          .set({ scormEntryUrl: entryUrl } as any)
-          .where(eq(mediaVersions.id, version.id));
+        await db.update(mediaVersions).set({ scormEntryUrl: entryUrl } as any).where(eq(mediaVersions.id, version.id));
         // Promote mediaType to "scorm" so future requests hit the right branch
-        await db
-          .update(mediaAssets)
-          .set({ mediaType: "scorm" } as any)
-          .where(eq(mediaAssets.id, asset.id));
+        await db.update(mediaAssets).set({ mediaType: "scorm" } as any).where(eq(mediaAssets.id, asset.id));
         console.log(`[SCORM] Extraction complete for asset ${asset.id}: ${entryUrl}`);
       } catch (dbErr) {
         console.error("[SCORM] Failed to save extraction result:", dbErr);
@@ -696,10 +756,8 @@ router.get("/api/media/:slug/view", async (req: Request, res: Response) => {
     }).catch((err) => {
       console.error("[SCORM] Background extraction error:", err);
     });
-
-    return;
+     return;
   }
-
   // ── HTML: proxy the raw HTML inline ────────────────────────────────────────
   if (asset.mediaType === "html" || mime === "text/html" || mime === "application/xhtml+xml") {
     await proxyFile(url, "inline", filename, mime || "text/html", res);
@@ -767,17 +825,23 @@ router.get("/api/media/:slug/embed", async (req: Request, res: Response) => {
   // SCORM/zip: iframe to extracted entry
   if (isZipLike(asset.mediaType, mime)) {
     const entryUrl = (version as any).scormEntryUrl as string | null;
-    if (entryUrl) {
+    if (entryUrl === "FAILED") {
+      const downloadUrl = `/api/media/${slug}/download${token ? `?token=${encodeURIComponent(token)}` : ""}`;
+      res.send(buildNoEntryPage(asset.title, downloadUrl));
+    } else if (entryUrl) {
       res.send(buildScormPage(asset.title, entryUrl));
     } else {
       res.send(buildExtractingPage(asset.title, slug, token));
       // Trigger extraction in background
       const keyPrefix = `media-repository/${asset.slug}-scorm`;
-      extractZipAndGetEntryUrl(url, keyPrefix).then(async (entryUrl) => {
-        if (!entryUrl) return;
+      extractZipAndGetEntryUrl(url, keyPrefix).then(async (result) => {
         const db = await getDb();
         if (!db) return;
-        await db.update(mediaVersions).set({ scormEntryUrl: entryUrl } as any).where(eq(mediaVersions.id, version.id));
+        if (!result || result === "FAILED") {
+          await db.update(mediaVersions).set({ scormEntryUrl: "FAILED" } as any).where(eq(mediaVersions.id, version.id));
+          return;
+        }
+        await db.update(mediaVersions).set({ scormEntryUrl: result } as any).where(eq(mediaVersions.id, version.id));
         await db.update(mediaAssets).set({ mediaType: "scorm" } as any).where(eq(mediaAssets.id, asset.id));
       }).catch(console.error);
     }

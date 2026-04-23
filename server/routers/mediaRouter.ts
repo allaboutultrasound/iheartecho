@@ -157,11 +157,11 @@ async function extractScormZip(
     // Fallback: first HTML file found
     const firstHtml = Object.keys(uploadedUrls).find(k => k.endsWith(".html") || k.endsWith(".htm"));
     if (firstHtml) return uploadedUrls[firstHtml];
-
-    return null;
+    console.error("[SCORM] No HTML entry point found in zip. Files:", Object.keys(uploadedUrls).slice(0, 10));
+    return "FAILED";
   } catch (err) {
     console.error("[SCORM] Extraction failed:", err);
-    return null;
+    return "FAILED";
   }
 }
 // ─── Router ───────────────────────────────────────────────────────────────────
@@ -476,9 +476,15 @@ export const mediaRouter = router({
       if (!asset.currentVersionId) throw new TRPCError({ code: "BAD_REQUEST", message: "No active version" });
       const [version] = await db.select().from(mediaVersions).where(eq(mediaVersions.id, asset.currentVersionId));
       if (!version) throw new TRPCError({ code: "NOT_FOUND", message: "Version not found" });
+      // Clear any previous FAILED sentinel so the view route won't show the error page during re-extraction
+      await db.update(mediaVersions).set({ scormEntryUrl: null } as any).where(eq(mediaVersions.id, version.id));
       const keyPrefix = `media-repository/${asset.slug}-scorm`;
       const entryUrl = await extractScormZip(Buffer.from(await fetch(version.s3Url).then(r => r.arrayBuffer())), keyPrefix);
-      if (!entryUrl) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Extraction failed — no entry HTML found in zip" });
+      if (!entryUrl || entryUrl === "FAILED") {
+        // Store FAILED sentinel and throw a user-friendly error
+        await db.update(mediaVersions).set({ scormEntryUrl: "FAILED" } as any).where(eq(mediaVersions.id, version.id));
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Extraction failed — no displayable HTML entry point found in the zip. Please re-export the package from your authoring tool as a complete SCORM or HTML package." });
+      }
       await db.update(mediaVersions).set({ scormEntryUrl: entryUrl } as any).where(eq(mediaVersions.id, version.id));
       await db.update(mediaAssets).set({ mediaType: "scorm", updatedAt: new Date() } as any).where(eq(mediaAssets.id, asset.id));
       return { scormEntryUrl: entryUrl };
