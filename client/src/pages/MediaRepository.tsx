@@ -55,6 +55,7 @@ import {
   ExternalLink,
   Play,
   Download,
+  UploadCloud,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -376,6 +377,51 @@ function AssetDetailPanel({
     onError: (e) => toast.error(`Re-extraction failed: ${e.message}`),
   });
 
+  // ── Upload new version state ────────────────────────────────────────────────
+  const [versionFile, setVersionFile] = useState<File | null>(null);
+  const [versionNote, setVersionNote] = useState("");
+  const [versionUploading, setVersionUploading] = useState(false);
+  const [versionProgress, setVersionProgress] = useState(0);
+
+  const handleVersionUpload = async () => {
+    if (!versionFile) return;
+    setVersionUploading(true);
+    setVersionProgress(0);
+    try {
+      // Read file as base64 in chunks, reporting progress
+      const arrayBuf = await versionFile.arrayBuffer();
+      setVersionProgress(40);
+      const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuf)));
+      setVersionProgress(70);
+      await addVersionMutation.mutateAsync({
+        assetId: asset.id,
+        fileBase64: base64,
+        mimeType: versionFile.type || "application/octet-stream",
+        fileSizeBytes: versionFile.size,
+        originalFilename: versionFile.name,
+        changeNote: versionNote || undefined,
+        promoteToActive: true,
+      });
+      setVersionProgress(100);
+      setVersionFile(null);
+      setVersionNote("");
+    } catch (e) {
+      // error handled by mutation onError
+    } finally {
+      setVersionUploading(false);
+      setVersionProgress(0);
+    }
+  };
+
+  const addVersionMutation = trpc.media.addVersion.useMutation({
+    onSuccess: (result) => {
+      toast.success(`Version ${result.versionNumber} uploaded and set as active`);
+      utils.media.getAsset.invalidate({ assetId });
+      utils.media.listAssets.invalidate();
+    },
+    onError: (e) => toast.error(`Upload failed: ${e.message}`),
+  });
+
   const copyToClipboard = (text: string, label = "Copied!") => {
     navigator.clipboard.writeText(text);
     toast.success(label);
@@ -555,38 +601,126 @@ function AssetDetailPanel({
 
         {/* VERSIONS */}
         {activeTab === "versions" && (
-          <div className="space-y-2">
-            {versions.map((v) => (
-              <div
-                key={v.id}
-                className={`p-3 rounded-lg border text-xs ${
-                  v.id === asset.currentVersionId ? "border-[#189aa1] bg-[#f0fbfc]" : "border-gray-100 bg-white"
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-semibold text-gray-800">
-                    v{v.versionNumber}
-                    {v.id === asset.currentVersionId && (
-                      <span className="ml-2 text-[#189aa1] font-bold">● Active</span>
-                    )}
-                  </span>
-                  <span className="text-gray-400">{formatDate(v.createdAt)}</span>
+          <div className="space-y-4">
+            {/* ── Upload New Version ─────────────────────────────────────────── */}
+            <div className="border border-dashed border-[#189aa1]/40 rounded-lg p-4 bg-[#f0fbfc]/50">
+              <p className="text-xs font-semibold text-gray-700 mb-3 flex items-center gap-1.5">
+                <UploadCloud className="w-3.5 h-3.5 text-[#189aa1]" />
+                Upload New Version
+              </p>
+              {/* File drop zone */}
+              <label className="block cursor-pointer">
+                <div
+                  className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${
+                    versionFile ? "border-[#189aa1] bg-[#f0fbfc]" : "border-gray-200 hover:border-[#189aa1]/50"
+                  }`}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const f = e.dataTransfer.files[0];
+                    if (f) setVersionFile(f);
+                  }}
+                >
+                  {versionFile ? (
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <CheckCircle2 className="w-4 h-4 text-[#189aa1] flex-shrink-0" />
+                        <span className="text-xs text-gray-700 truncate">{versionFile.name}</span>
+                        <span className="text-xs text-gray-400 flex-shrink-0">({formatBytes(versionFile.size)})</span>
+                      </div>
+                      <button
+                        type="button"
+                        className="text-gray-400 hover:text-gray-600 flex-shrink-0"
+                        onClick={(e) => { e.preventDefault(); setVersionFile(null); }}
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div>
+                      <UploadCloud className="w-6 h-6 text-gray-300 mx-auto mb-1" />
+                      <p className="text-xs text-gray-500">Click or drag a file here</p>
+                      <p className="text-xs text-gray-400 mt-0.5">Replaces active version — old versions are kept</p>
+                    </div>
+                  )}
                 </div>
-                <p className="text-gray-500 truncate">{v.originalFilename ?? "—"}</p>
-                <p className="text-gray-400">{formatBytes(v.fileSizeBytes)}</p>
-                {v.changeNote && <p className="text-gray-500 mt-1 italic">{v.changeNote}</p>}
-                {v.id !== asset.currentVersionId && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="mt-2 h-6 text-xs"
-                    onClick={() => promoteVersion.mutate({ assetId: asset.id, versionId: v.id })}
-                  >
-                    Promote to Active
-                  </Button>
+                <input
+                  type="file"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) setVersionFile(f);
+                  }}
+                />
+              </label>
+              {/* Change note */}
+              <Input
+                placeholder="Change note (optional)"
+                value={versionNote}
+                onChange={(e) => setVersionNote(e.target.value)}
+                className="mt-2 h-8 text-xs"
+                disabled={versionUploading}
+              />
+              {/* Progress bar */}
+              {versionUploading && (
+                <div className="mt-2 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-[#189aa1] transition-all duration-300 rounded-full"
+                    style={{ width: `${versionProgress}%` }}
+                  />
+                </div>
+              )}
+              <Button
+                className="mt-2 w-full h-8 text-xs"
+                style={{ background: BRAND }}
+                disabled={!versionFile || versionUploading}
+                onClick={handleVersionUpload}
+              >
+                {versionUploading ? (
+                  <><Loader2 className="w-3 h-3 mr-1.5 animate-spin" /> Uploading…</>
+                ) : (
+                  <><UploadCloud className="w-3 h-3 mr-1.5" /> Upload & Set as Active</>
                 )}
+              </Button>
+            </div>
+
+            {/* ── Version History ────────────────────────────────────────────── */}
+            <div>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Version History</p>
+              <div className="space-y-2">
+                {versions.map((v) => (
+                  <div
+                    key={v.id}
+                    className={`p-3 rounded-lg border text-xs ${
+                      v.id === asset.currentVersionId ? "border-[#189aa1] bg-[#f0fbfc]" : "border-gray-100 bg-white"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-semibold text-gray-800">
+                        v{v.versionNumber}
+                        {v.id === asset.currentVersionId && (
+                          <span className="ml-2 text-[#189aa1] font-bold">● Active</span>
+                        )}
+                      </span>
+                      <span className="text-gray-400">{formatDate(v.createdAt)}</span>
+                    </div>
+                    <p className="text-gray-500 truncate">{v.originalFilename ?? "—"}</p>
+                    <p className="text-gray-400">{formatBytes(v.fileSizeBytes)}</p>
+                    {v.changeNote && <p className="text-gray-500 mt-1 italic">"{v.changeNote}"</p>}
+                    {v.id !== asset.currentVersionId && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="mt-2 h-6 text-xs"
+                        onClick={() => promoteVersion.mutate({ assetId: asset.id, versionId: v.id })}
+                      >
+                        Promote to Active
+                      </Button>
+                    )}
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
         )}
 

@@ -1015,3 +1015,9 @@
 - [x] Fix existing asset DB entry to use encoded URL
 - [x] reExtractScorm tRPC procedure for admin-triggered re-extraction
 - [x] Re-extract button in MediaRepository Info tab for SCORM/zip assets
+
+## Version Upload UI (2026-04-23)
+- [x] Add Upload New Version section to Versions tab with file picker and drag-and-drop
+- [x] Add change note field for version description
+- [x] Add upload progress bar
+- [x] Show version history list with active indicator and Promote to Active button
