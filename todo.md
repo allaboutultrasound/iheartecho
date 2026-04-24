@@ -1063,3 +1063,16 @@
 - [x] Raised uploadScanCoachMedia.ts multer limit from 100 MB to 500 MB
 - [x] Raised DragDropUploadZone default maxSizeMB from 50 to 500
 - [x] Raised useFileUpload DEFAULT_MAX_SIZE from 10 MB to 500 MB
+
+## Fetal Echo ScanCoach — Premium Gating (2026-04-24)
+- [ ] Wrap entire Fetal Echo ScanCoach tab content in BlurredOverlay (type="premium")
+- [ ] Mark fetal tab as premium: true in tabMeta array
+- [ ] Remove individual PremiumPearlGate wrappers from pitfalls and red flags (redundant once full overlay is in place)
+
+## ScanCoach Premium Gating — All Tabs Except TTE and Strain (2026-04-24)
+- [x] Audit current BlurredOverlay/premium state of all tabs
+- [x] Fetal Echo: wrapped in BlurredOverlay (type="premium"), tabMeta premium: true
+- [x] CHD: wrapped in BlurredOverlay (type="premium"), tabMeta premium: true
+- [x] TEE, ICE, UEA, HOCM, ACHD, Diastolic, Pulm: confirmed already premium-gated
+- [x] TTE and Strain: confirmed remain free (no overlay)
+- [x] Tab order updated: TTE → Strain → CHD → Fetal → TEE → ICE → UEA → HOCM → ACHD → Diastolic → Pulm

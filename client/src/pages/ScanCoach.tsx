@@ -1294,14 +1294,16 @@ export default function ScanCoach() {
             ice: { path: "/ice", label: "ICE Navigator" },
           };
           const tabMeta: Array<{ key: typeof activeTab; label: string; shortLabel: string; icon: React.ElementType; views: number; premium?: boolean }> = [
+            // ── Free tabs ──
             { key: "tte",      label: "Adult TTE",          shortLabel: "Adult TTE",         icon: Stethoscope, views: 10 },
+            { key: "strain",   label: "Strain",             shortLabel: "Strain",            icon: Activity,    views: 4  },
+            // ── Premium tabs ──
+            { key: "chd",      label: "Pediatric CHD",      shortLabel: "Pediatric CHD",     icon: Users,       views: 14, premium: true },
+            { key: "fetal",    label: "Fetal Echo",         shortLabel: "Fetal Echo",        icon: Baby,        views: 13, premium: true },
             { key: "tee",      label: "TEE",                shortLabel: "TEE",               icon: Microscope,  views: 13, premium: true },
             { key: "ice",      label: "ICE",                shortLabel: "ICE",               icon: Scan,        views: 9,  premium: true },
             { key: "uea",      label: "UEA",                shortLabel: "UEA",               icon: Zap,         views: 7,  premium: true },
-            { key: "strain",   label: "Strain",             shortLabel: "Strain",            icon: Activity,    views: 4,  premium: false },
             { key: "hocm",     label: "HOCM-Assist™",      shortLabel: "HOCM",              icon: Heart,       views: 14, premium: true },
-            { key: "chd",      label: "Pediatric CHD",      shortLabel: "Pediatric CHD",     icon: Users,       views: 14, premium: false },
-            { key: "fetal",    label: "Fetal Echo",         shortLabel: "Fetal Echo",        icon: Baby,        views: 13, premium: false },
             { key: "achd",     label: "Adult Congenital",   shortLabel: "Adult Congenital",  icon: Heart,       views: 13, premium: true },
             { key: "diastolic",label: "Diastolic Function", shortLabel: "Diastolic",         icon: Wind,        views: 7,  premium: true },
             { key: "pulm",     label: "Pulmonary HTN & PE", shortLabel: "Pulm HTN & PE",     icon: Wind,        views: 8,  premium: true },
@@ -2179,6 +2181,14 @@ export default function ScanCoach() {
             </div>
           </div>
               </BlurredOverlay>
+              : !loading && !isPremium
+              ? <BlurredOverlay type="premium" featureName="Fetal Echo ScanCoach">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 items-start">
+            <div className="lg:col-span-3 lg:order-2 order-1 space-y-4">
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8 text-center text-gray-400">Fetal Echo ScanCoach</div>
+            </div>
+          </div>
+              </BlurredOverlay>
               : <>
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 items-start">
@@ -2362,7 +2372,9 @@ export default function ScanCoach() {
         {activeTab === "chd" && (
           !loading && !isAuthenticated
             ? <BlurredOverlay type="login" featureName="Pediatric CHD ScanCoach"><PedCHDCoach /></BlurredOverlay>
-            : <PedCHDCoach isPremium={isPremium} />
+            : !loading && !isPremium
+              ? <BlurredOverlay type="premium" featureName="Pediatric CHD ScanCoach"><PedCHDCoach /></BlurredOverlay>
+              : <PedCHDCoach isPremium={isPremium} />
         )}
         {/* ─── ADULT CONGENITAL TAB ─── */}
         {activeTab === "achd" && (
