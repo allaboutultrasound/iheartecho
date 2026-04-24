@@ -5,7 +5,7 @@
  * Props:
  *   onFile(file: File) — called when a valid file is selected/dropped
  *   accept            — MIME types string, e.g. "image/*,video/*"
- *   maxSizeMB         — optional max file size in MB (default 50)
+ *   maxSizeMB         — optional max file size in MB (default 500, no practical limit)
  *   uploading         — show spinner instead of idle state
  *   previewUrl        — if set, show a thumbnail/video preview with a remove button
  *   onRemove          — called when the user clicks the × on the preview
@@ -37,7 +37,7 @@ function isVideoUrl(url: string) {
 export default function DragDropUploadZone({
   onFile,
   accept = "image/*,video/*",
-  maxSizeMB = 50,
+  maxSizeMB = 500,
   uploading = false,
   previewUrl,
   onRemove,

@@ -558,10 +558,9 @@ function ImageUploadZone({
         toast.error("Please upload an image (JPEG, PNG, GIF, WebP, SVG) or video (MP4, WebM, MOV)");
         return;
       }
-      const maxSize = isVideo ? 100 * 1024 * 1024 : 8 * 1024 * 1024;
-      const maxLabel = isVideo ? "100 MB" : "8 MB";
+      const maxSize = 500 * 1024 * 1024; // 500 MB — no practical limit for images or videos
       if (file.size > maxSize) {
-        toast.error(`${isVideo ? "Video" : "Image"} must be under ${maxLabel}`);
+        toast.error(`File must be under 500 MB`);
         return;
       }
       setIsUploading(true);

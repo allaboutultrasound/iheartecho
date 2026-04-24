@@ -21,10 +21,10 @@ import { eq, and } from "drizzle-orm";
 
 const router = Router();
 
-// Store files in memory (max 100 MB per file)
+// Store files in memory (no practical size limit — large GIFs and images are supported)
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 100 * 1024 * 1024 },
+  limits: { fileSize: 500 * 1024 * 1024 }, // 500 MB
   fileFilter: (_req, file, cb) => {
     const allowed = /^(image|video)\//;
     if (allowed.test(file.mimetype)) {

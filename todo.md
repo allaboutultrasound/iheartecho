@@ -1055,3 +1055,11 @@
 - [x] Wire search input to filter assets by title, filename, and tags (client-side, real-time)
 - [x] Clear search button (×) when query is non-empty
 - [x] Show "No results for '…'" empty state when search returns nothing
+
+## Media Repository — Remove File Size Limits (2026-04-24)
+- [x] Remove frontend file size validation in UploadDialog (currently 8 MB for images/GIFs)
+- [x] Express body-parser already at 100 MB — no change needed
+- [x] Chunked upload route already has no size limit — no change needed
+- [x] Raised uploadScanCoachMedia.ts multer limit from 100 MB to 500 MB
+- [x] Raised DragDropUploadZone default maxSizeMB from 50 to 500
+- [x] Raised useFileUpload DEFAULT_MAX_SIZE from 10 MB to 500 MB
