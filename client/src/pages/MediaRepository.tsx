@@ -555,7 +555,7 @@ function AssetDetailPanel({
               {asset.accessMode === "public" ? <Globe className="w-2.5 h-2.5" /> : <Lock className="w-2.5 h-2.5" />}
               {asset.accessMode === "public" ? "Public" : "Private"}
             </Badge>
-            <span className="text-xs bg-gray-100 text-gray-500 px-1.5 rounded font-mono">{asset.currentVersionMime ?? asset.mediaType}</span>
+            <span className="text-xs bg-gray-100 text-gray-500 px-1.5 rounded font-mono">{asset.mediaType}</span>
             {versions[0] && <span className="text-xs text-gray-400">v{versions.length} · {versions[0]?.fileSizeBytes ? formatBytes(versions[0].fileSizeBytes) : ""}</span>}
           </div>
         </div>
@@ -1355,7 +1355,7 @@ export default function MediaRepository() {
     return sortDir === "asc" ? cmp : -cmp;
   });
   const total = assetsData?.total ?? 0;
-  const deletedAssets = (deletedAssetsData ?? []) as Array<AssetRow & { daysRemaining: number }>;
+  const deletedAssets = (deletedAssetsData ?? []) as unknown as Array<AssetRow & { daysRemaining: number }>;
   const trashCount = deletedAssets.length;
   // Build per-folder asset counts for the sidebar
   const assetCounts: Record<string, number> = { null: 0 };
