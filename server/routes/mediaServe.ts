@@ -1099,3 +1099,25 @@ router.get("/api/media/:slug/extract-status", async (req: Request, res: Response
 export function registerMediaServeRoute(app: import("express").Express) {
   app.use(router);
 }
+
+/**
+ * Start a background extraction job for a newly uploaded ZIP/SCORM asset.
+ * Call this fire-and-forget (no await) from createAsset / addVersion / reExtractScorm.
+ * Safe to call even if a job is already running — it will skip if already done/running.
+ */
+export function startExtractionJobForAsset(
+  assetId: number,
+  versionId: number,
+  slug: string,
+  s3Url: string
+): void {
+  // Skip if already running on this instance
+  const existing = extractionJobs.get(assetId);
+  if (existing && existing.state === "running") return;
+  // Set up job state and fire
+  const job: JobState = { state: "running", pct: 0, uploaded: 0, total: 0, status: "Starting\u2026" };
+  extractionJobs.set(assetId, job);
+  runExtractionJob(assetId, versionId, slug, s3Url).catch((err) => {
+    console.error("[SCORM JOB] Unhandled error in startExtractionJobForAsset:", err);
+  });
+}

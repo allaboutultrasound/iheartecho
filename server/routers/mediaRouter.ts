@@ -19,7 +19,7 @@ import { and, desc, eq, isNotNull, isNull, like, lt, or, sql } from "drizzle-orm
 import { adminProcedure, router } from "../_core/trpc";
 import { getDb } from "../db";
 import { storagePut } from "../storage";
-import JSZip from "jszip";
+import { startExtractionJobForAsset } from "../routes/mediaServe";
 import { sendEmail } from "../_core/email";
 import {
   mediaAssets,
@@ -87,83 +87,6 @@ function inferMediaType(
 }
 
 
-// ─── SCORM Extraction Helper ──────────────────────────────────────────────────
-/**
- * Given a zip file buffer and a base S3 key prefix, extracts all files from the
- * zip, uploads them to S3, and returns the URL of the SCORM entry-point HTML.
- *
- * Entry-point detection order:
- *  1. href attribute of <resource> with type "webcontent" in imsmanifest.xml
- *  2. index.html / index.htm at root
- *  3. First .html file found
- */
-async function extractScormZip(
-  zipBuffer: Buffer,
-  keyPrefix: string
-): Promise<string | null> {
-  try {
-    const zip = await JSZip.loadAsync(zipBuffer);
-    const files = zip.files;
-    const uploadedUrls: Record<string, string> = {};
-
-    // Upload all files in the zip to S3
-    for (const [relativePath, file] of Object.entries(files)) {
-      if (file.dir) continue;
-      const fileBuffer = Buffer.from(await file.async("arraybuffer"));
-      const ext = relativePath.split(".").pop()?.toLowerCase() ?? "";
-      const mimeMap: Record<string, string> = {
-        html: "text/html", htm: "text/html",
-        js: "application/javascript", css: "text/css",
-        json: "application/json", xml: "application/xml",
-        png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg",
-        gif: "image/gif", svg: "image/svg+xml", webp: "image/webp",
-        mp4: "video/mp4", webm: "video/webm", mp3: "audio/mpeg",
-        wav: "audio/wav", ogg: "audio/ogg",
-        woff: "font/woff", woff2: "font/woff2", ttf: "font/ttf",
-        eot: "application/vnd.ms-fontobject",
-        pdf: "application/pdf",
-      };
-      const contentType = mimeMap[ext] ?? "application/octet-stream";
-      const s3Key = `${keyPrefix}/${relativePath}`;
-      const result = await storagePut(s3Key, fileBuffer, contentType);
-      // Encode spaces and special chars in the URL path for browser compatibility
-      try {
-        const urlObj = new URL(result.url);
-        const encodedPath = urlObj.pathname.split('/').map((seg: string) => encodeURIComponent(decodeURIComponent(seg))).join('/');
-        uploadedUrls[relativePath] = urlObj.origin + encodedPath;
-      } catch {
-        uploadedUrls[relativePath] = result.url;
-      }
-    }
-
-    // Try to find the entry point from imsmanifest.xml
-    const manifestFile = files["imsmanifest.xml"] ?? files["imsmanifest.XML"];
-    if (manifestFile) {
-      const manifestText = await manifestFile.async("text");
-      // Look for <resource ... href="..." type="webcontent"...>
-      const hrefMatch = manifestText.match(/<resource[^>]+type=["'][^"']*webcontent[^"']*["'][^>]+href=["']([^"']+)["']/i)
-        ?? manifestText.match(/<resource[^>]+href=["']([^"']+)["'][^>]+type=["'][^"']*webcontent[^"']*["']/i)
-        ?? manifestText.match(/<resource[^>]+href=["']([^"']+)["']/i);
-      if (hrefMatch) {
-        const entryPath = hrefMatch[1].replace(/\\/g, "/");
-        if (uploadedUrls[entryPath]) return uploadedUrls[entryPath];
-      }
-    }
-
-    // Fallback: index.html / index.htm at root
-    if (uploadedUrls["index.html"]) return uploadedUrls["index.html"];
-    if (uploadedUrls["index.htm"]) return uploadedUrls["index.htm"];
-
-    // Fallback: first HTML file found
-    const firstHtml = Object.keys(uploadedUrls).find(k => k.endsWith(".html") || k.endsWith(".htm"));
-    if (firstHtml) return uploadedUrls[firstHtml];
-    console.error("[SCORM] No HTML entry point found in zip. Files:", Object.keys(uploadedUrls).slice(0, 10));
-    return "FAILED";
-  } catch (err) {
-    console.error("[SCORM] Extraction failed:", err);
-    return "FAILED";
-  }
-}
 // ─── Router ───────────────────────────────────────────────────────────────────
 
 export const mediaRouter = router({
@@ -335,30 +258,15 @@ export const mediaRouter = router({
         s3Key = result.key;
       }
 
-      // For SCORM/zip: extract files and find entry point
-      // Skip extraction for files > 50 MB to avoid Cloud Run timeout/OOM.
-      // Large zips (quiz packs, course bundles) are stored as-is and served as downloads.
-      const SCORM_EXTRACT_MAX_BYTES = 50 * 1024 * 1024; // 50 MB
-      const fileTooLargeForExtraction = (input.fileSizeBytes ?? 0) > SCORM_EXTRACT_MAX_BYTES;
-      let scormEntryUrl: string | null = null;
-      if ((mediaType === "scorm" || mediaType === "zip" || mediaType === "lms") && s3Url && !fileTooLargeForExtraction) {
-        try {
-          const zipRes = await fetch(s3Url);
-          if (zipRes.ok) {
-            const zipBuf = Buffer.from(await zipRes.arrayBuffer());
-            const keyPrefix = `media-repository/${slug}-scorm`;
-            scormEntryUrl = await extractScormZip(zipBuf, keyPrefix);
-          }
-        } catch (e) {
-          console.error("[SCORM] createAsset extraction error:", e);
-        }
-      }
+      // Extraction happens in the background (non-blocking) after upload.
+      // scormEntryUrl starts as null; the background job will populate it.
+      const scormEntryUrl: string | null = null;
       // Insert asset row
       const [assetResult] = await db.insert(mediaAssets).values({
         slug,
         title: input.title,
         description: input.description ?? null,
-        mediaType: scormEntryUrl ? "scorm" : mediaType,
+        mediaType,
         originalFilename: input.originalFilename ?? null,
         tags: input.tags ? JSON.stringify(input.tags) : null,
         accessMode: input.accessMode,
@@ -383,8 +291,11 @@ export const mediaRouter = router({
       const versionId = (versionResult as any).insertId as number;
       // Point asset to first version
       await db.update(mediaAssets).set({ currentVersionId: versionId }).where(eq(mediaAssets.id, assetId));
+      // Kick off background extraction for SCORM/ZIP types (non-blocking)
+      if ((mediaType === "scorm" || mediaType === "zip" || mediaType === "lms") && s3Url) {
+        startExtractionJobForAsset(assetId, versionId, slug, s3Url);
+      }
       return { assetId, versionId, slug, s3Url, scormEntryUrl };
-      return { assetId, versionId, slug, s3Url };
     }),
 
   // ── Add a new version to an existing asset ─────────────────────────────────
@@ -428,23 +339,8 @@ export const mediaRouter = router({
         s3Url = result.url;
         s3Key = result.key;
       }
-      // For SCORM/zip: extract files and find entry point
-      // Skip extraction for files > 50 MB to avoid Cloud Run timeout/OOM.
-      const fileTooLargeV = (input.fileSizeBytes ?? 0) > 50 * 1024 * 1024;
-      // For SCORM/zip: extract files and find entry point
-      let scormEntryUrlV: string | null = null;
-      if ((asset.mediaType === "scorm" || asset.mediaType === "zip" || asset.mediaType === "lms") && s3Url && !fileTooLargeV) {
-        try {
-          const zipRes = await fetch(s3Url);
-          if (zipRes.ok) {
-            const zipBuf = Buffer.from(await zipRes.arrayBuffer());
-            const keyPrefix = `media-repository/${asset.slug}-scorm-v${versionNumber}`;
-            scormEntryUrlV = await extractScormZip(zipBuf, keyPrefix);
-          }
-        } catch (e) {
-          console.error("[SCORM] addVersion extraction error:", e);
-        }
-      }
+      // Extraction happens in the background (non-blocking) after upload.
+      const scormEntryUrlV: string | null = null;
       const [versionResult] = await db.insert(mediaVersions).values({
         assetId: input.assetId,
         versionNumber,
@@ -464,17 +360,19 @@ export const mediaRouter = router({
           .set({
             currentVersionId: versionId,
             updatedAt: new Date(),
-            ...(scormEntryUrlV ? { mediaType: "scorm" } : {}),
           })
           .where(eq(mediaAssets.id, input.assetId));
+      }
+      // Kick off background extraction for SCORM/ZIP types (non-blocking)
+      const newMediaType = inferMediaType(input.mimeType, input.originalFilename ?? asset.originalFilename ?? "");
+      if ((newMediaType === "scorm" || newMediaType === "zip" || newMediaType === "lms") && s3Url) {
+        startExtractionJobForAsset(input.assetId, versionId, asset.slug, s3Url);
       }
       return { versionId, versionNumber, s3Url, scormEntryUrl: scormEntryUrlV };
     }),
 
   // ── Re-extract SCORM/zip for an existing asset ─────────────────────────────
-  // Non-blocking: clears the sentinel and returns the view URL immediately.
-  // The actual extraction runs via the SSE endpoint (/api/media/:slug/extract-sse)
-  // which the loading page opens with EventSource when the view URL is visited.
+  // Non-blocking: clears the sentinel, starts background extraction, returns the view URL immediately.
   reExtractScorm: adminProcedure
     .input(z.object({ assetId: z.number() }))
     .mutation(async ({ input }) => {
@@ -485,10 +383,14 @@ export const mediaRouter = router({
       if (!asset.currentVersionId) throw new TRPCError({ code: 'BAD_REQUEST', message: 'No active version' });
       const [version] = await db.select().from(mediaVersions).where(eq(mediaVersions.id, asset.currentVersionId));
       if (!version) throw new TRPCError({ code: 'NOT_FOUND', message: 'Version not found' });
-      // Clear any previous FAILED/completed sentinel so the SSE endpoint will re-run extraction
+      // Clear any previous FAILED/completed sentinel so extraction can re-run
       await db.update(mediaVersions).set({ scormEntryUrl: null } as any).where(eq(mediaVersions.id, version.id));
-      // Reset mediaType to 'zip' so the view route shows the SSE loading page
+      // Reset mediaType to 'zip' so view route shows the loading page if extraction hasn't finished yet
       await db.update(mediaAssets).set({ mediaType: 'zip', updatedAt: new Date() } as any).where(eq(mediaAssets.id, asset.id));
+      // Kick off background extraction immediately (non-blocking)
+      if (version.s3Url) {
+        startExtractionJobForAsset(asset.id, version.id, asset.slug, version.s3Url);
+      }
       return { viewUrl: '/api/media/' + asset.slug + '/view' };
     }),
   // ── Promote a specific version to active ───────────────────────────────────

@@ -1119,3 +1119,4 @@
 - [x] Root cause: after direct-to-Forge upload succeeds, createAsset tRPC mutation downloads the entire 400 MB zip from Forge, extracts it with JSZip, and re-uploads every file inside — causing OOM/timeout on Cloud Run
 - [x] Fix: added 50 MB size limit to SCORM extraction in both createAsset and addVersion procedures — files larger than 50 MB are stored as-is without extraction
 - [x] TypeScript compiles cleanly (no errors)
+- [x] Update mediaRouter.ts: remove JSZip import and synchronous extractScormZip function, add startExtractionJobForAsset calls in createAsset, addVersion, and reExtractScorm — extraction now happens at upload time (non-blocking background job), not at view time
