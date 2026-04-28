@@ -479,7 +479,8 @@ export const mediaRouter = router({
       // Clear any previous FAILED sentinel so the view route won't show the error page during re-extraction
       await db.update(mediaVersions).set({ scormEntryUrl: null } as any).where(eq(mediaVersions.id, version.id));
       const keyPrefix = `media-repository/${asset.slug}-scorm`;
-      const entryUrl = await extractScormZip(Buffer.from(new Uint8Array(await fetch(version.s3Url).then(r => r.arrayBuffer()))), keyPrefix);
+      const scormArrayBuf = await fetch(version.s3Url).then(r => r.arrayBuffer());
+      const entryUrl = await extractScormZip(Buffer.from(Buffer.from(scormArrayBuf)), keyPrefix);
       if (!entryUrl || entryUrl === "FAILED") {
         // Store FAILED sentinel and throw a user-friendly error
         await db.update(mediaVersions).set({ scormEntryUrl: "FAILED" } as any).where(eq(mediaVersions.id, version.id));
