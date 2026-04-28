@@ -139,68 +139,65 @@ const MEDIA_TYPE_COLOR: Record<MediaType, string> = {
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-const CHUNK_SIZE = 5 * 1024 * 1024; // 5 MB
 
+/**
+ * Uploads a file directly to the server in a single request.
+ * The server streams it to Forge storage and returns the final URL.
+ * Uses XMLHttpRequest for upload progress tracking.
+ */
 async function chunkedUpload(
   file: File,
   folder: string,
   onProgress: (pct: number) => void
 ): Promise<{ url: string; fileKey: string; sizeBytes: number }> {
-  const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-  // 1. Initiate
-  const initRes = await fetch("/api/media-upload/initiate", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ fileName: file.name, mimeType: file.type || "application/octet-stream", totalChunks }),
-  });
-  if (!initRes.ok) throw new Error(await initRes.text());
-  const { uploadId } = await initRes.json() as { uploadId: string };
-  // 2. Upload chunks
-  for (let i = 0; i < totalChunks; i++) {
-    const start = i * CHUNK_SIZE;
-    const blob = file.slice(start, start + CHUNK_SIZE);
+  return new Promise((resolve, reject) => {
     const form = new FormData();
-    form.append("uploadId", uploadId);
-    form.append("chunkIndex", String(i));
-    form.append("chunk", blob, file.name);
-    const chunkRes = await fetch("/api/media-upload/chunk", { method: "POST", credentials: "include", body: form });
-    if (!chunkRes.ok) throw new Error(await chunkRes.text());
-    onProgress(Math.round(((i + 1) / totalChunks) * 90));
-  }
-  // 3. Trigger async complete (returns immediately — server assembles in background)
-  const completeRes = await fetch("/api/media-upload/complete", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({ uploadId, folder }),
+    form.append("file", file, file.name);
+    form.append("folder", folder);
+
+    const xhr = new XMLHttpRequest();
+    xhr.withCredentials = true;
+
+    // Track upload progress
+    xhr.upload.addEventListener("progress", (e) => {
+      if (e.lengthComputable) {
+        // Report 0-95% during upload; 95-100% while server processes
+        onProgress(Math.round((e.loaded / e.total) * 95));
+      }
+    });
+
+    xhr.addEventListener("load", () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const data = JSON.parse(xhr.responseText) as { url: string; fileKey: string; sizeBytes: number };
+          onProgress(100);
+          resolve(data);
+        } catch {
+          reject(new Error("Invalid response from server"));
+        }
+      } else {
+        // Try to parse error message from response
+        let errMsg = `Upload failed (${xhr.status})`;
+        try {
+          const errData = JSON.parse(xhr.responseText);
+          errMsg = errData.error ?? errMsg;
+        } catch {
+          if (xhr.responseText && xhr.responseText.length < 500) {
+            errMsg = xhr.responseText;
+          }
+        }
+        reject(new Error(errMsg));
+      }
+    });
+
+    xhr.addEventListener("error", () => reject(new Error("Network error during upload")));
+    xhr.addEventListener("abort", () => reject(new Error("Upload cancelled")));
+    xhr.addEventListener("timeout", () => reject(new Error("Upload timed out")));
+
+    xhr.open("POST", "/api/media-upload/upload");
+    xhr.timeout = 30 * 60 * 1000; // 30 minute timeout
+    xhr.send(form);
   });
-  if (!completeRes.ok) throw new Error(await completeRes.text());
-  // 4. Poll /status until assembly is done
-  const POLL_INTERVAL = 3000; // 3 seconds
-  const POLL_TIMEOUT = 20 * 60 * 1000; // 20 minutes max
-  const pollStart = Date.now();
-  while (true) {
-    await new Promise((r) => setTimeout(r, POLL_INTERVAL));
-    if (Date.now() - pollStart > POLL_TIMEOUT) throw new Error("Upload timed out after 20 minutes");
-    const statusRes = await fetch(`/api/media-upload/status/${uploadId}`, { credentials: "include" });
-    if (!statusRes.ok) throw new Error(await statusRes.text());
-    const statusData = await statusRes.json() as {
-      status: string;
-      url?: string;
-      fileKey?: string;
-      sizeBytes?: number;
-      error?: string;
-    };
-    if (statusData.status === "done") {
-      onProgress(100);
-      return { url: statusData.url!, fileKey: statusData.fileKey!, sizeBytes: statusData.sizeBytes ?? 0 };
-    } else if (statusData.status === "error") {
-      throw new Error(statusData.error ?? "Assembly failed");
-    }
-    // Still processing — keep polling at 95%
-    onProgress(95);
-  }
 }
 
 function formatBytes(bytes: number | null | undefined): string {
@@ -1256,7 +1253,7 @@ function UploadDialog({
         {uploading && (
           <div className="space-y-1">
             <div className="flex justify-between text-xs text-gray-500">
-              <span>{uploadProgress >= 95 && uploadProgress < 100 ? "Assembling file on server…" : "Uploading…"}</span>
+              <span>{uploadProgress >= 95 && uploadProgress < 100 ? "Saving to storage…" : "Uploading…"}</span>
               <span>{uploadProgress}%</span>
             </div>
             <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -1266,7 +1263,7 @@ function UploadDialog({
               />
             </div>
             {uploadProgress >= 95 && uploadProgress < 100 && (
-              <p className="text-xs text-gray-400">Large files may take a few minutes to assemble. Please wait…</p>
+              <p className="text-xs text-gray-400">Almost done — saving file to storage…</p>
             )}
           </div>
         )}

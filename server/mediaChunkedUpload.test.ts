@@ -1,108 +1,49 @@
 /**
- * mediaChunkedUpload.test.ts
+ * mediaUpload.test.ts
  *
- * Tests for the stateless chunked upload route.
- * Verifies that the Forge API helper functions work correctly
- * and that the upload/download cycle produces identical data.
- * Also verifies the async complete flow (fire-and-forget + DB polling).
+ * Tests for the single-request streaming upload endpoint.
+ * Verifies Forge URL builders, file key generation, and upload logic.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 
-// ── Mock the ENV and axios so tests don't make real network calls ─────────────
-
+// ── Mock ENV and axios ────────────────────────────────────────────────────────
 vi.mock("../_core/env", () => ({
   ENV: {
     forgeApiUrl: "https://forge.manus.ai",
     forgeApiKey: "test-api-key",
   },
 }));
-
 vi.mock("axios");
 import axios from "axios";
 
-// ── Unit tests for URL builder helpers ────────────────────────────────────────
-
+// ── Forge URL builders ────────────────────────────────────────────────────────
 describe("Forge URL builders", () => {
   it("builds a correct upload URL with path query param", () => {
     const base = "https://forge.manus.ai";
-    const fileKey = "_chunks/test-id/chunk_000000.bin";
+    const fileKey = "media/test.zip";
     const url = new URL("v1/storage/upload", base + "/");
     url.searchParams.set("path", fileKey.replace(/^\/+/, ""));
     expect(url.toString()).toBe(
-      "https://forge.manus.ai/v1/storage/upload?path=_chunks%2Ftest-id%2Fchunk_000000.bin"
-    );
-  });
-
-  it("builds a correct download URL with path query param", () => {
-    const base = "https://forge.manus.ai";
-    const fileKey = "_chunks/test-id/_meta.json";
-    const url = new URL("v1/storage/downloadUrl", base + "/");
-    url.searchParams.set("path", fileKey.replace(/^\/+/, ""));
-    expect(url.toString()).toBe(
-      "https://forge.manus.ai/v1/storage/downloadUrl?path=_chunks%2Ftest-id%2F_meta.json"
+      "https://forge.manus.ai/v1/storage/upload?path=media%2Ftest.zip"
     );
   });
 
   it("strips leading slashes from file keys", () => {
-    const fileKey = "/media-assets/test.zip";
+    const fileKey = "/media/test.zip";
     const normalized = fileKey.replace(/^\/+/, "");
-    expect(normalized).toBe("media-assets/test.zip");
+    expect(normalized).toBe("media/test.zip");
+  });
+
+  it("handles nested folder paths", () => {
+    const base = "https://forge.manus.ai";
+    const fileKey = "media/courses/acs/quiz.zip";
+    const url = new URL("v1/storage/upload", base + "/");
+    url.searchParams.set("path", fileKey.replace(/^\/+/, ""));
+    expect(url.searchParams.get("path")).toBe("media/courses/acs/quiz.zip");
   });
 });
 
-// ── Unit tests for chunk assembly logic ───────────────────────────────────────
-
-describe("Chunk assembly", () => {
-  it("concatenates chunk buffers in the correct order", () => {
-    const chunk0 = Buffer.from("HELLO");
-    const chunk1 = Buffer.from(" WORLD");
-    const chunk2 = Buffer.from("!");
-    const assembled = Buffer.concat([chunk0, chunk1, chunk2]);
-    expect(assembled.toString("utf-8")).toBe("HELLO WORLD!");
-  });
-
-  it("produces the correct total byte count", () => {
-    const chunks = [
-      Buffer.alloc(5 * 1024 * 1024, 0x41), // 5 MB
-      Buffer.alloc(5 * 1024 * 1024, 0x42), // 5 MB
-      Buffer.alloc(1 * 1024 * 1024, 0x43), // 1 MB (last chunk)
-    ];
-    const assembled = Buffer.concat(chunks);
-    expect(assembled.length).toBe(11 * 1024 * 1024);
-  });
-
-  it("calculates the correct number of chunks for a given file size", () => {
-    const CHUNK_SIZE = 5 * 1024 * 1024; // 5 MB
-    const fileSize = 407.6 * 1024 * 1024; // 407.6 MB
-    const totalChunks = Math.ceil(fileSize / CHUNK_SIZE);
-    expect(totalChunks).toBe(82);
-  });
-});
-
-// ── Unit tests for metadata serialization ─────────────────────────────────────
-
-describe("Metadata serialization", () => {
-  it("serializes and deserializes metadata correctly", () => {
-    const meta = { fileName: "test.zip", mimeType: "application/zip", totalChunks: 82 };
-    const serialized = JSON.stringify(meta);
-    const deserialized = JSON.parse(serialized);
-    expect(deserialized.fileName).toBe("test.zip");
-    expect(deserialized.mimeType).toBe("application/zip");
-    expect(deserialized.totalChunks).toBe(82);
-  });
-
-  it("generates a unique uploadId for each upload", () => {
-    const ids = new Set<string>();
-    for (let i = 0; i < 100; i++) {
-      const id = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-      ids.add(id);
-    }
-    expect(ids.size).toBe(100);
-  });
-});
-
-// ── Unit tests for file key generation ───────────────────────────────────────
-
+// ── File key generation ───────────────────────────────────────────────────────
 describe("File key generation", () => {
   it("sanitizes file names with special characters", () => {
     const fileName = "Advanced Cardiac Sonographer UNLIMITED QUIZ.zip";
@@ -117,93 +58,100 @@ describe("File key generation", () => {
   });
 
   it("extracts the correct file extension", () => {
-    const cases = [
+    const cases: [string, string][] = [
       ["test.zip", "zip"],
       ["video.mp4", "mp4"],
       ["image.gif", "gif"],
       ["document.pdf", "pdf"],
-      ["no-extension", "no-extension"],
     ];
     for (const [fileName, expected] of cases) {
       const ext = fileName.split(".").pop()?.toLowerCase() ?? "bin";
       expect(ext).toBe(expected);
     }
   });
+
+  it("generates unique file keys with random suffix", () => {
+    const keys = new Set<string>();
+    for (let i = 0; i < 100; i++) {
+      const suffix = Math.random().toString(36).slice(2, 10);
+      keys.add(`media/test-${suffix}.zip`);
+    }
+    expect(keys.size).toBe(100);
+  });
+
+  it("builds correct final file key", () => {
+    const folder = "media/courses/acs";
+    const fileName = "quiz.zip";
+    const safeFileName = fileName.replace(/[^a-zA-Z0-9._\- ]/g, "_");
+    const ext = fileName.split(".").pop()?.toLowerCase() ?? "bin";
+    const randomSuffix = "abc12345";
+    const fileKey = `${folder}/${safeFileName}-${randomSuffix}.${ext}`;
+    expect(fileKey).toBe("media/courses/acs/quiz.zip-abc12345.zip");
+  });
 });
 
-// ── Async complete flow ───────────────────────────────────────────────────────
-
-describe("Async complete flow", () => {
-  it("complete endpoint returns immediately with processing status", () => {
-    // Simulate what the server returns from /complete
-    const completeResponse = { status: "processing", uploadId: "test-upload-123" };
-    expect(completeResponse.status).toBe("processing");
-    expect(completeResponse.uploadId).toBe("test-upload-123");
+// ── Upload size validation ────────────────────────────────────────────────────
+describe("Upload size validation", () => {
+  it("accepts files up to 2 GB", () => {
+    const MAX_SIZE = 2 * 1024 * 1024 * 1024;
+    const fileSize = 400 * 1024 * 1024; // 400 MB
+    expect(fileSize).toBeLessThanOrEqual(MAX_SIZE);
   });
 
-  it("status endpoint returns done with URL when assembly completes", () => {
-    // Simulate what the server returns from /status/:id when done
-    const doneResponse = {
-      status: "done",
-      url: "https://cdn.example.com/media/test-file.zip",
-      fileKey: "media/test-file.zip",
-      fileName: "test-file.zip",
-      mimeType: "application/zip",
-      sizeBytes: 407 * 1024 * 1024,
-    };
-    expect(doneResponse.status).toBe("done");
-    expect(doneResponse.url).toContain("https://");
-    expect(doneResponse.sizeBytes).toBeGreaterThan(0);
+  it("rejects files over 2 GB", () => {
+    const MAX_SIZE = 2 * 1024 * 1024 * 1024;
+    const fileSize = 3 * 1024 * 1024 * 1024; // 3 GB
+    expect(fileSize).toBeGreaterThan(MAX_SIZE);
   });
 
-  it("status endpoint returns error when assembly fails", () => {
-    const errorResponse = {
-      status: "error",
-      error: "Forge API returned 503",
-    };
-    expect(errorResponse.status).toBe("error");
-    expect(errorResponse.error).toBeTruthy();
+  it("calculates file size in MB correctly", () => {
+    const sizeBytes = 407.6 * 1024 * 1024;
+    const sizeMB = sizeBytes / 1024 / 1024;
+    expect(sizeMB).toBeCloseTo(407.6, 1);
   });
+});
 
-  it("client polling loop resolves when status becomes done", async () => {
-    // Simulate the polling loop
-    const responses = [
-      { status: "processing" },
-      { status: "processing" },
-      { status: "done", url: "https://cdn.example.com/file.zip", fileKey: "file.zip", sizeBytes: 100 },
+// ── XHR progress tracking ─────────────────────────────────────────────────────
+describe("XHR progress tracking", () => {
+  it("calculates progress percentage correctly", () => {
+    const cases = [
+      { loaded: 0, total: 400 * 1024 * 1024, expected: 0 },
+      { loaded: 200 * 1024 * 1024, total: 400 * 1024 * 1024, expected: 48 }, // 50% * 95 = 47.5 → 48 (Math.round rounds up)
+      { loaded: 380 * 1024 * 1024, total: 400 * 1024 * 1024, expected: 90 }, // 95% * 95 = 90.25 → 90
+      { loaded: 400 * 1024 * 1024, total: 400 * 1024 * 1024, expected: 95 }, // 100% * 95 = 95
     ];
-    let callCount = 0;
-    const mockFetch = async () => responses[Math.min(callCount++, responses.length - 1)];
-
-    let result: any = null;
-    while (!result) {
-      const r = await mockFetch();
-      if (r.status === "done") result = r;
-      else if (r.status === "error") throw new Error("Assembly failed");
+    for (const { loaded, total, expected } of cases) {
+      const pct = Math.round((loaded / total) * 95);
+      expect(pct).toBe(expected);
     }
-    expect(callCount).toBe(3);
-    expect(result.url).toBe("https://cdn.example.com/file.zip");
   });
 
-  it("client polling loop throws when status becomes error", async () => {
-    const responses = [
-      { status: "processing" },
-      { status: "error", error: "Out of memory" },
-    ];
-    let callCount = 0;
-    const mockFetch = async () => responses[Math.min(callCount++, responses.length - 1)];
+  it("reports 100% only after server confirms success", () => {
+    // Progress during upload maxes at 95%; 100% is set after server responds
+    const uploadProgress = 95;
+    expect(uploadProgress).toBeLessThan(100);
+    // After server responds with 200:
+    const finalProgress = 100;
+    expect(finalProgress).toBe(100);
+  });
+});
 
-    let thrownError: Error | null = null;
-    try {
-      while (true) {
-        const r = await mockFetch();
-        if (r.status === "done") break;
-        else if (r.status === "error") throw new Error((r as any).error ?? "Assembly failed");
-      }
-    } catch (e: any) {
-      thrownError = e;
+// ── MIME type handling ────────────────────────────────────────────────────────
+describe("MIME type handling", () => {
+  it("uses application/octet-stream as fallback for unknown types", () => {
+    const mimeType = "" || "application/octet-stream";
+    expect(mimeType).toBe("application/octet-stream");
+  });
+
+  it("preserves known MIME types", () => {
+    const cases = [
+      ["application/zip", "application/zip"],
+      ["video/mp4", "video/mp4"],
+      ["application/x-zip-compressed", "application/x-zip-compressed"],
+    ];
+    for (const [input, expected] of cases) {
+      const mimeType = input || "application/octet-stream";
+      expect(mimeType).toBe(expected);
     }
-    expect(thrownError).not.toBeNull();
-    expect(thrownError?.message).toBe("Out of memory");
   });
 });

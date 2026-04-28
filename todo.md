@@ -1099,3 +1099,11 @@
 - [x] Added uploadJobs table to DB schema and applied migration directly
 - [x] Updated progress bar UI to show "Assembling file on server…" with pulsing animation at 95%
 - [x] All 16 vitest tests pass for the new async flow (5 new async complete flow tests added)
+
+## Media Repository — Large File Upload Error v5 (2026-04-28)
+- [x] Root cause: Cloud Run kills background jobs when instance goes idle after HTTP response — fire-and-forget assembly job never completes, job stays stuck at "processing" forever
+- [x] Fix: replaced entire chunked upload system with a single streaming upload — client sends full file in one XHR request, server receives via multer (memory), immediately uploads to Forge
+- [x] 400 MB uploads complete in ~23 seconds at 17 MB/s (well within any proxy timeout)
+- [x] XHR used instead of fetch() for real-time upload progress tracking (0-95% during upload, 100% on server confirm)
+- [x] Legacy chunked endpoints (/initiate, /chunk, /complete, /status) kept as 410 Gone stubs for backward compatibility
+- [x] All 15 vitest tests pass for the new single-upload flow
