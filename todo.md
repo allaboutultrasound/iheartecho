@@ -1081,3 +1081,8 @@
 - [x] Diagnosed: complete step loaded all chunks into a single Buffer (OOM for 400+ MB files)
 - [x] Fixed: chunks now written to disk via multer.diskStorage; complete step stream-assembles to a temp file and streams to Forge proxy via form-data package (no memory spike)
 - [x] Fixed pre-existing TS error in mediaRouter.ts (ArrayBuffer cast)
+
+## Media Repository — Large File Upload Error v2 (2026-04-28)
+- [x] Root cause: native fetch does not support streaming multipart bodies — causes Internal Server Error on large files in production
+- [x] Fix: rewrote complete handler to use axios with maxBodyLength: Infinity + form-data streaming (no memory spike, no fetch streaming limitation)
+- [x] Improved error logging to surface the actual Forge API error message in the 500 response

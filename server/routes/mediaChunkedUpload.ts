@@ -15,12 +15,15 @@
  *
  * Memory-safe: chunks are written to disk as they arrive; the complete step
  * concatenates them into a single temp file and streams it to the storage proxy
- * without ever loading the full file into a JS Buffer.
+ * via axios (which supports streaming multipart bodies) without ever loading
+ * the full file into a JS Buffer.
  */
 import { Router, Request, Response } from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import axios from "axios";
+import FormDataNode from "form-data";
 import { ENV } from "../_core/env";
 import { sdk } from "../_core/sdk";
 
@@ -143,8 +146,8 @@ router.post("/api/media-upload/complete", async (req: Request, res: Response) =>
     return;
   }
 
-  // Use a longer timeout for large files (10 minutes)
-  res.setTimeout(10 * 60 * 1000);
+  // Use a longer timeout for large files (15 minutes)
+  res.setTimeout(15 * 60 * 1000);
 
   const assembledPath = path.join(dir, "_assembled");
   try {
@@ -184,7 +187,8 @@ router.post("/api/media-upload/complete", async (req: Request, res: Response) =>
 
     const sizeBytes = fs.statSync(assembledPath).size;
 
-    // ── Stream the assembled file to the Forge storage proxy ──
+    // ── Stream the assembled file to the Forge storage proxy via axios ──
+    // axios properly supports streaming multipart bodies (unlike native fetch)
     const safeFileName = meta.fileName.replace(/[^a-zA-Z0-9._\- ]/g, "_");
     const ext = meta.fileName.split(".").pop()?.toLowerCase() ?? "bin";
     const randomSuffix = Math.random().toString(36).slice(2, 10);
@@ -194,8 +198,7 @@ router.post("/api/media-upload/complete", async (req: Request, res: Response) =>
     const uploadUrl = new URL(`v1/storage/upload`, forgeBaseUrl + "/");
     uploadUrl.searchParams.set("path", fileKey.replace(/^\/+/, ""));
 
-    // Use form-data package for streaming multipart upload
-    const FormDataNode = (await import("form-data")).default;
+    // Build a streaming form-data body using the form-data npm package
     const form = new FormDataNode();
     form.append("file", fs.createReadStream(assembledPath), {
       filename: safeFileName,
@@ -203,33 +206,30 @@ router.post("/api/media-upload/complete", async (req: Request, res: Response) =>
       knownLength: sizeBytes,
     });
 
-    const uploadResponse = await fetch(uploadUrl.toString(), {
-      method: "POST",
+    const uploadResponse = await axios.post(uploadUrl.toString(), form, {
       headers: {
         Authorization: `Bearer ${ENV.forgeApiKey}`,
         ...form.getHeaders(),
       },
-      body: form as any,
-      // @ts-ignore — Node 18+ fetch supports duplex for streaming bodies
-      duplex: "half",
+      // No size limit — we're streaming from disk
+      maxBodyLength: Infinity,
+      maxContentLength: Infinity,
+      // 10 minute timeout for the actual S3 upload
+      timeout: 10 * 60 * 1000,
     });
 
-    if (!uploadResponse.ok) {
-      const errText = await uploadResponse.text().catch(() => uploadResponse.statusText);
-      throw new Error(`Storage upload failed (${uploadResponse.status}): ${errText}`);
-    }
-
-    const { url } = await uploadResponse.json() as { url: string };
+    const { url } = uploadResponse.data as { url: string };
 
     // Cleanup
     cleanupTempDir(uploadId);
     res.json({ url, fileKey, fileName: meta.fileName, mimeType: meta.mimeType, sizeBytes });
   } catch (err: any) {
-    console.error("[media-chunked-upload] complete error:", err);
+    console.error("[media-chunked-upload] complete error:", err?.response?.data ?? err?.message ?? err);
     // Clean up assembled file if it exists
     try { if (fs.existsSync(assembledPath)) fs.unlinkSync(assembledPath); } catch {}
     cleanupTempDir(uploadId);
-    res.status(500).json({ error: err?.message ?? "Assembly failed" });
+    const errMsg = err?.response?.data?.error ?? err?.response?.data ?? err?.message ?? "Assembly failed";
+    res.status(500).json({ error: typeof errMsg === "string" ? errMsg : JSON.stringify(errMsg) });
   }
 });
 
