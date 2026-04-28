@@ -472,29 +472,24 @@ export const mediaRouter = router({
     }),
 
   // ── Re-extract SCORM/zip for an existing asset ─────────────────────────────
+  // Non-blocking: clears the sentinel and returns the view URL immediately.
+  // The actual extraction runs via the SSE endpoint (/api/media/:slug/extract-sse)
+  // which the loading page opens with EventSource when the view URL is visited.
   reExtractScorm: adminProcedure
     .input(z.object({ assetId: z.number() }))
     .mutation(async ({ input }) => {
       const db = await getDb();
-      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "DB unavailable" });
+      if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'DB unavailable' });
       const [asset] = await db.select().from(mediaAssets).where(eq(mediaAssets.id, input.assetId));
-      if (!asset) throw new TRPCError({ code: "NOT_FOUND", message: "Asset not found" });
-      if (!asset.currentVersionId) throw new TRPCError({ code: "BAD_REQUEST", message: "No active version" });
+      if (!asset) throw new TRPCError({ code: 'NOT_FOUND', message: 'Asset not found' });
+      if (!asset.currentVersionId) throw new TRPCError({ code: 'BAD_REQUEST', message: 'No active version' });
       const [version] = await db.select().from(mediaVersions).where(eq(mediaVersions.id, asset.currentVersionId));
-      if (!version) throw new TRPCError({ code: "NOT_FOUND", message: "Version not found" });
-      // Clear any previous FAILED sentinel so the view route won't show the error page during re-extraction
+      if (!version) throw new TRPCError({ code: 'NOT_FOUND', message: 'Version not found' });
+      // Clear any previous FAILED/completed sentinel so the SSE endpoint will re-run extraction
       await db.update(mediaVersions).set({ scormEntryUrl: null } as any).where(eq(mediaVersions.id, version.id));
-      const keyPrefix = `media-repository/${asset.slug}-scorm`;
-      const scormArrayBuf = await fetch(version.s3Url).then(r => r.arrayBuffer());
-      const entryUrl = await extractScormZip(Buffer.from(Buffer.from(scormArrayBuf)), keyPrefix);
-      if (!entryUrl || entryUrl === "FAILED") {
-        // Store FAILED sentinel and throw a user-friendly error
-        await db.update(mediaVersions).set({ scormEntryUrl: "FAILED" } as any).where(eq(mediaVersions.id, version.id));
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Extraction failed — no displayable HTML entry point found in the zip. Please re-export the package from your authoring tool as a complete SCORM or HTML package." });
-      }
-      await db.update(mediaVersions).set({ scormEntryUrl: entryUrl } as any).where(eq(mediaVersions.id, version.id));
-      await db.update(mediaAssets).set({ mediaType: "scorm", updatedAt: new Date() } as any).where(eq(mediaAssets.id, asset.id));
-      return { scormEntryUrl: entryUrl };
+      // Reset mediaType to 'zip' so the view route shows the SSE loading page
+      await db.update(mediaAssets).set({ mediaType: 'zip', updatedAt: new Date() } as any).where(eq(mediaAssets.id, asset.id));
+      return { viewUrl: '/api/media/' + asset.slug + '/view' };
     }),
   // ── Promote a specific version to active ───────────────────────────────────
   promoteVersion: adminProcedure

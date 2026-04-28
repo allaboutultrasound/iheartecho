@@ -507,12 +507,14 @@ function AssetDetailPanel({
     onSuccess: () => { toast.success("Updated"); utils.media.getAsset.invalidate({ assetId }); },
   });
   const reExtractScorm = trpc.media.reExtractScorm.useMutation({
-    onSuccess: () => {
-      toast.success("Re-extraction complete — opening content now.");
+    onSuccess: (result) => {
+      toast.success("Re-extracting package — opening view page now.");
       utils.media.getAsset.invalidate({ assetId });
-      // Open the view URL so the user sees the content immediately
-      if (data?.viewUrl) {
-        window.open(data.viewUrl, "_blank", "noopener,noreferrer");
+      // The server cleared the sentinel and reset mediaType to "zip".
+      // Opening the view URL will trigger the SSE loading page which runs extraction.
+      const viewUrl = result?.viewUrl ?? data?.viewUrl;
+      if (viewUrl) {
+        window.open(viewUrl, "_blank", "noopener,noreferrer");
       }
     },
     onError: (e) => toast.error(`Re-extraction failed: ${e.message}`),
@@ -773,9 +775,9 @@ function AssetDetailPanel({
                   onClick={() => reExtractScorm.mutate({ assetId: asset.id })}
                 >
                   <RefreshCw className={`w-3 h-3 ${reExtractScorm.isPending ? "animate-spin" : ""}`} />
-                  {reExtractScorm.isPending ? "Extracting…" : "Re-extract Package Files"}
+                  {reExtractScorm.isPending ? "Resetting…" : "Re-extract Package Files"}
                 </Button>
-                <p className="text-xs text-gray-400 mt-1">Re-uploads all files from the zip to make them viewable in the browser.</p>
+                <p className="text-xs text-gray-400 mt-1">Clears the current extraction, then opens the view page which will stream live re-extraction progress.</p>
               </div>
             )}
             <div>

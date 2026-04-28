@@ -774,33 +774,12 @@ router.get("/api/media/:slug/view", async (req: Request, res: Response) => {
       res.send(buildScormPage(asset.title, existingEntryUrl));
       return;
     }
-    // Not yet extracted — start extraction in the background and show a loading page
+    // Not yet extracted — show the SSE loading page.
+    // The EventSource in the page will call /api/media/:slug/extract-sse
+    // which runs the extraction and streams progress back to the browser.
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.send(buildExtractingPage(asset.title, slug, token));
-    // Extract asynchronously (fire-and-forget; next request will get the iframe or error page)
-    const keyPrefix = `media-repository/${asset.slug}-scorm`;
-    extractZipAndGetEntryUrl(url, keyPrefix).then(async (entryUrl) => {
-      try {
-        const db = await getDb();
-        if (!db) return;
-        if (!entryUrl || entryUrl === "FAILED") {
-          // Store FAILED sentinel so we don't retry on every page load
-          await db.update(mediaVersions).set({ scormEntryUrl: "FAILED" } as any).where(eq(mediaVersions.id, version.id));
-          console.error(`[SCORM] Extraction produced no entry URL for asset ${asset.id} — stored FAILED sentinel`);
-          return;
-        }
-        // Store scormEntryUrl on the version row
-        await db.update(mediaVersions).set({ scormEntryUrl: entryUrl } as any).where(eq(mediaVersions.id, version.id));
-        // Promote mediaType to "scorm" so future requests hit the right branch
-        await db.update(mediaAssets).set({ mediaType: "scorm" } as any).where(eq(mediaAssets.id, asset.id));
-        console.log(`[SCORM] Extraction complete for asset ${asset.id}: ${entryUrl}`);
-      } catch (dbErr) {
-        console.error("[SCORM] Failed to save extraction result:", dbErr);
-      }
-    }).catch((err) => {
-      console.error("[SCORM] Background extraction error:", err);
-    });
-     return;
+    return;
   }
   // ── HTML: proxy the raw HTML inline ────────────────────────────────────────
   if (asset.mediaType === "html" || mime === "text/html" || mime === "application/xhtml+xml") {
@@ -875,19 +854,8 @@ router.get("/api/media/:slug/embed", async (req: Request, res: Response) => {
     } else if (entryUrl) {
       res.send(buildScormPage(asset.title, entryUrl));
     } else {
+      // Show SSE loading page — EventSource will call /api/media/:slug/extract-sse
       res.send(buildExtractingPage(asset.title, slug, token));
-      // Trigger extraction in background
-      const keyPrefix = `media-repository/${asset.slug}-scorm`;
-      extractZipAndGetEntryUrl(url, keyPrefix).then(async (result) => {
-        const db = await getDb();
-        if (!db) return;
-        if (!result || result === "FAILED") {
-          await db.update(mediaVersions).set({ scormEntryUrl: "FAILED" } as any).where(eq(mediaVersions.id, version.id));
-          return;
-        }
-        await db.update(mediaVersions).set({ scormEntryUrl: result } as any).where(eq(mediaVersions.id, version.id));
-        await db.update(mediaAssets).set({ mediaType: "scorm" } as any).where(eq(mediaAssets.id, asset.id));
-      }).catch(console.error);
     }
     return;
   }
