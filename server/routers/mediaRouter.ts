@@ -523,6 +523,7 @@ export const mediaRouter = router({
         tags: z.array(z.string()).optional(),
         accessMode: z.enum(["public", "private"]).optional(),
         folderId: z.number().nullable().optional(),
+        originalFilename: z.string().max(512).nullable().optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -534,6 +535,7 @@ export const mediaRouter = router({
       if (input.tags !== undefined) updates.tags = JSON.stringify(input.tags);
       if (input.accessMode !== undefined) updates.accessMode = input.accessMode;
       if (input.folderId !== undefined) updates.folderId = input.folderId;
+      if (input.originalFilename !== undefined) updates.originalFilename = input.originalFilename;
       await db.update(mediaAssets).set(updates).where(eq(mediaAssets.id, input.assetId));
       return { success: true };
     }),

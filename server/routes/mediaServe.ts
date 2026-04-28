@@ -345,9 +345,11 @@ function buildScormPage(title: string, entryUrl: string): string {
 </html>`;
 }
 
-/** Build a loading/extracting page that auto-refreshes while extraction runs. */
+/** Build a loading/extracting page that uses SSE to show real-time progress. */
 function buildExtractingPage(title: string, slug: string, token?: string): string {
   const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
+  const sseUrl = `/api/media/${slug}/extract-sse${tokenParam}`;
+  const viewUrl = `/api/media/${slug}/view${tokenParam}`;
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -355,8 +357,7 @@ function buildExtractingPage(title: string, slug: string, token?: string): strin
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta http-equiv="refresh" content="4;url=/api/media/${slug}/view${tokenParam}" />
-  <title>Loading ${escapeHtml(title)}…</title>
+  <title>Loading ${escapeHtml(title)}\u2026</title>
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     html { height: 100%; height: -webkit-fill-available; }
@@ -402,14 +403,57 @@ function buildExtractingPage(title: string, slug: string, token?: string): strin
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       line-height: 1.5;
     }
+    .progress-bar-wrap {
+      width: 100%; background: #e0f7f8; border-radius: 8px;
+      height: 8px; margin: 14px 0 6px; overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%; background: #189aa1; border-radius: 8px;
+      transition: width 0.4s ease;
+      width: 0%;
+    }
   </style>
 </head>
 <body>
   <div class="card">
     <div class="spinner"></div>
     <h2>Preparing ${escapeHtml(title)}</h2>
-    <p>Extracting package files… this may take a few seconds.<br/>The page will reload automatically.</p>
+    <p id="status-msg">Extracting package files\u2026 this may take a moment.</p>
+    <div class="progress-bar-wrap"><div class="progress-bar" id="pbar"></div></div>
+    <p id="pct-msg" style="font-size:12px;color:#189aa1;margin-top:4px;"></p>
   </div>
+<script>
+(function(){
+  var es = new EventSource('${sseUrl}');
+  var pbar = document.getElementById('pbar');
+  var pct = document.getElementById('pct-msg');
+  var msg = document.getElementById('status-msg');
+  es.addEventListener('progress', function(e){
+    try {
+      var d = JSON.parse(e.data);
+      if (d.pct != null) {
+        if (pbar) pbar.style.width = d.pct + '%';
+        if (pct) pct.textContent = d.pct + '% uploaded';
+      }
+    } catch(ex){}
+  });
+  es.addEventListener('done', function(e){
+    es.close();
+    if (pbar) pbar.style.width = '100%';
+    if (msg) msg.textContent = 'Done! Loading content\u2026';
+    setTimeout(function(){ window.location.replace('${viewUrl}'); }, 400);
+  });
+  es.addEventListener('error', function(e){
+    es.close();
+    if (msg) msg.textContent = 'Extraction failed. Redirecting\u2026';
+    setTimeout(function(){ window.location.replace('${viewUrl}'); }, 2000);
+  });
+  es.onerror = function(){
+    es.close();
+    setTimeout(function(){ window.location.replace('${viewUrl}'); }, 3000);
+  };
+})();
+<\/script>
 </body>
 </html>`;
 }
@@ -855,6 +899,136 @@ router.get("/api/media/:slug/embed", async (req: Request, res: Response) => {
   }
 
   res.send(buildViewerPage(asset.title, url, asset.mediaType, mime));
+});
+
+// ── SSE extraction endpoint — streams progress to the loading page ────────────
+// This is called by the EventSource in buildExtractingPage.
+// It runs the extraction and sends progress events, then a 'done' event.
+// If extraction was already completed (scormEntryUrl set), it sends 'done' immediately.
+router.get("/api/media/:slug/extract-sse", async (req: Request, res: Response) => {
+  const { slug } = req.params;
+  const token = req.query.token as string | undefined;
+
+  // Resolve asset (enforces access control)
+  const resolved = await resolveAsset(slug, token, res);
+  if (!resolved) return;
+  const { asset, version } = resolved;
+
+  // Set SSE headers
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no"); // Disable nginx buffering
+  res.flushHeaders();
+
+  const send = (event: string, data: unknown) => {
+    res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+  };
+
+  // If already extracted, send done immediately
+  const existingEntry = (version as any).scormEntryUrl as string | null;
+  if (existingEntry && existingEntry !== "FAILED") {
+    send("done", { entryUrl: existingEntry });
+    res.end();
+    return;
+  }
+
+  // If not a zip-like asset, send done immediately (nothing to extract)
+  const mime = version.mimeType ?? "";
+  if (!isZipLike(asset.mediaType, mime)) {
+    send("done", {});
+    res.end();
+    return;
+  }
+
+  // Run extraction with progress reporting
+  const keyPrefix = `media-repository/${asset.slug}-scorm`;
+  try {
+    const zipRes = await fetch(version.s3Url);
+    if (!zipRes.ok) {
+      send("error", { message: "Failed to fetch zip" });
+      res.end();
+      return;
+    }
+    const zipBuf = Buffer.from(await zipRes.arrayBuffer());
+    const JSZipLib = (await import("jszip")).default;
+    const zip = await JSZipLib.loadAsync(zipBuf);
+    const files = zip.files;
+    const fileEntries = Object.entries(files).filter(([, f]) => !f.dir);
+    const total = fileEntries.length;
+    const uploadedUrls: Record<string, string> = {};
+    let uploaded = 0;
+
+    for (const [relativePath, file] of fileEntries) {
+      const fileBuffer = Buffer.from(await file.async("arraybuffer"));
+      const ext = relativePath.split(".").pop()?.toLowerCase() ?? "";
+      const contentType = MIME_MAP[ext] ?? "application/octet-stream";
+      const s3Key = `${keyPrefix}/${relativePath}`;
+      try {
+        const result = await storagePut(s3Key, fileBuffer, contentType);
+        try {
+          const urlObj = new URL(result.url);
+          const encodedPath = urlObj.pathname.split("/").map((seg: string) => encodeURIComponent(decodeURIComponent(seg))).join("/");
+          uploadedUrls[relativePath] = urlObj.origin + encodedPath;
+        } catch {
+          uploadedUrls[relativePath] = result.url;
+        }
+      } catch (uploadErr) {
+        console.error(`[SCORM SSE] Failed to upload ${relativePath}:`, uploadErr);
+      }
+      uploaded++;
+      const pct = Math.round((uploaded / total) * 100);
+      send("progress", { pct, uploaded, total });
+    }
+
+    // Determine entry URL
+    let entryUrl: string | null = null;
+    const manifestFile = files["imsmanifest.xml"] ?? files["imsmanifest.XML"];
+    if (manifestFile) {
+      const manifestText = await manifestFile.async("text");
+      const hrefMatch =
+        manifestText.match(/<resource[^>]+type=["'][^"']*webcontent[^"']*["'][^>]+href=["']([^"']+)["']/i) ??
+        manifestText.match(/<resource[^>]+href=["']([^"']+)["'][^>]+type=["'][^"']*webcontent[^"']*["']/i) ??
+        manifestText.match(/<resource[^>]+href=["']([^"']+)["']/i);
+      if (hrefMatch) {
+        const entryPath = hrefMatch[1].replace(/\\/g, "/");
+        if (uploadedUrls[entryPath]) entryUrl = uploadedUrls[entryPath];
+        else {
+          const lcEntry = entryPath.toLowerCase();
+          const match = Object.keys(uploadedUrls).find(k => k.toLowerCase() === lcEntry);
+          if (match) entryUrl = uploadedUrls[match];
+        }
+      }
+    }
+    if (!entryUrl && uploadedUrls["index.html"]) entryUrl = uploadedUrls["index.html"];
+    if (!entryUrl && uploadedUrls["index.htm"]) entryUrl = uploadedUrls["index.htm"];
+    if (!entryUrl) {
+      const htmlFiles = Object.keys(uploadedUrls)
+        .filter(k => k.endsWith(".html") || k.endsWith(".htm"))
+        .sort((a, b) => a.split("/").length - b.split("/").length);
+      if (htmlFiles.length > 0) entryUrl = uploadedUrls[htmlFiles[0]];
+    }
+
+    // Persist result
+    const db = await getDb();
+    if (db) {
+      if (!entryUrl) {
+        await db.update(mediaVersions).set({ scormEntryUrl: "FAILED" } as any).where(eq(mediaVersions.id, version.id));
+        send("error", { message: "No HTML entry point found" });
+        res.end();
+        return;
+      }
+      await db.update(mediaVersions).set({ scormEntryUrl: entryUrl } as any).where(eq(mediaVersions.id, version.id));
+      await db.update(mediaAssets).set({ mediaType: "scorm" } as any).where(eq(mediaAssets.id, asset.id));
+    }
+
+    send("done", { entryUrl });
+    res.end();
+  } catch (err) {
+    console.error("[SCORM SSE] Extraction error:", err);
+    send("error", { message: String(err) });
+    res.end();
+  }
 });
 
 export function registerMediaServeRoute(app: import("express").Express) {

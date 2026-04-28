@@ -508,8 +508,12 @@ function AssetDetailPanel({
   });
   const reExtractScorm = trpc.media.reExtractScorm.useMutation({
     onSuccess: () => {
-      toast.success("Re-extraction complete — package is now viewable in the browser.");
+      toast.success("Re-extraction complete — opening content now.");
       utils.media.getAsset.invalidate({ assetId });
+      // Open the view URL so the user sees the content immediately
+      if (data?.viewUrl) {
+        window.open(data.viewUrl, "_blank", "noopener,noreferrer");
+      }
     },
     onError: (e) => toast.error(`Re-extraction failed: ${e.message}`),
   });
@@ -669,6 +673,27 @@ function AssetDetailPanel({
             <div>
               <p className="text-xs text-gray-500 mb-1">Title</p>
               <p className="text-sm font-medium text-gray-800">{asset.title}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500 mb-1">Filename</p>
+              <div className="flex gap-1">
+                <Input
+                  defaultValue={asset.originalFilename ?? ""}
+                  key={asset.originalFilename ?? ""}
+                  className="h-7 text-xs"
+                  placeholder="e.g. module-1.zip"
+                  onBlur={(e) => {
+                    const val = e.target.value.trim();
+                    if (val !== (asset.originalFilename ?? "")) {
+                      updateAsset.mutate({ assetId: asset.id, originalFilename: val || null });
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                  }}
+                />
+              </div>
+              <p className="text-xs text-gray-400 mt-0.5">Used as the download filename. Press Enter or click away to save.</p>
             </div>
             {asset.description && (
               <div>
