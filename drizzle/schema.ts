@@ -2642,6 +2642,10 @@ export const mediaVersions = mysqlTable("mediaVersions", {
   changeNote: text("changeNote"),                  // optional admin note about this version
   // For SCORM/zip assets: URL of the extracted entry-point HTML (e.g. index.html inside the zip)
   scormEntryUrl: text("scormEntryUrl"),
+  // Extraction job state: null = not started, 'running' = in progress, 'done' = complete, 'failed' = error
+  extractionState: varchar("extractionState", { length: 16 }),
+  // JSON: { pct, uploaded, total, status, error? }
+  extractionProgress: text("extractionProgress"),
   uploadedByUserId: int("uploadedByUserId").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });

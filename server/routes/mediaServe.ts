@@ -345,54 +345,67 @@ function buildExtractingPage(title: string, slug: string, token?: string): strin
   var pollTimer = null;
   var failed = false;
 
+  var idleRetries = 0;
+
+  function handleResult(d) {
+    if (failed) return;
+    if (d.pct != null && pbar) pbar.style.width = d.pct + '%';
+    if (d.total > 0 && pct) pct.textContent = d.pct + '% \u2014 ' + d.uploaded + ' / ' + d.total + ' files';
+    else if (d.pct != null && pct) pct.textContent = d.pct + '%';
+    if (d.status && msg) msg.textContent = d.status;
+    if (d.state === 'done') {
+      clearInterval(pollTimer);
+      if (pbar) pbar.style.width = '100%';
+      if (msg) msg.textContent = 'Done! Loading content\u2026';
+      // Redirect to view URL (which will serve the SCORM page directly)
+      setTimeout(function(){ window.location.replace('${viewUrl}'); }, 400);
+    } else if (d.state === 'failed') {
+      clearInterval(pollTimer);
+      failed = true;
+      if (msg) msg.textContent = 'Extraction failed. Redirecting\u2026';
+      setTimeout(function(){ window.location.replace('${viewUrl}'); }, 2000);
+    } else if (d.state === 'idle') {
+      // No job running on any instance — restart extraction
+      idleRetries++;
+      if (idleRetries <= 3) {
+        if (msg) msg.textContent = 'Restarting extraction\u2026';
+        clearInterval(pollTimer);
+        startExtraction();
+      } else {
+        clearInterval(pollTimer);
+        failed = true;
+        if (msg) msg.textContent = 'Extraction could not start. Redirecting\u2026';
+        setTimeout(function(){ window.location.replace('${viewUrl}'); }, 2000);
+      }
+    }
+  }
+
   function poll() {
     fetch('${statusUrl}')
       .then(function(r){ return r.json(); })
-      .then(function(d) {
-        if (failed) return;
-        if (d.pct != null && pbar) pbar.style.width = d.pct + '%';
-        if (d.total > 0 && pct) pct.textContent = d.pct + '% \u2014 ' + d.uploaded + ' / ' + d.total + ' files';
-        else if (d.pct != null && pct) pct.textContent = d.pct + '%';
-        if (d.status && msg) msg.textContent = d.status;
-        if (d.state === 'done') {
-          clearInterval(pollTimer);
-          if (pbar) pbar.style.width = '100%';
-          if (msg) msg.textContent = 'Done! Loading content\u2026';
-          setTimeout(function(){ window.location.replace('${viewUrl}'); }, 400);
-        } else if (d.state === 'failed') {
-          clearInterval(pollTimer);
-          failed = true;
-          if (msg) msg.textContent = 'Extraction failed. Redirecting\u2026';
-          setTimeout(function(){ window.location.replace('${viewUrl}'); }, 2000);
-        }
-      })
-      .catch(function(){ /* network error — keep polling */ });
+      .then(handleResult)
+      .catch(function(){ /* network error \u2014 keep polling */ });
   }
 
-  // Start the background extraction job, then begin polling
-  fetch('${startUrl}', { method: 'POST' })
-    .then(function(r){ return r.json(); })
-    .then(function(d) {
-      if (d.state === 'done') {
-        // Already extracted (race condition — another tab finished first)
-        if (pbar) pbar.style.width = '100%';
-        if (msg) msg.textContent = 'Done! Loading content\u2026';
-        setTimeout(function(){ window.location.replace('${viewUrl}'); }, 400);
-        return;
-      }
-      if (d.state === 'failed') {
-        if (msg) msg.textContent = 'Extraction failed. Redirecting\u2026';
-        setTimeout(function(){ window.location.replace('${viewUrl}'); }, 2000);
-        return;
-      }
-      // Job started or already running — begin polling
-      poll();
-      pollTimer = setInterval(poll, 2000);
-    })
-    .catch(function() {
-      // Fallback: just redirect to view
-      setTimeout(function(){ window.location.replace('${viewUrl}'); }, 3000);
-    });
+  function startExtraction() {
+    // Start the background extraction job, then begin polling
+    fetch('${startUrl}', { method: 'POST' })
+      .then(function(r){ return r.json(); })
+      .then(function(d) {
+        handleResult(d);
+        if (d.state === 'running') {
+          // Job started or already running \u2014 begin polling
+          poll();
+          pollTimer = setInterval(poll, 2000);
+        }
+      })
+      .catch(function() {
+        // Fallback: just redirect to view
+        setTimeout(function(){ window.location.replace('${viewUrl}'); }, 3000);
+      });
+  }
+
+  startExtraction();
 })();
 <\/script>
 </body>
@@ -850,6 +863,21 @@ function makeFetchRangeSource(url: string) {
   };
 }
 
+/** Helper: write progress to DB (best-effort, never throws). */
+async function persistProgress(versionId: number, state: string, pct: number, uploaded: number, total: number, status: string) {
+  try {
+    const db = await getDb();
+    if (db) {
+      await db.update(mediaVersions)
+        .set({
+          extractionState: state,
+          extractionProgress: JSON.stringify({ pct, uploaded, total, status }),
+        } as any)
+        .where(eq(mediaVersions.id, versionId));
+    }
+  } catch { /* ignore — progress is best-effort */ }
+}
+
 /** Run extraction as a background job (not tied to any HTTP request). */
 async function runExtractionJob(assetId: number, versionId: number, slug: string, zipUrl: string) {
   const job = extractionJobs.get(assetId)!;
@@ -858,6 +886,7 @@ async function runExtractionJob(assetId: number, versionId: number, slug: string
   try {
     console.log(`[SCORM JOB] Starting streaming extraction for asset ${assetId} (${slug})`);
     job.status = "Reading zip directory\u2026";
+    await persistProgress(versionId, "running", 0, 0, 0, "Reading zip directory\u2026");
 
     const source = makeFetchRangeSource(zipUrl);
     const directory = await unzipper.Open.custom(source);
@@ -867,10 +896,12 @@ async function runExtractionJob(assetId: number, versionId: number, slug: string
     job.status = `Uploading ${total} files\u2026`;
     job.pct = 2;
     console.log(`[SCORM JOB] Zip has ${total} files for asset ${assetId}`);
+    await persistProgress(versionId, "running", 2, 0, total, `Uploading ${total} files\u2026`);
 
     const uploadedUrls: Record<string, string> = {};
     let uploaded = 0;
     let manifestText: string | null = null;
+    let lastPersistedPct = 2;
 
     // Upload in parallel batches of 5
     const BATCH_SIZE = 5;
@@ -907,6 +938,11 @@ async function runExtractionJob(assetId: number, versionId: number, slug: string
       }));
       job.uploaded = uploaded;
       job.pct = Math.min(95, Math.round(2 + (uploaded / total) * 93));
+      // Persist to DB every ~10% to avoid too many DB writes
+      if (job.pct - lastPersistedPct >= 10) {
+        lastPersistedPct = job.pct;
+        await persistProgress(versionId, "running", job.pct, uploaded, total, job.status);
+      }
     }
 
     // Determine entry URL
@@ -939,13 +975,13 @@ async function runExtractionJob(assetId: number, versionId: number, slug: string
     const db = await getDb();
     if (db) {
       if (!entryUrl) {
-        await db.update(mediaVersions).set({ scormEntryUrl: "FAILED" } as any).where(eq(mediaVersions.id, versionId));
+        await db.update(mediaVersions).set({ scormEntryUrl: "FAILED", extractionState: "failed", extractionProgress: JSON.stringify({ pct: 0, uploaded, total, status: "No HTML entry point found" }) } as any).where(eq(mediaVersions.id, versionId));
         job.state = "failed";
         job.status = "No HTML entry point found";
         console.error(`[SCORM JOB] No entry URL found for asset ${assetId}`);
         return;
       }
-      await db.update(mediaVersions).set({ scormEntryUrl: entryUrl } as any).where(eq(mediaVersions.id, versionId));
+      await db.update(mediaVersions).set({ scormEntryUrl: entryUrl, extractionState: "done", extractionProgress: JSON.stringify({ pct: 100, uploaded, total, status: "Done" }) } as any).where(eq(mediaVersions.id, versionId));
       await db.update(mediaAssets).set({ mediaType: "scorm" } as any).where(eq(mediaAssets.id, assetId));
     }
     job.state = "done";
@@ -962,7 +998,7 @@ async function runExtractionJob(assetId: number, versionId: number, slug: string
     try {
       const db = await getDb();
       if (db) {
-        await db.update(mediaVersions).set({ scormEntryUrl: "FAILED" } as any).where(eq(mediaVersions.id, versionId));
+        await db.update(mediaVersions).set({ scormEntryUrl: "FAILED", extractionState: "failed", extractionProgress: JSON.stringify({ pct: 0, uploaded: 0, total: 0, status: `Error: ${String(err)}` }) } as any).where(eq(mediaVersions.id, versionId));
       }
     } catch { /* ignore */ }
     setTimeout(() => extractionJobs.delete(assetId), 5 * 60 * 1000);
@@ -971,7 +1007,7 @@ async function runExtractionJob(assetId: number, versionId: number, slug: string
 
 // ── POST /api/media/:slug/extract-start — start background extraction job ─────
 // Returns immediately with { state: 'running' | 'done' | 'failed' }.
-// If a job is already running for this asset, returns current state without starting a new one.
+// Uses DB extractionState to prevent duplicate jobs across Cloud Run instances.
 router.post("/api/media/:slug/extract-start", async (req: Request, res: Response) => {
   const { slug } = req.params;
   const token = req.query.token as string | undefined;
@@ -980,26 +1016,37 @@ router.post("/api/media/:slug/extract-start", async (req: Request, res: Response
   if (!resolved) return;
   const { asset, version } = resolved;
 
+  const v = version as any;
+  const existingEntry = v.scormEntryUrl as string | null;
+  const dbState = v.extractionState as string | null;
+
   // If already extracted in DB, return done immediately
-  const existingEntry = (version as any).scormEntryUrl as string | null;
   if (existingEntry && existingEntry !== "FAILED") {
-    res.json({ state: "done", pct: 100, uploaded: 0, total: 0, status: "Already extracted" });
+    res.json({ state: "done", pct: 100, uploaded: 0, total: 0, status: "Already extracted", entryUrl: existingEntry });
     return;
   }
-  if (existingEntry === "FAILED") {
-    // Clear FAILED so extraction can retry
-    const db = await getDb();
-    if (db) {
-      await db.update(mediaVersions).set({ scormEntryUrl: null } as any).where(eq(mediaVersions.id, version.id));
-      await db.update(mediaAssets).set({ mediaType: "zip" } as any).where(eq(mediaAssets.id, asset.id));
-    }
+
+  // If another instance is already running (DB says 'running'), return running state
+  if (dbState === "running") {
+    const prog = v.extractionProgress ? JSON.parse(v.extractionProgress) : {};
+    res.json({ state: "running", pct: prog.pct ?? 0, uploaded: prog.uploaded ?? 0, total: prog.total ?? 0, status: prog.status ?? "Extracting\u2026" });
+    return;
   }
 
-  // If job already running, return current state
+  // If in-memory job is already running on this instance, return it
   const existing = extractionJobs.get(asset.id);
   if (existing && existing.state === "running") {
     res.json(existing);
     return;
+  }
+
+  // Clear FAILED state so extraction can retry
+  if (existingEntry === "FAILED" || dbState === "failed") {
+    const db = await getDb();
+    if (db) {
+      await db.update(mediaVersions).set({ scormEntryUrl: null, extractionState: null, extractionProgress: null } as any).where(eq(mediaVersions.id, version.id));
+      await db.update(mediaAssets).set({ mediaType: "zip" } as any).where(eq(mediaAssets.id, asset.id));
+    }
   }
 
   // Start new background job
@@ -1011,7 +1058,8 @@ router.post("/api/media/:slug/extract-start", async (req: Request, res: Response
   res.json(job);
 });
 
-// ── GET /api/media/:slug/extract-status — poll extraction progress ────────────
+//// ── GET /api/media/:slug/extract-status — poll extraction progress ────────
+// Reads from in-memory job map first (same instance), falls back to DB (cross-instance).
 router.get("/api/media/:slug/extract-status", async (req: Request, res: Response) => {
   const { slug } = req.params;
   const token = req.query.token as string | undefined;
@@ -1019,24 +1067,32 @@ router.get("/api/media/:slug/extract-status", async (req: Request, res: Response
   const resolved = await resolveAsset(slug, token, res);
   if (!resolved) return;
   const { asset, version } = resolved;
+  const v = version as any;
 
-  // Check in-memory job first
+  // Check in-memory job first (same instance)
   const job = extractionJobs.get(asset.id);
   if (job) {
-    res.json(job);
+    const resp: any = { state: job.state, pct: job.pct, uploaded: job.uploaded, total: job.total, status: job.status };
+    if (job.entryUrl) resp.entryUrl = job.entryUrl;
+    res.json(resp);
     return;
   }
 
-  // Fall back to DB state
-  const entryUrl = (version as any).scormEntryUrl as string | null;
+  // Fall back to DB state (cross-instance: different Cloud Run instance started the job)
+  const entryUrl = v.scormEntryUrl as string | null;
+  const dbState = v.extractionState as string | null;
+  const prog = v.extractionProgress ? JSON.parse(v.extractionProgress) : {};
+
   if (entryUrl && entryUrl !== "FAILED") {
-    res.json({ state: "done", pct: 100, uploaded: 0, total: 0, status: "Extraction complete" });
-  } else if (entryUrl === "FAILED") {
-    res.json({ state: "failed", pct: 0, uploaded: 0, total: 0, status: "Extraction failed" });
+    res.json({ state: "done", pct: 100, uploaded: prog.total ?? 0, total: prog.total ?? 0, status: "Extraction complete", entryUrl });
+  } else if (entryUrl === "FAILED" || dbState === "failed") {
+    res.json({ state: "failed", pct: prog.pct ?? 0, uploaded: prog.uploaded ?? 0, total: prog.total ?? 0, status: prog.status ?? "Extraction failed" });
+  } else if (dbState === "running") {
+    // Another instance is running the job — return DB progress
+    res.json({ state: "running", pct: prog.pct ?? 0, uploaded: prog.uploaded ?? 0, total: prog.total ?? 0, status: prog.status ?? "Extracting\u2026" });
   } else {
-    // No job running and no DB result — job may have been lost (server restart)
-    // Return running so the client keeps polling; it will auto-start via extract-start
-    res.json({ state: "running", pct: 0, uploaded: 0, total: 0, status: "Waiting for extraction to start\u2026" });
+    // No job running anywhere — client should call extract-start again
+    res.json({ state: "idle", pct: 0, uploaded: 0, total: 0, status: "Waiting for extraction to start\u2026" });
   }
 });
 
