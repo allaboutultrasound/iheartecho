@@ -2696,3 +2696,23 @@ export const mediaFolders = mysqlTable("mediaFolders", {
 });
 export type MediaFolder = typeof mediaFolders.$inferSelect;
 export type InsertMediaFolder = typeof mediaFolders.$inferInsert;
+
+// ─── Upload Jobs (async chunked upload assembly) ──────────────────────────────
+export const uploadJobs = mysqlTable("uploadJobs", {
+  id: varchar("id", { length: 64 }).primaryKey(), // uploadId
+  status: mysqlEnum("status", ["pending", "processing", "done", "error"])
+    .default("pending")
+    .notNull(),
+  // Result fields (populated when status = 'done')
+  resultUrl: text("resultUrl"),
+  resultFileKey: text("resultFileKey"),
+  resultFileName: text("resultFileName"),
+  resultMimeType: text("resultMimeType"),
+  resultSizeBytes: bigint("resultSizeBytes", { mode: "number" }),
+  // Error message (populated when status = 'error')
+  errorMessage: text("errorMessage"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type UploadJob = typeof uploadJobs.$inferSelect;
+export type InsertUploadJob = typeof uploadJobs.$inferInsert;

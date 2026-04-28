@@ -8,9 +8,10 @@
  *  1. POST /api/media-upload/initiate   → returns uploadId
  *  2. POST /api/media-upload/chunk      → server receives chunk via multer (memory),
  *                                         immediately uploads it to Forge as a temp chunk file
- *  3. POST /api/media-upload/complete   → server downloads all chunk files from Forge in order,
- *                                         concatenates them, and uploads the final file to Forge
- *  4. POST /api/media-upload/abort      → no-op (chunk files expire naturally in Forge)
+ *  3. POST /api/media-upload/complete   → returns IMMEDIATELY with { status: 'processing', uploadId }
+ *                                         background job assembles all chunks and uploads final file
+ *  4. GET  /api/media-upload/status/:id → poll for job completion { status, url?, error? }
+ *  5. POST /api/media-upload/abort      → no-op (chunk files expire naturally in Forge)
  *
  * Auth: platform admin only.
  *
@@ -18,10 +19,9 @@
  * storage under the prefix `_chunks/<uploadId>/`. This means any Cloud Run instance can
  * handle any request in the sequence without sticky sessions.
  *
- * Memory usage: each chunk is buffered in memory only for the duration of the upload to Forge
- * (≤ 5 MB per chunk). The complete step downloads all chunks and concatenates them in memory
- * before uploading. For a 400 MB file this uses ~400 MB of RAM, which is within Cloud Run's
- * default 2 GB memory limit.
+ * Async complete: the /complete endpoint returns immediately (avoiding proxy timeouts).
+ * The assembly job runs in the background and writes its result to the uploadJobs DB table.
+ * The client polls /status/:id every 2 seconds until status is 'done' or 'error'.
  */
 import { Router, Request, Response } from "express";
 import multer from "multer";
@@ -29,6 +29,9 @@ import axios from "axios";
 import FormDataNode from "form-data";
 import { ENV } from "../_core/env";
 import { sdk } from "../_core/sdk";
+import { getDb } from "../db";
+import { uploadJobs } from "../../drizzle/schema";
+import { eq } from "drizzle-orm";
 
 const router = Router();
 
@@ -39,7 +42,6 @@ const chunkUpload = multer({
 });
 
 // ── Forge helpers ─────────────────────────────────────────────────────────────
-
 function forgeUploadUrl(fileKey: string): string {
   const base = ENV.forgeApiUrl.replace(/\/+$/, "");
   const url = new URL("v1/storage/upload", base + "/");
@@ -95,7 +97,6 @@ async function downloadChunkBuffer(fileKey: string): Promise<Buffer> {
 }
 
 // ── Auth helper ───────────────────────────────────────────────────────────────
-
 async function requireAdmin(req: Request, res: Response): Promise<any | null> {
   try {
     const user = await sdk.authenticateRequest(req);
@@ -105,6 +106,107 @@ async function requireAdmin(req: Request, res: Response): Promise<any | null> {
   } catch {
     res.status(401).json({ error: "Unauthorized" });
     return null;
+  }
+}
+
+// ── Background assembly job ───────────────────────────────────────────────────
+/**
+ * Runs in the background (fire-and-forget). Downloads all chunks from Forge,
+ * concatenates them, uploads the final file, and writes the result to the DB.
+ */
+async function runAssemblyJob(
+  uploadId: string,
+  folder: string
+): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    console.error("[media-chunked-upload] DB unavailable for assembly job", uploadId);
+    return;
+  }
+  try {
+    // Mark as processing
+    await db.update(uploadJobs).set({ status: "processing" }).where(eq(uploadJobs.id, uploadId));
+
+    // Read metadata from Forge
+    const metaKey = `_chunks/${uploadId}/_meta.json`;
+    const metaBuf = await downloadChunkBuffer(metaKey);
+    const meta = JSON.parse(metaBuf.toString("utf-8")) as {
+      fileName: string;
+      mimeType: string;
+      totalChunks: number;
+    };
+
+    // Build the final file key
+    const safeFileName = meta.fileName.replace(/[^a-zA-Z0-9._\- ]/g, "_");
+    const ext = meta.fileName.split(".").pop()?.toLowerCase() ?? "bin";
+    const randomSuffix = Math.random().toString(36).slice(2, 10);
+    const fileKey = `${folder}/${safeFileName}-${randomSuffix}.${ext}`;
+
+    console.log(
+      `[media-chunked-upload] Assembling ${meta.totalChunks} chunks for "${meta.fileName}" → ${fileKey}`
+    );
+
+    // Download all chunks sequentially and concatenate
+    const chunkBuffers: Buffer[] = [];
+    let totalBytes = 0;
+    for (let i = 0; i < meta.totalChunks; i++) {
+      const chunkKey = `_chunks/${uploadId}/chunk_${String(i).padStart(6, "0")}.bin`;
+      const buf = await downloadChunkBuffer(chunkKey);
+      chunkBuffers.push(buf);
+      totalBytes += buf.length;
+      if ((i + 1) % 10 === 0 || i + 1 === meta.totalChunks) {
+        console.log(
+          `[media-chunked-upload] Downloaded ${i + 1}/${meta.totalChunks} chunks (${(totalBytes / 1024 / 1024).toFixed(1)} MB)`
+        );
+      }
+    }
+
+    // Concatenate and upload to Forge
+    const assembled = Buffer.concat(chunkBuffers);
+    console.log(
+      `[media-chunked-upload] Uploading assembled file: ${(assembled.length / 1024 / 1024).toFixed(1)} MB`
+    );
+
+    const form = new FormDataNode();
+    form.append("file", assembled, {
+      filename: safeFileName,
+      contentType: meta.mimeType,
+      knownLength: assembled.length,
+    });
+    const uploadRes = await axios.post(forgeUploadUrl(fileKey), form, {
+      headers: {
+        Authorization: `Bearer ${ENV.forgeApiKey}`,
+        ...form.getHeaders(),
+      },
+      maxBodyLength: Infinity,
+      maxContentLength: Infinity,
+      timeout: 20 * 60 * 1000,
+    });
+    const { url } = uploadRes.data as { url: string };
+
+    console.log(`[media-chunked-upload] Upload complete: ${url}`);
+
+    // Write success to DB
+    await db.update(uploadJobs).set({
+      status: "done",
+      resultUrl: url,
+      resultFileKey: fileKey,
+      resultFileName: meta.fileName,
+      resultMimeType: meta.mimeType,
+      resultSizeBytes: assembled.length,
+    }).where(eq(uploadJobs.id, uploadId));
+  } catch (err: any) {
+    const errMsg = err?.response?.data
+      ? JSON.stringify(err.response.data)
+      : (err?.message ?? String(err));
+    console.error("[media-chunked-upload] assembly job error:", errMsg);
+    const db2 = await getDb();
+    if (db2) {
+      await db2.update(uploadJobs).set({
+        status: "error",
+        errorMessage: errMsg,
+      }).where(eq(uploadJobs.id, uploadId));
+    }
   }
 }
 
@@ -123,12 +225,20 @@ router.post("/api/media-upload/initiate", async (req: Request, res: Response) =>
       return;
     }
     const uploadId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+
     // Store metadata as a small JSON file in Forge so any instance can read it
     const metaKey = `_chunks/${uploadId}/_meta.json`;
     const metaBuffer = Buffer.from(
       JSON.stringify({ fileName, mimeType, totalChunks: Number(totalChunks) })
     );
     await uploadBufferToForge(metaBuffer, metaKey, "application/json");
+
+    // Create a pending job record in the DB
+    const db = await getDb();
+    if (db) {
+      await db.insert(uploadJobs).values({ id: uploadId, status: "pending" });
+    }
+
     res.json({ uploadId });
   } catch (err: any) {
     console.error("[media-chunked-upload] initiate error:", err?.message ?? err);
@@ -165,7 +275,7 @@ router.post(
   }
 );
 
-// ── 3. Complete ───────────────────────────────────────────────────────────────
+// ── 3. Complete (async — returns immediately, job runs in background) ─────────
 router.post("/api/media-upload/complete", async (req: Request, res: Response) => {
   try {
     const user = await requireAdmin(req, res);
@@ -176,87 +286,56 @@ router.post("/api/media-upload/complete", async (req: Request, res: Response) =>
       return;
     }
 
-    // Use a longer timeout for large files (20 minutes)
-    res.setTimeout(20 * 60 * 1000);
+    // Return immediately — the assembly runs in the background
+    res.json({ status: "processing", uploadId });
 
-    // Read metadata from Forge
-    const metaKey = `_chunks/${uploadId}/_meta.json`;
-    const metaBuf = await downloadChunkBuffer(metaKey);
-    const meta = JSON.parse(metaBuf.toString("utf-8")) as {
-      fileName: string;
-      mimeType: string;
-      totalChunks: number;
-    };
-
-    // Build the final file key
-    const safeFileName = meta.fileName.replace(/[^a-zA-Z0-9._\- ]/g, "_");
-    const ext = meta.fileName.split(".").pop()?.toLowerCase() ?? "bin";
-    const randomSuffix = Math.random().toString(36).slice(2, 10);
-    const fileKey = `${folder}/${safeFileName}-${randomSuffix}.${ext}`;
-
-    console.log(
-      `[media-chunked-upload] Assembling ${meta.totalChunks} chunks for "${meta.fileName}" → ${fileKey}`
-    );
-
-    // Download all chunks sequentially and concatenate into a single Buffer.
-    // We do this chunk-by-chunk to keep peak memory at ~2× chunk size (current + next).
-    const chunkBuffers: Buffer[] = [];
-    let totalBytes = 0;
-    for (let i = 0; i < meta.totalChunks; i++) {
-      const chunkKey = `_chunks/${uploadId}/chunk_${String(i).padStart(6, "0")}.bin`;
-      const buf = await downloadChunkBuffer(chunkKey);
-      chunkBuffers.push(buf);
-      totalBytes += buf.length;
-      if ((i + 1) % 10 === 0 || i + 1 === meta.totalChunks) {
-        console.log(
-          `[media-chunked-upload] Downloaded ${i + 1}/${meta.totalChunks} chunks (${(totalBytes / 1024 / 1024).toFixed(1)} MB)`
-        );
-      }
-    }
-
-    // Concatenate all chunks and upload to Forge as the final file
-    const assembled = Buffer.concat(chunkBuffers);
-    console.log(
-      `[media-chunked-upload] Uploading assembled file: ${(assembled.length / 1024 / 1024).toFixed(1)} MB`
-    );
-
-    const form = new FormDataNode();
-    form.append("file", assembled, {
-      filename: safeFileName,
-      contentType: meta.mimeType,
-      knownLength: assembled.length,
-    });
-
-    const uploadRes = await axios.post(forgeUploadUrl(fileKey), form, {
-      headers: {
-        Authorization: `Bearer ${ENV.forgeApiKey}`,
-        ...form.getHeaders(),
-      },
-      maxBodyLength: Infinity,
-      maxContentLength: Infinity,
-      timeout: 15 * 60 * 1000,
-    });
-
-    const { url } = uploadRes.data as { url: string };
-    console.log(`[media-chunked-upload] Upload complete: ${url}`);
-
-    res.json({
-      url,
-      fileKey,
-      fileName: meta.fileName,
-      mimeType: meta.mimeType,
-      sizeBytes: assembled.length,
+    // Fire-and-forget: run assembly job without awaiting
+    runAssemblyJob(uploadId, folder).catch((err) => {
+      console.error("[media-chunked-upload] unhandled assembly error:", err?.message ?? err);
     });
   } catch (err: any) {
-    const errDetail = err?.response?.data ?? err?.message ?? String(err);
-    console.error("[media-chunked-upload] complete error:", errDetail);
-    res.status(500).json({
-      error: typeof errDetail === "string" ? errDetail : JSON.stringify(errDetail),
-    });
+    console.error("[media-chunked-upload] complete error:", err?.message ?? err);
+    res.status(500).json({ error: err?.message ?? "Complete failed" });
   }
 });
 
-// ── 4. Abort ──────────────────────────────────────────────────────────────────
+// ── 4. Status poll ────────────────────────────────────────────────────────────
+router.get("/api/media-upload/status/:uploadId", async (req: Request, res: Response) => {
+  try {
+    const user = await requireAdmin(req, res);
+    if (!user) return;
+    const { uploadId } = req.params;
+    const db = await getDb();
+    if (!db) {
+      res.status(503).json({ error: "DB unavailable" });
+      return;
+    }
+    const [job] = await db.select().from(uploadJobs).where(eq(uploadJobs.id, uploadId)).limit(1);
+    if (!job) {
+      res.status(404).json({ error: "Upload job not found" });
+      return;
+    }
+    if (job.status === "done") {
+      res.json({
+        status: "done",
+        url: job.resultUrl,
+        fileKey: job.resultFileKey,
+        fileName: job.resultFileName,
+        mimeType: job.resultMimeType,
+        sizeBytes: job.resultSizeBytes,
+      });
+    } else if (job.status === "error") {
+      res.json({ status: "error", error: job.errorMessage });
+    } else {
+      res.json({ status: job.status });
+    }
+  } catch (err: any) {
+    console.error("[media-chunked-upload] status error:", err?.message ?? err);
+    res.status(500).json({ error: err?.message ?? "Status check failed" });
+  }
+});
+
+// ── 5. Abort ──────────────────────────────────────────────────────────────────
 router.post("/api/media-upload/abort", async (req: Request, res: Response) => {
   try {
     const user = await requireAdmin(req, res);

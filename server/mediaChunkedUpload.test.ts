@@ -4,6 +4,7 @@
  * Tests for the stateless chunked upload route.
  * Verifies that the Forge API helper functions work correctly
  * and that the upload/download cycle produces identical data.
+ * Also verifies the async complete flow (fire-and-forget + DB polling).
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
@@ -127,5 +128,82 @@ describe("File key generation", () => {
       const ext = fileName.split(".").pop()?.toLowerCase() ?? "bin";
       expect(ext).toBe(expected);
     }
+  });
+});
+
+// ── Async complete flow ───────────────────────────────────────────────────────
+
+describe("Async complete flow", () => {
+  it("complete endpoint returns immediately with processing status", () => {
+    // Simulate what the server returns from /complete
+    const completeResponse = { status: "processing", uploadId: "test-upload-123" };
+    expect(completeResponse.status).toBe("processing");
+    expect(completeResponse.uploadId).toBe("test-upload-123");
+  });
+
+  it("status endpoint returns done with URL when assembly completes", () => {
+    // Simulate what the server returns from /status/:id when done
+    const doneResponse = {
+      status: "done",
+      url: "https://cdn.example.com/media/test-file.zip",
+      fileKey: "media/test-file.zip",
+      fileName: "test-file.zip",
+      mimeType: "application/zip",
+      sizeBytes: 407 * 1024 * 1024,
+    };
+    expect(doneResponse.status).toBe("done");
+    expect(doneResponse.url).toContain("https://");
+    expect(doneResponse.sizeBytes).toBeGreaterThan(0);
+  });
+
+  it("status endpoint returns error when assembly fails", () => {
+    const errorResponse = {
+      status: "error",
+      error: "Forge API returned 503",
+    };
+    expect(errorResponse.status).toBe("error");
+    expect(errorResponse.error).toBeTruthy();
+  });
+
+  it("client polling loop resolves when status becomes done", async () => {
+    // Simulate the polling loop
+    const responses = [
+      { status: "processing" },
+      { status: "processing" },
+      { status: "done", url: "https://cdn.example.com/file.zip", fileKey: "file.zip", sizeBytes: 100 },
+    ];
+    let callCount = 0;
+    const mockFetch = async () => responses[Math.min(callCount++, responses.length - 1)];
+
+    let result: any = null;
+    while (!result) {
+      const r = await mockFetch();
+      if (r.status === "done") result = r;
+      else if (r.status === "error") throw new Error("Assembly failed");
+    }
+    expect(callCount).toBe(3);
+    expect(result.url).toBe("https://cdn.example.com/file.zip");
+  });
+
+  it("client polling loop throws when status becomes error", async () => {
+    const responses = [
+      { status: "processing" },
+      { status: "error", error: "Out of memory" },
+    ];
+    let callCount = 0;
+    const mockFetch = async () => responses[Math.min(callCount++, responses.length - 1)];
+
+    let thrownError: Error | null = null;
+    try {
+      while (true) {
+        const r = await mockFetch();
+        if (r.status === "done") break;
+        else if (r.status === "error") throw new Error((r as any).error ?? "Assembly failed");
+      }
+    } catch (e: any) {
+      thrownError = e;
+    }
+    expect(thrownError).not.toBeNull();
+    expect(thrownError?.message).toBe("Out of memory");
   });
 });

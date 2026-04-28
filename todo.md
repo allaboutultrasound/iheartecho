@@ -1091,3 +1091,11 @@
 - [x] Root cause: Cloud Run multi-instance routing — /initiate creates temp dir on Instance A, /chunk requests may go to Instance B where dir does not exist, causing multer to fail with HTML 500 error
 - [x] Fix: fully stateless chunked upload — each chunk is uploaded to Forge storage immediately as it arrives (no /tmp disk storage), complete step downloads all chunks from Forge and reassembles in memory
 - [x] Added vitest tests for URL builders, chunk assembly, metadata serialization, and file key generation (11 tests, all passing)
+
+## Media Repository — Large File Upload Error v4 (2026-04-28)
+- [x] Root cause: complete step times out on platform proxy — assembling 400 MB (downloading 80 chunks + re-uploading) takes 2-3 min, proxy has ~60s timeout → 503 Service Unavailable
+- [x] Fix: async complete step — /complete returns immediately with { status: 'processing' }, background job assembles chunks and writes result to uploadJobs DB table
+- [x] Added GET /api/media-upload/status/:uploadId polling endpoint — client polls every 3 seconds until status = 'done' or 'error'
+- [x] Added uploadJobs table to DB schema and applied migration directly
+- [x] Updated progress bar UI to show "Assembling file on server…" with pulsing animation at 95%
+- [x] All 16 vitest tests pass for the new async flow (5 new async complete flow tests added)

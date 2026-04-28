@@ -168,7 +168,7 @@ async function chunkedUpload(
     if (!chunkRes.ok) throw new Error(await chunkRes.text());
     onProgress(Math.round(((i + 1) / totalChunks) * 90));
   }
-  // 3. Complete
+  // 3. Trigger async complete (returns immediately — server assembles in background)
   const completeRes = await fetch("/api/media-upload/complete", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -176,8 +176,31 @@ async function chunkedUpload(
     body: JSON.stringify({ uploadId, folder }),
   });
   if (!completeRes.ok) throw new Error(await completeRes.text());
-  onProgress(100);
-  return completeRes.json() as Promise<{ url: string; fileKey: string; sizeBytes: number }>;
+  // 4. Poll /status until assembly is done
+  const POLL_INTERVAL = 3000; // 3 seconds
+  const POLL_TIMEOUT = 20 * 60 * 1000; // 20 minutes max
+  const pollStart = Date.now();
+  while (true) {
+    await new Promise((r) => setTimeout(r, POLL_INTERVAL));
+    if (Date.now() - pollStart > POLL_TIMEOUT) throw new Error("Upload timed out after 20 minutes");
+    const statusRes = await fetch(`/api/media-upload/status/${uploadId}`, { credentials: "include" });
+    if (!statusRes.ok) throw new Error(await statusRes.text());
+    const statusData = await statusRes.json() as {
+      status: string;
+      url?: string;
+      fileKey?: string;
+      sizeBytes?: number;
+      error?: string;
+    };
+    if (statusData.status === "done") {
+      onProgress(100);
+      return { url: statusData.url!, fileKey: statusData.fileKey!, sizeBytes: statusData.sizeBytes ?? 0 };
+    } else if (statusData.status === "error") {
+      throw new Error(statusData.error ?? "Assembly failed");
+    }
+    // Still processing — keep polling at 95%
+    onProgress(95);
+  }
 }
 
 function formatBytes(bytes: number | null | undefined): string {
@@ -1233,15 +1256,18 @@ function UploadDialog({
         {uploading && (
           <div className="space-y-1">
             <div className="flex justify-between text-xs text-gray-500">
-              <span>Uploading…</span>
+              <span>{uploadProgress >= 95 && uploadProgress < 100 ? "Assembling file on server…" : "Uploading…"}</span>
               <span>{uploadProgress}%</span>
             </div>
             <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
               <div
-                className="h-full bg-[#189aa1] transition-all duration-300 rounded-full"
-                style={{ width: `${uploadProgress}%` }}
+                className={`h-full transition-all duration-300 rounded-full ${uploadProgress >= 95 && uploadProgress < 100 ? "animate-pulse" : ""}`}
+                style={{ width: `${uploadProgress}%`, background: BRAND }}
               />
             </div>
+            {uploadProgress >= 95 && uploadProgress < 100 && (
+              <p className="text-xs text-gray-400">Large files may take a few minutes to assemble. Please wait…</p>
+            )}
           </div>
         )}
         <DialogFooter>
