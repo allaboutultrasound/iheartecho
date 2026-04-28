@@ -1114,3 +1114,8 @@
 - [x] Forge API confirmed to support CORS (Access-Control-Allow-Origin: *) so browser can POST directly
 - [x] Progress bar shows real-time upload progress (3-98%) during direct CDN upload
 - [x] All 16 vitest tests pass
+
+## Media Repository — Large File Upload Fix v7 (2026-04-28)
+- [x] Root cause: after direct-to-Forge upload succeeds, createAsset tRPC mutation downloads the entire 400 MB zip from Forge, extracts it with JSZip, and re-uploads every file inside — causing OOM/timeout on Cloud Run
+- [x] Fix: added 50 MB size limit to SCORM extraction in both createAsset and addVersion procedures — files larger than 50 MB are stored as-is without extraction
+- [x] TypeScript compiles cleanly (no errors)

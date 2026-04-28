@@ -336,8 +336,12 @@ export const mediaRouter = router({
       }
 
       // For SCORM/zip: extract files and find entry point
+      // Skip extraction for files > 50 MB to avoid Cloud Run timeout/OOM.
+      // Large zips (quiz packs, course bundles) are stored as-is and served as downloads.
+      const SCORM_EXTRACT_MAX_BYTES = 50 * 1024 * 1024; // 50 MB
+      const fileTooLargeForExtraction = (input.fileSizeBytes ?? 0) > SCORM_EXTRACT_MAX_BYTES;
       let scormEntryUrl: string | null = null;
-      if ((mediaType === "scorm" || mediaType === "zip" || mediaType === "lms") && s3Url) {
+      if ((mediaType === "scorm" || mediaType === "zip" || mediaType === "lms") && s3Url && !fileTooLargeForExtraction) {
         try {
           const zipRes = await fetch(s3Url);
           if (zipRes.ok) {
@@ -424,10 +428,12 @@ export const mediaRouter = router({
         s3Url = result.url;
         s3Key = result.key;
       }
-
+      // For SCORM/zip: extract files and find entry point
+      // Skip extraction for files > 50 MB to avoid Cloud Run timeout/OOM.
+      const fileTooLargeV = (input.fileSizeBytes ?? 0) > 50 * 1024 * 1024;
       // For SCORM/zip: extract files and find entry point
       let scormEntryUrlV: string | null = null;
-      if ((asset.mediaType === "scorm" || asset.mediaType === "zip" || asset.mediaType === "lms") && s3Url) {
+      if ((asset.mediaType === "scorm" || asset.mediaType === "zip" || asset.mediaType === "lms") && s3Url && !fileTooLargeV) {
         try {
           const zipRes = await fetch(s3Url);
           if (zipRes.ok) {
