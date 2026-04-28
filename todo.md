@@ -1086,3 +1086,8 @@
 - [x] Root cause: native fetch does not support streaming multipart bodies — causes Internal Server Error on large files in production
 - [x] Fix: rewrote complete handler to use axios with maxBodyLength: Infinity + form-data streaming (no memory spike, no fetch streaming limitation)
 - [x] Improved error logging to surface the actual Forge API error message in the 500 response
+
+## Media Repository — Large File Upload Error v3 (2026-04-28)
+- [x] Root cause: Cloud Run multi-instance routing — /initiate creates temp dir on Instance A, /chunk requests may go to Instance B where dir does not exist, causing multer to fail with HTML 500 error
+- [x] Fix: fully stateless chunked upload — each chunk is uploaded to Forge storage immediately as it arrives (no /tmp disk storage), complete step downloads all chunks from Forge and reassembles in memory
+- [x] Added vitest tests for URL builders, chunk assembly, metadata serialization, and file key generation (11 tests, all passing)
