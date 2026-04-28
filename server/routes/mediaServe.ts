@@ -259,10 +259,11 @@ function buildScormPage(title: string, entryUrl: string): string {
 </html>`;
 }
 
-/** Build a loading/extracting page that uses SSE to show real-time progress. */
+/** Build a loading/extracting page that polls for progress. */
 function buildExtractingPage(title: string, slug: string, token?: string): string {
   const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
-  const sseUrl = `/api/media/${slug}/extract-sse${tokenParam}`;
+  const startUrl = `/api/media/${slug}/extract-start${tokenParam}`;
+  const statusUrl = `/api/media/${slug}/extract-status${tokenParam}`;
   const viewUrl = `/api/media/${slug}/view${tokenParam}`;
   return `<!DOCTYPE html>
 <html lang="en">
@@ -332,45 +333,66 @@ function buildExtractingPage(title: string, slug: string, token?: string): strin
   <div class="card">
     <div class="spinner"></div>
     <h2>Preparing ${escapeHtml(title)}</h2>
-    <p id="status-msg">Extracting package files\u2026 this may take a moment.</p>
+    <p id="status-msg">Starting extraction\u2026</p>
     <div class="progress-bar-wrap"><div class="progress-bar" id="pbar"></div></div>
     <p id="pct-msg" style="font-size:12px;color:#189aa1;margin-top:4px;"></p>
   </div>
 <script>
 (function(){
-  var es = new EventSource('${sseUrl}');
   var pbar = document.getElementById('pbar');
   var pct = document.getElementById('pct-msg');
   var msg = document.getElementById('status-msg');
-  es.addEventListener('progress', function(e){
-    try {
-      var d = JSON.parse(e.data);
-      if (d.pct != null) {
-        if (pbar) pbar.style.width = d.pct + '%';
-        if (d.total > 0) {
-          if (pct) pct.textContent = d.pct + '% \u2014 ' + d.uploaded + ' / ' + d.total + ' files';
-        } else {
-          if (pct) pct.textContent = d.pct + '%';
+  var pollTimer = null;
+  var failed = false;
+
+  function poll() {
+    fetch('${statusUrl}')
+      .then(function(r){ return r.json(); })
+      .then(function(d) {
+        if (failed) return;
+        if (d.pct != null && pbar) pbar.style.width = d.pct + '%';
+        if (d.total > 0 && pct) pct.textContent = d.pct + '% \u2014 ' + d.uploaded + ' / ' + d.total + ' files';
+        else if (d.pct != null && pct) pct.textContent = d.pct + '%';
+        if (d.status && msg) msg.textContent = d.status;
+        if (d.state === 'done') {
+          clearInterval(pollTimer);
+          if (pbar) pbar.style.width = '100%';
+          if (msg) msg.textContent = 'Done! Loading content\u2026';
+          setTimeout(function(){ window.location.replace('${viewUrl}'); }, 400);
+        } else if (d.state === 'failed') {
+          clearInterval(pollTimer);
+          failed = true;
+          if (msg) msg.textContent = 'Extraction failed. Redirecting\u2026';
+          setTimeout(function(){ window.location.replace('${viewUrl}'); }, 2000);
         }
+      })
+      .catch(function(){ /* network error — keep polling */ });
+  }
+
+  // Start the background extraction job, then begin polling
+  fetch('${startUrl}', { method: 'POST' })
+    .then(function(r){ return r.json(); })
+    .then(function(d) {
+      if (d.state === 'done') {
+        // Already extracted (race condition — another tab finished first)
+        if (pbar) pbar.style.width = '100%';
+        if (msg) msg.textContent = 'Done! Loading content\u2026';
+        setTimeout(function(){ window.location.replace('${viewUrl}'); }, 400);
+        return;
       }
-      if (d.status && msg) msg.textContent = d.status;
-    } catch(ex){}
-  });
-  es.addEventListener('done', function(e){
-    es.close();
-    if (pbar) pbar.style.width = '100%';
-    if (msg) msg.textContent = 'Done! Loading content\u2026';
-    setTimeout(function(){ window.location.replace('${viewUrl}'); }, 400);
-  });
-  es.addEventListener('error', function(e){
-    es.close();
-    if (msg) msg.textContent = 'Extraction failed. Redirecting\u2026';
-    setTimeout(function(){ window.location.replace('${viewUrl}'); }, 2000);
-  });
-  es.onerror = function(){
-    es.close();
-    setTimeout(function(){ window.location.replace('${viewUrl}'); }, 3000);
-  };
+      if (d.state === 'failed') {
+        if (msg) msg.textContent = 'Extraction failed. Redirecting\u2026';
+        setTimeout(function(){ window.location.replace('${viewUrl}'); }, 2000);
+        return;
+      }
+      // Job started or already running — begin polling
+      poll();
+      pollTimer = setInterval(poll, 2000);
+    })
+    .catch(function() {
+      // Fallback: just redirect to view
+      setTimeout(function(){ window.location.replace('${viewUrl}'); }, 3000);
+    });
 })();
 <\/script>
 </body>
@@ -788,93 +810,63 @@ router.get("/api/media/:slug/embed", async (req: Request, res: Response) => {
   res.send(buildViewerPage(asset.title, url, asset.mediaType, mime));
 });
 
-// ── SSE extraction endpoint — streams progress to the loading page ────────────
-// This is called by the EventSource in buildExtractingPage.
-// It runs the extraction and sends progress events, then a 'done' event.
-// If extraction was already completed (scormEntryUrl set), it sends 'done' immediately.
-router.get("/api/media/:slug/extract-sse", async (req: Request, res: Response) => {
-  const { slug } = req.params;
-  const token = req.query.token as string | undefined;
+// ── Background extraction job map ────────────────────────────────────────────
+// Keyed by asset ID. Survives across HTTP requests so polling can read progress.
+type JobState = {
+  state: "running" | "done" | "failed";
+  pct: number;
+  uploaded: number;
+  total: number;
+  status: string;
+  entryUrl?: string;
+};
+const extractionJobs = new Map<number, JobState>();
 
-  // Resolve asset (enforces access control)
-  const resolved = await resolveAsset(slug, token, res);
-  if (!resolved) return;
-  const { asset, version } = resolved;
-
-  // Set SSE headers
-  res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache");
-  res.setHeader("Connection", "keep-alive");
-  res.setHeader("X-Accel-Buffering", "no"); // Disable nginx buffering
-  res.flushHeaders();
-
-  const send = (event: string, data: unknown) => {
-    res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+// Build a custom unzipper source that uses HTTP Range requests
+// stream() must return synchronously — pipe async fetch into a PassThrough
+function makeFetchRangeSource(url: string) {
+  return {
+    stream: (offset: number, length: number) => {
+      const pass = new PassThrough();
+      const end = length ? offset + length - 1 : "";
+      fetch(url, { headers: { Range: `bytes=${offset}-${end}` } })
+        .then(r => {
+          if (!r.ok && r.status !== 206) {
+            pass.destroy(new Error(`Range request failed: ${r.status}`));
+            return;
+          }
+          // @ts-ignore — r.body is a web ReadableStream; pipe via Node Readable
+          Readable.fromWeb(r.body as any).pipe(pass);
+        })
+        .catch((e: Error) => pass.destroy(e));
+      return pass;
+    },
+    size: () =>
+      fetch(url, { method: "HEAD" }).then(r => {
+        const cl = r.headers.get("content-length");
+        if (!cl) throw new Error("Missing content-length header");
+        return parseInt(cl, 10);
+      }),
   };
+}
 
-  // If already extracted, send done immediately
-  const existingEntry = (version as any).scormEntryUrl as string | null;
-  if (existingEntry && existingEntry !== "FAILED") {
-    send("done", { entryUrl: existingEntry });
-    res.end();
-    return;
-  }
-
-  // If not a zip-like asset, send done immediately (nothing to extract)
-  const mime = version.mimeType ?? "";
-  if (!isZipLike(asset.mediaType, mime)) {
-    send("done", {});
-    res.end();
-    return;
-  }
-
-  // Run extraction using streaming range requests — never loads the full zip into memory
-  const keyPrefix = `media-repository/${asset.slug}-scorm`;
-  const zipUrl = version.s3Url;
-
-  // Send a keepalive comment every 15 seconds to prevent proxy/Cloud Run timeouts
-  const keepaliveInterval = setInterval(() => {
-    try { res.write(": keepalive\n\n"); } catch { /* ignore */ }
-  }, 15000);
-
-  // Build a custom unzipper source that uses HTTP Range requests
-  // stream() must return synchronously — pipe async fetch into a PassThrough
-  function makeFetchRangeSource(url: string) {
-    return {
-      stream: (offset: number, length: number) => {
-        const pass = new PassThrough();
-        const end = length ? offset + length - 1 : "";
-        fetch(url, { headers: { Range: `bytes=${offset}-${end}` } })
-          .then(r => {
-            if (!r.ok && r.status !== 206) {
-              pass.destroy(new Error(`Range request failed: ${r.status}`));
-              return;
-            }
-            // @ts-ignore — r.body is a web ReadableStream; pipe via Node Readable
-            Readable.fromWeb(r.body as any).pipe(pass);
-          })
-          .catch((e: Error) => pass.destroy(e));
-        return pass;
-      },
-      size: () =>
-        fetch(url, { method: "HEAD" }).then(r => {
-          const cl = r.headers.get("content-length");
-          if (!cl) throw new Error("Missing content-length header");
-          return parseInt(cl, 10);
-        }),
-    };
-  }
+/** Run extraction as a background job (not tied to any HTTP request). */
+async function runExtractionJob(assetId: number, versionId: number, slug: string, zipUrl: string) {
+  const job = extractionJobs.get(assetId)!;
+  const keyPrefix = `media-repository/${slug}-scorm`;
 
   try {
-    console.log(`[SCORM SSE] Starting streaming extraction for asset ${asset.id} (${asset.slug})`);
-    send("progress", { pct: 0, uploaded: 0, total: 0, status: "Reading zip directory\u2026" });
+    console.log(`[SCORM JOB] Starting streaming extraction for asset ${assetId} (${slug})`);
+    job.status = "Reading zip directory\u2026";
 
     const source = makeFetchRangeSource(zipUrl);
     const directory = await unzipper.Open.custom(source);
     const fileEntries = directory.files.filter((f: any) => !f.type || f.type !== "Directory");
     const total = fileEntries.length;
-    console.log(`[SCORM SSE] Zip has ${total} files for asset ${asset.id}`);
-    send("progress", { pct: 2, uploaded: 0, total, status: `Uploading ${total} files\u2026` });
+    job.total = total;
+    job.status = `Uploading ${total} files\u2026`;
+    job.pct = 2;
+    console.log(`[SCORM JOB] Zip has ${total} files for asset ${assetId}`);
 
     const uploadedUrls: Record<string, string> = {};
     let uploaded = 0;
@@ -887,7 +879,6 @@ router.get("/api/media/:slug/extract-sse", async (req: Request, res: Response) =
       await Promise.all(batch.map(async (file: any) => {
         const relativePath: string = file.path;
         try {
-          // Stream the file content from the zip via range request
           const chunks: Buffer[] = [];
           const fileStream = file.stream();
           for await (const chunk of fileStream) {
@@ -905,18 +896,17 @@ router.get("/api/media/:slug/extract-sse", async (req: Request, res: Response) =
           } catch {
             uploadedUrls[relativePath] = result.url;
           }
-          // Capture manifest text for entry point detection
           const lp = relativePath.toLowerCase();
           if (lp === "imsmanifest.xml" && !manifestText) {
             manifestText = fileBuffer.toString("utf8");
           }
         } catch (uploadErr) {
-          console.error(`[SCORM SSE] Failed to process ${relativePath}:`, uploadErr);
+          console.error(`[SCORM JOB] Failed to process ${relativePath}:`, uploadErr);
         }
         uploaded++;
       }));
-      const pct = Math.min(95, Math.round(2 + (uploaded / total) * 93));
-      send("progress", { pct, uploaded, total });
+      job.uploaded = uploaded;
+      job.pct = Math.min(95, Math.round(2 + (uploaded / total) * 93));
     }
 
     // Determine entry URL
@@ -945,27 +935,108 @@ router.get("/api/media/:slug/extract-sse", async (req: Request, res: Response) =
       if (htmlFiles.length > 0) entryUrl = uploadedUrls[htmlFiles[0]];
     }
 
-    clearInterval(keepaliveInterval);
     // Persist result
     const db = await getDb();
     if (db) {
       if (!entryUrl) {
-        await db.update(mediaVersions).set({ scormEntryUrl: "FAILED" } as any).where(eq(mediaVersions.id, version.id));
-        send("error", { message: "No HTML entry point found" });
-        res.end();
+        await db.update(mediaVersions).set({ scormEntryUrl: "FAILED" } as any).where(eq(mediaVersions.id, versionId));
+        job.state = "failed";
+        job.status = "No HTML entry point found";
+        console.error(`[SCORM JOB] No entry URL found for asset ${assetId}`);
         return;
       }
-      await db.update(mediaVersions).set({ scormEntryUrl: entryUrl } as any).where(eq(mediaVersions.id, version.id));
-      await db.update(mediaAssets).set({ mediaType: "scorm" } as any).where(eq(mediaAssets.id, asset.id));
+      await db.update(mediaVersions).set({ scormEntryUrl: entryUrl } as any).where(eq(mediaVersions.id, versionId));
+      await db.update(mediaAssets).set({ mediaType: "scorm" } as any).where(eq(mediaAssets.id, assetId));
     }
-    console.log(`[SCORM SSE] Extraction complete for asset ${asset.id}: ${entryUrl}`);
-    send("done", { entryUrl });
-    res.end();
+    job.state = "done";
+    job.pct = 100;
+    job.entryUrl = entryUrl ?? undefined;
+    console.log(`[SCORM JOB] Extraction complete for asset ${assetId}: ${entryUrl}`);
+    // Clean up job after 5 minutes
+    setTimeout(() => extractionJobs.delete(assetId), 5 * 60 * 1000);
   } catch (err) {
-    clearInterval(keepaliveInterval);
-    console.error("[SCORM SSE] Extraction error:", err);
-    send("error", { message: String(err) });
-    res.end();
+    console.error("[SCORM JOB] Extraction error:", err);
+    job.state = "failed";
+    job.status = `Error: ${String(err)}`;
+    // Persist FAILED sentinel
+    try {
+      const db = await getDb();
+      if (db) {
+        await db.update(mediaVersions).set({ scormEntryUrl: "FAILED" } as any).where(eq(mediaVersions.id, versionId));
+      }
+    } catch { /* ignore */ }
+    setTimeout(() => extractionJobs.delete(assetId), 5 * 60 * 1000);
+  }
+}
+
+// ── POST /api/media/:slug/extract-start — start background extraction job ─────
+// Returns immediately with { state: 'running' | 'done' | 'failed' }.
+// If a job is already running for this asset, returns current state without starting a new one.
+router.post("/api/media/:slug/extract-start", async (req: Request, res: Response) => {
+  const { slug } = req.params;
+  const token = req.query.token as string | undefined;
+
+  const resolved = await resolveAsset(slug, token, res);
+  if (!resolved) return;
+  const { asset, version } = resolved;
+
+  // If already extracted in DB, return done immediately
+  const existingEntry = (version as any).scormEntryUrl as string | null;
+  if (existingEntry && existingEntry !== "FAILED") {
+    res.json({ state: "done", pct: 100, uploaded: 0, total: 0, status: "Already extracted" });
+    return;
+  }
+  if (existingEntry === "FAILED") {
+    // Clear FAILED so extraction can retry
+    const db = await getDb();
+    if (db) {
+      await db.update(mediaVersions).set({ scormEntryUrl: null } as any).where(eq(mediaVersions.id, version.id));
+      await db.update(mediaAssets).set({ mediaType: "zip" } as any).where(eq(mediaAssets.id, asset.id));
+    }
+  }
+
+  // If job already running, return current state
+  const existing = extractionJobs.get(asset.id);
+  if (existing && existing.state === "running") {
+    res.json(existing);
+    return;
+  }
+
+  // Start new background job
+  const job: JobState = { state: "running", pct: 0, uploaded: 0, total: 0, status: "Starting\u2026" };
+  extractionJobs.set(asset.id, job);
+  // Fire-and-forget — does NOT await
+  runExtractionJob(asset.id, version.id, asset.slug, version.s3Url).catch(() => {});
+
+  res.json(job);
+});
+
+// ── GET /api/media/:slug/extract-status — poll extraction progress ────────────
+router.get("/api/media/:slug/extract-status", async (req: Request, res: Response) => {
+  const { slug } = req.params;
+  const token = req.query.token as string | undefined;
+
+  const resolved = await resolveAsset(slug, token, res);
+  if (!resolved) return;
+  const { asset, version } = resolved;
+
+  // Check in-memory job first
+  const job = extractionJobs.get(asset.id);
+  if (job) {
+    res.json(job);
+    return;
+  }
+
+  // Fall back to DB state
+  const entryUrl = (version as any).scormEntryUrl as string | null;
+  if (entryUrl && entryUrl !== "FAILED") {
+    res.json({ state: "done", pct: 100, uploaded: 0, total: 0, status: "Extraction complete" });
+  } else if (entryUrl === "FAILED") {
+    res.json({ state: "failed", pct: 0, uploaded: 0, total: 0, status: "Extraction failed" });
+  } else {
+    // No job running and no DB result — job may have been lost (server restart)
+    // Return running so the client keeps polling; it will auto-start via extract-start
+    res.json({ state: "running", pct: 0, uploaded: 0, total: 0, status: "Waiting for extraction to start\u2026" });
   }
 });
 
