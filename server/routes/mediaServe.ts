@@ -433,8 +433,13 @@ function buildExtractingPage(title: string, slug: string, token?: string): strin
       var d = JSON.parse(e.data);
       if (d.pct != null) {
         if (pbar) pbar.style.width = d.pct + '%';
-        if (pct) pct.textContent = d.pct + '% uploaded';
+        if (d.total > 0) {
+          if (pct) pct.textContent = d.pct + '% \u2014 ' + d.uploaded + ' / ' + d.total + ' files';
+        } else {
+          if (pct) pct.textContent = d.pct + '%';
+        }
       }
+      if (d.status && msg) msg.textContent = d.status;
     } catch(ex){}
   });
   es.addEventListener('done', function(e){
@@ -909,46 +914,60 @@ router.get("/api/media/:slug/extract-sse", async (req: Request, res: Response) =
     return;
   }
 
-  // Run extraction with progress reporting
+  // Run extraction with parallel batch uploads and keepalive pings
   const keyPrefix = `media-repository/${asset.slug}-scorm`;
+  // Send a keepalive comment every 15 seconds to prevent proxy timeouts
+  const keepaliveInterval = setInterval(() => {
+    try { res.write(": keepalive\n\n"); } catch { /* ignore */ }
+  }, 15000);
   try {
+    console.log(`[SCORM SSE] Starting extraction for asset ${asset.id} (${asset.slug}), zip: ${version.s3Url}`);
+    send("progress", { pct: 0, uploaded: 0, total: 0, status: "Downloading zip\u2026" });
     const zipRes = await fetch(version.s3Url);
     if (!zipRes.ok) {
-      send("error", { message: "Failed to fetch zip" });
+      clearInterval(keepaliveInterval);
+      console.error(`[SCORM SSE] Failed to fetch zip for asset ${asset.id}: ${zipRes.status} ${zipRes.statusText}`);
+      send("error", { message: `Failed to fetch zip (${zipRes.status})` });
       res.end();
       return;
     }
     const zipBuf = Buffer.from(await zipRes.arrayBuffer());
+    console.log(`[SCORM SSE] Downloaded zip for asset ${asset.id}: ${zipBuf.length} bytes`);
+    send("progress", { pct: 2, uploaded: 0, total: 0, status: "Unpacking zip\u2026" });
     const JSZipLib = (await import("jszip")).default;
     const zip = await JSZipLib.loadAsync(zipBuf);
     const files = zip.files;
     const fileEntries = Object.entries(files).filter(([, f]) => !f.dir);
     const total = fileEntries.length;
+    console.log(`[SCORM SSE] Zip has ${total} files for asset ${asset.id}`);
     const uploadedUrls: Record<string, string> = {};
     let uploaded = 0;
-
-    for (const [relativePath, file] of fileEntries) {
-      const fileBuffer = Buffer.from(await file.async("arraybuffer"));
-      const ext = relativePath.split(".").pop()?.toLowerCase() ?? "";
-      const contentType = MIME_MAP[ext] ?? "application/octet-stream";
-      const s3Key = `${keyPrefix}/${relativePath}`;
-      try {
-        const result = await storagePut(s3Key, fileBuffer, contentType);
+    // Upload in parallel batches of 5 to speed up large packages
+    const BATCH_SIZE = 5;
+    for (let i = 0; i < fileEntries.length; i += BATCH_SIZE) {
+      const batch = fileEntries.slice(i, i + BATCH_SIZE);
+      await Promise.all(batch.map(async ([relativePath, file]) => {
+        const fileBuffer = Buffer.from(await file.async("arraybuffer"));
+        const ext = relativePath.split(".").pop()?.toLowerCase() ?? "";
+        const contentType = MIME_MAP[ext] ?? "application/octet-stream";
+        const s3Key = `${keyPrefix}/${relativePath}`;
         try {
-          const urlObj = new URL(result.url);
-          const encodedPath = urlObj.pathname.split("/").map((seg: string) => encodeURIComponent(decodeURIComponent(seg))).join("/");
-          uploadedUrls[relativePath] = urlObj.origin + encodedPath;
-        } catch {
-          uploadedUrls[relativePath] = result.url;
+          const result = await storagePut(s3Key, fileBuffer, contentType);
+          try {
+            const urlObj = new URL(result.url);
+            const encodedPath = urlObj.pathname.split("/").map((seg: string) => encodeURIComponent(decodeURIComponent(seg))).join("/");
+            uploadedUrls[relativePath] = urlObj.origin + encodedPath;
+          } catch {
+            uploadedUrls[relativePath] = result.url;
+          }
+        } catch (uploadErr) {
+          console.error(`[SCORM SSE] Failed to upload ${relativePath}:`, uploadErr);
         }
-      } catch (uploadErr) {
-        console.error(`[SCORM SSE] Failed to upload ${relativePath}:`, uploadErr);
-      }
-      uploaded++;
-      const pct = Math.round((uploaded / total) * 100);
+        uploaded++;
+      }));
+      const pct = Math.min(95, Math.round(2 + (uploaded / total) * 93));
       send("progress", { pct, uploaded, total });
     }
-
     // Determine entry URL
     let entryUrl: string | null = null;
     const manifestFile = files["imsmanifest.xml"] ?? files["imsmanifest.XML"];
@@ -977,6 +996,8 @@ router.get("/api/media/:slug/extract-sse", async (req: Request, res: Response) =
       if (htmlFiles.length > 0) entryUrl = uploadedUrls[htmlFiles[0]];
     }
 
+    clearInterval(keepaliveInterval);
+    clearInterval(keepaliveInterval);
     // Persist result
     const db = await getDb();
     if (db) {
@@ -993,6 +1014,7 @@ router.get("/api/media/:slug/extract-sse", async (req: Request, res: Response) =
     send("done", { entryUrl });
     res.end();
   } catch (err) {
+    clearInterval(keepaliveInterval);
     console.error("[SCORM SSE] Extraction error:", err);
     send("error", { message: String(err) });
     res.end();
