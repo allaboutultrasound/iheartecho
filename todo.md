@@ -1107,3 +1107,10 @@
 - [x] XHR used instead of fetch() for real-time upload progress tracking (0-95% during upload, 100% on server confirm)
 - [x] Legacy chunked endpoints (/initiate, /chunk, /complete, /status) kept as 410 Gone stubs for backward compatibility
 - [x] All 15 vitest tests pass for the new single-upload flow
+
+## Media Repository — Large File Upload Fix v6 (2026-04-28)
+- [x] Root cause: double-upload bottleneck — file traveled browser→server→Forge, so 400 MB had to traverse user's slow upload connection twice
+- [x] Fix: direct-to-Forge upload — server generates pre-authorized upload URL, browser uploads directly to Forge CDN (file only travels once), server registers metadata
+- [x] Forge API confirmed to support CORS (Access-Control-Allow-Origin: *) so browser can POST directly
+- [x] Progress bar shows real-time upload progress (3-98%) during direct CDN upload
+- [x] All 16 vitest tests pass

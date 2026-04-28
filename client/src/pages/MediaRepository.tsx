@@ -141,50 +141,72 @@ const MEDIA_TYPE_COLOR: Record<MediaType, string> = {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
- * Uploads a file directly to the server in a single request.
- * The server streams it to Forge storage and returns the final URL.
- * Uses XMLHttpRequest for upload progress tracking.
+ * Direct-to-Forge upload:
+ * 1. Ask server for a pre-authorized upload URL (no file data sent to server)
+ * 2. Browser uploads file directly to Forge CDN using XHR (real-time progress)
+ * 3. Notify server to register the completed upload
+ *
+ * The file only travels once: user's computer → Forge CDN.
+ * No double-upload, no server memory pressure, no timeout issues.
  */
 async function chunkedUpload(
   file: File,
   folder: string,
   onProgress: (pct: number) => void
 ): Promise<{ url: string; fileKey: string; sizeBytes: number }> {
-  return new Promise((resolve, reject) => {
+  // Step 1: Get pre-authorized upload URL from server
+  onProgress(1);
+  const prepareRes = await fetch("/api/media-upload/prepare", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({
+      fileName: file.name,
+      mimeType: file.type || "application/octet-stream",
+      folder,
+    }),
+  });
+  if (!prepareRes.ok) {
+    const errData = await prepareRes.json().catch(() => ({})) as { error?: string };
+    throw new Error(errData.error ?? `Prepare failed (${prepareRes.status})`);
+  }
+  const { uploadUrl, fileKey, forgeApiKey } = await prepareRes.json() as {
+    uploadUrl: string;
+    fileKey: string;
+    forgeApiKey: string;
+  };
+
+  // Step 2: Upload file directly to Forge using XHR for progress tracking
+  const forgeUrl = await new Promise<string>((resolve, reject) => {
     const form = new FormData();
     form.append("file", file, file.name);
-    form.append("folder", folder);
 
     const xhr = new XMLHttpRequest();
-    xhr.withCredentials = true;
+    // No credentials needed — we're going directly to Forge (different origin)
+    xhr.withCredentials = false;
 
-    // Track upload progress
     xhr.upload.addEventListener("progress", (e) => {
       if (e.lengthComputable) {
-        // Report 0-95% during upload; 95-100% while server processes
-        onProgress(Math.round((e.loaded / e.total) * 95));
+        // 1% reserved for prepare, 2% for register; 3-98% for actual upload
+        onProgress(3 + Math.round((e.loaded / e.total) * 95));
       }
     });
 
     xhr.addEventListener("load", () => {
       if (xhr.status >= 200 && xhr.status < 300) {
         try {
-          const data = JSON.parse(xhr.responseText) as { url: string; fileKey: string; sizeBytes: number };
-          onProgress(100);
-          resolve(data);
+          const data = JSON.parse(xhr.responseText) as { url: string };
+          resolve(data.url);
         } catch {
-          reject(new Error("Invalid response from server"));
+          reject(new Error("Invalid response from Forge storage"));
         }
       } else {
-        // Try to parse error message from response
-        let errMsg = `Upload failed (${xhr.status})`;
+        let errMsg = `Storage upload failed (${xhr.status})`;
         try {
           const errData = JSON.parse(xhr.responseText);
           errMsg = errData.error ?? errMsg;
         } catch {
-          if (xhr.responseText && xhr.responseText.length < 500) {
-            errMsg = xhr.responseText;
-          }
+          if (xhr.responseText && xhr.responseText.length < 500) errMsg = xhr.responseText;
         }
         reject(new Error(errMsg));
       }
@@ -194,10 +216,33 @@ async function chunkedUpload(
     xhr.addEventListener("abort", () => reject(new Error("Upload cancelled")));
     xhr.addEventListener("timeout", () => reject(new Error("Upload timed out")));
 
-    xhr.open("POST", "/api/media-upload/upload");
-    xhr.timeout = 30 * 60 * 1000; // 30 minute timeout
+    xhr.open("POST", uploadUrl);
+    xhr.setRequestHeader("Authorization", `Bearer ${forgeApiKey}`);
+    xhr.timeout = 60 * 60 * 1000; // 60 minute timeout for very large files
     xhr.send(form);
   });
+
+  // Step 3: Register the completed upload with the server
+  onProgress(99);
+  const registerRes = await fetch("/api/media-upload/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({
+      fileKey,
+      fileName: file.name,
+      mimeType: file.type || "application/octet-stream",
+      sizeBytes: file.size,
+      url: forgeUrl,
+    }),
+  });
+  if (!registerRes.ok) {
+    const errData = await registerRes.json().catch(() => ({})) as { error?: string };
+    throw new Error(errData.error ?? `Register failed (${registerRes.status})`);
+  }
+  const result = await registerRes.json() as { url: string; fileKey: string; sizeBytes: number };
+  onProgress(100);
+  return result;
 }
 
 function formatBytes(bytes: number | null | undefined): string {
@@ -1253,18 +1298,28 @@ function UploadDialog({
         {uploading && (
           <div className="space-y-1">
             <div className="flex justify-between text-xs text-gray-500">
-              <span>{uploadProgress >= 95 && uploadProgress < 100 ? "Saving to storage…" : "Uploading…"}</span>
+              <span>
+                {uploadProgress < 3
+                  ? "Preparing upload…"
+                  : uploadProgress >= 98
+                  ? "Finishing up…"
+                  : "Uploading to storage…"}
+              </span>
               <span>{uploadProgress}%</span>
             </div>
             <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
               <div
-                className={`h-full transition-all duration-300 rounded-full ${uploadProgress >= 95 && uploadProgress < 100 ? "animate-pulse" : ""}`}
+                className="h-full transition-all duration-300 rounded-full"
                 style={{ width: `${uploadProgress}%`, background: BRAND }}
               />
             </div>
-            {uploadProgress >= 95 && uploadProgress < 100 && (
-              <p className="text-xs text-gray-400">Almost done — saving file to storage…</p>
-            )}
+            <p className="text-xs text-gray-400">
+              {uploadProgress < 3
+                ? "Connecting to storage…"
+                : uploadProgress >= 98
+                ? "Registering file…"
+                : `Uploading directly to CDN — ${uploadProgress}% complete`}
+            </p>
           </div>
         )}
         <DialogFooter>
