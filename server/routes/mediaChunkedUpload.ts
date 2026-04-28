@@ -7,26 +7,42 @@
  * Flow:
  *  1. POST /api/media-upload/initiate   → returns uploadId
  *  2. POST /api/media-upload/chunk      → upload each chunk (multipart, field: chunk)
- *  3. POST /api/media-upload/complete   → reassemble and push to S3, returns { url, fileKey }
+ *  3. POST /api/media-upload/complete   → stream-assemble to a temp file, then stream to S3 proxy
  *  4. POST /api/media-upload/abort      → clean up temp files
  *
  * Auth: platform admin only.
  * Temp files are stored in /tmp/media-chunks/<uploadId>/ and cleaned up after complete/abort.
+ *
+ * Memory-safe: chunks are written to disk as they arrive; the complete step
+ * concatenates them into a single temp file and streams it to the storage proxy
+ * without ever loading the full file into a JS Buffer.
  */
 import { Router, Request, Response } from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
-import { storagePut } from "../storage";
+import { ENV } from "../_core/env";
 import { sdk } from "../_core/sdk";
 
 const router = Router();
 const TEMP_DIR = "/tmp/media-chunks";
 
-// Multer instance — store chunk to memory (each chunk is ≤ 5 MB)
+// Multer instance — store each chunk to disk (not memory) to avoid RAM spikes
 const chunkUpload = multer({
-  storage: multer.memoryStorage(),
-  // No size limit — each chunk is small by design
+  storage: multer.diskStorage({
+    destination: (req, _file, cb) => {
+      const uploadId = (req.body as any).uploadId as string | undefined;
+      if (!uploadId) return cb(new Error("uploadId missing"), "");
+      const dir = chunkDir(uploadId);
+      if (!fs.existsSync(dir)) return cb(new Error("Upload session not found"), "");
+      cb(null, dir);
+    },
+    filename: (_req, _file, cb) => {
+      // Temporary name; we'll rename after we know the chunkIndex
+      cb(null, `_incoming_${Date.now()}`);
+    },
+  }),
+  // No size limit — each chunk is small by design (≤ 5 MB)
 });
 
 function chunkDir(uploadId: string): string {
@@ -84,9 +100,14 @@ router.post(
   chunkUpload.single("chunk"),
   async (req: Request, res: Response) => {
     const user = await requireAdmin(req, res);
-    if (!user) return;
+    if (!user) {
+      // Clean up the temp file multer wrote if auth fails
+      if (req.file) try { fs.unlinkSync(req.file.path); } catch {}
+      return;
+    }
     const { uploadId, chunkIndex } = req.body as { uploadId?: string; chunkIndex?: string };
     if (!uploadId || chunkIndex === undefined) {
+      if (req.file) try { fs.unlinkSync(req.file.path); } catch {}
       res.status(400).json({ error: "uploadId and chunkIndex are required" });
       return;
     }
@@ -96,11 +117,13 @@ router.post(
     }
     const dir = chunkDir(uploadId);
     if (!fs.existsSync(dir)) {
+      try { fs.unlinkSync(req.file.path); } catch {}
       res.status(400).json({ error: "Upload session not found" });
       return;
     }
+    // Rename the incoming file to the correct chunk name
     const chunkPath = path.join(dir, `chunk_${String(chunkIndex).padStart(6, "0")}`);
-    fs.writeFileSync(chunkPath, req.file.buffer);
+    fs.renameSync(req.file.path, chunkPath);
     res.json({ received: true, chunkIndex: Number(chunkIndex) });
   }
 );
@@ -119,9 +142,15 @@ router.post("/api/media-upload/complete", async (req: Request, res: Response) =>
     res.status(400).json({ error: "Upload session not found" });
     return;
   }
+
+  // Use a longer timeout for large files (10 minutes)
+  res.setTimeout(10 * 60 * 1000);
+
+  const assembledPath = path.join(dir, "_assembled");
   try {
     const metaRaw = fs.readFileSync(path.join(dir, "_meta.json"), "utf-8");
     const meta = JSON.parse(metaRaw) as { fileName: string; mimeType: string; totalChunks: number };
+
     // Collect chunk files in order
     const chunkFiles = fs
       .readdirSync(dir)
@@ -133,20 +162,72 @@ router.post("/api/media-upload/complete", async (req: Request, res: Response) =>
       });
       return;
     }
-    // Reassemble into a single Buffer
-    const parts = chunkFiles.map((f) => fs.readFileSync(path.join(dir, f)));
-    const assembled = Buffer.concat(parts);
-    // Upload to S3
+
+    // ── Stream-assemble chunks into a single temp file (no memory spike) ──
+    await new Promise<void>((resolve, reject) => {
+      const writeStream = fs.createWriteStream(assembledPath);
+      writeStream.on("error", reject);
+      writeStream.on("finish", resolve);
+
+      (async () => {
+        for (const chunkFile of chunkFiles) {
+          await new Promise<void>((res2, rej2) => {
+            const readStream = fs.createReadStream(path.join(dir, chunkFile));
+            readStream.on("error", rej2);
+            readStream.on("end", res2);
+            readStream.pipe(writeStream, { end: false });
+          });
+        }
+        writeStream.end();
+      })().catch(reject);
+    });
+
+    const sizeBytes = fs.statSync(assembledPath).size;
+
+    // ── Stream the assembled file to the Forge storage proxy ──
     const safeFileName = meta.fileName.replace(/[^a-zA-Z0-9._\- ]/g, "_");
     const ext = meta.fileName.split(".").pop()?.toLowerCase() ?? "bin";
     const randomSuffix = Math.random().toString(36).slice(2, 10);
     const fileKey = `${folder}/${safeFileName}-${randomSuffix}.${ext}`;
-    const { url } = await storagePut(fileKey, assembled, meta.mimeType);
+
+    const forgeBaseUrl = ENV.forgeApiUrl.replace(/\/+$/, "");
+    const uploadUrl = new URL(`v1/storage/upload`, forgeBaseUrl + "/");
+    uploadUrl.searchParams.set("path", fileKey.replace(/^\/+/, ""));
+
+    // Use form-data package for streaming multipart upload
+    const FormDataNode = (await import("form-data")).default;
+    const form = new FormDataNode();
+    form.append("file", fs.createReadStream(assembledPath), {
+      filename: safeFileName,
+      contentType: meta.mimeType,
+      knownLength: sizeBytes,
+    });
+
+    const uploadResponse = await fetch(uploadUrl.toString(), {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${ENV.forgeApiKey}`,
+        ...form.getHeaders(),
+      },
+      body: form as any,
+      // @ts-ignore — Node 18+ fetch supports duplex for streaming bodies
+      duplex: "half",
+    });
+
+    if (!uploadResponse.ok) {
+      const errText = await uploadResponse.text().catch(() => uploadResponse.statusText);
+      throw new Error(`Storage upload failed (${uploadResponse.status}): ${errText}`);
+    }
+
+    const { url } = await uploadResponse.json() as { url: string };
+
     // Cleanup
     cleanupTempDir(uploadId);
-    res.json({ url, fileKey, fileName: meta.fileName, mimeType: meta.mimeType, sizeBytes: assembled.length });
+    res.json({ url, fileKey, fileName: meta.fileName, mimeType: meta.mimeType, sizeBytes });
   } catch (err: any) {
     console.error("[media-chunked-upload] complete error:", err);
+    // Clean up assembled file if it exists
+    try { if (fs.existsSync(assembledPath)) fs.unlinkSync(assembledPath); } catch {}
     cleanupTempDir(uploadId);
     res.status(500).json({ error: err?.message ?? "Assembly failed" });
   }

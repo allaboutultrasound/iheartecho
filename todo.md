@@ -1076,3 +1076,8 @@
 - [x] TEE, ICE, UEA, HOCM, ACHD, Diastolic, Pulm: confirmed already premium-gated
 - [x] TTE and Strain: confirmed remain free (no overlay)
 - [x] Tab order updated: TTE → Strain → CHD → Fetal → TEE → ICE → UEA → HOCM → ACHD → Diastolic → Pulm
+
+## Media Repository — Large File Upload Error (2026-04-24)
+- [x] Diagnosed: complete step loaded all chunks into a single Buffer (OOM for 400+ MB files)
+- [x] Fixed: chunks now written to disk via multer.diskStorage; complete step stream-assembles to a temp file and streams to Forge proxy via form-data package (no memory spike)
+- [x] Fixed pre-existing TS error in mediaRouter.ts (ArrayBuffer cast)
