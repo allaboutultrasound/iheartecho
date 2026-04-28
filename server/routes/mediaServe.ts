@@ -17,7 +17,8 @@ import { getDb } from "../db";
 import { mediaAssets, mediaVersions, mediaAccessRules, mediaAccessLogs } from "../../drizzle/schema";
 import { and, eq, isNull } from "drizzle-orm";
 import { storagePut } from "../storage";
-import JSZip from "jszip";
+import { PassThrough, Readable } from "stream";
+import unzipper from "unzipper";
 
 const router = Router();
 
@@ -39,94 +40,7 @@ const MIME_MAP: Record<string, string> = {
   swf: "application/x-shockwave-flash",
 };
 
-/**
- * Extract a SCORM/HTML zip from a remote URL, upload all files to S3, and
- * return the URL of the entry-point HTML.
- *
- * Entry-point detection order:
- *  1. href of <resource type="webcontent"> in imsmanifest.xml
- *  2. index.html / index.htm at root
- *  3. First .html file found
- */
-async function extractZipAndGetEntryUrl(
-  zipUrl: string,
-  keyPrefix: string
-): Promise<string | null> {
-  try {
-    const zipRes = await fetch(zipUrl);
-    if (!zipRes.ok) {
-      console.error(`[SCORM] Failed to fetch zip: ${zipRes.status} ${zipUrl}`);
-      return null;
-    }
-    const zipBuf = Buffer.from(await zipRes.arrayBuffer());
-    const zip = await JSZip.loadAsync(zipBuf);
-    const files = zip.files;
-    const uploadedUrls: Record<string, string> = {};
 
-    // Upload all files in the zip to S3
-    for (const [relativePath, file] of Object.entries(files)) {
-      if (file.dir) continue;
-      const fileBuffer = Buffer.from(await file.async("arraybuffer"));
-      const ext = relativePath.split(".").pop()?.toLowerCase() ?? "";
-      const contentType = MIME_MAP[ext] ?? "application/octet-stream";
-      const s3Key = `${keyPrefix}/${relativePath}`;
-      try {
-        const result = await storagePut(s3Key, fileBuffer, contentType);
-        // Encode spaces and special chars in the URL path for browser compatibility
-        try {
-          const urlObj = new URL(result.url);
-          const encodedPath = urlObj.pathname.split('/').map((seg: string) => encodeURIComponent(decodeURIComponent(seg))).join('/');
-          uploadedUrls[relativePath] = urlObj.origin + encodedPath;
-        } catch {
-          uploadedUrls[relativePath] = result.url;
-        }
-      } catch (uploadErr) {
-        console.error(`[SCORM] Failed to upload ${relativePath}:`, uploadErr);
-      }
-    }
-
-    if (Object.keys(uploadedUrls).length === 0) {
-      console.error("[SCORM] No files were uploaded from zip — all files may be empty/null");
-      return "FAILED";
-    }
-
-    // Try to find the entry point from imsmanifest.xml
-    const manifestFile = files["imsmanifest.xml"] ?? files["imsmanifest.XML"];
-    if (manifestFile) {
-      const manifestText = await manifestFile.async("text");
-      // Look for <resource ... href="..." type="webcontent"...>
-      const hrefMatch =
-        manifestText.match(/<resource[^>]+type=["'][^"']*webcontent[^"']*["'][^>]+href=["']([^"']+)["']/i) ??
-        manifestText.match(/<resource[^>]+href=["']([^"']+)["'][^>]+type=["'][^"']*webcontent[^"']*["']/i) ??
-        manifestText.match(/<resource[^>]+href=["']([^"']+)["']/i);
-      if (hrefMatch) {
-        const entryPath = hrefMatch[1].replace(/\\/g, "/");
-        if (uploadedUrls[entryPath]) return uploadedUrls[entryPath];
-        // Try case-insensitive match
-        const lcEntry = entryPath.toLowerCase();
-        const match = Object.keys(uploadedUrls).find(k => k.toLowerCase() === lcEntry);
-        if (match) return uploadedUrls[match];
-      }
-    }
-
-    // Fallback: index.html / index.htm at root
-    if (uploadedUrls["index.html"]) return uploadedUrls["index.html"];
-    if (uploadedUrls["index.htm"]) return uploadedUrls["index.htm"];
-
-    // Fallback: first HTML file found (sorted so root-level files come first)
-    const htmlFiles = Object.keys(uploadedUrls)
-      .filter(k => k.endsWith(".html") || k.endsWith(".htm"))
-      .sort((a, b) => a.split("/").length - b.split("/").length);
-    if (htmlFiles.length > 0) return uploadedUrls[htmlFiles[0]];
-
-    // No HTML entry found — mark as failed so we don't retry indefinitely
-    console.error("[SCORM] No HTML entry point found in zip. Files uploaded:", Object.keys(uploadedUrls).slice(0, 10));
-    return "FAILED";
-  } catch (err) {
-    console.error("[SCORM] Extraction failed:", err);
-    return "FAILED";
-  }
-}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -914,44 +828,75 @@ router.get("/api/media/:slug/extract-sse", async (req: Request, res: Response) =
     return;
   }
 
-  // Run extraction with parallel batch uploads and keepalive pings
+  // Run extraction using streaming range requests — never loads the full zip into memory
   const keyPrefix = `media-repository/${asset.slug}-scorm`;
-  // Send a keepalive comment every 15 seconds to prevent proxy timeouts
+  const zipUrl = version.s3Url;
+
+  // Send a keepalive comment every 15 seconds to prevent proxy/Cloud Run timeouts
   const keepaliveInterval = setInterval(() => {
     try { res.write(": keepalive\n\n"); } catch { /* ignore */ }
   }, 15000);
+
+  // Build a custom unzipper source that uses HTTP Range requests
+  // stream() must return synchronously — pipe async fetch into a PassThrough
+  function makeFetchRangeSource(url: string) {
+    return {
+      stream: (offset: number, length: number) => {
+        const pass = new PassThrough();
+        const end = length ? offset + length - 1 : "";
+        fetch(url, { headers: { Range: `bytes=${offset}-${end}` } })
+          .then(r => {
+            if (!r.ok && r.status !== 206) {
+              pass.destroy(new Error(`Range request failed: ${r.status}`));
+              return;
+            }
+            // @ts-ignore — r.body is a web ReadableStream; pipe via Node Readable
+            Readable.fromWeb(r.body as any).pipe(pass);
+          })
+          .catch((e: Error) => pass.destroy(e));
+        return pass;
+      },
+      size: () =>
+        fetch(url, { method: "HEAD" }).then(r => {
+          const cl = r.headers.get("content-length");
+          if (!cl) throw new Error("Missing content-length header");
+          return parseInt(cl, 10);
+        }),
+    };
+  }
+
   try {
-    console.log(`[SCORM SSE] Starting extraction for asset ${asset.id} (${asset.slug}), zip: ${version.s3Url}`);
-    send("progress", { pct: 0, uploaded: 0, total: 0, status: "Downloading zip\u2026" });
-    const zipRes = await fetch(version.s3Url);
-    if (!zipRes.ok) {
-      clearInterval(keepaliveInterval);
-      console.error(`[SCORM SSE] Failed to fetch zip for asset ${asset.id}: ${zipRes.status} ${zipRes.statusText}`);
-      send("error", { message: `Failed to fetch zip (${zipRes.status})` });
-      res.end();
-      return;
-    }
-    const zipBuf = Buffer.from(await zipRes.arrayBuffer());
-    console.log(`[SCORM SSE] Downloaded zip for asset ${asset.id}: ${zipBuf.length} bytes`);
-    send("progress", { pct: 2, uploaded: 0, total: 0, status: "Unpacking zip\u2026" });
-    const JSZipLib = (await import("jszip")).default;
-    const zip = await JSZipLib.loadAsync(zipBuf);
-    const files = zip.files;
-    const fileEntries = Object.entries(files).filter(([, f]) => !f.dir);
+    console.log(`[SCORM SSE] Starting streaming extraction for asset ${asset.id} (${asset.slug})`);
+    send("progress", { pct: 0, uploaded: 0, total: 0, status: "Reading zip directory\u2026" });
+
+    const source = makeFetchRangeSource(zipUrl);
+    const directory = await unzipper.Open.custom(source);
+    const fileEntries = directory.files.filter((f: any) => !f.type || f.type !== "Directory");
     const total = fileEntries.length;
     console.log(`[SCORM SSE] Zip has ${total} files for asset ${asset.id}`);
+    send("progress", { pct: 2, uploaded: 0, total, status: `Uploading ${total} files\u2026` });
+
     const uploadedUrls: Record<string, string> = {};
     let uploaded = 0;
-    // Upload in parallel batches of 5 to speed up large packages
+    let manifestText: string | null = null;
+
+    // Upload in parallel batches of 5
     const BATCH_SIZE = 5;
     for (let i = 0; i < fileEntries.length; i += BATCH_SIZE) {
       const batch = fileEntries.slice(i, i + BATCH_SIZE);
-      await Promise.all(batch.map(async ([relativePath, file]) => {
-        const fileBuffer = Buffer.from(await file.async("arraybuffer"));
-        const ext = relativePath.split(".").pop()?.toLowerCase() ?? "";
-        const contentType = MIME_MAP[ext] ?? "application/octet-stream";
-        const s3Key = `${keyPrefix}/${relativePath}`;
+      await Promise.all(batch.map(async (file: any) => {
+        const relativePath: string = file.path;
         try {
+          // Stream the file content from the zip via range request
+          const chunks: Buffer[] = [];
+          const fileStream = file.stream();
+          for await (const chunk of fileStream) {
+            chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+          }
+          const fileBuffer = Buffer.concat(chunks);
+          const ext = relativePath.split(".").pop()?.toLowerCase() ?? "";
+          const contentType = MIME_MAP[ext] ?? "application/octet-stream";
+          const s3Key = `${keyPrefix}/${relativePath}`;
           const result = await storagePut(s3Key, fileBuffer, contentType);
           try {
             const urlObj = new URL(result.url);
@@ -960,23 +905,27 @@ router.get("/api/media/:slug/extract-sse", async (req: Request, res: Response) =
           } catch {
             uploadedUrls[relativePath] = result.url;
           }
+          // Capture manifest text for entry point detection
+          const lp = relativePath.toLowerCase();
+          if (lp === "imsmanifest.xml" && !manifestText) {
+            manifestText = fileBuffer.toString("utf8");
+          }
         } catch (uploadErr) {
-          console.error(`[SCORM SSE] Failed to upload ${relativePath}:`, uploadErr);
+          console.error(`[SCORM SSE] Failed to process ${relativePath}:`, uploadErr);
         }
         uploaded++;
       }));
       const pct = Math.min(95, Math.round(2 + (uploaded / total) * 93));
       send("progress", { pct, uploaded, total });
     }
+
     // Determine entry URL
     let entryUrl: string | null = null;
-    const manifestFile = files["imsmanifest.xml"] ?? files["imsmanifest.XML"];
-    if (manifestFile) {
-      const manifestText = await manifestFile.async("text");
+    if (manifestText) {
       const hrefMatch =
-        manifestText.match(/<resource[^>]+type=["'][^"']*webcontent[^"']*["'][^>]+href=["']([^"']+)["']/i) ??
-        manifestText.match(/<resource[^>]+href=["']([^"']+)["'][^>]+type=["'][^"']*webcontent[^"']*["']/i) ??
-        manifestText.match(/<resource[^>]+href=["']([^"']+)["']/i);
+        (manifestText as string).match(/<resource[^>]+type=["'][^"']*webcontent[^"']*["'][^>]+href=["']([^"']+)["']/i) ??
+        (manifestText as string).match(/<resource[^>]+href=["']([^"']+)["'][^>]+type=["'][^"']*webcontent[^"']*["']/i) ??
+        (manifestText as string).match(/<resource[^>]+href=["']([^"']+)["']/i);
       if (hrefMatch) {
         const entryPath = hrefMatch[1].replace(/\\/g, "/");
         if (uploadedUrls[entryPath]) entryUrl = uploadedUrls[entryPath];
@@ -997,7 +946,6 @@ router.get("/api/media/:slug/extract-sse", async (req: Request, res: Response) =
     }
 
     clearInterval(keepaliveInterval);
-    clearInterval(keepaliveInterval);
     // Persist result
     const db = await getDb();
     if (db) {
@@ -1010,7 +958,7 @@ router.get("/api/media/:slug/extract-sse", async (req: Request, res: Response) =
       await db.update(mediaVersions).set({ scormEntryUrl: entryUrl } as any).where(eq(mediaVersions.id, version.id));
       await db.update(mediaAssets).set({ mediaType: "scorm" } as any).where(eq(mediaAssets.id, asset.id));
     }
-
+    console.log(`[SCORM SSE] Extraction complete for asset ${asset.id}: ${entryUrl}`);
     send("done", { entryUrl });
     res.end();
   } catch (err) {
