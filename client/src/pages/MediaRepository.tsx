@@ -543,7 +543,7 @@ function AssetDetailPanel({
       {/* Modal header row: compact single-line */}
       <div className="flex-shrink-0 flex items-center gap-3 px-4 pt-3 pb-3 border-b border-gray-100">
         <div className="flex-shrink-0">
-          <AssetThumbnail asset={asset as AssetRow} size="sm" />
+          <AssetThumbnail asset={asset as unknown as AssetRow} size="sm" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-gray-800 truncate leading-tight">{asset.title}</p>
