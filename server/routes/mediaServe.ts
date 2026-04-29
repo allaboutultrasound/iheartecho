@@ -357,8 +357,9 @@ function buildExtractingPage(title: string, slug: string, token?: string): strin
       clearInterval(pollTimer);
       if (pbar) pbar.style.width = '100%';
       if (msg) msg.textContent = 'Done! Loading content\u2026';
-      // Redirect to view URL (which will serve the SCORM page directly)
-      setTimeout(function(){ window.location.replace('${viewUrl}'); }, 400);
+      // Use entryUrl directly if available (avoids extra round-trip through /view)
+      var dest = (d.entryUrl) ? d.entryUrl : '${viewUrl}';
+      setTimeout(function(){ window.location.replace(dest); }, 400);
     } else if (d.state === 'failed') {
       clearInterval(pollTimer);
       failed = true;
@@ -397,6 +398,9 @@ function buildExtractingPage(title: string, slug: string, token?: string): strin
           // Job started or already running \u2014 begin polling
           poll();
           pollTimer = setInterval(poll, 2000);
+        } else if (d.state === 'done' && d.entryUrl) {
+          // Already extracted — go directly to content
+          window.location.replace(d.entryUrl);
         }
       })
       .catch(function() {
@@ -723,14 +727,11 @@ router.get("/api/media/:slug/view", async (req: Request, res: Response) => {
       return;
     }
     if (existingEntryUrl) {
-      // Already extracted — serve the iframe immediately
-      res.setHeader("Content-Type", "text/html; charset=utf-8");
-      res.send(buildScormPage(asset.title, existingEntryUrl));
+      // Already extracted — redirect directly to the entry URL (full-page, no iframe wrapper)
+      res.redirect(302, existingEntryUrl);
       return;
     }
-    // Not yet extracted — show the SSE loading page.
-    // The EventSource in the page will call /api/media/:slug/extract-sse
-    // which runs the extraction and streams progress back to the browser.
+    // Extraction still in progress — show polling page
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.send(buildExtractingPage(asset.title, slug, token));
     return;
@@ -806,9 +807,11 @@ router.get("/api/media/:slug/embed", async (req: Request, res: Response) => {
       const downloadUrl = `/api/media/${slug}/download${token ? `?token=${encodeURIComponent(token)}` : ""}`;
       res.send(buildNoEntryPage(asset.title, downloadUrl));
     } else if (entryUrl) {
-      res.send(buildScormPage(asset.title, entryUrl));
+      // Already extracted — redirect directly to the entry URL (full-page)
+      res.redirect(302, entryUrl);
+      return;
     } else {
-      // Show SSE loading page — EventSource will call /api/media/:slug/extract-sse
+      // Extraction still in progress — show polling page
       res.send(buildExtractingPage(asset.title, slug, token));
     }
     return;
@@ -1114,10 +1117,36 @@ export function startExtractionJobForAsset(
   // Skip if already running on this instance
   const existing = extractionJobs.get(assetId);
   if (existing && existing.state === "running") return;
-  // Set up job state and fire
-  const job: JobState = { state: "running", pct: 0, uploaded: 0, total: 0, status: "Starting\u2026" };
-  extractionJobs.set(assetId, job);
-  runExtractionJob(assetId, versionId, slug, s3Url).catch((err) => {
-    console.error("[SCORM JOB] Unhandled error in startExtractionJobForAsset:", err);
-  });
+  // Check DB state first — skip if already extracted or currently running on another instance
+  // This is async but fire-and-forget is fine here
+  (async () => {
+    try {
+      const db = await getDb();
+      if (db) {
+        const [v] = await db.select().from(mediaVersions).where(eq(mediaVersions.id, versionId));
+        if (v) {
+          const existingEntry = (v as any).scormEntryUrl as string | null;
+          const dbState = (v as any).extractionState as string | null;
+          // Already extracted successfully — nothing to do
+          if (existingEntry && existingEntry !== "FAILED") {
+            console.log(`[SCORM JOB] Asset ${assetId} already extracted, skipping.`);
+            return;
+          }
+          // Another instance is already running — skip
+          if (dbState === "running") {
+            console.log(`[SCORM JOB] Asset ${assetId} extraction already running on another instance, skipping.`);
+            return;
+          }
+        }
+      }
+    } catch (e) {
+      console.error("[SCORM JOB] DB check failed, proceeding with extraction:", e);
+    }
+    // Set up job state and fire
+    const job: JobState = { state: "running", pct: 0, uploaded: 0, total: 0, status: "Starting\u2026" };
+    extractionJobs.set(assetId, job);
+    runExtractionJob(assetId, versionId, slug, s3Url).catch((err) => {
+      console.error("[SCORM JOB] Unhandled error in startExtractionJobForAsset:", err);
+    });
+  })();
 }

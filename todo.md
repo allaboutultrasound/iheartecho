@@ -1120,3 +1120,9 @@
 - [x] Fix: added 50 MB size limit to SCORM extraction in both createAsset and addVersion procedures — files larger than 50 MB are stored as-is without extraction
 - [x] TypeScript compiles cleanly (no errors)
 - [x] Update mediaRouter.ts: remove JSZip import and synchronous extractScormZip function, add startExtractionJobForAsset calls in createAsset, addVersion, and reExtractScorm — extraction now happens at upload time (non-blocking background job), not at view time
+- [x] Fix view route: when scormEntryUrl is set, do 302 redirect directly to scormEntryUrl (no iframe wrapper, no server loading page) — SCORM content plays full-page in browser immediately like Teachific
+- [x] Fix embed route: same redirect-to-scormEntryUrl approach
+- [x] Fix polling page JS: when extract-start returns state=done with entryUrl, redirect directly to entryUrl without extra round-trip through /view
+- [x] Fix startExtractionJobForAsset: check DB state before starting — skip if already extracted or running on another instance
+- [x] Fix view route: 302 redirect directly to scormEntryUrl — SCORM plays full-page immediately like Teachific
+- [x] Fix startExtractionJobForAsset: check DB state before starting
