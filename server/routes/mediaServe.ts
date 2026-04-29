@@ -1029,21 +1029,22 @@ router.post("/api/media/:slug/extract-start", async (req: Request, res: Response
     return;
   }
 
-  // If another instance is already running (DB says 'running'), return running state
-  if (dbState === "running") {
-    const prog = v.extractionProgress ? JSON.parse(v.extractionProgress) : {};
-    res.json({ state: "running", pct: prog.pct ?? 0, uploaded: prog.uploaded ?? 0, total: prog.total ?? 0, status: prog.status ?? "Extracting\u2026" });
-    return;
-  }
-
   // If in-memory job is already running on this instance, return it
   const existing = extractionJobs.get(asset.id);
   if (existing && existing.state === "running") {
     res.json(existing);
     return;
   }
-
-  // Clear FAILED state so extraction can retry
+  // If DB says 'running' but no in-memory job on this instance, the previous Cloud Run
+  // instance was recycled mid-extraction. Reset DB state and restart the job here.
+  if (dbState === "running") {
+    const db2 = await getDb();
+    if (db2) {
+      await db2.update(mediaVersions).set({ extractionState: null, extractionProgress: null } as any).where(eq(mediaVersions.id, version.id));
+    }
+    // Fall through to start a new job below
+  }
+    // Clear FAILED state so extraction can retry
   if (existingEntry === "FAILED" || dbState === "failed") {
     const db = await getDb();
     if (db) {
@@ -1091,8 +1092,10 @@ router.get("/api/media/:slug/extract-status", async (req: Request, res: Response
   } else if (entryUrl === "FAILED" || dbState === "failed") {
     res.json({ state: "failed", pct: prog.pct ?? 0, uploaded: prog.uploaded ?? 0, total: prog.total ?? 0, status: prog.status ?? "Extraction failed" });
   } else if (dbState === "running") {
-    // Another instance is running the job — return DB progress
-    res.json({ state: "running", pct: prog.pct ?? 0, uploaded: prog.uploaded ?? 0, total: prog.total ?? 0, status: prog.status ?? "Extracting\u2026" });
+    // DB says running but no in-memory job on this instance.
+    // The Cloud Run instance that started the job was recycled.
+    // Return 'idle' so the client calls extract-start to restart the job.
+    res.json({ state: "idle", pct: prog.pct ?? 0, uploaded: prog.uploaded ?? 0, total: prog.total ?? 0, status: "Restarting extraction\u2026" });
   } else {
     // No job running anywhere — client should call extract-start again
     res.json({ state: "idle", pct: 0, uploaded: 0, total: 0, status: "Waiting for extraction to start\u2026" });
