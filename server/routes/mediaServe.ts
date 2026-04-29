@@ -181,6 +181,56 @@ async function proxyFile(
   }
 }
 
+/**
+ * Build a full-page HTML that loads a SCORM entry from the ZIP streaming endpoint.
+ * Uses a <base> tag so all relative URLs in the SCORM content resolve correctly.
+ */
+function buildZipStreamPage(title: string, slug: string, entryPath: string, token?: string): string {
+  const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
+  // URL-encode each path segment so spaces and special chars work in browser URLs
+  const encodedEntryPath = entryPath.split("/").map((seg: string) => encodeURIComponent(seg)).join("/");
+  const fullEntryUrl = `/api/media/${slug}/zip-file/${encodedEntryPath}${tokenParam}`;
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>${escapeHtml(title)}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { height: 100%; height: -webkit-fill-available; }
+    body {
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      overflow: hidden;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+    }
+    iframe {
+      flex: 1;
+      width: 100%;
+      border: none;
+      display: block;
+      height: 100dvh;
+      height: 100vh;
+    }
+  </style>
+</head>
+<body>
+  <iframe
+    src="${fullEntryUrl}"
+    title="${escapeHtml(title)}"
+    allowfullscreen
+    allow="fullscreen; autoplay"
+    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation allow-modals"
+  ></iframe>
+</body>
+</html>`;
+}
+
 /** Build a full-page HTML wrapper that loads a SCORM entry URL in an iframe. */
 function buildScormPage(title: string, entryUrl: string): string {
   return `<!DOCTYPE html>
@@ -727,11 +777,23 @@ router.get("/api/media/:slug/view", async (req: Request, res: Response) => {
       return;
     }
     if (existingEntryUrl) {
-      // Already extracted — redirect directly to the entry URL (full-page, no iframe wrapper)
+      // Already extracted to S3 — redirect directly to the entry URL (full-page, no iframe wrapper)
       res.redirect(302, existingEntryUrl);
       return;
     }
-    // Extraction still in progress — show polling page
+    // Not yet extracted — use ZIP streaming instead (instant, no extraction needed)
+    try {
+      const entryPath = await findScormEntryPath(version.id, url);
+      if (entryPath) {
+        // Build a wrapper page that loads the SCORM content via ZIP streaming
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
+        res.send(buildZipStreamPage(asset.title, slug, entryPath, token));
+        return;
+      }
+    } catch (e) {
+      console.error('[ZIP STREAM] Failed to find entry path:', e);
+    }
+    // Fallback: show extraction page
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.send(buildExtractingPage(asset.title, slug, token));
     return;
@@ -756,6 +818,43 @@ router.get("/api/media/:slug/view", async (req: Request, res: Response) => {
   // ── Everything else: viewer page ────────────────────────────────────────────
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.send(buildViewerPage(asset.title, url, asset.mediaType, mime));
+});
+
+// ── ZIP file streaming route — serve individual files from ZIP on S3 ──────────
+// Pattern: GET /api/media/:slug/zip-file/*filepath
+// Streams the requested file directly from the ZIP using HTTP Range requests.
+// This avoids extracting all files to S3 — the ZIP stays as-is on S3.
+router.get("/api/media/:slug/zip-file/*", async (req: Request, res: Response) => {
+  const { slug } = req.params;
+  const token = req.query.token as string | undefined;
+  const resolved = await resolveAsset(slug, token, res);
+  if (!resolved) return;
+  const { version } = resolved;
+  const filePath = (req.params as any)[0] as string; // everything after /zip-file/
+  if (!filePath) { res.status(400).json({ error: 'Missing file path' }); return; }
+  try {
+    const source = makeFetchRangeSource(version.s3Url);
+    const dir = await unzipper.Open.custom(source);
+    // Find the file (case-insensitive)
+    const entry = dir.files.find((f: any) => f.path === filePath || f.path.toLowerCase() === filePath.toLowerCase());
+    if (!entry) { res.status(404).json({ error: 'File not found in ZIP' }); return; }
+    const ext = filePath.split('.').pop()?.toLowerCase() ?? '';
+    const contentType = MIME_MAP[ext] ?? 'application/octet-stream';
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    // Allow SCORM content to be framed and run scripts
+    res.setHeader('X-Frame-Options', 'ALLOWALL');
+    res.setHeader('Content-Security-Policy', "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:");
+    // Stream the file
+    const fileStream = entry.stream();
+    fileStream.pipe(res);
+    fileStream.on('error', (err: Error) => {
+      if (!res.headersSent) res.status(500).json({ error: 'Stream error' });
+    });
+  } catch (err) {
+    console.error('[ZIP STREAM] Error:', err);
+    if (!res.headersSent) res.status(500).json({ error: 'Failed to stream file from ZIP' });
+  }
 });
 
 // ── DOWNLOAD route — force attachment ─────────────────────────────────────────
@@ -807,11 +906,18 @@ router.get("/api/media/:slug/embed", async (req: Request, res: Response) => {
       const downloadUrl = `/api/media/${slug}/download${token ? `?token=${encodeURIComponent(token)}` : ""}`;
       res.send(buildNoEntryPage(asset.title, downloadUrl));
     } else if (entryUrl) {
-      // Already extracted — redirect directly to the entry URL (full-page)
+      // Already extracted to S3 — redirect directly to the entry URL (full-page)
       res.redirect(302, entryUrl);
       return;
     } else {
-      // Extraction still in progress — show polling page
+      // Not yet extracted — use ZIP streaming
+      try {
+        const entryPath = await findScormEntryPath(version.id, url);
+        if (entryPath) {
+          res.send(buildZipStreamPage(asset.title, slug, entryPath, token));
+          return;
+        }
+      } catch { /* fall through */ }
       res.send(buildExtractingPage(asset.title, slug, token));
     }
     return;
@@ -825,6 +931,66 @@ router.get("/api/media/:slug/embed", async (req: Request, res: Response) => {
 
   res.send(buildViewerPage(asset.title, url, asset.mediaType, mime));
 });
+
+// ── ZIP directory cache ──────────────────────────────────────────────────────
+// Keyed by versionId. Caches the parsed ZIP directory so we don't re-read the
+// central directory on every file request. Entries expire after 30 minutes.
+interface ZipDirEntry { path: string; type: string; }
+const zipDirCache = new Map<number, { files: ZipDirEntry[]; expiry: number }>();
+
+async function getZipDirectory(versionId: number, zipUrl: string): Promise<ZipDirEntry[]> {
+  const cached = zipDirCache.get(versionId);
+  if (cached && cached.expiry > Date.now()) return cached.files;
+  const source = makeFetchRangeSource(zipUrl);
+  const dir = await unzipper.Open.custom(source);
+  const files: ZipDirEntry[] = dir.files.map((f: any) => ({ path: f.path, type: f.type }));
+  zipDirCache.set(versionId, { files, expiry: Date.now() + 30 * 60 * 1000 });
+  return files;
+}
+
+/** Find the SCORM entry point from a ZIP directory listing. */
+async function findScormEntryPath(versionId: number, zipUrl: string): Promise<string | null> {
+  const files = await getZipDirectory(versionId, zipUrl);
+  const filePaths = files.filter((f: ZipDirEntry) => f.type === 'File').map((f: ZipDirEntry) => f.path);
+  // Try imsmanifest.xml first
+  const manifestPath = filePaths.find((p: string) => p.toLowerCase().endsWith('imsmanifest.xml'));
+  if (manifestPath) {
+    // Read the manifest to find the entry href
+    try {
+      const source2 = makeFetchRangeSource(zipUrl);
+      const dir2 = await unzipper.Open.custom(source2);
+      const manifestFile = dir2.files.find((f: any) => f.path === manifestPath);
+      if (manifestFile) {
+        const chunks: Buffer[] = [];
+        const stream = manifestFile.stream();
+        for await (const chunk of stream) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+        const manifestText = Buffer.concat(chunks).toString('utf8');
+        const hrefMatch =
+          manifestText.match(/<resource[^>]+type=["'][^"']*webcontent[^"']*["'][^>]+href=["']([^"']+)["']/i) ??
+          manifestText.match(/<resource[^>]+href=["']([^"']+)["'][^>]+type=["'][^"']*webcontent[^"']*["']/i) ??
+          manifestText.match(/<resource[^>]+href=["']([^"']+)["']/i);
+        if (hrefMatch) {
+          const entryPath = hrefMatch[1].replace(/\\/g, '/');
+          // Resolve relative to manifest directory
+          const manifestDir = manifestPath.includes('/') ? manifestPath.substring(0, manifestPath.lastIndexOf('/') + 1) : '';
+          const fullPath = manifestDir + entryPath;
+          const match = filePaths.find((p: string) => p === fullPath || p.toLowerCase() === fullPath.toLowerCase());
+          if (match) return match;
+          // Also try without manifest dir prefix
+          const match2 = filePaths.find((p: string) => p === entryPath || p.toLowerCase() === entryPath.toLowerCase());
+          if (match2) return match2;
+        }
+      }
+    } catch { /* fall through to index.html search */ }
+  }
+  // Fall back to index.html
+  const indexHtml = filePaths.find((p: string) => p.toLowerCase().endsWith('/index.html') || p.toLowerCase() === 'index.html');
+  if (indexHtml) return indexHtml;
+  // Any HTML file (shallowest path)
+  const htmlFiles = filePaths.filter((p: string) => p.endsWith('.html') || p.endsWith('.htm'))
+    .sort((a: string, b: string) => a.split('/').length - b.split('/').length);
+  return htmlFiles[0] ?? null;
+}
 
 // ── Background extraction job map ────────────────────────────────────────────
 // Keyed by asset ID. Survives across HTTP requests so polling can read progress.
