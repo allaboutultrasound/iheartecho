@@ -34,6 +34,28 @@ function daysAgoStr(n: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+export function aggregateDailyCounts<T>(
+  rows: T[],
+  getDate: (row: T) => Date | string | number | null | undefined
+) {
+  const totals = new Map<string, number>();
+
+  for (const row of rows) {
+    const value = getDate(row);
+    if (!value) continue;
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) continue;
+
+    const day = date.toISOString().slice(0, 10);
+    totals.set(day, (totals.get(day) ?? 0) + 1);
+  }
+
+  return Array.from(totals.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([day, total]) => ({ day, total }));
+}
+
 export const engagementRouter = router({
   /**
    * Platform-level overview stats + 30-day daily activity chart.
@@ -110,11 +132,11 @@ export const engagementRouter = router({
       .groupBy(sql`DATE(${quickfireAttempts.createdAt})`)
       .orderBy(sql`DATE(${quickfireAttempts.createdAt})`);
 
-    // 30-day case views
-    const dailyCaseViewRows = await db
+    // 30-day case views. Aggregate in Node to avoid dialect differences around
+    // DATE(...) expressions in GROUP BY clauses.
+    const recentCaseViewRows = await db
       .select({
-        day: sql<string>`DATE(${caseViewEvents.viewedAt})`,
-        total: count(),
+        viewedAt: caseViewEvents.viewedAt,
       })
       .from(caseViewEvents)
       .where(
@@ -122,9 +144,12 @@ export const engagementRouter = router({
           eq(caseViewEvents.isAdminView, false),
           gte(caseViewEvents.viewedAt, since30),
         )
-      )
-      .groupBy(sql`DATE(${caseViewEvents.viewedAt})`)
-      .orderBy(sql`DATE(${caseViewEvents.viewedAt})`);
+      );
+
+    const dailyCaseViewRows = aggregateDailyCounts(
+      recentCaseViewRows,
+      (row) => row.viewedAt
+    );
 
     return {
       totals: {

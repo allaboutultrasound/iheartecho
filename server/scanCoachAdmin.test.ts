@@ -4,9 +4,133 @@
  * Covers: auth guard, listOverrides, upsertOverride, deleteOverride, clearImageField.
  * Note: uploadImage is not tested here as it requires a live S3 connection.
  */
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { appRouter } from "./routers";
 import type { TrpcContext } from "./_core/context";
+
+type MockScanCoachOverride = Record<string, unknown> & {
+  id: number;
+  module: string;
+  viewId: string;
+};
+
+const scanCoachDbState = vi.hoisted(() => ({
+  rows: [] as MockScanCoachOverride[],
+  nextId: 1,
+}));
+
+function extractWherePredicate(condition: unknown): (row: MockScanCoachOverride) => boolean {
+  if (!condition || typeof condition !== "object") return () => true;
+
+  const columns: string[] = [];
+  const values: unknown[] = [];
+
+  function walk(value: unknown) {
+    if (!value || typeof value !== "object") return;
+
+    const record = value as Record<string, unknown>;
+    if (
+      typeof record.name === "string" &&
+      record.table &&
+      record.config &&
+      !columns.includes(record.name)
+    ) {
+      columns.push(record.name);
+    }
+
+    if ("value" in record && !Array.isArray(record.value)) {
+      values.push(record.value);
+    }
+
+    for (const [key, child] of Object.entries(record)) {
+      if (key === "table") continue;
+      if (Array.isArray(child)) {
+        child.forEach(walk);
+      } else {
+        walk(child);
+      }
+    }
+  }
+
+  walk(condition);
+
+  const filters = columns
+    .slice(0, values.length)
+    .map((column, index) => [column, values[index]] as const);
+
+  return (row) => filters.every(([column, value]) => row[column] === value);
+}
+
+function projectRow(
+  row: MockScanCoachOverride,
+  projection?: Record<string, unknown>
+): Record<string, unknown> {
+  if (!projection) return { ...row };
+  return Object.fromEntries(Object.keys(projection).map((key) => [key, row[key]]));
+}
+
+function makeQueryResult(
+  resolveRows: () => MockScanCoachOverride[],
+  projection?: Record<string, unknown>
+) {
+  const materialize = () => resolveRows().map((row) => projectRow(row, projection));
+
+  return {
+    where(condition: unknown) {
+      const predicate = extractWherePredicate(condition);
+      return makeQueryResult(() => resolveRows().filter(predicate), projection);
+    },
+    limit(count: number) {
+      return materialize().slice(0, count);
+    },
+    then<TResult1 = Record<string, unknown>[], TResult2 = never>(
+      onfulfilled?: ((value: Record<string, unknown>[]) => TResult1 | PromiseLike<TResult1>) | null,
+      onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null
+    ) {
+      return Promise.resolve(materialize()).then(onfulfilled, onrejected);
+    },
+  };
+}
+
+const mockDb = {
+  select: (projection?: Record<string, unknown>) => ({
+    from: () => makeQueryResult(() => scanCoachDbState.rows, projection),
+  }),
+  insert: () => ({
+    values: async (payload: Omit<MockScanCoachOverride, "id">) => {
+      const id = scanCoachDbState.nextId++;
+      scanCoachDbState.rows.push({ id, ...payload });
+      return [{ insertId: id }];
+    },
+  }),
+  update: () => ({
+    set: (payload: Partial<MockScanCoachOverride>) => ({
+      where: async (condition: unknown) => {
+        const predicate = extractWherePredicate(condition);
+        scanCoachDbState.rows = scanCoachDbState.rows.map((row) =>
+          predicate(row) ? { ...row, ...payload } : row
+        );
+        return [];
+      },
+    }),
+  }),
+  delete: () => ({
+    where: async (condition: unknown) => {
+      const predicate = extractWherePredicate(condition);
+      scanCoachDbState.rows = scanCoachDbState.rows.filter((row) => !predicate(row));
+      return [];
+    },
+  }),
+};
+
+vi.mock("./db", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./db")>();
+  return {
+    ...actual,
+    getDb: vi.fn(async () => mockDb),
+    getUserRoles: vi.fn(async () => []),
+  };
+});
 
 // ─── Context helpers ──────────────────────────────────────────────────────────
 
@@ -52,6 +176,11 @@ function makeUnauthCtx(): TrpcContext {
 }
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
+
+beforeEach(() => {
+  scanCoachDbState.rows = [];
+  scanCoachDbState.nextId = 1;
+});
 
 describe("scanCoachAdmin.listOverrides", () => {
   // listOverrides is a publicProcedure — accessible by all users including unauthenticated
