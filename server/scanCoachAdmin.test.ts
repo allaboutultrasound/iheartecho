@@ -69,34 +69,32 @@ function projectRow(
   return Object.fromEntries(Object.keys(projection).map((key) => [key, row[key]]));
 }
 
-function selectRows(
-  projection: Record<string, unknown> | undefined,
-  predicate: (row: MockScanCoachOverride) => boolean = () => true
+function makeQueryResult(
+  resolveRows: () => MockScanCoachOverride[],
+  projection?: Record<string, unknown>
 ) {
-  return scanCoachDbState.rows.filter(predicate).map((row) => projectRow(row, projection));
-}
+  const materialize = () => resolveRows().map((row) => projectRow(row, projection));
 
-function makeQueryResult<T>(resolveRows: () => T[]) {
   return {
     where(condition: unknown) {
       const predicate = extractWherePredicate(condition);
-      return makeQueryResult(() => resolveRows().filter((row) => predicate(row as MockScanCoachOverride)));
+      return makeQueryResult(() => resolveRows().filter(predicate), projection);
     },
     limit(count: number) {
-      return resolveRows().slice(0, count);
+      return materialize().slice(0, count);
     },
-    then<TResult1 = T[], TResult2 = never>(
-      onfulfilled?: ((value: T[]) => TResult1 | PromiseLike<TResult1>) | null,
+    then<TResult1 = Record<string, unknown>[], TResult2 = never>(
+      onfulfilled?: ((value: Record<string, unknown>[]) => TResult1 | PromiseLike<TResult1>) | null,
       onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null
     ) {
-      return Promise.resolve(resolveRows()).then(onfulfilled, onrejected);
+      return Promise.resolve(materialize()).then(onfulfilled, onrejected);
     },
   };
 }
 
 const mockDb = {
   select: (projection?: Record<string, unknown>) => ({
-    from: () => makeQueryResult(() => selectRows(projection)),
+    from: () => makeQueryResult(() => scanCoachDbState.rows, projection),
   }),
   insert: () => ({
     values: async (payload: Omit<MockScanCoachOverride, "id">) => {
