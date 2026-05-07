@@ -78,6 +78,10 @@ async function startServer() {
   registerUnsubscribeRoute(app);
   // Server-side login/magic-verify routes (bypasses Cloudflare fetch-response cookie stripping)
   registerAuthLoginRoute(app);
+  // Health check endpoint for Railway
+  app.get("/api/health", (_req, res) => {
+    res.json({ status: "ok", timestamp: new Date().toISOString() });
+  });
   // tRPC API
   app.use(
     "/api/trpc",
