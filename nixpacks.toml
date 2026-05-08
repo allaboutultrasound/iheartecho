@@ -3,12 +3,13 @@ nixPkgs = ["nodejs_22"]
 
 [phases.install]
 cmds = [
-  "corepack enable pnpm",
-  "pnpm install --frozen-lockfile"
+  "npx --yes pnpm@10 install --frozen-lockfile"
 ]
 
 [phases.build]
-cmds = ["pnpm run build"]
+cmds = [
+  "npx --yes pnpm@10 run build"
+]
 
 [start]
 cmd = "node dist/index.js"
