@@ -407,3 +407,38 @@ export async function enrollInFreeMembership(
 export async function getAllThinkificUsers(): Promise<ThinkificUser[]> {
   return fetchAllPages<ThinkificUser>("/users");
 }
+
+// ─── Cached Member Count ─────────────────────────────────────────────────────
+
+let _cachedMemberCount: { total: number; fetchedAt: number } | null = null;
+const MEMBER_COUNT_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+
+/**
+ * Fetch the total Thinkific user count (single lightweight API call).
+ * Cached for 10 minutes to stay well under the 120 req/min rate limit.
+ * Returns 0 if Thinkific credentials are not configured or the API call fails.
+ */
+export async function getThinkificMemberCount(): Promise<number> {
+  if (
+    _cachedMemberCount &&
+    Date.now() - _cachedMemberCount.fetchedAt < MEMBER_COUNT_CACHE_TTL_MS
+  ) {
+    return _cachedMemberCount.total;
+  }
+
+  if (!process.env.THINKIFIC_API_KEY || !process.env.THINKIFIC_SUBDOMAIN) {
+    return _cachedMemberCount?.total ?? 0;
+  }
+
+  try {
+    const data = await thinkificFetch<PaginatedResponse<ThinkificUser>>(
+      "/users?page=1&limit=1"
+    );
+    const total = data.meta.pagination.total_items;
+    _cachedMemberCount = { total, fetchedAt: Date.now() };
+    return total;
+  } catch (err) {
+    console.error("[Thinkific] Failed to fetch member count:", err);
+    return _cachedMemberCount?.total ?? 0;
+  }
+}

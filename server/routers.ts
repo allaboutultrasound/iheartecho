@@ -25,6 +25,7 @@ import { soundBytesRouter } from "./routers/soundBytesRouter";
 import { abTestRouter } from "./routers/abTestRouter";
 import { navigatorAdminRouter } from "./routers/navigatorAdminRouter";
 import { mediaRouter } from "./routers/mediaRouter";
+import { getThinkificMemberCount } from "./thinkific";
 import {
   getUserById,
   getUsersByIds,
@@ -114,7 +115,6 @@ import {
   removeRole,
   ensureUserRole,
   listUsersWithRoles,
-  countUsers,
   getUsersByRole,
   getDiyUsersForLab,
   type AppRole,
@@ -2313,14 +2313,14 @@ export const appRouter = router({
   stats: router({
     /**
      * Total user count for public display.
-     * Returns realCount + DISPLAY_OFFSET so the displayed number is always
-     * ahead of the true registration count by a fixed amount.
-     * Admin panel uses admin.userCount which returns the raw count.
+     * Returns the live Thinkific member total + a fixed display offset so the
+     * number shown publicly reflects the full All About Ultrasound community.
+     * Admin panel uses admin.userCount which returns the raw local DB count.
      */
     userCount: publicProcedure.query(async () => {
-      const DISPLAY_OFFSET = 3997; // fixed display offset — real count + 3997 shown publicly
-      const real = await countUsers();
-      return { total: real + DISPLAY_OFFSET };
+      const DISPLAY_OFFSET = 3992;
+      const thinkificTotal = await getThinkificMemberCount();
+      return { total: thinkificTotal + DISPLAY_OFFSET };
     }),
   }),
 

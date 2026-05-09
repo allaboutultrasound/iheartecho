@@ -21,14 +21,15 @@
  * Every event (including filtered ones) is logged to the webhookEvents table.
  *
  * WELCOME EMAIL POLICY:
- *   A welcome email with a 72-hour magic sign-in link is sent for:
- *     • order.created (complete) for any direct iHeartEcho product
- *     • enrollment.created for any direct iHeartEcho product
+ *   A welcome email with a 72-hour magic sign-in link is sent ONLY for:
+ *     • order.created (complete) for any direct iHeartEcho product (= a purchase)
  *   NOT sent for:
- *     • enrollment.updated (re-activations / status changes)
+ *     • enrollment.created / enrollment.updated (auto-enrollments, gifted access)
  *     • subscription.activated (re-activations)
  *     • user.signup (no product purchase — silent account creation)
  *     • All About Ultrasound free membership (allaboutultrasound.com bundles)
+ *   Welcome emails are also sent on first login attempt (OAuth callback or
+ *   email/password registration) — see oauth.ts and emailAuthRouter.ts.
  *
  * Setup in Thinkific:
  *   Admin → Settings → Webhooks → Add Webhook
@@ -396,7 +397,8 @@ export function registerThinkificWebhook(app: Router) {
           return res.status(200).json({ ok: true, message: msg });
         }
 
-        // Send welcome email only on enrollment.created (not enrollment.updated re-activations)
+        // Welcome emails are only sent on purchase (order.created) or login attempt.
+        // Enrollments (including gifted/free) do NOT trigger welcome emails.
         return await grantAccess({
           resource,
           action,
@@ -404,7 +406,7 @@ export function registerThinkificWebhook(app: Router) {
           productName: resolvedProductName,
           payload,
           res,
-          sendWelcome: action === "created",
+          sendWelcome: false,
         });
       }
 

@@ -5,7 +5,7 @@
  * Thinkific credentials or third-party API availability.
  */
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
-import { getUserByEmail, getVisibleProducts, parseCreditHoursFromName } from "./thinkific";
+import { getUserByEmail, getVisibleProducts, parseCreditHoursFromName, getThinkificMemberCount } from "./thinkific";
 
 function paginatedResponse<T>(items: T[]) {
   return {
@@ -136,6 +136,33 @@ describe("Thinkific API", () => {
       type: "SDMS",
     });
     expect(parseCreditHoursFromName("Registry Review Quiz - No Credits")).toBeNull();
+  });
+
+  it("should fetch Thinkific member count from API", async () => {
+    // Set env vars so the function doesn't bail early
+    const origKey = process.env.THINKIFIC_API_KEY;
+    const origSub = process.env.THINKIFIC_SUBDOMAIN;
+    process.env.THINKIFIC_API_KEY = "test-api-key";
+    process.env.THINKIFIC_SUBDOMAIN = "test-subdomain";
+
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce(
+      mockJsonResponse({
+        items: [{ id: 1, email: "user@test.com", first_name: "Test", last_name: "User", full_name: "Test User" }],
+        meta: { pagination: { current_page: 1, next_page: null, total_pages: 50, total_items: 12538 } },
+      })
+    );
+
+    const count = await getThinkificMemberCount();
+    expect(count).toBe(12538);
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+
+    // Second call should use cache (no additional fetch)
+    const count2 = await getThinkificMemberCount();
+    expect(count2).toBe(12538);
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+
+    process.env.THINKIFIC_API_KEY = origKey;
+    process.env.THINKIFIC_SUBDOMAIN = origSub;
   });
 
   it("should return null for unknown user email", async () => {

@@ -206,7 +206,7 @@ export default function Home() {
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: true,
   });
-  // The server already adds the display offset (3997), so use the returned total directly.
+  // The server returns Thinkific member total + display offset (3992), so use directly.
   // Only fall back when the query hasn't resolved yet (undefined).
   const memberTarget = userCountData?.total ?? 0;
   // Animated count-up — starts as soon as the target is known
