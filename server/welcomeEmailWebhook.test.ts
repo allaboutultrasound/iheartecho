@@ -247,8 +247,8 @@ describe("buildWelcomeWithMagicLinkEmail — HTML content", () => {
       membershipLabel: "Premium Access",
       roles: [],
     });
-    // The circular logo CDN URL should be present
-    expect(result.htmlBody).toContain("tMerpTNEMefRhZwO.png");
+    // The circular logo is served from the app's transferred static assets.
+    expect(result.htmlBody).toContain("/assets/transferred/tMerpTNEMefRhZwO-f4738607.png");
   });
 
   it("includes the All About Ultrasound copyright in the footer", () => {
