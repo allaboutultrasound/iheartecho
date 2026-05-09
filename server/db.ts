@@ -84,6 +84,7 @@ import {
   type AccreditationChecklist,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
+import { buildPublicAppUrl } from "./_core/appUrl";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -331,8 +332,7 @@ export async function generateWelcomeMagicLink(userId: number): Promise<string> 
   const token = crypto.randomBytes(48).toString('hex');
   const expiry = new Date(Date.now() + 72 * 60 * 60 * 1000); // 72 hours
   await setMagicLinkToken(userId, token, expiry);
-  const appUrl = process.env.VITE_APP_URL || 'https://app.iheartecho.com';
-  return `${appUrl}/auth/magic?token=${token}`;
+  return buildPublicAppUrl(`/auth/magic?token=${token}`);
 }
 
 

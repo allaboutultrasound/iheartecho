@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { COOKIE_NAME, DEMO_COOKIE_NAME, TWO_HOURS_MS } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
+import { buildPublicAppUrl, getPublicAppUrl } from "./_core/appUrl";
 import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { storagePut } from "./storage";
@@ -280,8 +281,7 @@ export const appRouter = router({
         await setPendingEmail(ctx.user.id, newEmail, token, expiry);
 
         // Build verification URL
-        const appUrl = process.env.VITE_APP_URL || 'https://app.iheartecho.com';
-        const verificationUrl = `${appUrl}/verify-email?token=${token}&type=change`;
+        const verificationUrl = buildPublicAppUrl(`/verify-email?token=${token}&type=change`);
 
         const firstName = (currentUser.displayName || currentUser.name || 'there').split(' ')[0];
         const emailPayload = buildEmailChangeVerificationEmail({
@@ -354,8 +354,7 @@ export const appRouter = router({
 
         await setPasswordResetToken(user.id, token, expiry);
 
-        const appUrl = process.env.VITE_APP_URL || 'https://app.iheartecho.com';
-        const resetUrl = `${appUrl}/reset-password?token=${token}`;
+        const resetUrl = buildPublicAppUrl(`/reset-password?token=${token}`);
 
         const firstName = (user.displayName || user.name || 'there').split(' ')[0];
         const emailPayload = buildPasswordResetEmail({ firstName, resetUrl });
@@ -409,7 +408,7 @@ export const appRouter = router({
         console.log(`[magic-link] Request for: ${email}`);
         console.log(`[magic-link] SENDGRID_API_KEY set: ${!!process.env.SENDGRID_API_KEY}, length: ${process.env.SENDGRID_API_KEY?.length ?? 0}`);
         console.log(`[magic-link] SENDGRID_FROM_EMAIL: ${process.env.SENDGRID_FROM_EMAIL ?? '(not set)'}`);
-        console.log(`[magic-link] VITE_APP_URL: ${process.env.VITE_APP_URL ?? '(not set)'}`);
+        console.log(`[magic-link] Public app URL: ${getPublicAppUrl()}`);
 
         const user = await getUserByEmail(email);
         console.log(`[magic-link] User found: ${!!user}, id: ${user?.id ?? 'none'}`);
@@ -426,8 +425,7 @@ export const appRouter = router({
         await setMagicLinkToken(user.id, token, expiry);
         console.log(`[magic-link] Token stored for user ${user.id}`);
 
-        const appUrl = process.env.VITE_APP_URL || 'https://app.iheartecho.com';
-        const magicUrl = `${appUrl}/auth/magic?token=${token}`;
+        const magicUrl = buildPublicAppUrl(`/auth/magic?token=${token}`);
 
         const firstName = (user.displayName || user.name || 'there').split(' ')[0];
         const emailPayload = buildMagicLinkEmail({ firstName, magicUrl });
@@ -1150,7 +1148,7 @@ export const appRouter = router({
           if (input.notifySonographer === "Yes" && input.notifySonographerEmail) {
             try {
               const { sendEmail, buildPeerReviewFeedbackEmail } = await import('./_core/email');
-              const appUrl = process.env.VITE_APP_URL ?? "https://iheartecho.com";
+              const appUrl = getPublicAppUrl();
               const reviewerName = ctx.user.name ?? ctx.user.email ?? "Your reviewer";
               const examType = input.examType ?? "Echo Study";
               const examDate = input.examDos ?? input.dateReviewCompleted ?? new Date().toLocaleDateString();
@@ -1190,7 +1188,7 @@ export const appRouter = router({
           if (input.notifyAdmin === "Yes" && input.notifyAdminEmail) {
             try {
               const { sendEmail, buildPeerReviewFeedbackEmail } = await import('./_core/email');
-              const appUrl = process.env.VITE_APP_URL ?? "https://iheartecho.com";
+              const appUrl = getPublicAppUrl();
               const reviewerName = ctx.user.name ?? ctx.user.email ?? "A reviewer";
               const examType = input.examType ?? "Echo Study";
               const examDate = input.examDos ?? input.dateReviewCompleted ?? new Date().toLocaleDateString();
@@ -1911,8 +1909,7 @@ export const appRouter = router({
         // Send email to physician
         try {
           const { sendEmail } = await import("./_core/email");
-          const appUrl = process.env.VITE_APP_URL || "https://app.iheartecho.com";
-          const formUrl = `${appUrl}/physician-review/${accessToken}`;
+          const formUrl = buildPublicAppUrl(`/physician-review/${accessToken}`);
           const physicianName = input.reviewerName || "Physician";
           const labName = (lab as any).organization || "the lab";
           await sendEmail({
@@ -2081,8 +2078,7 @@ export const appRouter = router({
           const { getUserById: getUser } = await import("./db");
           const creator = await getUser(invitation.createdByUserId);
           if (creator?.email) {
-            const appUrl = process.env.VITE_APP_URL || "https://app.iheartecho.com";
-            const step2Url = `${appUrl}/accreditation?tab=physician-review&step2=${submissionId}`;
+            const step2Url = buildPublicAppUrl(`/accreditation?tab=physician-review&step2=${submissionId}`);
             await sendEmail({
               to: { name: creator.displayName || creator.name || "Lab Admin", email: creator.email },
               subject: `Over-Read Completed &#8212; ${invitation.examType} (${invitation.examIdentifier})`,
