@@ -141,12 +141,12 @@ const MEDIA_TYPE_COLOR: Record<MediaType, string> = {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /**
- * Direct-to-Forge upload:
+ * Direct-to-R2 upload:
  * 1. Ask server for a pre-authorized upload URL (no file data sent to server)
- * 2. Browser uploads file directly to Forge CDN using XHR (real-time progress)
+ * 2. Browser uploads file directly to R2 using XHR (real-time progress)
  * 3. Notify server to register the completed upload
  *
- * The file only travels once: user's computer → Forge CDN.
+ * The file only travels once: user's computer → R2.
  * No double-upload, no server memory pressure, no timeout issues.
  */
 async function chunkedUpload(
@@ -170,19 +170,18 @@ async function chunkedUpload(
     const errData = await prepareRes.json().catch(() => ({})) as { error?: string };
     throw new Error(errData.error ?? `Prepare failed (${prepareRes.status})`);
   }
-  const { uploadUrl, fileKey, forgeApiKey } = await prepareRes.json() as {
+  const { uploadUrl, fileKey, publicUrl, method, headers } = await prepareRes.json() as {
     uploadUrl: string;
     fileKey: string;
-    forgeApiKey: string;
+    publicUrl: string;
+    method?: "PUT" | "POST";
+    headers?: Record<string, string>;
   };
 
-  // Step 2: Upload file directly to Forge using XHR for progress tracking
-  const forgeUrl = await new Promise<string>((resolve, reject) => {
-    const form = new FormData();
-    form.append("file", file, file.name);
-
+  // Step 2: Upload file directly to object storage using XHR for progress tracking
+  await new Promise<void>((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    // No credentials needed — we're going directly to Forge (different origin)
+    // No credentials needed — the presigned URL already authorizes this upload.
     xhr.withCredentials = false;
 
     xhr.upload.addEventListener("progress", (e) => {
@@ -194,12 +193,7 @@ async function chunkedUpload(
 
     xhr.addEventListener("load", () => {
       if (xhr.status >= 200 && xhr.status < 300) {
-        try {
-          const data = JSON.parse(xhr.responseText) as { url: string };
-          resolve(data.url);
-        } catch {
-          reject(new Error("Invalid response from Forge storage"));
-        }
+        resolve();
       } else {
         let errMsg = `Storage upload failed (${xhr.status})`;
         try {
@@ -216,10 +210,12 @@ async function chunkedUpload(
     xhr.addEventListener("abort", () => reject(new Error("Upload cancelled")));
     xhr.addEventListener("timeout", () => reject(new Error("Upload timed out")));
 
-    xhr.open("POST", uploadUrl);
-    xhr.setRequestHeader("Authorization", `Bearer ${forgeApiKey}`);
+    xhr.open(method ?? "PUT", uploadUrl);
+    Object.entries(headers ?? {}).forEach(([name, value]) => {
+      xhr.setRequestHeader(name, value);
+    });
     xhr.timeout = 60 * 60 * 1000; // 60 minute timeout for very large files
-    xhr.send(form);
+    xhr.send(file);
   });
 
   // Step 3: Register the completed upload with the server
@@ -233,7 +229,7 @@ async function chunkedUpload(
       fileName: file.name,
       mimeType: file.type || "application/octet-stream",
       sizeBytes: file.size,
-      url: forgeUrl,
+      url: publicUrl,
     }),
   });
   if (!registerRes.ok) {

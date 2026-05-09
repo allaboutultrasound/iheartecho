@@ -1,6 +1,6 @@
 /**
  * bulk-generate-questions.mjs
- * Generates 5 MCQ questions per topic across 9 clinical topics using the Forge API,
+ * Generates 5 MCQ questions per topic across 9 clinical topics using the AI gateway,
  * then inserts them directly into the database.
  *
  * Usage: node scripts/bulk-generate-questions.mjs
@@ -14,12 +14,12 @@ import { dirname, join } from "path";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: join(__dirname, "../.env") });
 
-const FORGE_API_URL = process.env.BUILT_IN_FORGE_API_URL?.replace(/\/+$/, "") ?? "";
-const FORGE_API_KEY = process.env.BUILT_IN_FORGE_API_KEY ?? "";
+const AI_GATEWAY_URL = process.env.AI_GATEWAY_URL?.replace(/\/+$/, "") ?? "";
+const AI_GATEWAY_API_KEY = process.env.AI_GATEWAY_API_KEY ?? "";
 const DATABASE_URL = process.env.DATABASE_URL ?? "";
 
-if (!FORGE_API_URL || !FORGE_API_KEY) {
-  console.error("❌ Missing BUILT_IN_FORGE_API_URL or BUILT_IN_FORGE_API_KEY");
+if (!AI_GATEWAY_URL || !AI_GATEWAY_API_KEY) {
+  console.error("❌ Missing AI_GATEWAY_URL or AI_GATEWAY_API_KEY");
   process.exit(1);
 }
 if (!DATABASE_URL) {
@@ -56,11 +56,11 @@ Return exactly 5 questions as a valid JSON object matching this format:
 
 Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
 
-  const response = await fetch(`${FORGE_API_URL}/v1/chat/completions`, {
+  const response = await fetch(`${AI_GATEWAY_URL}/v1/chat/completions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${FORGE_API_KEY}`,
+      Authorization: `Bearer ${AI_GATEWAY_API_KEY}`,
     },
     body: JSON.stringify({
       model: "gpt-4o",
@@ -71,14 +71,14 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
 
   if (!response.ok) {
     const errBody = await response.text();
-    throw new Error(`Forge API ${response.status}: ${errBody.substring(0, 200)}`);
+    throw new Error(`AI gateway ${response.status}: ${errBody.substring(0, 200)}`);
   }
 
   const data = await response.json();
-  if (data.error) throw new Error(`Forge error: ${data.error.message}`);
+  if (data.error) throw new Error(`AI gateway error: ${data.error.message}`);
 
   let text = data.choices?.[0]?.message?.content ?? "";
-  if (!text) throw new Error("Empty response from Forge API");
+  if (!text) throw new Error("Empty response from AI gateway");
 
   // Strip markdown fences if present
   text = text.replace(/^```(?:json)?\s*/im, "").replace(/\s*```\s*$/im, "").trim();

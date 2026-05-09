@@ -203,7 +203,7 @@ export const appRouter = router({
         const bcrypt = await import('bcryptjs');
         const currentHash = await getUserPasswordHash(ctx.user.id);
         if (!currentHash) {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Password change is not available for OAuth-only accounts. Please use the forgot password flow.' });
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Password change is not available until you set a password. Please use the forgot password flow.' });
         }
         const isValid = await bcrypt.compare(input.currentPassword, currentHash);
         if (!isValid) {
@@ -343,8 +343,8 @@ export const appRouter = router({
         const user = await getUserByEmail(email);
 
         // Always return success to prevent email enumeration
-        // Send reset email to any registered account (including OAuth-only accounts without a passwordHash)
-        // — this allows OAuth users to set a password for the first time via the reset flow
+        // Send reset email to any registered account, including imported accounts
+        // without a passwordHash so they can set a first password.
         if (!user) {
           return { success: true };
         }
@@ -467,8 +467,8 @@ export const appRouter = router({
         // Consume the token immediately (one-time use)
         await clearMagicLinkToken(user.id);
 
-        // Determine the openId for session creation
-        // Email/password accounts use synthetic openId; OAuth accounts use their real openId
+        // Determine the openId for session creation. Imported users may already
+        // have a real openId; email/password users use a synthetic one.
         const openId = user.openId ?? `email:${user.email!.toLowerCase().trim()}`;
         const name = user.displayName || user.name || user.email || '';
 

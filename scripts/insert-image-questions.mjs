@@ -11,11 +11,16 @@ if (!DB_URL) throw new Error("DATABASE_URL not set");
 
 const conn = await mysql.createConnection(DB_URL);
 
-// CDN URLs for the uploaded echo images
-const PLAX_LABELED = "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/OkpDOCEQdNSksuFC.png?Expires=1804564207&Signature=cAI7D4Pm~1FigofsOtukEIRdmaMBQa9Ssy6IzkMwE5~apQCdAY2hK9xvB1CtBMEvGs9cv7Yb3lEtIbyfdC6oTvwdgGDFfSWJgMPmyeBmKP4uu1ZY4uuVMqEuBwnWAh97sDKDEgd~gw2LLF95gmyZ0jvPF1s-QHXaoSGl9ng7qTRaRRlcfx~QNlVLGJ5qWUNaSmxEmQu5LOFsN8ZiDWmYVZXQGfu~77QHLX5njti4uKkiHOSAFeqt0IuNrwmKCxfiUNYfolDytjYoTI6KKFYDbkSHKQ~ml~XM3d9MCiEze7OR3Ecrq8DO7cCU0wxwg49OB3lR58HLEhBaxhBmYSDXA__&Key-Pair-Id=K2HSFNDJXOU9YS";
-const PLAX_NORMAL = "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/EloGCUVyhJitLrHa.jpg?Expires=1804564207&Signature=tkFBPbzRxPsCbAhA4hb0EpoeYOUxU8iV-3bvpNGvcB~bCSTRB4drIt1EiiSrfjW5NTY~MQSkptPoxPKRgTfHuHFw0rtcIqmPQEiupyMPwC~mDj2UV6NcqxVRD2-pSx-x3EWUJuxJ0WTDl~KKgBhMnBPBqA2ORrPuQhBMCJBHrOkpK3OtnJqEbkBT6UGX9OzzDrMl2lgEoGhE6K~njbzGXhTXlPHQwCrbGjdjPxuu~Fe1Vu~a2gS7rUb40C1gA5NuP685zzJqTmjnDVvKBdn5nT~gcT~JciLLb1u45H-LI~qJJkoDGLsBdWc9dPq6mwfN3MEjzYbK1BRRAhRA-mxbvg__&Key-Pair-Id=K2HSFNDJXOU9YS";
-const A4C_LABELED = "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/lrDITMCqnBPodjrf.png?Expires=1804564207&Signature=JY2-ZC-5NXBXoYKTNZOs91~clts02LkoBixVtjUKTKbzAu8Djd-5MRrtJRq3MdqJSwEOA1yjl~xh6PyusYM0zUvEr6xtRS5XCmGjoTpn7HBqmzXZN6Z9WDIwTGoN46ebIqy3Xm3FfYik2NB9ospmp9rPp0TLi~yMTkSOzN8CoPV-5vOf9m1GLtKsi2qEWrzxTDpvB4SoP6uNRTVj3DvfmCeEcB4sRj39kal1yXMoXmMPzwxW-cKNW-y3eFT5ZYS6bCDZQxegXpdtbD-2dkH0oPT5xi03avtPvi9JCaKnyBoW2gvBAuFvxi84uBsLmo3f~nBKhFwUaLoBXaBAyTJvXA__&Key-Pair-Id=K2HSFNDJXOU9YS";
-const A4C_NORMAL = "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/oqMpzCspSVIAABAv.jpg?Expires=1804564207&Signature=ZyIqeOWnMOlPOKGKiFfJ0ltDClpGhmfOpYb8L7EEdDXOSAFgxAUrO1NqyCXPztUMWpmKhPxxxjTMaHAyeF3Rtrl6tV4CP1wxA1C8bSgFP-LgFljKnkEJrOcne7n-bcoCrLHOy77C9jcVwtgydBEChbCke-upQSnHAwOLQnG14gL61lk9sGBEgi9lLOTvVH0uieh2UuzyfnTKu0hGB8IZ6om87rTz-qy8JetC8QyX6ZhWywlGPBMTySQYBUeCTbOmTRsk149kT4wEpN7G94NX43DvBQ4S2bYPLnfRQdddjtUevoDv~W8g2xDxRdRXMzYemjMDpIjGPJdURdV2f2jFmA__&Key-Pair-Id=K2HSFNDJXOU9YS";
+function requireImageUrl(name) {
+  const value = process.env[name]?.trim();
+  if (!value) throw new Error(`${name} must point to a Railway/R2-hosted image URL`);
+  return value;
+}
+
+const PLAX_LABELED = requireImageUrl("SAMPLE_PLAX_LABELED_URL");
+const PLAX_NORMAL = requireImageUrl("SAMPLE_PLAX_NORMAL_URL");
+const A4C_LABELED = requireImageUrl("SAMPLE_A4C_LABELED_URL");
+const A4C_NORMAL = requireImageUrl("SAMPLE_A4C_NORMAL_URL");
 
 const questions = [
   {

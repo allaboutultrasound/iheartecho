@@ -17,13 +17,13 @@ import { createPatchedFetch } from "./patchedFetch";
  * Creates an OpenAI-compatible provider with patched fetch.
  */
 function createLLMProvider() {
-  const baseURL = ENV.forgeApiUrl.endsWith("/v1")
-    ? ENV.forgeApiUrl
-    : `${ENV.forgeApiUrl}/v1`;
+  const baseURL = ENV.aiGatewayUrl.endsWith("/v1")
+    ? ENV.aiGatewayUrl
+    : `${ENV.aiGatewayUrl}/v1`;
 
   return createOpenAI({
     baseURL,
-    apiKey: ENV.forgeApiKey,
+    apiKey: ENV.aiGatewayApiKey,
     fetch: createPatchedFetch(fetch),
   });
 }

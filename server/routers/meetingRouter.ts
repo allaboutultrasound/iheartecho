@@ -40,7 +40,7 @@ async function getOrgId(userId: number): Promise<number> {
   return row.orgId;
 }
 
-/** Generate AI meeting minutes from transcript using Forge LLM */
+/** Generate AI meeting minutes from transcript using the configured AI gateway */
 async function generateMinutesFromTranscript(
   meetingTitle: string,
   agenda: string | null | undefined,
@@ -69,11 +69,11 @@ Use clean, professional HTML with <p>, <ul>, <li>, <table>, <tr>, <th>, <td> tag
 Use Arial font. Keep it concise and clinical. Do not include CSS styles inline.`;
 
   try {
-    const response = await fetch(`${ENV.forgeApiUrl}/v1/chat/completions`, {
+    const response = await fetch(`${ENV.aiGatewayUrl}/v1/chat/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${ENV.forgeApiKey}`,
+        Authorization: `Bearer ${ENV.aiGatewayApiKey}`,
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",

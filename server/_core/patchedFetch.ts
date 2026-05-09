@@ -1,8 +1,8 @@
 /**
- * Patched Fetch for Manus Forge Proxy
+ * Patched Fetch for streaming AI gateways
  *
- * Creates a patched fetch that fixes known issues with the Forge proxy.
- * Only needed when using Forge API (BUILT_IN_FORGE_API_URL) for streaming tool calls.
+ * Creates a patched fetch that fixes known issues with streaming gateway chunks.
+ * Only needed when the configured AI gateway emits empty tool-call types.
  *
  * @example
  * ```ts
@@ -10,15 +10,15 @@
  * import { createPatchedFetch } from "./_core/patchedFetch";
  *
  * const openai = createOpenAI({
- *   baseURL: "https://forge.manus.im/v1",
- *   apiKey: process.env.FORGE_API_KEY,
+ *   baseURL: `${process.env.AI_GATEWAY_URL}/v1`,
+ *   apiKey: process.env.AI_GATEWAY_API_KEY,
  *   fetch: createPatchedFetch(fetch),
  * });
  * ```
  */
 
 /**
- * Creates a patched fetch that fixes known issues with the Forge proxy.
+ * Creates a patched fetch that fixes known issues with streaming gateways.
  *
  * Known issues fixed:
  * - Empty "type" field in tool call streaming chunks (should be "function")
@@ -69,7 +69,7 @@ export function createPatchedFetch(originalFetch: typeof fetch): typeof fetch {
             buffer = buffer.slice(separatorIndex + eventSeparator.length);
 
             // Fix: Empty type field in tool calls
-            // Proxy sends "type":"" instead of "type":"function"
+            // Some gateways send "type":"" instead of "type":"function".
             const fixedEvent = completeEvent.replace(
               /"type":""/g,
               '"type":"function"'

@@ -260,10 +260,10 @@ export const emailAuthRouter = router({
 
       if (!user) throw invalidError;
       if (!user.passwordHash) {
-        // Account exists but was created via OAuth — guide them
+        // Account exists but has no local password yet — guide them
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: "This account was created with Google/Microsoft/Apple. Please use social sign-in.",
+          message: "This account does not have a password yet. Please use the forgot password flow to set one.",
         });
       }
       if (user.isPending) {
@@ -381,8 +381,8 @@ export const emailAuthRouter = router({
         .limit(1);
 
       // Always return success to avoid email enumeration
-      // Send reset email to any registered account (including OAuth-only accounts without a passwordHash)
-      // — this allows OAuth users to set a password for the first time via the reset flow
+      // Send reset email to any registered account, including imported accounts
+      // without a passwordHash so they can set a first password.
       const user = result[0];
       if (user) {
         const resetToken = generateToken();

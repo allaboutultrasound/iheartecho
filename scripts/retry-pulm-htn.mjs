@@ -9,8 +9,8 @@ import { dirname, join } from "path";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: join(__dirname, "../.env") });
 
-const FORGE_API_URL = process.env.BUILT_IN_FORGE_API_URL?.replace(/\/+$/, "") ?? "";
-const FORGE_API_KEY = process.env.BUILT_IN_FORGE_API_KEY ?? "";
+const AI_GATEWAY_URL = process.env.AI_GATEWAY_URL?.replace(/\/+$/, "") ?? "";
+const AI_GATEWAY_API_KEY = process.env.AI_GATEWAY_API_KEY ?? "";
 const DATABASE_URL = process.env.DATABASE_URL ?? "";
 
 const prompt = `You are an expert echocardiography educator creating 5 intermediate multiple-choice questions about Pulmonary Hypertension assessment by echocardiography.
@@ -25,9 +25,9 @@ Return exactly 5 questions as a valid JSON object:
 Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
 
 async function main() {
-  const response = await fetch(`${FORGE_API_URL}/v1/chat/completions`, {
+  const response = await fetch(`${AI_GATEWAY_URL}/v1/chat/completions`, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${FORGE_API_KEY}` },
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${AI_GATEWAY_API_KEY}` },
     body: JSON.stringify({ model: "gpt-4o", messages: [{ role: "user", content: prompt }], temperature: 0.5 }),
   });
   const data = await response.json();

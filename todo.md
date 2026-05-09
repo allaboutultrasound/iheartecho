@@ -425,7 +425,7 @@
 - [x] Fix: same scroll preservation applied to both the Edit (pencil) and Preview (eye) dialogs
 
 ## AI Generate Question in Case Editor (Mar 15 2026)
-- [x] Add tRPC procedure: caseLibrary.aiGenerateQuestion — takes caseId + optional focusArea, generates MCQ from case data (title, modality, difficulty, clinical history, diagnosis, teaching points, tags) using gpt-4o via Forge API; avoids duplicating existing questions
+- [x] Add tRPC procedure: caseLibrary.aiGenerateQuestion — takes caseId + optional focusArea, generates MCQ from case data (title, modality, difficulty, clinical history, diagnosis, teaching points, tags) using gpt-4o via AI gateway; avoids duplicating existing questions
 - [x] Add "AI Generate" button in CaseEditorDialog Questions tab (alongside "Add Question" button)
 - [x] Show generated question pre-filled in QuestionEditor for admin review/edit before saving
 - [x] Loading state shown during generation; Regenerate button available after first generation
@@ -916,7 +916,7 @@
 ## TS Error Fixes + Welcome Email (Apr 8 2026)
 - [ ] Fix adminRouter.ts null DB guard (TS18047)
 - [ ] Fix caseLibraryRouter.ts missing categorySortOrder field (TS2741)
-- [ ] Implement welcome email on first sign-in (OAuth callback isPending flip)
+- [ ] Implement welcome email on first email/password activation
 - [ ] Write vitest for welcome email trigger logic
 
 ## TS Fixes + Welcome Email (Apr 8 2026)
@@ -925,7 +925,7 @@
 - [x] Move findDuplicatesByEmail and mergeUsers from labSeatsRouter into platformAdminRouter
 - [x] Fix CaseEditorDialog missing isSaving prop and ChallengeCardGenerator missing dayOffset prop
 - [x] Add buildFirstSignInWelcomeEmail email template (introduces daily challenge, links to profile)
-- [x] Wire welcome email in OAuth callback on first sign-in (fires alongside Thinkific enrollment)
+- [x] Wire welcome email in first sign-in/registration flow (fires alongside Thinkific enrollment)
 - [x] Add vitest for welcome email trigger and template (32 tests passing)
 
 ## Premium Gate Bug Fix (Apr 8 2026)
@@ -1079,17 +1079,17 @@
 
 ## Media Repository — Large File Upload Error (2026-04-24)
 - [x] Diagnosed: complete step loaded all chunks into a single Buffer (OOM for 400+ MB files)
-- [x] Fixed: chunks now written to disk via multer.diskStorage; complete step stream-assembles to a temp file and streams to Forge proxy via form-data package (no memory spike)
+- [x] Fixed: chunks now written to disk via multer.diskStorage; complete step stream-assembles to a temp file and streams to AI gateway via form-data package (no memory spike)
 - [x] Fixed pre-existing TS error in mediaRouter.ts (ArrayBuffer cast)
 
 ## Media Repository — Large File Upload Error v2 (2026-04-28)
 - [x] Root cause: native fetch does not support streaming multipart bodies — causes Internal Server Error on large files in production
 - [x] Fix: rewrote complete handler to use axios with maxBodyLength: Infinity + form-data streaming (no memory spike, no fetch streaming limitation)
-- [x] Improved error logging to surface the actual Forge API error message in the 500 response
+- [x] Improved error logging to surface the actual AI gateway error message in the 500 response
 
 ## Media Repository — Large File Upload Error v3 (2026-04-28)
 - [x] Root cause: Cloud Run multi-instance routing — /initiate creates temp dir on Instance A, /chunk requests may go to Instance B where dir does not exist, causing multer to fail with HTML 500 error
-- [x] Fix: fully stateless chunked upload — each chunk is uploaded to Forge storage immediately as it arrives (no /tmp disk storage), complete step downloads all chunks from Forge and reassembles in memory
+- [x] Fix: fully stateless chunked upload — each chunk is uploaded to R2 storage immediately as it arrives (no /tmp disk storage), complete step downloads all chunks from AI gateway and reassembles in memory
 - [x] Added vitest tests for URL builders, chunk assembly, metadata serialization, and file key generation (11 tests, all passing)
 
 ## Media Repository — Large File Upload Error v4 (2026-04-28)
@@ -1102,21 +1102,21 @@
 
 ## Media Repository — Large File Upload Error v5 (2026-04-28)
 - [x] Root cause: Cloud Run kills background jobs when instance goes idle after HTTP response — fire-and-forget assembly job never completes, job stays stuck at "processing" forever
-- [x] Fix: replaced entire chunked upload system with a single streaming upload — client sends full file in one XHR request, server receives via multer (memory), immediately uploads to Forge
+- [x] Fix: replaced entire chunked upload system with a single streaming upload — client sends full file in one XHR request, server receives via multer (memory), immediately uploads to AI gateway
 - [x] 400 MB uploads complete in ~23 seconds at 17 MB/s (well within any proxy timeout)
 - [x] XHR used instead of fetch() for real-time upload progress tracking (0-95% during upload, 100% on server confirm)
 - [x] Legacy chunked endpoints (/initiate, /chunk, /complete, /status) kept as 410 Gone stubs for backward compatibility
 - [x] All 15 vitest tests pass for the new single-upload flow
 
 ## Media Repository — Large File Upload Fix v6 (2026-04-28)
-- [x] Root cause: double-upload bottleneck — file traveled browser→server→Forge, so 400 MB had to traverse user's slow upload connection twice
-- [x] Fix: direct-to-Forge upload — server generates pre-authorized upload URL, browser uploads directly to Forge CDN (file only travels once), server registers metadata
-- [x] Forge API confirmed to support CORS (Access-Control-Allow-Origin: *) so browser can POST directly
+- [x] Root cause: double-upload bottleneck — file traveled browser→server→storage, so 400 MB had to traverse user's slow upload connection twice
+- [x] Fix: direct-to-R2 upload — server generates pre-authorized upload URL, browser uploads directly to R2 (file only travels once), server registers metadata
+- [x] AI gateway confirmed to support CORS (Access-Control-Allow-Origin: *) so browser can POST directly
 - [x] Progress bar shows real-time upload progress (3-98%) during direct CDN upload
 - [x] All 16 vitest tests pass
 
 ## Media Repository — Large File Upload Fix v7 (2026-04-28)
-- [x] Root cause: after direct-to-Forge upload succeeds, createAsset tRPC mutation downloads the entire 400 MB zip from Forge, extracts it with JSZip, and re-uploads every file inside — causing OOM/timeout on Cloud Run
+- [x] Root cause: after direct-to-R2 upload succeeds, createAsset tRPC mutation downloads the entire 400 MB zip from AI gateway, extracts it with JSZip, and re-uploads every file inside — causing OOM/timeout on Cloud Run
 - [x] Fix: added 50 MB size limit to SCORM extraction in both createAsset and addVersion procedures — files larger than 50 MB are stored as-is without extraction
 - [x] TypeScript compiles cleanly (no errors)
 - [x] Update mediaRouter.ts: remove JSZip import and synchronous extractScormZip function, add startExtractionJobForAsset calls in createAsset, addVersion, and reExtractScorm — extraction now happens at upload time (non-blocking background job), not at view time

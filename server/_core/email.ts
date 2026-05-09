@@ -3,6 +3,7 @@
  * API: POST https://api.sendgrid.com/v3/mail/send
  * Auth: Authorization: Bearer <SENDGRID_API_KEY>
  */
+import { buildPublicAppUrl } from "./appUrl";
 
 const SENDGRID_API_URL = "https://api.sendgrid.com/v3/mail/send";
 
@@ -79,6 +80,8 @@ const brandColor = "#189aa1";
 const brandDark = "#0e1e2e";
 
 function emailWrapper(content: string): string {
+  const logoUrl = buildPublicAppUrl("/assets/transferred/tMerpTNEMefRhZwO-f4738607.png");
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -96,7 +99,7 @@ function emailWrapper(content: string): string {
           <!-- Header -->
           <tr>
             <td style="background:linear-gradient(135deg,${brandDark} 0%,#0e4a50 60%,${brandColor} 100%);padding:28px 32px;text-align:center;">
-              <img src="https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310519663401463434/tMerpTNEMefRhZwO.png?Expires=1804389585&Signature=WUUmbeKd6gRL-5YievLbV1CH3uu0nlv-Re4ouPNZeR8Uaa5fZGvIpyzCfN4GeYzdNVN-L2Dfhpb6wP3tKMLML8tU2MU77LZNA0Db1Qt~FgBKmBrDM8f98IhyhaIIh3mcPdLcoP5aezbNBOluLkAKxGF1onaa3LNS33jvn6RdWOARg3rQF-iGyCG8t~MaJrqXCHCHnEQWkv8ww0KFZrIE6cKq-EgnS6NZ6Ugc~9fSwQmMSgxfKiJuZdqcca1LwferRwRh3oNdounneCfHfE~QI00U4T7~b0DybwkrOKG0VWDKwXiSGd2AgO7up05Jcgsq7v8V58dmlV9XRRUqXN~soA__&Key-Pair-Id=K2HSFNDJXOU9YS"
+              <img src="${logoUrl}"
                 alt="iHeartEcho™" width="80" height="80"
                 style="border-radius:50%;display:block;margin:0 auto 12px;" />
               <div style="font-size:22px;font-weight:700;color:#ffffff;font-family:Georgia,serif;">iHeartEcho™</div>

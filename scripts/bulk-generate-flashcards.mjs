@@ -9,8 +9,8 @@ import dotenv from "dotenv";
 dotenv.config({ path: "/home/ubuntu/iheartecho/.env" });
 
 const DB_URL = process.env.DATABASE_URL;
-const FORGE_API_URL = process.env.BUILT_IN_FORGE_API_URL || "https://forge.manus.ai";
-const FORGE_API_KEY = process.env.BUILT_IN_FORGE_API_KEY;
+const AI_GATEWAY_URL = (process.env.AI_GATEWAY_URL || "").replace(/\/+$/, "");
+const AI_GATEWAY_API_KEY = process.env.AI_GATEWAY_API_KEY;
 
 const TOPICS = [
   { name: "HOCM", tags: ["HOCM", "Cardiomyopathy"] },
@@ -43,12 +43,12 @@ Return ONLY valid JSON in this exact format (no markdown, no code blocks):
   ]
 }`;
 
-async function callForgeAPI(prompt) {
-  const response = await fetch(`${FORGE_API_URL}/v1/chat/completions`, {
+async function callAiGatewayAPI(prompt) {
+  const response = await fetch(`${AI_GATEWAY_URL}/v1/chat/completions`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${FORGE_API_KEY}`,
+      Authorization: `Bearer ${AI_GATEWAY_API_KEY}`,
     },
     body: JSON.stringify({
       model: "gpt-4o",
@@ -59,7 +59,7 @@ async function callForgeAPI(prompt) {
   });
 
   if (!response.ok) {
-    throw new Error(`Forge API error: ${response.status} ${await response.text()}`);
+    throw new Error(`AI gateway error: ${response.status} ${await response.text()}`);
   }
 
   const data = await response.json();
@@ -73,7 +73,7 @@ async function main() {
   for (const topic of TOPICS) {
     console.log(`\n📚 Generating flashcards for: ${topic.name}`);
     try {
-      const raw = await callForgeAPI(FLASHCARD_PROMPT(topic.name));
+      const raw = await callAiGatewayAPI(FLASHCARD_PROMPT(topic.name));
 
       // Strip markdown code blocks if present
       const cleaned = raw.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();

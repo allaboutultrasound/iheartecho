@@ -38,6 +38,7 @@ import { eq, and, desc, asc, sql, count, like, or, gte } from "drizzle-orm";
 import { storagePut } from "../storage";
 import { sendEmail, buildCaseApprovedEmail, buildCaseRejectedEmail, buildNewCaseSubmissionAdminEmail } from "../_core/email";
 import { notifyOwner } from "../_core/notification";
+import { ENV } from "../_core/env";
 import { awardPoints } from "./leaderboardRouter";
 import { createPatchedFetch } from "../_core/patchedFetch";
 import { generateText } from "ai";
@@ -1280,13 +1281,13 @@ export const caseLibraryRouter = router({
       })
     )
     .mutation(async ({ input }) => {
-      const forgeBaseUrl = (process.env.BUILT_IN_FORGE_API_URL ?? "").replace(/\/+$/, "");
-      const forgeApiKey = process.env.BUILT_IN_FORGE_API_KEY ?? "";
+      const aiGatewayBaseUrl = (ENV.aiGatewayUrl ?? "").replace(/\/+$/, "");
+      const aiGatewayApiKey = ENV.aiGatewayApiKey ?? "";
 
-      if (!forgeBaseUrl || !forgeApiKey) {
+      if (!aiGatewayBaseUrl || !aiGatewayApiKey) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "AI service not configured. Missing Forge API credentials.",
+          message: "AI service not configured. Missing AI gateway credentials.",
         });
       }
 
@@ -1317,10 +1318,10 @@ Guidelines:
 
       let text: string;
       try {
-        const baseURL = forgeBaseUrl.endsWith("/v1") ? forgeBaseUrl : `${forgeBaseUrl}/v1`;
+        const baseURL = aiGatewayBaseUrl.endsWith("/v1") ? aiGatewayBaseUrl : `${aiGatewayBaseUrl}/v1`;
         const openai = createOpenAI({
           baseURL,
-          apiKey: forgeApiKey,
+          apiKey: aiGatewayApiKey,
           // Use native fetch (not patched) — patched fetch is for streaming SSE only
         });
         const result = await generateText({
@@ -1732,9 +1733,9 @@ Guidelines:
       })
     )
     .mutation(async ({ input }) => {
-      const forgeBaseUrl = (process.env.BUILT_IN_FORGE_API_URL ?? "").replace(/\/+$/, "");
-      const forgeApiKey = process.env.BUILT_IN_FORGE_API_KEY ?? "";
-      if (!forgeBaseUrl || !forgeApiKey) {
+      const aiGatewayBaseUrl = (ENV.aiGatewayUrl ?? "").replace(/\/+$/, "");
+      const aiGatewayApiKey = ENV.aiGatewayApiKey ?? "";
+      if (!aiGatewayBaseUrl || !aiGatewayApiKey) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "AI service not configured." });
       }
       const db = await getDb();
@@ -1780,8 +1781,8 @@ Field requirements:
 - Use United States English spelling throughout
 - Difficulty level: ${caseRow.difficulty}`;
       const promptText = buildPrompt(0);
-      const baseURL = forgeBaseUrl.endsWith("/v1") ? forgeBaseUrl : `${forgeBaseUrl}/v1`;
-      const openai = createOpenAI({ baseURL, apiKey: forgeApiKey });
+      const baseURL = aiGatewayBaseUrl.endsWith("/v1") ? aiGatewayBaseUrl : `${aiGatewayBaseUrl}/v1`;
+      const openai = createOpenAI({ baseURL, apiKey: aiGatewayApiKey });
 
       const parseOne = async (index: number): Promise<{ question: string; options: string[]; correctAnswer: number; explanation: string }> => {
         let text: string;

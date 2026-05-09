@@ -1,36 +1,28 @@
 /**
  * mediaUpload.ts
  *
- * Direct browser-to-Forge upload endpoint for the Media Repository.
+ * Direct browser-to-R2 upload endpoint for the Media Repository.
  *
  * Flow:
- *  1. POST /api/media-upload/prepare  → server validates auth, generates file key,
- *                                        returns { uploadUrl, fileKey, forgeApiKey }
- *  2. Browser POSTs file directly to Forge (uploadUrl) — bypasses server entirely
+ *  1. POST /api/media-upload/prepare  → server validates auth and returns a
+ *                                        presigned R2 upload URL.
+ *  2. Browser PUTs file directly to R2 (uploadUrl) — bypasses server entirely.
  *  3. POST /api/media-upload/register → server records metadata in DB and returns asset
  *
  * Why direct upload?
- * - The file only travels once: user's computer → Forge CDN
- * - No double-upload (browser → server → Forge)
- * - No server memory pressure (400 MB never touches Cloud Run RAM)
- * - No timeout issues (browser uploads at its own pace directly to Forge)
- * - Forge has CORS headers: Access-Control-Allow-Origin: *
+ * - The file only travels once: user's computer → R2
+ * - No double-upload (browser → server → object storage)
+ * - No server memory pressure (400 MB never touches Railway RAM)
+ * - No timeout issues (browser uploads at its own pace directly to R2)
+ * - R2 CORS must allow PUT from the app origin.
  *
  * Auth: platform admin only (validated on both /prepare and /register).
  */
 import { Router, Request, Response } from "express";
-import { ENV } from "../_core/env";
 import { sdk } from "../_core/sdk";
+import { storageCreateUploadUrl } from "../storage";
 
 const router = Router();
-
-// ── Forge helpers ─────────────────────────────────────────────────────────────
-function forgeUploadUrl(fileKey: string): string {
-  const base = ENV.forgeApiUrl.replace(/\/+$/, "");
-  const url = new URL("v1/storage/upload", base + "/");
-  url.searchParams.set("path", fileKey.replace(/^\/+/, ""));
-  return url.toString();
-}
 
 // ── Auth helper ───────────────────────────────────────────────────────────────
 async function requireAdmin(req: Request, res: Response): Promise<any | null> {
@@ -45,17 +37,11 @@ async function requireAdmin(req: Request, res: Response): Promise<any | null> {
   }
 }
 
-// ── 1. Prepare: generate upload URL and return Forge credentials ──────────────
+// ── 1. Prepare: generate upload URL ───────────────────────────────────────────
 /**
  * POST /api/media-upload/prepare
  * Body: { fileName: string, mimeType: string, folder: string }
- * Returns: { uploadUrl, fileKey, forgeApiKey, forgeApiUrl }
- *
- * The browser uses uploadUrl + forgeApiKey to POST the file directly to Forge.
- * This is safe because:
- * - The key is already exposed as VITE_FRONTEND_FORGE_API_KEY (same origin)
- * - The Forge API key only allows uploads to this project's storage bucket
- * - The fileKey is pre-generated with a random suffix to prevent enumeration
+ * Returns: { uploadUrl, fileKey, publicUrl, method, headers }
  */
 router.post("/api/media-upload/prepare", async (req: Request, res: Response) => {
   try {
@@ -79,17 +65,18 @@ router.post("/api/media-upload/prepare", async (req: Request, res: Response) => 
     const randomSuffix = Math.random().toString(36).slice(2, 10);
     const fileKey = `${folder}/${safeFileName}-${randomSuffix}.${ext}`;
 
-    const uploadUrl = forgeUploadUrl(fileKey);
+    const { uploadUrl, publicUrl } = await storageCreateUploadUrl(fileKey, mimeType);
 
     console.log(`[media-upload] Prepared upload: ${fileKey}`);
 
     res.json({
       uploadUrl,
       fileKey,
-      // Pass the server-side Forge API key so the browser can upload directly.
-      // This key is scoped to this project's storage bucket only.
-      forgeApiKey: ENV.forgeApiKey,
-      forgeApiUrl: ENV.forgeApiUrl,
+      publicUrl,
+      method: "PUT",
+      headers: {
+        "Content-Type": mimeType,
+      },
     });
   } catch (err: any) {
     console.error("[media-upload] prepare error:", err?.message ?? err);
@@ -103,7 +90,7 @@ router.post("/api/media-upload/prepare", async (req: Request, res: Response) => 
  * Body: { fileKey, fileName, mimeType, sizeBytes, url }
  * Returns: { success: true, url, fileKey }
  *
- * Called after the browser has successfully uploaded the file to Forge.
+ * Called after the browser has successfully uploaded the file to R2.
  * The server validates the file key matches the expected pattern and records metadata.
  */
 router.post("/api/media-upload/register", async (req: Request, res: Response) => {
@@ -142,19 +129,19 @@ router.post("/api/media-upload/register", async (req: Request, res: Response) =>
 
 // ── Legacy endpoints (kept as 410 Gone stubs) ─────────────────────────────────
 router.post("/api/media-upload/upload", (_req, res) => {
-  res.status(410).json({ error: "Use /api/media-upload/prepare + direct Forge upload instead." });
+  res.status(410).json({ error: "Use /api/media-upload/prepare + direct R2 upload instead." });
 });
 router.post("/api/media-upload/initiate", (_req, res) => {
-  res.status(410).json({ error: "Use /api/media-upload/prepare + direct Forge upload instead." });
+  res.status(410).json({ error: "Use /api/media-upload/prepare + direct R2 upload instead." });
 });
 router.post("/api/media-upload/chunk", (_req, res) => {
-  res.status(410).json({ error: "Use /api/media-upload/prepare + direct Forge upload instead." });
+  res.status(410).json({ error: "Use /api/media-upload/prepare + direct R2 upload instead." });
 });
 router.post("/api/media-upload/complete", (_req, res) => {
-  res.status(410).json({ error: "Use /api/media-upload/prepare + direct Forge upload instead." });
+  res.status(410).json({ error: "Use /api/media-upload/prepare + direct R2 upload instead." });
 });
 router.get("/api/media-upload/status/:uploadId", (_req, res) => {
-  res.status(410).json({ error: "Use /api/media-upload/prepare + direct Forge upload instead." });
+  res.status(410).json({ error: "Use /api/media-upload/prepare + direct R2 upload instead." });
 });
 router.post("/api/media-upload/abort", (_req, res) => {
   res.json({ aborted: true });

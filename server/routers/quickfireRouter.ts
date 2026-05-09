@@ -1087,15 +1087,15 @@ getUserStats: protectedProcedure.query(async ({ ctx }) => {
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ENV.forgeApiKey || !ENV.forgeApiUrl) {
+      if (!ENV.aiGatewayApiKey || !ENV.aiGatewayUrl) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "AI service not configured. Missing Forge API credentials.",
+          message: "AI service not configured. Missing AI gateway credentials.",
         });
       }
 
-      const forgeBaseUrl = (ENV.forgeApiUrl ?? "").replace(/\/+$/, "");
-      const forgeApiKey = ENV.forgeApiKey ?? "";
+      const aiGatewayBaseUrl = (ENV.aiGatewayUrl ?? "").replace(/\/+$/, "");
+      const aiGatewayApiKey = ENV.aiGatewayApiKey ?? "";
 
       let typeInstructions: string;
       let jsonFormatInstructions: string;
@@ -1187,11 +1187,11 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
 
         let batchText: string;
         try {
-          const aiResp = await fetch(`${forgeBaseUrl}/v1/chat/completions`, {
+          const aiResp = await fetch(`${aiGatewayBaseUrl}/v1/chat/completions`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${forgeApiKey}`,
+              Authorization: `Bearer ${aiGatewayApiKey}`,
             },
             body: JSON.stringify({
               model: "gpt-4o",
@@ -1203,17 +1203,17 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
           });
           if (!aiResp.ok) {
             const errBody = await aiResp.text();
-            throw new Error(`Forge API returned ${aiResp.status}: ${errBody.substring(0, 200)}`);
+            throw new Error(`AI gateway returned ${aiResp.status}: ${errBody.substring(0, 200)}`);
           }
           const aiData = await aiResp.json() as {
             choices?: { message?: { content?: string } }[];
             error?: { message?: string };
           };
           if (aiData.error) {
-            throw new Error(`Forge API error: ${aiData.error.message ?? JSON.stringify(aiData.error)}`);
+            throw new Error(`AI gateway error: ${aiData.error.message ?? JSON.stringify(aiData.error)}`);
           }
           batchText = aiData.choices?.[0]?.message?.content ?? "";
-          if (!batchText) throw new Error("Forge API returned empty content");
+          if (!batchText) throw new Error("AI gateway returned empty content");
           allTexts.push(batchText);
         } catch (aiErr) {
           const errMsg = aiErr instanceof Error ? aiErr.message : String(aiErr);
@@ -1349,15 +1349,15 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       })
     )
     .mutation(async ({ ctx, input }) => {
-      if (!ENV.forgeApiKey || !ENV.forgeApiUrl) {
+      if (!ENV.aiGatewayApiKey || !ENV.aiGatewayUrl) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: "AI service not configured. Missing Forge API credentials.",
+          message: "AI service not configured. Missing AI gateway credentials.",
         });
       }
 
-      const forgeBaseUrl = (ENV.forgeApiUrl ?? "").replace(/\/+$/, "");
-      const forgeApiKey = ENV.forgeApiKey ?? "";
+      const aiGatewayBaseUrl = (ENV.aiGatewayUrl ?? "").replace(/\/+$/, "");
+      const aiGatewayApiKey = ENV.aiGatewayApiKey ?? "";
 
       // Filter to only types with count > 0
       const activeTypes = Object.entries(input.typeCounts).filter(([, count]) => count > 0) as [string, number][];
@@ -1410,13 +1410,13 @@ ${jsonFormatInstructions}
 Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
       }
 
-      // Helper: call Forge API and parse response
-      async function callForge(prompt: string): Promise<any[]> {
-        const aiResp = await fetch(`${forgeBaseUrl}/v1/chat/completions`, {
+      // Helper: call AI gateway and parse response
+      async function callAiGateway(prompt: string): Promise<any[]> {
+        const aiResp = await fetch(`${aiGatewayBaseUrl}/v1/chat/completions`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${forgeApiKey}`,
+            Authorization: `Bearer ${aiGatewayApiKey}`,
           },
           body: JSON.stringify({
             model: "gpt-4o",
@@ -1427,12 +1427,12 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
         });
         if (!aiResp.ok) {
           const errBody = await aiResp.text();
-          throw new Error(`Forge API returned ${aiResp.status}: ${errBody.substring(0, 200)}`);
+          throw new Error(`AI gateway returned ${aiResp.status}: ${errBody.substring(0, 200)}`);
         }
         const aiData = await aiResp.json() as { choices?: { message?: { content?: string } }[]; error?: { message?: string } };
-        if (aiData.error) throw new Error(`Forge API error: ${aiData.error.message}`);
+        if (aiData.error) throw new Error(`AI gateway error: ${aiData.error.message}`);
         const text = aiData.choices?.[0]?.message?.content ?? "";
-        if (!text) throw new Error("Forge API returned empty content");
+        if (!text) throw new Error("AI gateway returned empty content");
 
         // Parse JSON — strip fences, extract outermost object
         let cleaned = text.replace(/^```(?:json)?\s*/im, "").replace(/\s*```\s*$/im, "").trim();
@@ -1495,7 +1495,7 @@ Return ONLY the JSON object, no markdown, no explanation, no code fences.`;
               "Return ONLY the JSON object, no markdown, no explanation, no code fences.",
               `${dedupBlock}Return ONLY the JSON object, no markdown, no explanation, no code fences.`
             );
-            const questions = await callForge(prompt);
+            const questions = await callAiGateway(prompt);
             return questions.map((q: any) => ({ type, question: q }));
           })
         );

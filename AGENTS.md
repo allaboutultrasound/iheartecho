@@ -39,7 +39,7 @@ The public member count (`stats.userCount`) returns `getThinkificMemberCount() +
 
 Welcome emails are sent ONLY on:
 - **Purchase**: Thinkific `order.created` webhook (complete status) for direct iHeartEcho products
-- **Login attempt**: OAuth callback (`oauth.ts`) or email/password registration (`emailAuthRouter.ts`)
+- **Login attempt**: Email/password registration (`emailAuthRouter.ts`)
 
 NOT sent on enrollment events, subscription re-activations, or `user.signup` (Thinkific registration without purchase).
 

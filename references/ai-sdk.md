@@ -1,4 +1,4 @@
-# AI SDK v6 with Forge API
+# AI SDK v6 with AI gateway
 
 > **Packages**: `ai@6.x`, `@ai-sdk/react@3.x`, `@ai-sdk/openai@3.x`
 
@@ -45,9 +45,9 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { createPatchedFetch } from "./patchedFetch";
 
 const openai = createOpenAI({
-  apiKey: process.env.BUILT_IN_FORGE_API_KEY,
-  baseURL: `${process.env.BUILT_IN_FORGE_API_URL}/v1`,  // Must include /v1
-  fetch: createPatchedFetch(),  // Required for Forge API compatibility
+  apiKey: process.env.AI_GATEWAY_API_KEY,
+  baseURL: `${process.env.AI_GATEWAY_URL}/v1`,  // Must include /v1
+  fetch: createPatchedFetch(),  // Required for AI gateway compatibility
 });
 
 const model = openai.chat("gemini-2.5-flash");
@@ -452,7 +452,7 @@ function QuestionAnalyzer() {
 
 ## Patched Fetch
 
-Forge API returns `"type": ""` in streaming tool_calls. AI SDK expects no `type` field:
+AI gateway returns `"type": ""` in streaming tool_calls. AI SDK expects no `type` field:
 
 ```ts
 // server/_core/patchedFetch.ts

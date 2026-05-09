@@ -25,7 +25,7 @@ function createUser(overrides: Partial<AuthenticatedUser> = {}): AuthenticatedUs
     openId: "test-open-id",
     email: "testuser@example.com",
     name: "Test User",
-    loginMethod: "manus",
+    loginMethod: "imported",
     role: "user",
     displayName: null,
     avatarUrl: null,

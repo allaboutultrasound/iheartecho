@@ -28,8 +28,8 @@
  *     • subscription.activated (re-activations)
  *     • user.signup (no product purchase — silent account creation)
  *     • All About Ultrasound free membership (allaboutultrasound.com bundles)
- *   Welcome emails are also sent on first login attempt (OAuth callback or
- *   email/password registration) — see oauth.ts and emailAuthRouter.ts.
+ *   Welcome emails are also sent on first email/password registration — see
+ *   emailAuthRouter.ts.
  *
  * Setup in Thinkific:
  *   Admin → Settings → Webhooks → Add Webhook

@@ -113,6 +113,4 @@ drizzle/*.sql
 # Mobile app folders (not part of web deployment)
 ios/
 android/
-# Manus internal files
-.manus/db/
 client/public/icons/*.png

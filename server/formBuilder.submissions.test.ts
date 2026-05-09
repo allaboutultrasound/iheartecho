@@ -45,7 +45,7 @@ function makeLabAdminCtx(role: "admin" | "user" = "user"): TrpcContext {
     openId: "lab-admin-user",
     email: "admin@lab.com",
     name: "Lab Admin",
-    loginMethod: "manus",
+    loginMethod: "imported",
     role,
     createdAt: new Date(),
     updatedAt: new Date(),

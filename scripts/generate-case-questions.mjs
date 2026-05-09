@@ -14,11 +14,11 @@ import { readFileSync } from 'fs';
 dotenv.config();
 
 const DB_URL = process.env.DATABASE_URL;
-const FORGE_API_URL = process.env.BUILT_IN_FORGE_API_URL;
-const FORGE_API_KEY = process.env.BUILT_IN_FORGE_API_KEY;
+const AI_GATEWAY_URL = process.env.AI_GATEWAY_URL;
+const AI_GATEWAY_API_KEY = process.env.AI_GATEWAY_API_KEY;
 
-if (!DB_URL || !FORGE_API_URL || !FORGE_API_KEY) {
-  console.error('Missing required environment variables: DATABASE_URL, BUILT_IN_FORGE_API_URL, BUILT_IN_FORGE_API_KEY');
+if (!DB_URL || !AI_GATEWAY_URL || !AI_GATEWAY_API_KEY) {
+  console.error('Missing required environment variables: DATABASE_URL, AI_GATEWAY_URL, AI_GATEWAY_API_KEY');
   process.exit(1);
 }
 
@@ -37,11 +37,11 @@ function parseDbUrl(url) {
 }
 
 async function callAI(prompt) {
-  const response = await fetch(`${FORGE_API_URL}/v1/chat/completions`, {
+  const response = await fetch(`${AI_GATEWAY_URL}/v1/chat/completions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${FORGE_API_KEY}`,
+      'Authorization': `Bearer ${AI_GATEWAY_API_KEY}`,
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-5',

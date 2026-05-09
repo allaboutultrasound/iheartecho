@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="title desc">
+  <title id="title">Media unavailable</title>
+  <desc id="desc">Placeholder shown when a transferred clinical media asset is not available.</desc>
+  <rect width="640" height="360" fill="#0e1e2e"/>
+  <circle cx="320" cy="132" r="44" fill="#189aa1" opacity="0.25"/>
+  <path d="M286 134c28-56 70-56 98 0-28 56-70 56-98 0Z" fill="none" stroke="#4ad9e0" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M270 214h100l26 36h-152l26-36Z" fill="#189aa1" opacity="0.55"/>
+  <text x="320" y="288" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#ffffff">Clinical media unavailable</text>
+  <text x="320" y="318" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#b8eef1">Upload the replacement asset to Railway/R2 to restore this view.</text>
+</svg>

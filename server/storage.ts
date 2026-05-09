@@ -1,5 +1,4 @@
 // Storage helpers — Cloudflare R2 (S3-compatible)
-// Falls back to Manus Forge proxy when R2 env vars are not set (backward compat)
 
 import {
   S3Client,
@@ -77,6 +76,31 @@ export async function storagePut(
   );
 
   return { key, url: getPublicUrl(key) };
+}
+
+/**
+ * Create a presigned PUT URL so browsers can upload directly to R2 without
+ * sending large files through the Railway app process.
+ */
+export async function storageCreateUploadUrl(
+  relKey: string,
+  contentType = "application/octet-stream",
+  expiresIn = 3600
+): Promise<{ key: string; uploadUrl: string; publicUrl: string }> {
+  const client = getR2Client();
+  const bucket = getBucket();
+  const key = normalizeKey(relKey);
+  const uploadUrl = await getSignedUrl(
+    client,
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      ContentType: contentType,
+    }),
+    { expiresIn }
+  );
+
+  return { key, uploadUrl, publicUrl: getPublicUrl(key) };
 }
 
 /**
