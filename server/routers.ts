@@ -406,10 +406,17 @@ export const appRouter = router({
         const crypto = await import('crypto');
 
         const email = input.email.trim().toLowerCase();
+        console.log(`[magic-link] Request for: ${email}`);
+        console.log(`[magic-link] SENDGRID_API_KEY set: ${!!process.env.SENDGRID_API_KEY}, length: ${process.env.SENDGRID_API_KEY?.length ?? 0}`);
+        console.log(`[magic-link] SENDGRID_FROM_EMAIL: ${process.env.SENDGRID_FROM_EMAIL ?? '(not set)'}`);
+        console.log(`[magic-link] VITE_APP_URL: ${process.env.VITE_APP_URL ?? '(not set)'}`);
+
         const user = await getUserByEmail(email);
+        console.log(`[magic-link] User found: ${!!user}, id: ${user?.id ?? 'none'}`);
 
         // Always return success to prevent email enumeration
         if (!user) {
+          console.log(`[magic-link] No user found — returning early`);
           return { success: true };
         }
 
@@ -417,6 +424,7 @@ export const appRouter = router({
         const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
         await setMagicLinkToken(user.id, token, expiry);
+        console.log(`[magic-link] Token stored for user ${user.id}`);
 
         const appUrl = process.env.VITE_APP_URL || 'https://app.iheartecho.com';
         const magicUrl = `${appUrl}/auth/magic?token=${token}`;
@@ -424,12 +432,18 @@ export const appRouter = router({
         const firstName = (user.displayName || user.name || 'there').split(' ')[0];
         const emailPayload = buildMagicLinkEmail({ firstName, magicUrl });
 
-        await sendEmail({
-          to: { name: firstName, email: user.email! },
-          subject: emailPayload.subject,
-          htmlBody: emailPayload.htmlBody,
-          previewText: emailPayload.previewText,
-        });
+        console.log(`[magic-link] Calling sendEmail to: ${user.email}`);
+        try {
+          const emailResult = await sendEmail({
+            to: { name: firstName, email: user.email! },
+            subject: emailPayload.subject,
+            htmlBody: emailPayload.htmlBody,
+            previewText: emailPayload.previewText,
+          });
+          console.log(`[magic-link] sendEmail returned: ${emailResult}`);
+        } catch (emailErr: unknown) {
+          console.error(`[magic-link] sendEmail threw:`, emailErr);
+        }
 
         return { success: true };
       }),
