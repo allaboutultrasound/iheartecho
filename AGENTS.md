@@ -24,14 +24,24 @@ iHeartEcho — a clinical cardiac echocardiography companion platform (React 19 
 
 ### Railway deployment
 
-- Requires a valid `RAILWAY_TOKEN` secret. Use `railway` CLI (installed at `~/.railway/bin/railway`).
-- Add `~/.railway/bin` to `PATH` before using the CLI.
+- Project: **Echo-Assist** (ID `da65fe92-119e-46a9-b4c5-691bb4d436d8`), service `echo-assist`, environment `production`.
+- The Railway CLI (`~/.railway/bin/railway`) does not support `whoami`/`link`/`list` with the current `RAILWAY_TOKEN`; use the **GraphQL API** at `https://backboard.railway.app/graphql/v2` with `Authorization: Bearer $RAILWAY_TOKEN` instead.
+- Auto-deploys from `main` branch. Env var changes also trigger redeployment.
 - Config: `railway.json` (Nixpacks builder), `nixpacks.toml` (Node 22).
-- Health check: `GET /api/health`.
+- Health check: `GET /api/health` on both `echo-assist-production.up.railway.app` and `app.iheartecho.com`.
+- Key env vars for magic links: `JWT_SECRET`, `PUBLIC_APP_URL`, `SENDGRID_API_KEY`, `DATABASE_URL`.
 
 ### Member count on dashboard
 
-The public member count on the homepage is `countUsers() + DISPLAY_OFFSET` (currently 3997 in `server/routers.ts`). The offset represents the Thinkific LMS member base. Without a database, the dashboard shows only the offset value.
+The public member count (`stats.userCount`) returns `getThinkificMemberCount() + 3992`. The Thinkific count is fetched live via API (cached 10 min). Without `THINKIFIC_API_KEY`/`THINKIFIC_SUBDOMAIN`, only the 3992 offset is shown.
+
+### Welcome email policy
+
+Welcome emails are sent ONLY on:
+- **Purchase**: Thinkific `order.created` webhook (complete status) for direct iHeartEcho products
+- **Login attempt**: OAuth callback (`oauth.ts`) or email/password registration (`emailAuthRouter.ts`)
+
+NOT sent on enrollment events, subscription re-activations, or `user.signup` (Thinkific registration without purchase).
 
 ### CI (GitHub Actions)
 
