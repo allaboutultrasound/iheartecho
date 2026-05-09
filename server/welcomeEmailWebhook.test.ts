@@ -326,10 +326,12 @@ describe("Webhook sendWelcome flag logic", () => {
     expect(shouldSend).toBe(false);
   });
 
-  it("enrollment.created should send welcome email", () => {
+  it("enrollment.created should NOT send welcome email (only purchases trigger welcome)", () => {
     const event = { resource: "enrollment", action: "created" };
-    const shouldSend = event.resource === "enrollment" && event.action === "created";
-    expect(shouldSend).toBe(true);
+    // Enrollments (including gifted/free) no longer trigger welcome emails.
+    // Only order.created (purchase) and login attempts send welcome emails.
+    const shouldSend = event.resource === "order" && event.action === "created";
+    expect(shouldSend).toBe(false);
   });
 
   it("enrollment.updated should NOT send welcome email (re-activation)", () => {
@@ -361,10 +363,10 @@ describe("Webhook sendWelcome flag logic", () => {
 
 describe("Combined filter: isDirectIHeartEchoProduct + sendWelcome flag", () => {
   function shouldSendWelcome(productName: string, resource: string, action: string, orderStatus?: string): boolean {
-    // Mirrors the logic in the webhook handler
+    // Mirrors the updated webhook logic: only order.created (purchase) sends welcome emails.
+    // Enrollment events no longer trigger welcome emails.
     const isNewEvent =
-      (resource === "order" && action === "created" && orderStatus === "complete") ||
-      (resource === "enrollment" && action === "created");
+      (resource === "order" && action === "created" && orderStatus === "complete");
     return isNewEvent && isDirectIHeartEchoProduct(productName);
   }
 
@@ -372,12 +374,12 @@ describe("Combined filter: isDirectIHeartEchoProduct + sendWelcome flag", () => 
     expect(shouldSendWelcome("iHeartEcho App - Premium Access", "order", "created", "complete")).toBe(true);
   });
 
-  it("sends welcome for DIY Accreditation enrollment.created", () => {
-    expect(shouldSendWelcome("DIY Accreditation Membership", "enrollment", "created")).toBe(true);
+  it("does NOT send welcome for DIY Accreditation enrollment.created", () => {
+    expect(shouldSendWelcome("DIY Accreditation Membership", "enrollment", "created")).toBe(false);
   });
 
-  it("sends welcome for iHeartEcho App enrollment.created", () => {
-    expect(shouldSendWelcome("iHeartEcho™ App", "enrollment", "created")).toBe(true);
+  it("does NOT send welcome for iHeartEcho App enrollment.created", () => {
+    expect(shouldSendWelcome("iHeartEcho™ App", "enrollment", "created")).toBe(false);
   });
 
   it("does NOT send welcome for AAU Free Membership enrollment.created", () => {
