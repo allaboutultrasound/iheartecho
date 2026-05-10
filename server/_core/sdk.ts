@@ -53,7 +53,10 @@ class OAuthService {
       ENV.oAuthTokenUrl,
       params.toString(),
       {
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          Accept: "application/json",
+        },
         timeout: AXIOS_TIMEOUT_MS,
       }
     );

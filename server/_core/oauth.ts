@@ -24,7 +24,12 @@ export function registerOAuthRoutes(app: Express) {
 
     try {
       const tokenResponse = await sdk.exchangeCodeForToken(code, state);
-      const userInfo = await sdk.getUserInfo(tokenResponse.accessToken);
+      if (!tokenResponse.access_token) {
+        res.status(400).json({ error: "access_token missing from OAuth token response" });
+        return;
+      }
+
+      const userInfo = await sdk.getUserInfo(tokenResponse.access_token);
 
       if (!userInfo.openId) {
         res.status(400).json({ error: "openId missing from user info" });
