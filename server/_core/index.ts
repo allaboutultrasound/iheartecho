@@ -22,6 +22,7 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { startChallengeCron } from "../jobs/challengeCron";
 import { startEmailCampaignScheduler } from "../routers/emailCampaignRouter";
+import { startMirrorSyncJob } from "../jobs/mirrorSync";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -110,6 +111,8 @@ async function startServer() {
     startChallengeCron();
     // Start the email campaign scheduler (sends scheduled campaigns every 5 minutes)
     startEmailCampaignScheduler();
+    // Start the Railway mirror sync (DB + R2 media) — no-op on Manus hosting
+    startMirrorSyncJob();
   });
 }
 
