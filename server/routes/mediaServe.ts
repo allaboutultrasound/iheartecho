@@ -634,55 +634,104 @@ function buildViewerPage(title: string, url: string, mediaType: string, mime: st
   </style>
   <img src="${safeUrl}" alt="${safeTitle}" />`;
   } else if (mediaType === "document" || mime === "application/pdf") {
+    // Google Docs Viewer works on all mobile browsers including iOS Safari
+    const googleDocsUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(safeUrl)}&embedded=true`;
     body = `
   <style>
-    body { background: #525659; }
-    iframe {
+    body { background: #525659; margin: 0; padding: 0; }
+    /* Desktop: direct PDF iframe fills viewport */
+    .pdf-desktop {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+    }
+    .pdf-desktop iframe {
       flex: 1;
       width: 100%;
-      height: 100dvh;
-      height: 100vh;
       border: none;
       display: block;
     }
-    /* Mobile fallback: PDF iframes often don't work on iOS */
-    .pdf-fallback {
+    /* Mobile: Google Docs Viewer + open/download buttons */
+    .pdf-mobile {
       display: none;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
       gap: 16px;
-      padding: clamp(20px, 6vw, 40px);
-      text-align: center;
+      padding: clamp(16px, 5vw, 32px) clamp(12px, 4vw, 24px);
       background: #f0fbfc;
       min-height: 100vh;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
-    .pdf-fallback h2 { color: #1a2e3b; font-size: clamp(16px, 4vw, 20px); }
-    .pdf-fallback p { color: #6b7280; font-size: clamp(13px, 3.5vw, 15px); }
-    .pdf-fallback a {
-      display: inline-block;
+    .pdf-mobile h2 {
+      color: #1a2e3b;
+      font-size: clamp(15px, 4vw, 19px);
+      margin: 0;
+      line-height: 1.4;
+      text-align: center;
+    }
+    .pdf-mobile .viewer-frame {
+      width: 100%;
+      flex: 1;
+      min-height: 60vh;
+      border: none;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+      background: #fff;
+    }
+    .pdf-mobile .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      width: 100%;
+      padding-bottom: env(safe-area-inset-bottom, 16px);
+    }
+    .pdf-mobile a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       background: #189aa1;
       color: #fff;
       text-decoration: none;
-      padding: 12px 28px;
+      padding: 12px 20px;
       border-radius: 8px;
       font-weight: 600;
-      font-size: clamp(14px, 3.5vw, 16px);
+      font-size: clamp(13px, 3.5vw, 15px);
       min-height: 44px;
-      line-height: 1.5;
+      flex: 1;
+      min-width: 130px;
+      max-width: 200px;
+      text-align: center;
     }
-    @media (max-width: 640px) {
-      /* On mobile, show fallback link instead of broken PDF iframe */
-      iframe { display: none; }
-      .pdf-fallback { display: flex; }
+    .pdf-mobile a.secondary {
+      background: #fff;
+      color: #189aa1;
+      border: 2px solid #189aa1;
+    }
+    @media (max-width: 768px) {
+      .pdf-desktop { display: none !important; }
+      .pdf-mobile { display: flex; }
     }
   </style>
-  <iframe src="${safeUrl}" title="${safeTitle}"></iframe>
-  <div class="pdf-fallback">
+  <!-- Desktop: direct PDF iframe -->
+  <div class="pdf-desktop">
+    <iframe src="${safeUrl}" title="${safeTitle}"></iframe>
+  </div>
+  <!-- Mobile: Google Docs Viewer + direct open/download fallback -->
+  <div class="pdf-mobile">
     <h2>${safeTitle}</h2>
-    <p>PDF preview is not supported on this device.<br/>Tap below to open it directly.</p>
-    <a href="${safeUrl}" target="_blank" rel="noopener">Open PDF</a>
+    <iframe
+      class="viewer-frame"
+      src="${googleDocsUrl}"
+      title="${safeTitle}"
+      allow="autoplay"
+    ></iframe>
+    <div class="btn-row">
+      <a href="${safeUrl}" target="_blank" rel="noopener">Open PDF</a>
+      <a href="${safeUrl}" download class="secondary">Download</a>
+    </div>
   </div>`;
   } else {
     body = `
@@ -804,18 +853,26 @@ router.get("/api/media/:slug/view", async (req: Request, res: Response) => {
     return;
   }
 
-  // ── Images, video, audio, PDF: proxy inline ─────────────────────────────────
+  // ── Images, video, audio: proxy inline ─────────────────────────────────────
   if (
     mime.startsWith("image/") ||
     mime.startsWith("video/") ||
-    mime.startsWith("audio/") ||
-    mime === "application/pdf"
+    mime.startsWith("audio/")
   ) {
     await proxyFile(url, "inline", filename, mime, res);
     return;
   }
 
-  // ── Everything else: viewer page ────────────────────────────────────────────
+  // ── PDF / document: serve via HTML viewer page (handles mobile fallback) ────────
+  // Raw PDF proxy works on desktop but fails on iOS Safari and many Android browsers.
+  // The viewer page uses Google Docs Viewer as a mobile-compatible iframe fallback.
+  if (mime === "application/pdf" || asset.mediaType === "document") {
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.send(buildViewerPage(asset.title, url, "document", "application/pdf"));
+    return;
+  }
+
+  // ── Everything else: viewer page ─────────────────────────────────────
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.send(buildViewerPage(asset.title, url, asset.mediaType, mime));
 });
