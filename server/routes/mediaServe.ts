@@ -424,7 +424,7 @@ function buildScormEmbedWrapper(title: string, entryUrl: string): string {
     <div id="diag"></div>
   </div>
 
-  <iframe id="content-frame" title="${escapeHtml(title)}" allowfullscreen allow="fullscreen; autoplay"></iframe>
+  <iframe id="content-frame" title="${escapeHtml(title)}" allowfullscreen allow="fullscreen; autoplay" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"></iframe>
 
   <script>
     var CONTENT_URL = ${JSON.stringify(entryUrl)};
@@ -532,6 +532,25 @@ function buildScormEmbedWrapper(title: string, entryUrl: string): string {
       frame.src = 'about:blank';
       setTimeout(startLoad, 200);
     }
+
+    // Catch any attempt by iframe content to navigate the top/parent window
+    window.addEventListener('beforeunload', function(e) {
+      addDiag('WARNING: beforeunload fired — something tried to navigate away!');
+    });
+
+    // Also monitor for the page going blank by checking visibility periodically
+    var blankCheckCount = 0;
+    var blankChecker = setInterval(function() {
+      blankCheckCount++;
+      if (blankCheckCount > 60) { clearInterval(blankChecker); return; } // stop after 60s
+      try {
+        // If our own DOM elements are gone, something overwrote the page
+        if (!document.getElementById('content-frame')) {
+          addDiag('CRITICAL: Our DOM was destroyed!');
+          clearInterval(blankChecker);
+        }
+      } catch(e) {}
+    }, 1000);
 
     // Start loading
     startLoad();
