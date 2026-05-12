@@ -292,6 +292,31 @@ function buildScormPage(title: string, entryUrl: string): string {
   </style>
 </head>
 <body>
+  <!-- SCORM 1.2 + SCORM 2004 API stubs so iSpring/Articulate content doesn't hang -->
+  <script>
+    // SCORM 1.2 stub
+    window.API = {
+      LMSInitialize: function() { return 'true'; },
+      LMSFinish: function() { return 'true'; },
+      LMSGetValue: function(e) { return ''; },
+      LMSSetValue: function(e, v) { return 'true'; },
+      LMSCommit: function() { return 'true'; },
+      LMSGetLastError: function() { return '0'; },
+      LMSGetErrorString: function() { return ''; },
+      LMSGetDiagnostic: function() { return ''; }
+    };
+    // SCORM 2004 stub
+    window.API_1484_11 = {
+      Initialize: function() { return 'true'; },
+      Terminate: function() { return 'true'; },
+      GetValue: function(e) { return ''; },
+      SetValue: function(e, v) { return 'true'; },
+      Commit: function() { return 'true'; },
+      GetLastError: function() { return '0'; },
+      GetErrorString: function() { return ''; },
+      GetDiagnostic: function() { return ''; }
+    };
+  </script>
   <iframe
     src="${entryUrl}"
     title="${escapeHtml(title)}"
@@ -826,7 +851,21 @@ router.get("/api/media/:slug/view", async (req: Request, res: Response) => {
       return;
     }
     if (existingEntryUrl) {
-      // Already extracted to S3 — redirect directly to the entry URL (full-page, no iframe wrapper)
+      // Prefer zip-file streaming over CDN redirect so the content stays on
+      // app.iheartecho.com (same origin). This is critical for iframe embeds on
+      // third-party sites (e.g. Thinkific) — cross-origin SCORM fails on mobile
+      // Chrome and Safari because window.parent is inaccessible across origins.
+      try {
+        const entryPath = await findScormEntryPath(version.id, url);
+        if (entryPath) {
+          res.setHeader("Content-Type", "text/html; charset=utf-8");
+          res.send(buildZipStreamPage(asset.title, slug, entryPath, token));
+          return;
+        }
+      } catch (e) {
+        console.error('[ZIP STREAM] Failed to find entry path, falling back to CDN redirect:', e);
+      }
+      // Fallback: CDN redirect (desktop-only, cross-origin)
       res.redirect(302, existingEntryUrl);
       return;
     }
@@ -963,7 +1002,16 @@ router.get("/api/media/:slug/embed", async (req: Request, res: Response) => {
       const downloadUrl = `/api/media/${slug}/download${token ? `?token=${encodeURIComponent(token)}` : ""}`;
       res.send(buildNoEntryPage(asset.title, downloadUrl));
     } else if (entryUrl) {
-      // Already extracted to S3 — redirect directly to the entry URL (full-page)
+      // Prefer zip-file streaming so the content stays on app.iheartecho.com
+      // (same origin). Cross-origin SCORM fails on mobile Chrome/Safari when
+      // embedded in third-party iframes (e.g. Thinkific).
+      try {
+        const entryPath = await findScormEntryPath(version.id, url);
+        if (entryPath) {
+          res.send(buildZipStreamPage(asset.title, slug, entryPath, token));
+          return;
+        }
+      } catch { /* fall through to CDN redirect */ }
       res.redirect(302, entryUrl);
       return;
     } else {
