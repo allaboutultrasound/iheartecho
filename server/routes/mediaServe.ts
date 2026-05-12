@@ -921,34 +921,163 @@ router.get("/api/media/:slug/view", async (req: Request, res: Response) => {
 // ── ZIP file streaming route — serve individual files from ZIP on S3 ──────────
 // Pattern: GET /api/media/:slug/zip-file/*filepath
 // Streams the requested file directly from the ZIP using HTTP Range requests.
-// This avoids extracting all files to S3 — the ZIP stays as-is on S3.
+// Performance: caches the parsed ZIP directory + small file buffers in memory.
+
+// --- Caches for zip-file streaming performance ---
+// 1. Asset resolution cache: slug → { version, expiry }
+const assetResolveCache = new Map<string, { version: any; expiry: number }>();
+const ASSET_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
+async function resolveAssetCached(slug: string, token: string | undefined, res: Response) {
+  const cacheKey = `${slug}:${token ?? ''}`;
+  const cached = assetResolveCache.get(cacheKey);
+  if (cached && cached.expiry > Date.now()) return cached.version;
+  const resolved = await resolveAsset(slug, token, res);
+  if (!resolved) return null;
+  assetResolveCache.set(cacheKey, { version: resolved, expiry: Date.now() + ASSET_CACHE_TTL });
+  // Evict old entries if cache grows too large
+  if (assetResolveCache.size > 200) {
+    const now = Date.now();
+    Array.from(assetResolveCache.entries()).forEach(([k, v]) => { if (v.expiry < now) assetResolveCache.delete(k); });
+  }
+  return resolved;
+}
+
+// 2. Parsed ZIP directory cache: s3Url → { dir (unzipper directory object), expiry }
+const zipOpenCache = new Map<string, { dir: any; expiry: number; promise?: Promise<any> }>();
+const ZIP_OPEN_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+
+async function getZipOpen(s3Url: string): Promise<any> {
+  const cached = zipOpenCache.get(s3Url);
+  if (cached && cached.expiry > Date.now()) {
+    if (cached.promise) return cached.promise;
+    return cached.dir;
+  }
+  // Deduplicate concurrent opens for the same URL
+  const promise = (async () => {
+    const source = makeFetchRangeSource(s3Url);
+    const dir = await unzipper.Open.custom(source);
+    zipOpenCache.set(s3Url, { dir, expiry: Date.now() + ZIP_OPEN_CACHE_TTL });
+    return dir;
+  })();
+  zipOpenCache.set(s3Url, { dir: null, expiry: Date.now() + ZIP_OPEN_CACHE_TTL, promise });
+  try {
+    return await promise;
+  } catch (err) {
+    zipOpenCache.delete(s3Url);
+    throw err;
+  }
+}
+
+// 3. File buffer cache: cacheKey → { buffer, contentType, expiry }
+//    Only caches files < 2 MB to avoid memory bloat.
+const fileBufferCache = new Map<string, { buffer: Buffer; contentType: string; expiry: number }>();
+const FILE_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+const FILE_CACHE_MAX_SIZE = 2 * 1024 * 1024; // 2 MB
+const FILE_CACHE_MAX_ENTRIES = 500;
+
+// 4. Background prefetch: when any file from a ZIP is requested, pre-cache ALL
+//    small files from that ZIP in the background so subsequent requests are instant.
+const prefetchInProgress = new Set<string>();
+
+async function prefetchZipFiles(slug: string, s3Url: string) {
+  if (prefetchInProgress.has(s3Url)) return;
+  prefetchInProgress.add(s3Url);
+  try {
+    const dir = await getZipOpen(s3Url);
+    // Process files in batches of 5 concurrently
+    const files = dir.files.filter((f: any) => f.type === 'File' && f.uncompressedSize <= FILE_CACHE_MAX_SIZE);
+    console.log(`[ZIP PREFETCH] Starting prefetch for ${slug}: ${files.length} files`);
+    const BATCH_SIZE = 5;
+    for (let i = 0; i < files.length; i += BATCH_SIZE) {
+      const batch = files.slice(i, i + BATCH_SIZE);
+      await Promise.allSettled(batch.map(async (entry: any) => {
+        const cacheKey = `${slug}:${entry.path}`;
+        if (fileBufferCache.has(cacheKey)) return; // already cached
+        try {
+          const chunks: Buffer[] = [];
+          const stream = entry.stream();
+          for await (const chunk of stream) {
+            chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+          }
+          const buffer = Buffer.concat(chunks);
+          const ext = entry.path.split('.').pop()?.toLowerCase() ?? '';
+          const ct = MIME_MAP[ext] ?? 'application/octet-stream';
+          fileBufferCache.set(cacheKey, { buffer, contentType: ct, expiry: Date.now() + FILE_CACHE_TTL });
+        } catch { /* skip failed files */ }
+      }));
+    }
+    console.log(`[ZIP PREFETCH] Done for ${slug}: ${fileBufferCache.size} total cached files`);
+  } catch (err) {
+    console.error('[ZIP PREFETCH] Error:', err);
+  } finally {
+    prefetchInProgress.delete(s3Url);
+  }
+}
+
 router.get("/api/media/:slug/zip-file/*", async (req: Request, res: Response) => {
   const { slug } = req.params;
   const token = req.query.token as string | undefined;
-  const resolved = await resolveAsset(slug, token, res);
-  if (!resolved) return;
-  const { version } = resolved;
-  const filePath = (req.params as any)[0] as string; // everything after /zip-file/
+  const filePath = (req.params as any)[0] as string;
   if (!filePath) { res.status(400).json({ error: 'Missing file path' }); return; }
-  try {
-    const source = makeFetchRangeSource(version.s3Url);
-    const dir = await unzipper.Open.custom(source);
-    // Find the file (case-insensitive)
-    const entry = dir.files.find((f: any) => f.path === filePath || f.path.toLowerCase() === filePath.toLowerCase());
-    if (!entry) { res.status(404).json({ error: 'File not found in ZIP' }); return; }
-    const ext = filePath.split('.').pop()?.toLowerCase() ?? '';
-    const contentType = MIME_MAP[ext] ?? 'application/octet-stream';
-    res.setHeader('Content-Type', contentType);
-    res.setHeader('Cache-Control', 'public, max-age=3600');
-    // Allow SCORM content to be framed and run scripts
+
+  const ext = filePath.split('.').pop()?.toLowerCase() ?? '';
+  const contentType = MIME_MAP[ext] ?? 'application/octet-stream';
+
+  // Check file buffer cache first (instant response)
+  const fileCacheKey = `${slug}:${filePath}`;
+  const cachedFile = fileBufferCache.get(fileCacheKey);
+  if (cachedFile && cachedFile.expiry > Date.now()) {
+    res.setHeader('Content-Type', cachedFile.contentType);
+    res.setHeader('Content-Length', cachedFile.buffer.length);
+    res.setHeader('Cache-Control', 'public, max-age=86400'); // 1 day
     res.setHeader('X-Frame-Options', 'ALLOWALL');
     res.setHeader('Content-Security-Policy', "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:");
-    // Stream the file
-    const fileStream = entry.stream();
-    fileStream.pipe(res);
-    fileStream.on('error', (err: Error) => {
-      if (!res.headersSent) res.status(500).json({ error: 'Stream error' });
-    });
+    res.setHeader('X-Cache', 'HIT');
+    res.end(cachedFile.buffer);
+    return;
+  }
+
+  // Resolve asset (cached)
+  const resolved = await resolveAssetCached(slug, token, res);
+  if (!resolved) return;
+  const { version } = resolved;
+
+  try {
+    // Get cached ZIP directory (avoids re-reading central directory)
+    const dir = await getZipOpen(version.s3Url);
+    const entry = dir.files.find((f: any) => f.path === filePath || f.path.toLowerCase() === filePath.toLowerCase());
+    if (!entry) { res.status(404).json({ error: 'File not found in ZIP' }); return; }
+
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Cache-Control', 'public, max-age=86400'); // 1 day
+    res.setHeader('X-Frame-Options', 'ALLOWALL');
+    res.setHeader('Content-Security-Policy', "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:");
+    res.setHeader('X-Cache', 'MISS');
+
+    // For small files, buffer into memory cache for instant future responses
+    if (entry.uncompressedSize <= FILE_CACHE_MAX_SIZE) {
+      const chunks: Buffer[] = [];
+      const stream = entry.stream();
+      for await (const chunk of stream) {
+        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+      }
+      const buffer = Buffer.concat(chunks);
+      // Store in cache
+      fileBufferCache.set(fileCacheKey, { buffer, contentType, expiry: Date.now() + FILE_CACHE_TTL });
+      res.setHeader('Content-Length', buffer.length);
+      res.end(buffer);
+    } else {
+      // Large files: stream directly
+      const fileStream = entry.stream();
+      fileStream.pipe(res);
+      fileStream.on('error', (err: Error) => {
+        if (!res.headersSent) res.status(500).json({ error: 'Stream error' });
+      });
+    }
+
+    // Trigger background prefetch for ALL files in this ZIP (fire-and-forget)
+    prefetchZipFiles(slug, version.s3Url).catch(() => {});
   } catch (err) {
     console.error('[ZIP STREAM] Error:', err);
     if (!res.headersSent) res.status(500).json({ error: 'Failed to stream file from ZIP' });

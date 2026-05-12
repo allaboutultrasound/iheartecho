@@ -1126,3 +1126,7 @@
 - [x] Fix startExtractionJobForAsset: check DB state before starting — skip if already extracted or running on another instance
 - [x] Fix view route: 302 redirect directly to scormEntryUrl — SCORM plays full-page immediately like Teachific
 - [x] Fix startExtractionJobForAsset: check DB state before starting
+
+## SCORM Mobile Blank Page - Deeper Investigation (May 12 2026)
+- [ ] SCORM mobile blank page still occurring after same-origin redirect fix — deeper investigation needed
+- [ ] Fix slow SCORM zip-file streaming — content keeps spinning on load
