@@ -851,21 +851,23 @@ router.get("/api/media/:slug/view", async (req: Request, res: Response) => {
       return;
     }
     if (existingEntryUrl) {
-      // Prefer zip-file streaming over CDN redirect so the content stays on
-      // app.iheartecho.com (same origin). This is critical for iframe embeds on
-      // third-party sites (e.g. Thinkific) — cross-origin SCORM fails on mobile
-      // Chrome and Safari because window.parent is inaccessible across origins.
+      // Redirect directly to the zip-file streaming URL (same origin: app.iheartecho.com).
+      // This avoids a nested iframe chain (Thinkific → wrapper → zip-file) which breaks
+      // SCORM on mobile because window.parent.parent is cross-origin (Thinkific).
+      // With a direct redirect, the chain is: Thinkific → zip-file (single iframe, same origin).
       try {
         const entryPath = await findScormEntryPath(version.id, url);
         if (entryPath) {
-          res.setHeader("Content-Type", "text/html; charset=utf-8");
-          res.send(buildZipStreamPage(asset.title, slug, entryPath, token));
+          const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
+          const encodedEntryPath = entryPath.split("/").map((seg: string) => encodeURIComponent(seg)).join("/");
+          const zipFileUrl = `/api/media/${slug}/zip-file/${encodedEntryPath}${tokenParam}`;
+          res.redirect(302, zipFileUrl);
           return;
         }
       } catch (e) {
         console.error('[ZIP STREAM] Failed to find entry path, falling back to CDN redirect:', e);
       }
-      // Fallback: CDN redirect (desktop-only, cross-origin)
+      // Fallback: CDN redirect
       res.redirect(302, existingEntryUrl);
       return;
     }
@@ -1002,13 +1004,15 @@ router.get("/api/media/:slug/embed", async (req: Request, res: Response) => {
       const downloadUrl = `/api/media/${slug}/download${token ? `?token=${encodeURIComponent(token)}` : ""}`;
       res.send(buildNoEntryPage(asset.title, downloadUrl));
     } else if (entryUrl) {
-      // Prefer zip-file streaming so the content stays on app.iheartecho.com
-      // (same origin). Cross-origin SCORM fails on mobile Chrome/Safari when
-      // embedded in third-party iframes (e.g. Thinkific).
+      // Redirect directly to the zip-file streaming URL (same origin: app.iheartecho.com).
+      // Avoids nested iframe chain that breaks SCORM on mobile.
       try {
         const entryPath = await findScormEntryPath(version.id, url);
         if (entryPath) {
-          res.send(buildZipStreamPage(asset.title, slug, entryPath, token));
+          const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
+          const encodedEntryPath = entryPath.split("/").map((seg: string) => encodeURIComponent(seg)).join("/");
+          const zipFileUrl = `/api/media/${slug}/zip-file/${encodedEntryPath}${tokenParam}`;
+          res.redirect(302, zipFileUrl);
           return;
         }
       } catch { /* fall through to CDN redirect */ }
