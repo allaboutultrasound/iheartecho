@@ -334,6 +334,212 @@ function buildScormPage(title: string, entryUrl: string): string {
 </html>`;
 }
 
+/** Build a wrapper page for SCORM embed with loading state, error catching, and fallback. */
+function buildScormEmbedWrapper(title: string, entryUrl: string): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>${escapeHtml(title)}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; overflow: hidden; background: #f0fbfc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    #loading {
+      position: fixed; inset: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 16px;
+      background: #f0fbfc;
+      transition: opacity 0.3s;
+    }
+    #loading.hidden { opacity: 0; pointer-events: none; }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid #e0f4f5; border-top-color: #189aa1;
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { color: #189aa1; font-size: 14px; font-weight: 600; }
+    .loading-sub { color: #6b7280; font-size: 12px; max-width: 280px; text-align: center; }
+    #error-panel {
+      position: fixed; inset: 0; z-index: 200;
+      display: none; align-items: center; justify-content: center; flex-direction: column; gap: 16px;
+      background: #f0fbfc; padding: 24px; text-align: center;
+    }
+    #error-panel.visible { display: flex; }
+    #error-panel h2 { color: #1a2e3b; font-size: 18px; }
+    #error-panel p { color: #6b7280; font-size: 14px; max-width: 320px; }
+    #error-panel .error-detail { color: #ef4444; font-size: 11px; background: #fef2f2; padding: 8px 12px; border-radius: 6px; max-width: 320px; word-break: break-all; font-family: monospace; }
+    #error-panel a, #error-panel button {
+      display: inline-block; background: #189aa1; color: #fff; text-decoration: none;
+      padding: 12px 28px; border-radius: 8px; font-weight: 600; font-size: 15px;
+      border: none; cursor: pointer; min-height: 44px;
+    }
+    #error-panel .secondary { background: transparent; color: #189aa1; border: 2px solid #189aa1; }
+    #diag { display: none; color: #9ca3af; font-size: 10px; margin-top: 8px; max-width: 320px; word-break: break-all; font-family: monospace; }
+    iframe {
+      width: 100%; height: 100%; border: none; display: block;
+      position: fixed; inset: 0;
+    }
+  </style>
+</head>
+<body>
+  <!-- SCORM 1.2 + SCORM 2004 API stubs so iSpring/Articulate content doesn't hang -->
+  <script>
+    window.API = {
+      LMSInitialize: function() { return 'true'; },
+      LMSFinish: function() { return 'true'; },
+      LMSGetValue: function(e) { return ''; },
+      LMSSetValue: function(e, v) { return 'true'; },
+      LMSCommit: function() { return 'true'; },
+      LMSGetLastError: function() { return '0'; },
+      LMSGetErrorString: function() { return ''; },
+      LMSGetDiagnostic: function() { return ''; }
+    };
+    window.API_1484_11 = {
+      Initialize: function() { return 'true'; },
+      Terminate: function() { return 'true'; },
+      GetValue: function(e) { return ''; },
+      SetValue: function(e, v) { return 'true'; },
+      Commit: function() { return 'true'; },
+      GetLastError: function() { return '0'; },
+      GetErrorString: function() { return ''; },
+      GetDiagnostic: function() { return ''; }
+    };
+  </script>
+
+  <div id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text">Loading content...</div>
+    <div class="loading-sub" id="loading-status">Connecting to content server</div>
+  </div>
+
+  <div id="error-panel">
+    <h2>Unable to Load Content</h2>
+    <p id="error-msg">The content failed to load. You can open it directly in your browser.</p>
+    <div class="error-detail" id="error-detail"></div>
+    <a href="${entryUrl}" target="_blank" rel="noopener">Open Directly</a>
+    <button class="secondary" onclick="retryLoad()">Retry</button>
+    <div id="diag"></div>
+  </div>
+
+  <iframe id="content-frame" title="${escapeHtml(title)}" allowfullscreen allow="fullscreen; autoplay"></iframe>
+
+  <script>
+    var CONTENT_URL = ${JSON.stringify(entryUrl)};
+    var frame = document.getElementById('content-frame');
+    var loadingEl = document.getElementById('loading');
+    var errorPanel = document.getElementById('error-panel');
+    var errorDetail = document.getElementById('error-detail');
+    var diagEl = document.getElementById('diag');
+    var statusEl = document.getElementById('loading-status');
+    var loadTimer = null;
+    var diagLog = [];
+
+    function addDiag(msg) {
+      var ts = new Date().toISOString().substr(11, 12);
+      diagLog.push(ts + ' ' + msg);
+      if (diagEl) diagEl.textContent = diagLog.join('\\n');
+    }
+
+    function showError(msg, detail) {
+      loadingEl.classList.add('hidden');
+      errorPanel.classList.add('visible');
+      if (detail) errorDetail.textContent = detail;
+      if (msg) document.getElementById('error-msg').textContent = msg;
+      diagEl.style.display = 'block';
+      addDiag('ERROR: ' + (detail || msg));
+    }
+
+    function startLoad() {
+      errorPanel.classList.remove('visible');
+      loadingEl.classList.remove('hidden');
+      statusEl.textContent = 'Connecting to content server';
+      addDiag('Starting load: ' + CONTENT_URL);
+
+      // First, verify the content URL is reachable
+      addDiag('Sending preflight fetch...');
+      statusEl.textContent = 'Checking content availability...';
+
+      fetch(CONTENT_URL, { method: 'HEAD', mode: 'no-cors' })
+        .then(function() {
+          addDiag('Preflight OK, setting iframe src');
+          statusEl.textContent = 'Loading interactive content...';
+          frame.src = CONTENT_URL;
+        })
+        .catch(function(err) {
+          addDiag('Preflight failed: ' + err.message);
+          // Still try loading in iframe — no-cors may fail but iframe might work
+          statusEl.textContent = 'Loading content...';
+          frame.src = CONTENT_URL;
+        });
+
+      // Timeout: if iframe hasn't loaded in 30 seconds, show error
+      clearTimeout(loadTimer);
+      loadTimer = setTimeout(function() {
+        addDiag('30s timeout reached');
+        // Check if iframe has content
+        try {
+          var hasContent = frame.contentDocument && frame.contentDocument.body && frame.contentDocument.body.innerHTML.length > 0;
+          addDiag('iframe contentDocument accessible: ' + !!hasContent);
+          if (!hasContent) {
+            showError(
+              'Content is taking too long to load. This may be a network issue on your device.',
+              'Timeout after 30s. Try opening directly.'
+            );
+          }
+        } catch(e) {
+          addDiag('iframe cross-origin (expected): ' + e.message);
+          // Cross-origin — can't check content. Hide loading and hope it loaded.
+          loadingEl.classList.add('hidden');
+        }
+      }, 30000);
+    }
+
+    frame.addEventListener('load', function() {
+      clearTimeout(loadTimer);
+      addDiag('iframe onload fired');
+      // Small delay to let content render
+      setTimeout(function() {
+        loadingEl.classList.add('hidden');
+        addDiag('Loading hidden, content should be visible');
+        // Check if the iframe body is actually empty (blank page scenario)
+        try {
+          var body = frame.contentDocument && frame.contentDocument.body;
+          if (body && body.innerHTML.trim().length === 0) {
+            addDiag('WARNING: iframe body is empty after load!');
+            showError(
+              'Content loaded but appears blank. This may be a browser compatibility issue.',
+              'iframe loaded with empty body. Try opening directly.'
+            );
+          }
+        } catch(e) {
+          // Cross-origin — can't inspect, which is fine
+          addDiag('Cross-origin iframe (normal for CloudFront)');
+        }
+      }, 1500);
+    });
+
+    frame.addEventListener('error', function(e) {
+      clearTimeout(loadTimer);
+      addDiag('iframe onerror: ' + (e.message || 'unknown'));
+      showError('Failed to load content.', 'iframe error event: ' + (e.message || 'unknown'));
+    });
+
+    function retryLoad() {
+      addDiag('Retry requested');
+      frame.src = 'about:blank';
+      setTimeout(startLoad, 200);
+    }
+
+    // Start loading
+    startLoad();
+  </script>
+</body>
+</html>`;
+}
+
 /** Build a loading/extracting page that polls for progress. */
 function buildExtractingPage(title: string, slug: string, token?: string): string {
   const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
@@ -1110,15 +1316,15 @@ router.get("/api/media/:slug/embed", async (req: Request, res: Response) => {
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.setHeader("X-Frame-Options", "ALLOWALL");
 
-  // SCORM/zip: redirect to extracted entry on CloudFront (original working behavior)
+  // SCORM/zip: serve wrapper page with loading state, error catching, and fallback
   if (isZipLike(asset.mediaType, mime)) {
     const entryUrl = (version as any).scormEntryUrl as string | null;
     if (entryUrl === "FAILED") {
       const downloadUrl = `/api/media/${slug}/download${token ? `?token=${encodeURIComponent(token)}` : ""}`;
       res.send(buildNoEntryPage(asset.title, downloadUrl));
     } else if (entryUrl) {
-      // Already extracted to S3/CloudFront — redirect directly to the entry URL (full-page)
-      res.redirect(302, entryUrl);
+      // Serve a wrapper page that loads the CloudFront content with loading/error UI
+      res.send(buildScormEmbedWrapper(asset.title, entryUrl));
       return;
     } else {
       // Not yet extracted — use ZIP streaming
