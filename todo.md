@@ -1129,4 +1129,4 @@
 
 ## SCORM Mobile Blank Page - Deeper Investigation (May 12 2026)
 - [ ] SCORM mobile blank page still occurring after same-origin redirect fix — deeper investigation needed
-- [ ] Fix slow SCORM zip-file streaming — content keeps spinning on load
+- [x] Fix slow SCORM zip-file streaming — content keeps spinning on load (added 3-layer cache: asset resolution, ZIP directory, file buffer + background prefetch)
