@@ -458,16 +458,14 @@ function buildScormEmbedWrapper(title: string, entryUrl: string, slug?: string, 
   <div id="mobile-banner">
     <button class="dismiss" onclick="this.parentElement.style.display='none'">&times;</button>
     Having trouble viewing? Switch to <strong>Desktop Site</strong> in your browser menu.<br/>
-    <span style="font-size:11px; opacity:0.7;">Chrome: &#8942; &rarr; Desktop site &nbsp;|&nbsp; Safari: aA &rarr; Request Desktop Website</span><br/>
-    <a href="${viewUrl}" target="_blank" rel="noopener">Open in New Tab</a>
+    <span style="font-size:11px; opacity:0.7;">Chrome: &#8942; &rarr; Desktop site &nbsp;|&nbsp; Safari: aA &rarr; Request Desktop Website</span>
   </div>
 
   <div id="error-panel">
     <h2>Unable to Load Content</h2>
-    <p id="error-msg">The content failed to load. You can open it directly in your browser.</p>
+    <p id="error-msg">The content failed to load. Try switching to <strong>Desktop Site</strong> in your browser settings, or retry below.</p>
     <div class="error-detail" id="error-detail"></div>
-    <a href="${viewUrl}" target="_blank" rel="noopener">Open Directly</a>
-    <button class="secondary" onclick="retryLoad()">Retry</button>
+    <button onclick="retryLoad()" style="background:#189aa1;color:#fff;border:none;padding:12px 28px;border-radius:8px;font-weight:600;font-size:15px;cursor:pointer;min-height:44px;">Retry</button>
     <div id="diag"></div>
   </div>
 

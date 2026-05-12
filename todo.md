@@ -1131,3 +1131,4 @@
 - [x] SCORM mobile blank page still occurring after same-origin redirect fix — fixed by serving SCORM HTML directly (no 302 redirect) with injected <base> tag for relative URL resolution
 - [x] Fix slow SCORM zip-file streaming — content keeps spinning on load (added 3-layer cache: asset resolution, ZIP directory, file buffer + background prefetch)
 - [x] Add SCORM embed wrapper page with visible loading state, error catching, and fallback link for mobile debugging
+- [x] Remove "Open Directly" and "Open in New Tab" links from SCORM embed wrapper — content only accessible via Thinkific embed
