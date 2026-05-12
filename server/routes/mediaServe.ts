@@ -362,6 +362,32 @@ function buildScormEmbedWrapper(title: string, entryUrl: string): string {
     @keyframes spin { to { transform: rotate(360deg); } }
     .loading-text { color: #189aa1; font-size: 14px; font-weight: 600; }
     .loading-sub { color: #6b7280; font-size: 12px; max-width: 280px; text-align: center; }
+    .mobile-tip {
+      background: #fff; border: 1px solid #189aa1; border-radius: 10px;
+      padding: 12px 16px; max-width: 300px; text-align: center;
+      margin-top: 4px;
+    }
+    .mobile-tip-icon { font-size: 20px; margin-bottom: 4px; }
+    .mobile-tip-title { color: #189aa1; font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+    .mobile-tip-text { color: #6b7280; font-size: 11px; line-height: 1.5; }
+    .mobile-tip-text strong { color: #1a2e3b; }
+    #mobile-banner {
+      display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 300;
+      background: linear-gradient(135deg, #0e1e2e, #0e4a50); color: #fff;
+      padding: 14px 16px; text-align: center;
+      font-size: 13px; line-height: 1.5;
+      box-shadow: 0 -2px 12px rgba(0,0,0,0.2);
+    }
+    #mobile-banner strong { color: #4ad9e0; }
+    #mobile-banner a {
+      display: inline-block; background: #189aa1; color: #fff; text-decoration: none;
+      padding: 8px 20px; border-radius: 6px; font-weight: 600; font-size: 13px;
+      margin-top: 8px;
+    }
+    #mobile-banner .dismiss {
+      position: absolute; top: 8px; right: 12px; background: none; border: none;
+      color: #fff; font-size: 18px; cursor: pointer; opacity: 0.7;
+    }
     #error-panel {
       position: fixed; inset: 0; z-index: 200;
       display: none; align-items: center; justify-content: center; flex-direction: column; gap: 16px;
@@ -413,6 +439,23 @@ function buildScormEmbedWrapper(title: string, entryUrl: string): string {
     <div class="spinner"></div>
     <div class="loading-text">Loading content...</div>
     <div class="loading-sub" id="loading-status">Connecting to content server</div>
+    <div class="mobile-tip" id="mobile-tip" style="display:none">
+      <div class="mobile-tip-icon">&#128241;</div>
+      <div class="mobile-tip-title">Viewing on mobile?</div>
+      <div class="mobile-tip-text">
+        If content doesn't display, switch to<br/>
+        <strong>Desktop Site</strong> in your browser settings.<br/>
+        <span style="color:#9ca3af; font-size:10px;">Chrome: &#8942; &rarr; Desktop site &nbsp;|&nbsp; Safari: aA &rarr; Request Desktop Website</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Persistent banner shown after content loads (in case it goes gray) -->
+  <div id="mobile-banner">
+    <button class="dismiss" onclick="this.parentElement.style.display='none'">&times;</button>
+    Having trouble viewing? Switch to <strong>Desktop Site</strong> in your browser menu.<br/>
+    <span style="font-size:11px; opacity:0.7;">Chrome: &#8942; &rarr; Desktop site &nbsp;|&nbsp; Safari: aA &rarr; Request Desktop Website</span><br/>
+    <a href="${entryUrl}" target="_blank" rel="noopener">Open in New Tab</a>
   </div>
 
   <div id="error-panel">
@@ -504,14 +547,19 @@ function buildScormEmbedWrapper(title: string, entryUrl: string): string {
       setTimeout(function() {
         loadingEl.classList.add('hidden');
         addDiag('Loading hidden, content should be visible');
+        // On mobile, show the persistent banner after content loads
+        if (isMobile) {
+          var banner = document.getElementById('mobile-banner');
+          if (banner) banner.style.display = 'block';
+        }
         // Check if the iframe body is actually empty (blank page scenario)
         try {
           var body = frame.contentDocument && frame.contentDocument.body;
           if (body && body.innerHTML.trim().length === 0) {
             addDiag('WARNING: iframe body is empty after load!');
             showError(
-              'Content loaded but appears blank. This may be a browser compatibility issue.',
-              'iframe loaded with empty body. Try opening directly.'
+              'Content loaded but appears blank. Switch to Desktop Site in your browser settings, or open directly.',
+              'iframe loaded with empty body. Try Desktop mode or open directly.'
             );
           }
         } catch(e) {
@@ -551,6 +599,14 @@ function buildScormEmbedWrapper(title: string, entryUrl: string): string {
         }
       } catch(e) {}
     }, 1000);
+
+    // Detect mobile and show tip
+    var isMobile = /iPhone|iPad|iPod|Android|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      || (navigator.maxTouchPoints > 0 && window.innerWidth < 1024);
+    if (isMobile) {
+      var tip = document.getElementById('mobile-tip');
+      if (tip) tip.style.display = 'block';
+    }
 
     // Start loading
     startLoad();
