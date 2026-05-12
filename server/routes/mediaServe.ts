@@ -840,7 +840,7 @@ router.get("/api/media/:slug/view", async (req: Request, res: Response) => {
   const filename = version.originalFilename ?? `${asset.slug}.bin`;
   const url = version.s3Url;
 
-    // ── SCORM / ZIP: extract on-demand if needed ────────────────────────────────
+    // ── SCORM / ZIP: serve content directly (no redirect — mobile browsers block 302 in cross-origin iframes)
   if (isZipLike(asset.mediaType, mime)) {
     const existingEntryUrl = (version as any).scormEntryUrl as string | null;
     if (existingEntryUrl === "FAILED") {
@@ -850,32 +850,48 @@ router.get("/api/media/:slug/view", async (req: Request, res: Response) => {
       res.send(buildNoEntryPage(asset.title, dlUrl));
       return;
     }
-    if (existingEntryUrl) {
-      // Redirect directly to the zip-file streaming URL (same origin: app.iheartecho.com).
-      // This avoids a nested iframe chain (Thinkific → wrapper → zip-file) which breaks
-      // SCORM on mobile because window.parent.parent is cross-origin (Thinkific).
-      // With a direct redirect, the chain is: Thinkific → zip-file (single iframe, same origin).
-      try {
-        const entryPath = await findScormEntryPath(version.id, url);
-        if (entryPath) {
-          const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
-          const encodedEntryPath = entryPath.split("/").map((seg: string) => encodeURIComponent(seg)).join("/");
-          const zipFileUrl = `/api/media/${slug}/zip-file/${encodedEntryPath}${tokenParam}`;
-          res.redirect(302, zipFileUrl);
-          return;
-        }
-      } catch (e) {
-        console.error('[ZIP STREAM] Failed to find entry path, falling back to CDN redirect:', e);
-      }
-      // Fallback: CDN redirect
-      res.redirect(302, existingEntryUrl);
-      return;
-    }
-    // Not yet extracted — use ZIP streaming instead (instant, no extraction needed)
+    // Serve SCORM index.html directly with <base> tag (no redirect)
     try {
       const entryPath = await findScormEntryPath(version.id, url);
       if (entryPath) {
-        // Build a wrapper page that loads the SCORM content via ZIP streaming
+        const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
+        const entryDir = entryPath.substring(0, entryPath.lastIndexOf('/') + 1);
+        const encodedEntryDir = entryDir.split("/").map((seg: string) => encodeURIComponent(seg)).join("/");
+        const baseHref = `/api/media/${slug}/zip-file/${encodedEntryDir}`;
+
+        const dir = await getZipOpen(url);
+        const entry = dir.files.find((f: any) => f.path === entryPath || f.path.toLowerCase() === entryPath.toLowerCase());
+        if (entry) {
+          const chunks: Buffer[] = [];
+          const stream = entry.stream();
+          for await (const chunk of stream) {
+            chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+          }
+          let html = Buffer.concat(chunks).toString('utf-8');
+
+          // Inject <base> tag so relative URLs resolve to the zip-file streaming path
+          const cleanBaseTag = `<base href="${baseHref}">`;
+          html = html.replace(/<head>/i, `<head>\n${cleanBaseTag}`);
+          if (!html.includes('<base')) {
+            html = cleanBaseTag + html;
+          }
+
+          res.setHeader("Content-Type", "text/html; charset=utf-8");
+          res.setHeader('X-Frame-Options', 'ALLOWALL');
+          res.setHeader('Content-Security-Policy', "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:");
+          res.send(html);
+
+          prefetchZipFiles(slug, url).catch(() => {});
+          return;
+        }
+      }
+    } catch (e) {
+      console.error('[ZIP STREAM] Failed to serve SCORM inline:', e);
+    }
+    // Fallback: wrapper page with iframe
+    try {
+      const entryPath = await findScormEntryPath(version.id, url);
+      if (entryPath) {
         res.setHeader("Content-Type", "text/html; charset=utf-8");
         res.send(buildZipStreamPage(asset.title, slug, entryPath, token));
         return;
@@ -1126,38 +1142,66 @@ router.get("/api/media/:slug/embed", async (req: Request, res: Response) => {
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.setHeader("X-Frame-Options", "ALLOWALL");
 
-  // SCORM/zip: iframe to extracted entry
+  // SCORM/zip: serve content directly (no redirect — mobile browsers block 302 in cross-origin iframes)
   if (isZipLike(asset.mediaType, mime)) {
     const entryUrl = (version as any).scormEntryUrl as string | null;
     if (entryUrl === "FAILED") {
       const downloadUrl = `/api/media/${slug}/download${token ? `?token=${encodeURIComponent(token)}` : ""}`;
       res.send(buildNoEntryPage(asset.title, downloadUrl));
-    } else if (entryUrl) {
-      // Redirect directly to the zip-file streaming URL (same origin: app.iheartecho.com).
-      // Avoids nested iframe chain that breaks SCORM on mobile.
-      try {
-        const entryPath = await findScormEntryPath(version.id, url);
-        if (entryPath) {
-          const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
-          const encodedEntryPath = entryPath.split("/").map((seg: string) => encodeURIComponent(seg)).join("/");
-          const zipFileUrl = `/api/media/${slug}/zip-file/${encodedEntryPath}${tokenParam}`;
-          res.redirect(302, zipFileUrl);
-          return;
-        }
-      } catch { /* fall through to CDN redirect */ }
-      res.redirect(302, entryUrl);
       return;
-    } else {
-      // Not yet extracted — use ZIP streaming
-      try {
-        const entryPath = await findScormEntryPath(version.id, url);
-        if (entryPath) {
-          res.send(buildZipStreamPage(asset.title, slug, entryPath, token));
+    }
+    // Try to serve the SCORM index.html directly from the ZIP (no redirect)
+    try {
+      const entryPath = await findScormEntryPath(version.id, url);
+      if (entryPath) {
+        const tokenParam = token ? `?token=${encodeURIComponent(token)}` : "";
+        // Get the directory part of the entry path for the <base> tag
+        const entryDir = entryPath.substring(0, entryPath.lastIndexOf('/') + 1);
+        const encodedEntryDir = entryDir.split("/").map((seg: string) => encodeURIComponent(seg)).join("/");
+        const baseHref = `/api/media/${slug}/zip-file/${encodedEntryDir}`;
+
+        // Read the index.html content from the ZIP
+        const dir = await getZipOpen(url);
+        const entry = dir.files.find((f: any) => f.path === entryPath || f.path.toLowerCase() === entryPath.toLowerCase());
+        if (entry) {
+          const chunks: Buffer[] = [];
+          const stream = entry.stream();
+          for await (const chunk of stream) {
+            chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+          }
+          let html = Buffer.concat(chunks).toString('utf-8');
+
+          // Inject <base> tag right after <head> so all relative URLs resolve to the zip-file path
+          // This is critical: without it, relative src="data/player.js" would resolve against /embed
+          const baseTag = `<base href="${baseHref}${tokenParam ? '?' + tokenParam.slice(1) : ''}">`;
+          // Remove any token from base href - tokens go in individual requests
+          const cleanBaseTag = `<base href="${baseHref}">`;
+          html = html.replace(/<head>/i, `<head>\n${cleanBaseTag}`);
+          // If no <head> tag, prepend it
+          if (!html.includes('<base')) {
+            html = cleanBaseTag + html;
+          }
+
+          res.setHeader('Content-Security-Policy', "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:");
+          res.send(html);
+
+          // Trigger background prefetch for performance
+          prefetchZipFiles(slug, url).catch(() => {});
           return;
         }
-      } catch { /* fall through */ }
-      res.send(buildExtractingPage(asset.title, slug, token));
+      }
+    } catch (e) {
+      console.error('[EMBED] Failed to serve SCORM inline:', e);
     }
+    // Fallback: use wrapper page with iframe (less ideal but works on desktop)
+    try {
+      const entryPath = await findScormEntryPath(version.id, url);
+      if (entryPath) {
+        res.send(buildZipStreamPage(asset.title, slug, entryPath, token));
+        return;
+      }
+    } catch { /* fall through */ }
+    res.send(buildExtractingPage(asset.title, slug, token));
     return;
   }
 
