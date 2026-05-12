@@ -335,7 +335,11 @@ function buildScormPage(title: string, entryUrl: string): string {
 }
 
 /** Build a wrapper page for SCORM embed with loading state, error catching, and fallback. */
-function buildScormEmbedWrapper(title: string, entryUrl: string): string {
+function buildScormEmbedWrapper(title: string, entryUrl: string, slug?: string, token?: string): string {
+  // Build a safe /view URL that goes through our server (never expose CloudFront directly)
+  const viewUrl = slug
+    ? `/api/media/${slug}/view${token ? `?token=${encodeURIComponent(token)}` : ''}`
+    : entryUrl; // fallback to entryUrl only if slug not provided
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -455,14 +459,14 @@ function buildScormEmbedWrapper(title: string, entryUrl: string): string {
     <button class="dismiss" onclick="this.parentElement.style.display='none'">&times;</button>
     Having trouble viewing? Switch to <strong>Desktop Site</strong> in your browser menu.<br/>
     <span style="font-size:11px; opacity:0.7;">Chrome: &#8942; &rarr; Desktop site &nbsp;|&nbsp; Safari: aA &rarr; Request Desktop Website</span><br/>
-    <a href="${entryUrl}" target="_blank" rel="noopener">Open in New Tab</a>
+    <a href="${viewUrl}" target="_blank" rel="noopener">Open in New Tab</a>
   </div>
 
   <div id="error-panel">
     <h2>Unable to Load Content</h2>
     <p id="error-msg">The content failed to load. You can open it directly in your browser.</p>
     <div class="error-detail" id="error-detail"></div>
-    <a href="${entryUrl}" target="_blank" rel="noopener">Open Directly</a>
+    <a href="${viewUrl}" target="_blank" rel="noopener">Open Directly</a>
     <button class="secondary" onclick="retryLoad()">Retry</button>
     <div id="diag"></div>
   </div>
@@ -1399,7 +1403,7 @@ router.get("/api/media/:slug/embed", async (req: Request, res: Response) => {
       res.send(buildNoEntryPage(asset.title, downloadUrl));
     } else if (entryUrl) {
       // Serve a wrapper page that loads the CloudFront content with loading/error UI
-      res.send(buildScormEmbedWrapper(asset.title, entryUrl));
+      res.send(buildScormEmbedWrapper(asset.title, entryUrl, slug, token));
       return;
     } else {
       // Not yet extracted — use ZIP streaming
