@@ -469,7 +469,7 @@ function buildScormEmbedWrapper(title: string, entryUrl: string, slug?: string, 
     <div id="diag"></div>
   </div>
 
-  <iframe id="content-frame" title="${escapeHtml(title)}" allowfullscreen allow="fullscreen; autoplay" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"></iframe>
+  <iframe id="content-frame" title="${escapeHtml(title)}" allowfullscreen allow="fullscreen; autoplay"></iframe>
 
   <script>
     var CONTENT_URL = ${JSON.stringify(entryUrl)};
