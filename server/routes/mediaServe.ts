@@ -376,11 +376,11 @@ function buildScormEmbedWrapper(title: string, entryUrl: string, slug?: string, 
     .mobile-tip-text { color: #6b7280; font-size: 11px; line-height: 1.5; }
     .mobile-tip-text strong { color: #1a2e3b; }
     #mobile-banner {
-      display: none; position: fixed; bottom: 0; left: 0; right: 0; z-index: 300;
+      display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 300;
       background: linear-gradient(135deg, #0e1e2e, #0e4a50); color: #fff;
       padding: 14px 16px; text-align: center;
       font-size: 13px; line-height: 1.5;
-      box-shadow: 0 -2px 12px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.2);
     }
     #mobile-banner strong { color: #4ad9e0; }
     #mobile-banner a {
